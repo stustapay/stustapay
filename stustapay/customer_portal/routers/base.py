@@ -2,8 +2,9 @@
 some basic api endpoints.
 """
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, status
 
+from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService, ContextMailService
 from stustapay.core.schema.customer import (
@@ -95,11 +96,9 @@ async def get_customer_config(
     return await customer_service.get_api_config(base_url=base_url)
 
 
-@router.get("/bon/{bon_id}", summary="Retrieve a bon")
-async def get_bon(token: CurrentAuthToken, customer_service: ContextCustomerService, bon_id: int):
-    mime_type, content = await customer_service.get_bon(
+@router.get("/bon/{order_uuid}", summary="Retrieve a bon", response_model=BonJson)
+async def get_bon(token: CurrentAuthToken, customer_service: ContextCustomerService, order_uuid: str):
+    return await customer_service.get_bon(
         token=token,
-        bon_id=bon_id,
+        order_uuid=order_uuid,
     )
-
-    return Response(content=content, media_type=mime_type)

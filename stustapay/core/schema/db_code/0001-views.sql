@@ -328,14 +328,6 @@ create view order_tax_rates as
     group by
         ordr.id, tax_rate, tax_name;
 
-create view order_value_with_bon as
-    select
-        o.*,
-        b.generated   as bon_generated
-    from
-        order_value o
-        left join bon b on (o.id = b.id);
-
 create view event_with_translations as
     select
         e.*,

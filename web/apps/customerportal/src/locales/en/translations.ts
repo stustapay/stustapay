@@ -12,6 +12,7 @@ export const translations = {
   },
   loginFailed: "Login failed: {{reason}}.",
   errorLoadingCustomer: "Error loading customer",
+  errorLoadingBon: "Error loading bon",
   payoutInfo:
     "To get your payout after the festival, please <1>enter your bank account details here</1>. Your payout will happen approximately within one month.",
   about: "About",

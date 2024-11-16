@@ -7,12 +7,11 @@
     "generate-openapi": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/administration",
         "commands": [
-          "npx @rtk-query/codegen-openapi openapi-config.js",
-          "sed -i 's/\\[key: string\\]: Account;/\\[key: string\\]: AccountRead;/' src/api/generated/api.ts",
-          "sed -i 's/\\[key: string\\]: UserTagDetail;/\\[key: string\\]: UserTagDetailRead;/' src/api/generated/api.ts",
-          "sed -i 's/\\[key: string\\]: Cashier;/\\[key: string\\]: CashierRead;/' src/api/generated/api.ts"
+          "npx @rtk-query/codegen-openapi apps/administration/openapi-config.js",
+          "sed -i 's/\\[key: string\\]: Account;/\\[key: string\\]: AccountRead;/' apps/administration/src/api/generated/api.ts",
+          "sed -i 's/\\[key: string\\]: UserTagDetail;/\\[key: string\\]: UserTagDetailRead;/' apps/administration/src/api/generated/api.ts",
+          "sed -i 's/\\[key: string\\]: Cashier;/\\[key: string\\]: CashierRead;/' apps/administration/src/api/generated/api.ts"
         ],
         "parallel": false
       }

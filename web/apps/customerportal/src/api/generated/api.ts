@@ -42,11 +42,16 @@ const injectedRtkApi = api
         providesTags: ["base"],
       }),
       getCustomerConfig: build.query<GetCustomerConfigApiResponse, GetCustomerConfigApiArg>({
-        query: (queryArg) => ({ url: `/config`, params: { base_url: queryArg.baseUrl } }),
+        query: (queryArg) => ({
+          url: `/config`,
+          params: {
+            base_url: queryArg.baseUrl,
+          },
+        }),
         providesTags: ["base"],
       }),
       getBon: build.query<GetBonApiResponse, GetBonApiArg>({
-        query: (queryArg) => ({ url: `/bon/${queryArg.bonId}` }),
+        query: (queryArg) => ({ url: `/bon/${queryArg.orderUuid}` }),
         providesTags: ["base"],
       }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
@@ -71,7 +76,7 @@ export type GetCustomerApiResponse = /** status 200 Successful Response */ Custo
 export type GetCustomerApiArg = void;
 export type GetOrdersApiResponse = /** status 200 Successful Response */ OrderWithBonRead[];
 export type GetOrdersApiArg = void;
-export type UpdateCustomerInfoApiResponse = /** status 204 Successful Response */ void;
+export type UpdateCustomerInfoApiResponse = unknown;
 export type UpdateCustomerInfoApiArg = {
   customerBank: CustomerBank;
 };
@@ -85,9 +90,9 @@ export type GetCustomerConfigApiResponse = /** status 200 Successful Response */
 export type GetCustomerConfigApiArg = {
   baseUrl: string;
 };
-export type GetBonApiResponse = /** status 200 Successful Response */ any;
+export type GetBonApiResponse = /** status 200 Successful Response */ BonJsonRead;
 export type GetBonApiArg = {
-  bonId: number;
+  orderUuid: string;
 };
 export type CreateCheckoutApiResponse = /** status 200 Successful Response */ CreateCheckoutResponse;
 export type CreateCheckoutApiArg = {
@@ -340,6 +345,91 @@ export type CustomerPortalApiConfig = {
       [key: string]: string;
     };
   };
+};
+export type OrderWithTse = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItem[];
+  signature_status: string;
+  transaction_process_type?: string | null;
+  transaction_process_data?: string | null;
+  tse_transaction?: string | null;
+  tse_signaturenr?: string | null;
+  tse_start?: string | null;
+  tse_end?: string | null;
+  tse_hashalgo?: string | null;
+  tse_time_format?: string | null;
+  tse_signature?: string | null;
+  tse_public_key?: string | null;
+  node_id: number;
+};
+export type OrderWithTseRead = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItemRead[];
+  signature_status: string;
+  transaction_process_type?: string | null;
+  transaction_process_data?: string | null;
+  tse_transaction?: string | null;
+  tse_signaturenr?: string | null;
+  tse_start?: string | null;
+  tse_end?: string | null;
+  tse_hashalgo?: string | null;
+  tse_time_format?: string | null;
+  tse_signature?: string | null;
+  tse_public_key?: string | null;
+  node_id: number;
+  customer_tag_uid_hex: string | null;
+  tse_qr_code_text: string;
+};
+export type TaxRateAggregation = {
+  tax_name: string;
+  tax_rate: number;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+};
+export type BonConfig = {
+  title: string;
+  issuer: string;
+  address: string;
+  ust_id: string;
+};
+export type BonJson = {
+  order: OrderWithTse;
+  tax_rate_aggregations: TaxRateAggregation[];
+  config: BonConfig;
+  currency_identifier: string;
+};
+export type BonJsonRead = {
+  order: OrderWithTseRead;
+  tax_rate_aggregations: TaxRateAggregation[];
+  config: BonConfig;
+  currency_identifier: string;
 };
 export type CreateCheckoutResponse = {
   checkout_id: string;

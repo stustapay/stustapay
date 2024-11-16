@@ -7,7 +7,7 @@ import sys
 from asyncpg.exceptions import PostgresError
 from sftkit.database import Connection, DatabaseHook
 
-from stustapay.bon.bon import generate_bon
+from stustapay.bon.bon import generate_bon_json
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
@@ -15,7 +15,6 @@ from stustapay.core.healthcheck import run_healthcheck
 
 class GeneratorWorker:
     def __init__(self, config: Config):
-        self.n_workers = config.bon.n_workers
         self.config = config
         self.logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class GeneratorWorker:
         self.db_hook = DatabaseHook(self.pool, "bon", self.handle_hook, hook_timeout=30)
 
         self.tasks = [
-            asyncio.create_task(self.db_hook.run(num_parallel=self.n_workers)),
+            asyncio.create_task(self.db_hook.run()),
             asyncio.create_task(run_healthcheck(db, service_name="bon")),
         ]
 
@@ -63,16 +62,10 @@ class GeneratorWorker:
             "join ordr o on bon.id = o.id "
             "join till t on o.till_id = t.id "
             "join node n on t.node_id = n.id "
-            "where not generated and error is null and not n.read_only",
+            "where generated_at is null and not n.read_only",
         )
-        async with asyncio.TaskGroup() as tg:
-            tasks = set()
-            for row in missing_bons:
-                task = tg.create_task(self.process_bon(order_id=row["id"]))
-                tasks.add(task)
-                if len(tasks) >= self.n_workers:
-                    done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                    tasks.difference_update(done)
+        for row in missing_bons:
+            await self.process_bon(order_id=row["id"])
 
         self.logger.info("Finished generating left-over bons")
 
@@ -81,8 +74,8 @@ class GeneratorWorker:
         try:
             decoded = json.loads(payload)
             bon_id = decoded["bon_id"]
-            order_uuid = await self.pool.fetchval("select uuid from ordr where id = $1", bon_id)
-            assert order_uuid is not None
+            bon_exists = await self.pool.fetchval("select exists (select from ordr where id = $1)", bon_id)
+            assert bon_exists is not None
             await self.process_bon(order_id=bon_id)
         except json.JSONDecodeError as e:
             self.logger.error(f"Error while trying to decode database payload for bon notification: {e}")
@@ -101,27 +94,21 @@ class GeneratorWorker:
         Queries the database for the bon data and generates it.
         Then saves the result back to the database
         """
-        # Generate the PDF and store the result back in the database
         self.logger.debug(f"Generating Bon for order {order_id}...")
-        render_result = await generate_bon(db_pool=self.pool, order_id=order_id)
-        self.logger.debug(f"Bon {order_id} generated with result {render_result.success}")
+        bon_json = await generate_bon_json(db_pool=self.pool, order_id=order_id)
+        if bon_json is None:
+            self.logger.error(
+                f"Error while generating bon data for order {order_id}. This is an internal stustapay error and should not occur naturally"
+            )
+            return
+
         async with self.pool.acquire() as conn:
             async with conn.transaction(isolation="serializable"):
-                if render_result.success and render_result.bon is not None:
-                    await conn.execute(
-                        "update bon set generated = true, generated_at = now(), content = $2 , mime_type = $3 where id = $1",
-                        order_id,
-                        render_result.bon.content,
-                        render_result.bon.mime_type,
-                    )
-                else:
-                    self.logger.warning(f"Error while generating bon: {order_id}")
-                    await conn.execute(
-                        "update bon set generated = $2, error = $3, generated_at = now() where id = $1",
-                        order_id,
-                        False,
-                        render_result.msg,
-                    )
+                await conn.execute(
+                    "update bon set bon_json = $2, generated_at = now() where id = $1",
+                    order_id,
+                    bon_json.model_dump_json(),
+                )
 
 
 class Generator:
@@ -130,7 +117,6 @@ class Generator:
     """
 
     def __init__(self, config: Config):
-        self.n_workers = config.bon.n_workers
         self.config = config
         self.logger = logging.getLogger(__name__)
 

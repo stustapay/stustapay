@@ -13,6 +13,7 @@
       "@stustapay/framework": ["../../libs/framework/src/index.ts"],
       "@stustapay/models": ["../../libs/models/src/index.ts"],
       "@stustapay/modal-provider": ["../../libs/modal-provider/src/index.ts"],
+      "@stustapay/translations": ["../../libs/translations/src/index.ts"],
       "@/*": ["src/*"]
     }
   },

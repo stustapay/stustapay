@@ -5,7 +5,7 @@ import time
 from sftkit.async_thread import AsyncThread
 
 from stustapay.administration.server import Api as AdminApi
-from stustapay.bon.generator import Generator
+from stustapay.bon.generator import GeneratorWorker
 from stustapay.core.config import Config
 from stustapay.customer_portal.server import Api as CustomerApi
 from stustapay.terminalserver.server import Api as TerminalApi
@@ -32,7 +32,7 @@ class FestivalSetup:
         customer_api = CustomerApi(config=self.config)
         threads.append(AsyncThread(customer_api.run))
         if not self.no_bon:
-            bon_generator = Generator(config=self.config)
+            bon_generator = GeneratorWorker(config=self.config)
             threads.append(AsyncThread(bon_generator.run))
 
         if not self.no_tse:

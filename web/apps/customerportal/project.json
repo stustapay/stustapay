@@ -7,8 +7,7 @@
     "generate-openapi": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "apps/customerportal",
-        "command": "npx @rtk-query/codegen-openapi openapi-config.js"
+        "command": "npx @rtk-query/codegen-openapi apps/customerportal/openapi-config.js"
       }
     },
     "build": {

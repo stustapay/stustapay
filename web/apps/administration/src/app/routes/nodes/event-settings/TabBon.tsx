@@ -1,12 +1,14 @@
 import {
+  BonJsonRead,
   RestrictedEventSettings,
   useGenerateTestBonMutation,
   useGenerateTestReportMutation,
   useUpdateEventMutation,
 } from "@/api";
-import { Button, LinearProgress, Stack } from "@mui/material";
+import { Button, LinearProgress, Stack, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { FormTextField } from "@stustapay/form-components";
+import { BonDisplay } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { Receipt as ReceiptIcon } from "@mui/icons-material";
@@ -34,6 +36,16 @@ export const BonSettingsForm: React.FC<FormikProps<BonSettings>> = (formik) => {
   );
 };
 
+const BonPreviewPopup: React.FC<{ bon: BonJsonRead | null; closePreview: () => void }> = ({ bon, closePreview }) => {
+  const { t } = useTranslation();
+  return (
+    <Dialog open={bon != null} onClose={closePreview} maxWidth="lg" fullWidth={true}>
+      <DialogTitle>{t("settings.bon.previewBon")}</DialogTitle>
+      <DialogContent>{bon && <BonDisplay bon={bon} />}</DialogContent>
+    </Dialog>
+  );
+};
+
 export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
   nodeId,
   eventSettings,
@@ -41,6 +53,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
   const [previewBon, { isLoading: bonPreviewGenerating }] = useGenerateTestBonMutation();
+  const [bonPreview, setBonPreview] = React.useState<BonJsonRead | null>(null);
   const [previewReport, { isLoading: reportPreviewGenerating }] = useGenerateTestReportMutation();
 
   const handleSubmit = (values: BonSettings, { setSubmitting }: FormikHelpers<BonSettings>) => {
@@ -63,15 +76,18 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       const resp = await previewBon({
         nodeId,
       });
-      const pdfUrl = (resp as any).data;
-      if (pdfUrl === undefined) {
-        toast.error("Error generating bon preview");
+      if (resp.data) {
+        setBonPreview(resp.data);
       } else {
-        window.open(pdfUrl);
+        toast.error("Error generating bon preview");
       }
     } catch {
       toast.error("Error generating bon preview");
     }
+  };
+
+  const closeBonPreview = () => {
+    setBonPreview(null);
   };
 
   const openReportPreview = async () => {
@@ -135,6 +151,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       >
         {t("settings.bon.previewReport")}
       </LoadingButton>
+      <BonPreviewPopup bon={bonPreview} closePreview={closeBonPreview} />
     </Stack>
   );
 };

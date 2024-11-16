@@ -11,8 +11,14 @@ import { TopUp } from "./routes/topup";
 import { Faq } from "./routes/Faq";
 import { Agb } from "./routes/Agb";
 import { PrivacyPolicy } from "./routes/PrivacyPolicy";
+import { Bon } from "./routes/Bon";
 
 const router = createBrowserRouter([
+  {
+    path: "/bon/:orderUUID",
+    element: <Bon />,
+    errorElement: <ErrorPage />,
+  },
   {
     path: "/",
     element: <AuthenticatedRoot />,
