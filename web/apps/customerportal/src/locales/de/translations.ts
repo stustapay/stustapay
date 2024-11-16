@@ -95,6 +95,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     confirmDonateAllContent: "Wills Du dein gesamtes Restguthaben von {{remainingBalance}} spenden?",
     confirmDonateAmountTitle: "Spenden?",
     confirmDonateAmountContent: "Willst Du {{donation}} spenden?",
+    onlyDuringEvent: "Eine Auszahlung des Restguthabens ist nur während der Veranstaltung möglich!",
   },
   topup: {
     onlineTopUp: "Online-Aufladung",

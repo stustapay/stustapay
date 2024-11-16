@@ -16,7 +16,10 @@ import de.stustapay.libssp.nfc.NfcHandler
 import de.stustapay.chip_debug.ui.Main
 import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.libssp.util.SysUiController
+import de.stustapay.libssp.util.decodeHex
+import java.io.BufferedReader
 import javax.inject.Inject
+import kotlin.streams.toList
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
@@ -35,8 +38,13 @@ class MainActivity : ComponentActivity(), SysUiController {
         // disable all automatic screen rotation
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
+        val uid_map = resources.openRawResource(R.raw.uids).bufferedReader().lines().skip(1).map {
+            val line = it.split(",")
+            Pair(line[3].toULong(16), line[2])
+        }.toList().toMap()
+
         // things that need the activity
-        nfcHandler.onCreate(this)
+        nfcHandler.onCreate(this, uid_map)
 
         setContent {
             Main(this)

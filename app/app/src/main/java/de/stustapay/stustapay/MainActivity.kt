@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         // things that need the activity
-        nfcHandler.onCreate(this)
+        nfcHandler.onCreate(this, mapOf())
         sumUp.init(activityCallback)
 
         infallible.launch()

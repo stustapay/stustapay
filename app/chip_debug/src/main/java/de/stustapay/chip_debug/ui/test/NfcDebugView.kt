@@ -106,6 +106,18 @@ fun NfcDebugView(viewModel: NfcDebugViewModel = hiltViewModel()) {
             onClick = {
                 scope.launch {
                     state.start()
+                    viewModel.rewrite()
+                    state.stop()
+                }
+            }, modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Rewrite")
+        }
+
+        Button(
+            onClick = {
+                scope.launch {
+                    state.start()
                     viewModel.test()
                     state.stop()
                 }

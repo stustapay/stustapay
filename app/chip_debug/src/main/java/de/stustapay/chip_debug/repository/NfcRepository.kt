@@ -15,13 +15,12 @@ import javax.inject.Singleton
 class NfcRepository @Inject constructor(
     private val nfcDataSource: NfcDataSource
 ) {
-    // nfc communication secret keys
-    // "key0"
+    private val uidRetrKey =
+        MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
     private val dataProtKey =
         MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
-    // "key1"
-    private val uidRetrKey =
-        MutableStateFlow<BitVector?>("00102030405060708090a0b0c0d0e0f0".decodeHex())
+    private val oldDataProtKey =
+        MutableStateFlow<BitVector?>("000102030405060708090a0b0c0d0e0f".decodeHex())
 
     suspend fun read(): NfcScanResult {
         return nfcDataSource.scan(
@@ -38,6 +37,16 @@ class NfcRepository @Inject constructor(
             NfcScanRequest.Write(
                 uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
                 dataProtKey.value
+            )
+        )
+    }
+
+    suspend fun rewrite(): NfcScanResult {
+        return nfcDataSource.scan(
+            NfcScanRequest.Rewrite(
+                uidRetrKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
+                dataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey),
+                oldDataProtKey.value ?: return NfcScanResult.Fail(NfcScanFailure.NoKey)
             )
         )
     }

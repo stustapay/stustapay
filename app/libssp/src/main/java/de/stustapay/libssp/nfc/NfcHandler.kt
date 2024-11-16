@@ -23,9 +23,11 @@ class NfcHandler @Inject constructor(
     private val dataSource: NfcDataSource
 ) {
     private lateinit var device: NfcAdapter
+    private lateinit var uid_map: Map<ULong, String>
 
-    fun onCreate(activity: Activity) {
+    fun onCreate(activity: Activity, uid_map: Map<ULong, String>) {
         device = NfcAdapter.getDefaultAdapter(activity)
+        this.uid_map = uid_map
     }
 
     fun onPause(activity: Activity) {
@@ -142,6 +144,51 @@ class NfcHandler @Inject constructor(
                     tag.writePin("WWWWWWWWWWWW")
                     tag.writeDataProtKey(req.dataProtKey)
                     tag.writeUidRetrKey(req.uidRetrKey)
+                    dataSource.setScanResult(NfcScanResult.Write)
+                }
+                is NfcScanRequest.Rewrite -> {
+                    try {
+                        tag.connect()
+                    } catch (e: TagIncompatibleException) {
+                        dataSource.setScanResult(
+                            NfcScanResult.Fail(
+                                NfcScanFailure.Incompatible(
+                                    e.message ?: "unknown reason"
+                                )
+                            )
+                        )
+                        return
+                    }
+
+                    try {
+                        tag.authenticate(req.dataProtKey, MifareUltralightAES.KeyType.DATA_PROT_KEY, true)
+                    } catch (e: Exception) {
+                        dataSource.setScanResult(
+                            NfcScanResult.Fail(
+                                NfcScanFailure.Auth(
+                                    e.message ?: "unknown auth error"
+                                )
+                            )
+                        )
+                        return
+                    }
+
+                    val ser = tag.readSerialNumber()
+                    if (uid_map[ser] == null) {
+                        dataSource.setScanResult(
+                            NfcScanResult.Fail(
+                                NfcScanFailure.Other(
+                                    "uid not found"
+                                )
+                            )
+                        )
+                        return
+                    }
+
+                    tag.setCMAC(true)
+                    tag.writeDataProtKey(req.dataProtKey)
+                    tag.writeUidRetrKey(req.uidRetrKey)
+                    tag.writePin(uid_map[ser] + "\u0000\u0000\u0000\u0000")
                     dataSource.setScanResult(NfcScanResult.Write)
                 }
                 is NfcScanRequest.Test -> {

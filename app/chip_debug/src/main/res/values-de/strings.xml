@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="root_item_test">Test</string>
+    <string name="root_item_write">Schreiben</string>
+    <string name="root_item_verify">Prüfen</string>
     <string name="root_item_restart_app">App Neustarten</string>
 
     <string name="nfc_scan_prompt">📡 Chip scannen</string>
