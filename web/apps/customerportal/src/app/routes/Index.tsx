@@ -105,11 +105,21 @@ export const Index: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Grid item xs={12} sm={8}>
-        <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
-          {payout_info}
-        </Alert>
-      </Grid>
+      {config.payout_enabled && (
+        <Grid item xs={12} sm={8}>
+          <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
+            {payout_info}
+          </Alert>
+        </Grid>
+      )}
+
+      {!config.payout_enabled && (
+        <Grid item xs={12} sm={8}>
+          <Alert severity="warning" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
+            <b>{t("payout.onlyDuringEvent")}</b>
+          </Alert>
+        </Grid>
+      )}
 
       <Grid item xs={12} sm={8}>
         <OrderList />

@@ -42,31 +42,23 @@ export const AuthenticatedRoot: React.FC = () => {
     return <Navigate to={`/login${next}`} />;
   }
 
-  const navbarLinks = publicConfig.sumup_topup_enabled
-    ? [
-        {
-          label: t("nav.payout"),
-          link: "/payout-info",
-        },
-        {
-          label: t("nav.topup"),
-          link: "/topup",
-        },
-        {
-          label: t("nav.faq"),
-          link: "/faq",
-        },
-      ]
-    : [
-        {
-          label: t("nav.payout"),
-          link: "/payout-info",
-        },
-        {
-          label: t("nav.faq"),
-          link: "/faq",
-        },
-      ];
+  var navbarLinks = []
+  if (publicConfig.payout_enabled) {
+    navbarLinks.push({
+      label: t("nav.payout"),
+      link: "/payout-info",
+    })
+  }
+  if (publicConfig.sumup_topup_enabled) {
+    navbarLinks.push({
+      label: t("nav.topup"),
+      link: "/topup",
+    })
+  }
+  navbarLinks.push({
+    label: t("nav.faq"),
+    link: "/faq",
+  })
 
   return (
     <Layout>
