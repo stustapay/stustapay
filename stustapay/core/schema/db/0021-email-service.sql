@@ -1,5 +1,5 @@
 -- migration: e2c67010
--- requires: 9a962cb1
+-- requires: 4e2c75a7
 
 create table if not exists mails (
     id   bigint primary key generated always as identity,
