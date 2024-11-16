@@ -429,3 +429,22 @@ create view node_with_allowed_objects as
     from node n
     join _forbidden_at_node_computed fan on n.id = fan.node_id
     left join event_as_json ev on n.event_id = ev.id;
+
+create view mail_with_attachments as
+    select
+        m.*,
+        coalesce(a.mail, json_build_array()) as attachments
+    from
+        mails m left join (
+
+            select
+                m.mail_id,
+                json_agg(m) as mail
+            from
+                mail_attachments m
+            group by
+                m.mail_id
+
+        ) a on m.id = a.mail_id
+    order by
+        scheduled_send_date;

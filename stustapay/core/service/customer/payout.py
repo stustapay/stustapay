@@ -319,11 +319,11 @@ class PayoutService(Service[Config]):
         for payout in payouts:
             if payout.email is None:
                 continue
-            mail_service.send_mail(
+            await mail_service.send_mail(
                 subject=res_config.payout_done_subject,
                 message=res_config.payout_done_message.format(**payout.model_dump()),
-                from_email=res_config.payout_sender,
-                to_email=payout.email,
+                from_addr=res_config.payout_sender,
+                to_addr=payout.email,
                 node_id=node.id,
             )
 
