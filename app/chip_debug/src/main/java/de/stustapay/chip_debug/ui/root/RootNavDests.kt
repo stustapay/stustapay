@@ -8,4 +8,6 @@ import de.stustapay.chip_debug.ui.nav.NavDestinations
 object RootNavDests : NavDestinations() {
     val startpage = NavDest("startpage")
     val test = NavDest("test")
+    val write = NavDest("write")
+    val verify = NavDest("verify")
 }

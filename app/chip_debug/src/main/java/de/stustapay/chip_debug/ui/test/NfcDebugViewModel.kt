@@ -49,7 +49,15 @@ class NfcDebugViewModel @Inject constructor(
 
     suspend fun write() {
         when (val res = nfcRepository.write()) {
-            is NfcScanResult.Test -> _result.emit(NfcDebugScanResult.WriteSuccess)
+            is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
+            is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
+            else -> _result.emit(NfcDebugScanResult.None)
+        }
+    }
+
+    suspend fun rewrite() {
+        when (val res = nfcRepository.rewrite()) {
+            is NfcScanResult.Write -> _result.emit(NfcDebugScanResult.WriteSuccess)
             is NfcScanResult.Fail -> _result.emit(NfcDebugScanResult.Failure(res.reason))
             else -> _result.emit(NfcDebugScanResult.None)
         }
