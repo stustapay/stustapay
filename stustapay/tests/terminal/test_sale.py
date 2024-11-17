@@ -6,7 +6,13 @@ import pytest
 from sftkit.database import Connection
 
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.order import Button, NewSale, OrderType, PendingSale
+from stustapay.core.schema.order import (
+    Button,
+    NewSale,
+    OrderType,
+    PaymentMethod,
+    PendingSale,
+)
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import (
@@ -171,6 +177,7 @@ async def test_basic_sale_flow(
         uuid=uuid.uuid4(),
         buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=2)],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     pending_sale = await order_service.check_sale(
         token=terminal_token,
@@ -224,6 +231,7 @@ async def test_returnable_products(
         uuid=uuid.uuid4(),
         buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=-1)],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     with pytest.raises(InvalidSaleException):
         await order_service.check_sale(
@@ -235,6 +243,7 @@ async def test_returnable_products(
         uuid=uuid.uuid4(),
         buttons=[Button(till_button_id=sale_products.deposit_button.id, quantity=-1)],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     pending_sale = await order_service.check_sale(
         token=terminal_token,
@@ -272,6 +281,7 @@ async def test_basic_sale_flow_with_deposit(
             Button(till_button_id=sale_products.deposit_button.id, quantity=-5),
         ],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     pending_sale = await order_service.check_sale(
         token=terminal_token,
@@ -314,6 +324,7 @@ async def test_basic_sale_flow_with_only_deposit_return(
             Button(till_button_id=sale_products.deposit_button.id, quantity=-2),
         ],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     pending_sale = await order_service.check_sale(
         token=terminal_token,
@@ -353,6 +364,7 @@ async def test_deposit_returns_cannot_exceed_account_limit(
             Button(till_button_id=sale_products.deposit_button.id, quantity=-n_deposits),
         ],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     with pytest.raises(InvalidArgument):
         await order_service.check_sale(
@@ -378,6 +390,7 @@ async def test_basic_sale_flow_with_vouchers(
             Button(till_button_id=sale_products.beer_button.id, quantity=3),
         ],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     pending_sale = await order_service.check_sale(
         token=terminal_token,
@@ -412,6 +425,7 @@ async def test_basic_sale_flow_with_fixed_vouchers(
             Button(till_button_id=sale_products.beer_button_full.id, quantity=1),
         ],
         customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
     )
     pending_sale: PendingSale = await order_service.check_sale(
         token=terminal_token,
@@ -515,6 +529,7 @@ async def test_cashier_close_out(
             uuid=uuid.uuid4(),
             customer_tag_uid=customer.tag.uid,
             buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=1)],
+            payment_method=PaymentMethod.tag,
         ),
     )
 

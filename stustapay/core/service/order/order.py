@@ -502,9 +502,10 @@ class OrderService(Service[Config]):
         if uuid_exists:
             # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
             raise AlreadyProcessedException("Successfully booked order")
-        
+
         customer_account = None
         if tag_payment:
+            assert new_sale.customer_tag_uid is not None
             customer_account = await self._fetch_customer_by_user_tag(
                 conn=conn, node=node, customer_tag_uid=new_sale.customer_tag_uid
             )
@@ -513,23 +514,30 @@ class OrderService(Service[Config]):
             conn=conn, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
         )
         line_items = await self._preprocess_order_positions(
-            customer_restrictions=(customer_account.restriction if tag_payment else []),
-            booked_products=booked_products
+            customer_restrictions=(
+                customer_account.restriction if tag_payment and customer_account is not None else None
+            ),
+            booked_products=booked_products,
         )
 
         order = InternalPendingSale(
             uuid=new_sale.uuid,
             buttons=new_sale.buttons,
-            old_balance=(customer_account.balance if tag_payment else 0.0),
-            new_balance=(customer_account.balance if tag_payment else 0.0),  # will be overwritten later on
-            old_voucher_balance=(customer_account.vouchers if tag_payment else 0),
-            new_voucher_balance=(customer_account.vouchers if tag_payment else 0),  # will be overwritten later on
+            old_balance=(customer_account.balance if tag_payment and customer_account is not None else 0.0),
+            new_balance=(
+                customer_account.balance if tag_payment and customer_account is not None else 0.0
+            ),  # will be overwritten later on
+            old_voucher_balance=(customer_account.vouchers if tag_payment and customer_account is not None else 0),
+            new_voucher_balance=(
+                customer_account.vouchers if tag_payment and customer_account is not None else 0
+            ),  # will be overwritten later on
             line_items=line_items,
-            customer_account_id=(customer_account.id if tag_payment else None),
+            customer_account_id=(customer_account.id if tag_payment and customer_account is not None else None),
             payment_method=new_sale.payment_method,
         )
 
         if tag_payment:
+            assert customer_account is not None
             # if an explicit voucher amount was requested - use that as the maximum.
             vouchers_to_use = customer_account.vouchers
             if new_sale.used_vouchers is not None:
@@ -631,6 +639,7 @@ class OrderService(Service[Config]):
                 )
                 for b in new_sale.products
             ],
+            payment_method=new_sale.payment_method,
         )
         pending_sale = await self._check_sale(
             conn=conn, event_settings=event_settings, node=node, till=current_till, new_sale=internal_new_sale
@@ -642,6 +651,7 @@ class OrderService(Service[Config]):
             old_voucher_balance=pending_sale.old_voucher_balance,
             new_voucher_balance=pending_sale.new_voucher_balance,
             customer_account_id=pending_sale.customer_account_id,
+            payment_method=pending_sale.payment_method,
             line_items=pending_sale.line_items,
             products=new_sale.products,
         )
@@ -692,9 +702,11 @@ class OrderService(Service[Config]):
             source_acc_id = None
             target_acc_id = None
             if pending_sale.payment_method == PaymentMethod.tag:
+                assert pending_sale.customer_account_id is not None
                 source_acc_id = get_source_account(OrderType.sale, pending_sale.customer_account_id)
                 target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
             elif pending_sale.payment_method == PaymentMethod.cash:
+                assert current_user.cashier_account_id is not None
                 bookings[
                     BookingIdentifier(
                         source_account_id=cash_entry_acc.id, target_account_id=current_user.cashier_account_id
@@ -705,6 +717,9 @@ class OrderService(Service[Config]):
             elif pending_sale.payment_method == PaymentMethod.sumup:
                 source_acc_id = get_source_account(OrderType.sale, sumup_entry_acc.id)
                 target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+
+            assert source_acc_id is not None
+            assert target_acc_id is not None
 
             bookings[BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)] += float(
                 line_item.total_price
@@ -724,6 +739,7 @@ class OrderService(Service[Config]):
         )
 
         if pending_sale.used_vouchers > 0:
+            assert pending_sale.customer_account_id is not None
             await book_transaction(
                 conn=conn,
                 order_id=order_info.id,
@@ -749,6 +765,7 @@ class OrderService(Service[Config]):
         )
 
         if completed_order.payment_method == PaymentMethod.tag:
+            assert completed_order.customer_account_id is not None
             customer_account_after_booking = await get_account_by_id(
                 conn=conn, node=node, account_id=completed_order.customer_account_id
             )
@@ -846,6 +863,7 @@ class OrderService(Service[Config]):
                 )
                 for b in new_sale.products
             ],
+            payment_method=new_sale.payment_method,
         )
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
         completed_sale = await self._book_sale(
@@ -867,6 +885,7 @@ class OrderService(Service[Config]):
             old_voucher_balance=completed_sale.old_voucher_balance,
             new_voucher_balance=completed_sale.new_voucher_balance,
             customer_account_id=completed_sale.customer_account_id,
+            payment_method=completed_sale.payment_method,
             line_items=completed_sale.line_items,
             products=new_sale.products,
         )
@@ -896,6 +915,7 @@ class OrderService(Service[Config]):
             uuid=edit_sale.uuid,
             used_vouchers=edit_sale.used_vouchers,
             customer_tag_uid=order.customer_tag_uid,
+            payment_method=order.payment_method,
         )
 
         return await self.book_sale_products(  # pylint: disable=missing-kwoa,unexpected-keyword-arg

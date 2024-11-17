@@ -222,7 +222,6 @@ class CompletedSaleProducts(CompletedSaleBase, PendingSaleProducts):
 
 class CompletedSale(CompletedSaleBase, PendingSale):
     bon_url: str
-    pass
 
 
 class UserTagScan(BaseModel):
