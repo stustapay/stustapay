@@ -714,9 +714,10 @@ class OrderService(Service[Config]):
             conn=conn,
             order_type=OrderType.sale,
             uuid=pending_sale.uuid,
-            payment_method=PaymentMethod.tag,
+            payment_method=pending_sale.payment_method,
             customer_account_id=pending_sale.customer_account_id,
             cashier_id=current_user.id,
+            cash_register_id=current_user.cash_register_id,
             line_items=line_items,
             bookings=bookings,
             till_id=till.id,
@@ -798,6 +799,7 @@ class OrderService(Service[Config]):
             new_sale=internal_new_sale,
             current_user=current_user,
         )
+        bon_url = event_settings.customer_portal_url + "/bon/" + str(completed_sale.uuid)
         return CompletedSale(
             id=completed_sale.id,
             booked_at=completed_sale.booked_at,
@@ -812,6 +814,7 @@ class OrderService(Service[Config]):
             payment_method=completed_sale.payment_method,
             line_items=completed_sale.line_items,
             buttons=new_sale.buttons,
+            bon_url=bon_url,
         )
 
     @with_db_transaction(read_only=False)

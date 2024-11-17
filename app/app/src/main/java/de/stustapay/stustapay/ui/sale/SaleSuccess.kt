@@ -1,7 +1,11 @@
 package de.stustapay.stustapay.ui.sale
 
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.widget.ImageView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +24,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -28,6 +34,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
@@ -98,11 +108,13 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                         bigStyle = true,
                     )
 
-                    ProductConfirmItem(
-                        name = stringResource(R.string.new_balance),
-                        price = saleCompletedV.newBalance,
-                        bigStyle = true,
-                    )
+                    if (saleCompletedV.paymentMethod == PaymentMethod.tag) {
+                        ProductConfirmItem(
+                            name = stringResource(R.string.new_balance),
+                            price = saleCompletedV.newBalance,
+                            bigStyle = true,
+                        )
+                    }
 
                     if (saleCompletedV.usedVouchers > 0 || saleCompletedV.newVoucherBalance > 0) {
                         Divider(modifier = Modifier.padding(bottom = 10.dp))
@@ -134,6 +146,26 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                                 quantity = -returnableCount,
                             )
                         }
+                    }
+
+                    if (saleCompletedV.paymentMethod != PaymentMethod.tag) {
+                        val hints =
+                            hashMapOf<EncodeHintType, Int>().also { it[EncodeHintType.MARGIN] = 1 }
+                        val qrCodeRaw = QRCodeWriter().encode(
+                            saleCompletedV.bonUrl,
+                            BarcodeFormat.QR_CODE,
+                            512,
+                            512,
+                            hints
+                        )
+                        val qrCodeBitmap = Bitmap.createBitmap(512, 512, Bitmap.Config.RGB_565).also {
+                            for (x in 0 until 512) {
+                                for (y in 0 until 512) {
+                                    it.setPixel(x, y, if (qrCodeRaw[x, y]) Color.BLACK else Color.WHITE)
+                                }
+                            }
+                        }
+                        Image(qrCodeBitmap.asImageBitmap(), "Bon QR Code")
                     }
                 }
             }

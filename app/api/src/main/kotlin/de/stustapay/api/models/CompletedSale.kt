@@ -39,6 +39,7 @@ import kotlinx.serialization.Contextual
  * @param bookedAt 
  * @param cashierId 
  * @param tillId 
+ * @param bonUrl 
  * @param usedVouchers 
  * @param itemCount 
  * @param totalPrice 
@@ -85,6 +86,9 @@ data class CompletedSale (
 
     @SerialName(value = "till_id")
     val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "bon_url")
+    val bonUrl: kotlin.String,
 
     @SerialName(value = "used_vouchers")
     val usedVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,

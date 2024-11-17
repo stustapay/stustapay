@@ -97,8 +97,7 @@ async def get_customer_config(
 
 
 @router.get("/bon/{order_uuid}", summary="Retrieve a bon", response_model=BonJson)
-async def get_bon(token: CurrentAuthToken, customer_service: ContextCustomerService, order_uuid: str):
+async def get_bon(customer_service: ContextCustomerService, order_uuid: str):
     return await customer_service.get_bon(
-        token=token,
         order_uuid=order_uuid,
     )
