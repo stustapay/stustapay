@@ -134,6 +134,9 @@ async def test_basic_till_workflow(
             allow_top_up=False,
             allow_cash_out=False,
             allow_ticket_sale=False,
+            enable_ssp_payment=True,
+            enable_cash_payment=False,
+            enable_card_payment=False,
         ),
     )
     till = await till_service.create_till(

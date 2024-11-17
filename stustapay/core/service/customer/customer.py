@@ -258,13 +258,10 @@ class CustomerService(Service[Config]):
         )
 
     @with_db_transaction
-    @requires_customer
-    async def get_bon(self, *, conn: Connection, current_customer: Customer, order_uuid: str) -> BonJson:
+    async def get_bon(self, *, conn: Connection, order_uuid: str) -> BonJson:
         row = await conn.fetchrow(
-            "select b.bon_json from bon b join ordr o on b.id = o.id "
-            "where o.uuid = $1 and o.customer_account_id = $2",
+            "select b.bon_json from bon b join ordr o on b.id = o.id where o.uuid = $1",
             order_uuid,
-            current_customer.id,
         )
         if not row or row["bon_json"] is None:
             raise NotFound(element_type="bon", element_id=order_uuid)

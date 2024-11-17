@@ -16,6 +16,7 @@
 package de.stustapay.api.models
 
 import de.stustapay.api.models.Button
+import de.stustapay.api.models.PaymentMethod
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -25,8 +26,9 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param uuid 
- * @param customerTagUid 
+ * @param paymentMethod 
  * @param buttons 
+ * @param customerTagUid 
  * @param usedVouchers 
  */
 @Serializable
@@ -36,11 +38,14 @@ data class NewSale (
     @Contextual @SerialName(value = "uuid")
     val uuid: java.util.UUID,
 
-    @SerialName(value = "customer_tag_uid")
-    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    @Contextual @SerialName(value = "payment_method")
+    val paymentMethod: PaymentMethod,
 
     @SerialName(value = "buttons")
     val buttons: kotlin.collections.List<Button>,
+
+    @SerialName(value = "customer_tag_uid")
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "used_vouchers")
     val usedVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null

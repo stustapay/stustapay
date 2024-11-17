@@ -29,11 +29,18 @@ fun SaleSelection(
     val saleStatus by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val config = saleConfig
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(saleConfig.tillName) },
+                title = {
+                    if (config is SaleConfig.Ready) {
+                        Text(config.tillName)
+                    } else {
+                        Text("No Till")
+                    }
+                },
                 icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
                     leaveView()
                 },
@@ -43,10 +50,12 @@ fun SaleSelection(
 
             // if we only have one free price item to sell
             // directly show the number keyboard.
-            if (saleConfig.buttons.size == 1 &&
-                saleConfig.buttons.all { it.value.price is SaleItemPrice.FreePrice }
+
+            if (config is SaleConfig.Ready &&
+                config.buttons.size == 1 &&
+                config.buttons.all { it.value.price is SaleItemPrice.FreePrice }
             ) {
-                val button = saleConfig.buttons.values.last()
+                val button = config.buttons.values.last()
                 SaleSelectionFreePrice(
                     buttonId = button.id,
                     modifier = Modifier
@@ -63,22 +72,27 @@ fun SaleSelection(
         },
         bottomBar = {
             var totalPrice = 0.0
-            for (button in saleConfig.buttons) {
-                if (saleStatus.buttonSelection[button.value.id] != null) {
-                    when (val buttonStatus = saleStatus.buttonSelection[button.value.id]!!) {
-                        is SaleItemAmount.FreePrice -> {
-                            totalPrice += buttonStatus.price.toDouble() / 100.0
-                        }
-                        is SaleItemAmount.FixedPrice -> {
-                            totalPrice += when (val price = button.value.price) {
-                                is SaleItemPrice.FreePrice -> {
-                                    buttonStatus.amount * (price.defaultPrice ?: 0.0)
-                                }
-                                is SaleItemPrice.FixedPrice -> {
-                                    buttonStatus.amount * price.price
-                                }
-                                is SaleItemPrice.Returnable -> {
-                                    buttonStatus.amount * (price.price ?: 0.0)
+            if (config is SaleConfig.Ready) {
+                for (button in config.buttons) {
+                    if (saleStatus.buttonSelection[button.value.id] != null) {
+                        when (val buttonStatus = saleStatus.buttonSelection[button.value.id]!!) {
+                            is SaleItemAmount.FreePrice -> {
+                                totalPrice += buttonStatus.price.toDouble() / 100.0
+                            }
+
+                            is SaleItemAmount.FixedPrice -> {
+                                totalPrice += when (val price = button.value.price) {
+                                    is SaleItemPrice.FreePrice -> {
+                                        buttonStatus.amount * (price.defaultPrice ?: 0.0)
+                                    }
+
+                                    is SaleItemPrice.FixedPrice -> {
+                                        buttonStatus.amount * price.price
+                                    }
+
+                                    is SaleItemPrice.Returnable -> {
+                                        buttonStatus.amount * (price.price ?: 0.0)
+                                    }
                                 }
                             }
                         }
@@ -98,15 +112,30 @@ fun SaleSelection(
                         fontFamily = FontFamily.Monospace,
                     )
                 },
-                ready = saleConfig.ready,
+                ready = config is SaleConfig.Ready,
+                cashierHasRegister = config is SaleConfig.Ready && config.till.cashRegisterId != null,
+                amountIsPositive = totalPrice > 0.0f,
+                sspEnabled = config is SaleConfig.Ready && config.till.enableSspPayment,
+                cashEnabled = config is SaleConfig.Ready && config.till.enableCashPayment,
+                cardEnabled = config is SaleConfig.Ready && config.till.enableCardPayment,
                 onAbort = {
                     scope.launch {
                         viewModel.clearSale()
                     }
                 },
-                onSubmit = {
+                onSubmitSsp = {
                     scope.launch {
                         viewModel.checkSale()
+                    }
+                },
+                onSubmitCash = {
+                    scope.launch {
+                        viewModel.checkSaleCash()
+                    }
+                },
+                onSubmitCard = {
+                    scope.launch {
+                        viewModel.checkSaleCard()
                     }
                 },
                 price = totalPrice

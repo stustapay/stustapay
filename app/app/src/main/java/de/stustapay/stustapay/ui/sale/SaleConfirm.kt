@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.pay.ProductConfirmBottomBar
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmLineItem
-import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustapay.stustapay.ui.nav.TopAppBar
 
 /**
@@ -32,10 +32,10 @@ fun SaleConfirm(
     onEdit: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    val orderConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val config = saleConfig
 
     val checkedSale = saleDraft.checkedSale
     if (checkedSale == null) {
@@ -49,7 +49,13 @@ fun SaleConfirm(
     Scaffold(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                TopAppBar(title = { Text(saleConfig.tillName) })
+                TopAppBar(title = {
+                    if (config is SaleConfig.Ready) {
+                        Text(config.tillName)
+                    } else {
+                        Text("No Till")
+                    }
+                })
                 Text(
                     stringResource(R.string.sale_check_your_order),
                     style = MaterialTheme.typography.h4,
@@ -103,7 +109,7 @@ fun SaleConfirm(
             }
         },
         bottomBar = {
-            ProductSelectionBottomBar(
+            ProductConfirmBottomBar(
                 abortText = stringResource(R.string.edit),
                 submitSize = 24.sp,
                 submitText = stringResource(R.string.book_order),
@@ -117,7 +123,7 @@ fun SaleConfirm(
                         )
                     }
                 },
-                ready = orderConfig.ready,
+                ready = config is SaleConfig.Ready,
                 onAbort = onEdit,
                 onSubmit = onConfirm,
             )

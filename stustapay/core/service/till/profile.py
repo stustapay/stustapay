@@ -33,8 +33,8 @@ class TillProfileService(Service[Config]):
         # TODO: TREE visibility
         profile_id = await conn.fetchval(
             "insert into till_profile (node_id, name, description, allow_top_up, allow_cash_out, "
-            "allow_ticket_sale, layout_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7) "
+            "allow_ticket_sale, enable_ssp_payment, enable_cash_payment, enable_card_payment, layout_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) "
             "returning id",
             node.id,
             profile.name,
@@ -42,6 +42,9 @@ class TillProfileService(Service[Config]):
             profile.allow_top_up,
             profile.allow_cash_out,
             profile.allow_ticket_sale,
+            profile.enable_ssp_payment,
+            profile.enable_cash_payment,
+            profile.enable_card_payment,
             profile.layout_id,
         )
 
@@ -72,14 +75,18 @@ class TillProfileService(Service[Config]):
         # TODO: TREE visibility
         p_id = await conn.fetchval(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
-            "   allow_ticket_sale = $6, layout_id = $7 "
-            "where id = $1 and node_id = any($8) returning id ",
+            "   allow_ticket_sale = $6, enable_ssp_payment = $7, enable_cash_payment = $8, "
+            "   enable_card_payment = $9, layout_id = $10 "
+            "where id = $1 and node_id = any($11) returning id ",
             profile_id,
             profile.name,
             profile.description,
             profile.allow_top_up,
             profile.allow_cash_out,
             profile.allow_ticket_sale,
+            profile.enable_ssp_payment,
+            profile.enable_cash_payment,
+            profile.enable_card_payment,
             profile.layout_id,
             node.ids_to_event_node,
         )

@@ -303,6 +303,9 @@ async def create_terminal_token(
                 allow_top_up=True,
                 allow_cash_out=True,
                 allow_ticket_sale=True,
+                enable_ssp_payment=True,
+                enable_cash_payment=False,
+                enable_card_payment=False,
             ),
         )
         terminal = await terminal_service.create_terminal(

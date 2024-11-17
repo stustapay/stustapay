@@ -37,6 +37,9 @@ import kotlinx.serialization.Contextual
  * @param allowTopUp 
  * @param allowCashOut 
  * @param allowTicketSale 
+ * @param enableSspPayment 
+ * @param enableCashPayment 
+ * @param enableCardPayment 
  * @param buttons 
  * @param secrets 
  * @param activeUserId 
@@ -78,6 +81,15 @@ data class TerminalTillConfig (
 
     @SerialName(value = "allow_ticket_sale")
     val allowTicketSale: kotlin.Boolean,
+
+    @SerialName(value = "enable_ssp_payment")
+    val enableSspPayment: kotlin.Boolean,
+
+    @SerialName(value = "enable_cash_payment")
+    val enableCashPayment: kotlin.Boolean,
+
+    @SerialName(value = "enable_card_payment")
+    val enableCardPayment: kotlin.Boolean,
 
     @SerialName(value = "buttons")
     val buttons: kotlin.collections.List<TerminalButton>?,

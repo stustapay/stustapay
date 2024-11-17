@@ -35,6 +35,9 @@ class NewTillProfile(BaseModel):
     allow_top_up: bool
     allow_cash_out: bool
     allow_ticket_sale: bool
+    enable_ssp_payment: bool
+    enable_cash_payment: bool
+    enable_card_payment: bool
 
 
 class TillProfile(NewTillProfile):

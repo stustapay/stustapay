@@ -69,6 +69,9 @@ export const TillProfileDetail: React.FC = () => {
         <DetailBoolField label={t("profile.allowTopUp")} value={profile.allow_top_up} />
         <DetailBoolField label={t("profile.allowCashOut")} value={profile.allow_cash_out} />
         <DetailBoolField label={t("profile.allowTicketSale")} value={profile.allow_ticket_sale} />
+        <DetailBoolField label={t("profile.enableSspPayment")} value={profile.enable_ssp_payment} />
+        <DetailBoolField label={t("profile.enableCashPayment")} value={profile.enable_cash_payment} />
+        <DetailBoolField label={t("profile.enableCardPayment")} value={profile.enable_card_payment} />
         {layout && (
           <DetailField label={t("profile.layout")} linkTo={TillLayoutRoutes.detail(layout.id)} value={layout.name} />
         )}

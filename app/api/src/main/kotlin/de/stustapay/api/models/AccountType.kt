@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: `private`,saleExit,cashEntry,cashExit,cashTopupSource,cashImbalance,cashVault,sumupEntry,sumupOnlineEntry,transport,cashier,voucherCreate
+ * Values: `private`,saleExit,cashEntry,cashExit,cashTopupSource,cashImbalance,cashVault,sumupEntry,sumupOnlineEntry,transport,cashier,voucherCreate,donationExit,sepaExit
  */
 @Serializable
 enum class AccountType(val value: kotlin.String) {
@@ -61,7 +61,13 @@ enum class AccountType(val value: kotlin.String) {
     cashier("cashier"),
 
     @SerialName(value = "voucher_create")
-    voucherCreate("voucher_create");
+    voucherCreate("voucher_create"),
+
+    @SerialName(value = "donation_exit")
+    donationExit("donation_exit"),
+
+    @SerialName(value = "sepa_exit")
+    sepaExit("sepa_exit");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use

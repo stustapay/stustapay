@@ -16,6 +16,7 @@
 package de.stustapay.api.models
 
 import de.stustapay.api.models.Button
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.PendingLineItem
 
 import kotlinx.serialization.Serializable
@@ -31,12 +32,14 @@ import kotlinx.serialization.Contextual
  * @param oldVoucherBalance 
  * @param newVoucherBalance 
  * @param customerAccountId 
+ * @param paymentMethod 
  * @param lineItems 
  * @param buttons 
  * @param id 
  * @param bookedAt 
  * @param cashierId 
  * @param tillId 
+ * @param bonUrl 
  * @param usedVouchers 
  * @param itemCount 
  * @param totalPrice 
@@ -61,7 +64,10 @@ data class CompletedSale (
     val newVoucherBalance: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
+
+    @Contextual @SerialName(value = "payment_method")
+    val paymentMethod: PaymentMethod,
 
     @SerialName(value = "line_items")
     val lineItems: kotlin.collections.List<PendingLineItem>,
@@ -80,6 +86,9 @@ data class CompletedSale (
 
     @SerialName(value = "till_id")
     val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "bon_url")
+    val bonUrl: kotlin.String,
 
     @SerialName(value = "used_vouchers")
     val usedVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
