@@ -113,6 +113,8 @@ fun SaleSelection(
                     )
                 },
                 ready = config is SaleConfig.Ready,
+                cashierHasRegister = config is SaleConfig.Ready && config.till.cashRegisterId != null,
+                amountIsPositive = totalPrice > 0.0f,
                 sspEnabled = config is SaleConfig.Ready && config.till.enableSspPayment,
                 cashEnabled = config is SaleConfig.Ready && config.till.enableCashPayment,
                 cardEnabled = config is SaleConfig.Ready && config.till.enableCardPayment,
@@ -124,6 +126,16 @@ fun SaleSelection(
                 onSubmitSsp = {
                     scope.launch {
                         viewModel.checkSale()
+                    }
+                },
+                onSubmitCash = {
+                    scope.launch {
+                        viewModel.checkSaleCash()
+                    }
+                },
+                onSubmitCard = {
+                    scope.launch {
+                        viewModel.checkSaleCard()
                     }
                 },
                 price = totalPrice

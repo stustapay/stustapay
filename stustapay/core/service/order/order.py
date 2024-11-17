@@ -191,7 +191,10 @@ class BookedProduct(BaseModel):
 class InternalNewSale(BaseModel):
     uuid: UUID
     buttons: list[BookedButton]
-    customer_tag_uid: int
+
+    customer_tag_uid: Optional[int]
+    payment_method: PaymentMethod
+
     used_vouchers: Optional[int] = None
 
 
@@ -484,65 +487,81 @@ class OrderService(Service[Config]):
         prepare the given order: checks all requirements.
         To finish the order, book_order is used.
         """
+        if new_sale.payment_method == PaymentMethod.sumup_online:
+            raise InvalidArgument("Cannot pay sales online")
+
+        if new_sale.payment_method == PaymentMethod.tag and new_sale.customer_tag_uid is None:
+            raise InvalidArgument("Tag UID required for tag payment")
+
+        if new_sale.payment_method != PaymentMethod.tag and new_sale.customer_tag_uid is not None:
+            raise InvalidArgument("Tag UID given for cash or card payment")
+
+        tag_payment = new_sale.payment_method == PaymentMethod.tag
+
         uuid_exists = await conn.fetchval("select exists(select from ordr where uuid = $1)", new_sale.uuid)
         if uuid_exists:
             # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
             raise AlreadyProcessedException("Successfully booked order")
-
-        customer_account = await self._fetch_customer_by_user_tag(
-            conn=conn, node=node, customer_tag_uid=new_sale.customer_tag_uid
-        )
+        
+        customer_account = None
+        if tag_payment:
+            customer_account = await self._fetch_customer_by_user_tag(
+                conn=conn, node=node, customer_tag_uid=new_sale.customer_tag_uid
+            )
 
         booked_products = await self._get_products_from_buttons(
             conn=conn, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
         )
         line_items = await self._preprocess_order_positions(
-            customer_restrictions=customer_account.restriction, booked_products=booked_products
+            customer_restrictions=(customer_account.restriction if tag_payment else []),
+            booked_products=booked_products
         )
 
         order = InternalPendingSale(
             uuid=new_sale.uuid,
             buttons=new_sale.buttons,
-            old_balance=customer_account.balance,
-            new_balance=customer_account.balance,  # will be overwritten later on
-            old_voucher_balance=customer_account.vouchers,
-            new_voucher_balance=customer_account.vouchers,  # will be overwritten later on
+            old_balance=(customer_account.balance if tag_payment else 0.0),
+            new_balance=(customer_account.balance if tag_payment else 0.0),  # will be overwritten later on
+            old_voucher_balance=(customer_account.vouchers if tag_payment else 0),
+            new_voucher_balance=(customer_account.vouchers if tag_payment else 0),  # will be overwritten later on
             line_items=line_items,
-            customer_account_id=customer_account.id,
+            customer_account_id=(customer_account.id if tag_payment else None),
+            payment_method=new_sale.payment_method,
         )
 
-        # if an explicit voucher amount was requested - use that as the maximum.
-        vouchers_to_use = customer_account.vouchers
-        if new_sale.used_vouchers is not None:
-            if new_sale.used_vouchers > customer_account.vouchers:
-                raise NotEnoughVouchersException(
-                    used_vouchers=new_sale.used_vouchers, available_vouchers=customer_account.vouchers
+        if tag_payment:
+            # if an explicit voucher amount was requested - use that as the maximum.
+            vouchers_to_use = customer_account.vouchers
+            if new_sale.used_vouchers is not None:
+                if new_sale.used_vouchers > customer_account.vouchers:
+                    raise NotEnoughVouchersException(
+                        used_vouchers=new_sale.used_vouchers, available_vouchers=customer_account.vouchers
+                    )
+                vouchers_to_use = new_sale.used_vouchers
+            discount_product = await fetch_discount_product(conn=conn, node=node)
+            voucher_usage = self.voucher_service.compute_optimal_voucher_usage(
+                max_vouchers=vouchers_to_use, line_items=order.line_items, discount_product=discount_product
+            )
+
+            order.new_voucher_balance = customer_account.vouchers - voucher_usage.used_vouchers
+            order.line_items.extend(voucher_usage.additional_line_items)
+
+            if customer_account.balance < order.total_price:
+                raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
+            order.new_balance = customer_account.balance - order.total_price
+
+            max_limit = event_settings.max_account_balance
+            if order.new_balance > max_limit:
+                too_much = order.new_balance - max_limit
+                raise InvalidArgument(
+                    f"More than {max_limit:.02f}€ on accounts is disallowed! "
+                    f"New balance would be {order.new_balance:.02f}€, which is {too_much:.02f}€ too much."
                 )
-            vouchers_to_use = new_sale.used_vouchers
-        discount_product = await fetch_discount_product(conn=conn, node=node)
-        voucher_usage = self.voucher_service.compute_optimal_voucher_usage(
-            max_vouchers=vouchers_to_use, line_items=order.line_items, discount_product=discount_product
-        )
 
-        order.new_voucher_balance = customer_account.vouchers - voucher_usage.used_vouchers
-        order.line_items.extend(voucher_usage.additional_line_items)
-
-        if customer_account.balance < order.total_price:
-            raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
-        order.new_balance = customer_account.balance - order.total_price
-
-        max_limit = event_settings.max_account_balance
-        if order.new_balance > max_limit:
-            too_much = order.new_balance - max_limit
-            raise InvalidArgument(
-                f"More than {max_limit:.02f}€ on accounts is disallowed! "
-                f"New balance would be {order.new_balance:.02f}€, which is {too_much:.02f}€ too much."
-            )
-
-        if order.new_balance < 0:
-            raise InvalidArgument(
-                f"Account balance would be less than 0€. New balance would be {order.new_balance:.02f}€"
-            )
+            if order.new_balance < 0:
+                raise InvalidArgument(
+                    f"Account balance would be less than 0€. New balance would be {order.new_balance:.02f}€"
+                )
 
         return order
 
@@ -557,6 +576,7 @@ class OrderService(Service[Config]):
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
+            payment_method=new_sale.payment_method,
             used_vouchers=new_sale.used_vouchers,
             buttons=[
                 BookedButton(
@@ -578,6 +598,7 @@ class OrderService(Service[Config]):
             old_voucher_balance=pending_sale.old_voucher_balance,
             new_voucher_balance=pending_sale.new_voucher_balance,
             customer_account_id=pending_sale.customer_account_id,
+            payment_method=pending_sale.payment_method,
             line_items=pending_sale.line_items,
             buttons=new_sale.buttons,
         )
@@ -656,14 +677,35 @@ class OrderService(Service[Config]):
             for line_item in pending_sale.line_items
         ]
 
+        cash_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_entry)
+        cash_topup_acc = await get_system_account_for_node(
+            conn=conn, node=node, account_type=AccountType.cash_topup_source
+        )
+        sumup_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sumup_entry)
         sale_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sale_exit)
 
         # combine booking based on (source, target) -> amount
         bookings: Dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)
         for line_item in pending_sale.line_items:
             product = line_item.product
-            source_acc_id = get_source_account(OrderType.sale, pending_sale.customer_account_id)
-            target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+
+            source_acc_id = None
+            target_acc_id = None
+            if pending_sale.payment_method == PaymentMethod.tag:
+                source_acc_id = get_source_account(OrderType.sale, pending_sale.customer_account_id)
+                target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+            elif pending_sale.payment_method == PaymentMethod.cash:
+                bookings[
+                    BookingIdentifier(
+                        source_account_id=cash_entry_acc.id, target_account_id=current_user.cashier_account_id
+                    )
+                ] += float(line_item.total_price)
+                source_acc_id = get_source_account(OrderType.sale, cash_topup_acc.id)
+                target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+            elif pending_sale.payment_method == PaymentMethod.sumup:
+                source_acc_id = get_source_account(OrderType.sale, sumup_entry_acc.id)
+                target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+
             bookings[BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)] += float(
                 line_item.total_price
             )
@@ -698,20 +740,22 @@ class OrderService(Service[Config]):
             old_voucher_balance=pending_sale.old_voucher_balance,
             new_voucher_balance=pending_sale.new_voucher_balance,
             customer_account_id=pending_sale.customer_account_id,
+            payment_method=pending_sale.payment_method,
             line_items=pending_sale.line_items,
             booked_at=order_info.booked_at,
             till_id=till.id,
             cashier_id=current_user.id,
         )
 
-        customer_account_after_booking = await get_account_by_id(
-            conn=conn, node=node, account_id=completed_order.customer_account_id
-        )
-        assert customer_account_after_booking is not None
+        if completed_order.payment_method == PaymentMethod.tag:
+            customer_account_after_booking = await get_account_by_id(
+                conn=conn, node=node, account_id=completed_order.customer_account_id
+            )
+            assert customer_account_after_booking is not None
 
-        # adjust completed order values after real booking in database
-        completed_order.new_balance = customer_account_after_booking.balance
-        completed_order.new_voucher_balance = customer_account_after_booking.vouchers
+            # adjust completed order values after real booking in database
+            completed_order.new_balance = customer_account_after_booking.balance
+            completed_order.new_voucher_balance = customer_account_after_booking.vouchers
 
         return completed_order
 
@@ -734,6 +778,7 @@ class OrderService(Service[Config]):
         internal_new_sale = InternalNewSale(
             uuid=new_sale.uuid,
             customer_tag_uid=new_sale.customer_tag_uid,
+            payment_method=new_sale.payment_method,
             used_vouchers=new_sale.used_vouchers,
             buttons=[
                 BookedButton(
@@ -764,6 +809,7 @@ class OrderService(Service[Config]):
             old_voucher_balance=completed_sale.old_voucher_balance,
             new_voucher_balance=completed_sale.new_voucher_balance,
             customer_account_id=completed_sale.customer_account_id,
+            payment_method=completed_sale.payment_method,
             line_items=completed_sale.line_items,
             buttons=new_sale.buttons,
         )

@@ -4,6 +4,7 @@ import android.util.Log
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.Button
 import de.stustapay.api.models.NewSale
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.PendingSale
 import de.stustapay.api.models.TerminalButton
 import de.stustapay.api.models.UserTag
@@ -241,7 +242,7 @@ data class SaleStatus(
         statusSerial += 1u
     }
 
-    fun getNewSale(tag: NfcTag): NewSale {
+    fun getNewSale(tag: NfcTag? = null, method: PaymentMethod = PaymentMethod.tag): NewSale {
         return NewSale(
             buttons = buttonSelection.mapNotNull {
                 when (val amount = it.value) {
@@ -265,7 +266,8 @@ data class SaleStatus(
                     }
                 }
             }.toList(),
-            customerTagUid = tag.uid,
+            paymentMethod = method,
+            customerTagUid = tag?.uid,
             usedVouchers = voucherAmount?.toBigInteger(),
             uuid = checkedSale?.uuid ?: UUID.randomUUID()
         )

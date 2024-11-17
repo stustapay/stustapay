@@ -57,6 +57,7 @@ fun ProductSelectionBottomBar(
     cashEnabled: Boolean = false,
     cardEnabled: Boolean = false,
     cashierHasRegister: Boolean = false,
+    amountIsPositive: Boolean = true,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -91,8 +92,7 @@ fun ProductSelectionBottomBar(
         if (!sspEnabled && !cashEnabled && !cardEnabled) {
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp)
             ) {
                 Button(
                     enabled = ready, colors = errorButtonColors(), onClick = {
@@ -122,14 +122,10 @@ fun ProductSelectionBottomBar(
                     )
                 }
             }
-        } else if ((sspEnabled && !cashEnabled && !cardEnabled) ||
-            (!sspEnabled && cashEnabled && !cardEnabled) ||
-            (!sspEnabled && !cashEnabled && cardEnabled)
-        ) {
+        } else if ((sspEnabled && !cashEnabled && !cardEnabled) || (!sspEnabled && cashEnabled && !cardEnabled) || (!sspEnabled && !cashEnabled && cardEnabled)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp)
             ) {
                 Button(
                     enabled = ready, colors = errorButtonColors(), onClick = {
@@ -144,7 +140,7 @@ fun ProductSelectionBottomBar(
                 }
 
                 Button(
-                    enabled = ready,
+                    enabled = (ready && sspEnabled) || (ready && cashEnabled && cashierHasRegister) || (ready && cardEnabled && amountIsPositive),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         if (sspEnabled) {
@@ -168,10 +164,7 @@ fun ProductSelectionBottomBar(
                     )
                 }
             }
-        } else if ((sspEnabled && cashEnabled && !cardEnabled) ||
-            (!sspEnabled && cashEnabled && cardEnabled) ||
-            (sspEnabled && !cashEnabled && cardEnabled)
-        ) {
+        } else if ((sspEnabled && cashEnabled && !cardEnabled) || (!sspEnabled && cashEnabled && cardEnabled) || (sspEnabled && !cashEnabled && cardEnabled)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
@@ -179,7 +172,7 @@ fun ProductSelectionBottomBar(
                     .height(100.dp)
             ) {
                 Button(
-                    enabled = ready && (sspEnabled || cashierHasRegister),
+                    enabled = (ready && sspEnabled) || (ready && cashierHasRegister),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         if (sspEnabled) {
@@ -218,7 +211,7 @@ fun ProductSelectionBottomBar(
                             onSubmitCash()
                         }
                     },
-                    enabled = ready && (cardEnabled || cashierHasRegister),
+                    enabled = (ready && cardEnabled && amountIsPositive) || (ready && cashierHasRegister),
                 ) {
                     Text(
                         text = if (cardEnabled) {
@@ -297,7 +290,7 @@ fun ProductSelectionBottomBar(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onSubmitCard()
                     },
-                    enabled = ready,
+                    enabled = ready && amountIsPositive,
                 ) {
                     Text(
                         stringResource(R.string.pay_card),

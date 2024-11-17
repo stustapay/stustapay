@@ -1,26 +1,37 @@
 package de.stustapay.stustapay.ui.sale
 
-import androidx.compose.ui.res.stringResource
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ionspin.kotlin.bignum.integer.BigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedSale
+import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.mapState
-import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ec.ECPayment
+import de.stustapay.stustapay.repository.ECPaymentRepository
+import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.math.BigDecimal
 import javax.inject.Inject
 
 
 enum class SalePage(val route: String) {
-    ProductSelect("product"), Confirm("confirm"), Success("done"), Error("error"),
+    ProductSelect("product"),
+    Confirm("confirm"),
+    ConfirmCash("confirm_cash"),
+    ConfirmCard("confirm_card"),
+    Success("done"),
+    Error("error"),
 }
 
 
@@ -33,6 +44,7 @@ enum class ScanTarget {
 class SaleViewModel @Inject constructor(
     private val saleRepository: SaleRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
+    private val ecPaymentRepository: ECPaymentRepository,
 ) : ViewModel() {
 
     // navigation in views
@@ -219,17 +231,119 @@ class SaleViewModel @Inject constructor(
         }
     }
 
-    suspend fun bookSale() {
-        val tag = _saleStatus.value.tag
-        if (tag == null) {
-            _status.update { "No tag scan information" }
+    suspend fun checkSaleCash() {
+        if (_saleStatus.value.buttonSelection.isEmpty()) {
+            _status.update { "Nothing ordered!" }
             return
+        }
+
+        _status.update { "Checking order..." }
+
+        val response = saleRepository.checkSale(
+            _saleStatus.value.getNewSale(method = PaymentMethod.cash)
+        )
+
+        when (response) {
+            is Response.OK -> {
+                _saleStatus.update { sale ->
+                    val newSale = sale.copy()
+                    newSale.updateWithPendingSale(response.data)
+                    newSale
+                }
+                _status.update { "Order validated!" }
+                _navState.update { SalePage.Confirm }
+            }
+
+            is Response.Error.Service -> {
+                // maybe only clear tag for some errors.
+                clearScannedTag()
+                _error.update { response.msg() }
+                _status.update { response.msg() }
+            }
+
+            is Response.Error -> {
+                _status.update { response.msg() }
+            }
+        }
+    }
+
+    suspend fun checkSaleCard() {
+        if (_saleStatus.value.buttonSelection.isEmpty()) {
+            _status.update { "Nothing ordered!" }
+            return
+        }
+
+        _status.update { "Checking order..." }
+
+        val response = saleRepository.checkSale(
+            _saleStatus.value.getNewSale(method = PaymentMethod.sumup)
+        )
+
+        when (response) {
+            is Response.OK -> {
+                _saleStatus.update { sale ->
+                    val newSale = sale.copy()
+                    newSale.updateWithPendingSale(response.data)
+                    newSale
+                }
+                _status.update { "Order validated!" }
+                _navState.update { SalePage.Confirm }
+            }
+
+            is Response.Error.Service -> {
+                // maybe only clear tag for some errors.
+                clearScannedTag()
+                _error.update { response.msg() }
+                _status.update { response.msg() }
+            }
+
+            is Response.Error -> {
+                _status.update { response.msg() }
+            }
+        }
+    }
+
+    suspend fun bookSale(context: Activity) {
+        val tag = _saleStatus.value.tag
+        val sale = _saleStatus.value.checkedSale
+        if (sale == null) {
+            _status.update { "Unchecked sale!" }
+            return
+        }
+
+        if (sale.paymentMethod == PaymentMethod.sumup) {
+            ecPaymentRepository.wakeup()
+
+            val payment = ECPayment(
+                id = sale.uuid.toString(),
+                amount = BigDecimal(sale.totalPrice),
+                tag = NfcTag(BigInteger(0), null),
+            )
+
+            _status.update { "Starting EC transaction..." }
+
+            // workaround so the sumup activity is not in foreground too quickly.
+            // when it's active, nfc intents are no longer captured by us, apparently,
+            // and then the system nfc handler spawns the default handler (e.g. stustapay) again.
+            // https://stackoverflow.com/questions/60868912
+            delay(800)
+
+            when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
+                is ECPaymentResult.Failure -> {
+                    _status.update { "EC: ${paymentResult.msg}" }
+                    return
+                }
+
+                is ECPaymentResult.Success -> {
+                    _status.update { "EC: ${paymentResult.result.msg}" }
+                }
+            }
         }
 
         _saleCompleted.update { null }
 
         val response = saleRepository.bookSale(
-            newSale = _saleStatus.value.getNewSale(tag)
+            newSale = _saleStatus.value.getNewSale(tag, sale.paymentMethod)
         )
 
         when (response) {

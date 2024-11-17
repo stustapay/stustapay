@@ -126,7 +126,10 @@ class BookedProduct(BaseModel):
 
 class NewSaleBase(BaseModel):
     uuid: UUID
-    customer_tag_uid: int
+
+    customer_tag_uid: Optional[int] = None
+    payment_method: PaymentMethod
+
     used_vouchers: Optional[int] = None
 
 
@@ -169,7 +172,8 @@ class PendingSaleBase(BaseModel):
     old_voucher_balance: int
     new_voucher_balance: int
 
-    customer_account_id: int
+    customer_account_id: Optional[int]
+    payment_method: PaymentMethod
 
     line_items: list[PendingLineItem]
 
@@ -207,6 +211,9 @@ class CompletedSaleBase(BaseModel):
 
     cashier_id: int
     till_id: int
+
+    customer_account_id: Optional[int]
+    payment_method: PaymentMethod
 
 
 class CompletedSaleProducts(CompletedSaleBase, PendingSaleProducts):

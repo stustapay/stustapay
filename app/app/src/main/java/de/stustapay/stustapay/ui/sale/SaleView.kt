@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.sale
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -7,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,6 +40,7 @@ fun SaleView(
     val error_ by viewModel.error.collectAsStateWithLifecycle()
     val error = error_
     val enableScan by viewModel.enableScan.collectAsStateWithLifecycle()
+    val context = LocalContext.current as Activity
 
     LaunchedEffect(navTarget) {
         if (nav.currentDestination?.route != navTarget.route) {
@@ -99,7 +102,7 @@ fun SaleView(
                 },
                 onConfirm = {
                     scope.launch {
-                        viewModel.bookSale()
+                        viewModel.bookSale(context)
                     }
                 },
             )
