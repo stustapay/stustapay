@@ -180,6 +180,34 @@ async def _create_system_products(conn: Connection, node_id: int):
     )
 
 
+async def _sync_optional_event_metadata(conn: Connection, event_id: int, event: NewEvent):
+    for lang_code, translation in event.translation_texts.items():
+        for text_type, content in translation.items():
+            await conn.execute(
+                "insert into translation_text (event_id, lang_code, type, content) values ($1, $2, $3, $4)",
+                event_id,
+                lang_code.value,
+                text_type,
+                content,
+            )
+    if event.payout_done_subject is not None:
+        await conn.execute(
+            "update event set payout_done_subject = $1 where id = $2", event.payout_done_subject, event_id
+        )
+    if event.payout_done_message is not None:
+        await conn.execute(
+            "update event set payout_done_message = $1 where id = $2", event.payout_done_message, event_id
+        )
+    if event.payout_registered_subject is not None:
+        await conn.execute(
+            "update event set payout_registered_subject = $1 where id = $2", event.payout_registered_subject, event_id
+        )
+    if event.payout_registered_message is not None:
+        await conn.execute(
+            "update event set payout_registered_message = $1 where id = $2", event.payout_registered_subject, event_id
+        )
+
+
 async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Node:
     # TODO: tree, create all needed resources, e.g. global accounts which have to and should
     #  only exist at an event node
@@ -189,11 +217,10 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "sepa_description, sepa_allowed_country_codes, customer_portal_url, customer_portal_about_page_url, "
         "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
         "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
-        "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_done_subject, "
-        "payout_done_message, payout_registered_subject, payout_registered_message, payout_sender, "
+        "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_sender, "
         " sumup_oauth_client_id, sumup_oauth_client_secret) "
         "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, "
-        " $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36)"
+        " $25, $26, $27, $28, $29, $30, $31, $32)"
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
@@ -224,23 +251,11 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.email_smtp_port,
         event.email_smtp_username,
         event.email_smtp_password,
-        event.payout_done_subject,
-        event.payout_done_message,
-        event.payout_registered_subject,
-        event.payout_registered_message,
         event.payout_sender,
         event.sumup_oauth_client_id,
         event.sumup_oauth_client_secret,
     )
-    for lang_code, translation in event.translation_texts.items():
-        for text_type, content in translation.items():
-            await conn.execute(
-                "insert into translation_text (event_id, lang_code, type, content) values ($1, $2, $3, $4)",
-                event_id,
-                lang_code.value,
-                text_type,
-                content,
-            )
+    await _sync_optional_event_metadata(conn, event_id, event)
 
     node = await create_node(conn=conn, parent_id=parent_id, new_node=event, event_id=event_id)
     await _create_system_accounts(conn=conn, node_id=node.id)
@@ -304,9 +319,7 @@ class TreeService(Service[Config]):
             "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
             "   daily_end_time = $24, email_enabled = $25, email_default_sender = $26, email_smtp_host = $27, "
             "   email_smtp_port = $28, email_smtp_username = $29, email_smtp_password = $30, "
-            "   payout_done_subject = $31, payout_done_message = $32, payout_registered_subject = $33, "
-            "   payout_registered_message = $34, payout_sender = $35, sumup_oauth_client_id = $36, "
-            "   sumup_oauth_client_secret = $37 "
+            "   payout_sender = $31, sumup_oauth_client_id = $32, sumup_oauth_client_secret = $33 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -347,15 +360,7 @@ class TreeService(Service[Config]):
             event.sumup_oauth_client_secret,
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
-        for lang_code, translation in event.translation_texts.items():
-            for text_type, content in translation.items():
-                await conn.execute(
-                    "insert into translation_text (event_id, lang_code, type, content) values ($1, $2, $3, $4)",
-                    event_id,
-                    lang_code.value,
-                    text_type,
-                    content,
-                )
+        await _sync_optional_event_metadata(conn, event_id, event)
         updated_node = await fetch_node(conn=conn, node_id=node.id)
         assert updated_node is not None
         return updated_node

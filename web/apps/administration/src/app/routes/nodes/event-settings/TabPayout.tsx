@@ -1,6 +1,6 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
-import { FormSelect, FormSwitch, FormTextField } from "@stustapay/form-components";
+import { FormSelect, FormSwitch, FormTextField, zodExtension } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import iban from "iban";
@@ -18,10 +18,7 @@ const requiredIssue = {
 export const PayoutSettingsSchema = z
   .object({
     sepa_enabled: z.boolean(),
-    sepa_sender_name: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
+    sepa_sender_name: zodExtension.emptyString(),
     sepa_sender_iban: z
       .string()
       .optional()
@@ -34,16 +31,13 @@ export const PayoutSettingsSchema = z
         }
       })
       .transform((val) => val ?? ""),
-    sepa_description: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
+    sepa_description: zodExtension.emptyString(),
     sepa_allowed_country_codes: z.array(z.string()).default([]),
-    payout_done_subject: z.string(),
-    payout_done_message: z.string(),
-    payout_registered_subject: z.string(),
-    payout_registered_message: z.string(),
-    payout_sender: z.string().email().optional().nullable(),
+    payout_done_subject: zodExtension.undefineableString(),
+    payout_done_message: zodExtension.undefineableString(),
+    payout_registered_subject: zodExtension.undefineableString(),
+    payout_registered_message: zodExtension.undefineableString(),
+    payout_sender: z.string().email().optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.sepa_enabled) {
