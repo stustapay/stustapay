@@ -1,4 +1,4 @@
-import { useGetTreeForCurrentUserQuery } from "@/api";
+import { useGetTreeForCurrentUserQuery, useLogoutMutation } from "@/api";
 import { config } from "@/api/common";
 import { AppBar, DrawerHeader, Main } from "@/components";
 import { drawerWidth } from "@/components/layouts/constants";
@@ -25,7 +25,7 @@ import { useTheme } from "@mui/material/styles";
 import { Loading, TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet, Link as RouterLink, useLocation } from "react-router-dom";
+import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { NavigationTree } from "./navigation-tree";
 
 export const AuthenticatedRoot: React.FC = () => {
@@ -33,6 +33,8 @@ export const AuthenticatedRoot: React.FC = () => {
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
   const location = useLocation();
+  const [logout] = useLogoutMutation();
+  const navigate = useNavigate();
 
   const user = useAppSelector(selectCurrentUser);
 
@@ -49,6 +51,15 @@ export const AuthenticatedRoot: React.FC = () => {
 
   const handleDrawerClose = () => {
     setOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout()
+      .unwrap()
+      .then(() => {
+        navigate("/login");
+      })
+      .catch((err) => console.error("error during logout", err));
   };
 
   return (
@@ -73,7 +84,7 @@ export const AuthenticatedRoot: React.FC = () => {
           <Button component={RouterLink} color="inherit" to="/profile">
             {t("auth.profile")}
           </Button>
-          <Button component={RouterLink} color="inherit" to="/logout">
+          <Button color="inherit" onClick={handleLogout}>
             {t("logout")}
           </Button>
         </Toolbar>

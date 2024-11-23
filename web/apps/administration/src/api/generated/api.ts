@@ -2464,7 +2464,8 @@ export type CompletedSaleProducts = {
   new_balance: number;
   old_voucher_balance: number;
   new_voucher_balance: number;
-  customer_account_id: number;
+  customer_account_id: number | null;
+  payment_method: PaymentMethod;
   line_items: PendingLineItem[];
   products: BookedProduct[];
   id: number;
@@ -2478,7 +2479,8 @@ export type CompletedSaleProductsRead = {
   new_balance: number;
   old_voucher_balance: number;
   new_voucher_balance: number;
-  customer_account_id: number;
+  customer_account_id: number | null;
+  payment_method: PaymentMethod;
   line_items: PendingLineItemRead[];
   products: BookedProduct[];
   id: number;
@@ -2807,10 +2809,10 @@ export type PublicEventSettings = {
   email_smtp_host?: string | null;
   email_smtp_port?: number | null;
   email_smtp_username?: string | null;
-  payout_done_subject: string;
-  payout_done_message: string;
-  payout_registered_subject: string;
-  payout_registered_message: string;
+  payout_done_subject?: string | null;
+  payout_done_message?: string | null;
+  payout_registered_subject?: string | null;
+  payout_registered_message?: string | null;
   payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
@@ -2905,10 +2907,10 @@ export type NewEvent = {
   email_smtp_host?: string | null;
   email_smtp_port?: number | null;
   email_smtp_username?: string | null;
-  payout_done_subject: string;
-  payout_done_message: string;
-  payout_registered_subject: string;
-  payout_registered_message: string;
+  payout_done_subject?: string | null;
+  payout_done_message?: string | null;
+  payout_registered_subject?: string | null;
+  payout_registered_message?: string | null;
   payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
@@ -2953,10 +2955,10 @@ export type UpdateEvent = {
   email_smtp_host?: string | null;
   email_smtp_port?: number | null;
   email_smtp_username?: string | null;
-  payout_done_subject: string;
-  payout_done_message: string;
-  payout_registered_subject: string;
-  payout_registered_message: string;
+  payout_done_subject?: string | null;
+  payout_done_message?: string | null;
+  payout_registered_subject?: string | null;
+  payout_registered_message?: string | null;
   payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {
@@ -2997,10 +2999,10 @@ export type RestrictedEventSettings = {
   email_smtp_host?: string | null;
   email_smtp_port?: number | null;
   email_smtp_username?: string | null;
-  payout_done_subject: string;
-  payout_done_message: string;
-  payout_registered_subject: string;
-  payout_registered_message: string;
+  payout_done_subject?: string | null;
+  payout_done_message?: string | null;
+  payout_registered_subject?: string | null;
+  payout_registered_message?: string | null;
   payout_sender?: string | null;
   translation_texts?: {
     [key: string]: {

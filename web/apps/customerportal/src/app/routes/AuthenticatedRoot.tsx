@@ -1,3 +1,4 @@
+import { useLogoutMutation } from "@/api";
 import { config } from "@/api/common";
 import { LanguageSelect, Layout } from "@/components";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
@@ -19,12 +20,14 @@ import {
 import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet, Link as RouterLink, useLocation } from "react-router-dom";
+import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const publicConfig = usePublicConfig();
+  const [logout] = useLogoutMutation();
+  const navigate = useNavigate();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
@@ -42,23 +45,32 @@ export const AuthenticatedRoot: React.FC = () => {
     return <Navigate to={`/login${next}`} />;
   }
 
-  const navbarLinks = []
+  const handleLogout = () => {
+    logout()
+      .unwrap()
+      .then(() => {
+        navigate("/login");
+      })
+      .catch((err) => console.error("error during logout", err));
+  };
+
+  const navbarLinks = [];
   if (publicConfig.payout_enabled) {
     navbarLinks.push({
       label: t("nav.payout"),
       link: "/payout-info",
-    })
+    });
   }
   if (publicConfig.sumup_topup_enabled) {
     navbarLinks.push({
       label: t("nav.topup"),
       link: "/topup",
-    })
+    });
   }
   navbarLinks.push({
     label: t("nav.faq"),
     link: "/faq",
-  })
+  });
 
   return (
     <Layout>
@@ -138,7 +150,7 @@ export const AuthenticatedRoot: React.FC = () => {
 
               <Box sx={{ flexGrow: 0 }}>
                 <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
-                <Button component={RouterLink} color="inherit" to="/logout">
+                <Button color="inherit" onClick={handleLogout}>
                   {t("logout")}
                 </Button>
               </Box>

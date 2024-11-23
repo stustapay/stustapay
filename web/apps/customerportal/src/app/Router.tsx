@@ -4,7 +4,6 @@ import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
 import { Login } from "./routes/auth/Login";
 import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
-import { Logout } from "./routes/auth/Logout";
 import { Index } from "./routes/Index";
 import { PayoutInfo } from "./routes/PayoutInfo";
 import { TopUp } from "./routes/topup";
@@ -35,10 +34,6 @@ const router = createBrowserRouter([
       {
         path: "topup",
         element: <TopUp />,
-      },
-      {
-        path: "logout",
-        element: <Logout />,
       },
     ],
   },

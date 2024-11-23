@@ -319,6 +319,7 @@ class PayoutService(Service[Config]):
         for payout in payouts:
             if payout.email is None:
                 continue
+            assert res_config.payout_done_message is not None
             await mail_service.send_mail(
                 subject=res_config.payout_done_subject,
                 message=res_config.payout_done_message.format(**payout.model_dump()),

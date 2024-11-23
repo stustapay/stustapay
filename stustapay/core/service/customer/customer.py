@@ -203,6 +203,7 @@ class CustomerService(Service[Config]):
         )
         if current_customer.email is not None:
             res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
+            assert res_config.payout_registered_message is not None
             await mail_service.send_mail(
                 subject=res_config.payout_registered_subject,
                 message=res_config.payout_registered_message.format(**current_customer.model_dump()),

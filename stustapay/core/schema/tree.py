@@ -52,10 +52,10 @@ class _BaseEvent(BaseModel):
     email_smtp_port: int | None = None
     email_smtp_username: str | None = None
 
-    payout_done_subject: str
-    payout_done_message: str
-    payout_registered_subject: str
-    payout_registered_message: str
+    payout_done_subject: str | None = None
+    payout_done_message: str | None = None
+    payout_registered_subject: str | None = None
+    payout_registered_message: str | None = None
     payout_sender: str | None = None
 
     # map of lang_code -> [text type -> text content]
