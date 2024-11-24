@@ -7,6 +7,7 @@ import { Loading } from "@stustapay/components";
 import { config, fetchConfig } from "@/api/common";
 import { CurrencyProvider } from "@stustapay/framework";
 import { ConfigLoadErrorPage } from "./ConfigLoadErrorPage";
+import { CurrencyIdentifier } from "@stustapay/models";
 
 export function App() {
   const [state, setState] = React.useState<"loading" | "loaded" | "error">("loading");
@@ -47,7 +48,7 @@ export function App() {
       ) : state === "error" ? (
         <ConfigLoadErrorPage />
       ) : (
-        <CurrencyProvider currencyIdentifier={config.apiConfig.currency_identifier}>
+        <CurrencyProvider currencyIdentifier={config.apiConfig.currency_identifier as CurrencyIdentifier}>
           <Router />
         </CurrencyProvider>
       )}

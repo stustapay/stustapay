@@ -3,6 +3,7 @@ import { CurrencyProvider } from "@stustapay/framework";
 import { useCurrentNode } from "@/hooks";
 import { findNode, useNodeTree } from "@/api";
 import { Outlet } from "react-router-dom";
+import { CurrencyIdentifier } from "@stustapay/models";
 
 export const NodeProvider: React.FC = () => {
   const { root } = useNodeTree();
@@ -26,7 +27,7 @@ export const NodeProvider: React.FC = () => {
 
   if (settings) {
     return (
-      <CurrencyProvider currencyIdentifier={settings.currency_identifier}>
+      <CurrencyProvider currencyIdentifier={settings.currency_identifier as CurrencyIdentifier}>
         <Outlet />
       </CurrencyProvider>
     );

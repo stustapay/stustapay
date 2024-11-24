@@ -1,14 +1,14 @@
+import { CurrencyIdentifier } from "@stustapay/models";
 import * as React from "react";
 
 type ICurrencyContext = {
-  // currencySymbol: string;
-  currencyIdentifier: string;
+  currencyIdentifier: CurrencyIdentifier;
 };
 
 const CurrencyContext = React.createContext<ICurrencyContext | null>(null);
 
 export type CurrencyProviderProps = {
-  currencyIdentifier: string;
+  currencyIdentifier: CurrencyIdentifier;
   children?: React.ReactNode;
 };
 
@@ -29,7 +29,7 @@ export const useOptionalCurrencyIdentifier = () => {
   return ctx?.currencyIdentifier;
 };
 
-export const useCurrencyIdentifier = () => {
+export const useCurrencyIdentifier = (): CurrencyIdentifier => {
   const ctx = React.useContext(CurrencyContext);
 
   if (!ctx) {
