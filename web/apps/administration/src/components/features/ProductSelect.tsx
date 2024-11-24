@@ -1,5 +1,5 @@
 import { Product, selectProductAll, useListProductsQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
@@ -9,6 +9,7 @@ export type ProductSelectProps = {
 
 export const ProductSelect: React.FC<ProductSelectProps> = ({ onlyLocked = false, ...props }) => {
   const { currentNode } = useCurrentNode();
+  const formatCurrency = useCurrencyFormatter();
   const { products } = useListProductsQuery(
     { nodeId: currentNode.id },
     {
@@ -23,7 +24,7 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({ onlyLocked = false
     <Select
       multiple={false}
       options={products}
-      formatOption={(product) => `${product.name} (${product.price})€`}
+      formatOption={(product) => `${product.name} (${formatCurrency(product.price)})`}
       {...props}
     />
   );
