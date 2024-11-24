@@ -1,10 +1,10 @@
 import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
-import { useCurrencySymbol, usePublicConfig } from "@/hooks";
+import { usePublicConfig } from "@/hooks";
 import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
-import { Alert, AlertTitle, Box, Button, Grid, InputAdornment, LinearProgress, Link, Stack } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Grid, LinearProgress, Link, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { FormNumericInput } from "@stustapay/form-components";
+import { FormCurrencyInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -80,7 +80,6 @@ export const TopUp: React.FC = () => {
   const { t, i18n } = useTranslation();
 
   const config = usePublicConfig();
-  const currencySymbol = useCurrencySymbol();
 
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
   const [createCheckout] = useCreateCheckoutMutation();
@@ -207,15 +206,7 @@ export const TopUp: React.FC = () => {
             {(formik) => (
               <Form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
-                  <FormNumericInput
-                    name="amount"
-                    label={t("topup.amount")}
-                    variant="outlined"
-                    formik={formik}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
-                    }}
-                  />
+                  <FormCurrencyInput name="amount" label={t("topup.amount")} variant="outlined" formik={formik} />
                   {formik.isSubmitting && <LinearProgress />}
                   <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
                     {t("topup.next")}

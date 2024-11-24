@@ -1,9 +1,9 @@
 import { useCreatePayoutRunMutation } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
-import { useCurrencySymbol, useCurrentEventSettings, useCurrentNode } from "@/hooks";
+import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import { ChevronLeft } from "@mui/icons-material";
-import { Button, Grid, IconButton, InputAdornment, LinearProgress, Paper, Stack, Typography } from "@mui/material";
-import { FormNumericInput } from "@stustapay/form-components";
+import { Button, Grid, IconButton, LinearProgress, Paper, Stack, Typography } from "@mui/material";
+import { FormCurrencyInput, FormNumericInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -23,7 +23,6 @@ export const PayoutRunCreate: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const currencySymbol = useCurrencySymbol();
 
   const { eventSettings } = useCurrentEventSettings();
 
@@ -84,11 +83,10 @@ export const PayoutRunCreate: React.FC = () => {
               <PendingPayoutDetail />
               <Paper sx={{ p: 3 }}>
                 <Stack spacing={2}>
-                  <FormNumericInput
+                  <FormCurrencyInput
                     variant="outlined"
                     name="max_payout_sum"
                     label={t("payoutRun.maxPayoutSum")}
-                    InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
                     formik={formik}
                   />
                   <FormNumericInput

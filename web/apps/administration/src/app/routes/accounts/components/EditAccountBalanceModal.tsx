@@ -64,7 +64,7 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
           fullWidth
           onChange={handleChange}
           label={t("account.newBalance")}
-          InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
+          slotProps={{ input: { endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> } }}
         />
       </DialogContent>
       <DialogActions>

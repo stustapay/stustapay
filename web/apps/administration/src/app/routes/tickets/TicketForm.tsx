@@ -1,8 +1,6 @@
 import { NewTicket } from "@/api";
 import { RestrictionSelect, TaxRateSelect } from "@/components/features";
-import { useCurrencySymbol } from "@/hooks";
-import { InputAdornment } from "@mui/material";
-import { FormNumericInput, FormTextField } from "@stustapay/form-components";
+import { FormCurrencyInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
@@ -11,23 +9,15 @@ export type TicketFormProps<T extends NewTicket> = FormikProps<T>;
 export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
   const { values, touched, errors, setFieldValue } = props;
   const { t } = useTranslation();
-  const currencySymbol = useCurrencySymbol();
 
   return (
     <>
       <FormTextField autoFocus name="name" label={t("ticket.name")} formik={props} />
-      <FormNumericInput
-        name="price"
-        label={t("ticket.price")}
-        formik={props}
-        disabled={values.is_locked}
-        InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
-      />
-      <FormNumericInput
+      <FormCurrencyInput name="price" label={t("ticket.price")} formik={props} disabled={values.is_locked} />
+      <FormCurrencyInput
         name="initial_top_up_amount"
         disabled={values.is_locked}
         label={t("ticket.initialTopUpAmount")}
-        InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
         formik={props}
       />
 

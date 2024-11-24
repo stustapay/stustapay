@@ -1,8 +1,7 @@
 import { NewProduct } from "@/api";
 import { RestrictionSelect, TaxRateSelect } from "@/components/features";
-import { useCurrencySymbol } from "@/hooks";
-import { Checkbox, FormControlLabel, InputAdornment } from "@mui/material";
-import { FormNumericInput, FormTextField } from "@stustapay/form-components";
+import { Checkbox, FormControlLabel } from "@mui/material";
+import { FormCurrencyInput, FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
@@ -11,7 +10,6 @@ export type ProductFormProps<T extends NewProduct> = FormikProps<T>;
 export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
   const { values, touched, errors, setFieldValue } = props;
   const { t } = useTranslation();
-  const currencySymbol = useCurrencySymbol();
 
   return (
     <>
@@ -50,13 +48,7 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
 
       {values.fixed_price && (
         <>
-          <FormNumericInput
-            name="price"
-            label={t("product.price")}
-            formik={props}
-            disabled={values.is_locked}
-            InputProps={{ endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> }}
-          />
+          <FormCurrencyInput name="price" label={t("product.price")} formik={props} disabled={values.is_locked} />
           <FormNumericInput
             name="price_in_vouchers"
             label={t("product.priceInVouchers")}

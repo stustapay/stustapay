@@ -5,7 +5,7 @@ import {
   useUpdateCustomerInfoDonateAllMutation,
   useUpdateCustomerInfoMutation,
 } from "@/api";
-import { useCurrencySymbol, useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import {
   Alert,
@@ -15,13 +15,12 @@ import {
   FormControlLabel,
   FormHelperText,
   Grid,
-  InputAdornment,
   Link,
   Stack,
   Typography,
 } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { FormNumericInput, FormTextField } from "@stustapay/form-components";
+import { FormCurrencyInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Formik, FormikHelpers } from "formik";
 import iban from "iban";
@@ -44,7 +43,6 @@ export const PayoutInfo: React.FC = () => {
   const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
   const formatCurrency = useCurrencyFormatter();
-  const currencySymbol = useCurrencySymbol();
 
   if (isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError)) {
     return <Loading />;
@@ -250,14 +248,11 @@ export const PayoutInfo: React.FC = () => {
                     )}
                   </FormControl>
                   <Typography>{t("payout.donationDescription")}</Typography>
-                  <FormNumericInput
+                  <FormCurrencyInput
                     name="donation"
                     label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
                     variant="outlined"
                     formik={formik}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
-                    }}
                     disabled={payoutInfo.in_payout_run}
                   />
                   <Button

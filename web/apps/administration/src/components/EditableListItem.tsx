@@ -58,17 +58,19 @@ export const EditableListItem: React.FC<EditableListItemProps> = ({ label, value
         onKeyUp={handleKeyUp}
         onChange={(evt) => setInternalValue(evt.target.value)}
         fullWidth
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton color="primary" onClick={saveEdit}>
-                <CheckIcon />
-              </IconButton>
-              <IconButton color="error" onClick={cancelEdit}>
-                <CloseIcon />
-              </IconButton>
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton color="primary" onClick={saveEdit}>
+                  <CheckIcon />
+                </IconButton>
+                <IconButton color="error" onClick={cancelEdit}>
+                  <CloseIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
         }}
       />
     </ListItem>
