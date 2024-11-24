@@ -45,7 +45,7 @@ export const NumericInput: React.FC<NumericInputProps> = ({ value, onChange, ...
       value={internalValue}
       onChange={onInternalChange}
       onBlur={onInternalBlur}
-      inputProps={{ style: { textAlign: "right" } }}
+      slotProps={{ htmlInput: { style: { textAlign: "right" } } }}
       onKeyUp={onKeyUp}
       variant="standard"
       onFocus={(event) => event.target.select()}

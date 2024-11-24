@@ -67,19 +67,24 @@ export const TabGeneral: React.FC<{ nodeId: number; eventSettings: RestrictedEve
             <CurrencyIdentifierSelect
               label={t("settings.general.currency_identifier")}
               value={formik.values.currency_identifier}
-              onChange={(val) => formik.setFieldValue("currency_identifier", val)}
+              onChange={(val) => {
+                formik.setFieldValue("currency_identifier", val);
+                formik.setFieldTouched("currency_identifier");
+              }}
               error={formik.touched.currency_identifier && !!formik.errors.currency_identifier}
               helperText={(formik.touched.currency_identifier && formik.errors.currency_identifier) as string}
             />
             <FormNumericInput
               label={t("settings.general.max_account_balance")}
               name="max_account_balance"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {getCurrencySymbolForIdentifier(formik.values.currency_identifier)}
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      {getCurrencySymbolForIdentifier(formik.values.currency_identifier)}
+                    </InputAdornment>
+                  ),
+                },
               }}
               formik={formik}
             />

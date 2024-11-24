@@ -1,5 +1,5 @@
 import { PrivilegeSelect } from "@/components/features";
-import { Checkbox, FormControlLabel } from "@mui/material";
+import { FormCheckbox } from "@stustapay/form-components";
 import { PrivilegeSchema } from "@stustapay/models";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
@@ -15,26 +15,12 @@ export type UserRoleUpdate = z.infer<typeof UserRoleUpdateSchema>;
 
 export type UserRoleUpdateFormProps<T extends UserRoleUpdate> = FormikProps<T>;
 
-export function UserRoleUpdateForm<T extends UserRoleUpdate>({
-  handleBlur,
-  handleChange,
-  values,
-  touched,
-  errors,
-  setFieldValue,
-}: UserRoleUpdateFormProps<T>) {
+export function UserRoleUpdateForm<T extends UserRoleUpdate>(props: UserRoleUpdateFormProps<T>) {
   const { t } = useTranslation();
+  const { values, touched, errors, setFieldValue } = props;
   return (
     <>
-      <FormControlLabel
-        label={t("userRole.isPrivileged")}
-        control={
-          <Checkbox
-            checked={values.is_privileged}
-            onChange={(evt) => setFieldValue("is_privileged", evt.target.checked)}
-          />
-        }
-      />
+      <FormCheckbox name="is_privileged" label={t("userRole.isPrivileged")} formik={props} />
 
       <PrivilegeSelect
         label={t("userRole.privileges")}

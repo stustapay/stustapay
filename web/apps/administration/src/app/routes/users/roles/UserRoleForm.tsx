@@ -1,9 +1,8 @@
 import { NewUserRole } from "@/api";
 import { PrivilegeSelect } from "@/components/features";
-import { Checkbox, FormControlLabel } from "@mui/material";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
-import { FormTextField } from "@stustapay/form-components";
+import { FormCheckbox, FormTextField } from "@stustapay/form-components";
 
 export type UserRoleFormProps<T extends NewUserRole> = FormikProps<T>;
 
@@ -13,15 +12,7 @@ export function UserRoleForm<T extends NewUserRole>(props: UserRoleFormProps<T>)
   return (
     <>
       <FormTextField autoFocus name="name" label={t("userRole.name")} formik={props} />
-      <FormControlLabel
-        label={t("userRole.isPrivileged")}
-        control={
-          <Checkbox
-            checked={values.is_privileged}
-            onChange={(evt) => setFieldValue("is_privileged", evt.target.checked)}
-          />
-        }
-      />
+      <FormCheckbox label={t("userRole.isPrivileged")} name="is_privileged" formik={props} />
 
       <PrivilegeSelect
         label={t("userRole.privileges")}

@@ -57,8 +57,7 @@ export const TillButtonList: React.FC = () => {
     {
       field: "price",
       headerName: t("button.price"),
-      type: "number",
-      valueFormatter: (value) => `${value} €`,
+      type: "currency",
     },
     dataGridNodeColumn,
   ];

@@ -1,4 +1,4 @@
-import { CashierShiftStats, useGetCashierShiftStatsQuery } from "@/api";
+import { CashierProductStats, useGetCashierShiftStatsQuery } from "@/api";
 import { OrderTable } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
@@ -13,8 +13,6 @@ export interface CashierShiftStatsOverview {
   shiftId?: number;
 }
 
-type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[] ? ElementType : never;
-
 export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({ cashierId, shiftId }) => {
   const { currentNode } = useCurrentNode();
   const { data } = useGetCashierShiftStatsQuery({ nodeId: currentNode.id, cashierId, shiftId });
@@ -25,10 +23,11 @@ export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({
     return <Loading />;
   }
 
-  const columns: GridColDef<ArrElement<CashierShiftStats["booked_products"]>>[] = [
+  const columns: GridColDef<CashierProductStats>[] = [
     {
-      field: "product.name",
+      field: "product",
       headerName: t("product.name"),
+      valueGetter: (val: CashierProductStats["product"]) => val.name,
       flex: 1,
     },
     {
@@ -49,7 +48,6 @@ export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({
       </Box>
       <TabPanel value="products">
         <DataGrid
-          autoHeight
           rows={data.booked_products}
           columns={columns}
           getRowId={(row) => row.product.id}

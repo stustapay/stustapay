@@ -5,23 +5,11 @@ import {
   useUpdateCustomerInfoDonateAllMutation,
   useUpdateCustomerInfoMutation,
 } from "@/api";
-import { useCurrencySymbol, useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import {
-  Alert,
-  Button,
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
-  Grid,
-  InputAdornment,
-  Link,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Alert, Button, Grid, Link, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { FormNumericInput, FormTextField } from "@stustapay/form-components";
+import { FormCheckbox, FormCurrencyInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Formik, FormikHelpers } from "formik";
 import iban from "iban";
@@ -44,7 +32,6 @@ export const PayoutInfo: React.FC = () => {
   const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
   const formatCurrency = useCurrencyFormatter();
-  const currencySymbol = useCurrencySymbol();
 
   if (isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError)) {
     return <Loading />;
@@ -225,39 +212,26 @@ export const PayoutInfo: React.FC = () => {
                     formik={formik}
                     disabled={payoutInfo.in_payout_run}
                   />
-                  <FormControl error={Boolean(formik.errors.privacy_policy)}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="privacy_policy"
-                          checked={formik.values.privacy_policy}
-                          onChange={formik.handleChange}
-                          color="primary"
-                          disabled={payoutInfo.in_payout_run}
-                        />
-                      }
-                      label={
-                        <Trans i18nKey="payout.privacyPolicyCheck">
-                          please accept the
-                          <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
-                            privacy policy
-                          </Link>
-                        </Trans>
-                      }
-                    />
-                    {formik.touched.privacy_policy && (
-                      <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
-                    )}
-                  </FormControl>
+                  <FormCheckbox
+                    name="privacy_policy"
+                    formik={formik}
+                    color="primary"
+                    disabled={payoutInfo.in_payout_run}
+                    label={
+                      <Trans i18nKey="payout.privacyPolicyCheck">
+                        please accept the
+                        <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
+                          privacy policy
+                        </Link>
+                      </Trans>
+                    }
+                  />
                   <Typography>{t("payout.donationDescription")}</Typography>
-                  <FormNumericInput
+                  <FormCurrencyInput
                     name="donation"
                     label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
                     variant="outlined"
                     formik={formik}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
-                    }}
                     disabled={payoutInfo.in_payout_run}
                   />
                   <Button

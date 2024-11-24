@@ -72,12 +72,14 @@ const GeneralForm: React.FC<FormikProps<GeneralFormValues>> = (formik) => {
         label={t("settings.general.max_account_balance")}
         name="max_account_balance"
         formik={formik}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              {getCurrencySymbolForIdentifier(formik.values.currency_identifier)}
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                {getCurrencySymbolForIdentifier(formik.values.currency_identifier)}
+              </InputAdornment>
+            ),
+          },
         }}
       />
       <FormTextField label={t("settings.general.ust_id")} name="ust_id" formik={formik} />

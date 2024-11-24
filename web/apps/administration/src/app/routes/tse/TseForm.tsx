@@ -17,7 +17,7 @@ export function TseForm<T extends NewTse>(props: TseFormProps<T>) {
       <FormNumericInput
         name="ws_timeout"
         label={t("tse.wsTimeout")}
-        InputProps={{ endAdornment: <InputAdornment position="end">s</InputAdornment> }}
+        slotProps={{ input: { endAdornment: <InputAdornment position="end">s</InputAdornment> } }}
         formik={props}
       />
       <FormTextField name="password" label={t("tse.password")} formik={props} />
