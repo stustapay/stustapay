@@ -6,8 +6,10 @@ from uuid import UUID
 import asyncpg
 from pydantic import BaseModel
 from sftkit.database import Connection
+from sftkit.error import NotFound
 from sftkit.service import Service, with_db_transaction
 
+from stustapay.bon.bon import BonJson
 from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     Account,
@@ -1455,3 +1457,25 @@ class OrderService(Service[Config]):
     @requires_user([Privilege.node_administration])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)
+
+    @with_db_transaction
+    async def get_bon_by_uuid(self, *, conn: Connection, order_uuid: str) -> BonJson:
+        row = await conn.fetchrow(
+            "select b.bon_json from bon b join ordr o on b.id = o.id where o.uuid = $1",
+            order_uuid,
+        )
+        if not row or row["bon_json"] is None:
+            raise NotFound(element_type="bon", element_id=order_uuid)
+
+        return BonJson.model_validate_json(row["bon_json"])
+
+    @with_db_transaction
+    async def get_bon_by_id(self, *, conn: Connection, order_id: int) -> BonJson:
+        row = await conn.fetchrow(
+            "select b.bon_json from bon b where b.id = $1",
+            order_id,
+        )
+        if not row or row["bon_json"] is None:
+            raise NotFound(element_type="bon", element_id=order_id)
+
+        return BonJson.model_validate_json(row["bon_json"])

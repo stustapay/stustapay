@@ -8,10 +8,8 @@ import asyncpg
 from pydantic import BaseModel, EmailStr
 from schwifty import IBAN
 from sftkit.database import Connection
-from sftkit.error import NotFound
 from sftkit.service import Service, with_db_transaction
 
-from stustapay.bon.bon import BonJson
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import (
     Customer,
@@ -257,14 +255,3 @@ class CustomerService(Service[Config]):
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,
         )
-
-    @with_db_transaction
-    async def get_bon(self, *, conn: Connection, order_uuid: str) -> BonJson:
-        row = await conn.fetchrow(
-            "select b.bon_json from bon b join ordr o on b.id = o.id where o.uuid = $1",
-            order_uuid,
-        )
-        if not row or row["bon_json"] is None:
-            raise NotFound(element_type="bon", element_id=order_uuid)
-
-        return BonJson.model_validate_json(row["bon_json"])

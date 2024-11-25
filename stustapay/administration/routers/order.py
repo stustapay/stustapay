@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
 
+from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
@@ -38,6 +39,11 @@ async def get_order(token: CurrentAuthToken, order_id: int, order_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return order
+
+
+@router.get("/{order_id}/bon", response_model=BonJson)
+async def get_order_bon(order_id: int, order_service: ContextOrderService):
+    return await order_service.get_bon_by_id(order_id=order_id)
 
 
 @router.delete("/{order_id}")

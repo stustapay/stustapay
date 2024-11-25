@@ -712,6 +712,10 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["orders"],
       }),
+      getOrderBon: build.query<GetOrderBonApiResponse, GetOrderBonApiArg>({
+        query: (queryArg) => ({ url: `/orders/${queryArg.orderId}/bon` }),
+        providesTags: ["orders"],
+      }),
       editOrder: build.mutation<EditOrderApiResponse, EditOrderApiArg>({
         query: (queryArg) => ({
           url: `/orders/${queryArg.orderId}/edit`,
@@ -1616,6 +1620,10 @@ export type CancelOrderApiArg = {
   orderId: number;
   nodeId: number;
 };
+export type GetOrderBonApiResponse = /** status 200 Successful Response */ BonJsonRead;
+export type GetOrderBonApiArg = {
+  orderId: number;
+};
 export type EditOrderApiResponse = /** status 200 Successful Response */ CompletedSaleProductsRead;
 export type EditOrderApiArg = {
   orderId: number;
@@ -2436,6 +2444,91 @@ export type NormalizedListOrderInt = {
     [key: string]: Order;
   };
 };
+export type OrderWithTse = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItem[];
+  signature_status: string;
+  transaction_process_type?: string | null;
+  transaction_process_data?: string | null;
+  tse_transaction?: string | null;
+  tse_signaturenr?: string | null;
+  tse_start?: string | null;
+  tse_end?: string | null;
+  tse_hashalgo?: string | null;
+  tse_time_format?: string | null;
+  tse_signature?: string | null;
+  tse_public_key?: string | null;
+  node_id: number;
+};
+export type OrderWithTseRead = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItemRead[];
+  signature_status: string;
+  transaction_process_type?: string | null;
+  transaction_process_data?: string | null;
+  tse_transaction?: string | null;
+  tse_signaturenr?: string | null;
+  tse_start?: string | null;
+  tse_end?: string | null;
+  tse_hashalgo?: string | null;
+  tse_time_format?: string | null;
+  tse_signature?: string | null;
+  tse_public_key?: string | null;
+  node_id: number;
+  customer_tag_uid_hex: string | null;
+  tse_qr_code_text: string;
+};
+export type TaxRateAggregation = {
+  tax_name: string;
+  tax_rate: number;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+};
+export type BonConfig = {
+  title: string;
+  issuer: string;
+  address: string;
+  ust_id: string;
+};
+export type BonJson = {
+  order: OrderWithTse;
+  tax_rate_aggregations: TaxRateAggregation[];
+  config: BonConfig;
+  currency_identifier: string;
+};
+export type BonJsonRead = {
+  order: OrderWithTseRead;
+  tax_rate_aggregations: TaxRateAggregation[];
+  config: BonConfig;
+  currency_identifier: string;
+};
 export type PendingLineItem = {
   quantity: number;
   product: Product;
@@ -3013,91 +3106,6 @@ export type RestrictedEventSettings = {
   languages: Language[];
   sumup_oauth_refresh_token: string;
 };
-export type OrderWithTse = {
-  id: number;
-  uuid: string;
-  total_price: number;
-  total_tax: number;
-  total_no_tax: number;
-  cancels_order: number | null;
-  booked_at: string;
-  payment_method: PaymentMethod;
-  order_type: OrderType;
-  cashier_id: number | null;
-  till_id: number | null;
-  customer_account_id: number | null;
-  customer_tag_uid: number | null;
-  customer_tag_id: number | null;
-  line_items: LineItem[];
-  signature_status: string;
-  transaction_process_type?: string | null;
-  transaction_process_data?: string | null;
-  tse_transaction?: string | null;
-  tse_signaturenr?: string | null;
-  tse_start?: string | null;
-  tse_end?: string | null;
-  tse_hashalgo?: string | null;
-  tse_time_format?: string | null;
-  tse_signature?: string | null;
-  tse_public_key?: string | null;
-  node_id: number;
-};
-export type OrderWithTseRead = {
-  id: number;
-  uuid: string;
-  total_price: number;
-  total_tax: number;
-  total_no_tax: number;
-  cancels_order: number | null;
-  booked_at: string;
-  payment_method: PaymentMethod;
-  order_type: OrderType;
-  cashier_id: number | null;
-  till_id: number | null;
-  customer_account_id: number | null;
-  customer_tag_uid: number | null;
-  customer_tag_id: number | null;
-  line_items: LineItemRead[];
-  signature_status: string;
-  transaction_process_type?: string | null;
-  transaction_process_data?: string | null;
-  tse_transaction?: string | null;
-  tse_signaturenr?: string | null;
-  tse_start?: string | null;
-  tse_end?: string | null;
-  tse_hashalgo?: string | null;
-  tse_time_format?: string | null;
-  tse_signature?: string | null;
-  tse_public_key?: string | null;
-  node_id: number;
-  customer_tag_uid_hex: string | null;
-  tse_qr_code_text: string;
-};
-export type TaxRateAggregation = {
-  tax_name: string;
-  tax_rate: number;
-  total_price: number;
-  total_tax: number;
-  total_no_tax: number;
-};
-export type BonConfig = {
-  title: string;
-  issuer: string;
-  address: string;
-  ust_id: string;
-};
-export type BonJson = {
-  order: OrderWithTse;
-  tax_rate_aggregations: TaxRateAggregation[];
-  config: BonConfig;
-  currency_identifier: string;
-};
-export type BonJsonRead = {
-  order: OrderWithTseRead;
-  tax_rate_aggregations: TaxRateAggregation[];
-  config: BonConfig;
-  currency_identifier: string;
-};
 export type SumUpTokenPayload = {
   authorization_code: string;
 };
@@ -3297,6 +3305,8 @@ export const {
   useGetOrderQuery,
   useLazyGetOrderQuery,
   useCancelOrderMutation,
+  useGetOrderBonQuery,
+  useLazyGetOrderBonQuery,
   useEditOrderMutation,
   useListCashiersQuery,
   useLazyListCashiersQuery,
