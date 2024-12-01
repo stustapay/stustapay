@@ -142,7 +142,8 @@ export const translations = {
     description: "Description",
     cashDrawerBalance: "Cash Drawer",
     tagId: "Tag ID",
-    till: "Till",
+    terminal: "Terminal",
+    terminals: "Terminals",
     shifts: "Shifts",
     closeOut: "Close Out",
     showWithoutTill: "Show without till",
@@ -179,6 +180,7 @@ export const translations = {
     coins: "Coins",
     bill: "{{denomination}}{{currencySymbol}} *",
     totalCashCount: "Total Cash Count",
+    noCashDrawerWarning: "The cashier does not have an assigned cash drawer",
   },
   order: {
     id: "ID",

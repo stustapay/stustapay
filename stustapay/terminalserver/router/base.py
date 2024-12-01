@@ -86,5 +86,5 @@ class UserInfoPayload(BaseModel):
 
 
 @router.post("/user-info", summary="Obtain information about a user tag", response_model=UserInfo)
-async def user_info(token: CurrentAuthToken, payload: UserInfoPayload, till_service: ContextTillService):
-    return await till_service.get_user_info(token=token, user_tag_uid=payload.user_tag_uid)
+async def user_info(token: CurrentAuthToken, payload: UserInfoPayload, terminal_service: ContextTerminalService):
+    return await terminal_service.get_user_info(token=token, user_tag_uid=payload.user_tag_uid)

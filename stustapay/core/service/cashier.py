@@ -26,6 +26,7 @@ from .order.booking import (
 )
 from .product import fetch_money_difference_product
 from .till.common import fetch_virtual_till
+from .till.register import get_cash_register_account_id
 from .user import AuthService
 
 
@@ -50,10 +51,10 @@ async def _book_imbalance_order(
     conn: Connection,
     current_user: CurrentUser,
     node: Node,
-    cashier_account_id: int,
     cash_register_id: int,
     imbalance: float,
 ) -> OrderInfo:
+    cash_register_account_id = await get_cash_register_account_id(conn=conn, cash_register_id=cash_register_id)
     difference_product = await fetch_money_difference_product(conn=conn, node=node)
     line_items = [
         NewLineItem(
@@ -69,7 +70,9 @@ async def _book_imbalance_order(
     )
 
     bookings: dict[BookingIdentifier, float] = {
-        BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_imbalance_acc.id): -imbalance,
+        BookingIdentifier(
+            source_account_id=cash_register_account_id, target_account_id=cash_imbalance_acc.id
+        ): -imbalance,
     }
     virtual_till = await fetch_virtual_till(conn=conn, node=node)
 
@@ -105,13 +108,13 @@ async def _book_money_transfer_cash_vault_order(
     conn: Connection,
     current_user: CurrentUser,
     node: Node,
-    cashier_account_id: int,
     cash_register_id: int,
     amount: float,
 ) -> OrderInfo:
+    cash_register_account_id = await get_cash_register_account_id(conn=conn, cash_register_id=cash_register_id)
     cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
     bookings: dict[BookingIdentifier, float] = {
-        BookingIdentifier(source_account_id=cashier_account_id, target_account_id=cash_vault_acc.id): amount,
+        BookingIdentifier(source_account_id=cash_register_account_id, target_account_id=cash_vault_acc.id): amount,
     }
     virtual_till = await fetch_virtual_till(conn=conn, node=node)
     return await book_money_transfer(
@@ -250,7 +253,7 @@ class CashierService(Service[Config]):
             raise InvalidCloseOutException("Cashier does not have a cash register")
         expected_balance = cashier.cash_drawer_balance
 
-        is_logged_in = await conn.fetchval("select true from till where active_user_id = $1", cashier_id)
+        is_logged_in = await conn.fetchval("select exists(select from terminal where active_user_id = $1)", cashier_id)
         if is_logged_in:
             raise InvalidCloseOutException("cannot close out a cashier who is logged in at a terminal")
 
@@ -278,7 +281,6 @@ class CashierService(Service[Config]):
             conn=conn,
             current_user=current_user,
             node=node,
-            cashier_account_id=cashier.cashier_account_id,
             cash_register_id=cashier.cash_register_id,
             amount=close_out.actual_cash_drawer_balance,
         )
@@ -286,7 +288,6 @@ class CashierService(Service[Config]):
             conn=conn,
             current_user=current_user,
             node=node,
-            cashier_account_id=cashier.cashier_account_id,
             cash_register_id=cashier.cash_register_id,
             imbalance=imbalance,
         )
@@ -311,6 +312,9 @@ class CashierService(Service[Config]):
         await conn.execute("update usr set cash_register_id = null where id = $1", cashier.id)
         await conn.execute("update till set z_nr = z_nr + 1 where id = $1", virtual_till.id)
         # correct the actual balance to rule out any floating point errors / representation errors
-        await conn.execute("update account set balance = 0 where id = $1", cashier.cashier_account_id)
+        cash_register_account_id = await get_cash_register_account_id(
+            conn=conn, cash_register_id=cashier.cash_register_id
+        )
+        await conn.execute("update account set balance = 0 where id = $1", cash_register_account_id)
 
         return CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)

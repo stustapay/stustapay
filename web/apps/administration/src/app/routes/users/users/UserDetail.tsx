@@ -1,5 +1,5 @@
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
-import { CashierRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
+import { UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
@@ -64,9 +64,6 @@ export const UserDetail: React.FC = () => {
           />
         ) : (
           <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
-        )}
-        {user.cashier_account_id != null && (
-          <DetailField label={t("user.cashierDetails")} linkTo={CashierRoutes.detail(user.id, user.node_id)} />
         )}
       </DetailView>
     </DetailLayout>

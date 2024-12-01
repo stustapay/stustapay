@@ -13,7 +13,7 @@ from stustapay.core.schema.user import (
 )
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
-from stustapay.core.service.till import TillService
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
@@ -40,7 +40,6 @@ async def test_user_creation(
     )
     assert user is not None
     assert user.login == "test-cashier"
-    assert user.cashier_account_id is None
     assert user.transport_account_id is None
     assert user.user_tag_uid == user_tag.uid
     # Test creation if user already exists, then this should return an error
@@ -63,25 +62,25 @@ async def test_user_creation(
 
 
 async def test_terminal_user_management(
-    till_service: TillService, terminal_token: str, cashier: Cashier, finanzorga: Finanzorga
+    terminal_service: TerminalService, terminal_token: str, cashier: Cashier, finanzorga: Finanzorga
 ):
-    await till_service.logout_user(token=terminal_token)
+    await terminal_service.logout_user(token=terminal_token)
     # Cashier cannot simply login
     with pytest.raises(AccessDenied):
-        await till_service.check_user_login(token=terminal_token, user_tag=UserTag(uid=cashier.user_tag_uid))
+        await terminal_service.check_user_login(token=terminal_token, user_tag=UserTag(uid=cashier.user_tag_uid))
     with pytest.raises(AccessDenied):
-        await till_service.login_user(
+        await terminal_service.login_user(
             token=terminal_token,
             user_tag=UserTag(uid=cashier.user_tag_uid),
             user_role_id=cashier.cashier_role.id,
         )
 
     # Admins can login
-    roles: list[UserRole] = await till_service.check_user_login(
+    roles: list[UserRole] = await terminal_service.check_user_login(
         token=terminal_token, user_tag=UserTag(uid=finanzorga.user_tag_uid)
     )
     for role in roles:
-        orga: CurrentUser = await till_service.login_user(
+        orga: CurrentUser = await terminal_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=finanzorga.user_tag_uid), user_role_id=role.id
         )
         assert orga is not None
@@ -89,40 +88,40 @@ async def test_terminal_user_management(
         assert role.id == orga.active_role_id
 
     # log in finanzorga as supervisor
-    await till_service.login_user(
+    await terminal_service.login_user(
         token=terminal_token,
         user_tag=UserTag(uid=finanzorga.user_tag_uid),
         user_role_id=finanzorga.finanzorga_role.id,
     )
     # Now Cashiers can login
-    roles = await till_service.check_user_login(token=terminal_token, user_tag=UserTag(uid=cashier.user_tag_uid))
+    roles = await terminal_service.check_user_login(token=terminal_token, user_tag=UserTag(uid=cashier.user_tag_uid))
     assert 1 == len(roles)
     cashier_role = roles[0]
-    login_res = await till_service.login_user(
+    login_res = await terminal_service.login_user(
         token=terminal_token, user_tag=UserTag(uid=cashier.user_tag_uid), user_role_id=cashier_role.id
     )
     assert login_res is not None
     assert cashier_role.name == login_res.active_role_name
     assert cashier_role.id == login_res.active_role_id
 
-    user = await till_service.get_current_user(token=terminal_token)
+    user = await terminal_service.get_current_user(token=terminal_token)
     assert user is not None
     assert cashier_role.name == user.active_role_name
     assert cashier_role.id == user.active_role_id
 
-    await till_service.logout_user(token=terminal_token)
-    user = await till_service.get_current_user(token=terminal_token)
+    await terminal_service.logout_user(token=terminal_token)
+    user = await terminal_service.get_current_user(token=terminal_token)
     assert user is None
 
     # non supervisors cannot login when a supervisor is logged in with a non-supervisor role
     with pytest.raises(AccessDenied):
-        await till_service.login_user(
+        await terminal_service.login_user(
             token=terminal_token,
             user_tag=UserTag(uid=cashier.user_tag_uid),
             user_role_id=cashier.cashier_role.id,
         )
 
-    await till_service.login_user(
+    await terminal_service.login_user(
         token=terminal_token, user_tag=UserTag(uid=finanzorga.user_tag_uid), user_role_id=cashier.cashier_role.id
     )
 

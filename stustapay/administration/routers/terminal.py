@@ -85,3 +85,10 @@ async def switch_till(
     await terminal_service.switch_till(
         token=token, terminal_id=terminal_id, node_id=node_id, new_till_id=payload.new_till_id
     )
+
+
+@router.post("/{terminal_id}/force-logout-user")
+async def force_logout_user(
+    terminal_id: int, token: CurrentAuthToken, terminal_service: ContextTerminalService, node_id: int
+):
+    await terminal_service.force_logout_user(token=token, terminal_id=terminal_id, node_id=node_id)

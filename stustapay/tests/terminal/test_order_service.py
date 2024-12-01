@@ -93,9 +93,9 @@ async def test_cash_pay_out_flow_with_amount(
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
 ):
-    await assign_cash_register(cashier=cashier)
+    cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
-    cash_drawer_start_balance = await get_account_balance(account_id=cashier.cashier_account_id)
+    cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_exit_start_balance = await get_system_account_balance(account_type=AccountType.cash_exit)
 
@@ -114,7 +114,7 @@ async def test_cash_pay_out_flow_with_amount(
 
     customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
     assert START_BALANCE - 20 == customer_info.balance
-    await assert_account_balance(account_id=cashier.cashier_account_id, expected_balance=cash_drawer_start_balance - 20)
+    await assert_account_balance(account_id=cash_register_account_id, expected_balance=cash_drawer_start_balance - 20)
     await assert_system_account_balance(
         account_type=AccountType.cash_topup_source, expected_balance=cash_sale_source_start_balance + 20
     )
@@ -136,9 +136,9 @@ async def test_cash_pay_out_flow_no_amount(
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
 ):
-    await assign_cash_register(cashier=cashier)
+    cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
-    cash_drawer_start_balance = await get_account_balance(account_id=cashier.cashier_account_id)
+    cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_exit_start_balance = await get_system_account_balance(account_type=AccountType.cash_exit)
 
@@ -153,7 +153,7 @@ async def test_cash_pay_out_flow_no_amount(
     customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
     assert 0 == customer_info.balance
     await assert_account_balance(
-        expected_balance=cash_drawer_start_balance - START_BALANCE, account_id=cashier.cashier_account_id
+        expected_balance=cash_drawer_start_balance - START_BALANCE, account_id=cash_register_account_id
     )
     await assert_system_account_balance(
         account_type=AccountType.cash_topup_source, expected_balance=cash_sale_source_start_balance + START_BALANCE
@@ -216,9 +216,9 @@ async def test_topup_cash_order_flow(
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
 ):
-    await assign_cash_register(cashier=cashier)
+    cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
-    cash_drawer_start_balance = await get_account_balance(account_id=cashier.cashier_account_id)
+    cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_entry_start_balance = await get_system_account_balance(account_type=AccountType.cash_entry)
 
@@ -237,7 +237,7 @@ async def test_topup_cash_order_flow(
     assert completed_topup.old_balance == START_BALANCE
     assert completed_topup.amount == 20
     assert completed_topup.new_balance == START_BALANCE + completed_topup.amount
-    await assert_account_balance(account_id=cashier.cashier_account_id, expected_balance=cash_drawer_start_balance + 20)
+    await assert_account_balance(account_id=cash_register_account_id, expected_balance=cash_drawer_start_balance + 20)
     await assert_system_account_balance(
         account_type=AccountType.cash_entry, expected_balance=cash_entry_start_balance - 20
     )

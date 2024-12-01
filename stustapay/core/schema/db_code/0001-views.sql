@@ -1,26 +1,30 @@
+create view cash_register_with_balance as
+    select
+        c.*,
+        a.balance as balance
+    from
+        cash_register c
+        join account a on c.account_id = a.id;
+
 create view till_with_cash_register as
     select
         t.*,
         tse.serial,
         cr.name   as current_cash_register_name,
-        a.balance as current_cash_register_balance
+        cr.balance as current_cash_register_balance
     from
         till t
-        left join usr u on t.active_user_id = u.id
-        left join account a on u.cashier_account_id = a.id
-        left join cash_register cr on t.active_cash_register_id = cr.id
+        left join cash_register_with_balance cr on t.active_cash_register_id = cr.id
         left join tse on tse.id = t.tse_id;
 
 create view cash_register_with_cashier as
     select
         c.*,
         t.id                   as current_till_id,
-        u.id                   as current_cashier_id,
-        coalesce(a.balance, 0) as current_balance
+        u.id                   as current_cashier_id
     from
-        cash_register c
+        cash_register_with_balance c
         left join usr u on u.cash_register_id = c.id
-        left join account a on a.id = u.cashier_account_id
         left join till t on t.active_cash_register_id = c.id;
 
 create view user_role_with_privileges as
@@ -46,10 +50,11 @@ create view user_to_roles_aggregated as
     select
         utr.user_id,
         utr.node_id,
+        utr.terminal_only,
         array_agg(utr.role_id) as role_ids
     from
         user_to_role utr
-    group by utr.user_id, utr.node_id;
+    group by utr.user_id, utr.node_id, utr.terminal_only;
 
 create view account_with_history as
     select
@@ -169,23 +174,22 @@ create view cashier as
         u.user_tag_id,
         u.user_tag_uid,
         u.transport_account_id,
-        u.cashier_account_id,
         u.cash_register_id,
-        a.balance                                    as cash_drawer_balance,
-        coalesce(tills.till_ids, '{}'::bigint array) as till_ids
+        cr.balance                                           as cash_drawer_balance,
+        coalesce(terminals.terminal_ids, '{}'::bigint array) as terminal_ids
     from
         user_with_tag u
-        join account a on u.cashier_account_id = a.id
+        left join cash_register_with_balance cr on cr.id = u.cash_register_id
         left join (
             select
                 t.active_user_id as user_id,
-                array_agg(t.id)  as till_ids
+                array_agg(t.id)  as terminal_ids
             from
-                till t
+                terminal t
             where
                 t.active_user_id is not null
             group by t.active_user_id
-        ) tills on tills.user_id = u.id;
+        ) terminals on terminals.user_id = u.id;
 
 create view product_with_tax_and_restrictions as
     select

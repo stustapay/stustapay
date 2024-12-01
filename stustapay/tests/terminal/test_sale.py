@@ -37,6 +37,7 @@ from stustapay.core.service.order.order import InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till import TillService
 
+from ...core.service.terminal import TerminalService
 from ..conftest import Cashier
 from .conftest import (
     START_BALANCE,
@@ -156,6 +157,7 @@ async def sale_products(
 async def test_basic_sale_flow(
     db_connection: Connection,
     till_service: TillService,
+    terminal_service: TerminalService,
     order_service: OrderService,
     till: Till,
     customer: Customer,
@@ -207,11 +209,11 @@ async def test_basic_sale_flow(
     await assert_system_account_balance(account_type=AccountType.sale_exit, expected_balance=0)
 
     # after logging out a user with bookings the z_nr should not be incremented
-    await till_service.logout_user(token=terminal_token)
+    await terminal_service.logout_user(token=terminal_token)
     z_nr = await db_connection.fetchval("select z_nr from till where id = $1", till.id)
     assert z_nr_start == z_nr
     # after logging in a user with bookings the z_nr should be incremented
-    await till_service.login_user(
+    await terminal_service.login_user(
         token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
     )
     z_nr = await db_connection.fetchval("select z_nr from till where id = $1", till.id)
@@ -464,6 +466,7 @@ async def test_basic_sale_flow_with_fixed_vouchers(
 
 async def test_cashier_close_out(
     till_service: TillService,
+    terminal_service: TerminalService,
     order_service: OrderService,
     cashier_service: CashierService,
     db_connection: Connection,
@@ -508,7 +511,7 @@ async def test_cashier_close_out(
     )
     assert success
 
-    await assert_account_balance(cashier.cashier_account_id, stocking.total)
+    await assert_account_balance(register.account_id, stocking.total)
     await assert_system_account_balance(AccountType.cash_vault, -stocking.total)
 
     # before logging in we did not produce a money transfer order
@@ -550,7 +553,7 @@ async def test_cashier_close_out(
             ),
         )
 
-    await till_service.logout_user(token=terminal_token)
+    await terminal_service.logout_user(token=terminal_token)
     n_orders = await get_num_orders(OrderType.money_transfer)
     assert n_orders_start + 2 == n_orders
 
@@ -566,7 +569,7 @@ async def test_cashier_close_out(
     )
     assert close_out_result.imbalance == actual_balance - cashier_info.cash_drawer_balance
 
-    await assert_account_balance(account_id=cashier.cashier_account_id, expected_balance=0)
+    await assert_account_balance(account_id=register.account_id, expected_balance=0)
     shifts = await cashier_service.get_cashier_shifts(
         token=event_admin_token, node_id=event_node.id, cashier_id=cashier.id
     )
@@ -594,6 +597,7 @@ async def test_cashier_close_out(
 
 async def test_transport_and_cashier_account_management(
     till_service: TillService,
+    terminal_service: TerminalService,
     assert_account_balance: AssertAccountBalance,
     assert_system_account_balance: AssertSystemAccountBalance,
     cashier: Cashier,
@@ -604,12 +608,12 @@ async def test_transport_and_cashier_account_management(
     assign_cash_register: AssignCashRegister,
 ):
     cashier_terminal_token = await create_terminal_token()
-    await assign_cash_register(cashier=cashier)
+    cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(
         user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id, terminal_token=cashier_terminal_token
     )
     await login_supervised_user(user_tag_uid=finanzorga.user_tag_uid, user_role_id=finanzorga.finanzorga_role.id)
-    await till_service.login_user(
+    await terminal_service.login_user(
         token=terminal_token,
         user_tag=UserTag(uid=finanzorga.user_tag_uid),
         user_role_id=finanzorga.finanzorga_role.id,
@@ -631,12 +635,12 @@ async def test_transport_and_cashier_account_management(
         token=terminal_token, cashier_tag_uid=cashier.user_tag_uid, amount=60
     )
     await assert_account_balance(finanzorga.transport_account_id, 40)
-    await assert_account_balance(cashier.cashier_account_id, 60)
+    await assert_account_balance(cash_register_account_id, 60)
     await till_service.register.modify_cashier_account_balance(
         token=terminal_token, cashier_tag_uid=cashier.user_tag_uid, amount=-30
     )
     await assert_account_balance(finanzorga.transport_account_id, 70)
-    await assert_account_balance(cashier.cashier_account_id, 30)
+    await assert_account_balance(cash_register_account_id, 30)
 
     with pytest.raises(InvalidArgument):
         await till_service.register.modify_transport_account_balance(

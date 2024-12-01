@@ -414,7 +414,6 @@ async def tax_rate_ust(tax_rate_service: TaxRateService, event_admin_token: str,
 
 
 class Cashier(User):
-    cashier_account_id: int
     user_tag_uid: int
     cashier_role: UserRole
     token: str
