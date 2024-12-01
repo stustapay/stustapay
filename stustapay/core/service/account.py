@@ -57,16 +57,6 @@ async def get_account_by_tag_id(*, conn: Connection, node: Node, tag_id: int) ->
     )
 
 
-async def get_cashier_account_by_tag_uid(*, conn: Connection, node: Node, cashier_tag_id: int) -> Optional[Account]:
-    return await conn.fetch_maybe_one(
-        Account,
-        "select a.* from usr join account_with_history a on a.id = usr.cashier_account_id "
-        "where usr.user_tag_id = $1 and usr.node_id = any($2)",
-        cashier_tag_id,
-        node.ids_to_event_node,
-    )
-
-
 async def get_transport_account_by_tag_uid(*, conn: Connection, node: Node, orga_tag_uid: int) -> Optional[Account]:
     return await conn.fetch_maybe_one(
         Account,

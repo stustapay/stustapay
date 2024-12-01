@@ -19,6 +19,8 @@ class Terminal(NewTerminal):
     till_id: int | None
     session_uuid: UUID | None
     registration_uuid: UUID | None
+    active_user_id: Optional[int] = None
+    active_user_role_id: Optional[int] = None
 
 
 class UserTagSecret(BaseModel):
@@ -26,11 +28,14 @@ class UserTagSecret(BaseModel):
     key1: str
 
 
-class TerminalSecrets(BaseModel):
+class TerminalUserTagSecrets(BaseModel):
+    user_tag_secret: UserTagSecret
+
+
+class TerminalSumupSecrets(BaseModel):
     sumup_affiliate_key: str
     sumup_api_key: str
     sumup_api_key_expires_at: datetime | None
-    user_tag_secret: UserTagSecret
 
 
 class TerminalButton(BaseModel):
@@ -48,9 +53,7 @@ class TerminalTillConfig(BaseModel):
     id: int
     name: str
     description: Optional[str]
-    event_name: str
     profile_name: str
-    user_privileges: Optional[list[Privilege]]
     cash_register_id: Optional[int]
     cash_register_name: Optional[str]
     allow_top_up: bool
@@ -60,16 +63,19 @@ class TerminalTillConfig(BaseModel):
     enable_cash_payment: bool
     enable_card_payment: bool
     buttons: Optional[list[TerminalButton]]
-    secrets: Optional[TerminalSecrets]
-    active_user_id: Optional[int]
-
-    available_roles: list[UserRole]
+    sumup_secrets: Optional[TerminalSumupSecrets]
 
 
 class TerminalConfig(BaseModel):
     id: int
     name: str
     description: str | None
+
+    event_name: str
+    active_user_id: Optional[int]
+    available_roles: list[UserRole]
+    user_privileges: Optional[list[Privilege]]
+    secrets: Optional[TerminalUserTagSecrets]
 
     till: TerminalTillConfig | None
 
@@ -87,4 +93,6 @@ class CurrentTerminal(BaseModel):
     node_id: int
     name: str
     description: str | None
+    active_user_id: int | None
+    active_user_role_id: int | None
     till: Till | None

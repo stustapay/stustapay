@@ -20,10 +20,11 @@ class AccountType(enum.Enum):
     sumup_entry = "sumup_entry"
     sumup_online_entry = "sumup_online_entry"
     transport = "transport"
-    cashier = "cashier"
+    # cashier = "cashier"  # LEGACY, not used anymore, kept for reference
     voucher_create = "voucher_create"
     donation_exit = "donation_exit"
     sepa_exit = "sepa_exit"
+    cash_register = "cash_register"
 
 
 def get_source_account(order_type: OrderType, customer_account: int):

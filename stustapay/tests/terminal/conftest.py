@@ -64,7 +64,7 @@ async def terminal_token(
             terminal_id=terminal.id,
         ),
     )
-    await till_service.login_user(
+    await terminal_service.login_user(
         token=registration.token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
     )
     return registration.token
@@ -94,16 +94,16 @@ class LoginSupervisedUser(Protocol):
 
 @pytest.fixture
 async def login_supervised_user(
-    till_service: TillService,
+    terminal_service: TerminalService,
     terminal_token: str,
     event_admin_user,
 ) -> LoginSupervisedUser:
     async def func(user_tag_uid: int, user_role_id: int, terminal_token: str = terminal_token):
-        await till_service.logout_user(token=terminal_token)
-        await till_service.login_user(
+        await terminal_service.logout_user(token=terminal_token)
+        await terminal_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=event_admin_user[0].user_tag_uid), user_role_id=ADMIN_ROLE_ID
         )
-        await till_service.login_user(
+        await terminal_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=user_tag_uid), user_role_id=user_role_id
         )
 
@@ -118,12 +118,13 @@ class AssignCashRegister(Protocol):
 async def assign_cash_register(
     cash_register: CashRegister,
     cash_register_stocking: CashRegisterStocking,
+    terminal_service: TerminalService,
     till_service: TillService,
     terminal_token: str,
     event_admin_tag: TestUserTag,
 ) -> AssignCashRegister:
     async def func(cashier: Cashier):
-        await till_service.login_user(
+        await terminal_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
         )
         await till_service.register.stock_up_cash_register(
@@ -132,6 +133,7 @@ async def assign_cash_register(
             stocking_id=cash_register_stocking.id,
             cash_register_id=cash_register.id,
         )
+        return cash_register.account_id
 
     return func
 
@@ -323,7 +325,7 @@ async def create_terminal_token(
             ),
         )
         terminal_token = (await terminal_service.register_terminal(registration_uuid=terminal.registration_uuid)).token
-        await till_service.login_user(
+        await terminal_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID
         )
         return terminal_token

@@ -23,10 +23,9 @@ class Cashier(BaseModel):
         return format_user_tag_uid(self.user_tag_uid)
 
     transport_account_id: Optional[int] = None
-    cashier_account_id: int
     cash_register_id: Optional[int] = None
-    cash_drawer_balance: float
-    till_ids: list[int]
+    cash_drawer_balance: float | None
+    terminal_ids: list[int]
 
 
 class CashierShiftStats(BaseModel):

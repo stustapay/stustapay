@@ -1,9 +1,6 @@
 alter table usr add constraint login_encoding
     check ( login ~ '[a-zA-Z0-9\-_]+' );
 
-alter table usr add constraint cash_register_need_cashier_acccount
-    check (((cash_register_id is not null) and (cashier_account_id is not null)) or cash_register_id is null);
-
 alter table usr add constraint password_or_user_tag_id_set
     check ((user_tag_id is not null) or (password is not null));
 
@@ -26,7 +23,7 @@ alter table cash_register_stocking add constraint non_negative_stockings
            cent50 >= 0 and cent20 >= 0 and cent10 >= 0 and cent5 >= 0 and
            cent2 >= 0 and cent1 >= 0 and variable_in_euro >= 0);
 
-alter table till add constraint user_requires_role
+alter table terminal add constraint user_requires_role
     check ((active_user_id is null) = (active_user_role_id is null));
 
 alter table terminal add constraint registration_or_session_uuid_null
@@ -393,3 +390,25 @@ alter table event add constraint end_date_gt_start_date
 
 alter table customer_info add constraint account_name_charset
     check ( account_name ~ '^[a-zA-Z0-9\.''\:\?,\-\(\)\/ ÄäÖöÜüßÉéèàùâáêėîíôóûÇğçčćëİïÁϋğÑñãŞÇşı&\$%]+$' );
+
+create or replace function check_user_to_role_terminals_only_at_event_node(
+    node_id bigint,
+    terminal_only bool
+) returns boolean as
+$$
+<<locals>> declare
+    is_event_node bool;
+begin
+    if not terminal_only then
+        return true;
+    end if;
+
+    select n.event_id is not null into locals.is_event_node
+    from node n
+    where n.id = check_user_to_role_terminals_only_at_event_node.node_id;
+
+    return locals.is_event_node;
+end
+$$ language plpgsql
+    set search_path = "$user", public;
+alter table user_to_role add constraint user_to_role_terminals_only_at_event_node check(check_user_to_role_terminals_only_at_event_node(node_id, terminal_only));

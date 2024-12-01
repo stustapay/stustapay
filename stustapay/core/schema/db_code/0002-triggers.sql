@@ -142,7 +142,6 @@ $$
     event_node_id         bigint;
     role_privileges       text[];
     user_login            text;
-    cashier_account_id    bigint;
     transport_account_id  bigint;
 begin
     select
@@ -173,29 +172,14 @@ begin
     end if;
 
     select
-        usr.cashier_account_id,
         usr.transport_account_id,
         usr.login
-    into locals.cashier_account_id, locals.transport_account_id, locals.user_login
+    into locals.transport_account_id, locals.user_login
     from
         usr
     where
         id = NEW.user_id;
 
-    -- TODO: use a better privilege
-    if 'can_book_orders' = any (locals.role_privileges) then
-        if locals.cashier_account_id is null then
-            insert into account (
-                node_id, type, name
-            )
-            values (
-                locals.event_node_id, 'cashier', 'cashier account for ' || locals.user_login
-            )
-            returning id into locals.cashier_account_id;
-
-            update usr set cashier_account_id = locals.cashier_account_id where id = NEW.user_id;
-        end if;
-    end if;
     -- TODO: use a better privilege
     if 'cash_transport' = any (locals.role_privileges) then
         if locals.transport_account_id is null then
@@ -280,89 +264,80 @@ create trigger update_tag_association_history_trigger
     when (OLD.user_tag_id is distinct from NEW.user_tag_id and OLD.user_tag_id is not null)
 execute function update_tag_association_history();
 
-create or replace function handle_till_user_login() returns trigger as
+create or replace function handle_till_cash_register_change() returns trigger as
 $$
 <<locals>> declare
-    old_cashier_account_id    bigint;
-    old_cash_register_id      bigint;
-    old_cash_register_balance numeric;
-    old_order_id              bigint;
-    n_orders_booked           bigint;
-    new_cashier_account_id    bigint;
-    new_cash_register_id      bigint;
-    new_cash_register_balance numeric;
-    new_order_id              bigint;
-    tax_rate_none_id          bigint;
+    cash_register_balance           numeric;
+    order_id                        bigint;
+    tax_rate_none_id                bigint;
+    money_transfer_product_id       bigint;
+    cash_register_id                bigint;
+    logged_in_cashier               bigint;
 begin
-    NEW.active_cash_register_id := null;
-
     select t.id into locals.tax_rate_none_id
     from tax_rate t join node n on t.node_id = n.event_node_id
     where n.id = NEW.node_id and t.name = 'none';
-
-    if NEW.active_user_id is not null then
-        select
-            usr.cash_register_id,
-            usr.cashier_account_id,
-            a.balance
-        into locals.new_cash_register_id, locals.new_cashier_account_id, locals.new_cash_register_balance
-        from
-            usr
-            join account a on usr.cashier_account_id = a.id
-        where
-            usr.id = NEW.active_user_id;
-
-        select count(*) into locals.n_orders_booked from ordr where z_nr = NEW.z_nr and till_id = NEW.id;
-
-        if locals.n_orders_booked > 0 then NEW.z_nr := NEW.z_nr + 1; end if;
-
-        if locals.new_cash_register_id is not null then
-            insert into ordr (
-                item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr
-            )
-            values (
-                1, 'cash', 'money_transfer', NEW.active_user_id, NEW.id, locals.new_cash_register_id, NEW.z_nr
-            )
-            returning id into locals.new_order_id;
-
-            insert into line_item (
-                order_id, item_id, product_id, product_price, quantity, tax_rate_id, tax_name, tax_rate
-            )
-            values (
-                locals.new_order_id, 0, 7, locals.new_cash_register_balance, 1, locals.tax_rate_none_id, 'none', 0
-            );
-            NEW.active_cash_register_id := locals.new_cash_register_id;
-        end if;
+    if locals.tax_rate_none_id is null then
+        raise 'Could not find tax rate "none" for current node';
     end if;
 
-    if OLD.active_user_id is not null then
-        select
-            usr.cash_register_id,
-            usr.cashier_account_id,
-            a.balance
-        into locals.old_cash_register_id, locals.old_cashier_account_id, locals.old_cash_register_balance
-        from
-            usr
-            join account a on usr.cashier_account_id = a.id
-        where
-            usr.id = OLD.active_user_id;
+    select p.id into locals.money_transfer_product_id
+    from product p join node n on p.node_id = n.event_node_id
+    where n.id = NEW.node_id and p.type = 'money_transfer';
+    if locals.money_transfer_product_id is null then
+        raise 'Could not find money transfer product for current node';
+    end if;
 
-        if locals.old_cash_register_id is not null and locals.old_cash_register_balance != 0 then
+    if NEW.active_cash_register_id is null then
+        locals.cash_register_id := OLD.active_cash_register_id;
+        select t.active_user_id into locals.logged_in_cashier
+        from terminal t where t.id = OLD.terminal_id;
+    else
+        locals.cash_register_id := NEW.active_cash_register_id;
+        select t.active_user_id into locals.logged_in_cashier
+        from terminal t where t.id = NEW.terminal_id;
+    end if;
+
+    select
+        c.balance
+    into locals.cash_register_balance
+    from
+        cash_register_with_balance c
+    where
+        c.id = locals.cash_register_id;
+
+    if NEW.active_cash_register_id is null then
+        if locals.cash_register_balance != 0 then
             insert into ordr (
                 item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr
             )
             values (
-                1, 'cash', 'money_transfer', OLD.active_user_id, OLD.id, locals.old_cash_register_id, OLD.z_nr
+                1, 'cash', 'money_transfer', locals.logged_in_cashier, OLD.id, locals.cash_register_id, OLD.z_nr
             )
-            returning id into locals.old_order_id;
+            returning id into locals.order_id;
 
             insert into line_item (
                 order_id, item_id, product_id, product_price, quantity, tax_rate_id, tax_name, tax_rate
             )
             values (
-                locals.old_order_id, 0, 7, -locals.old_cash_register_balance, 1, locals.tax_rate_none_id, 'none', 0
+                locals.order_id, 0, locals.money_transfer_product_id, -locals.cash_register_balance, 1, locals.tax_rate_none_id, 'none', 0
             );
         end if;
+    else
+        insert into ordr (
+            item_count, payment_method, order_type, cashier_id, till_id, cash_register_id, z_nr
+        )
+        values (
+            1, 'cash', 'money_transfer', locals.logged_in_cashier, NEW.id, locals.cash_register_id, NEW.z_nr
+        )
+        returning id into locals.order_id;
+
+        insert into line_item (
+            order_id, item_id, product_id, product_price, quantity, tax_rate_id, tax_name, tax_rate
+        )
+        values (
+            locals.order_id, 0, locals.money_transfer_product_id, locals.cash_register_balance, 1, locals.tax_rate_none_id, 'none', 0
+        );
     end if;
 
     return NEW;
@@ -370,13 +345,51 @@ end
 $$ language plpgsql
     set search_path = "$user", public;
 
-drop trigger if exists handle_till_user_login_trigger on till;
-create trigger handle_till_user_login_trigger
-    before update of active_user_id
+drop trigger if exists handle_till_cash_register_change_trigger on till;
+create trigger handle_till_cash_register_change_trigger
+    before update of active_cash_register_id
     on till
     for each row
+    when (OLD.active_cash_register_id is distinct from NEW.active_cash_register_id)
+execute function handle_till_cash_register_change();
+
+create or replace function handle_terminal_active_user_change() returns trigger as
+$$
+<<locals>> declare
+    till_id bigint;
+    current_znr bigint;
+    n_orders_booked bigint;
+begin
+    if NEW.active_user_id is null then
+        return NEW;
+    end if;
+
+    select t.id, t.z_nr into locals.till_id, locals.current_znr
+    from till t where t.terminal_id = NEW.id;
+
+    if locals.till_id is null then
+        return NEW;
+    end if;
+
+    select count(*) into locals.n_orders_booked from ordr o
+    where o.z_nr = locals.current_znr and o.till_id = locals.till_id;
+
+    if locals.n_orders_booked > 0 then
+        update till set z_nr = z_nr + 1 where id = locals.till_id;
+    end if;
+
+    return NEW;
+end
+$$ language plpgsql
+    set search_path = "$user", public;
+
+drop trigger if exists handle_terminal_active_user_change_trigger on terminal;
+create trigger handle_terminal_active_user_change_trigger
+    after update of active_user_id
+    on terminal
+    for each row
     when (OLD.active_user_id is distinct from NEW.active_user_id)
-execute function handle_till_user_login();
+execute function handle_terminal_active_user_change();
 
 create or replace function deny_in_trigger() returns trigger
     language plpgsql as

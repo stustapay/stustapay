@@ -15,6 +15,7 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
+from stustapay.core.schema.user import Privilege
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -71,6 +72,8 @@ class Simulator:
         self.n_sale_till_workers = 1
         self.n_topup_till_workers = 1
 
+        self.unused_cashiers: list[int] = []
+
     async def sleep(self):
         to_sleep = 1.0 / self.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
@@ -105,9 +108,10 @@ class Simulator:
             for row in await self.db_pool.fetch(
                 "select u.user_tag_uid "
                 "from user_with_tag u "
-                "join account a on u.cashier_account_id = a.id "
+                "join user_privileges_at_node(u.id) pr on pr.node_id = $1 "
                 "left join till t on u.id = t.active_user_id "
-                "where t.id is null"
+                "where t.id is null and 'can_book_orders' = any(pr.privileges_at_node) ",
+                self.event_node_id,
             )
         ]
 
@@ -327,12 +331,8 @@ class Simulator:
             await asyncio.sleep(0.1)  # to avoid overloading the database
 
             assert terminal.config.till is not None
-            if terminal.config.till.active_user_id is not None:
-                is_cashier = await self.db_pool.fetchval(
-                    "select exists(select from usr where id = $1 and cashier_account_id is not null)",
-                    terminal.config.till.active_user_id,
-                )
-                if is_cashier:
+            if terminal.config.active_user_id is not None and terminal.config.user_privileges is not None:
+                if Privilege.can_book_orders in terminal.config.user_privileges:
                     self.logger.info("Terminal already has a logged in cashier")
                     terminals.append(terminal)
                     continue
