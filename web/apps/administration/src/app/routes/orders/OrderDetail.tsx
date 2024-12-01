@@ -10,7 +10,7 @@ import { CashierRoutes, CustomerRoutes, OrderRoutes, TillRoutes, UserTagRoutes }
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
-import { Cancel as CancelIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { formatUserTagUid, getUserName } from "@stustapay/models";
@@ -68,6 +68,13 @@ export const OrderDetail: React.FC = () => {
       title={t("order.name", { id: orderId })}
       routes={OrderRoutes}
       actions={[
+        {
+          label: t("bon"),
+          onClick: () => navigate(OrderRoutes.detailAction(orderId, "bon")),
+          color: "primary",
+          icon: <PrintIcon />,
+          hidden: order.order_type !== "sale",
+        },
         {
           label: t("edit"),
           onClick: () => navigate(OrderRoutes.edit(orderId)),

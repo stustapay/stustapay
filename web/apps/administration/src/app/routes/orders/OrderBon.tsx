@@ -1,15 +1,15 @@
-import { useGetBonQuery } from "@/api";
-import { Alert } from "@mui/material";
+import { useGetOrderBonQuery } from "@/api";
+import { Alert, Paper } from "@mui/material";
 import { BonDisplay, Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
-export const Bon: React.FC = () => {
-  const { orderUUID } = useParams();
+export const OrderBon: React.FC = () => {
+  const { orderId } = useParams();
   const { t } = useTranslation();
 
-  const { data: bon, isError } = useGetBonQuery({ orderUuid: orderUUID! });
+  const { data: bon, isError } = useGetOrderBonQuery({ orderId: Number(orderId) });
 
   if (!isError && !bon) {
     return <Loading />;
@@ -19,5 +19,9 @@ export const Bon: React.FC = () => {
     return <Alert severity="error">{t("errorLoadingBon")}</Alert>;
   }
 
-  return <BonDisplay bon={bon} />;
+  return (
+    <Paper>
+      <BonDisplay bon={bon} />
+    </Paper>
+  );
 };

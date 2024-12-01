@@ -13,6 +13,7 @@ from stustapay.core.http.context import Context
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.mail import MailService
+from stustapay.core.service.order import OrderService
 from stustapay.core.service.user import AuthService
 
 from .routers import auth, base, sumup
@@ -61,6 +62,7 @@ class Api:
         context = Context(
             config=self.cfg,
             config_service=ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            order_service=OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             customer_service=customer_service,
             mail_service=mail_service,
         )
