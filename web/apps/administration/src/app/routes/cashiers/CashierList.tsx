@@ -1,10 +1,10 @@
-import { CashierRead, selectCashierAll, selectTillById, useListCashiersQuery, useListTillsQuery } from "@/api";
-import { CashierRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import { CashierRead, selectCashierAll, selectTerminalById, useListCashiersQuery, useListTerminalsQuery } from "@/api";
+import { CashierRoutes, TerminalRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";
 import * as React from "react";
@@ -14,7 +14,7 @@ import { z } from "zod";
 
 const FilterOptionsSchema = z.object({
   showZeroBalance: StringyBoolean,
-  showWithoutTill: StringyBoolean,
+  showWithoutTerminal: StringyBoolean,
 });
 
 export const CashierList: React.FC = () => {
@@ -22,7 +22,7 @@ export const CashierList: React.FC = () => {
   const { currentNode } = useCurrentNode();
 
   const [filterOptions, setFilterOptions] = useQueryState(
-    { showZeroBalance: true, showWithoutTill: true },
+    { showZeroBalance: true, showWithoutTerminal: true },
     FilterOptionsSchema
   );
 
@@ -33,7 +33,7 @@ export const CashierList: React.FC = () => {
         ...rest,
         cashiers: data
           ? selectCashierAll(data).filter((cashier) => {
-              if (!filterOptions.showWithoutTill && cashier.till_ids.length === 0) {
+              if (!filterOptions.showWithoutTerminal && cashier.terminal_ids.length === 0) {
                 return false;
               }
               if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
@@ -45,26 +45,26 @@ export const CashierList: React.FC = () => {
       }),
     }
   );
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const { dataGridNodeColumn } = useRenderNode();
 
-  if (isCashiersLoading || isTillsLoading) {
+  if (isCashiersLoading || isTerminalsLoading) {
     return <Loading />;
   }
 
-  const renderTill = (id?: number | null) => {
-    if (!id || !tills) {
+  const renderTerminal = (id?: number | null) => {
+    if (!id || !terminals) {
       return "";
     }
 
-    const till = selectTillById(tills, id);
-    if (!till) {
+    const terminal = selectTerminalById(terminals, id);
+    if (!terminal) {
       return "";
     }
 
     return (
-      <Link component={RouterLink} key={id} to={TillRoutes.detail(till.id)}>
-        {till.name}
+      <Link component={RouterLink} key={id} to={TerminalRoutes.detail(terminal.id)}>
+        {terminal.name}
       </Link>
     );
   };
@@ -92,11 +92,11 @@ export const CashierList: React.FC = () => {
       flex: 2,
     },
     {
-      field: "till_id",
-      headerName: t("cashier.till"),
+      field: "terminal_ids",
+      headerName: t("cashier.terminals"),
       flex: 0.5,
       minWidth: 150,
-      renderCell: (params) => params.row.till_ids.map((till_id) => renderTill(till_id)),
+      renderCell: (params) => params.row.terminal_ids.map((id) => renderTerminal(id)),
     },
     {
       field: "user_tag_id",
@@ -133,8 +133,8 @@ export const CashierList: React.FC = () => {
         <FormControlLabel
           control={
             <Checkbox
-              checked={filterOptions.showWithoutTill}
-              onChange={(evt) => setFilterOptions({ ...filterOptions, showWithoutTill: evt.target.checked })}
+              checked={filterOptions.showWithoutTerminal}
+              onChange={(evt) => setFilterOptions({ ...filterOptions, showWithoutTerminal: evt.target.checked })}
             />
           }
           label={t("cashier.showWithoutTill")}

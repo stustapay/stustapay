@@ -134,5 +134,11 @@ class AuthService(Service[Config]):
         )
 
         return CurrentTerminal(
-            id=terminal.id, node_id=terminal.node_id, name=terminal.name, description=terminal.description, till=till
+            id=terminal.id,
+            node_id=terminal.node_id,
+            name=terminal.name,
+            description=terminal.description,
+            active_user_id=terminal.active_user_id,
+            active_user_role_id=terminal.active_user_role_id,
+            till=till,
         )

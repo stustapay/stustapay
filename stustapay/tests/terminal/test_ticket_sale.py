@@ -158,9 +158,9 @@ async def test_ticket_flow_with_one_tag(
     assign_cash_register: AssignCashRegister,
     create_random_user_tag: CreateRandomUserTag,
 ):
-    await assign_cash_register(cashier=cashier)
+    cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
-    cash_drawer_start_balance = await get_account_balance(account_id=cashier.cashier_account_id)
+    cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_entry_start_balance = await get_system_account_balance(account_type=AccountType.cash_entry)
     sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.cash_exit)
@@ -185,7 +185,7 @@ async def test_ticket_flow_with_one_tag(
     customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
     assert sale_tickets.ticket.initial_top_up_amount == customer.balance
     await assert_account_balance(
-        account_id=cashier.cashier_account_id,
+        account_id=cash_register_account_id,
         expected_balance=cash_drawer_start_balance + completed_ticket.total_price,
     )
     await assert_system_account_balance(
@@ -256,9 +256,9 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
     assign_cash_register: AssignCashRegister,
     create_random_user_tag: CreateRandomUserTag,
 ):
-    await assign_cash_register(cashier=cashier)
+    cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
-    cash_drawer_start_balance = await get_account_balance(account_id=cashier.cashier_account_id)
+    cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_entry_start_balance = await get_system_account_balance(account_type=AccountType.cash_entry)
     sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
@@ -294,7 +294,7 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
     )
     assert completed_ticket is not None
     await assert_account_balance(
-        account_id=cashier.cashier_account_id,
+        account_id=cash_register_account_id,
         expected_balance=cash_drawer_start_balance + completed_ticket.total_price,
     )
     expected_line_items = {

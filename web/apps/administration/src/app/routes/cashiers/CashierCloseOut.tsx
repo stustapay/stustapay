@@ -1,4 +1,5 @@
-import { selectTillById, useCloseOutCashierMutation, useGetCashierQuery, useListTillsQuery } from "@/api";
+import { selectTerminalById, useCloseOutCashierMutation, useGetCashierQuery, useListTerminalsQuery } from "@/api";
+import { CashierRoutes, TerminalRoutes } from "@/app/routes";
 import { UserSelect } from "@/components/features";
 import { useCurrencyFormatter, useCurrentNode, useCurrentUser } from "@/hooks";
 import {
@@ -27,7 +28,6 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
-import { CashierRoutes, TillRoutes } from "@/app/routes";
 import { CurrencyDenomination, useDenomination } from "./denominations";
 
 type CloseOutValues = {
@@ -90,17 +90,17 @@ export const CashierCloseOut: React.FC = () => {
 
   const [closeOut] = useCloseOutCashierMutation();
   const { data: cashier, isLoading } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
 
-  if (!cashier || isLoading || !tills || isTillsLoading) {
+  if (!cashier || isLoading || !terminals || isTerminalsLoading) {
     return <Loading />;
   }
 
-  const getTill = (id: number) => {
-    if (!tills) {
+  const getTerminal = (id: number) => {
+    if (!terminals) {
       return undefined;
     }
-    return selectTillById(tills, id);
+    return selectTerminalById(terminals, id);
   };
 
   const handleSubmit = (values: CloseOutValues, { setSubmitting }: FormikHelpers<CloseOutValues>) => {
@@ -124,6 +124,12 @@ export const CashierCloseOut: React.FC = () => {
       });
   };
 
+  const cashDrawerBalance = cashier.cash_drawer_balance;
+
+  if (cashDrawerBalance == null) {
+    return <Alert severity="error">{t("closeOut.noCashDrawerWarning")}</Alert>;
+  }
+
   return (
     <Stack spacing={2}>
       <Paper>
@@ -132,13 +138,13 @@ export const CashierCloseOut: React.FC = () => {
         </ListItem>
       </Paper>
 
-      {cashier.till_ids.length !== 0 && (
+      {cashier.terminal_ids.length !== 0 && (
         <Alert severity="error">
           <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
           {t("closeOut.warningStillLoggedIn")}
-          {cashier.till_ids.map((till_id) => (
-            <RouterLink key={till_id} to={TillRoutes.detail(till_id, getTill(till_id)?.node_id)}>
-              {getTill(till_id)?.name}
+          {cashier.terminal_ids.map((id) => (
+            <RouterLink key={id} to={TerminalRoutes.detail(id, getTerminal(id)?.node_id)}>
+              {getTerminal(id)?.name}
             </RouterLink>
           ))}
         </Alert>
@@ -173,7 +179,7 @@ export const CashierCloseOut: React.FC = () => {
                     <TableCell align="right" sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }}>
                       {t("closeOut.targetInDrawer")}
                     </TableCell>
-                    <TableCell align="right">{formatCurrency(cashier.cash_drawer_balance)}</TableCell>
+                    <TableCell align="right">{formatCurrency(cashDrawerBalance)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }} align="right">
@@ -186,11 +192,10 @@ export const CashierCloseOut: React.FC = () => {
                       {t("closeOut.difference")}
                     </TableCell>
                     <TableCell align="right">
-                      {formatCurrency(computeDifference(formik.values, denominations, cashier.cash_drawer_balance))} (
+                      {formatCurrency(computeDifference(formik.values, denominations, cashDrawerBalance))} (
                       {(
                         Math.abs(
-                          computeDifference(formik.values, denominations, cashier.cash_drawer_balance) /
-                            cashier.cash_drawer_balance
+                          computeDifference(formik.values, denominations, cashDrawerBalance) / cashDrawerBalance
                         ) * 100
                       ).toFixed(2)}
                       %)

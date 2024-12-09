@@ -68,6 +68,10 @@ class SumUpTransaction(BaseModel):
     transaction_code: str
 
 
+class SumUpTransactionDetail(SumUpTransaction):
+    foreign_transaction_id: str
+
+
 class SumUpTransactionResp(BaseModel):
     items: list[SumUpTransaction]
 
@@ -247,6 +251,12 @@ class SumUpApi:
             raise SumUpError("SumUp API returned an invalid response")
 
         return [SumUpCheckout.model_validate(x) for x in resp]
+
+    async def get_transaction(self, foreign_transaction_id: str) -> SumUpTransactionDetail:
+        resp = await self._get(
+            f"{SUMUP_API_URL}/me/transactions", query={"foreign_transaction_id": foreign_transaction_id}
+        )
+        return SumUpTransactionDetail.model_validate(resp)
 
     async def list_transactions(self) -> list[SumUpTransaction]:
         resp = await self._get(f"{SUMUP_API_URL}/me/transactions/history", query={"limit": 10000})

@@ -17,7 +17,7 @@ from stustapay.core.service.common.error import (
     ResourceNotAllowed,
     Unauthorized,
 )
-from stustapay.core.service.tree.common import fetch_node
+from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node
 
 R = TypeVar("R")
 
@@ -287,67 +287,64 @@ def requires_terminal(
             signature_params = signature(func).parameters
             func_is_read_only = _is_func_read_only(kwargs, func)
 
-            if requires_till:
-                assert till is not None
+            event_node = await fetch_event_node_for_node(conn=conn, node_id=terminal.node_id)
+            if event_node is None:
+                raise InvalidArgument("Terminals should not be able to be created outside of events")
+
+            node: Node | None = event_node
+            if till is not None:
                 node = await fetch_node(conn=conn, node_id=till.node_id)
-                assert node is not None
-                if node.event_node_id is None:
-                    raise InvalidArgument("Tills should not be able to be created outside of events")
-                event_node = await fetch_node(conn=conn, node_id=node.event_node_id)
-                assert event_node is not None
+            assert node is not None
 
-                logged_in_user = await conn.fetch_maybe_one(
-                    CurrentUser,
-                    "select "
-                    "   usr.*, "
-                    "   ut.uid as user_tag_uid, "
-                    "   urwp.privileges as privileges, "
-                    "   $2::bigint as active_role_id, "
-                    "   urwp.name as active_role_name "
-                    "from usr "
-                    "join user_tag ut on usr.user_tag_id = ut.id "
-                    "join user_to_role utr on utr.user_id = usr.id "
-                    "join user_role_with_privileges urwp on urwp.id = utr.role_id "
-                    "where usr.id = $1 and utr.role_id = $2 and utr.node_id = any($3)",
-                    till.active_user_id,
-                    till.active_user_role_id,
-                    event_node.ids_to_root if requires_event_privileges else node.ids_to_root,
-                )
+            logged_in_user = await conn.fetch_maybe_one(
+                CurrentUser,
+                "select "
+                "   usr.*, "
+                "   ut.uid as user_tag_uid, "
+                "   urwp.privileges as privileges, "
+                "   $2::bigint as active_role_id, "
+                "   urwp.name as active_role_name "
+                "from usr "
+                "join user_tag ut on usr.user_tag_id = ut.id "
+                "join user_to_role utr on utr.user_id = usr.id "
+                "join user_role_with_privileges urwp on urwp.id = utr.role_id "
+                "where usr.id = $1 and utr.role_id = $2 and utr.node_id = any($3)",
+                terminal.active_user_id,
+                terminal.active_user_role_id,
+                event_node.ids_to_root if requires_event_privileges else node.ids_to_root,
+            )
 
-                if user_privileges is not None:
-                    stringified_privileges = ", ".join(map(lambda x: x.name, user_privileges))
+            if "current_user" in signature_params:
+                kwargs["current_user"] = logged_in_user
+            elif "current_user" in kwargs:
+                kwargs.pop("current_user")
 
-                    if till.active_user_id is None or logged_in_user is None:
-                        raise AccessDenied(
-                            f"no user is logged into this terminal but "
-                            f"the following privileges are required {stringified_privileges}"
-                        )
+            if user_privileges is not None:
+                stringified_privileges = ", ".join(map(lambda x: x.name, user_privileges))
 
-                    if not any([p in user_privileges for p in logged_in_user.privileges]):
-                        raise AccessDenied(
-                            f"user does not have any of the required privileges: {stringified_privileges}"
-                        )
+                if logged_in_user is None:
+                    raise AccessDenied(
+                        f"no user is logged into this terminal but "
+                        f"the following privileges are required {stringified_privileges}"
+                    )
 
-                if not func_is_read_only and node.read_only:
-                    raise NodeIsReadOnly(f"{node.name} is read only")
+                if not any([p in user_privileges for p in logged_in_user.privileges]):
+                    raise AccessDenied(f"user does not have any of the required privileges: {stringified_privileges}")
 
-                if "current_user" in signature_params:
-                    kwargs["current_user"] = logged_in_user
-                elif "current_user" in kwargs:
-                    kwargs.pop("current_user")
+            if not func_is_read_only and node.read_only:
+                raise NodeIsReadOnly(f"{node.name} is read only")
 
-                if "node" in signature_params:
-                    kwargs["node"] = node
+            if "node" in signature_params:
+                kwargs["node"] = node
+
+            if requires_till:
+                if till is None:
+                    raise AccessDenied("No till assigned to this terminal")
 
                 if "current_till" in signature_params:
                     kwargs["current_till"] = till
-
-            else:  # requires_till == False
-                node_is_readonly = await conn.fetchval(
-                    "select read_only from node n join terminal t on t.node_id = n.id where t.id = $1", terminal.id
-                )
-                if not func_is_read_only and node_is_readonly:
-                    raise NodeIsReadOnly("Node is read only")
+                elif "current_till" in kwargs:
+                    kwargs.pop("current_till")
 
             if "current_terminal" in signature_params:
                 kwargs["current_terminal"] = terminal

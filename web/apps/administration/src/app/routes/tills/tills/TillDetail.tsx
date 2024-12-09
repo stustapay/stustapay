@@ -2,30 +2,20 @@ import {
   selectOrderAll,
   selectTerminalById,
   selectTillProfileById,
-  selectUserById,
   useDeleteTillMutation,
-  useForceLogoutUserMutation,
   useGetTillQuery,
   useListOrdersByTillQuery,
   useListTerminalsQuery,
   useListTillProfilesQuery,
-  useListUsersQuery,
   useRemoveFromTerminalMutation,
 } from "@/api";
-import { CashierRoutes, TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
-import { OrderTable, TillSwitchTerminal } from "@/components/features";
+import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { OrderTable, TillSwitchTerminal } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Logout as LogoutIcon,
-  Smartphone as SmartphoneIcon,
-} from "@mui/icons-material";
-import { Button, ListItem } from "@mui/material";
+import { Delete as DeleteIcon, Edit as EditIcon, Smartphone as SmartphoneIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
@@ -38,7 +28,6 @@ export const TillDetail: React.FC = () => {
   const navigate = useNavigate();
   const openModal = useOpenModal();
 
-  const [forceLogoutUser] = useForceLogoutUserMutation();
   const [deleteTill] = useDeleteTillMutation();
   const [removeFromTerminal] = useRemoveFromTerminalMutation();
   const { data: till, error: tillError } = useGetTillQuery({ nodeId: currentNode.id, tillId: Number(tillId) });
@@ -52,11 +41,10 @@ export const TillDetail: React.FC = () => {
     }
   );
   const { data: profiles, error: profileError } = useListTillProfilesQuery({ nodeId: currentNode.id });
-  const { data: users, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: terminals, error: terminalError } = useListTerminalsQuery({ nodeId: currentNode.id });
   const [switchTerminalOpen, setSwitchTerminalOpen] = React.useState(false);
 
-  if (tillError || orderError || userError || profileError || terminalError) {
+  if (tillError || orderError || profileError || terminalError) {
     toast.error("Error loading tills or orders");
     return <Navigate to={TillRoutes.list()} />;
   }
@@ -76,19 +64,6 @@ export const TillDetail: React.FC = () => {
     return <Loading />;
   }
 
-  const renderUser = (id?: number | null) => {
-    if (!id || !users) {
-      return "";
-    }
-
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return getUserName(user);
-  };
-
   const renderProfile = (id: number) => {
     if (!profiles) {
       return "";
@@ -103,17 +78,6 @@ export const TillDetail: React.FC = () => {
   };
 
   const terminal = till.terminal_id != null ? selectTerminalById(terminals, till.terminal_id) : undefined;
-
-  const openConfirmLogoutDialog = () => {
-    openModal({
-      type: "confirm",
-      title: t("till.forceLogoutUser"),
-      content: t("till.forceLogoutUserDescription"),
-      onConfirm: () => {
-        forceLogoutUser({ nodeId: currentNode.id, tillId: Number(tillId) });
-      },
-    });
-  };
 
   const openConfirmRemoveFromTerminalDialog = () => {
     if (!terminal) {
@@ -175,20 +139,6 @@ export const TillDetail: React.FC = () => {
             linkTo={TerminalRoutes.detail(till.terminal_id)}
             value={terminal.name}
           />
-        )}
-        {till.active_user_id != null && (
-          <>
-            <DetailField
-              label={t("till.activeUser")}
-              linkTo={CashierRoutes.detail(till.active_user_id)}
-              value={renderUser(till.active_user_id)}
-            />
-            <ListItem>
-              <Button color="error" variant="contained" onClick={openConfirmLogoutDialog} startIcon={<LogoutIcon />}>
-                {t("till.forceLogoutUser")}
-              </Button>
-            </ListItem>
-          </>
         )}
         {till.current_cash_register_name != null && (
           <DetailField label={t("till.cashRegisterName")} value={till.current_cash_register_name} />

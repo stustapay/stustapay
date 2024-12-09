@@ -53,7 +53,7 @@ async def fetch_user_to_roles(*, conn: Connection, node: Node, user_id: int) -> 
         UserToRoles, "select * from user_to_roles_aggregated where node_id = $1 and user_id = $2", node.id, user_id
     )
     if curr_user_to_role is None:
-        return UserToRoles(node_id=node.id, user_id=user_id, role_ids=[])
+        return UserToRoles(node_id=node.id, user_id=user_id, role_ids=[], terminal_only=False)
     return curr_user_to_role
 
 

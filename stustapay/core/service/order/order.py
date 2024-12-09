@@ -71,6 +71,7 @@ from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
+from ..till.register import get_cash_register_account_id
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -402,8 +403,6 @@ class OrderService(Service[Config]):
         current_user: CurrentUser,
         new_topup: NewTopUp,
     ) -> CompletedTopUp:
-        assert current_user.cashier_account_id is not None
-
         pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
             conn=conn,
             node=node,
@@ -430,6 +429,11 @@ class OrderService(Service[Config]):
         sumup_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sumup_entry)
 
         if pending_top_up.payment_method == PaymentMethod.cash:
+            if current_till.active_cash_register_id is None:
+                raise InvalidArgument("Cash payments require a cash register")
+            cash_register_account_id = await get_cash_register_account_id(
+                conn=conn, cash_register_id=current_till.active_cash_register_id
+            )
             bookings = {
                 BookingIdentifier(
                     source_account_id=cash_topup_acc.id,
@@ -437,7 +441,7 @@ class OrderService(Service[Config]):
                 ): pending_top_up.amount,
                 BookingIdentifier(
                     source_account_id=cash_entry_acc.id,
-                    target_account_id=current_user.cashier_account_id,
+                    target_account_id=cash_register_account_id,
                 ): pending_top_up.amount,
             }
         elif pending_top_up.payment_method == PaymentMethod.sumup:
@@ -708,11 +712,13 @@ class OrderService(Service[Config]):
                 source_acc_id = get_source_account(OrderType.sale, pending_sale.customer_account_id)
                 target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
             elif pending_sale.payment_method == PaymentMethod.cash:
-                assert current_user.cashier_account_id is not None
+                if till.active_cash_register_id is None:
+                    raise InvalidArgument("Cash payments require a cash register")
+                cash_register_account_id = await get_cash_register_account_id(
+                    conn=conn, cash_register_id=till.active_cash_register_id
+                )
                 bookings[
-                    BookingIdentifier(
-                        source_account_id=cash_entry_acc.id, target_account_id=current_user.cashier_account_id
-                    )
+                    BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=cash_register_account_id)
                 ] += float(line_item.total_price)
                 source_acc_id = get_source_account(OrderType.sale, cash_topup_acc.id)
                 target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
@@ -1005,6 +1011,7 @@ class OrderService(Service[Config]):
     async def check_pay_out(
         self, *, conn: Connection, node: Node, current_till: Till, new_pay_out: NewPayOut
     ) -> PendingPayOut:
+
         if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
             raise InvalidArgument("Only payouts with a negative amount are allowed")
 
@@ -1018,6 +1025,9 @@ class OrderService(Service[Config]):
         )
         if not can_pay_out:
             raise TillPermissionException("This terminal is not allowed to pay out customers")
+
+        if current_till.active_cash_register_id is None:
+            raise InvalidArgument("Cash pay out requires a cash register")
 
         customer_account = await self._fetch_customer_by_user_tag(
             conn=conn, node=node, customer_tag_uid=new_pay_out.customer_tag_uid
@@ -1052,7 +1062,6 @@ class OrderService(Service[Config]):
         current_user: CurrentUser,
         new_pay_out: NewPayOut,
     ) -> CompletedPayOut:
-        assert current_user.cashier_account_id is not None
         pending_pay_out: PendingPayOut = (
             await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
                 conn=conn,
@@ -1062,7 +1071,7 @@ class OrderService(Service[Config]):
                 new_pay_out=new_pay_out,
             )
         )
-
+        assert current_till.active_cash_register_id is not None
         pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
 
         line_items = [
@@ -1079,12 +1088,15 @@ class OrderService(Service[Config]):
         )
         cash_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_exit)
 
+        cash_register_account_id = await get_cash_register_account_id(
+            conn=conn, cash_register_id=current_till.active_cash_register_id
+        )
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
                 source_account_id=pending_pay_out.customer_account_id, target_account_id=cash_topup_acc.id
             ): -pending_pay_out.amount,
             BookingIdentifier(
-                source_account_id=current_user.cashier_account_id, target_account_id=cash_exit_acc.id
+                source_account_id=cash_register_account_id, target_account_id=cash_exit_acc.id
             ): -pending_pay_out.amount,
         }
 
@@ -1298,7 +1310,6 @@ class OrderService(Service[Config]):
         if new_ticket_sale.payment_method is None:
             raise InvalidArgument("No payment method provided")
 
-        assert current_user.cashier_account_id is not None
         pending_ticket_sale: PendingTicketSale = (
             await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
                 conn=conn,
@@ -1358,10 +1369,13 @@ class OrderService(Service[Config]):
 
         prepared_bookings: dict[BookingIdentifier, float] = {}
         if pending_ticket_sale.payment_method == PaymentMethod.cash:
+            if current_till.active_cash_register_id is None:
+                raise InvalidArgument("Cash payments require a cash register")
+            cash_register_account_id = await get_cash_register_account_id(
+                conn=conn, cash_register_id=current_till.active_cash_register_id
+            )
             prepared_bookings[
-                BookingIdentifier(
-                    source_account_id=cash_entry_acc.id, target_account_id=current_user.cashier_account_id
-                )
+                BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=cash_register_account_id)
             ] = pending_ticket_sale.total_price
             prepared_bookings[
                 BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=sale_exit_acc.id)

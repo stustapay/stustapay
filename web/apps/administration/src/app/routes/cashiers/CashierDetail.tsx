@@ -1,21 +1,21 @@
 import {
   selectCashierShiftAll,
-  selectTillById,
+  selectTerminalById,
   selectTillRegisterById,
   selectUserById,
   useGetCashierQuery,
   useGetCashierShiftsQuery,
   useListCashRegistersAdminQuery,
-  useListTillsQuery,
+  useListTerminalsQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
+import { CashierRoutes, TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Paper, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
 import { CashierShift, formatUserTagUid, getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -46,7 +46,11 @@ export const CashierDetail: React.FC = () => {
       }),
     }
   );
-  const { data: tills, isLoading: isTillsLoading, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
+  const {
+    data: terminals,
+    isLoading: isTerminalsLoading,
+    error: tillError,
+  } = useListTerminalsQuery({ nodeId: currentNode.id });
   const { data: users, isLoading: isUsersLoading, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
   const {
     data: registers,
@@ -65,7 +69,7 @@ export const CashierDetail: React.FC = () => {
     !cashierShifts ||
     !registers ||
     isLoading ||
-    isTillsLoading ||
+    isTerminalsLoading ||
     isShiftsLoading ||
     isUsersLoading ||
     isRegistersLoading
@@ -73,11 +77,11 @@ export const CashierDetail: React.FC = () => {
     return <Loading />;
   }
 
-  const getTill = (id: number) => {
-    if (!tills) {
+  const getTerminal = (id: number) => {
+    if (!terminals) {
       return undefined;
     }
-    return selectTillById(tills, id);
+    return selectTerminalById(terminals, id);
   };
 
   const renderUser = (id?: number | null) => {
@@ -185,13 +189,13 @@ export const CashierDetail: React.FC = () => {
           value={formatUserTagUid(cashier.user_tag_uid_hex)}
           linkTo={UserTagRoutes.detail(cashier.user_tag_id)}
         />
-        {cashier.till_ids.length !== 0 ? (
-          cashier.till_ids.map((till_id) => (
+        {cashier.terminal_ids.length !== 0 ? (
+          cashier.terminal_ids.map((id) => (
             <DetailField
-              key={till_id}
-              label={t("cashier.till")}
-              value={getTill(till_id)?.name}
-              linkTo={TillRoutes.detail(getTill(till_id)?.id)}
+              key={id}
+              label={t("cashier.terminal")}
+              value={getTerminal(id)?.name}
+              linkTo={TerminalRoutes.detail(getTerminal(id)?.id)}
             />
           ))
         ) : (

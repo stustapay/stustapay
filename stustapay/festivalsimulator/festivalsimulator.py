@@ -15,6 +15,7 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
+from stustapay.core.schema.user import Privilege
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -71,6 +72,8 @@ class Simulator:
         self.n_sale_till_workers = 1
         self.n_topup_till_workers = 1
 
+        self.unused_cashiers: list[int] = []
+
     async def sleep(self):
         to_sleep = 1.0 / self.bookings_per_second
         to_sleep = random.uniform(to_sleep * 0.5, to_sleep * 1.5) / 2.0
@@ -105,9 +108,10 @@ class Simulator:
             for row in await self.db_pool.fetch(
                 "select u.user_tag_uid "
                 "from user_with_tag u "
-                "join account a on u.cashier_account_id = a.id "
-                "left join till t on u.id = t.active_user_id "
-                "where t.id is null"
+                "join user_privileges_at_node(u.id) pr on pr.node_id = $1 "
+                "left join terminal t on u.id = t.active_user_id "
+                "where t.id is null and 'can_book_orders' = any(pr.privileges_at_node) ",
+                self.event_node_id,
             )
         ]
 
@@ -268,12 +272,12 @@ class Simulator:
             await asyncio.sleep(10)
 
     async def _stock_up_cashier(self, cashier_tag_uid: int):
-        till_id = await self.db_pool.fetchval(
-            "select till.id from till join user_with_tag u on till.active_user_id = u.id where u.user_tag_uid = $1",
+        terminal_id = await self.db_pool.fetchval(
+            "select t.id from terminal t join user_with_tag u on t.active_user_id = u.id where u.user_tag_uid = $1",
             cashier_tag_uid,
         )
         await self.db_pool.execute(
-            "update till set active_user_id = null, active_user_role_id = null where id = $1", till_id
+            "update terminal set active_user_id = null, active_user_role_id = null where id = $1", terminal_id
         )
         stocking_id = await self.db_pool.fetchval("select id from cash_register_stocking limit 1")
         has_cash_register = await self.db_pool.fetchval(
@@ -327,12 +331,8 @@ class Simulator:
             await asyncio.sleep(0.1)  # to avoid overloading the database
 
             assert terminal.config.till is not None
-            if terminal.config.till.active_user_id is not None:
-                is_cashier = await self.db_pool.fetchval(
-                    "select exists(select from usr where id = $1 and cashier_account_id is not null)",
-                    terminal.config.till.active_user_id,
-                )
-                if is_cashier:
+            if terminal.config.active_user_id is not None and terminal.config.user_privileges is not None:
+                if Privilege.can_book_orders in terminal.config.user_privileges:
                     self.logger.info("Terminal already has a logged in cashier")
                     terminals.append(terminal)
                     continue
@@ -531,6 +531,7 @@ class Simulator:
                     "uuid": str(uuid.uuid4()),
                     "customer_tag_uid": customer_tag_uid,
                     "buttons": terminal.get_random_button_selection(),
+                    "payment_method": "tag",
                 }
                 async with client.post("/order/check-sale", json=payload, headers=terminal.get_headers()) as resp:
                     if resp.status != 200:

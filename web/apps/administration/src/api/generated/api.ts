@@ -316,16 +316,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tills"],
       }),
-      forceLogoutUser: build.mutation<ForceLogoutUserApiResponse, ForceLogoutUserApiArg>({
-        query: (queryArg) => ({
-          url: `/tills/${queryArg.tillId}/force-logout-user`,
-          method: "POST",
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        invalidatesTags: ["tills"],
-      }),
       removeFromTerminal: build.mutation<RemoveFromTerminalApiResponse, RemoveFromTerminalApiArg>({
         query: (queryArg) => ({
           url: `/tills/${queryArg.tillId}/remove-from-terminal`,
@@ -1268,6 +1258,16 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["terminals", "tills", "terminals"],
       }),
+      forceLogoutUser: build.mutation<ForceLogoutUserApiResponse, ForceLogoutUserApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/${queryArg.terminalId}/force-logout-user`,
+          method: "POST",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["terminals"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1415,11 +1415,6 @@ export type UpdateTillApiArg = {
 };
 export type DeleteTillApiResponse = /** status 200 Successful Response */ any;
 export type DeleteTillApiArg = {
-  tillId: number;
-  nodeId: number;
-};
-export type ForceLogoutUserApiResponse = /** status 200 Successful Response */ any;
-export type ForceLogoutUserApiArg = {
   tillId: number;
   nodeId: number;
 };
@@ -1920,6 +1915,11 @@ export type SwitchTillApiArg = {
   nodeId: number;
   switchTillPayload: SwitchTillPayload;
 };
+export type ForceLogoutUserApiResponse = /** status 200 Successful Response */ any;
+export type ForceLogoutUserApiArg = {
+  terminalId: number;
+  nodeId: number;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
@@ -1973,7 +1973,6 @@ export type User = {
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
-  cashier_account_id?: number | null;
   id: number;
 };
 export type UserRead = {
@@ -1985,7 +1984,6 @@ export type UserRead = {
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
-  cashier_account_id?: number | null;
   id: number;
   user_tag_uid_hex: string | null;
 };
@@ -2052,11 +2050,13 @@ export type UpdateUserRolePrivilegesPayload = {
 export type UserToRoles = {
   user_id: number;
   role_ids: number[];
+  terminal_only?: boolean;
   node_id: number;
 };
 export type NewUserToRoles = {
   user_id: number;
   role_ids: number[];
+  terminal_only?: boolean;
 };
 export type TaxRate = {
   name: string;
@@ -2088,7 +2088,6 @@ export type CurrentUser = {
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
   transport_account_id?: number | null;
-  cashier_account_id?: number | null;
   cash_register_id?: number | null;
 };
 export type UserLoginSuccess = {
@@ -2122,8 +2121,7 @@ export type Till = {
   node_id: number;
   id: number;
   z_nr: number;
-  active_user_id?: number | null;
-  active_user_role_id?: number | null;
+  active_cash_register_id?: number | null;
   current_cash_register_name?: string | null;
   current_cash_register_balance?: number | null;
   tse_id?: number | null;
@@ -2263,7 +2261,8 @@ export type CashRegister = {
   id: number;
   current_cashier_id: number | null;
   current_till_id: number | null;
-  current_balance: number;
+  balance: number;
+  account_id: number;
 };
 export type NormalizedListCashRegisterInt = {
   ids: number[];
@@ -2305,10 +2304,10 @@ export type AccountType =
   | "sumup_entry"
   | "sumup_online_entry"
   | "transport"
-  | "cashier"
   | "voucher_create"
   | "donation_exit"
-  | "sepa_exit";
+  | "sepa_exit"
+  | "cash_register";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
   user_tag_pin: string;
@@ -2598,10 +2597,9 @@ export type Cashier = {
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
   transport_account_id?: number | null;
-  cashier_account_id: number;
   cash_register_id?: number | null;
-  cash_drawer_balance: number;
-  till_ids: number[];
+  cash_drawer_balance: number | null;
+  terminal_ids: number[];
 };
 export type CashierRead = {
   node_id: number;
@@ -2612,10 +2610,9 @@ export type CashierRead = {
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
   transport_account_id?: number | null;
-  cashier_account_id: number;
   cash_register_id?: number | null;
-  cash_drawer_balance: number;
-  till_ids: number[];
+  cash_drawer_balance: number | null;
+  terminal_ids: number[];
   user_tag_uid_hex: string | null;
 };
 export type NormalizedListCashierInt = {
@@ -3194,6 +3191,8 @@ export type Terminal = {
   till_id: number | null;
   session_uuid: string | null;
   registration_uuid: string | null;
+  active_user_id?: number | null;
+  active_user_role_id?: number | null;
 };
 export type NormalizedListTerminalInt = {
   ids: number[];
@@ -3249,7 +3248,6 @@ export const {
   useLazyGetTillQuery,
   useUpdateTillMutation,
   useDeleteTillMutation,
-  useForceLogoutUserMutation,
   useRemoveFromTerminalMutation,
   useSwitchTerminalMutation,
   useListTillLayoutsQuery,
@@ -3392,4 +3390,5 @@ export const {
   useDeleteTerminalMutation,
   useLogoutTerminalMutation,
   useSwitchTillMutation,
+  useForceLogoutUserMutation,
 } = injectedRtkApi;

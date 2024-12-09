@@ -57,9 +57,8 @@ class Till(NewTill):
     node_id: int
     id: int
     z_nr: int
-    active_user_id: Optional[int] = None
-    active_user_role_id: Optional[int] = None
 
+    active_cash_register_id: Optional[int] = None
     current_cash_register_name: Optional[str] = None
     current_cash_register_balance: Optional[float] = None
 
@@ -76,7 +75,8 @@ class CashRegister(NewCashRegister):
     id: int
     current_cashier_id: Optional[int]
     current_till_id: Optional[int]
-    current_balance: float
+    balance: float
+    account_id: int
 
 
 class NewCashRegisterStocking(BaseModel):

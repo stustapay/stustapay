@@ -113,10 +113,10 @@ export type AccountType =
   | "sumup_entry"
   | "sumup_online_entry"
   | "transport"
-  | "cashier"
   | "voucher_create"
   | "donation_exit"
-  | "sepa_exit";
+  | "sepa_exit"
+  | "cash_register";
 export type ProductRestriction = "under_16" | "under_18";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
