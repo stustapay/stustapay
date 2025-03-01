@@ -2,22 +2,31 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Customer Portal",
+      "name": "Customer Portal API",
       "type": "debugpy",
       "request": "launch",
       "console": "integratedTerminal",
       "module": "stustapay",
       "justMyCode": true,
-      "args": ["-c", "server.yaml", "-vvv", "customerportal-api"]
+      "args": ["-c", "config.yaml", "-vvv", "customerportal-api"]
     },
     {
-      "name": "Python: Administration Portal",
+      "name": "Administration API",
       "type": "debugpy",
       "request": "launch",
       "console": "integratedTerminal",
       "module": "stustapay",
       "justMyCode": true,
-      "args": ["-c", "server.yaml", "-vvv", "administration-api"]
+      "args": ["-c", "config.yaml", "-vvv", "administration-api"]
+    },
+    {
+      "name": "Terminal API",
+      "type": "debugpy",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "config.yaml", "-vvv", "terminalserver-api"]
     },
     {
       "name": "FestivalSimulator DB Setup",
@@ -25,7 +34,7 @@
       "request": "launch",
       "module": "stustapay",
       "justMyCode": true,
-      "args": ["-c", "server.yaml", "-vvv", "simulate", "setup"]
+      "args": ["-c", "config.yaml", "-vvv", "simulate", "setup"]
     },
     {
       "name": "FestivalSimulator Simulate API",
@@ -36,7 +45,7 @@
       "args": [
         "-vvv",
         "-c",
-        "etc/config.devel.yaml",
+        "config.yaml",
         "simulate",
         "api",
         "--no-tse",
@@ -49,7 +58,7 @@
       "request": "launch",
       "module": "stustapay",
       "justMyCode": true,
-      "args": ["-c", "server.yaml", "-vvv", "simulate", "start"]
+      "args": ["-c", "config.yaml", "-vvv", "simulate", "start"]
     },
     {
       "name": "Python Tests",

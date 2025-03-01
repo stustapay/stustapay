@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	pytest . --doctest-modules --cov=stustapay
+	pytest stustapay --doctest-modules --cov=stustapay
 
 .PHONY: check-format
 check-format:
