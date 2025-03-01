@@ -46,6 +46,7 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * POST /user/check-login
         * Check if a user can login to the terminal and return his roles
         * 
          * @param userTag  
@@ -78,6 +79,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user/create-user
         * Create a new user with the given roles
         * 
          * @param createUserPayload  
@@ -110,6 +112,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * GET /user
         * Get the currently logged in User
         * 
          * @return CurrentUser
@@ -142,6 +145,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user/grant-free-ticket
         * grant a free ticket, e.g. to a volunteer
         * 
          * @param newFreeTicketGrant  
@@ -174,6 +178,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user/grant-vouchers
         * grant vouchers to a customer
         * 
          * @param grantVoucherPayload  
@@ -206,6 +211,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user/login
         * Login User
         * 
          * @param loginPayload  
@@ -238,6 +244,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user/logout
         * Logout the current user
         * 
          * @return void
@@ -269,6 +276,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user/update-user-roles
         * Update the roles of a given user
         * 
          * @param updateUserPayload  

@@ -36,5 +36,8 @@ data class UserTagSecret (
     @SerialName(value = "key1")
     val key1: kotlin.String
 
-)
+) {
+
+
+}
 

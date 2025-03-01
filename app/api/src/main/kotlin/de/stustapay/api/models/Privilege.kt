@@ -22,49 +22,49 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: nodeAdministration,customerManagement,payoutManagement,createUser,allowPrivilegedRoleAssignment,userManagement,viewNodeStats,cashTransport,terminalLogin,supervisedTerminalLogin,canBookOrders,grantFreeTickets,grantVouchers
+ * Values: node_administration,customer_management,payout_management,create_user,allow_privileged_role_assignment,user_management,view_node_stats,cash_transport,terminal_login,supervised_terminal_login,can_book_orders,grant_free_tickets,grant_vouchers
  */
 @Serializable
 enum class Privilege(val value: kotlin.String) {
 
     @SerialName(value = "node_administration")
-    nodeAdministration("node_administration"),
+    node_administration("node_administration"),
 
     @SerialName(value = "customer_management")
-    customerManagement("customer_management"),
+    customer_management("customer_management"),
 
     @SerialName(value = "payout_management")
-    payoutManagement("payout_management"),
+    payout_management("payout_management"),
 
     @SerialName(value = "create_user")
-    createUser("create_user"),
+    create_user("create_user"),
 
     @SerialName(value = "allow_privileged_role_assignment")
-    allowPrivilegedRoleAssignment("allow_privileged_role_assignment"),
+    allow_privileged_role_assignment("allow_privileged_role_assignment"),
 
     @SerialName(value = "user_management")
-    userManagement("user_management"),
+    user_management("user_management"),
 
     @SerialName(value = "view_node_stats")
-    viewNodeStats("view_node_stats"),
+    view_node_stats("view_node_stats"),
 
     @SerialName(value = "cash_transport")
-    cashTransport("cash_transport"),
+    cash_transport("cash_transport"),
 
     @SerialName(value = "terminal_login")
-    terminalLogin("terminal_login"),
+    terminal_login("terminal_login"),
 
     @SerialName(value = "supervised_terminal_login")
-    supervisedTerminalLogin("supervised_terminal_login"),
+    supervised_terminal_login("supervised_terminal_login"),
 
     @SerialName(value = "can_book_orders")
-    canBookOrders("can_book_orders"),
+    can_book_orders("can_book_orders"),
 
     @SerialName(value = "grant_free_tickets")
-    grantFreeTickets("grant_free_tickets"),
+    grant_free_tickets("grant_free_tickets"),
 
     @SerialName(value = "grant_vouchers")
-    grantVouchers("grant_vouchers");
+    grant_vouchers("grant_vouchers");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use

@@ -81,5 +81,8 @@ data class CurrentUser (
     @SerialName(value = "cash_register_id")
     val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
 
-)
+) {
+
+
+}
 

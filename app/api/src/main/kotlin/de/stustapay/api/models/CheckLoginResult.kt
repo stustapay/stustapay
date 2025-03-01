@@ -38,5 +38,8 @@ data class CheckLoginResult (
     @SerialName(value = "roles")
     val roles: kotlin.collections.List<UserRole>
 
-)
+) {
+
+
+}
 

@@ -41,5 +41,8 @@ data class TicketScanResultEntry (
     @SerialName(value = "ticket")
     val ticket: Ticket
 
-)
+) {
+
+
+}
 

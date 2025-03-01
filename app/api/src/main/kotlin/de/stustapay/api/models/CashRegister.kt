@@ -52,5 +52,8 @@ data class CashRegister (
     @Contextual @SerialName(value = "current_balance")
     val currentBalance: kotlin.Double
 
-)
+) {
+
+
+}
 

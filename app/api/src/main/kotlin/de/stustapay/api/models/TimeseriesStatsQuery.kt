@@ -36,5 +36,8 @@ data class TimeseriesStatsQuery (
     @Contextual @SerialName(value = "to_time")
     val toTime: java.time.OffsetDateTime?
 
-)
+) {
+
+
+}
 

@@ -57,5 +57,8 @@ data class UserRoleInfo (
     @SerialName(value = "is_at_current_node")
     val isAtCurrentNode: kotlin.Boolean
 
-)
+) {
+
+
+}
 

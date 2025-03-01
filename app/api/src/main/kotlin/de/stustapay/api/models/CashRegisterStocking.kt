@@ -104,5 +104,8 @@ data class CashRegisterStocking (
     @Contextual @SerialName(value = "variable_in_euro")
     val variableInEuro: kotlin.Double? = 0.0
 
-)
+) {
+
+
+}
 

@@ -50,5 +50,8 @@ data class NewSale (
     @SerialName(value = "used_vouchers")
     val usedVouchers: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
 
-)
+) {
+
+
+}
 

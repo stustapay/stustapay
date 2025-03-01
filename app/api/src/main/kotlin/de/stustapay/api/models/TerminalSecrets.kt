@@ -45,5 +45,8 @@ data class TerminalSecrets (
     @SerialName(value = "user_tag_secret")
     val userTagSecret: UserTagSecret
 
-)
+) {
+
+
+}
 

@@ -38,6 +38,7 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * POST /auth/logout_terminal
         * Log out this Terminal
         * 
          * @return void
@@ -69,6 +70,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /auth/register_terminal
         * Register a new Terminal
         * 
          * @param terminalRegistrationPayload  

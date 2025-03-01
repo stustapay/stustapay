@@ -10,7 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://maven.sumup.com/releases' }
+        maven { url = 'https://maven.sumup.com/releases' }
     }
 }
 rootProject.name = "StuStaPay"

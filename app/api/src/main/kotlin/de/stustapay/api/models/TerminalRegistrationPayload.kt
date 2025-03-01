@@ -32,5 +32,8 @@ data class TerminalRegistrationPayload (
     @SerialName(value = "registration_uuid")
     val registrationUuid: kotlin.String
 
-)
+) {
+
+
+}
 

@@ -93,5 +93,8 @@ data class UserInfo (
     @Contextual @SerialName(value = "transport_account_balance")
     val transportAccountBalance: kotlin.Double? = null
 
-)
+) {
+
+
+}
 

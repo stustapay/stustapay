@@ -15,7 +15,8 @@
 
 package de.stustapay.api.models
 
-
+import de.stustapay.api.models.Privilege
+import de.stustapay.api.models.TerminalButton
 import de.stustapay.api.models.TerminalSecrets
 import de.stustapay.api.models.UserRole
 
@@ -65,7 +66,7 @@ data class TerminalTillConfig (
     val profileName: kotlin.String,
 
     @SerialName(value = "user_privileges")
-    val userPrivileges: kotlin.collections.List<Privilege>?,
+    val userPrivileges: kotlin.collections.List<@Contextual Privilege>?,
 
     @SerialName(value = "cash_register_id")
     val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
@@ -103,5 +104,8 @@ data class TerminalTillConfig (
     @SerialName(value = "available_roles")
     val availableRoles: kotlin.collections.List<UserRole>
 
-)
+) {
+
+
+}
 

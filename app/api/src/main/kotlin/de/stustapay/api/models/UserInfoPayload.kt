@@ -32,5 +32,8 @@ data class UserInfoPayload (
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

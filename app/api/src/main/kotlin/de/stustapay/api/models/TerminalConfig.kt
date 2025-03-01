@@ -53,5 +53,8 @@ data class TerminalConfig (
     @SerialName(value = "test_mode_message")
     val testModeMessage: kotlin.String
 
-)
+) {
+
+
+}
 

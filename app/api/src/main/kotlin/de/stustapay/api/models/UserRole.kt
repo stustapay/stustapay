@@ -49,5 +49,8 @@ data class UserRole (
     @SerialName(value = "is_privileged")
     val isPrivileged: kotlin.Boolean? = false
 
-)
+) {
+
+
+}
 

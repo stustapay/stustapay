@@ -33,5 +33,8 @@ data class TicketScanResult (
     @SerialName(value = "scanned_tickets")
     val scannedTickets: kotlin.collections.List<TicketScanResultEntry>
 
-)
+) {
+
+
+}
 
