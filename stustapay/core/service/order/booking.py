@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -93,16 +93,18 @@ async def book_order(
     cancels_order: Optional[int] = None,
     customer_account_id: Optional[int] = None,
     cash_register_id: Optional[int] = None,
+    booked_at: Optional[datetime] = None,
 ) -> OrderInfo:
     z_nr = await conn.fetchval("select z_nr from till where id = $1", till_id)
     if z_nr is None:
         raise InvalidArgument("Till does not exist")
 
     uuid = uuid or uuid4()
+    booked_at = booked_at or datetime.now(tz=timezone.utc)
     order_row = await conn.fetchrow(
         "insert into ordr (uuid, item_count, payment_method, order_type, cancels_order, cashier_id, "
-        "   till_id, customer_account_id, cash_register_id, z_nr) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id, uuid, booked_at",
+        "   till_id, customer_account_id, cash_register_id, z_nr, booked_at) "
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id, uuid, booked_at",
         uuid,
         len(line_items),
         payment_method.name,
@@ -113,9 +115,9 @@ async def book_order(
         customer_account_id,
         cash_register_id if payment_method == PaymentMethod.cash else None,
         z_nr,
+        booked_at,
     )
     order_id = order_row["id"]
-    booked_at = order_row["booked_at"]
 
     for i, line_item in enumerate(line_items):
         await conn.fetchval(

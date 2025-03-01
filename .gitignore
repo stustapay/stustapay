@@ -2,6 +2,7 @@
 
 # python
 __pycache__
+.mypy_cache
 *.pyc
 *.pyo
 *.egg-info

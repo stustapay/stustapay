@@ -14,6 +14,7 @@ from stustapay.core.service.order.order import (
     TillPermissionException,
 )
 from stustapay.core.service.till import TillService
+from stustapay.tests.sumup_mock import MockSumUpApi
 
 from ..conftest import Cashier
 from .conftest import (
@@ -51,6 +52,7 @@ async def test_topup_exceeding_max_limit_fails(
 
 async def test_topup_sumup_order_flow(
     order_service: OrderService,
+    till_service: TillService,
     terminal_token: str,
     assert_system_account_balance: AssertSystemAccountBalance,
     customer: Customer,
@@ -78,6 +80,53 @@ async def test_topup_sumup_order_flow(
     assert completed_topup.amount == 20
     assert completed_topup.new_balance == START_BALANCE + completed_topup.amount
     await assert_system_account_balance(account_type=AccountType.sumup_entry, expected_balance=-20)
+    customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
+    assert customer_info.balance == completed_topup.new_balance
+
+
+async def test_topup_deferred_sumup_order_flow(
+    order_service: OrderService,
+    till_service: TillService,
+    terminal_token: str,
+    assert_system_account_balance: AssertSystemAccountBalance,
+    customer: Customer,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    new_topup = NewTopUp(
+        uuid=uuid.uuid4(),
+        amount=20,
+        payment_method=PaymentMethod.sumup,
+        customer_tag_uid=customer.tag.uid,
+    )
+    pending_topup = await order_service.check_topup(
+        token=terminal_token,
+        new_topup=new_topup,
+    )
+    assert pending_topup.old_balance == START_BALANCE
+    assert pending_topup.amount == 20
+    assert pending_topup.new_balance == START_BALANCE + pending_topup.amount
+    MockSumUpApi.mock_amount(pending_topup.amount)
+    completed_topup = await order_service.book_topup(token=terminal_token, new_topup=new_topup, pending=True)
+    assert completed_topup is not None
+    assert completed_topup.uuid == new_topup.uuid
+    assert completed_topup.old_balance == START_BALANCE
+    assert completed_topup.amount == 20
+    assert completed_topup.new_balance == START_BALANCE + completed_topup.amount
+    customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
+    assert customer_info.balance == START_BALANCE
+    completed_topup = await order_service.check_pending_topup(token=terminal_token, order_uuid=pending_topup.uuid)
+    assert completed_topup is not None
+    assert completed_topup.uuid == new_topup.uuid
+    assert completed_topup.old_balance == START_BALANCE
+    assert completed_topup.amount == 20
+    assert completed_topup.new_balance == START_BALANCE + completed_topup.amount
+    await assert_system_account_balance(account_type=AccountType.sumup_entry, expected_balance=-20)
+    customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
+    assert customer_info.balance == completed_topup.new_balance
 
 
 async def test_cash_pay_out_flow_with_amount(

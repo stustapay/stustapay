@@ -76,6 +76,19 @@ async def book_topup(
     return await order_service.book_topup(token=token, new_topup=topup)
 
 
+@router.post(
+    "/register-pending-topup",
+    summary="Register a pending topup with the server where the sumup payment is still pending",
+    response_model=CompletedTopUp,
+)
+async def register_pending_topup(
+    topup: NewTopUp,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.book_topup(token=token, new_topup=topup, pending=True)
+
+
 @router.post("/check-ticket-scan", summary="check if a ticket sale is valid", response_model=TicketScanResult)
 async def check_ticket_scan(
     ticket_scan: NewTicketScan,
@@ -103,6 +116,19 @@ async def book_ticket_sale(
     order_service: ContextOrderService,
 ):
     return await order_service.book_ticket_sale(token=token, new_ticket_sale=ticket_sale)
+
+
+@router.post(
+    "/register-pending-ticket-sale",
+    summary="Register a pending topup with the server where the sumup payment is still pending",
+    response_model=CompletedTicketSale,
+)
+async def register_pending_ticket_sale(
+    ticket_sale: NewTicketSale,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.book_ticket_sale(token=token, new_ticket_sale=ticket_sale, pending=True)
 
 
 @router.post("/check-payout", summary="check if a pay out is valid", response_model=PendingPayOut)

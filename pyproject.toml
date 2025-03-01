@@ -6,9 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "stustapay"
 version = "0.1.0"
 license = { file = "LICENSE" }
-maintainers = [
-    { name = "Michael Loipführer", email = "milo@sft.lol" },
-]
+maintainers = [{ name = "Michael Loipführer", email = "milo@sft.lol" }]
 readme = "README.md"
 classifiers = [
     "Operating System :: OS Independent",
@@ -17,7 +15,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "sftkit==0.2.0",
+    "sftkit==0.3.1",
     "bcrypt==4.0.1",
     "passlib[bcrypt]==1.7.4",
     "PyYAML==6.0.1",
@@ -37,13 +35,9 @@ dependencies = [
 stustapay = "stustapay.cli.main:main"
 
 [project.optional-dependencies]
-test = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-]
+test = ["pytest", "pytest-asyncio", "pytest-cov"]
 dev = [
-    "black==24.4.2",
+    "black==25.1.0",
     "isort==5.13.2",
     "mypy==1.4.1",
     "pylint==3.0.3",
@@ -66,15 +60,10 @@ exclude = ["stustapay.tests*", "tests*"]
 db_code_dir = "stustapay/core/schema/db_code"
 db_migrations_dir = "stustapay/core/schema/db"
 
-target_debian_distros = [
-    "debian:bookworm",
-    "debian:trixie",
-]
+target_debian_distros = ["debian:bookworm", "debian:trixie"]
 
 [tool.pylint]
-extension-pkg-whitelist = [
-    "pydantic"
-]
+extension-pkg-whitelist = ["pydantic"]
 
 [tool.pylint.format]
 max-line-length = 120
@@ -87,12 +76,12 @@ disable = [
     "logging-fstring-interpolation",
     "unspecified-encoding",
     "broad-exception-raised",
-    "broad-exception-caught"
+    "broad-exception-caught",
 ]
 
 [tool.black]
 line-length = 120
-target-version = ["py39"]
+target-version = ["py310"]
 
 [tool.isort]
 profile = "black"
@@ -101,21 +90,15 @@ profile = "black"
 ignore_missing_imports = true
 check_untyped_defs = true
 pretty = true
-plugins = [
-    "pydantic.mypy"
-]
+plugins = ["pydantic.mypy"]
 
 [tool.coverage.run]
-source = [
-    "stustapay"
-]
+source = ["stustapay"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 minversion = "6.0"
-testpaths = [
-    "stustapay.tests",
-]
+testpaths = ["stustapay.tests"]
 
 [tool.bumpversion]
 current_version = "0.1.0"

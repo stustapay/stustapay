@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-import aiohttp
 import asyncpg
 from pydantic import BaseModel
 from sftkit.database import Connection
@@ -73,7 +72,7 @@ def requires_sumup_enabled(func):
         conn = kwargs["conn"]
         event = await fetch_restricted_event_settings_for_node(conn, node_id=kwargs["current_customer"].node_id)
         is_sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
-        if not is_sumup_enabled or not self.sumup_reachable:
+        if not is_sumup_enabled:
             raise InvalidArgument("Online Top Up is currently disabled")
 
         return await func(self, **kwargs)
@@ -81,16 +80,7 @@ def requires_sumup_enabled(func):
     return wrapper
 
 
-def _get_sumup_auth_headers(event: RestrictedEventSettings) -> dict:
-    return {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {event.sumup_api_key}",
-    }
-
-
 class SumupService(Service[Config]):
-    SUMUP_API_URL = "https://api.sumup.com/v0.1"
     SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
     SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
@@ -99,29 +89,6 @@ class SumupService(Service[Config]):
         self.auth_service = auth_service
         self.logger = logging.getLogger("customer")
 
-        self.sumup_reachable = True
-
-    async def check_sumup_auth(self, event: RestrictedEventSettings):
-        sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
-        if not sumup_enabled:
-            self.logger.info("Sumup is disabled via the config")
-            return
-
-        self.logger.info("Checking if the configured sumup api key is valid")
-        sumup_url = f"{self.SUMUP_API_URL}/merchants/{event.sumup_merchant_code}/payment-methods"
-        async with aiohttp.ClientSession(trust_env=True, headers=_get_sumup_auth_headers(event)) as session:
-            try:
-                async with session.get(sumup_url, timeout=2) as response:
-                    if not response.ok:
-                        self.logger.error(
-                            f"Sumup API returned status code {response.status} with body {await response.text()}, disabling online top up"
-                        )
-                        return
-            except Exception:  # pylint: disable=bare-except
-                self.logger.exception("Sumup API error")
-                return
-
-        self.logger.info("Successfully validated the sumup api key")
         self.sumup_reachable = True
 
     async def _create_sumup_checkout(
@@ -207,7 +174,7 @@ class SumupService(Service[Config]):
 
     async def run_sumup_checkout_processing(self):
         sumup_enabled = self.config.core.sumup_enabled
-        if not sumup_enabled or not self.sumup_reachable:
+        if not sumup_enabled:
             self.logger.info("Sumup online topup not enabled, disabling sumup check state")
             return
 
