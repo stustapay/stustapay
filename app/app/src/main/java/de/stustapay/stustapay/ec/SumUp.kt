@@ -119,6 +119,7 @@ class SumUp @Inject constructor(
 
         // since sumup spawns its own activity for the checkout,
         // we register the launch and callbacks to our activity.
+
         SumUpReaderState.init(activity)
         activityCallback.registerHandler(ecPaymentActivityCallbackId) { resultCode, extras ->
             paymentResult(activity, resultCode, extras)
