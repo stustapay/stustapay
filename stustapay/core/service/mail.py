@@ -1,5 +1,4 @@
-"""Service to handle mail sending.
-"""
+"""Service to handle mail sending."""
 
 # pylint: disable=missing-kwoa
 import asyncio

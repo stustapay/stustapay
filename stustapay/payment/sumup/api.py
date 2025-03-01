@@ -252,6 +252,17 @@ class SumUpApi:
 
         return [SumUpCheckout.model_validate(x) for x in resp]
 
+    async def find_checkout(self, order_uuid: uuid.UUID) -> SumUpCheckout | None:
+        resp = await self._get(SUMUP_CHECKOUT_URL, {"checkout_reference": str(order_uuid)})
+
+        if not isinstance(resp, list):
+            raise SumUpError("SumUp API returned an invalid response")
+
+        if len(resp) != 1:
+            raise SumUpError(f"SumUp returned a non-unique checkout for the order uuid {order_uuid}")
+
+        return SumUpCheckout.model_validate(resp[0])
+
     async def get_transaction(self, foreign_transaction_id: str) -> SumUpTransactionDetail:
         resp = await self._get(
             f"{SUMUP_API_URL}/me/transactions", query={"foreign_transaction_id": foreign_transaction_id}

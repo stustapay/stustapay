@@ -1,5 +1,5 @@
-import datetime
 import enum
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -61,7 +61,7 @@ class CompletedTopUp(BaseModel):
     new_balance: float
 
     uuid: UUID
-    booked_at: datetime.datetime
+    booked_at: datetime
 
     cashier_id: int
     till_id: int
@@ -84,7 +84,7 @@ class PendingPayOut(NewPayOut):
 
 
 class CompletedPayOut(PendingPayOut):
-    booked_at: datetime.datetime
+    booked_at: datetime
 
     cashier_id: int
     till_id: int
@@ -207,7 +207,7 @@ class PendingSale(PendingSaleBase):
 class CompletedSaleBase(BaseModel):
     id: int
 
-    booked_at: datetime.datetime
+    booked_at: datetime
 
     cashier_id: int
     till_id: int
@@ -276,12 +276,11 @@ class PendingTicketSale(BaseModel):
 
 
 class CompletedTicketSale(PendingTicketSale):
-    id: int
-    booked_at: datetime.datetime
+    booked_at: datetime
 
     payment_method: PaymentMethod
 
-    customer_account_id: int
+    customer_account_id: int | None  # can be None in pending payments
 
     cashier_id: int
     till_id: int
@@ -305,7 +304,7 @@ class Order(BaseModel):
     total_no_tax: float
     cancels_order: Optional[int]
 
-    booked_at: datetime.datetime
+    booked_at: datetime
     payment_method: PaymentMethod
     order_type: OrderType
 
@@ -334,3 +333,28 @@ class NewFreeTicketGrant(BaseModel):
         if v < 0:
             raise ValueError("initial voucher amount must be positive")
         return v
+
+
+class PendingOrderType(enum.Enum):
+    topup = "topup"
+    ticket = "ticket"
+
+
+class PendingOrderStatus(enum.Enum):
+    pending = "pending"
+    booked = "booked"
+    cancelled = "cancelled"
+
+
+class PendingOrder(BaseModel):
+    uuid: UUID
+    node_id: int
+    till_id: int
+    cashier_id: int | None
+    last_checked: datetime | None
+    check_interval: int
+    created_at: datetime
+    order_type: PendingOrderType
+    order_content_version: int
+    order_content: str
+    status: PendingOrderStatus

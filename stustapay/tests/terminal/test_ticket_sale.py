@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass
 
 import pytest
+from sftkit.error import InvalidArgument
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
@@ -21,6 +22,7 @@ from stustapay.core.service.order.order import OrderService, TillPermissionExcep
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till import TillService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
+from stustapay.tests.sumup_mock import MockSumUpApi
 from stustapay.tests.terminal.conftest import (
     AssertAccountBalance,
     AssertSystemAccountBalance,
@@ -232,6 +234,60 @@ async def test_ticket_flow_with_initial_topup_sumup(
     completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert completed_ticket is not None
 
+    customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
+    assert sale_tickets.ticket.initial_top_up_amount == customer.balance
+    await assert_system_account_balance(
+        account_type=AccountType.sumup_entry, expected_balance=sumup_start_balance - completed_ticket.total_price
+    )
+    await assert_system_account_balance(
+        account_type=AccountType.sale_exit, expected_balance=sale_exit_start_balance + sale_tickets.ticket.price
+    )
+
+
+async def test_ticket_flow_with_deferred_sumup_payment(
+    order_service: OrderService,
+    till_service: TillService,
+    get_system_account_balance: GetSystemAccountBalance,
+    assert_system_account_balance: AssertSystemAccountBalance,
+    terminal_token: str,
+    sale_tickets: SaleTickets,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
+    sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
+    unused_tag = await create_random_user_tag()
+
+    new_scan = NewTicketScan(customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin)])
+    scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
+    assert scan_result is not None
+
+    new_ticket = NewTicketSale(
+        uuid=uuid.uuid4(),
+        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin)],
+        payment_method=PaymentMethod.sumup,
+    )
+    pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert 2 == pending_ticket.item_count
+    assert sale_tickets.ticket.total_price == pending_ticket.total_price
+    MockSumUpApi.mock_amount(pending_ticket.total_price)
+    completed_ticket = await order_service.book_ticket_sale(
+        token=terminal_token, new_ticket_sale=new_ticket, pending=True
+    )
+    assert completed_ticket is not None
+
+    with pytest.raises(InvalidArgument):
+        await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
+
+    completed_ticket = await order_service.check_pending_ticket_sale(
+        token=terminal_token,
+        order_uuid=new_ticket.uuid,
+    )
+    assert completed_ticket.uuid == new_ticket.uuid
     customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
     assert sale_tickets.ticket.initial_top_up_amount == customer.balance
     await assert_system_account_balance(
