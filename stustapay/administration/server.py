@@ -27,9 +27,10 @@ from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
 from stustapay.core.service.user_tag import UserTagService
 
-from .routers import account, auth, cashier
-from .routers import config as config_router
 from .routers import (
+    account,
+    auth,
+    cashier,
     customer,
     order,
     payout,
@@ -50,6 +51,7 @@ from .routers import (
     user,
     user_tag,
 )
+from .routers import config as config_router
 
 
 def get_server(config: Config):

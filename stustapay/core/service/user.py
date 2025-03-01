@@ -127,7 +127,6 @@ async def _get_user_role(*, conn: Connection, role_id: int) -> Optional[UserRole
 async def associate_user_to_role(
     *, conn: Connection, current_user_id: int | None, node: Node, user_id: int, role_id: int
 ):
-
     user_node_id = await conn.fetchval(
         "select node_id from usr where node_id = any($1) and id = $2",
         node.ids_to_root,
@@ -140,8 +139,7 @@ async def associate_user_to_role(
     assert user_node is not None
 
     role = await conn.fetchrow(
-        "select node_id, is_privileged, privileges from user_role_with_privileges "
-        "where id = $1 and node_id = any($2)",
+        "select node_id, is_privileged, privileges from user_role_with_privileges where id = $1 and node_id = any($2)",
         role_id,
         user_node.ids_to_root,
     )

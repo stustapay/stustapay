@@ -121,9 +121,9 @@ def check_sepa_xml(xml_file_content: str, customers: list[CustomerTestInfo], sep
     for sepa_transfer in sepa_transfers:
         account_name = _xml_text_at_node(sepa_transfer, f"{p}Cdtr/{p}Nm")
         customers_with_name = [c for c in customers if c.account_name == account_name]
-        assert (
-            len(customers_with_name) == 1
-        ), f"A customer with the account name {account_name} should not be part of a payout run"
+        assert len(customers_with_name) == 1, (
+            f"A customer with the account name {account_name} should not be part of a payout run"
+        )
         customer = customers_with_name[0]
 
         assert float(_xml_text_at_node(sepa_transfer, f"{p}Amt/{p}InstdAmt")) == round(
