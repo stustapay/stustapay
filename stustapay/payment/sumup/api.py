@@ -176,7 +176,6 @@ async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_toke
 
 
 class SumUpApi:
-
     def __init__(self, api_key: str, merchant_code: str):
         self.api_key = api_key
         self.merchant_code = merchant_code

@@ -28,6 +28,6 @@ def generate_key():
     print()
     print("So:")
     print(f"- `key0[0]  == 0x{key0[0:2]}`")
-    print(f"- `key0[15] == 0x{key0[15*2:15*2+2]}`")
+    print(f"- `key0[15] == 0x{key0[15 * 2 : 15 * 2 + 2]}`")
     print(f"- `key1[0]  == 0x{key1[0:2]}`")
-    print(f"- `key1[15] == 0x{key1[15*2:15*2+2]}`")
+    print(f"- `key1[15] == 0x{key1[15 * 2 : 15 * 2 + 2]}`")

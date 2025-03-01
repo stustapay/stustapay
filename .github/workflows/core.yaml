@@ -34,6 +34,19 @@ jobs:
       - name: Analysing the code with mypy
         run: make mypy
 
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: python -m pip install -e '.[dev,test]'
+      - name: Analysing the code with ruff
+        run: make ruff
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:

@@ -119,10 +119,7 @@ class Simulator:
         return [
             int(row["id"])
             for row in await self.db_pool.fetch(
-                "select cr.id "
-                "from cash_register cr "
-                "left join usr u on u.cash_register_id = cr.id "
-                "where u.id is null"
+                "select cr.id from cash_register cr left join usr u on u.cash_register_id = cr.id where u.id is null"
             )
         ]
 
@@ -181,7 +178,7 @@ class Simulator:
                     return await self._login_user(terminal=terminal, user_tag_uid=user_tag_uid, role_id=role_id)
                 elif resp.status != 200:
                     self.logger.critical(
-                        f"Failed to login {user_tag_uid} on terminal {terminal.terminal.name}. " f"{await resp.text()}"
+                        f"Failed to login {user_tag_uid} on terminal {terminal.terminal.name}. {await resp.text()}"
                     )
                     return False
 
@@ -209,7 +206,6 @@ class Simulator:
     async def payout_registration(self):
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
             while True:
-
                 # TODO: future: test if the user has not already locked in
                 # get random user that has uid
                 rows = await self.db_pool.fetch(

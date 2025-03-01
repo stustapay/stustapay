@@ -119,7 +119,6 @@ def validate_table(f, table):
                     elif c.findall("./Date"):
                         raise ValidationException("Date validation currently not supported")
                     else:
-                        j = j + 1
                         raise ValidationException("Unsupported data type for column {}".format(j))
 
 

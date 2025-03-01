@@ -27,8 +27,8 @@ class CashierAccountChangePayload(BaseModel):
 )
 async def change_cash_register_balance(
     token: CurrentAuthToken, till_service: ContextTillService, payload: CashierAccountChangePayload
-):
-    return await till_service.register.modify_cashier_account_balance(
+) -> None:
+    await till_service.register.modify_cashier_account_balance(
         token=token, cashier_tag_uid=payload.cashier_tag_uid, amount=payload.amount
     )
 
@@ -44,8 +44,8 @@ class TransportAccountChangePayload(BaseModel):
 )
 async def change_transport_account_balance(
     token: CurrentAuthToken, till_service: ContextTillService, payload: TransportAccountChangePayload
-):
-    return await till_service.register.modify_transport_account_balance(
+) -> None:
+    await till_service.register.modify_transport_account_balance(
         token=token, orga_tag_uid=payload.orga_tag_uid, amount=payload.amount
     )
 

@@ -4,16 +4,14 @@ test:
 
 .PHONY: check-format
 check-format:
-	isort --check-only .
-	black --check .
+	ruff format --check
 
 .PHONY: format
 format:
-	isort stustapay tools
-	black stustapay tools
+	ruff format
 
 .PHONY: lint
-lint: pylint mypy
+lint: ruff pylint mypy
 
 .PHONY: pylint
 pylint:
@@ -22,6 +20,14 @@ pylint:
 .PHONY: mypy
 mypy:
 	mypy stustapay
+
+.PHONY: ruff
+ruff:
+	ruff check
+
+.PHONY: ruff-fix
+ruff-fix:
+	ruff check --fix
 
 .PHONY: generate-openapi
 generate-openapi:

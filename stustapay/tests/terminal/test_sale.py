@@ -486,8 +486,7 @@ async def test_cashier_close_out(
 
     async def get_num_orders(order_type: OrderType) -> int:
         return await db_connection.fetchval(
-            "select count(*) from ordr o join till t on o.till_id = t.id "
-            "where order_type = $1 and t.node_id = any($2)",
+            "select count(*) from ordr o join till t on o.till_id = t.id where order_type = $1 and t.node_id = any($2)",
             order_type.name,
             event_node.ids_to_event_node,
         )
@@ -590,9 +589,9 @@ async def test_cashier_close_out(
     )
     assert 0 != len(balances)
     for balance in balances:
-        assert (
-            0 == balance["till_balance"]
-        ), f"Till with id {balance['till_id']} does not have a cash balance of 0, received {balance['till_balance']}"
+        assert 0 == balance["till_balance"], (
+            f"Till with id {balance['till_id']} does not have a cash balance of 0, received {balance['till_balance']}"
+        )
 
 
 async def test_transport_and_cashier_account_management(

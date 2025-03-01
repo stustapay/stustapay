@@ -1019,7 +1019,6 @@ class OrderService(Service[Config]):
     async def check_pay_out(
         self, *, conn: Connection, node: Node, current_till: Till, new_pay_out: NewPayOut
     ) -> PendingPayOut:
-
         if new_pay_out.amount is not None and new_pay_out.amount > 0.0:
             raise InvalidArgument("Only payouts with a negative amount are allowed")
 
@@ -1070,14 +1069,12 @@ class OrderService(Service[Config]):
         current_user: CurrentUser,
         new_pay_out: NewPayOut,
     ) -> CompletedPayOut:
-        pending_pay_out: PendingPayOut = (
-            await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
-                conn=conn,
-                node=node,
-                current_terminal=current_terminal,
-                current_user=current_user,
-                new_pay_out=new_pay_out,
-            )
+        pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+            conn=conn,
+            node=node,
+            current_terminal=current_terminal,
+            current_user=current_user,
+            new_pay_out=new_pay_out,
         )
         assert current_till.active_cash_register_id is not None
         pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
@@ -1221,14 +1218,12 @@ class OrderService(Service[Config]):
                 if cash_register_id is None:
                     raise InvalidArgument("This till needs a cash register for cash payments")
 
-        ticket_scan_result: TicketScanResult = (
-            await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
-                conn=conn,
-                node=node,
-                current_terminal=current_terminal,
-                current_user=current_user,
-                new_ticket_scan=NewTicketScan(customer_tags=new_ticket_sale.customer_tags),
-            )
+        ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+            conn=conn,
+            node=node,
+            current_terminal=current_terminal,
+            current_user=current_user,
+            new_ticket_scan=NewTicketScan(customer_tags=new_ticket_sale.customer_tags),
         )
 
         # mapping of product id to pending line item
@@ -1297,14 +1292,12 @@ class OrderService(Service[Config]):
         if new_ticket_sale.payment_method is None:
             raise InvalidArgument("No payment method provided")
 
-        pending_ticket_sale: PendingTicketSale = (
-            await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
-                conn=conn,
-                current_terminal=current_terminal,
-                node=node,
-                current_user=current_user,
-                new_ticket_sale=new_ticket_sale,
-            )
+        pending_ticket_sale: PendingTicketSale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+            conn=conn,
+            current_terminal=current_terminal,
+            node=node,
+            current_user=current_user,
+            new_ticket_sale=new_ticket_sale,
         )
         if pending and new_ticket_sale.payment_method != PaymentMethod.sumup:
             raise InvalidArgument("Only sumup payments can be marked as pending")

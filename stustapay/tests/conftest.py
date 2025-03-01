@@ -203,8 +203,7 @@ async def create_random_user_tag(
             pin = secrets.token_hex(16)
             try:
                 user_tag_id = await db_connection.fetchval(
-                    "insert into user_tag (node_id, secret_id, restriction, pin) values ($1, $2, $3, $4) "
-                    "returning id",
+                    "insert into user_tag (node_id, secret_id, restriction, pin) values ($1, $2, $3, $4) returning id",
                     event_node.id,
                     user_tag_secret,
                     restriction.name if restriction is not None else None,

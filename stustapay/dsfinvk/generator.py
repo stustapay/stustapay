@@ -104,10 +104,10 @@ class Generator:
                 Z_KASSE_ID: int = row["till_id"]
 
                 # iteriere über Kassenabschlüsse Z_NR dieser Kassen
-                for row in await conn.fetch(
+                for inner_row in await conn.fetch(
                     "select z_nr from ordr where till_id = $1 group by z_nr order by z_nr", Z_KASSE_ID
                 ):  # alle Kassenabschlussids
-                    Z_NR: int = row["z_nr"]
+                    Z_NR: int = inner_row["z_nr"]
 
                     # hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
                     last_order_time = await conn.fetchval(
@@ -205,7 +205,7 @@ class Generator:
             b.BON_ID = row["id"]
 
             if row["signature_status"] == "failure":
-                b.TSE_TA_FEHLER = f'TSE Fehler: {row["result_message"]}'  # TODO Fehlerbehandlung
+                b.TSE_TA_FEHLER = f"TSE Fehler: {row['result_message']}"  # TODO Fehlerbehandlung
             else:
                 b.TSE_ID = int(row["tse_id"])
                 b.TSE_TANR = int(row["tse_transaction"])

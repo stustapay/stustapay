@@ -18,11 +18,13 @@ class Collection:
 
     def write(self, name, xml_path, dtd_path):
         with ZipFile(name, "w", compression=ZIP_DEFLATED, compresslevel=9) as zf:
-            for k, l in self.records.items():
+            for k, records in self.records.items():
                 b = StringIO()
-                w = csv.DictWriter(b, fieldnames=[f.name for f in l[0]._fields], delimiter=";", lineterminator="\r\n")
+                w = csv.DictWriter(
+                    b, fieldnames=[f.name for f in records[0]._fields], delimiter=";", lineterminator="\r\n"
+                )
                 w.writeheader()
-                for r in l:
+                for r in records:
                     if r.data:
                         w.writerow(r.data)
                 b.seek(0)
