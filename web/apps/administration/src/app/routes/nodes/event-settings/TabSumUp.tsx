@@ -1,7 +1,7 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { config } from "@/api/common";
 import { useCurrentNode } from "@/hooks";
-import { Button, LinearProgress, Stack, Typography, ListItem, ListItemText } from "@mui/material";
+import { Button, LinearProgress, Stack, Typography, ListItem, ListItemText, Alert } from "@mui/material";
 import { FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
@@ -119,6 +119,9 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
 
   return (
     <Stack spacing={2}>
+      {!config.sumupTopupEnabledGlobally && (
+        <Alert severity="warning">Sumup Payment is disabled globally in this StuStayPay instances configuration</Alert>
+      )}
       <Formik
         initialValues={eventSettings as SumUpSettings} // TODO: figure out a way of not needing to cast this
         onSubmit={handleSubmit}

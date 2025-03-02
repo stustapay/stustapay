@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
@@ -22,10 +24,11 @@ class CreateCheckoutPayload(BaseModel):
 
 class CreateCheckoutResponse(BaseModel):
     checkout_id: str
+    order_uuid: UUID
 
 
 class CheckCheckoutPayload(BaseModel):
-    checkout_id: str
+    order_uuid: UUID
 
 
 class CheckCheckoutResponse(BaseModel):
@@ -38,8 +41,8 @@ async def create_checkout(
     customer_service: ContextCustomerService,
     payload: CreateCheckoutPayload,
 ):
-    checkout = await customer_service.sumup.create_checkout(token=token, amount=payload.amount)
-    return CreateCheckoutResponse(checkout_id=checkout.id)
+    checkout, order_uuid = await customer_service.sumup.create_online_topup_checkout(token=token, amount=payload.amount)
+    return CreateCheckoutResponse(checkout_id=checkout.id, order_uuid=order_uuid)
 
 
 @router.post("/check-checkout", summary="after payment check checkout state", response_model=CheckCheckoutResponse)
@@ -48,5 +51,7 @@ async def check_checkout(
     customer_service: ContextCustomerService,
     payload: CheckCheckoutPayload,
 ):
-    checkout_status = await customer_service.sumup.check_checkout(token=token, checkout_id=payload.checkout_id)
+    checkout_status = await customer_service.sumup.check_online_topup_checkout(
+        token=token, order_uuid=payload.order_uuid
+    )
     return CheckCheckoutResponse(status=checkout_status)

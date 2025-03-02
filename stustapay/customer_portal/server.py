@@ -69,7 +69,6 @@ class Api:
 
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db, service_name="customer_portal")))
-            self.server.add_task(asyncio.create_task(customer_service.sumup.run_sumup_checkout_processing()))
             self.server.add_task(asyncio.create_task(mail_service.run_mail_service()))
             await self.server.run(context)
         finally:

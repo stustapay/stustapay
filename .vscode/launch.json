@@ -29,6 +29,15 @@
       "args": ["-c", "config.yaml", "-vvv", "terminalserver-api"]
     },
     {
+      "name": "Payment Processor",
+      "type": "debugpy",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "config.yaml", "-vvv", "payment-processor"]
+    },
+    {
       "name": "FestivalSimulator DB Setup",
       "type": "debugpy",
       "request": "launch",

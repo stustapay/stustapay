@@ -433,6 +433,7 @@ export type BonJsonRead = {
 };
 export type CreateCheckoutResponse = {
   checkout_id: string;
+  order_uuid: string;
 };
 export type CreateCheckoutPayload = {
   amount: number;
@@ -442,7 +443,7 @@ export type CheckCheckoutResponse = {
   status: SumUpCheckoutStatus;
 };
 export type CheckCheckoutPayload = {
-  checkout_id: string;
+  order_uuid: string;
 };
 export const {
   useLoginMutation,

@@ -63,7 +63,7 @@ class CompletedTopUp(BaseModel):
     uuid: UUID
     booked_at: datetime
 
-    cashier_id: int
+    cashier_id: int | None  # can be none in online topup scenario
     till_id: int
 
 

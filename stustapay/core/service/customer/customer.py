@@ -23,8 +23,8 @@ from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.common.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.payout import PayoutService
-from stustapay.core.service.customer.sumup import SumupService
 from stustapay.core.service.mail import MailService
+from stustapay.core.service.order.sumup import SumupService
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
