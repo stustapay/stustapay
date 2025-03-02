@@ -1,16 +1,16 @@
-import { selectTillRegisterById, useListCashRegistersAdminQuery, useUpdateRegisterMutation } from "@/api";
-import { TillRegistersRoutes } from "@/app/routes";
+import { selectCashRegisterById, useListCashRegistersAdminQuery, useUpdateRegisterMutation } from "@/api";
+import { CashRegistersRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
-import { TillRegisterSchema } from "@stustapay/models";
+import { CashRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TillRegisterForm } from "./TillRegisterForm";
+import { CashRegisterForm } from "./CashRegisterForm";
 import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillRegisterUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
+export const CashRegisterUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { registerId } = useParams();
@@ -19,14 +19,14 @@ export const TillRegisterUpdate: React.FC = withPrivilegeGuard("node_administrat
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
+        register: data ? selectCashRegisterById(data, Number(registerId)) : undefined,
       }),
     }
   );
   const [update] = useUpdateRegisterMutation();
 
   if (error) {
-    return <Navigate to={TillRegistersRoutes.list()} />;
+    return <Navigate to={CashRegistersRoutes.list()} />;
   }
 
   if (isLoading || !register) {
@@ -37,11 +37,11 @@ export const TillRegisterUpdate: React.FC = withPrivilegeGuard("node_administrat
     <EditLayout
       title={t("register.update")}
       submitLabel={t("update")}
-      successRoute={TillRegistersRoutes.list()}
+      successRoute={CashRegistersRoutes.list()}
       initialValues={register}
-      validationSchema={TillRegisterSchema}
+      validationSchema={CashRegisterSchema}
       onSubmit={(r) => update({ nodeId: currentNode.id, registerId: register.id, newCashRegister: r })}
-      form={TillRegisterForm}
+      form={CashRegisterForm}
     />
   );
 });

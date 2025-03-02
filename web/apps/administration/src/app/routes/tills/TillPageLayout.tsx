@@ -3,7 +3,7 @@ import {
   TillButtonsRoutes,
   TillLayoutRoutes,
   TillProfileRoutes,
-  TillRegistersRoutes,
+  CashRegistersRoutes,
   TillRoutes,
   TillStockingsRoutes,
 } from "@/app/routes";
@@ -24,8 +24,8 @@ const getActiveTab = (location: string) => {
   if (location.startsWith(TillButtonsRoutes.list())) {
     return TillButtonsRoutes.list();
   }
-  if (location.startsWith(TillRegistersRoutes.list())) {
-    return TillRegistersRoutes.list();
+  if (location.startsWith(CashRegistersRoutes.list())) {
+    return CashRegistersRoutes.list();
   }
   if (location.startsWith(TillStockingsRoutes.list())) {
     return TillStockingsRoutes.list();
@@ -86,8 +86,8 @@ export const TillPageLayout: React.FC = () => {
         <Tab
           label={t("register.registers")}
           component={RouterLink}
-          value={TillRegistersRoutes.list()}
-          to={TillRegistersRoutes.list()}
+          value={CashRegistersRoutes.list()}
+          to={CashRegistersRoutes.list()}
         />
         <Tab
           label={t("register.stockings")}

@@ -206,12 +206,6 @@ async def make_topup_bookings(
 
     cash_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_entry)
     cash_topup_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_topup_source)
-    if top_up.payment_method == PaymentMethod.sumup:
-        sumup_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sumup_entry)
-    elif top_up.payment_method == PaymentMethod.sumup_online:
-        sumup_entry_acc = await get_system_account_for_node(
-            conn=conn, node=node, account_type=AccountType.sumup_online_entry
-        )
 
     if top_up.payment_method == PaymentMethod.cash:
         if current_till.active_cash_register_id is None:
@@ -230,6 +224,14 @@ async def make_topup_bookings(
             ): top_up.amount,
         }
     elif top_up.payment_method == PaymentMethod.sumup or top_up.payment_method == PaymentMethod.sumup_online:
+        if top_up.payment_method == PaymentMethod.sumup:
+            sumup_entry_acc = await get_system_account_for_node(
+                conn=conn, node=node, account_type=AccountType.sumup_entry
+            )
+        else:
+            sumup_entry_acc = await get_system_account_for_node(
+                conn=conn, node=node, account_type=AccountType.sumup_online_entry
+            )
         bookings = {
             BookingIdentifier(
                 source_account_id=sumup_entry_acc.id,

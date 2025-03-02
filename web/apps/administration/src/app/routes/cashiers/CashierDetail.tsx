@@ -1,7 +1,7 @@
 import {
   selectCashierShiftAll,
   selectTerminalById,
-  selectTillRegisterById,
+  selectCashRegisterById,
   selectUserById,
   useGetCashierQuery,
   useGetCashierShiftsQuery,
@@ -102,7 +102,7 @@ export const CashierDetail: React.FC = () => {
       return "";
     }
 
-    const register = selectTillRegisterById(registers, id);
+    const register = selectCashRegisterById(registers, id);
     if (!register) {
       return "";
     }

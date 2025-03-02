@@ -28,13 +28,13 @@ import {
   TillProfileDetail,
   TillProfileList,
   TillProfileUpdate,
-  TillRegisterCreate,
-  TillRegisterList,
-  TillRegisterStockingCreate,
-  TillRegisterStockingList,
-  TillRegisterStockingUpdate,
-  TillRegisterTransfer,
-  TillRegisterUpdate,
+  CashRegisterCreate,
+  CashRegisterList,
+  CashRegisterStockingCreate,
+  CashRegisterStockingList,
+  CashRegisterStockingUpdate,
+  CashRegisterTransfer,
+  CashRegisterUpdate,
   TillUpdate,
 } from "./routes/tills";
 import { TseCreate, TseDetail, TseList, TseUpdate } from "./routes/tse";
@@ -291,31 +291,31 @@ const router = createBrowserRouter([
               },
               {
                 path: "registers",
-                element: <TillRegisterList />,
+                element: <CashRegisterList />,
               },
               {
                 path: "registers/new",
-                element: <TillRegisterCreate />,
+                element: <CashRegisterCreate />,
               },
               {
                 path: "registers/:registerId/edit",
-                element: <TillRegisterUpdate />,
+                element: <CashRegisterUpdate />,
               },
               {
                 path: "registers/:registerId/transfer",
-                element: <TillRegisterTransfer />,
+                element: <CashRegisterTransfer />,
               },
               {
                 path: "stockings",
-                element: <TillRegisterStockingList />,
+                element: <CashRegisterStockingList />,
               },
               {
                 path: "stockings/new",
-                element: <TillRegisterStockingCreate />,
+                element: <CashRegisterStockingCreate />,
               },
               {
                 path: "stockings/:stockingId/edit",
-                element: <TillRegisterStockingUpdate />,
+                element: <CashRegisterStockingUpdate />,
               },
               {
                 path: "new",

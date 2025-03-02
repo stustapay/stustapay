@@ -255,20 +255,20 @@ export const {
 } = convertEntityAdaptorSelectors("TillProfile", tillProfileAdapter.getSelectors());
 
 export const {
-  selectTillRegisterAll,
-  selectTillRegisterById,
-  selectTillRegisterEntities,
-  selectTillRegisterIds,
-  selectTillRegisterTotal,
-} = convertEntityAdaptorSelectors("TillRegister", cashRegisterAdapter.getSelectors());
+  selectCashRegisterAll,
+  selectCashRegisterById,
+  selectCashRegisterEntities,
+  selectCashRegisterIds,
+  selectCashRegisterTotal,
+} = convertEntityAdaptorSelectors("CashRegister", cashRegisterAdapter.getSelectors());
 
 export const {
-  selectTillRegisterStockingAll,
-  selectTillRegisterStockingById,
-  selectTillRegisterStockingEntities,
-  selectTillRegisterStockingIds,
-  selectTillRegisterStockingTotal,
-} = convertEntityAdaptorSelectors("TillRegisterStocking", cashRegisterStockingAdapter.getSelectors());
+  selectCashRegisterStockingAll,
+  selectCashRegisterStockingById,
+  selectCashRegisterStockingEntities,
+  selectCashRegisterStockingIds,
+  selectCashRegisterStockingTotal,
+} = convertEntityAdaptorSelectors("CashRegisterStocking", cashRegisterStockingAdapter.getSelectors());
 
 export const { selectAccountById, selectAccountEntities, selectAccountTotal, selectAccountIds, selectAccountAll } =
   convertEntityAdaptorSelectors("Account", accountAdapter.getSelectors());
