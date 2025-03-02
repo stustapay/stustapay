@@ -20,8 +20,8 @@ android {
         applicationId "de.stustapay.stustapay"
         minSdk 28
         targetSdk 33
-        versionCode getVersionCode()
-        versionName getVersionName()
+        versionCode getSSPVersionCode()
+        versionName getSSPVersionName()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

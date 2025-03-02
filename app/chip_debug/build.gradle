@@ -17,8 +17,8 @@ android {
         applicationId "de.stustapay.chip_debug"
         minSdk 28
         targetSdk 33
-        versionCode getVersionCode()
-        versionName getVersionName()
+        versionCode getSSPVersionCode()
+        versionName getSSPVersionName()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

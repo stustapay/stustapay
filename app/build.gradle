@@ -162,28 +162,14 @@ final class ReplaceFilter extends BaseParamFilterReader {
 }
 
 
-def getVersionCode = { ->
-    try {
-        def code = new ByteArrayOutputStream()
-        ExecOperations.exec {
-            commandLine 'git', 'rev-list', '--count', 'HEAD'
-            standardOutput = code
-        }
-        return code.toString().trim().toInteger()
-    } catch (ignored) {
-        return -1
-    }
+ext.getSSPVersionCode = { ->
+    def commitCount = "git -C ${rootDir} rev-list --count HEAD".execute().text.trim()
+
+    return commitCount.toInteger()
 }
 
-def getVersionName = { ->
-    try {
-        def stdout = new ByteArrayOutputStream()
-        ExecOperations.exec {
-            commandLine 'git', 'describe', '--tags', '--dirty', '--always'
-            standardOutput = stdout
-        }
-        return stdout.toString().trim()
-    } catch (ignored) {
-        return null
-    }
+ext.getSSPVersionName = { ->
+    def versionDesc = "git -C ${rootDir} describe --tags --dirty --always".execute().text.trim()
+
+    return versionDesc
 }
