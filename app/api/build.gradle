@@ -2,8 +2,8 @@ group 'org.openapitools'
 version '1.0.0'
 
 buildscript {
-    ext.kotlin_version = '1.9.23'
-    ext.ktor_version = '2.3.9'
+
+
     ext.spotless_version = "6.25.0"
 
     repositories {
@@ -50,7 +50,7 @@ dependencies {
     implementation "com.ionspin.kotlin:bignum:$bignum_version"
     implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:$bignum_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_json_version"
     implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-content-negotiation:$ktor_version"
     testImplementation "io.kotlintest:kotlintest-runner-junit5:3.4.2"

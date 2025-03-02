@@ -88,6 +88,17 @@ tasks.register('modApi') {
                     find: 'dependencies {\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version\"\n',
                     replace: 'dependencies {\n    implementation \"com.ionspin.kotlin:bignum:$bignum_version\"\n    implementation \"com.ionspin.kotlin:bignum-serialization-kotlinx:$bignum_version\"\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version\"\n'
             )
+            filter { String line ->
+                // we define this globally, and versions have to match. otherwise the api client has a different ktor version...
+                line.replaceFirst("^\\s*(ext\\.ktor_version|ext\\.kotlin_version)\\s*=.*\$", "")
+            }
+            filter { String line ->
+                // don't hardcode the version, use our global setting
+                line.replaceFirst(
+                        "implementation ['\"]org.jetbrains.kotlinx:kotlinx-serialization-json:[^\"']+[\"']",
+                        'implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:\\$serialization_json_version"'
+                )
+            }
         }
     }
 }
