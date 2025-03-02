@@ -87,6 +87,7 @@ class SumUp @Inject constructor(
 
     /** login username/merchant status */
     val loginStatus = _loginStatus.asStateFlow()
+    private var _loginApiKeyUsed: String? = null
 
     enum class SumUpResultCode(val code: Int) {
         SUCCESSFUL(1),
@@ -167,9 +168,22 @@ class SumUp @Inject constructor(
             return
         }
 
+        val cfg = sumUpPaymentState.config
+        if (cfg == null) {
+            _paymentStatus.update { SumUpState.Error("no payment state config for next action") }
+            return
+        }
+
         // if needed, perform token login.
-        if (needsLogin && !SumUpAPI.isLoggedIn()) {
-            nextAction = SumUpAction.LoginToken
+        if (needsLogin) {
+            // logout if we're currently logged in with the wrong api key
+            if (_loginApiKeyUsed != cfg.apiKey) {
+                SumUpAPI.logout()
+            }
+
+            if (!SumUpAPI.isLoggedIn()) {
+                nextAction = SumUpAction.LoginToken
+            }
         }
 
         // record the soon-done action.
@@ -256,6 +270,7 @@ class SumUp @Inject constructor(
                 if (!secrets.sumupAffiliateKey.startsWith("sup_afk")) {
                     return SumUpConfigState.Error("invalid affiliate key: '${secrets.sumupAffiliateKey}'")
                 }
+
                 sumUpConfig = SumUpConfig(
                     affiliateKey = secrets.sumupAffiliateKey,
                     apiKey = secrets.sumupApiKey,
@@ -273,6 +288,10 @@ class SumUp @Inject constructor(
         }
 
         return SumUpConfigState.OK(sumUpConfig)
+    }
+
+    fun isLoggedIn(): Boolean {
+        return SumUpAPI.isLoggedIn()
     }
 
     /**
@@ -302,6 +321,7 @@ class SumUp @Inject constructor(
      */
     suspend fun logout() {
         SumUpAPI.logout()
+        _loginApiKeyUsed = null
         _loginStatus.update { null }
         _status.update { "logged out." }
     }
@@ -359,8 +379,6 @@ class SumUp @Inject constructor(
      * calls back to loginResult.
      */
     private fun openLogin(context: Activity) {
-        // TODO: maybe don't do anything if SumUpAPI.isLoggedIn()
-
         val cfg = sumUpPaymentState.config
         if (cfg == null) {
             _paymentStatus.update { SumUpState.Error("no config present in login") }
@@ -382,6 +400,8 @@ class SumUp @Inject constructor(
             _paymentStatus.update { SumUpState.Error("no config present in login") }
             return
         }
+        // remember which api key is currently logged in
+        _loginApiKeyUsed = cfg.apiKey
 
         val sumupLogin = SumUpLogin.builder(cfg.affiliateKey).accessToken(cfg.apiKey).build()
 
@@ -394,10 +414,12 @@ class SumUp @Inject constructor(
     private fun loginResult(context: Activity, resultCode: Int, extras: Bundle?) {
         if (!checkResultCode("login", resultCode)) {
             _paymentStatus.update { SumUpState.Started("bad login intent result: $resultCode") }
+            _loginApiKeyUsed = null
             return
         }
         if (extras == null) {
             _paymentStatus.update { SumUpState.Error("no sumup login result intent extras") }
+            _loginApiKeyUsed = null
             return
         }
 
@@ -416,10 +438,12 @@ class SumUp @Inject constructor(
             }
 
             SumUpResultCode.ERROR_INVALID_TOKEN -> {
+                _loginApiKeyUsed = null
                 _paymentStatus.update { SumUpState.Error("sumup login token invalid: $resultMsg") }
             }
 
             else -> {
+                _loginApiKeyUsed = null
                 _paymentStatus.update { SumUpState.Error("sumup login result: $result: $resultMsg") }
             }
         }

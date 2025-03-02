@@ -40,7 +40,7 @@ class ECSettingsViewModel @Inject constructor(
     }
 
     suspend fun openCardReader(context: Activity) {
-        _status.update { "opening card reader settings..." }
+        _status.update { "opening card reader settings ${if (!sumUp.isLoggedIn() ) "(not logged in!)" else ""}..." }
         sumUp.cardReaderSettings(context)
     }
 }
