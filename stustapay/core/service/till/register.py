@@ -43,7 +43,6 @@ async def get_cash_register(conn: Connection, node: Node, register_id: int) -> C
 
 
 async def create_cash_register(*, conn: Connection, node: Node, new_register: NewCashRegister) -> CashRegister:
-    # TODO: TREE visibility
     account_id = await conn.fetchval(
         "insert into account (type, name, node_id) values ('cash_register', 'Cash Register', $1) returning id",
         node.event_node_id,
@@ -142,7 +141,6 @@ class TillRegisterService(Service[Config]):
     async def create_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
-        # TODO: TREE visibility
         stocking_id = await conn.fetchval(
             "insert into cash_register_stocking "
             "   (node_id, euro200, euro100, euro50, euro20, euro10, euro5, euro2, euro1, "
@@ -177,12 +175,11 @@ class TillRegisterService(Service[Config]):
     async def update_cash_register_stockings(
         self, *, conn: Connection, node: Node, stocking_id: int, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
-        # TODO: TREE visibility
         stocking_id = await conn.fetchval(
             "update cash_register_stocking set "
             "   euro200 = $1, euro100 = $2, euro50 = $3, euro20 = $4, euro10 = $5, euro5 = $6, euro2 = $7, "
             "   euro1 = $8, cent50 = $9, cent20 = $10, cent10 = $11, cent5 = $12, cent2 = $13, cent1 = $14, "
-            "variable_in_euro = $15, name = $16 where id = $17 returning id",
+            "variable_in_euro = $15, name = $16 where id = $17 returning id where node_id = any($18)",
             stocking.euro200,
             stocking.euro100,
             stocking.euro50,
@@ -200,6 +197,7 @@ class TillRegisterService(Service[Config]):
             stocking.variable_in_euro,
             stocking.name,
             stocking_id,
+            node.ids_to_event_node,
         )
         if stocking_id is None:
             raise NotFound(element_type="cash_register_stocking", element_id=str(stocking_id))
@@ -210,11 +208,9 @@ class TillRegisterService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_cash_register_stockings(self, *, conn: Connection, stocking_id: int):
-        # TODO: TREE visibility
+    async def delete_cash_register_stockings(self, *, conn: Connection, node: Node, stocking_id: int):
         result = await conn.execute(
-            "delete from cash_register_stocking where id = $1",
-            stocking_id,
+            "delete from cash_register_stocking where id = $1 and node_id = $2", stocking_id, node.id
         )
         return result != "DELETE 0"
 
@@ -223,7 +219,6 @@ class TillRegisterService(Service[Config]):
     async def list_cash_registers_terminal(
         self, *, conn: Connection, current_till: Till, hide_assigned_registers=False
     ) -> list[CashRegister]:
-        # TODO: TREE visibility
         node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
@@ -248,7 +243,6 @@ class TillRegisterService(Service[Config]):
     async def create_cash_register(
         self, *, conn: Connection, node: Node, new_register: NewCashRegister
     ) -> CashRegister:
-        # TODO: TREE visibility
         return await create_cash_register(conn=conn, node=node, new_register=new_register)
 
     @with_db_transaction
@@ -257,9 +251,11 @@ class TillRegisterService(Service[Config]):
     async def update_cash_register(
         self, *, conn: Connection, node: Node, register_id: int, register: NewCashRegister
     ) -> CashRegister:
-        # TODO: TREE visibility
         row = await conn.fetchrow(
-            "update cash_register set name = $2 where id = $1 returning id, name", register_id, register.name
+            "update cash_register set name = $2 where id = $1 and node_id = $3 returning id, name",
+            register_id,
+            register.name,
+            node.id,
         )
         if row is None:
             raise NotFound(element_type="cash_register", element_id=str(register_id))
@@ -269,12 +265,8 @@ class TillRegisterService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_cash_register(self, *, conn: Connection, register_id: int):
-        # TODO: TREE visibility
-        result = await conn.execute(
-            "delete from cash_register where id = $1",
-            register_id,
-        )
+    async def delete_cash_register(self, *, conn: Connection, node: Node, register_id: int):
+        result = await conn.execute("delete from cash_register where id = $1 and node_id = $2", register_id, node.id)
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=False)
@@ -412,7 +404,6 @@ class TillRegisterService(Service[Config]):
         orga_tag_uid: int,
         amount: float,
     ):
-        # TODO: TREE visibility
         transport_account = await get_transport_account_by_tag_uid(conn=conn, node=node, orga_tag_uid=orga_tag_uid)
         if transport_account is None:
             raise InvalidArgument("Transport account could not be found")

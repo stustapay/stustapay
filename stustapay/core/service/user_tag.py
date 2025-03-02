@@ -128,8 +128,12 @@ class UserTagService(Service[Config]):
     async def update_user_tag_comment(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_id: int, comment: str
     ) -> UserTagDetail:
-        # TODO: TREE visibility
-        ret = await conn.fetchval("update user_tag set comment = $1 where id = $2 returning id", comment, user_tag_id)
+        ret = await conn.fetchval(
+            "update user_tag set comment = $1 where id = $2 and node_id = $3 returning id",
+            comment,
+            user_tag_id,
+            node.id,
+        )
         if ret is None:
             raise InvalidArgument(f"User tag {user_tag_id} does not exist")
 

@@ -577,7 +577,6 @@ class UserService(Service[Config]):
     async def change_password(
         self, *, conn: Connection, current_user: CurrentUser, old_password: str, new_password: str
     ):
-        # TODO: TREE visibility
         old_password_hashed = await conn.fetchval("select password from usr where id = $1", current_user.id)
         assert old_password_hashed is not None
         if not self._check_password(old_password, old_password_hashed):
@@ -590,7 +589,6 @@ class UserService(Service[Config]):
     @with_db_transaction
     @requires_user(node_required=False)
     async def logout_user(self, *, conn: Connection, current_user: User, token: str) -> bool:
-        # TODO: TREE visibility
         token_payload = self.auth_service.decode_user_jwt_payload(token)
         assert token_payload is not None
         assert current_user.id == token_payload.user_id
