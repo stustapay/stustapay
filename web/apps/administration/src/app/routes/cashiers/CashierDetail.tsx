@@ -9,7 +9,7 @@ import {
   useListTerminalsQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
+import { CashierRoutes, CashRegistersRoutes, TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
@@ -212,7 +212,11 @@ export const CashierDetail: React.FC = () => {
           }
         />
         {cashier.cash_register_id != null && (
-          <DetailField label={t("cashier.cashRegister")} value={renderRegister(cashier.cash_register_id)} />
+          <DetailField
+            label={t("cashier.cashRegister")}
+            value={renderRegister(cashier.cash_register_id)}
+            linkTo={CashRegistersRoutes.detail(cashier.cash_register_id)}
+          />
         )}
       </DetailView>
       <Paper sx={{ p: 1 }}>

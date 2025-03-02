@@ -35,6 +35,7 @@ import {
   CashRegisterStockingUpdate,
   CashRegisterTransfer,
   CashRegisterUpdate,
+  CashRegisterDetail,
   TillUpdate,
 } from "./routes/tills";
 import { TseCreate, TseDetail, TseList, TseUpdate } from "./routes/tse";
@@ -296,6 +297,10 @@ const router = createBrowserRouter([
               {
                 path: "registers/new",
                 element: <CashRegisterCreate />,
+              },
+              {
+                path: "registers/:registerId",
+                element: <CashRegisterDetail />,
               },
               {
                 path: "registers/:registerId/edit",

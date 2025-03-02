@@ -18,6 +18,13 @@ async def list_cash_registers_admin(token: CurrentAuthToken, till_service: Conte
     return normalize_list(await till_service.register.list_cash_registers_admin(token=token, node_id=node_id))
 
 
+@router.get("/{register_id}", response_model=CashRegister)
+async def get_cash_register_admin(
+    token: CurrentAuthToken, till_service: ContextTillService, node_id: int, register_id: int
+):
+    return await till_service.register.get_cash_register_admin(token=token, node_id=node_id, register_id=register_id)
+
+
 @router.post("", response_model=CashRegister)
 async def create_register(
     register: NewCashRegister, token: CurrentAuthToken, till_service: ContextTillService, node_id: int

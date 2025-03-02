@@ -33,8 +33,8 @@ from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_node
 
 
-async def get_cash_register(conn: Connection, node: Node, register_id: int) -> Optional[CashRegister]:
-    return await conn.fetch_maybe_one(
+async def get_cash_register(conn: Connection, node: Node, register_id: int) -> CashRegister:
+    return await conn.fetch_one(
         CashRegister,
         "select * from cash_register_with_cashier where id = $1 and node_id = any($2)",
         register_id,
@@ -55,7 +55,6 @@ async def create_cash_register(*, conn: Connection, node: Node, new_register: Ne
         account_id,
     )
     register = await get_cash_register(conn=conn, node=node, register_id=register_id)
-    assert register is not None
     return register
 
 
@@ -237,6 +236,12 @@ class TillRegisterService(Service[Config]):
     ) -> list[CashRegister]:
         return await _list_cash_registers(conn=conn, node=node, hide_assigned_registers=hide_assigned_registers)
 
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user()
+    async def get_cash_register_admin(self, *, conn: Connection, node: Node, register_id: int) -> CashRegister:
+        return await get_cash_register(conn=conn, node=node, register_id=register_id)
+
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
@@ -259,7 +264,6 @@ class TillRegisterService(Service[Config]):
         if row is None:
             raise NotFound(element_type="cash_register", element_id=str(register_id))
         r = await get_cash_register(conn=conn, node=node, register_id=register_id)
-        assert r is not None
         return r
 
     @with_db_transaction
@@ -478,7 +482,6 @@ class TillRegisterService(Service[Config]):
         )
 
         reg = await get_cash_register(conn=conn, node=node, register_id=cash_register_id)
-        assert reg is not None
         return reg
 
     @with_db_transaction(read_only=False)

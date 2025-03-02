@@ -548,16 +548,14 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-registers"],
       }),
-      transferRegister: build.mutation<TransferRegisterApiResponse, TransferRegisterApiArg>({
+      getCashRegisterAdmin: build.query<GetCashRegisterAdminApiResponse, GetCashRegisterAdminApiArg>({
         query: (queryArg) => ({
-          url: `/till-registers/transfer-register`,
-          method: "POST",
-          body: queryArg.transferRegisterPayload,
+          url: `/till-registers/${queryArg.registerId}`,
           params: {
             node_id: queryArg.nodeId,
           },
         }),
-        invalidatesTags: ["till-registers"],
+        providesTags: ["till-registers"],
       }),
       updateRegister: build.mutation<UpdateRegisterApiResponse, UpdateRegisterApiArg>({
         query: (queryArg) => ({
@@ -574,6 +572,17 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/till-registers/${queryArg.registerId}`,
           method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["till-registers"],
+      }),
+      transferRegister: build.mutation<TransferRegisterApiResponse, TransferRegisterApiArg>({
+        query: (queryArg) => ({
+          url: `/till-registers/transfer-register`,
+          method: "POST",
+          body: queryArg.transferRegisterPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1534,10 +1543,10 @@ export type CreateRegisterApiArg = {
   nodeId: number;
   newCashRegister: NewCashRegister;
 };
-export type TransferRegisterApiResponse = /** status 200 Successful Response */ any;
-export type TransferRegisterApiArg = {
+export type GetCashRegisterAdminApiResponse = /** status 200 Successful Response */ CashRegister;
+export type GetCashRegisterAdminApiArg = {
+  registerId: number;
   nodeId: number;
-  transferRegisterPayload: TransferRegisterPayload;
 };
 export type UpdateRegisterApiResponse = /** status 200 Successful Response */ any;
 export type UpdateRegisterApiArg = {
@@ -1549,6 +1558,11 @@ export type DeleteRegisterApiResponse = /** status 200 Successful Response */ an
 export type DeleteRegisterApiArg = {
   registerId: number;
   nodeId: number;
+};
+export type TransferRegisterApiResponse = /** status 200 Successful Response */ any;
+export type TransferRegisterApiArg = {
+  nodeId: number;
+  transferRegisterPayload: TransferRegisterPayload;
 };
 export type GetPublicConfigApiResponse = /** status 200 Successful Response */ Config;
 export type GetPublicConfigApiArg = void;
@@ -3279,9 +3293,11 @@ export const {
   useListCashRegistersAdminQuery,
   useLazyListCashRegistersAdminQuery,
   useCreateRegisterMutation,
-  useTransferRegisterMutation,
+  useGetCashRegisterAdminQuery,
+  useLazyGetCashRegisterAdminQuery,
   useUpdateRegisterMutation,
   useDeleteRegisterMutation,
+  useTransferRegisterMutation,
   useGetPublicConfigQuery,
   useLazyGetPublicConfigQuery,
   useListConfigEntriesQuery,
