@@ -11,6 +11,7 @@ from stustapay.bon.generator import Generator
 from stustapay.core.config import read_config
 from stustapay.customer_portal import server as customerportal_server
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
+from stustapay.payment.payment_processor import run as run_payment_processor
 from stustapay.terminalserver import server as terminal_server
 
 from .admin import admin_cli
@@ -112,6 +113,12 @@ def customerportal_api(ctx: typer.Context, show_openapi: bool = False):
         return
     server = customerportal_server.Api(config=ctx.obj.config)
     asyncio.run(server.run())
+
+
+@cli.command()
+def payment_processor(ctx: typer.Context):
+    """Run the payment processor."""
+    asyncio.run(run_payment_processor(config=ctx.obj.config))
 
 
 cli.add_typer(

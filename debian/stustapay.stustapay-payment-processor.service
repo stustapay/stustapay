@@ -1,0 +1,12 @@
+[Unit]
+Description=StuStaPay Payment Processor
+After=postgresql.service
+
+[Service]
+ExecStartPre=/usr/lib/stustapay/systemd-exec-start-pre.sh
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay payment-processor
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

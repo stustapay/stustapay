@@ -17,3 +17,5 @@ create table pending_sumup_order (
     order_content json not null,
     status pending_order_status not null default 'pending'
 );
+
+drop table customer_sumup_checkout;

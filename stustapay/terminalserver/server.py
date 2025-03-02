@@ -86,7 +86,6 @@ class Api:
         )
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db, service_name="terminalserver")))
-            self.server.add_task(asyncio.create_task(order_service.sumup.run_sumup_pending_order_processing()))
             await self.server.run(context)
         finally:
             await db_pool.close()

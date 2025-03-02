@@ -1,38 +1,76 @@
 import asyncio
 import logging
+import uuid
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 
 import asyncpg
+from pydantic import BaseModel
 from sftkit.database import Connection
 from sftkit.error import InvalidArgument
-from sftkit.service import Service
+from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import (
     CompletedTicketSale,
     CompletedTopUp,
+    PaymentMethod,
     PendingOrder,
+    PendingOrderStatus,
     PendingOrderType,
 )
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.order.pending_order import (
+    fetch_pending_order,
     fetch_pending_orders,
     load_pending_ticket_sale,
     load_pending_topup,
     make_ticket_sale_bookings,
     make_topup_bookings,
+    save_pending_topup,
 )
-from stustapay.core.service.till.common import fetch_till
+from stustapay.core.service.till.common import fetch_till, fetch_virtual_till
 from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.payment.sumup.api import SumUpApi, SumUpCheckoutStatus
+from stustapay.payment.sumup.api import (
+    SumUpApi,
+    SumUpCheckout,
+    SumUpCheckoutStatus,
+    SumUpCreateCheckout,
+)
 
 SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
 SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
+
+
+class CreateCheckout(BaseModel):
+    amount: float
+
+
+def requires_sumup_online_topup_enabled(func):
+    @wraps(func)
+    async def wrapper(self, **kwargs):
+        if "conn" not in kwargs:
+            raise RuntimeError(
+                "requires_sumup_enabled needs a database connection, "
+                "with_db_transaction needs to be put before this decorator"
+            )
+        conn = kwargs["conn"]
+        event = await fetch_restricted_event_settings_for_node(conn, node_id=kwargs["current_customer"].node_id)
+        is_sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
+        if not is_sumup_enabled:
+            raise InvalidArgument("Online Top Up is currently disabled")
+
+        return await func(self, **kwargs)
+
+    return wrapper
 
 
 def _should_check_order(order: PendingOrder) -> bool:
@@ -91,11 +129,13 @@ class SumupService(Service[Config]):
             return None
 
         if sumup_checkout.status == SumUpCheckoutStatus.FAILED:
+            self.logger.debug(f"Found a FAILED sumup order with uuid = {pending_order.uuid}")
             await conn.execute(
                 "update pending_sumup_order set status = 'cancelled' where uuid = $1", pending_order.uuid
             )
             return None
         elif sumup_checkout.status == SumUpCheckoutStatus.PAID:
+            self.logger.debug(f"Found a PAID sumup order with uuid = {pending_order.uuid}, starting order booking")
             node = await fetch_node(conn=conn, node_id=pending_order.node_id)
             if node is None:
                 raise InvalidArgument("Found a pending order without a matching node")
@@ -128,6 +168,87 @@ class SumupService(Service[Config]):
 
         return None
 
+    @with_db_transaction
+    @requires_customer
+    @requires_sumup_online_topup_enabled
+    async def check_online_topup_checkout(
+        self, *, conn: Connection, current_customer: Customer, order_uuid: uuid.UUID
+    ) -> SumUpCheckoutStatus:
+        pending_order = await fetch_pending_order(conn=conn, uuid=order_uuid)
+        if pending_order.order_type != PendingOrderType.topup:
+            raise InvalidArgument("Invalid order uuid")
+        topup = load_pending_topup(pending_order)
+        if topup.customer_account_id != current_customer.id:
+            raise InvalidArgument("Invalid order uuid")
+        if pending_order.status == PendingOrderStatus.booked:
+            return SumUpCheckoutStatus.PAID
+        if pending_order.status == PendingOrderStatus.cancelled:
+            return SumUpCheckoutStatus.FAILED
+
+        processed_topup = await self.process_pending_order(conn=conn, pending_order=pending_order)
+        if processed_topup is None:
+            return SumUpCheckoutStatus.FAILED
+        if isinstance(processed_topup, CompletedTopUp):
+            return SumUpCheckoutStatus.PAID
+
+        self.logger.warning(
+            f"Weird order state for uuid = {order_uuid}. Sumup order was accepted but we have the wrong order type"
+        )
+        return SumUpCheckoutStatus.FAILED
+
+    @with_db_transaction
+    @requires_customer
+    @requires_sumup_online_topup_enabled
+    async def create_online_topup_checkout(
+        self, *, conn: Connection, current_customer: Customer, amount: float
+    ) -> tuple[SumUpCheckout, uuid.UUID]:
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
+        assert event_node is not None
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
+
+        # check amount
+        if amount <= 0:
+            raise InvalidArgument("Must top up more than 0€")
+
+        max_account_balance = event_settings.max_account_balance
+        old_balance = current_customer.balance
+        new_balance = current_customer.balance + amount
+        if amount != int(amount):
+            raise InvalidArgument("Cent amounts are not allowed")
+        if new_balance > max_account_balance:
+            raise InvalidArgument(f"Resulting balance would be more than {max_account_balance}€")
+
+        order_uuid = uuid.uuid4()
+
+        create_checkout = SumUpCreateCheckout(
+            checkout_reference=order_uuid,
+            amount=amount,
+            currency=event_settings.currency_identifier,
+            merchant_code=event_settings.sumup_merchant_code,
+            description=f"{event_node.name} Online TopUp {current_customer.user_tag_uid_hex} {order_uuid}",
+        )
+        api = SumUpApi(merchant_code=event_settings.sumup_merchant_code, api_key=event_settings.sumup_api_key)
+        checkout_response = await api.create_sumup_checkout(create_checkout)
+        virtual_till = await fetch_virtual_till(conn=conn, node=event_node)
+        completed_top_up = CompletedTopUp(
+            amount=amount,
+            customer_tag_uid=current_customer.user_tag_uid,
+            customer_account_id=current_customer.id,
+            payment_method=PaymentMethod.sumup_online,
+            old_balance=old_balance,
+            new_balance=new_balance,
+            uuid=order_uuid,
+            booked_at=datetime.now(),
+            cashier_id=None,
+            till_id=virtual_till.id,
+        )
+
+        await save_pending_topup(
+            conn=conn, node_id=event_node.id, till_id=virtual_till.id, cashier_id=None, topup=completed_top_up
+        )
+
+        return checkout_response, order_uuid
+
     async def run_sumup_pending_order_processing(self):
         sumup_enabled = self.config.core.sumup_enabled
         if not sumup_enabled:
@@ -142,7 +263,7 @@ class SumupService(Service[Config]):
                     pending_orders = await fetch_pending_orders(conn=conn)
 
                     for pending_order in pending_orders:
-                        if _should_check_order(pending_order):
+                        if not _should_check_order(pending_order):
                             self.logger.debug(f"skipping pending checkout {pending_order.uuid} due to backoff")
                             continue
 

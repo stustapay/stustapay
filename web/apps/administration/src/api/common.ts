@@ -26,6 +26,7 @@ export const ConfigSchema = z.object({
   adminApiBaseUrl: z.string(),
   adminBaseUrl: z.string(),
   terminalApiBaseUrl: z.string(),
+  sumupTopupEnabledGlobally: z.boolean(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -39,6 +40,7 @@ const generateConfig = (publicApiConfig: BackendConfig): Config => {
     adminBaseUrl: adminBaseUrl,
     testMode: publicApiConfig.test_mode,
     testModeMessage: publicApiConfig.test_mode_message,
+    sumupTopupEnabledGlobally: publicApiConfig.sumup_topup_enabled_globally,
   };
 };
 

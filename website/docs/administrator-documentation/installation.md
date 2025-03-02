@@ -56,11 +56,12 @@ core:
 The StuStaPay bon generation is based on rendering Latex templates, it is therefore required to install the respective latex packages
 
 TODO: the following list of texlive package requirements is not up to date and should be added to the debian package
+
 ```bash
 sudo apt install texlive latexmk
 ```
 
-Additionally you need to decide how many bon generator workers should be spawned. In our testing the bon generation took 
+Additionally you need to decide how many bon generator workers should be spawned. In our testing the bon generation took
 about ~0.5 seconds per bon. Depending on the number of orders per second you are expecting set the `n_workers` setting accordingly.
 
 ```yaml title="/etc/stustapay/config.yaml"
@@ -70,7 +71,7 @@ bon:
 
 ### Test Mode
 
-The default config will contain the key `test_mode` set to `true`. 
+The default config will contain the key `test_mode` set to `true`.
 This is essentially just a flag to enable a red banner in both the administration UI and the customer portal to differentiate between production and test setups. We recommend leaving this enabled for the time being until you're comfortable with the setup and are ready to switch to production mode.
 An optional message can be configured in this test mode banner via `test_mode_message`.
 
@@ -95,7 +96,7 @@ Installing the debian package will also install some initial nginx config files 
 These can be found under `/etc/nginx/sites-available/stustapay-*`.
 They are mostly ready, you just need to configure TLS certificates and update the `server_name` settings with your desired domains.
 
-Then just activate them via 
+Then just activate them via
 
 ```bash
 ln -s /etc/nginx/sites-available/stustapay-* /etc/nginx/sites-enabled/
@@ -108,6 +109,7 @@ sudo systemctl enable --now stustapay-administration-api.service
 sudo systemctl enable --now stustapay-terminal-api.service
 sudo systemctl enable --now stustapay-customerportal-api.service
 sudo systemctl enable --now stustapay-tse-controller.service
+sudo systemctl enable --now stustapay-payment-processor.service
 # start and enable as many bon generator instances as you've configured bon workers
 sudo systemctl enable --now stustapay-bon-generator@0.service
 ```

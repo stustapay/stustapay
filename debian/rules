@@ -20,6 +20,7 @@ override_dh_installsystemd:
 	dh_installsystemd --name=stustapay-customerportal-api --no-restart-after-upgrade --no-start --no-enable
 	dh_installsystemd --name=stustapay-terminal-api --no-restart-after-upgrade --no-start --no-enable
 	dh_installsystemd --name=stustapay-tse-controller --no-restart-after-upgrade --no-start --no-enable
+	dh_installsystemd --name=stustapay-payment-processor --no-restart-after-upgrade --no-start --no-enable
 	dh_installsystemd --name=stustapay-bon-generator --no-restart-after-upgrade --no-start --no-enable
 
 override_dh_virtualenv:
