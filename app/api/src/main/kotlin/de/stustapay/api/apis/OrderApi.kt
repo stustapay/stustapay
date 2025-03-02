@@ -415,6 +415,72 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/register-pending-ticket-sale
+        * Register a pending topup with the server where the sumup payment is still pending
+        * 
+         * @param newTicketSale  
+         * @return CompletedTicketSale
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun registerPendingTicketSale(newTicketSale: NewTicketSale): HttpResponse<CompletedTicketSale> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = newTicketSale
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/register-pending-ticket-sale",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * POST /order/register-pending-topup
+        * Register a pending topup with the server where the sumup payment is still pending
+        * 
+         * @param newTopUp  
+         * @return CompletedTopUp
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun registerPendingTopup(newTopUp: NewTopUp): HttpResponse<CompletedTopUp> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = newTopUp
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/register-pending-topup",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
         * GET /order/{order_id}
         * get information about an order
         * 
