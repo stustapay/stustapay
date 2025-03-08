@@ -467,12 +467,12 @@ async def _create_ticket_tills(
         profile=NewTillProfile(
             name="Eintrittskasse",
             description="",
-            allow_top_up=False,
-            allow_cash_out=False,
+            allow_top_up=True,
+            allow_cash_out=True,
             allow_ticket_sale=True,
-            enable_ssp_payment=True,
-            enable_cash_payment=False,
-            enable_card_payment=False,
+            enable_ssp_payment=False,
+            enable_cash_payment=True,
+            enable_card_payment=True,
             layout_id=layout.id,
         ),
     )
@@ -518,8 +518,8 @@ async def _create_topup_tills(
             allow_cash_out=True,
             allow_ticket_sale=False,
             enable_ssp_payment=True,
-            enable_cash_payment=False,
-            enable_card_payment=False,
+            enable_cash_payment=True,
+            enable_card_payment=True,
             layout_id=layout.id,
         ),
     )
