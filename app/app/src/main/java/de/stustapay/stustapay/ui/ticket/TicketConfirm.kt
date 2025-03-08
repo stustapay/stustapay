@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.ticket
 
 import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -45,6 +46,10 @@ fun TicketConfirm(
             Text("no sale check present!")
         }
         return
+    }
+
+    BackHandler {
+        goBack()
     }
 
     NavScaffold(
