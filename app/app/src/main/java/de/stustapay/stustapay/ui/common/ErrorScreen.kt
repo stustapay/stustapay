@@ -21,7 +21,6 @@ fun ErrorScreen(
     modifier: Modifier = Modifier,
     onDismiss: (() -> Unit)?,
     topBarTitle: String? = null,
-    actuallyOk: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -34,8 +33,7 @@ fun ErrorScreen(
         },
         content = { padding ->
             ErrorBox(
-                modifier = modifier.padding(bottom = padding.calculateBottomPadding()),
-                actuallyOk = actuallyOk,
+                modifier = modifier.padding(bottom = padding.calculateBottomPadding()).fillMaxWidth(),
                 content = content
             )
         },

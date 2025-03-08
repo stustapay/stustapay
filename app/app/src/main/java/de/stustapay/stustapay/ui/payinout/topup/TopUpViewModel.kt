@@ -68,11 +68,6 @@ class TopUpViewModel @Inject constructor(
     private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
-    // dirty hack to make the error page an ok page for already-booked errors
-    // todo: remove :)
-    private val _actuallyOk = MutableStateFlow(false)
-    val actuallyOk = _actuallyOk.asStateFlow()
-
     val requestActive = infallibleRepository.active
 
     // configuration infos from backend
@@ -225,17 +220,8 @@ class TopUpViewModel @Inject constructor(
                 _navState.update { TopUpPage.Done }
             }
 
-            is Response.Error.Service.AlreadyProcessed -> {
-                // TODO: get a CompletedTopUp here from response, and navigate to Done-Page
-                clearDraft()
-                _status.update { "$topUpType TopUp successful!" }
-                _actuallyOk.update { true }
-                _navState.update { TopUpPage.Failure }
-            }
-
             is Response.Error -> {
                 _status.update { "$topUpType TopUp failed! ${response.msg()}" }
-                _actuallyOk.update { false }
                 _navState.update { TopUpPage.Failure }
             }
         }
