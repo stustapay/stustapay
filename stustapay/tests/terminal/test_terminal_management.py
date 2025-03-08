@@ -5,7 +5,7 @@ from sftkit.database import Connection
 from stustapay.core.schema.till import CashRegister, CashRegisterStocking
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import NewUser, NewUserToRoles
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 from stustapay.tests.terminal.conftest import LoginSupervisedUser

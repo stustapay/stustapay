@@ -21,7 +21,7 @@ from stustapay.core.service.sumup import SumUpService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.tree.service import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
@@ -46,6 +46,7 @@ from .routers import (
     till_profile,
     till_register_stockings,
     till_registers,
+    transaction,
     tree,
     tse,
     user,
@@ -86,6 +87,7 @@ def get_server(config: Config):
     server.add_router(sumup.router)
     server.add_router(customer.router)
     server.add_router(terminal.router)
+    server.add_router(transaction.router)
     return server
 
 

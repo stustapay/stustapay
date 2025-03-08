@@ -1,3 +1,3 @@
-export * from "./TillRegisterStockingCreate";
-export * from "./TillRegisterStockingUpdate";
-export * from "./TillRegisterStockingList";
+export * from "./CashRegisterStockingCreate";
+export * from "./CashRegisterStockingUpdate";
+export * from "./CashRegisterStockingList";

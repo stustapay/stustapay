@@ -1,14 +1,14 @@
 import {
   selectCashierById,
   selectTillById,
-  selectTillRegisterAll,
+  selectCashRegisterAll,
   useDeleteRegisterMutation,
   useListCashRegistersAdminQuery,
   useListCashiersQuery,
   useListTillsQuery,
   CashRegister,
 } from "@/api";
-import { CashierRoutes, TillRegistersRoutes, TillRoutes } from "@/app/routes";
+import { CashierRoutes, CashRegistersRoutes, TillRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
@@ -21,23 +21,23 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-export const TillRegisterList: React.FC = () => {
+export const CashRegisterList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const canManageRegisters = useCurrentUserHasPrivilege(TillRegistersRoutes.privilege);
-  const canManageRegistersAtNode = useCurrentUserHasPrivilegeAtNode(TillRegistersRoutes.privilege);
+  const canManageRegisters = useCurrentUserHasPrivilege(CashRegistersRoutes.privilege);
+  const canManageRegistersAtNode = useCurrentUserHasPrivilegeAtNode(CashRegistersRoutes.privilege);
   const navigate = useNavigate();
   const openModal = useOpenModal();
   const { dataGridNodeColumn } = useRenderNode();
 
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
   const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
-  const { stockings: registers, isLoading } = useListCashRegistersAdminQuery(
+  const { registers, isLoading } = useListCashRegistersAdminQuery(
     { nodeId: currentNode.id },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        stockings: data ? selectTillRegisterAll(data) : undefined,
+        registers: data ? selectCashRegisterAll(data) : undefined,
       }),
     }
   );
@@ -97,6 +97,11 @@ export const TillRegisterList: React.FC = () => {
       field: "name",
       headerName: t("register.name"),
       flex: 1,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={CashRegistersRoutes.detail(params.row.id, params.row.node_id)}>
+          {params.row.name}
+        </Link>
+      ),
     },
     {
       field: "current_cashier_id",
@@ -111,7 +116,7 @@ export const TillRegisterList: React.FC = () => {
       renderCell: (params) => renderTill(params.row.current_till_id),
     },
     {
-      field: "current_balance",
+      field: "balance",
       headerName: t("register.currentBalance"),
       type: "currency",
       width: 200,
@@ -133,13 +138,13 @@ export const TillRegisterList: React.FC = () => {
                 color="primary"
                 label={t("register.transfer")}
                 disabled={params.row.current_cashier_id == null}
-                onClick={() => navigate(`${TillRegistersRoutes.detail(params.row.id)}/transfer`)}
+                onClick={() => navigate(`${CashRegistersRoutes.detail(params.row.id)}/transfer`)}
               />,
               <GridActionsCellItem
                 icon={<EditIcon />}
                 color="primary"
                 label={t("edit")}
-                onClick={() => navigate(TillRegistersRoutes.edit(params.row.id))}
+                onClick={() => navigate(CashRegistersRoutes.edit(params.row.id))}
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon />}
@@ -153,7 +158,7 @@ export const TillRegisterList: React.FC = () => {
   }
 
   return (
-    <ListLayout title={t("register.registers")} routes={TillRegistersRoutes}>
+    <ListLayout title={t("register.registers")} routes={CashRegistersRoutes}>
       <DataGrid
         autoHeight
         rows={registers ?? []}

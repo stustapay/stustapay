@@ -35,7 +35,8 @@ from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.order import NotEnoughVouchersException, OrderService
 from stustapay.core.service.order.order import InvalidSaleException
 from stustapay.core.service.product import ProductService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.common import fetch_till
+from stustapay.core.service.till.till import TillService
 
 from ...core.service.terminal import TerminalService
 from ..conftest import Cashier
@@ -516,6 +517,8 @@ async def test_cashier_close_out(
     # before logging in we did not produce a money transfer order
     n_orders = await get_num_orders(OrderType.money_transfer)
     assert n_orders_start == n_orders
+    n_orders = await get_num_orders(OrderType.cashier_shift_start)
+    assert 1 == n_orders
 
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
 
@@ -577,6 +580,8 @@ async def test_cashier_close_out(
     assert n_orders_start + 4 == n_orders
     n_orders = await get_num_orders(OrderType.money_transfer_imbalance)
     assert 1 == n_orders
+    n_orders = await get_num_orders(OrderType.cashier_shift_end)
+    assert 1 == n_orders
     # the sum of cash order values at all tills should be 0 as we closed out the tills
     balances = await db_connection.fetch(
         "select o.till_id, sum(li.total_price) as till_balance "
@@ -589,8 +594,10 @@ async def test_cashier_close_out(
     )
     assert 0 != len(balances)
     for balance in balances:
+        till = await fetch_till(conn=db_connection, node=event_node, till_id=balance["till_id"])
+        assert till is not None
         assert 0 == balance["till_balance"], (
-            f"Till with id {balance['till_id']} does not have a cash balance of 0, received {balance['till_balance']}"
+            f"Till {till.name}({till.id}) does not have a cash balance of 0, received {balance['till_balance']}"
         )
 
 

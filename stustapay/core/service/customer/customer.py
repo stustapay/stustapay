@@ -133,9 +133,10 @@ class CustomerService(Service[Config]):
         return await conn.fetch_many(
             OrderWithBon,
             "select o.*, case when b.bon_json is null then false else true end as bon_generated from order_value_prefiltered("
-            "   (select array_agg(o.id) from ordr o where customer_account_id = $1)"
+            "   (select array_agg(o.id) from ordr o where customer_account_id = $1), $2"
             ") o left join bon b ON o.id = b.id order by o.booked_at desc",
             current_customer.id,
+            current_customer.node_id,
         )
 
     @with_db_transaction(read_only=True)

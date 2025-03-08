@@ -36,7 +36,6 @@ class TillLayoutService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_button(self, *, conn: Connection, node: Node, button: NewTillButton) -> TillButton:
-        # TODO: TREE visibility
         row = await conn.fetchrow(
             "insert into till_button (node_id, name) values ($1, $2) returning id, name",
             node.id,
@@ -77,12 +76,12 @@ class TillLayoutService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def update_button(self, *, conn: Connection, button_id: int, button: NewTillButton) -> TillButton:
-        # TODO: TREE visibility
+    async def update_button(self, *, conn: Connection, node: Node, button_id: int, button: NewTillButton) -> TillButton:
         row = await conn.fetchrow(
-            "update till_button set name = $2 where id = $1 returning id, name",
+            "update till_button set name = $2 where id = $1 and node_id = $3 returning id, name",
             button_id,
             button.name,
+            node.id,
         )
         if row is None:
             raise NotFound(element_type="button", element_id=button_id)
@@ -98,19 +97,14 @@ class TillLayoutService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_button(self, *, conn: Connection, button_id: int) -> bool:
-        # TODO: TREE visibility
-        result = await conn.execute(
-            "delete from till_button where id = $1",
-            button_id,
-        )
+    async def delete_button(self, *, conn: Connection, node: Node, button_id: int) -> bool:
+        result = await conn.execute("delete from till_button where id = $1 and node_id = $2", button_id, node.id)
         return result != "DELETE 0"
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_layout(self, *, conn: Connection, node: Node, layout: NewTillLayout) -> TillLayout:
-        # TODO: TREE visibility
         till_layout_id = await conn.fetchval(
             "insert into till_layout (node_id, name, description) values ($1, $2, $3) returning id",
             node.id,
@@ -161,13 +155,12 @@ class TillLayoutService(Service[Config]):
     async def update_layout(
         self, *, conn: Connection, node: Node, layout_id: int, layout: NewTillLayout
     ) -> Optional[TillLayout]:
-        # TODO: TREE visibility
         till_layout_id = await conn.fetchval(
-            "update till_layout set name = $2, description = $3 where id = $1 and node_id = any($4) returning id",
+            "update till_layout set name = $2, description = $3 where id = $1 and node_id = $4 returning id",
             layout_id,
             layout.name,
             layout.description,
-            node.ids_to_event_node,
+            node.id,
         )
         if till_layout_id is None:
             return None
@@ -197,10 +190,6 @@ class TillLayoutService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_layout(self, *, conn: Connection, layout_id: int) -> bool:
-        # TODO: TREE visibility
-        result = await conn.execute(
-            "delete from till_layout where id = $1",
-            layout_id,
-        )
+    async def delete_layout(self, *, conn: Connection, node: Node, layout_id: int) -> bool:
+        result = await conn.execute("delete from till_layout where id = $1 and node_id = $2", layout_id, node.id)
         return result != "DELETE 0"

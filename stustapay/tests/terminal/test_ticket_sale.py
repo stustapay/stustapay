@@ -20,7 +20,7 @@ from stustapay.core.schema.till import NewTillLayout, NewTillProfile, Till, Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.order.order import OrderService, TillPermissionException
 from stustapay.core.service.ticket import TicketService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 from stustapay.tests.sumup_mock import MockSumUpApi
 from stustapay.tests.terminal.conftest import (

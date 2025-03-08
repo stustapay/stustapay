@@ -18,7 +18,7 @@ from stustapay.core.service.account import AccountService
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.terminal import TerminalService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.terminalserver.router import (
     auth,

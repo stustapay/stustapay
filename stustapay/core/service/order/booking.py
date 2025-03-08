@@ -6,10 +6,14 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel
 from sftkit.database import Connection
 
+from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.tree import Node
+from stustapay.core.schema.user import CurrentUser
+from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.common.error import InvalidArgument
-from stustapay.core.service.product import fetch_money_transfer_product
+from stustapay.core.service.product import fetch_money_difference_product, fetch_money_transfer_product
+from stustapay.core.service.till.common import fetch_virtual_till, get_cash_register_account_id
 from stustapay.core.service.transaction import book_transaction
 
 
@@ -56,7 +60,7 @@ async def book_money_transfer(
     cash_register_id: int,
     bookings: dict[BookingIdentifier, float],
     amount: float,
-    till_id: int,
+    till_id: int | None,
 ) -> OrderInfo:
     transfer_product = await fetch_money_transfer_product(conn=conn, node=node)
     line_items = [
@@ -134,3 +138,131 @@ async def book_order(
         )
     await book_prepared_bookings(conn=conn, order_id=order_id, bookings=bookings)
     return OrderInfo(id=order_id, uuid=uuid, booked_at=booked_at)
+
+
+async def book_imbalance_order(
+    *,
+    conn: Connection,
+    current_user: CurrentUser,
+    node: Node,
+    cash_register_id: int,
+    imbalance: float,
+) -> OrderInfo:
+    cash_register_account_id = await get_cash_register_account_id(
+        conn=conn, node=node, cash_register_id=cash_register_id
+    )
+    difference_product = await fetch_money_difference_product(conn=conn, node=node)
+    line_items = [
+        NewLineItem(
+            quantity=1,
+            product_id=difference_product.id,
+            product_price=imbalance,
+            tax_rate_id=difference_product.tax_rate_id,
+        )
+    ]
+
+    cash_imbalance_acc = await get_system_account_for_node(
+        conn=conn, node=node, account_type=AccountType.cash_imbalance
+    )
+
+    bookings: dict[BookingIdentifier, float] = {
+        BookingIdentifier(
+            source_account_id=cash_register_account_id, target_account_id=cash_imbalance_acc.id
+        ): -imbalance,
+    }
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
+
+    return await book_order(
+        conn=conn,
+        payment_method=PaymentMethod.cash,
+        order_type=OrderType.money_transfer_imbalance,
+        till_id=virtual_till.id,
+        cashier_id=current_user.id,
+        line_items=line_items,
+        bookings=bookings,
+        cash_register_id=cash_register_id,
+    )
+
+
+async def book_cashier_shift_start_order(
+    *,
+    conn: Connection,
+    cashier_id: int,
+    node: Node,
+    cash_register_id: int,
+) -> OrderInfo:
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
+
+    return await book_order(
+        conn=conn,
+        payment_method=PaymentMethod.cash,
+        order_type=OrderType.cashier_shift_start,
+        till_id=virtual_till.id,
+        cashier_id=cashier_id,
+        line_items=[],
+        bookings={},
+        cash_register_id=cash_register_id,
+    )
+
+
+async def book_cashier_shift_end_order(
+    *,
+    conn: Connection,
+    cashier_id: int,
+    node: Node,
+    cash_register_id: int,
+) -> OrderInfo:
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
+
+    return await book_order(
+        conn=conn,
+        payment_method=PaymentMethod.cash,
+        order_type=OrderType.cashier_shift_end,
+        till_id=virtual_till.id,
+        cashier_id=cashier_id,
+        line_items=[],
+        bookings={},
+        cash_register_id=cash_register_id,
+    )
+
+
+async def book_money_transfer_close_out_start(
+    *, conn: Connection, current_user: CurrentUser, node: Node, cash_register_id: int, amount: float
+) -> OrderInfo:
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
+    return await book_money_transfer(
+        conn=conn,
+        node=node,
+        originating_user_id=current_user.id,
+        cash_register_id=cash_register_id,
+        amount=amount,
+        till_id=virtual_till.id,
+        bookings={},
+    )
+
+
+async def book_money_transfer_cash_vault_order(
+    *,
+    conn: Connection,
+    current_user: CurrentUser,
+    node: Node,
+    cash_register_id: int,
+    amount: float,
+) -> OrderInfo:
+    cash_register_account_id = await get_cash_register_account_id(
+        conn=conn, node=node, cash_register_id=cash_register_id
+    )
+    cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
+    bookings: dict[BookingIdentifier, float] = {
+        BookingIdentifier(source_account_id=cash_register_account_id, target_account_id=cash_vault_acc.id): amount,
+    }
+    virtual_till = await fetch_virtual_till(conn=conn, node=node)
+    return await book_money_transfer(
+        conn=conn,
+        node=node,
+        originating_user_id=current_user.id,
+        cash_register_id=cash_register_id,
+        amount=-amount,
+        bookings=bookings,
+        till_id=virtual_till.id,
+    )

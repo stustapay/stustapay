@@ -7,26 +7,21 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
-from stustapay.core.schema.order import Order, OrderType, PaymentMethod
+from stustapay.core.schema.order import Order
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege, User
 from stustapay.core.service.common.decorators import requires_node, requires_user
-
-from .account import get_system_account_for_node
-from .common.error import NotFound, ServiceException
-from .order.booking import (
-    BookingIdentifier,
-    NewLineItem,
-    OrderInfo,
-    book_money_transfer,
-    book_order,
+from stustapay.core.service.order.booking import (
+    book_cashier_shift_end_order,
+    book_imbalance_order,
+    book_money_transfer_cash_vault_order,
+    book_money_transfer_close_out_start,
 )
-from .product import fetch_money_difference_product
-from .till.common import fetch_virtual_till
-from .till.register import get_cash_register_account_id
+
+from .common.error import NotFound, ServiceException
+from .till.common import fetch_virtual_till, get_cash_register_account_id
 from .user import AuthService
 
 
@@ -44,88 +39,6 @@ class CloseOut(BaseModel):
 class CloseOutResult(BaseModel):
     cashier_id: int
     imbalance: float
-
-
-async def _book_imbalance_order(
-    *,
-    conn: Connection,
-    current_user: CurrentUser,
-    node: Node,
-    cash_register_id: int,
-    imbalance: float,
-) -> OrderInfo:
-    cash_register_account_id = await get_cash_register_account_id(conn=conn, cash_register_id=cash_register_id)
-    difference_product = await fetch_money_difference_product(conn=conn, node=node)
-    line_items = [
-        NewLineItem(
-            quantity=1,
-            product_id=difference_product.id,
-            product_price=imbalance,
-            tax_rate_id=difference_product.tax_rate_id,
-        )
-    ]
-
-    cash_imbalance_acc = await get_system_account_for_node(
-        conn=conn, node=node, account_type=AccountType.cash_imbalance
-    )
-
-    bookings: dict[BookingIdentifier, float] = {
-        BookingIdentifier(
-            source_account_id=cash_register_account_id, target_account_id=cash_imbalance_acc.id
-        ): -imbalance,
-    }
-    virtual_till = await fetch_virtual_till(conn=conn, node=node)
-
-    return await book_order(
-        conn=conn,
-        payment_method=PaymentMethod.cash,
-        order_type=OrderType.money_transfer_imbalance,
-        till_id=virtual_till.id,
-        cashier_id=current_user.id,
-        line_items=line_items,
-        bookings=bookings,
-        cash_register_id=cash_register_id,
-    )
-
-
-async def _book_money_transfer_close_out_start(
-    *, conn: Connection, current_user: CurrentUser, node: Node, cash_register_id: int, amount: float
-) -> OrderInfo:
-    virtual_till = await fetch_virtual_till(conn=conn, node=node)
-    return await book_money_transfer(
-        conn=conn,
-        node=node,
-        originating_user_id=current_user.id,
-        cash_register_id=cash_register_id,
-        amount=amount,
-        till_id=virtual_till.id,
-        bookings={},
-    )
-
-
-async def _book_money_transfer_cash_vault_order(
-    *,
-    conn: Connection,
-    current_user: CurrentUser,
-    node: Node,
-    cash_register_id: int,
-    amount: float,
-) -> OrderInfo:
-    cash_register_account_id = await get_cash_register_account_id(conn=conn, cash_register_id=cash_register_id)
-    cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
-    bookings: dict[BookingIdentifier, float] = {
-        BookingIdentifier(source_account_id=cash_register_account_id, target_account_id=cash_vault_acc.id): amount,
-    }
-    virtual_till = await fetch_virtual_till(conn=conn, node=node)
-    return await book_money_transfer(
-        conn=conn,
-        node=node,
-        originating_user_id=current_user.id,
-        cash_register_id=cash_register_id,
-        amount=-amount,
-        bookings=bookings,
-        till_id=virtual_till.id,
-    )
 
 
 class CashierService(Service[Config]):
@@ -168,6 +81,16 @@ class CashierService(Service[Config]):
         if not cashier:
             raise NotFound(element_type="cashier", element_id=cashier_id)
         return await conn.fetch_many(CashierShift, "select * from cashier_shift where cashier_id = $1", cashier_id)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def get_cashier_shifts_for_cash_register(
+        self, *, conn: Connection, cash_register_id: int
+    ) -> list[CashierShift]:
+        return await conn.fetch_many(
+            CashierShift, "select * from cashier_shift where cash_register_id = $1", cash_register_id
+        )
 
     @staticmethod
     async def _get_current_cashier_shift_start(*, conn: Connection, cashier_id: int) -> Optional[datetime]:
@@ -231,11 +154,13 @@ class CashierService(Service[Config]):
             Order,
             "select * from order_value_prefiltered("
             "   (select array_agg(o.id) from ordr o "
-            "   where o.cashier_id = $1 and booked_at >= $2 and ($3::timestamptz is null or booked_at <= $3::timestamptz))"
+            "   where o.cashier_id = $1 and booked_at >= $2 and ($3::timestamptz is null or booked_at <= $3::timestamptz)), "
+            "   $4"
             ")",
             cashier_id,
             shift_start,
             shift_end,
+            node.event_node_id,
         )
         return CashierShiftStats(booked_products=booked_products, orders=orders)
 
@@ -268,7 +193,7 @@ class CashierService(Service[Config]):
         imbalance = close_out.actual_cash_drawer_balance - expected_balance
 
         # first we transfer all money to the virtual till via a tse signed order
-        await _book_money_transfer_close_out_start(
+        await book_money_transfer_close_out_start(
             conn=conn,
             current_user=current_user,
             node=node,
@@ -277,26 +202,32 @@ class CashierService(Service[Config]):
         )
 
         # then we book two orders, one to track the imbalance, on to transfer the money to the cash vault
-        order_info = await _book_money_transfer_cash_vault_order(
+        order_info = await book_money_transfer_cash_vault_order(
             conn=conn,
             current_user=current_user,
             node=node,
             cash_register_id=cashier.cash_register_id,
             amount=close_out.actual_cash_drawer_balance,
         )
-        imbalance_order_info = await _book_imbalance_order(
+        imbalance_order_info = await book_imbalance_order(
             conn=conn,
             current_user=current_user,
             node=node,
             cash_register_id=cashier.cash_register_id,
             imbalance=imbalance,
         )
+        await book_cashier_shift_end_order(
+            conn=conn,
+            cashier_id=cashier.id,
+            node=node,
+            cash_register_id=cashier.cash_register_id,
+        )
 
         await conn.execute(
             "insert into cashier_shift ("
             "   cashier_id, started_at, ended_at, actual_cash_drawer_balance, expected_cash_drawer_balance, "
-            "   comment, close_out_order_id, close_out_imbalance_order_id, closing_out_user_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            "   comment, close_out_order_id, close_out_imbalance_order_id, closing_out_user_id, cash_register_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
             cashier.id,
             shift_start,
             shift_end,
@@ -306,6 +237,7 @@ class CashierService(Service[Config]):
             order_info.id,
             imbalance_order_info.id,
             close_out.closing_out_user_id,
+            cashier.cash_register_id,
         )
 
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
@@ -313,7 +245,7 @@ class CashierService(Service[Config]):
         await conn.execute("update till set z_nr = z_nr + 1 where id = $1", virtual_till.id)
         # correct the actual balance to rule out any floating point errors / representation errors
         cash_register_account_id = await get_cash_register_account_id(
-            conn=conn, cash_register_id=cashier.cash_register_id
+            conn=conn, node=node, cash_register_id=cashier.cash_register_id
         )
         await conn.execute("update account set balance = 0 where id = $1", cash_register_account_id)
 

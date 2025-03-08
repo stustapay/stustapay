@@ -7,7 +7,7 @@ from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import NewUserRole, NewUserToRoles, Privilege
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 

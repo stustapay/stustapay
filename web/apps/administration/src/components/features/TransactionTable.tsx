@@ -1,5 +1,5 @@
-import { Order, selectTillById, selectUserById, useListTillsQuery, useListUsersQuery } from "@/api";
-import { CashierRoutes, OrderRoutes, TillRoutes } from "@/app/routes";
+import { selectTillById, selectUserById, Transaction, useListTillsQuery, useListUsersQuery } from "@/api";
+import { CashierRoutes, OrderRoutes, TillRoutes, TransactionRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 import {
   AddCard as AddCardIcon,
@@ -9,14 +9,14 @@ import {
 import { Link, Tooltip } from "@mui/material";
 import { GridRenderCellParams } from "@mui/x-data-grid";
 import { Loading } from "@stustapay/components";
-import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-export interface OrderListProps {
-  orders: Order[];
+export interface TransactionTableProps {
+  transactions: Transaction[];
   showShadow?: boolean;
   showTillColumn?: boolean;
   showCashierColumn?: boolean;
@@ -32,8 +32,8 @@ const orderTypeToIcon: Record<string, React.ReactElement> = {
   top_up: <AddCardIcon />,
 };
 
-export const OrderTable: React.FC<OrderListProps> = ({
-  orders,
+export const TransactionTable: React.FC<TransactionTableProps> = ({
+  transactions,
   showShadow = false,
   showTillColumn = false,
   showCashierColumn = false,
@@ -60,32 +60,49 @@ export const OrderTable: React.FC<OrderListProps> = ({
     return getUserName(user);
   };
 
-  const columns: GridColDef<Order>[] = [
+  const columns: GridColDef<Transaction>[] = [
     {
       field: "id",
       headerName: t("order.id"),
-      renderCell: (params) => (
-        <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
-          {params.row.id}
-        </Link>
-      ),
+      renderCell: ({ row }) => {
+        if (row.order) {
+          return (
+            <Link component={RouterLink} to={OrderRoutes.detail(row.order.id)}>
+              {row.id}
+            </Link>
+          );
+        }
+        return (
+          <Link component={RouterLink} to={TransactionRoutes.detail(row.id)}>
+            {row.id}
+          </Link>
+        );
+      },
       width: 100,
     },
     {
-      field: "order_type",
+      field: "order.order_type",
       headerName: t("order.type"),
       width: 140,
       renderCell: ({ row }) => {
-        const icon = orderTypeToIcon[row.order_type];
-        if (icon) {
-          return <Tooltip title={row.order_type}>{icon}</Tooltip>;
+        if (!row.order) {
+          return (
+            <Tooltip title={row.description}>
+              <span>transaction</span>
+            </Tooltip>
+          );
         }
-        return row.order_type;
+        const icon = orderTypeToIcon[row.order.order_type];
+        if (icon) {
+          return <Tooltip title={row.order.order_type}>{icon}</Tooltip>;
+        }
+        return row.order.order_type;
       },
     },
     {
       field: "payment_method",
       headerName: t("order.paymentMethod"),
+      valueGetter: (_, row) => row.order?.payment_method,
       width: 150,
     },
     ...(showCashierColumn
@@ -94,12 +111,14 @@ export const OrderTable: React.FC<OrderListProps> = ({
             field: "cashier_id",
             headerName: t("common.cashier"),
             type: "string",
-            renderCell: ({ row }: GridRenderCellParams<Order>) => {
-              if (row.cashier_id == null) {
+            renderCell: ({ row }: GridRenderCellParams<Transaction>) => {
+              if (row.order?.cashier_id == null) {
                 return null;
               }
               return (
-                <RouterLink to={CashierRoutes.detail(row.cashier_id)}>{getUsernameForUser(row.cashier_id)}</RouterLink>
+                <RouterLink to={CashierRoutes.detail(row.order.cashier_id)}>
+                  {getUsernameForUser(row.order.cashier_id)}
+                </RouterLink>
               );
             },
             width: 200,
@@ -109,15 +128,17 @@ export const OrderTable: React.FC<OrderListProps> = ({
     ...(showTillColumn
       ? ([
           {
-            field: "till_id",
+            field: "order.till_id",
             headerName: t("common.till"),
             type: "string",
-            renderCell: ({ row }: GridRenderCellParams<Order>) => {
-              if (row.till_id == null) {
+            renderCell: ({ row }: GridRenderCellParams<Transaction>) => {
+              if (row.order?.till_id == null) {
                 return null;
               }
               return (
-                <RouterLink to={TillRoutes.detail(row.till_id)}>{selectTillById(tills, row.till_id)?.name}</RouterLink>
+                <RouterLink to={TillRoutes.detail(row.order.till_id)}>
+                  {selectTillById(tills, row.order.till_id)?.name}
+                </RouterLink>
               );
             },
             width: 200,
@@ -128,18 +149,21 @@ export const OrderTable: React.FC<OrderListProps> = ({
       field: "total_no_tax",
       headerName: t("order.totalNoTax"),
       type: "currency",
+      valueGetter: (_, row) => row.order?.total_no_tax,
       width: 150,
     },
     {
       field: "total_tax",
       headerName: t("order.totalTax"),
       type: "currency",
+      valueGetter: (_, row) => row.order?.total_tax,
       width: 100,
     },
     {
       field: "total_price",
       headerName: t("order.totalPrice"),
       type: "currency",
+      valueGetter: (_, row) => row.order?.total_price ?? row.amount,
       width: 100,
     },
     {
@@ -147,15 +171,15 @@ export const OrderTable: React.FC<OrderListProps> = ({
       headerName: t("order.bookedAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
+      minWidth: 150,
       flex: 1,
     },
   ];
 
   return (
     <DataGrid
-      autoHeight
-      rows={orders ?? []}
-      slots={{ toolbar: () => <DataGridTitle title={t("orders")} /> }}
+      rows={transactions ?? []}
+      slots={{ toolbar: () => <DataGridTitle title={t("transactions")} /> }}
       columns={columns}
       disableRowSelectionOnClick
       sx={{ p: 1, boxShadow: showShadow ? (theme) => theme.shadows[1] : undefined }}

@@ -1,6 +1,6 @@
-import { selectTillRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
+import { selectCashRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
-import { TillRegistersRoutes } from "@/app/routes";
+import { CashRegistersRoutes } from "@/app/routes";
 import { UserSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 import { Alert, AlertTitle, Button, LinearProgress, Paper, Typography } from "@mui/material";
@@ -18,7 +18,7 @@ const TillTransferSchema = z.object({
 
 type FormValues = z.infer<typeof TillTransferSchema>;
 
-export const TillRegisterTransfer: React.FC = withPrivilegeGuard("node_administration", () => {
+export const CashRegisterTransfer: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
@@ -28,7 +28,7 @@ export const TillRegisterTransfer: React.FC = withPrivilegeGuard("node_administr
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        register: data ? selectTillRegisterById(data, Number(registerId)) : undefined,
+        register: data ? selectCashRegisterById(data, Number(registerId)) : undefined,
       }),
     }
   );
@@ -41,7 +41,7 @@ export const TillRegisterTransfer: React.FC = withPrivilegeGuard("node_administr
   }, [register]);
 
   if (error) {
-    return <Navigate to={TillRegistersRoutes.list()} />;
+    return <Navigate to={CashRegistersRoutes.list()} />;
   }
 
   if (isLoading || !register) {
@@ -61,7 +61,7 @@ export const TillRegisterTransfer: React.FC = withPrivilegeGuard("node_administr
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate(TillRegistersRoutes.list());
+        navigate(CashRegistersRoutes.list());
       })
       .catch((err) => {
         setSubmitting(false);

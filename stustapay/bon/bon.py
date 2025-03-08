@@ -104,6 +104,7 @@ def gen_dummy_order(node_id: int):
         customer_tag_uid=None,
         customer_account_id=0,
         signature_status="done",
+        cash_register_id=None,
         line_items=[
             LineItem(
                 quantity=2,

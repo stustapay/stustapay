@@ -1,6 +1,6 @@
 import {
   CashRegisterStocking,
-  selectTillRegisterStockingAll,
+  selectCashRegisterStockingAll,
   useDeleteRegisterStockingMutation,
   useListRegisterStockingsQuery,
 } from "@/api";
@@ -15,7 +15,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-export const TillRegisterStockingList: React.FC = () => {
+export const CashRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
@@ -29,7 +29,7 @@ export const TillRegisterStockingList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        stockings: data ? selectTillRegisterStockingAll(data) : undefined,
+        stockings: data ? selectCashRegisterStockingAll(data) : undefined,
       }),
     }
   );

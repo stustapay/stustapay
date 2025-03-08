@@ -12,7 +12,7 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.order import (
     TillPermissionException,
 )
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.tests.sumup_mock import MockSumUpApi
 
 from ..conftest import Cashier

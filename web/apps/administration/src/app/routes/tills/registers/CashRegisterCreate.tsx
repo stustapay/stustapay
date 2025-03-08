@@ -1,18 +1,18 @@
 import { useCreateRegisterMutation } from "@/api";
-import { TillRegistersRoutes } from "@/app/routes";
+import { CashRegistersRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { NewTillRegister, NewTillRegisterSchema } from "@stustapay/models";
+import { NewCashRegister, NewCashRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TillRegisterForm } from "./TillRegisterForm";
+import { CashRegisterForm } from "./CashRegisterForm";
 import { withPrivilegeGuard } from "@/app/layout";
 
-const initialValues: NewTillRegister = {
+const initialValues: NewCashRegister = {
   name: "",
 };
 
-export const TillRegisterCreate: React.FC = withPrivilegeGuard("node_administration", () => {
+export const CashRegisterCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createRegister] = useCreateRegisterMutation();
@@ -21,11 +21,11 @@ export const TillRegisterCreate: React.FC = withPrivilegeGuard("node_administrat
     <CreateLayout
       title={t("register.createRegister")}
       submitLabel={t("add")}
-      successRoute={TillRegistersRoutes.list()}
+      successRoute={CashRegistersRoutes.list()}
       initialValues={initialValues}
-      validationSchema={NewTillRegisterSchema}
+      validationSchema={NewCashRegisterSchema}
       onSubmit={(register) => createRegister({ nodeId: currentNode.id, newCashRegister: register })}
-      form={TillRegisterForm}
+      form={CashRegisterForm}
     />
   );
 });

@@ -46,6 +46,7 @@ from stustapay.core.schema.order import (
     PendingTopUp,
     TicketScanResult,
     TicketScanResultEntry,
+    Transaction,
 )
 from stustapay.core.schema.product import Product, ProductRestriction, ProductType
 from stustapay.core.schema.terminal import CurrentTerminal
@@ -84,7 +85,7 @@ from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
-from ..till.register import get_cash_register_account_id
+from ..till.common import get_cash_register_account_id
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -227,6 +228,12 @@ async def fetch_order(*, conn: Connection, order_id: int) -> Optional[Order]:
     get all info about an order.
     """
     return await conn.fetch_maybe_one(Order, "select * from order_value where id = $1", order_id)
+
+
+async def fetch_transaction(*, conn: Connection, node: Node, transaction_id: int) -> Transaction:
+    del node  # unused
+    # TODO: tree permissions
+    return await conn.fetch_one(Transaction, "select * from transaction_with_order t where id = $1", transaction_id)
 
 
 class OrderService(Service[Config]):
@@ -723,7 +730,7 @@ class OrderService(Service[Config]):
                 if till.active_cash_register_id is None:
                     raise InvalidArgument("Cash payments require a cash register")
                 cash_register_account_id = await get_cash_register_account_id(
-                    conn=conn, cash_register_id=till.active_cash_register_id
+                    conn=conn, node=node, cash_register_id=till.active_cash_register_id
                 )
                 bookings[
                     BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=cash_register_account_id)
@@ -1094,7 +1101,7 @@ class OrderService(Service[Config]):
         cash_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_exit)
 
         cash_register_account_id = await get_cash_register_account_id(
-            conn=conn, cash_register_id=current_till.active_cash_register_id
+            conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
         )
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
@@ -1376,37 +1383,52 @@ class OrderService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_terminal([Privilege.can_book_orders])
     async def list_orders_terminal(
-        self, *, conn: Connection, current_user: User, current_terminal: CurrentTerminal
+        self, *, conn: Connection, node: Node, current_user: User, current_terminal: CurrentTerminal
     ) -> list[Order]:
         assert current_terminal.till is not None
         return await conn.fetch_many(
             Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where o.cashier_id = $1 and o.till_id = $2))",
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where o.cashier_id = $1 and o.till_id = $2), $3)",
             current_user.id,
             current_terminal.till.id,
+            node.event_node_id,
         )
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def list_orders(self, *, conn: Connection, customer_account_id: Optional[int] = None) -> list[Order]:
-        if customer_account_id is not None:
-            return await conn.fetch_many(
-                Order,
-                "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1))",
-                customer_account_id,
-            )
-        else:
-            return await conn.fetch_many(Order, "select * from order_value")
+    async def list_orders(self, *, conn: Connection, node: Node, customer_account_id: int) -> list[Order]:
+        return await conn.fetch_many(
+            Order,
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1), $2)",
+            customer_account_id,
+            node.event_node_id,
+        )
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def list_orders_by_till(self, *, conn: Connection, till_id: int) -> list[Order]:
+    async def list_orders_by_till(self, *, conn: Connection, node: Node, till_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where till_id = $1))",
+            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where till_id = $1), $2)",
             till_id,
+            node.event_node_id,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def list_transactions_by_cash_register(
+        self, *, conn: Connection, node: Node, cash_register_id: int
+    ) -> list[Transaction]:
+        cash_register_account_id = await get_cash_register_account_id(
+            conn=conn, node=node, cash_register_id=cash_register_id
+        )
+        return await conn.fetch_many(
+            Transaction,
+            "select * from transaction_with_order t where source_account = $1 or target_account = $1",
+            cash_register_account_id,
         )
 
     @with_db_transaction(read_only=True)
@@ -1414,6 +1436,12 @@ class OrderService(Service[Config]):
     @requires_user([Privilege.node_administration])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def get_transaction(self, *, conn: Connection, node: Node, transaction_id: int) -> Transaction:
+        return await fetch_transaction(conn=conn, node=node, transaction_id=transaction_id)
 
     @with_db_transaction
     async def get_bon_by_uuid(self, *, conn: Connection, order_uuid: str) -> BonJson:

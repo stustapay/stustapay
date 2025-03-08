@@ -2,13 +2,13 @@ import { useCreateRegisterStockingMutation } from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { NewTillRegisterStocking, NewTillRegisterStockingSchema } from "@stustapay/models";
+import { NewCashRegisterStocking, NewCashRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
+import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
 import { withPrivilegeGuard } from "@/app/layout";
 
-const initialValues: NewTillRegisterStocking = {
+const initialValues: NewCashRegisterStocking = {
   name: "",
   euro200: 0,
   euro100: 0,
@@ -27,7 +27,7 @@ const initialValues: NewTillRegisterStocking = {
   variable_in_euro: 0,
 };
 
-export const TillRegisterStockingCreate: React.FC = withPrivilegeGuard("node_administration", () => {
+export const CashRegisterStockingCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createStocking] = useCreateRegisterStockingMutation();
@@ -38,9 +38,9 @@ export const TillRegisterStockingCreate: React.FC = withPrivilegeGuard("node_adm
       submitLabel={t("add")}
       successRoute={TillStockingsRoutes.list()}
       initialValues={initialValues}
-      validationSchema={NewTillRegisterStockingSchema}
+      validationSchema={NewCashRegisterStockingSchema}
       onSubmit={(stocking) => createStocking({ nodeId: currentNode.id, newCashRegisterStocking: stocking })}
-      form={TillRegisterStockingForm}
+      form={CashRegisterStockingForm}
     />
   );
 });

@@ -3,9 +3,9 @@ import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
-export type TillRegisterStockingFormProps<T extends NewCashRegisterStocking> = FormikProps<T>;
+export type CashRegisterStockingFormProps<T extends NewCashRegisterStocking> = FormikProps<T>;
 
-export function TillRegisterStockingForm<T extends NewCashRegisterStocking>(props: TillRegisterStockingFormProps<T>) {
+export function CashRegisterStockingForm<T extends NewCashRegisterStocking>(props: CashRegisterStockingFormProps<T>) {
   const { t } = useTranslation();
   return (
     <>

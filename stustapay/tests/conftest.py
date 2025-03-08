@@ -57,7 +57,7 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,

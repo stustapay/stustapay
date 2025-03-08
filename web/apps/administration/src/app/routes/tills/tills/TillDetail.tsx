@@ -151,7 +151,7 @@ export const TillDetail: React.FC = () => {
           />
         )}
       </DetailView>
-      <OrderTable orders={orders ?? []} />
+      <OrderTable orders={orders ?? []} showCashierColumn />
       <TillSwitchTerminal open={switchTerminalOpen} tillId={till.id} onClose={() => setSwitchTerminalOpen(false)} />
     </DetailLayout>
   );

@@ -308,6 +308,15 @@ create view order_value as
         left join account a on ordr.customer_account_id = a.id
         left join user_tag ut on a.user_tag_id = ut.id;
 
+create view transaction_with_order as
+    select
+        t.*,
+        row_to_json(o) as order
+    from
+        transaction t
+        left join order_value o on t.order_id = o.id
+    order by t.id asc;
+
 -- show all line items
 create view order_items as
     select

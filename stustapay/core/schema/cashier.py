@@ -40,6 +40,8 @@ class CashierShiftStats(BaseModel):
 class CashierShift(BaseModel):
     id: int
     comment: str
+    cashier_id: int
+    cash_register_id: int | None
     closing_out_user_id: int
     actual_cash_drawer_balance: float
     expected_cash_drawer_balance: float

@@ -14,7 +14,7 @@ from stustapay.core.schema.till import (
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.product import ProductService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 
 from .conftest import Cashier
 

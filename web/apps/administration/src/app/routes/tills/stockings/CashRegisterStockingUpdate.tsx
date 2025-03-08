@@ -1,5 +1,5 @@
 import {
-  selectTillRegisterStockingById,
+  selectCashRegisterStockingById,
   useListRegisterStockingsQuery,
   useUpdateRegisterStockingMutation,
 } from "@/api";
@@ -7,14 +7,14 @@ import { TillStockingsRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
-import { UpdateTillRegisterStockingSchema } from "@stustapay/models";
+import { UpdateCashRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TillRegisterStockingForm } from "./TillRegisterStockingForm";
+import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
 import { withPrivilegeGuard } from "@/app/layout";
 
-export const TillRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
+export const CashRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { stockingId } = useParams();
@@ -23,7 +23,7 @@ export const TillRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_adm
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        stocking: data ? selectTillRegisterStockingById(data, Number(stockingId)) : undefined,
+        stocking: data ? selectCashRegisterStockingById(data, Number(stockingId)) : undefined,
       }),
     }
   );
@@ -43,9 +43,9 @@ export const TillRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_adm
       submitLabel={t("update")}
       successRoute={TillStockingsRoutes.list()}
       initialValues={stocking}
-      validationSchema={UpdateTillRegisterStockingSchema}
+      validationSchema={UpdateCashRegisterStockingSchema}
       onSubmit={(s) => updateStocking({ nodeId: currentNode.id, stockingId: stocking.id, newCashRegisterStocking: s })}
-      form={TillRegisterStockingForm}
+      form={CashRegisterStockingForm}
     />
   );
 });
