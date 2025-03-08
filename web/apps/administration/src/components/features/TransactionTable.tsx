@@ -1,5 +1,5 @@
 import { selectTillById, selectUserById, Transaction, useListTillsQuery, useListUsersQuery } from "@/api";
-import { CashierRoutes, OrderRoutes, TillRoutes } from "@/app/routes";
+import { CashierRoutes, OrderRoutes, TillRoutes, TransactionRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 import {
   AddCard as AddCardIcon,
@@ -72,7 +72,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             </Link>
           );
         }
-        return row.id;
+        return (
+          <Link component={RouterLink} to={TransactionRoutes.detail(row.id)}>
+            {row.id}
+          </Link>
+        );
       },
       width: 100,
     },
@@ -82,7 +86,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       width: 140,
       renderCell: ({ row }) => {
         if (!row.order) {
-          return "transaction";
+          return (
+            <Tooltip title={row.description}>
+              <span>transaction</span>
+            </Tooltip>
+          );
         }
         const icon = orderTypeToIcon[row.order.order_type];
         if (icon) {

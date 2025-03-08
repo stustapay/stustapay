@@ -24,6 +24,7 @@ export const addTagTypes = [
   "payouts",
   "tree",
   "sumup",
+  "transactions",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -1298,6 +1299,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["terminals"],
       }),
+      getTransaction: build.query<GetTransactionApiResponse, GetTransactionApiArg>({
+        query: (queryArg) => ({
+          url: `/transactions/${queryArg.transactionId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["transactions"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1964,6 +1974,11 @@ export type SwitchTillApiArg = {
 export type ForceLogoutUserApiResponse = /** status 200 Successful Response */ any;
 export type ForceLogoutUserApiArg = {
   terminalId: number;
+  nodeId: number;
+};
+export type GetTransactionApiResponse = /** status 200 Successful Response */ TransactionRead;
+export type GetTransactionApiArg = {
+  transactionId: number;
   nodeId: number;
 };
 export type ProductRestriction = "under_16" | "under_18";
@@ -3479,4 +3494,6 @@ export const {
   useLogoutTerminalMutation,
   useSwitchTillMutation,
   useForceLogoutUserMutation,
+  useGetTransactionQuery,
+  useLazyGetTransactionQuery,
 } = injectedRtkApi;

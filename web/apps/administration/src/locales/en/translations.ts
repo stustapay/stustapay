@@ -184,6 +184,17 @@ export const translations = {
     totalCashCount: "Total Cash Count",
     noCashDrawerWarning: "The cashier does not have an assigned cash drawer",
   },
+  transaction: {
+    id: "ID",
+    name: "Transaction with ID: {{id}}",
+    conductingUser: "Conducting User",
+    sourceAccount: "Source account",
+    targetAccount: "Target account",
+    order: "Associated order",
+    amount: "Amount",
+    voucherAmount: "Voucher Amount",
+    customerAccount: "Customer Account {{id}}",
+  },
   order: {
     id: "ID",
     itemCount: "number of items",

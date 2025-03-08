@@ -46,6 +46,7 @@ from .routers import (
     till_profile,
     till_register_stockings,
     till_registers,
+    transaction,
     tree,
     tse,
     user,
@@ -86,6 +87,7 @@ def get_server(config: Config):
     server.add_router(sumup.router)
     server.add_router(customer.router)
     server.add_router(terminal.router)
+    server.add_router(transaction.router)
     return server
 
 

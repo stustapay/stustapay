@@ -1,8 +1,10 @@
 import {
   selectCashierShiftById,
+  selectCashRegisterById,
   selectUserById,
   useGetCashierQuery,
   useGetCashierShiftsQuery,
+  useListCashRegistersAdminQuery,
   useListUsersQuery,
 } from "@/api";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
@@ -13,7 +15,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
-import { CashierRoutes, UserRoutes } from "@/app/routes";
+import { CashierRoutes, CashRegistersRoutes, UserRoutes } from "@/app/routes";
 
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -31,12 +33,15 @@ export const CashierShiftDetail: React.FC = () => {
     }
   );
   const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: registers } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
 
-  if (cashierShift === undefined || cashier === undefined || users === undefined) {
+  if (cashierShift === undefined || cashier === undefined || users === undefined || registers === undefined) {
     return <Loading />;
   }
 
   const closingOutUser = selectUserById(users, cashierShift.closing_out_user_id);
+  const cashRegister =
+    cashierShift.cash_register_id != null ? selectCashRegisterById(registers, cashierShift.cash_register_id) : null;
 
   return (
     <DetailLayout title={getUserName(cashier)} routes={CashierRoutes}>
@@ -49,6 +54,13 @@ export const CashierShiftDetail: React.FC = () => {
           value={getUserName(closingOutUser)}
           linkTo={UserRoutes.detail(cashierShift.closing_out_user_id)}
         />
+        {cashRegister && (
+          <DetailField
+            label={t("shift.cashRegister")}
+            value={cashRegister.name}
+            linkTo={CashRegistersRoutes.detail(cashierShift.cash_register_id)}
+          />
+        )}
         <DetailNumberField
           label={t("shift.actualCashDrawerBalance")}
           type="currency"

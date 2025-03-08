@@ -230,6 +230,12 @@ async def fetch_order(*, conn: Connection, order_id: int) -> Optional[Order]:
     return await conn.fetch_maybe_one(Order, "select * from order_value where id = $1", order_id)
 
 
+async def fetch_transaction(*, conn: Connection, node: Node, transaction_id: int) -> Transaction:
+    del node  # unused
+    # TODO: tree permissions
+    return await conn.fetch_one(Transaction, "select * from transaction_with_order t where id = $1", transaction_id)
+
+
 class OrderService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -1430,6 +1436,12 @@ class OrderService(Service[Config]):
     @requires_user([Privilege.node_administration])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def get_transaction(self, *, conn: Connection, node: Node, transaction_id: int) -> Transaction:
+        return await fetch_transaction(conn=conn, node=node, transaction_id=transaction_id)
 
     @with_db_transaction
     async def get_bon_by_uuid(self, *, conn: Connection, order_uuid: str) -> BonJson:

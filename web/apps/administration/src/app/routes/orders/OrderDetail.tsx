@@ -16,7 +16,7 @@ import {
   TillRoutes,
   UserTagRoutes,
 } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView } from "@/components";
+import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
 import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui/icons-material";
@@ -143,6 +143,9 @@ export const OrderDetail: React.FC = () => {
             linkTo={CashRegistersRoutes.detail(order.cash_register_id, register.node_id)}
           />
         )}
+        <DetailNumberField label={t("order.totalNoTax")} value={order.total_no_tax} type="currency" />
+        <DetailNumberField label={t("order.totalTax")} value={order.total_tax} type="currency" />
+        <DetailNumberField label={t("order.totalPrice")} value={order.total_price} type="currency" />
       </DetailView>
       <LineItemTable lineItems={order.line_items} />
     </DetailLayout>

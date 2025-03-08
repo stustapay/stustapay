@@ -7,7 +7,7 @@ import { Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
 import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, NodeCreate } from "./routes/nodes";
 import { NodeStats } from "./routes/nodes/stats";
-import { OrderBon, OrderDetail, SaleEdit } from "./routes/orders";
+import { OrderBon, OrderDetail, SaleEdit, TransactionDetail } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
@@ -416,6 +416,15 @@ const router = createBrowserRouter([
               {
                 path: ":orderId",
                 element: <OrderDetail />,
+              },
+            ],
+          },
+          {
+            path: "transactions",
+            children: [
+              {
+                path: ":transactionId",
+                element: <TransactionDetail />,
               },
             ],
           },
