@@ -267,10 +267,8 @@ class TerminalService(Service[Config]):
             cash_register_id = cash_reg["id"]
             cash_register_name = cash_reg["name"]
 
-        sumup_affiliate_key = ""
-        sumup_api_oauth_token = ""
-        sumup_api_oauth_valid_until = None
-        if event_settings.sumup_payment_enabled and (profile.allow_ticket_sale or profile.allow_top_up):
+        secrets = None
+        if event_settings.sumup_payment_enabled and profile.enable_card_payment:
             sumup_affiliate_key = event_settings.sumup_affiliate_key
             oauth_token = await self._get_terminal_sumup_oauth_token(
                 terminal_id=terminal_id, node=node, event_settings=event_settings
@@ -278,11 +276,11 @@ class TerminalService(Service[Config]):
             sumup_api_oauth_token = oauth_token.access_token if oauth_token is not None else ""
             sumup_api_oauth_valid_until = oauth_token.expires_at if oauth_token is not None else None
 
-        secrets = TerminalSumupSecrets(
-            sumup_affiliate_key=sumup_affiliate_key,
-            sumup_api_key=sumup_api_oauth_token,
-            sumup_api_key_expires_at=sumup_api_oauth_valid_until,
-        )
+            secrets = TerminalSumupSecrets(
+                sumup_affiliate_key=sumup_affiliate_key,
+                sumup_api_key=sumup_api_oauth_token,
+                sumup_api_key_expires_at=sumup_api_oauth_valid_until,
+            )
 
         return TerminalTillConfig(
             id=till.id,
