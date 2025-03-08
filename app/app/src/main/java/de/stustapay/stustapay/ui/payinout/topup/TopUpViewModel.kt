@@ -3,7 +3,6 @@ package de.stustapay.stustapay.ui.payinout.topup
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ionspin.kotlin.bignum.integer.BigInteger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
@@ -167,6 +166,15 @@ class TopUpViewModel @Inject constructor(
 
         val payment = getECPayment(newTopUp)
 
+        // pre-register the payment so the backend starts polling sumup
+        // if the transaction has completed, but the callback to the POS terminal got missing
+        // due to wlan glitches etc.
+
+        if (!registerTopUp("Card", newTopUp)) {
+            // already updates status message
+            return
+        }
+
         _status.update { "Remove the chip. Starting EC transaction..." }
 
         // workaround so the sumup activity is not in foreground too quickly.
@@ -188,6 +196,8 @@ class TopUpViewModel @Inject constructor(
         }
 
         // when successful, book the transaction
+        // if this doesn't reach the backend, the backend will book the topUp on its own
+        // when sumup confirms the payment.
         bookTopUp("Card", newTopUp)
     }
 
@@ -208,6 +218,23 @@ class TopUpViewModel @Inject constructor(
         }
 
         bookTopUp("Cash", newTopUp)
+    }
+
+    private suspend fun registerTopUp(topUpType: String, newTopUp: NewTopUp): Boolean {
+        _status.update { "Announcing $topUpType TopUp..." }
+
+        when (val response = topUpRepository.registerTopUp(newTopUp)) {
+            is Response.OK -> {
+                _status.update { "$topUpType TopUp announced!" }
+                return true
+            }
+
+            is Response.Error -> {
+                _status.update { "$topUpType TopUp announce failed: ${response.msg()}" }
+                _navState.update { TopUpPage.Failure }
+                return false
+            }
+        }
     }
 
     private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {

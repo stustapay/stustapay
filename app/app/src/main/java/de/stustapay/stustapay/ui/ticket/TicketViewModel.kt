@@ -250,6 +250,24 @@ class TicketViewModel @Inject constructor(
             tag = _ticketDraft.value.scans[0].tag,
         )
 
+        // register the sale so the backend can ask sumup for completion
+        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
+        val response = ticketRepository.registerTicketSale(newSale)
+        when (response) {
+            is Response.OK -> {
+                _status.update { "Order announced!" }
+            }
+
+            is Response.Error.Service -> {
+                _navState.update { TicketPage.Error }
+                _status.update { response.msg() }
+            }
+
+            is Response.Error -> {
+                _status.update { response.msg() }
+            }
+        }
+
         when (val ecResult = ecPaymentRepository.pay(context = context, ecPayment = payment)) {
             is ECPaymentResult.Failure -> {
                 _ticketDraft.update { status ->
