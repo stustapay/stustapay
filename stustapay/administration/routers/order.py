@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.bon.bon import BonJson
@@ -25,7 +23,7 @@ async def list_orders(
     token: CurrentAuthToken,
     order_service: ContextOrderService,
     node_id: int,
-    customer_account_id: Optional[int] = None,
+    customer_account_id: int,
 ):
     return normalize_list(
         await order_service.list_orders(token=token, customer_account_id=customer_account_id, node_id=node_id)

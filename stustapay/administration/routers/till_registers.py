@@ -2,8 +2,10 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextTillService
+from stustapay.core.http.context import ContextCashierService, ContextOrderService, ContextTillService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
+from stustapay.core.schema.cashier import CashierShift
+from stustapay.core.schema.order import Transaction
 from stustapay.core.schema.till import CashRegister, NewCashRegister
 
 router = APIRouter(
@@ -23,6 +25,31 @@ async def get_cash_register_admin(
     token: CurrentAuthToken, till_service: ContextTillService, node_id: int, register_id: int
 ):
     return await till_service.register.get_cash_register_admin(token=token, node_id=node_id, register_id=register_id)
+
+
+@router.get("/{register_id}/cashier-shifts", response_model=NormalizedList[CashierShift, int])
+async def get_cashier_shifts_for_register(
+    token: CurrentAuthToken, register_id: int, cashier_service: ContextCashierService, node_id: int
+):
+    return normalize_list(
+        await cashier_service.get_cashier_shifts_for_cash_register(
+            token=token, cash_register_id=register_id, node_id=node_id
+        )
+    )
+
+
+@router.get("/{register_id}/transactions", response_model=NormalizedList[Transaction, int])
+async def list_transactions(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    node_id: int,
+    register_id: int,
+):
+    return normalize_list(
+        await order_service.list_transactions_by_cash_register(
+            token=token, cash_register_id=register_id, node_id=node_id
+        )
+    )
 
 
 @router.post("", response_model=CashRegister)

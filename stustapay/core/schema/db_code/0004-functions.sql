@@ -116,7 +116,8 @@ $$ language sql
     set search_path = "$user", public;
 
 create or replace function order_value_prefiltered(
-    order_ids bigint[]
+    order_ids bigint[],
+    event_node_id bigint
 ) returns setof order_value as
 $$
 begin
@@ -134,6 +135,8 @@ begin
         left join account a on ordr.customer_account_id = a.id
         left join user_tag ut on a.user_tag_id = ut.id
         where ordr.id = any(order_value_prefiltered.order_ids);
+-- TODO: fix and add a proper node_id filter
+
 
 end;
 $$ language plpgsql

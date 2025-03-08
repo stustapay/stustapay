@@ -31,7 +31,7 @@ from stustapay.core.schema.user import (
 )
 from stustapay.core.service.account import AccountService, get_system_account_for_node
 from stustapay.core.service.terminal import TerminalService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import get_or_assign_user_tag
 

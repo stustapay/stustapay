@@ -12,7 +12,7 @@ from stustapay.core.service.order.order import (
     NotEnoughFundsException,
     TillPermissionException,
 )
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 
 from ..conftest import Cashier
 from .conftest import (

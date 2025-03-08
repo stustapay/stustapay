@@ -578,6 +578,27 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-registers"],
       }),
+      getCashierShiftsForRegister: build.query<
+        GetCashierShiftsForRegisterApiResponse,
+        GetCashierShiftsForRegisterApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/till-registers/${queryArg.registerId}/cashier-shifts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["till-registers"],
+      }),
+      listTransactions: build.query<ListTransactionsApiResponse, ListTransactionsApiArg>({
+        query: (queryArg) => ({
+          url: `/till-registers/${queryArg.registerId}/transactions`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["till-registers"],
+      }),
       transferRegister: build.mutation<TransferRegisterApiResponse, TransferRegisterApiArg>({
         query: (queryArg) => ({
           url: `/till-registers/transfer-register`,
@@ -1559,6 +1580,17 @@ export type DeleteRegisterApiArg = {
   registerId: number;
   nodeId: number;
 };
+export type GetCashierShiftsForRegisterApiResponse =
+  /** status 200 Successful Response */ NormalizedListCashierShiftInt;
+export type GetCashierShiftsForRegisterApiArg = {
+  registerId: number;
+  nodeId: number;
+};
+export type ListTransactionsApiResponse = /** status 200 Successful Response */ NormalizedListTransactionInt;
+export type ListTransactionsApiArg = {
+  registerId: number;
+  nodeId: number;
+};
 export type TransferRegisterApiResponse = /** status 200 Successful Response */ any;
 export type TransferRegisterApiArg = {
   nodeId: number;
@@ -1617,7 +1649,7 @@ export type ListOrdersByTillApiArg = {
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
   nodeId: number;
-  customerAccountId?: number | null;
+  customerAccountId: number;
 };
 export type GetOrderApiResponse = /** status 200 Successful Response */ OrderRead;
 export type GetOrderApiArg = {
@@ -2287,6 +2319,121 @@ export type NormalizedListCashRegisterInt = {
 export type NewCashRegister = {
   name: string;
 };
+export type CashierShift = {
+  id: number;
+  comment: string;
+  cashier_id: number;
+  cash_register_id: number | null;
+  closing_out_user_id: number;
+  actual_cash_drawer_balance: number;
+  expected_cash_drawer_balance: number;
+  cash_drawer_imbalance: number;
+  started_at: string;
+  ended_at: string;
+};
+export type NormalizedListCashierShiftInt = {
+  ids: number[];
+  entities: {
+    [key: string]: CashierShift;
+  };
+};
+export type PaymentMethod = "cash" | "sumup" | "tag" | "sumup_online";
+export type OrderType =
+  | "sale"
+  | "cancel_sale"
+  | "top_up"
+  | "pay_out"
+  | "ticket"
+  | "money_transfer"
+  | "money_transfer_imbalance"
+  | "cashier_shift_start"
+  | "cashier_shift_end";
+export type LineItem = {
+  quantity: number;
+  product: Product;
+  product_price: number;
+  tax_rate_id: number;
+  tax_name: string;
+  tax_rate: number;
+  item_id: number;
+  total_tax: number;
+};
+export type LineItemRead = {
+  quantity: number;
+  product: Product;
+  product_price: number;
+  tax_rate_id: number;
+  tax_name: string;
+  tax_rate: number;
+  item_id: number;
+  total_tax: number;
+  total_price: number;
+};
+export type Order = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  cash_register_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItem[];
+};
+export type OrderRead = {
+  id: number;
+  uuid: string;
+  total_price: number;
+  total_tax: number;
+  total_no_tax: number;
+  cancels_order: number | null;
+  booked_at: string;
+  payment_method: PaymentMethod;
+  order_type: OrderType;
+  cashier_id: number | null;
+  till_id: number | null;
+  cash_register_id: number | null;
+  customer_account_id: number | null;
+  customer_tag_uid: number | null;
+  customer_tag_id: number | null;
+  line_items: LineItemRead[];
+  customer_tag_uid_hex: string | null;
+};
+export type Transaction = {
+  id: number;
+  conducting_user_id: number | null;
+  description: string | null;
+  source_account: number;
+  target_account: number;
+  order: Order | null;
+  booked_at: string;
+  amount: number;
+  vouchers: number;
+};
+export type TransactionRead = {
+  id: number;
+  conducting_user_id: number | null;
+  description: string | null;
+  source_account: number;
+  target_account: number;
+  order: OrderRead | null;
+  booked_at: string;
+  amount: number;
+  vouchers: number;
+};
+export type NormalizedListTransactionInt = {
+  ids: number[];
+  entities: {
+    [key: string]: Transaction;
+  };
+};
 export type TransferRegisterPayload = {
   source_cashier_id: number;
   target_cashier_id: number;
@@ -2386,71 +2533,6 @@ export type UpdateVoucherAmountPayload = {
 export type UpdateAccountCommentPayload = {
   comment: string;
 };
-export type PaymentMethod = "cash" | "sumup" | "tag" | "sumup_online";
-export type OrderType =
-  | "sale"
-  | "cancel_sale"
-  | "top_up"
-  | "pay_out"
-  | "ticket"
-  | "money_transfer"
-  | "money_transfer_imbalance";
-export type LineItem = {
-  quantity: number;
-  product: Product;
-  product_price: number;
-  tax_rate_id: number;
-  tax_name: string;
-  tax_rate: number;
-  item_id: number;
-  total_tax: number;
-};
-export type LineItemRead = {
-  quantity: number;
-  product: Product;
-  product_price: number;
-  tax_rate_id: number;
-  tax_name: string;
-  tax_rate: number;
-  item_id: number;
-  total_tax: number;
-  total_price: number;
-};
-export type Order = {
-  id: number;
-  uuid: string;
-  total_price: number;
-  total_tax: number;
-  total_no_tax: number;
-  cancels_order: number | null;
-  booked_at: string;
-  payment_method: PaymentMethod;
-  order_type: OrderType;
-  cashier_id: number | null;
-  till_id: number | null;
-  customer_account_id: number | null;
-  customer_tag_uid: number | null;
-  customer_tag_id: number | null;
-  line_items: LineItem[];
-};
-export type OrderRead = {
-  id: number;
-  uuid: string;
-  total_price: number;
-  total_tax: number;
-  total_no_tax: number;
-  cancels_order: number | null;
-  booked_at: string;
-  payment_method: PaymentMethod;
-  order_type: OrderType;
-  cashier_id: number | null;
-  till_id: number | null;
-  customer_account_id: number | null;
-  customer_tag_uid: number | null;
-  customer_tag_id: number | null;
-  line_items: LineItemRead[];
-  customer_tag_uid_hex: string | null;
-};
 export type NormalizedListOrderInt = {
   ids: number[];
   entities: {
@@ -2469,6 +2551,7 @@ export type OrderWithTse = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -2498,6 +2581,7 @@ export type OrderWithTseRead = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -2633,22 +2717,6 @@ export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
     [key: string]: CashierRead;
-  };
-};
-export type CashierShift = {
-  id: number;
-  comment: string;
-  closing_out_user_id: number;
-  actual_cash_drawer_balance: number;
-  expected_cash_drawer_balance: number;
-  cash_drawer_imbalance: number;
-  started_at: string;
-  ended_at: string;
-};
-export type NormalizedListCashierShiftInt = {
-  ids: number[];
-  entities: {
-    [key: string]: CashierShift;
   };
 };
 export type CashierProductStats = {
@@ -3297,6 +3365,10 @@ export const {
   useLazyGetCashRegisterAdminQuery,
   useUpdateRegisterMutation,
   useDeleteRegisterMutation,
+  useGetCashierShiftsForRegisterQuery,
+  useLazyGetCashierShiftsForRegisterQuery,
+  useListTransactionsQuery,
+  useLazyListTransactionsQuery,
   useTransferRegisterMutation,
   useGetPublicConfigQuery,
   useLazyGetPublicConfigQuery,

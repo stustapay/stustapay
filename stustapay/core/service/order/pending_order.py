@@ -27,7 +27,7 @@ from stustapay.core.service.order.booking import (
     book_order,
 )
 from stustapay.core.service.product import fetch_top_up_product
-from stustapay.core.service.till.register import get_cash_register_account_id
+from stustapay.core.service.till.common import get_cash_register_account_id
 
 
 async def fetch_pending_order(conn: Connection, uuid: UUID) -> PendingOrder:
@@ -121,7 +121,7 @@ async def make_ticket_sale_bookings(
         if current_till.active_cash_register_id is None:
             raise InvalidArgument("Cash payments require a cash register")
         cash_register_account_id = await get_cash_register_account_id(
-            conn=conn, cash_register_id=current_till.active_cash_register_id
+            conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
         )
         prepared_bookings[
             BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=cash_register_account_id)
@@ -211,7 +211,7 @@ async def make_topup_bookings(
         if current_till.active_cash_register_id is None:
             raise InvalidArgument("Cash payments require a cash register")
         cash_register_account_id = await get_cash_register_account_id(
-            conn=conn, cash_register_id=current_till.active_cash_register_id
+            conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
         )
         bookings = {
             BookingIdentifier(

@@ -18,6 +18,8 @@ class OrderType(enum.Enum):
     ticket = "ticket"
     money_transfer = "money_transfer"
     money_transfer_imbalance = "money_transfer_imbalance"
+    cashier_shift_start = "cashier_shift_start"
+    cashier_shift_end = "cashier_shift_end"
 
 
 class PaymentMethod(enum.Enum):
@@ -311,6 +313,7 @@ class Order(BaseModel):
     # foreign keys
     cashier_id: Optional[int]
     till_id: Optional[int]
+    cash_register_id: Optional[int]
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
     customer_tag_id: Optional[int]
@@ -321,6 +324,18 @@ class Order(BaseModel):
         return format_user_tag_uid(self.customer_tag_uid)
 
     line_items: list[LineItem]
+
+
+class Transaction(BaseModel):
+    id: int
+    conducting_user_id: int | None
+    description: str | None
+    source_account: int
+    target_account: int
+    order: Order | None
+    booked_at: datetime
+    amount: float
+    vouchers: int
 
 
 class NewFreeTicketGrant(BaseModel):

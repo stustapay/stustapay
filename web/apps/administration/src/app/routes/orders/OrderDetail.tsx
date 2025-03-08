@@ -1,12 +1,21 @@
 import {
+  selectCashRegisterById,
   selectTillById,
   selectUserById,
   useCancelOrderMutation,
   useGetOrderQuery,
+  useListCashRegistersAdminQuery,
   useListTillsQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, CustomerRoutes, OrderRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import {
+  CashierRoutes,
+  CashRegistersRoutes,
+  CustomerRoutes,
+  OrderRoutes,
+  TillRoutes,
+  UserTagRoutes,
+} from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
@@ -35,12 +44,13 @@ export const OrderDetail: React.FC = () => {
   } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
 
-  if (isOrderLoading || isTillsLoading || isUsersLoading) {
+  if (isOrderLoading || isTillsLoading || isUsersLoading || isRegistersLoading) {
     return <Loading />;
   }
 
-  if (error || !order || !users || !tills) {
+  if (error || !order || !users || !tills || !registers) {
     navigate(-1);
     return null;
   }
@@ -62,6 +72,8 @@ export const OrderDetail: React.FC = () => {
 
   const till = order.till_id != null ? selectTillById(tills, order.till_id) : undefined;
   const cashier = order.cashier_id != null ? selectUserById(users, order.cashier_id) : undefined;
+  const register =
+    order.cash_register_id != null ? selectCashRegisterById(registers, order.cash_register_id) : undefined;
 
   return (
     <DetailLayout
@@ -122,6 +134,13 @@ export const OrderDetail: React.FC = () => {
             label={t("order.customerTagUid")}
             value={formatUserTagUid(order.customer_tag_uid_hex)}
             linkTo={UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id)}
+          />
+        )}
+        {register != null && (
+          <DetailField
+            label={t("order.cashRegister")}
+            value={register.name}
+            linkTo={CashRegistersRoutes.detail(order.cash_register_id, register.node_id)}
           />
         )}
       </DetailView>

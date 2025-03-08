@@ -240,7 +240,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
         open={voucherModalOpen}
         handleClose={() => setVoucherModalOpen(false)}
       />
-      <OrderTable orders={orders} />
+      <OrderTable orders={orders} showCashierColumn showTillColumn />
     </DetailLayout>
   );
 });

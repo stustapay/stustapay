@@ -28,40 +28,15 @@ from stustapay.core.service.common.decorators import (
     requires_user,
 )
 from stustapay.core.service.common.error import InvalidArgument, NotFound
-from stustapay.core.service.order.booking import BookingIdentifier, book_money_transfer
+from stustapay.core.service.order.booking import (
+    BookingIdentifier,
+    book_cashier_shift_end_order,
+    book_cashier_shift_start_order,
+    book_money_transfer,
+)
+from stustapay.core.service.till.common import create_cash_register, get_cash_register
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_node
-
-
-async def get_cash_register(conn: Connection, node: Node, register_id: int) -> CashRegister:
-    return await conn.fetch_one(
-        CashRegister,
-        "select * from cash_register_with_cashier where id = $1 and node_id = any($2)",
-        register_id,
-        node.ids_to_event_node,
-    )
-
-
-async def create_cash_register(*, conn: Connection, node: Node, new_register: NewCashRegister) -> CashRegister:
-    account_id = await conn.fetchval(
-        "insert into account (type, name, node_id) values ('cash_register', 'Cash Register', $1) returning id",
-        node.event_node_id,
-    )
-    register_id = await conn.fetchval(
-        "insert into cash_register (node_id, name, account_id) values ($1, $2, $3) returning id",
-        node.id,
-        new_register.name,
-        account_id,
-    )
-    register = await get_cash_register(conn=conn, node=node, register_id=register_id)
-    return register
-
-
-async def get_cash_register_account_id(*, conn: Connection, cash_register_id: int) -> int:
-    acc_id = await conn.fetchval("select account_id from cash_register where id = $1", cash_register_id)
-    if acc_id is None:
-        raise InvalidArgument("Cash Register not found")
-    return acc_id
 
 
 async def _list_cash_register_stockings(*, conn: Connection, node: Node) -> list[CashRegisterStocking]:
@@ -179,7 +154,7 @@ class TillRegisterService(Service[Config]):
             "update cash_register_stocking set "
             "   euro200 = $1, euro100 = $2, euro50 = $3, euro20 = $4, euro10 = $5, euro5 = $6, euro2 = $7, "
             "   euro1 = $8, cent50 = $9, cent20 = $10, cent10 = $11, cent5 = $12, cent2 = $13, cent1 = $14, "
-            "variable_in_euro = $15, name = $16 where id = $17 returning id where node_id = any($18)",
+            "variable_in_euro = $15, name = $16 where id = $17 and node_id = any($18) returning id",
             stocking.euro200,
             stocking.euro100,
             stocking.euro50,
@@ -310,6 +285,10 @@ class TillRegisterService(Service[Config]):
             raise InvalidArgument("The cashier already has an assigned cash register")
 
         await conn.fetchval("update usr set cash_register_id = $1 where id = $2", cash_register_id, user_row["id"])
+
+        await book_cashier_shift_start_order(
+            conn=conn, cashier_id=user_row["id"], cash_register_id=cash_register_id, node=node
+        )
 
         node = await fetch_node(conn=conn, node_id=current_till.node_id)
         assert node is not None
@@ -463,10 +442,16 @@ class TillRegisterService(Service[Config]):
             raise InvalidArgument("The cashier to whom to transfer the cash register already has a cash register")
 
         await conn.execute("update usr set cash_register_id = null where id = $1", source_cashier_id)
+        await book_cashier_shift_end_order(
+            conn=conn, cashier_id=source_cashier_id, cash_register_id=cash_register_id, node=node
+        )
         await conn.execute(
             "update usr set cash_register_id = $2 where id = $1",
             target_cashier_id,
             cash_register_id,
+        )
+        await book_cashier_shift_start_order(
+            conn=conn, cashier_id=target_cashier_id, cash_register_id=cash_register_id, node=node
         )
         await _select_till_for_cash_register_insertion(
             conn, user_id=target_cashier_id, cash_register_id=cash_register_id

@@ -409,7 +409,13 @@ execute function deny_in_trigger();
 create or replace function new_order_added() returns trigger as
 $$
 begin
-    if NEW is null then return null; end if;
+    if NEW is null then
+        return null;
+    end if;
+
+    if NEW.order_type = 'cashier_shift_start' or NEW.order_type = 'cashier_shift_end' then
+        return NEW;
+    end if;
 
     -- insert a new tse signing request and notify for it
     insert into tse_signature(

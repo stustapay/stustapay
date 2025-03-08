@@ -21,7 +21,7 @@ from stustapay.core.service.sumup import SumUpService
 from stustapay.core.service.tax_rate import TaxRateService
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
-from stustapay.core.service.till import TillService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.tree.service import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import AuthService, UserService
