@@ -62,7 +62,7 @@ class TerminalConfigRepository @Inject constructor(
                 is Response.OK -> {
                     _terminalConfigState.update { TerminalConfigState.Success(response.data) }
                     // if we have secrets, save them
-                    response.data.till?.secrets?.let {
+                    response.data.secrets?.let {
                         nfcRepository.setTagKeys(it.userTagSecret)
                     }
                     true
@@ -91,7 +91,7 @@ class TerminalConfigRepository @Inject constructor(
     suspend fun tokenRefresh() {
         when (val cfg = terminalConfigState.value) {
             is TerminalConfigState.Success -> {
-                cfg.config.till?.secrets?.sumupApiKeyExpiresAt?.let {
+                cfg.config.till?.sumupSecrets?.sumupApiKeyExpiresAt?.let {
                     val expiry = it
                     val currentTime = OffsetDateTime.now()
                     val secondsLeft = expiry.toEpochSecond() - currentTime.toEpochSecond()

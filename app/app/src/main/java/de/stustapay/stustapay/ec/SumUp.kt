@@ -263,7 +263,7 @@ class SumUp @Inject constructor(
         when (val terminalConfig = terminalConfigRepository.terminalConfigState.value) {
             is TerminalConfigState.Success -> {
                 val cfg = terminalConfig.config
-                val secrets = cfg.till?.secrets
+                val secrets = cfg.till?.sumupSecrets
                 if (secrets == null) {
                     return SumUpConfigState.Error("no terminal ec secrets in config")
                 }
@@ -277,7 +277,7 @@ class SumUp @Inject constructor(
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString(),
-                        eventName = cfg.till?.eventName ?: "StuStaPay event",
+                        eventName = cfg.eventName
                     )
                 )
             }
@@ -427,9 +427,9 @@ class SumUp @Inject constructor(
         when (val result = SumUpResultCode.fromInt(extras.getInt(SumUpAPI.Response.RESULT_CODE))) {
             SumUpResultCode.SUCCESSFUL -> {
 
-                val merchantInfo = updateLoginInfo()
+                updateLoginInfo()
 
-                _paymentStatus.update { SumUpState.Started("logged in: ${merchantInfo}...") }
+                _paymentStatus.update { SumUpState.Started("sumup login success") }
                 nextAction(context)
             }
 
