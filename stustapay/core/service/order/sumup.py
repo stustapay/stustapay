@@ -270,5 +270,5 @@ class SumupService(Service[Config]):
                         self.logger.debug(f"checking pending order uuid = {pending_order.uuid}")
                         async with conn.transaction(isolation="serializable"):
                             await self.process_pending_order(conn=conn, pending_order=pending_order)
-            except Exception as e:
-                self.logger.error(f"process pending orders threw an error: {e}")
+            except Exception:
+                self.logger.exception("process pending orders threw an error")

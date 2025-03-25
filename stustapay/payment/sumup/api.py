@@ -195,7 +195,8 @@ class SumUpApi:
                         resp = await response.json()
                         err = _SumUpErrorFormat.model_validate(resp)
                         raise SumUpError(f"SumUp API returned an error: {err.code} - {err.message}")
-                    return await response.json()
+                    # ignore content type as responses may be text/plain
+                    return await response.json(content_type=None)
             except asyncio.TimeoutError as e:
                 raise SumUpError("SumUp API timeout") from e
             except Exception as e:  # pylint: disable=bare-except
@@ -218,7 +219,8 @@ class SumUpApi:
                         except Exception as e:
                             logging.error(f"SumUp API error {response.content}, {e}")
                             raise SumUpError("SumUp API returned an unknown error") from e
-                    return await response.json()
+                    # ignore content type as responses may be text/plain
+                    return await response.json(content_type=None)
             except asyncio.TimeoutError as e:
                 raise SumUpError("SumUp API timeout") from e
             except Exception as e:  # pylint: disable=bare-except
@@ -257,8 +259,10 @@ class SumUpApi:
         if not isinstance(resp, list):
             raise SumUpError("SumUp API returned an invalid response")
 
-        if len(resp) != 1:
+        if len(resp) > 1:
             raise SumUpError(f"SumUp returned a non-unique checkout for the order uuid {order_uuid}")
+        elif len(resp) == 0:
+            return None
 
         return SumUpCheckout.model_validate(resp[0])
 
