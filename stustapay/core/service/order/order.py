@@ -1253,6 +1253,7 @@ class OrderService(Service[Config]):
                 scanned_ticket.customer_tag_pin,
                 node.ids_to_root,
             )
+            # here we create the account
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.event_node_id,

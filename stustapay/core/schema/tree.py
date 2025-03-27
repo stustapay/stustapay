@@ -58,13 +58,19 @@ class _BaseEvent(BaseModel):
     payout_registered_message: str
     payout_sender: str | None = None
 
+    presale_enabled: bool
+
     # map of lang_code -> [text type -> text content]
     translation_texts: dict[Language, dict[str, str]] = {}
 
     def is_sumup_topup_enabled(self, cfg: CoreConfig):
         return self.sumup_topup_enabled and cfg.sumup_enabled
 
+    def is_presale_enabled(self, cfg: CoreConfig):
+        return self.presale_enabled and cfg.sumup_enabled
+
     def is_sumup_payment_enabled(self, cfg: CoreConfig):
+        # vielleicht bug: sollte eigentlich irgendwo verwendet werden und ueberprueft
         return self.sumup_payment_enabled and cfg.sumup_enabled
 
     @property

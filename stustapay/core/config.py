@@ -33,6 +33,11 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     host: str = "localhost"
     port: int = 8082
 
+class PresaleApiConfig(HTTPServerConfig):
+    base_url: str
+    host: str = "localhost"
+    port: int = 8083
+
 
 class Config(BaseModel):
     database: DatabaseConfig
@@ -40,6 +45,7 @@ class Config(BaseModel):
     administration: AdministrationApiConfig
     terminalserver: TerminalApiConfig
     customerportal: CustomerPortalApiConfig
+    presale: PresaleApiConfig
 
 
 def read_config(config_path: os.PathLike) -> Config:

@@ -14,6 +14,8 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.customer import Customer, CustomerCheckout
 from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.presale import PresaleCheckout
+from stustapay.core.schema.ticket import Ticket
 from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
@@ -42,6 +44,7 @@ from stustapay.payment.sumup.api import (
     SumUpCheckoutStatus,
     SumUpCreateCheckout,
 )
+from stustapay.presale.routers.sumup import CreateCheckoutPayload
 
 
 class SumUpError(ServiceException):
@@ -59,7 +62,7 @@ class PendingCheckoutAlreadyExists(ServiceException):
 
 
 class CreateCheckout(BaseModel):
-    amount: float
+    amount: int
 
 
 def requires_sumup_enabled(func):
@@ -72,9 +75,10 @@ def requires_sumup_enabled(func):
             )
         conn = kwargs["conn"]
         event = await fetch_restricted_event_settings_for_node(conn, node_id=kwargs["current_customer"].node_id)
-        is_sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
+
+        is_sumup_enabled = event.is_presale_enabled(self.config.core)
         if not is_sumup_enabled or not self.sumup_reachable:
-            raise InvalidArgument("Online Top Up is currently disabled")
+            raise InvalidArgument("Presale is currently disabled")
 
         return await func(self, **kwargs)
 
@@ -97,14 +101,14 @@ class SumupService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-        self.logger = logging.getLogger("customer")
+        self.logger = logging.getLogger("presale_service_sumup")
 
         self.sumup_reachable = True
 
     async def check_sumup_auth(self, event: RestrictedEventSettings):
-        sumup_enabled = event.is_sumup_topup_enabled(self.config.core)
+        sumup_enabled = event.is_presale_enabled(self.config.core)
         if not sumup_enabled:
-            self.logger.info("Sumup is disabled via the config")
+            self.logger.info("Presale is disabled via the config")
             return
 
         self.logger.info("Checking if the configured sumup api key is valid")
@@ -135,9 +139,10 @@ class SumupService(Service[Config]):
         return await api.get_checkout(checkout_id)
 
     @staticmethod
-    async def _get_db_checkout(*, conn: Connection, checkout_id: str) -> CustomerCheckout:
+    async def _get_db_checkout(*, conn: Connection, checkout_id: str) -> PresaleCheckout:
         checkout = await conn.fetch_maybe_one(
-            CustomerCheckout, "select * from customer_sumup_checkout where id = $1", checkout_id
+            # TODO
+            PresaleCheckout, "select * from presale_sumup_checkout where id = $1", checkout_id
         )
         if checkout is None:
             raise NotFound(element_type="checkout", element_id=checkout_id)
@@ -145,9 +150,10 @@ class SumupService(Service[Config]):
 
     @staticmethod
     async def _process_topup(conn: Connection, checkout: SumUpCheckout):
+        # TODO
         row = await conn.fetchrow(
             "select c.customer_account_id, a.node_id "
-            "from customer_sumup_checkout c join account a on c.customer_account_id = a.id "
+            "from presale_sumup_checkout c join account a on c.customer_account_id = a.id "
             "where checkout_reference = $1",
             checkout.checkout_reference,
         )
@@ -181,23 +187,24 @@ class SumupService(Service[Config]):
         }
 
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
-        await book_order(
-            conn=conn,
-            uuid=checkout.checkout_reference,
-            order_type=OrderType.top_up,
-            payment_method=PaymentMethod.sumup_online,
-            cashier_id=None,
-            till_id=virtual_till.id,
-            customer_account_id=customer_account_id,
-            line_items=line_items,
-            bookings=bookings,
-        )
+
+        # await book_order(
+        #     conn=conn,
+        #     uuid=checkout.checkout_reference,
+        #     order_type=OrderType.top_up,
+        #     payment_method=PaymentMethod.sumup_online,
+        #     cashier_id=None,
+        #     till_id=virtual_till.id,
+        #     customer_account_id=customer_account_id,
+        #     line_items=line_items,
+        #     bookings=bookings,
+        # )
 
     @staticmethod
-    async def _get_pending_checkouts(*, conn: Connection) -> list[CustomerCheckout]:
+    async def _get_pending_checkouts(*, conn: Connection) -> list[PresaleCheckout]:
         return await conn.fetch_many(
-            CustomerCheckout,
-            "select c.* from customer_sumup_checkout c "
+            PresaleCheckout,
+            "select c.* from presale_sumup_checkout c "
             "join account a on c.customer_account_id = a.id "
             "join node n on n.id = a.node_id "
             "join event e on n.event_id = n.event_id "
@@ -208,7 +215,8 @@ class SumupService(Service[Config]):
     async def run_sumup_checkout_processing(self):
         sumup_enabled = self.config.core.sumup_enabled
         if not sumup_enabled or not self.sumup_reachable:
-            self.logger.info("Sumup online topup not enabled, disabling sumup check state")
+
+            self.logger.info("Sumup online or not enabled, disabling sumup check state")
             return
 
         self.logger.info("Staring periodic job to check pending sumup transactions")
@@ -270,7 +278,7 @@ class SumupService(Service[Config]):
 
         # update both valid_until and status in db
         await conn.fetchrow(
-            "update customer_sumup_checkout set status = $1, valid_until = $2, last_checked = now(), "
+            "update presale_sumup_checkout set status = $1, valid_until = $2, last_checked = now(), "
             "   check_interval = $4 "
             "where id = $3",
             sumup_checkout.status.name,
@@ -282,10 +290,9 @@ class SumupService(Service[Config]):
         return sumup_checkout.status
 
     @with_db_transaction(read_only=True)
-    @requires_customer
     @requires_sumup_enabled
     async def check_checkout(
-        self, *, conn: Connection, current_customer: Customer, checkout_id: str
+        self, *, conn: Connection, checkout_id: str
     ) -> SumUpCheckoutStatus:
         stored_checkout = await self._get_db_checkout(conn=conn, checkout_id=checkout_id)
 
@@ -294,10 +301,32 @@ class SumupService(Service[Config]):
             raise AccessDenied("Found checkout does not belong to current customer")
         return await self._update_checkout_status(conn=conn, checkout_id=checkout_id)
 
+
+    @with_db_transaction(read_only=True)
+    async def presale_ticket(self, *, conn: Connection, ticket_id) -> Ticket | None:
+        # is customer registered for payout
+        return await conn.fetch_maybe_one(
+            Ticket,
+            """
+            select t.* from ticket t where t.id = $1 and presale = true
+            """,
+            ticket_id,
+        )
+
     @with_db_transaction
-    @requires_customer
     @requires_sumup_enabled
-    async def create_checkout(self, *, conn: Connection, current_customer: Customer, amount: float) -> SumUpCheckout:
+    async def create_checkout(self, *, conn: Connection, payload: CreateCheckoutPayload) -> SumUpCheckout:
+
+
+        ticket = await self.presale_ticket(payload.ticket_id)
+
+        if ticket is None:
+            raise NotFound("Pre sale ticket not found")
+
+        amount = payload.amount * ticket.total_price
+
+
+
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
@@ -307,7 +336,7 @@ class SumupService(Service[Config]):
             raise InvalidArgument("Must top up more than 0€")
 
         max_account_balance = event_settings.max_account_balance
-        if round(amount, 2) != int(amount):
+        if amount != int(amount):
             raise InvalidArgument("Cent amounts are not allowed")
         if amount > max_account_balance - current_customer.balance:
             raise InvalidArgument(f"Resulting balance would be more than {max_account_balance}€")
@@ -316,7 +345,7 @@ class SumupService(Service[Config]):
         checkout_reference = uuid.uuid4()
         # check if checkout reference already exists
         while await conn.fetchval(
-            "select exists(select * from customer_sumup_checkout where checkout_reference = $1)", checkout_reference
+            "select exists(select * from presale_sumup_checkout where checkout_reference = $1)", checkout_reference
         ):
             checkout_reference = uuid.uuid4()
 
@@ -330,7 +359,7 @@ class SumupService(Service[Config]):
         checkout_response = await self._create_sumup_checkout(event=event_settings, checkout=create_checkout)
 
         await conn.execute(
-            "insert into customer_sumup_checkout ("
+            "insert into presale_sumup_checkout ("
             "   checkout_reference, amount, currency, merchant_code, description, id, status, date, "
             "   valid_until, customer_account_id"
             ") "
