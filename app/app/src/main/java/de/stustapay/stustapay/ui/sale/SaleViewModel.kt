@@ -16,11 +16,14 @@ import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
+import de.stustapay.stustapay.display.CustomerDisplayManager
+import de.stustapay.stustapay.display.CustomerDisplayState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -45,6 +48,7 @@ class SaleViewModel @Inject constructor(
     private val saleRepository: SaleRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
+    private val customerDisplayManager: CustomerDisplayManager,
 ) : ViewModel() {
 
     // navigation in views
@@ -134,6 +138,10 @@ class SaleViewModel @Inject constructor(
         scanTarget.update { ScanTarget.None }
         _navState.update { SalePage.ProductSelect }
         _saleCompleted.update { null }
+        
+        // Reset customer display to welcome state
+        customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+        
         if (success) {
             _status.update { "Order cleared - ready." }
         } else {
@@ -179,6 +187,9 @@ class SaleViewModel @Inject constructor(
     }
 
     fun errorPageDismissed() {
+        // Reset customer display to welcome state
+        customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+        
         // we clear the scanned tag in checkSale already
         _navState.update { SalePage.ProductSelect }
     }
@@ -303,6 +314,13 @@ class SaleViewModel @Inject constructor(
         }
     }
 
+    // Function to show a completed sale on the customer display
+    private fun updateCustomerDisplay(completedSale: CompletedSale?) {
+        completedSale?.let {
+            customerDisplayManager.updateState(CustomerDisplayState.SaleCompleted(it))
+        } ?: customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+    }
+
     suspend fun bookSale(context: Activity) {
         val tag = _saleStatus.value.tag
         val sale = _saleStatus.value.checkedSale
@@ -357,16 +375,25 @@ class SaleViewModel @Inject constructor(
                 // now we have a completed sale
                 _saleCompleted.update { response.data }
                 _navState.update { SalePage.Success }
+                
+                // Update the customer display with the completed sale information
+                updateCustomerDisplay(response.data)
             }
 
             is Response.Error.Service -> {
                 clearScannedTag()
                 _navState.update { SalePage.Error }
                 _status.update { response.msg() }
+                
+                // Reset customer display to welcome state on error
+                customerDisplayManager.updateState(CustomerDisplayState.Welcome)
             }
 
             is Response.Error -> {
                 _status.update { response.msg() }
+                
+                // Reset customer display to welcome state on error
+                customerDisplayManager.updateState(CustomerDisplayState.Welcome)
             }
         }
     }

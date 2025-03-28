@@ -18,6 +18,7 @@ import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.ui.Main
 import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.libssp.util.SysUiController
+import de.stustapay.stustapay.display.CustomerDisplayManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -33,6 +34,9 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     @Inject
     lateinit var infallible: InfallibleRepository
+    
+    @Inject
+    lateinit var customerDisplayManager: CustomerDisplayManager
 
     val viewModel: MainActivityViewModel by viewModels()
 
@@ -48,6 +52,9 @@ class MainActivity : ComponentActivity(), SysUiController {
         sumUp.init(activityCallback)
 
         infallible.launch()
+        
+        // Initialize the customer display if a secondary screen is available
+        customerDisplayManager.initializeCustomerDisplay()
 
         setContent {
             Main(this)
@@ -68,6 +75,13 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     public override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        
+        // Dismiss the presentation when the activity is destroyed
+        customerDisplayManager.dismissPresentation()
     }
 
     @Deprecated("Deprecated in Android")

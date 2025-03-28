@@ -17,6 +17,8 @@ import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
+import de.stustapay.stustapay.display.CustomerDisplayManager
+import de.stustapay.stustapay.display.CustomerDisplayState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,7 +51,8 @@ class TopUpViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
-    private val infallibleRepository: InfallibleRepository
+    private val infallibleRepository: InfallibleRepository,
+    private val customerDisplayManager: CustomerDisplayManager
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
@@ -121,6 +124,9 @@ class TopUpViewModel @Inject constructor(
         _topUpCompleted.update { null }
         _topUpState.update { TopUpState() }
         _status.update { "ready" }
+        
+        // Reset customer display to welcome state
+        customerDisplayManager.updateState(CustomerDisplayState.Welcome)
     }
 
     fun checkAmountLocal(amount: Double): Boolean {
@@ -278,25 +284,46 @@ class TopUpViewModel @Inject constructor(
                 _topUpCompleted.update { response.data }
                 _status.update { "$topUpType TopUp successful!" }
                 _navState.update { TopUpPage.Done }
+                
+                // Update the customer display with the top-up information
+                updateCustomerDisplay(response.data)
             }
 
             is Response.Error -> {
                 _status.update { "$topUpType TopUp failed! ${response.msg()}" }
                 _navState.update { TopUpPage.Failure }
+                
+                // Reset customer display to welcome state on error
+                customerDisplayManager.updateState(CustomerDisplayState.Welcome)
             }
         }
     }
 
+    // Function to update the customer display with top-up information
+    private fun updateCustomerDisplay(topUp: CompletedTopUp?) {
+        topUp?.let {
+            customerDisplayManager.updateState(
+                CustomerDisplayState.TopUpCompleted(
+                    newBalance = it.newBalance.toString(),
+                    topUpAmount = it.amount.toString()
+                )
+            )
+        } ?: customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+    }
 
     fun navigateTo(target: TopUpPage) {
         _navState.update { target }
         
         // When navigating to the selection screen, ensure we have a fresh token
+        // and reset the customer display
         if (target == TopUpPage.Selection) {
             viewModelScope.launch {
                 // Refresh token if needed
                 terminalConfigRepository.tokenRefresh()
             }
+            
+            // Reset the customer display
+            customerDisplayManager.updateState(CustomerDisplayState.Welcome)
         }
     }
 
