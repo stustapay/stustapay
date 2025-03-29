@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.ticket
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,7 +38,7 @@ fun TicketConfirm(
     val scope = rememberCoroutineScope()
     val context = LocalActivity.current!!
 
-    val checkedSale = ticketDraft.checkedSale
+    val checkedSale = ticketDraft.pendingSale
     if (checkedSale == null) {
         Column {
             Text(status)

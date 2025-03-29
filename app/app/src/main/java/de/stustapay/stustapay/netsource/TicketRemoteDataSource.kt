@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.netsource
 
+import de.stustapay.api.models.CancelOrderPayload
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTicketScan
@@ -7,6 +8,7 @@ import de.stustapay.api.models.PendingTicketSale
 import de.stustapay.api.models.TicketScanResult
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.net.TerminalApiAccessor
+import java.util.UUID
 import javax.inject.Inject
 
 class TicketRemoteDataSource @Inject constructor(
@@ -22,6 +24,10 @@ class TicketRemoteDataSource @Inject constructor(
 
     suspend fun registerTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
         return terminalApiAccessor.execute { it.order()?.registerPendingTicketSale(newTicketSale) }
+    }
+
+    suspend fun cancelPendingTicketSale(orderUUID: UUID): Response<Unit> {
+        return terminalApiAccessor.execute { it.order()?.cancelPendingTicketSale(CancelOrderPayload(orderUuid = orderUUID)) }
     }
 
     suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
