@@ -47,7 +47,6 @@ from stustapay.payment.sumup.api import (
 )
 
 SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
-SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
 
 class CreateCheckout(BaseModel):
@@ -71,16 +70,6 @@ def requires_sumup_online_topup_enabled(func):
         return await func(self, **kwargs)
 
     return wrapper
-
-
-def _should_check_order(order: PendingOrder) -> bool:
-    if order.last_checked is None:
-        return True
-    if datetime.now(tz=timezone.utc) > order.created_at + SUMUP_INITIAL_CHECK_TIMEOUT:
-        return True
-    if datetime.now(tz=timezone.utc) > order.last_checked + timedelta(seconds=order.check_interval):
-        return True
-    return False
 
 
 class SumupService(Service[Config]):
@@ -117,6 +106,12 @@ class SumupService(Service[Config]):
             booked_at=pending_order.created_at,
         )
         await conn.execute("update pending_sumup_order set status = 'booked' where uuid = $1", pending_order.uuid)
+
+    async def pending_order_exists_at_sumup(self, conn: Connection, pending_order: PendingOrder) -> bool:
+        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
+        sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
+        sumup_checkout = await sumup_api.find_checkout(pending_order.uuid)
+        return sumup_checkout is not None
 
     async def process_pending_order(
         self, conn: Connection, pending_order: PendingOrder
@@ -155,6 +150,16 @@ class SumupService(Service[Config]):
                     return ticket_sale
                 case _:
                     return None
+
+        if datetime.now(tz=timezone.utc) > pending_order.created_at + self.config.core.sumup_payment_timeout:
+            self.logger.info(
+                f"Marking order {pending_order.uuid} as cancelled due to exceeding the general payment timeout"
+            )
+            await conn.execute(
+                "update pending_sumup_order set status = 'cancelled' where uuid = $1",
+                pending_order.uuid,
+            )
+            return None
 
         check_interval = min(
             self.config.core.sumup_max_check_interval,
@@ -263,10 +268,6 @@ class SumupService(Service[Config]):
                     pending_orders = await fetch_pending_orders(conn=conn)
 
                     for pending_order in pending_orders:
-                        if not _should_check_order(pending_order):
-                            self.logger.debug(f"skipping pending checkout {pending_order.uuid} due to backoff")
-                            continue
-
                         self.logger.debug(f"checking pending order uuid = {pending_order.uuid}")
                         async with conn.transaction(isolation="serializable"):
                             await self.process_pending_order(conn=conn, pending_order=pending_order)
