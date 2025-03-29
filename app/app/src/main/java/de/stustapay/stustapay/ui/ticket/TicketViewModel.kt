@@ -4,7 +4,9 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.api.models.CancelOrderPayload
 import de.stustapay.api.models.CompletedTicketSale
+import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTagScan
@@ -14,11 +16,11 @@ import de.stustapay.libssp.util.ResourcesProvider
 import de.stustapay.libssp.util.mapState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
+import de.stustapay.stustapay.netsource.TicketRemoteDataSource
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
-import de.stustapay.stustapay.repository.TicketRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,7 +43,7 @@ sealed interface TagScanStatus {
 
 @HiltViewModel
 class TicketViewModel @Inject constructor(
-    private val ticketRepository: TicketRepository,
+    private val ticketApi: TicketRemoteDataSource,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val resourcesProvider: ResourcesProvider,
@@ -84,7 +86,7 @@ class TicketViewModel @Inject constructor(
      * how much do we have to pay? we get this from the PendingTicketSale
      */
     fun getPrice(): UInt {
-        val price = _ticketDraft.value.checkedSale?.totalPrice ?: 0.0
+        val price = _ticketDraft.value.pendingSale?.totalPrice ?: 0.0
         return (price * 100).toUInt()
     }
 
@@ -112,7 +114,7 @@ class TicketViewModel @Inject constructor(
      */
     suspend fun tagScanned(tag: NfcTag) {
         val response =
-            ticketRepository.checkTicketScan(NewTicketScan(customerTags = listOf(tag).mapNotNull {
+            ticketApi.checkTicketScan(NewTicketScan(customerTags = listOf(tag).mapNotNull {
                 UserTagScan(
                     it.uid, it.pin ?: return@mapNotNull null
                 )
@@ -196,7 +198,7 @@ class TicketViewModel @Inject constructor(
         _status.update { resourcesProvider.getString(R.string.order_checking) }
 
         // check if the sale is nice and well
-        val response = ticketRepository.checkTicketSale(
+        val response = ticketApi.checkTicketSale(
             selection.getNewTicketSale(null)
         )
 
@@ -230,49 +232,54 @@ class TicketViewModel @Inject constructor(
             return
         }
 
-        val checkedSale = _ticketDraft.value.checkedSale
-        if (checkedSale == null) {
+        val pendingSale = _ticketDraft.value.pendingSale
+        if (pendingSale == null) {
             _status.update { "no ticket sale check present" }
             return
         }
 
+        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
 
         // if we do cash payment, the confirmation was already presented by CashECPay
         if (paymentMethod == PaymentMethod.cash) {
-            bookSale(paymentMethod = PaymentMethod.cash)
+            bookSale(newSale)
             return
         }
 
         // otherwise, perform ec payment
         val payment = ECPayment(
-            id = "${checkedSale.uuid}_${_ticketDraft.value.ecRetry}",
-            amount = BigDecimal(checkedSale.totalPrice),
+            id = newSale.uuid.toString(),
+            amount = BigDecimal(pendingSale.totalPrice),
             tag = _ticketDraft.value.scans[0].tag,
         )
 
         // register the sale so the backend can ask sumup for completion
-        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
-        val response = ticketRepository.registerTicketSale(newSale)
+        val response = ticketApi.registerTicketSale(newSale)
         when (response) {
             is Response.OK -> {
-                _status.update { "Order announced!" }
+                _status.update { "Ticket order announced!" }
             }
 
             is Response.Error.Service -> {
-                _navState.update { TicketPage.Error }
                 _status.update { response.msg() }
+                _navState.update { TicketPage.Error }
+                return
             }
 
             is Response.Error -> {
                 _status.update { response.msg() }
+                return
             }
         }
 
         when (val ecResult = ecPaymentRepository.pay(context = context, ecPayment = payment)) {
             is ECPaymentResult.Failure -> {
+                // oh dear, the ec payment failed - let's tell the backend.
+                ticketApi.cancelPendingTicketSale(orderUUID = newSale.uuid)
                 _ticketDraft.update { status ->
                     val newSale = status.copy()
-                    newSale.ecFailure()
+                    // generate a new order/sumup uuid
+                    newSale.newUUID()
                     newSale
                 }
                 _status.update { ecResult.msg }
@@ -280,16 +287,15 @@ class TicketViewModel @Inject constructor(
 
             is ECPaymentResult.Success -> {
                 _status.update { ecResult.result.msg }
-                bookSale(PaymentMethod.sumup)
+                bookSale(newSale)
             }
         }
     }
 
-    private suspend fun bookSale(paymentMethod: PaymentMethod) {
+    private suspend fun bookSale(newTicketSale: NewTicketSale) {
         _saleCompleted.update { null }
 
-        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
-        val response = infallibleRepository.bookTicketSale(newSale)
+        val response = infallibleRepository.bookTicketSale(newTicketSale)
 
         when (response) {
             is Response.OK -> {

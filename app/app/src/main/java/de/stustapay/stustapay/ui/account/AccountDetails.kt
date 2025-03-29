@@ -203,6 +203,8 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
         }
         OrderType.money_transfer -> {}
         OrderType.money_transfer_imbalance -> {}
+        OrderType.cashier_shift_start -> {}
+        OrderType.cashier_shift_end -> {}
     }
 
     Row(

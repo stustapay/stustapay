@@ -10,11 +10,11 @@ import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.ec.ECPayment
+import de.stustapay.stustapay.netsource.TopUpRemoteDataSource
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
-import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.delay
@@ -45,7 +45,7 @@ data class TopUpState(
 
 @HiltViewModel
 class TopUpViewModel @Inject constructor(
-    private val topUpRepository: TopUpRepository,
+    private val topUpApi: TopUpRemoteDataSource,
     private val terminalConfigRepository: TerminalConfigRepository,
     userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
@@ -112,7 +112,7 @@ class TopUpViewModel @Inject constructor(
         }
 
         // server-side check
-        return when (val response = topUpRepository.checkTopUp(newTopUp)) {
+        return when (val response = topUpApi.checkTopUp(newTopUp)) {
             is Response.OK -> {
                 _status.update { "TopUp possible" }
                 true
@@ -187,6 +187,7 @@ class TopUpViewModel @Inject constructor(
         when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
             is ECPaymentResult.Failure -> {
                 _status.update { "EC: ${paymentResult.msg}" }
+                topUpApi.cancelPendingTopUp(newTopUp.uuid)
                 return
             }
 
@@ -223,15 +224,20 @@ class TopUpViewModel @Inject constructor(
     private suspend fun registerTopUp(topUpType: String, newTopUp: NewTopUp): Boolean {
         _status.update { "Announcing $topUpType TopUp..." }
 
-        when (val response = topUpRepository.registerTopUp(newTopUp)) {
+        when (val response = topUpApi.registerTopUp(newTopUp)) {
             is Response.OK -> {
                 _status.update { "$topUpType TopUp announced!" }
                 return true
             }
 
-            is Response.Error -> {
-                _status.update { "$topUpType TopUp announce failed: ${response.msg()}" }
+            is Response.Error.Service -> {
+                _status.update { response.msg() }
                 _navState.update { TopUpPage.Failure }
+                return false
+            }
+
+            is Response.Error -> {
+                _status.update { response.msg() }
                 return false
             }
         }
