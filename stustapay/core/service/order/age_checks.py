@@ -1,20 +1,23 @@
+from stustapay.core.schema.order import CustomerRegistration
 from stustapay.core.schema.product import ProductRestriction
 
 
-def find_oldest_customer(customers: dict[int, tuple[float, str | None]]) -> int:
-    oldest_customer = None
-    for account_id, restriction in customers.items():
-        if oldest_customer is None:
-            oldest_customer = (account_id, restriction)
-            if restriction is None:
-                return oldest_customer[0]
-            continue
-        if restriction is None:
-            return account_id
+def find_oldest_customer(customers: list[CustomerRegistration]) -> int:
+    oldest_customer: CustomerRegistration | None = None
+    for customer in customers:
+        if customer.restriction is None:
+            return customer.account_id
 
-        if oldest_customer[1] == ProductRestriction.under_16.name and restriction == ProductRestriction.under_18.name:
-            oldest_customer = (account_id, restriction)
+        if oldest_customer is None:
+            oldest_customer = customer
+            continue
+
+        # hacky way since we only have 3 states
+        # if needed, better define a ordering for restrictions :)
+        if oldest_customer.restriction == ProductRestriction.under_16.name and\
+           customer.restriction == ProductRestriction.under_18.name:
+            oldest_customer = customer
 
     assert oldest_customer is not None
 
-    return oldest_customer[0]
+    return oldest_customer.account_id

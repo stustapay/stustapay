@@ -151,6 +151,7 @@ async def test_only_topup_till_profiles_can_topup(
             allow_top_up=False,
             allow_cash_out=False,
             allow_ticket_sale=False,
+            allow_ticket_vouchers=False,
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,

@@ -4004,6 +4004,10 @@
             "type": "boolean",
             "title": "Allow Ticket Sale"
           },
+          "allow_ticket_vouchers": {
+            "type": "boolean",
+            "title": "Allow Ticket Vouchers"
+          },
           "enable_ssp_payment": {
             "type": "boolean",
             "title": "Enable Ssp Payment"
@@ -4052,6 +4056,7 @@
           "allow_top_up",
           "allow_cash_out",
           "allow_ticket_sale",
+          "allow_ticket_vouchers",
           "enable_ssp_payment",
           "enable_cash_payment",
           "enable_card_payment",
@@ -4166,15 +4171,88 @@
           },
           "ticket": {
             "$ref": "#/components/schemas/Ticket"
+          },
+          "total_price": {
+            "type": "number",
+            "title": "Total Price"
+          },
+          "top_up_amount": {
+            "type": "number",
+            "title": "Top Up Amount",
+            "default": 0
+          },
+          "ticket_voucher": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TicketVoucher"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Account"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
           "customer_tag_uid",
           "customer_tag_pin",
-          "ticket"
+          "ticket",
+          "total_price"
         ],
         "title": "TicketScanResultEntry"
+      },
+      "TicketVoucher": {
+        "properties": {
+          "ticket": {
+            "$ref": "#/components/schemas/Ticket"
+          },
+          "top_up_amount": {
+            "type": "number",
+            "title": "Top Up Amount"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "customer_account_id": {
+            "type": "integer",
+            "title": "Customer Account Id"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticket",
+          "top_up_amount",
+          "id",
+          "node_id",
+          "created_at",
+          "customer_account_id",
+          "token"
+        ],
+        "title": "TicketVoucher"
       },
       "TimeseriesStatsQuery": {
         "properties": {
@@ -4687,6 +4765,22 @@
           "tag_pin": {
             "type": "string",
             "title": "Tag Pin"
+          },
+          "top_up_amount": {
+            "type": "number",
+            "title": "Top Up Amount",
+            "default": 0.0
+          },
+          "voucher_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voucher Token"
           }
         },
         "type": "object",
@@ -4694,7 +4788,8 @@
           "tag_uid",
           "tag_pin"
         ],
-        "title": "UserTagScan"
+        "title": "UserTagScan",
+        "description": "a scanned tag before ticket sale "
       },
       "UserTagSecret": {
         "properties": {

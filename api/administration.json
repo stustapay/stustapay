@@ -10136,6 +10136,10 @@
             "type": "boolean",
             "title": "Allow Ticket Sale"
           },
+          "allow_ticket_vouchers": {
+            "type": "boolean",
+            "title": "Allow Ticket Vouchers"
+          },
           "enable_ssp_payment": {
             "type": "boolean",
             "title": "Enable Ssp Payment"
@@ -10156,6 +10160,7 @@
           "allow_top_up",
           "allow_cash_out",
           "allow_ticket_sale",
+          "allow_ticket_vouchers",
           "enable_ssp_payment",
           "enable_cash_payment",
           "enable_card_payment"
@@ -13391,6 +13396,10 @@
             "type": "boolean",
             "title": "Allow Ticket Sale"
           },
+          "allow_ticket_vouchers": {
+            "type": "boolean",
+            "title": "Allow Ticket Vouchers"
+          },
           "enable_ssp_payment": {
             "type": "boolean",
             "title": "Enable Ssp Payment"
@@ -13419,6 +13428,7 @@
           "allow_top_up",
           "allow_cash_out",
           "allow_ticket_sale",
+          "allow_ticket_vouchers",
           "enable_ssp_payment",
           "enable_cash_payment",
           "enable_card_payment",

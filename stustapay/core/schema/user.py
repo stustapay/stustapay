@@ -3,19 +3,10 @@ from typing import Optional
 
 from pydantic import BaseModel, computed_field
 
+from stustapay.core.schema.user_tag import UserTag, format_user_tag_uid
+
 ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
-
-
-def format_user_tag_uid(uid: Optional[int]) -> Optional[str]:
-    if uid is None:
-        return None
-
-    return hex(uid)[2:].upper()
-
-
-class UserTag(BaseModel):
-    uid: int
 
 
 class Privilege(enum.Enum):

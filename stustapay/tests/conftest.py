@@ -497,6 +497,7 @@ async def till_profile(
             allow_top_up=True,
             allow_cash_out=True,
             allow_ticket_sale=True,
+            allow_ticket_vouchers=False,
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,

@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Annotated
@@ -41,7 +42,7 @@ def get_config(
     asyncio.get_event_loop().set_debug(debug)
 
     if not config_path.exists():
-        print(f"Config file does not exist: {config_path}")
+        sys.stderr.write(f"Config file does not exist: {config_path}")
         raise typer.Exit(1)
 
     config = read_config(config_path)

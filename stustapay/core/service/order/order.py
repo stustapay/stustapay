@@ -15,8 +15,6 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     Account,
     AccountType,
-    get_source_account,
-    get_target_account,
 )
 from stustapay.core.schema.order import (
     CompletedPayOut,
@@ -30,7 +28,6 @@ from stustapay.core.schema.order import (
     NewSale,
     NewSaleProducts,
     NewTicketSale,
-    NewTicketScan,
     NewTopUp,
     Order,
     OrderType,
@@ -44,13 +41,19 @@ from stustapay.core.schema.order import (
     PendingSaleProducts,
     PendingTicketSale,
     PendingTopUp,
-    TicketScanResult,
-    TicketScanResultEntry,
     Transaction,
+    get_source_account,
+    get_target_account,
 )
 from stustapay.core.schema.product import Product, ProductRestriction, ProductType
 from stustapay.core.schema.terminal import CurrentTerminal
-from stustapay.core.schema.ticket import Ticket
+from stustapay.core.schema.ticket import (
+    NewTicketScan,
+    Ticket,
+    TicketScanResult,
+    TicketScanResultEntry,
+    TicketVoucher,
+)
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
@@ -356,6 +359,39 @@ class OrderService(Service[Config]):
             raise CustomerNotFound(uid=customer_tag_uid)
         return customer
 
+    @staticmethod
+    async def _fetch_ticket_voucher(*, conn: Connection, node: Node, voucher_token: str) -> TicketVoucher:
+        ticket_voucher = await conn.fetch_maybe_one(
+            TicketVoucher,
+            "select t.* "
+            "from ticket_voucher t "
+            "join account a on (a.id = t.account_id) "
+            "where t.token = $1 and a.user_tag_id is null and t.node_id = any($2)",
+            voucher_token,
+            node.ids_to_root,
+        )
+        if not ticket_voucher:
+            raise InvalidArgument("ticket voucher unknown or no longer valid")
+
+        return ticket_voucher
+
+    @staticmethod
+    async def _fetch_account_by_ticket_voucher(*, conn: Connection, node: Node,
+                                               ticket_voucher: TicketVoucher,
+                                               tag_pin: str) -> Account:
+        account = await conn.fetch_maybe_one(
+            Account,
+            "select a.*, (select t.restriction from user_tag t where t.pin = $1) as restriction "
+            "from account a "
+            "where a.type = 'private' and a.node_id = any($2) and a.id = $3",
+            tag_pin,
+            node.ids_to_root,
+            ticket_voucher.customer_account_id,
+        )
+        if account is None:
+            raise InvalidArgument("couldn't find account assigned to voucher")
+        return account
+
     @with_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
     async def check_topup(
@@ -425,7 +461,7 @@ class OrderService(Service[Config]):
         new_topup: NewTopUp,
         pending: bool = False,
     ) -> CompletedTopUp:
-        pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+        pending_top_up: PendingTopUp = await self.check_topup(
             conn=conn,
             node=node,
             current_terminal=current_terminal,
@@ -958,7 +994,7 @@ class OrderService(Service[Config]):
             payment_method=order.payment_method,
         )
 
-        return await self.book_sale_products(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
+        return await self.book_sale_products(
             conn=conn,
             node_id=node.id,
             current_user=current_user,
@@ -1093,7 +1129,7 @@ class OrderService(Service[Config]):
         current_user: CurrentUser,
         new_pay_out: NewPayOut,
     ) -> CompletedPayOut:
-        pending_pay_out: PendingPayOut = await self.check_pay_out(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+        pending_pay_out: PendingPayOut = await self.check_pay_out(
             conn=conn,
             node=node,
             current_terminal=current_terminal,
@@ -1165,6 +1201,14 @@ class OrderService(Service[Config]):
         if not can_sell_tickets:
             raise TillPermissionException("This terminal is not allowed to sell tickets")
 
+        # check if custom top up is allowed at this till
+        can_top_up = await conn.fetchval(
+            "select allow_top_up from till_profile where id = $1", current_till.active_profile_id
+        )
+        total_top_up = sum(scan.top_up_amount for scan in new_ticket_scan.customer_tags)
+        if total_top_up > 0.0 and not can_top_up:
+            raise TillPermissionException("This terminal is not allowed to sell tickets with topup")
+
         layout_id = await conn.fetchval(
             "select layout_id from till_profile tp where id = $1", current_till.active_profile_id
         )
@@ -1190,8 +1234,14 @@ class OrderService(Service[Config]):
             unknown_ids = set(customer_pins) - set(i["pin"] for i in known_pins)
             raise InvalidArgument(f"Unknown Ticket ID: {', '.join(unknown_ids)}")
 
-        scanned_tickets = []
+        # check if vouchers have duplicates
+        known_voucher_tokens: set[str] = set()
+
+        scanned_tickets: list[TicketScanResultEntry] = []
+
         for customer_tag in new_ticket_scan.customer_tags:
+            total_price: float = 0.0
+
             ticket = await conn.fetch_maybe_one(
                 Ticket,
                 "select t.* "
@@ -1206,9 +1256,44 @@ class OrderService(Service[Config]):
             )
             if ticket is None:
                 raise InvalidArgument("This terminal is not allowed to sell this ticket")
+
+            ticket_voucher: TicketVoucher | None = None
+
+            account: Account | None = None
+
+            # check if the given scanned voucher token is still valid
+            if voucher_token := customer_tag.voucher_token:
+                ticket_voucher = await self._fetch_ticket_voucher(conn=conn, node=node, voucher_token=voucher_token)
+
+                if voucher_token in known_voucher_tokens:
+                    raise InvalidArgument("ticket voucher used again in same booking")
+                known_voucher_tokens.add(voucher_token)
+
+                account = self._fetch_customer_by_ticket_voucher(conn=conn, node=node,
+                                                                 ticket_voucher=ticket_voucher,
+                                                                 tag_pin=customer_tag.tag_pin)
+                # ticket was already sold due to voucher
+                ticket.total_price = 0.0
+                ticket.initial_top_up_amount = 0.0
+
+            else:
+                total_price += ticket.total_price
+
+            # custom on-site top up amount
+            total_price += customer_tag.top_up_amount
+
+            if total_price < 0.0:
+                raise InvalidArgument("negative ticket sale price")
+
             scanned_tickets.append(
                 TicketScanResultEntry(
-                    customer_tag_uid=customer_tag.tag_uid, customer_tag_pin=customer_tag.tag_pin, ticket=ticket
+                    customer_tag_uid=customer_tag.tag_uid,
+                    customer_tag_pin=customer_tag.tag_pin,
+                    ticket=ticket,
+                    total_price=total_price,                      # price left to pay
+                    top_up_amount=customer_tag.top_up_amount,     # how much will be topped up to the new ticket
+                    ticket_voucher=ticket_voucher,                # used ticket voucher
+                    account=account,                              # associated account
                 )
             )
 
@@ -1242,7 +1327,7 @@ class OrderService(Service[Config]):
                 if cash_register_id is None:
                     raise InvalidArgument("This till needs a cash register for cash payments")
 
-        ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+        ticket_scan_result: TicketScanResult = await self.check_ticket_scan(
             conn=conn,
             node=node,
             current_terminal=current_terminal,
@@ -1251,17 +1336,19 @@ class OrderService(Service[Config]):
         )
 
         # mapping of product id to pending line item
-        ticket_line_items: dict[int, PendingLineItem] = {}
+        line_items: list[PendingLineItem] = []
 
         top_up_product = await fetch_top_up_product(conn=conn, node=node)
-        top_up_line_item = PendingLineItem(
-            quantity=1,
-            product=top_up_product,
-            product_price=0,
-            tax_name=top_up_product.tax_name,
-            tax_rate=top_up_product.tax_rate,
-            tax_rate_id=top_up_product.tax_rate_id,
-        )
+
+        def get_top_up_line_item(amount: float) -> PendingLineItem:
+            return PendingLineItem(
+                quantity=1,
+                product=top_up_product,
+                product_price=amount,
+                tax_name=top_up_product.tax_name,
+                tax_rate=top_up_product.tax_rate,
+                tax_rate_id=top_up_product.tax_rate_id,
+            )
 
         for ticket_scan in ticket_scan_result.scanned_tickets:
             ticket = ticket_scan.ticket
@@ -1272,26 +1359,30 @@ class OrderService(Service[Config]):
                 conn=conn, node=node, product_id=ticket.id, product_type=ProductType.ticket
             )
             assert ticket_product is not None
-            assert ticket_product.price is not None
+            assert ticket_scan.total_price is not None
 
-            if ticket.id in ticket_line_items:
-                ticket_line_items[ticket.id].quantity += 1
-            else:
-                ticket_line_items[ticket.id] = PendingLineItem(
+            line_items.append(
+                PendingLineItem(
                     quantity=1,
                     product=ticket_product,
-                    product_price=ticket.price,
+                    product_price=ticket_scan.total_price,
                     tax_name=ticket.tax_name,
                     tax_rate=ticket.tax_rate,
                     tax_rate_id=ticket.tax_rate_id,
                 )
-            if ticket.initial_top_up_amount > 0:
-                # wtf, pylint does not recognise this member
-                top_up_line_item.product_price += ticket.initial_top_up_amount  # pylint: disable=no-member
+            )
 
-        line_items = list(ticket_line_items.values())
-        if top_up_line_item.product_price > 0:  # pylint: disable=no-member
-            line_items.append(top_up_line_item)
+            # ticket-included top up
+            if ticket.initial_top_up_amount > 0:
+                line_items.append(
+                    get_top_up_line_item(ticket.initial_top_up_amount)
+                )
+
+            # user-requested top up
+            if ticket_scan.top_up_amount > 0:
+                line_items.append(
+                    get_top_up_line_item(ticket_scan.top_up_amount)
+                )
 
         return PendingTicketSale(
             uuid=new_ticket_sale.uuid,
@@ -1316,7 +1407,7 @@ class OrderService(Service[Config]):
         if new_ticket_sale.payment_method is None:
             raise InvalidArgument("No payment method provided")
 
-        pending_ticket_sale: PendingTicketSale = await self.check_ticket_sale(  # pylint: disable=unexpected-keyword-arg,missing-kwoa
+        pending_ticket_sale: PendingTicketSale = await self.check_ticket_sale(
             conn=conn,
             current_terminal=current_terminal,
             node=node,
