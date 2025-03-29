@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,7 +47,7 @@ fun StartpageView(
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
-    val activity = LocalContext.current as Activity
+    val activity = LocalActivity.current!!
 
     val navigateToHook = fun(dest: NavDest): Unit {
         // only allow navigation if we have a config

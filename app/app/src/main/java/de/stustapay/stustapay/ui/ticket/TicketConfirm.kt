@@ -2,6 +2,7 @@ package de.stustapay.stustapay.ui.ticket
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -37,7 +38,7 @@ fun TicketConfirm(
     val ticketDraft by viewModel.ticketDraft.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current as Activity
+    val context = LocalActivity.current!!
 
     val checkedSale = ticketDraft.checkedSale
     if (checkedSale == null) {

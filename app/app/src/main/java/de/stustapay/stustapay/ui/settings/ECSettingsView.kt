@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.settings
 
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
@@ -26,7 +27,7 @@ fun ECSettingsView(viewModel: ECSettingsViewModel = hiltViewModel()) {
 
     val scope = rememberCoroutineScope()
 
-    val context = LocalContext.current as Activity
+    val context = LocalActivity.current!!
 
     PrefGroup(
         modifier = Modifier.padding(20.dp),
