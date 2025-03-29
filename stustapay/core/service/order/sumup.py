@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 import asyncpg
@@ -150,6 +150,16 @@ class SumupService(Service[Config]):
                     return ticket_sale
                 case _:
                     return None
+
+        if datetime.now(tz=timezone.utc) > pending_order.created_at + self.config.core.sumup_payment_timeout:
+            self.logger.info(
+                f"Marking order {pending_order.uuid} as cancelled due to exceeding the general payment timeout"
+            )
+            await conn.execute(
+                "update pending_sumup_order set status = 'cancelled' where uuid = $1",
+                pending_order.uuid,
+            )
+            return None
 
         check_interval = min(
             self.config.core.sumup_max_check_interval,
