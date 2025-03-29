@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from functools import wraps
 
 import asyncpg
@@ -47,7 +47,6 @@ from stustapay.payment.sumup.api import (
 )
 
 SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
-SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
 
 class CreateCheckout(BaseModel):
@@ -71,16 +70,6 @@ def requires_sumup_online_topup_enabled(func):
         return await func(self, **kwargs)
 
     return wrapper
-
-
-def _should_check_order(order: PendingOrder) -> bool:
-    if order.last_checked is None:
-        return True
-    if datetime.now(tz=timezone.utc) > order.created_at + SUMUP_INITIAL_CHECK_TIMEOUT:
-        return True
-    if datetime.now(tz=timezone.utc) > order.last_checked + timedelta(seconds=order.check_interval):
-        return True
-    return False
 
 
 class SumupService(Service[Config]):
@@ -269,10 +258,6 @@ class SumupService(Service[Config]):
                     pending_orders = await fetch_pending_orders(conn=conn)
 
                     for pending_order in pending_orders:
-                        if not _should_check_order(pending_order):
-                            self.logger.debug(f"skipping pending checkout {pending_order.uuid} due to backoff")
-                            continue
-
                         self.logger.debug(f"checking pending order uuid = {pending_order.uuid}")
                         async with conn.transaction(isolation="serializable"):
                             await self.process_pending_order(conn=conn, pending_order=pending_order)

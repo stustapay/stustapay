@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sftkit.database import Connection
@@ -36,8 +36,18 @@ async def fetch_pending_order(conn: Connection, uuid: UUID) -> PendingOrder:
     )
 
 
+SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
+
+
 async def fetch_pending_orders(conn: Connection) -> list[PendingOrder]:
-    return await conn.fetch_many(PendingOrder, "select * from pending_sumup_order where status = 'pending'")
+    return await conn.fetch_many(
+        PendingOrder,
+        "select o.* from pending_sumup_order o "
+        "where o.status = 'pending' "
+        "and ((o.last_checked is null and now() > o.created_at + $1) "
+        "   or now() > o.last_checked + make_interval(secs => o.check_interval))",
+        SUMUP_INITIAL_CHECK_TIMEOUT,
+    )
 
 
 async def save_pending_ticket_sale(
