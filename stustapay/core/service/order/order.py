@@ -497,7 +497,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def cancel_pending_order(self, *, conn: Connection, current_till: Till, order_uuid: UUID):
+    async def cancel_pending_order(self, *, conn: Connection, current_till: Till, order_uuid: UUID) -> None:
         pending_order = await fetch_pending_order(conn=conn, uuid=order_uuid)
         if pending_order.till_id != current_till.id:
             raise InvalidArgument("Cannot cancel an order for a different till")
@@ -508,7 +508,7 @@ class OrderService(Service[Config]):
 
         order_exists_at_sumup = await self.sumup.pending_order_exists_at_sumup(conn=conn, pending_order=pending_order)
         if order_exists_at_sumup is None:
-            raise InvalidArgument("Cannot cancel an order which was already registered with sumup")
+            return
 
         await conn.execute("update pending_sumup_order set status = 'cancelled' where uuid = $1", pending_order.uuid)
 
