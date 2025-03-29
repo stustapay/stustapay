@@ -238,6 +238,7 @@ class TicketViewModel @Inject constructor(
             return
         }
 
+        // generates a new order UUID every time.
         val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
 
         // if we do cash payment, the confirmation was already presented by CashECPay
@@ -276,12 +277,6 @@ class TicketViewModel @Inject constructor(
             is ECPaymentResult.Failure -> {
                 // oh dear, the ec payment failed - let's tell the backend.
                 ticketApi.cancelPendingTicketSale(orderUUID = newSale.uuid)
-                _ticketDraft.update { status ->
-                    val newSale = status.copy()
-                    // generate a new order/sumup uuid
-                    newSale.newUUID()
-                    newSale
-                }
                 _status.update { ecResult.msg }
             }
 

@@ -42,9 +42,10 @@ data class TicketDraft(
         return scans.any { it.tag == tag }
     }
 
+    /** generate a ticket sale - always fresh UUID */
     fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(
-            uuid = pendingSale?.uuid ?: UUID.randomUUID(),
+            uuid = UUID.randomUUID(),
             customerTags = scans.mapNotNull {
                 UserTagScan(
                     it.tag.uid, it.tag.pin ?: return@mapNotNull null
@@ -62,18 +63,5 @@ data class TicketDraft(
             statusSerial += 1u
             true
         }
-    }
-
-    /**
-     * sumup and stustapay need fresh order/transaction identifiers for each attempt.
-     */
-    fun newUUID() {
-        val currentSale = pendingSale
-        if (currentSale == null) {
-            return
-        }
-        // set new uuid
-        pendingSale = currentSale.copy(uuid = UUID.randomUUID())
-        statusSerial += 1u
     }
 }
