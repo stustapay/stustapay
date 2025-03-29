@@ -1340,16 +1340,6 @@ class OrderService(Service[Config]):
 
         top_up_product = await fetch_top_up_product(conn=conn, node=node)
 
-        def get_top_up_line_item(amount: float) -> PendingLineItem:
-            return PendingLineItem(
-                quantity=1,
-                product=top_up_product,
-                product_price=amount,
-                tax_name=top_up_product.tax_name,
-                tax_rate=top_up_product.tax_rate,
-                tax_rate_id=top_up_product.tax_rate_id,
-            )
-
         for ticket_scan in ticket_scan_result.scanned_tickets:
             ticket = ticket_scan.ticket
 
@@ -1372,13 +1362,18 @@ class OrderService(Service[Config]):
                 )
             )
 
-            # ticket-included top up
-            if ticket.initial_top_up_amount > 0:
-                line_items.append(get_top_up_line_item(ticket.initial_top_up_amount))
-
-            # user-requested top up
-            if ticket_scan.top_up_amount > 0:
-                line_items.append(get_top_up_line_item(ticket_scan.top_up_amount))
+            topup_amount = ticket.initial_top_up_amount + ticket_scan.top_up_amount
+            if topup_amount > 0:
+                line_items.append(
+                    PendingLineItem(
+                        quantity=1,
+                        product=top_up_product,
+                        product_price=topup_amount,
+                        tax_name=top_up_product.tax_name,
+                        tax_rate=top_up_product.tax_rate,
+                        tax_rate_id=top_up_product.tax_rate_id,
+                    )
+                )
 
         return PendingTicketSale(
             uuid=new_ticket_sale.uuid,
