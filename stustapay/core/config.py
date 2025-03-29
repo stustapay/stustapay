@@ -29,6 +29,9 @@ class CoreConfig(BaseModel):
     sumup_max_check_interval: int = 300
     sumup_payment_timeout: timedelta = timedelta(days=1)
 
+    pretix_enabled: bool = False
+    pretix_synchronization_interval: timedelta = timedelta(minutes=5)
+
 
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str

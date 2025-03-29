@@ -6,8 +6,9 @@ from uuid import UUID
 from pydantic import BaseModel, computed_field, field_validator, model_validator
 
 from stustapay.core.schema.product import Product
-from stustapay.core.schema.ticket import Ticket
+from stustapay.core.schema.ticket import TicketScanResultEntry
 from stustapay.core.schema.user import format_user_tag_uid
+from stustapay.core.schema.user_tag import UserTagScan
 
 
 class OrderType(enum.Enum):
@@ -33,6 +34,26 @@ def is_non_tag_payment_method(payment_method: PaymentMethod):
     if payment_method == PaymentMethod.tag:
         raise ValueError("payment method cannot be 'tag'")
     return payment_method
+
+
+def get_source_account(order_type: OrderType, customer_account: int):
+    """
+    return the transaction source account, depending on the order type or sold product
+    """
+    if order_type == OrderType.sale:
+        return customer_account
+    raise NotImplementedError()
+
+
+def get_target_account(order_type: OrderType, product: Product, sale_exit_account_id: int):
+    """
+    return the transaction target account, depending on the order type or sold product
+    """
+    if order_type == OrderType.sale:
+        if product.target_account_id is not None:
+            return product.target_account_id
+        return sale_exit_account_id
+    raise NotImplementedError()
 
 
 class NewTopUp(BaseModel):
@@ -226,25 +247,6 @@ class CompletedSale(CompletedSaleBase, PendingSale):
     bon_url: str
 
 
-class UserTagScan(BaseModel):
-    tag_uid: int
-    tag_pin: str
-
-
-class NewTicketScan(BaseModel):
-    customer_tags: list[UserTagScan]
-
-
-class TicketScanResultEntry(BaseModel):
-    customer_tag_uid: int
-    customer_tag_pin: str
-    ticket: Ticket
-
-
-class TicketScanResult(BaseModel):
-    scanned_tickets: list[TicketScanResultEntry]
-
-
 class NewTicketSale(BaseModel):
     uuid: UUID
     customer_tags: list[UserTagScan]
@@ -286,6 +288,14 @@ class CompletedTicketSale(PendingTicketSale):
 
     cashier_id: int
     till_id: int
+
+
+class CustomerRegistration(BaseModel):
+    account_id: int
+    restriction: str | None
+    ticket_included_top_up: float
+    # additional top-up requested on-site
+    top_up_amount: float
 
 
 class LineItem(PendingLineItem):

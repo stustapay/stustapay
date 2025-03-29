@@ -243,6 +243,7 @@ class TerminalService(Service[Config]):
             profile.layout_id,
         )
         allow_ticket_sale = layout_has_tickets and profile.allow_ticket_sale
+        allow_ticket_vouchers = allow_ticket_sale and profile.allow_ticket_vouchers
 
         buttons = await conn.fetch_many(
             TerminalButton,
@@ -292,6 +293,7 @@ class TerminalService(Service[Config]):
             allow_top_up=profile.allow_top_up,
             allow_cash_out=profile.allow_cash_out,
             allow_ticket_sale=allow_ticket_sale,
+            allow_ticket_vouchers=allow_ticket_vouchers,
             enable_ssp_payment=profile.enable_ssp_payment,
             enable_cash_payment=profile.enable_cash_payment,
             enable_card_payment=profile.enable_card_payment,

@@ -33,6 +33,12 @@ class _BaseEvent(BaseModel):
     customer_portal_data_privacy_url: str
     customer_portal_contact_email: EmailStr
 
+    pretix_presale_enabled: bool
+    pretix_shop_url: str | None
+    pretix_organizer: str | None
+    pretix_event: str | None
+    pretix_ticket_ids: list[int] | None
+
     ust_id: str
     bon_issuer: str
     bon_address: str
@@ -86,6 +92,8 @@ class _RestrictedEventMetadata(BaseModel):
     sumup_merchant_code: str = ""
     sumup_oauth_client_id: str = ""
     sumup_oauth_client_secret: str = ""
+
+    pretix_api_key: str | None
 
     email_smtp_password: str | None = None
 

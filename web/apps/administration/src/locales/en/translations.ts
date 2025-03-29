@@ -349,6 +349,15 @@ export const translations = {
       data_privacy_url: "Data privacy URL",
       about_page_url: "About page URL",
     },
+    pretix: {
+      tabLabel: "Pretix",
+      presaleEnabled: "Pretix presale enabled",
+      baseUrl: "Base URL of Pretix instance",
+      apiKey: "Pretix API Key",
+      organizer: "Short name of pretix organizer",
+      event: "Short name of pretix event",
+      ticketIds: 'Ticket IDs in pretix event, separated by ","',
+    },
     agb: {
       tabLabel: "AGB",
       preview: "Show Preview",
@@ -470,6 +479,7 @@ export const translations = {
     allowTopUp: "Allow top up",
     allowCashOut: "Allow cash out",
     allowTicketSale: "Allow ticket sales",
+    allowTicketVouchers: "Allow presale ticket vouchers",
     enableSspPayment: "Enable payment of products with SSP",
     enableCashPayment: "Enable payment of products with cash",
     enableCardPayment: "Enable payment of products with card",

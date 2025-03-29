@@ -18,13 +18,15 @@ from stustapay.core.schema.order import (
     NewPayOut,
     NewSale,
     NewTicketSale,
-    NewTicketScan,
     NewTopUp,
     Order,
     PendingPayOut,
     PendingSale,
     PendingTicketSale,
     PendingTopUp,
+)
+from stustapay.core.schema.ticket import (
+    NewTicketScan,
     TicketScanResult,
 )
 

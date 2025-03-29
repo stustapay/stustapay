@@ -192,7 +192,18 @@ export const EventCreate: React.FC = withPrivilegeGuard("node_administration", (
   const [createEvent] = useCreateEventMutation();
   const handleSubmit = async (values: FormValues) => {
     try {
-      const newNode = await createEvent({ nodeId: currentNode.id, newEvent: values }).unwrap();
+      const newNode = await createEvent({
+        nodeId: currentNode.id,
+        newEvent: {
+          pretix_presale_enabled: false,
+          pretix_shop_url: null,
+          pretix_api_key: null,
+          pretix_organizer: null,
+          pretix_event: null,
+          pretix_ticket_ids: null,
+          ...values,
+        },
+      }).unwrap();
       navigate(`/node/${newNode.id}/settings`);
     } catch (e) {
       toast.error(`Error creating event: ${e}`);
