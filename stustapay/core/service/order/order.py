@@ -495,6 +495,23 @@ class OrderService(Service[Config]):
         )
         return None
 
+    @with_db_transaction(read_only=False)
+    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    async def cancel_pending_order(self, *, conn: Connection, current_till: Till, order_uuid: UUID):
+        pending_order = await fetch_pending_order(conn=conn, uuid=order_uuid)
+        if pending_order.till_id != current_till.id:
+            raise InvalidArgument("Cannot cancel an order for a different till")
+        if pending_order.order_type != PendingOrderType.topup:
+            raise InvalidArgument("Invalid order uuid")
+        if pending_order.status == PendingOrderStatus.booked:
+            raise InvalidArgument("Order was already successfully booked")
+
+        order_exists_at_sumup = await self.sumup.pending_order_exists_at_sumup(conn=conn, pending_order=pending_order)
+        if order_exists_at_sumup is None:
+            raise InvalidArgument("Cannot cancel an order which was already registered with sumup")
+
+        await conn.execute("update pending_sumup_order set status = 'cancelled' where uuid = $1", pending_order.uuid)
+
     async def _check_sale(
         self,
         *,

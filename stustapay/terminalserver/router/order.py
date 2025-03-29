@@ -3,8 +3,10 @@ purchase ordering.
 """
 
 from typing import Optional
+from uuid import UUID
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from stustapay.core.http.auth_till import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
@@ -89,6 +91,22 @@ async def register_pending_topup(
     return await order_service.book_topup(token=token, new_topup=topup, pending=True)
 
 
+class CancelOrderPayload(BaseModel):
+    order_uuid: UUID
+
+
+@router.post(
+    "/cancel-pending-topup",
+    summary="Mark a pending topup as cancelled, e.g. because the sumup booking failed",
+)
+async def cancel_pending_topup(
+    payload: CancelOrderPayload,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+) -> None:
+    await order_service.cancel_pending_order(token=token, order_uuid=payload.order_uuid)
+
+
 @router.post("/check-ticket-scan", summary="check if a ticket sale is valid", response_model=TicketScanResult)
 async def check_ticket_scan(
     ticket_scan: NewTicketScan,
@@ -129,6 +147,18 @@ async def register_pending_ticket_sale(
     order_service: ContextOrderService,
 ):
     return await order_service.book_ticket_sale(token=token, new_ticket_sale=ticket_sale, pending=True)
+
+
+@router.post(
+    "/cancel-pending-ticket-sale",
+    summary="Mark a pending ticket sale as cancelled, e.g. because the sumup booking failed",
+)
+async def cancel_pending_ticket_sale(
+    payload: CancelOrderPayload,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+) -> None:
+    await order_service.cancel_pending_order(token=token, order_uuid=payload.order_uuid)
 
 
 @router.post("/check-payout", summary="check if a pay out is valid", response_model=PendingPayOut)

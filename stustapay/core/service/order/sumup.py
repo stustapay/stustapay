@@ -118,6 +118,12 @@ class SumupService(Service[Config]):
         )
         await conn.execute("update pending_sumup_order set status = 'booked' where uuid = $1", pending_order.uuid)
 
+    async def pending_order_exists_at_sumup(self, conn: Connection, pending_order: PendingOrder) -> bool:
+        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
+        sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
+        sumup_checkout = await sumup_api.find_checkout(pending_order.uuid)
+        return sumup_checkout is not None
+
     async def process_pending_order(
         self, conn: Connection, pending_order: PendingOrder
     ) -> CompletedTicketSale | CompletedTopUp | None:
