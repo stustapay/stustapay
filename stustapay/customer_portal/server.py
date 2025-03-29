@@ -36,7 +36,7 @@ def get_server(config: Config):
 
 def print_openapi(config: Config):
     server = get_server(config)
-    print(json.dumps(server.get_openapi_spec()))
+    print(json.dumps(server.get_openapi_spec(), indent=2))
 
 
 class Api:

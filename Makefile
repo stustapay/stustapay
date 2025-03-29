@@ -31,6 +31,6 @@ ruff-fix:
 
 .PHONY: generate-openapi
 generate-openapi:
-	python3 -m stustapay -c config.yaml customerportal-api --show-openapi > api/customer_portal.json
-	python3 -m stustapay -c config.yaml administration-api --show-openapi > api/administration.json
-	python3 -m stustapay -c config.yaml terminalserver-api --show-openapi > api/terminalserver.json
+	python3 -m stustapay -c ./etc/config.yaml customerportal-api --show-openapi > api/customer_portal.json
+	python3 -m stustapay -c ./etc/config.yaml administration-api --show-openapi > api/administration.json
+	python3 -m stustapay -c ./etc/config.yaml terminalserver-api --show-openapi > api/terminalserver.json
