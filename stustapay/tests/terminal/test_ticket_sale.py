@@ -244,6 +244,50 @@ async def test_ticket_flow_with_initial_topup_sumup(
     )
 
 
+async def test_ticket_flow_with_user_defined_topup_sumup(
+    order_service: OrderService,
+    till_service: TillService,
+    get_system_account_balance: GetSystemAccountBalance,
+    assert_system_account_balance: AssertSystemAccountBalance,
+    terminal_token: str,
+    sale_tickets: SaleTickets,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
+    sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
+    unused_tag = await create_random_user_tag()
+
+    topup_amount = 10
+    new_scan = NewTicketScan(
+        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin, top_up_amount=topup_amount)]
+    )
+    scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
+    assert scan_result is not None
+
+    new_ticket = NewTicketSale(
+        uuid=uuid.uuid4(),
+        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin, top_up_amount=topup_amount)],
+        payment_method=PaymentMethod.sumup,
+    )
+    pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert 2 == pending_ticket.item_count
+    assert sale_tickets.ticket.total_price + topup_amount == pending_ticket.total_price
+    completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert completed_ticket is not None
+
+    customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
+    assert sale_tickets.ticket.initial_top_up_amount + topup_amount == customer.balance
+    await assert_system_account_balance(
+        account_type=AccountType.sumup_entry, expected_balance=sumup_start_balance - completed_ticket.total_price
+    )
+    await assert_system_account_balance(
+        account_type=AccountType.sale_exit, expected_balance=sale_exit_start_balance + sale_tickets.ticket.price
+    )
+
+
 async def test_ticket_flow_with_deferred_sumup_payment(
     order_service: OrderService,
     till_service: TillService,
