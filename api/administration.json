@@ -9473,6 +9473,17 @@
             "title": "Sumup Oauth Client Secret",
             "default": ""
           },
+          "pretix_api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Api Key"
+          },
           "email_smtp_password": {
             "anyOf": [
               {
@@ -9552,6 +9563,57 @@
             "type": "string",
             "format": "email",
             "title": "Customer Portal Contact Email"
+          },
+          "pretix_presale_enabled": {
+            "type": "boolean",
+            "title": "Pretix Presale Enabled"
+          },
+          "pretix_shop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Shop Url"
+          },
+          "pretix_organizer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Organizer"
+          },
+          "pretix_event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Event"
+          },
+          "pretix_ticket_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Ticket Ids"
           },
           "ust_id": {
             "type": "string",
@@ -9747,6 +9809,7 @@
         },
         "type": "object",
         "required": [
+          "pretix_api_key",
           "currency_identifier",
           "max_account_balance",
           "sumup_topup_enabled",
@@ -9755,6 +9818,11 @@
           "customer_portal_about_page_url",
           "customer_portal_data_privacy_url",
           "customer_portal_contact_email",
+          "pretix_presale_enabled",
+          "pretix_shop_url",
+          "pretix_organizer",
+          "pretix_event",
+          "pretix_ticket_ids",
           "ust_id",
           "bon_issuer",
           "bon_address",
@@ -12164,6 +12232,57 @@
             "format": "email",
             "title": "Customer Portal Contact Email"
           },
+          "pretix_presale_enabled": {
+            "type": "boolean",
+            "title": "Pretix Presale Enabled"
+          },
+          "pretix_shop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Shop Url"
+          },
+          "pretix_organizer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Organizer"
+          },
+          "pretix_event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Event"
+          },
+          "pretix_ticket_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Ticket Ids"
+          },
           "ust_id": {
             "type": "string",
             "title": "Ust Id"
@@ -12346,6 +12465,11 @@
           "customer_portal_about_page_url",
           "customer_portal_data_privacy_url",
           "customer_portal_contact_email",
+          "pretix_presale_enabled",
+          "pretix_shop_url",
+          "pretix_organizer",
+          "pretix_event",
+          "pretix_ticket_ids",
           "ust_id",
           "bon_issuer",
           "bon_address",
@@ -12388,6 +12512,17 @@
             "type": "string",
             "title": "Sumup Oauth Client Secret",
             "default": ""
+          },
+          "pretix_api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Api Key"
           },
           "email_smtp_password": {
             "anyOf": [
@@ -12468,6 +12603,57 @@
             "type": "string",
             "format": "email",
             "title": "Customer Portal Contact Email"
+          },
+          "pretix_presale_enabled": {
+            "type": "boolean",
+            "title": "Pretix Presale Enabled"
+          },
+          "pretix_shop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Shop Url"
+          },
+          "pretix_organizer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Organizer"
+          },
+          "pretix_event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Event"
+          },
+          "pretix_ticket_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Ticket Ids"
           },
           "ust_id": {
             "type": "string",
@@ -12647,6 +12833,7 @@
         },
         "type": "object",
         "required": [
+          "pretix_api_key",
           "currency_identifier",
           "max_account_balance",
           "sumup_topup_enabled",
@@ -12655,6 +12842,11 @@
           "customer_portal_about_page_url",
           "customer_portal_data_privacy_url",
           "customer_portal_contact_email",
+          "pretix_presale_enabled",
+          "pretix_shop_url",
+          "pretix_organizer",
+          "pretix_event",
+          "pretix_ticket_ids",
           "ust_id",
           "bon_issuer",
           "bon_address",
@@ -13766,6 +13958,17 @@
             "title": "Sumup Oauth Client Secret",
             "default": ""
           },
+          "pretix_api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Api Key"
+          },
           "email_smtp_password": {
             "anyOf": [
               {
@@ -13845,6 +14048,57 @@
             "type": "string",
             "format": "email",
             "title": "Customer Portal Contact Email"
+          },
+          "pretix_presale_enabled": {
+            "type": "boolean",
+            "title": "Pretix Presale Enabled"
+          },
+          "pretix_shop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Shop Url"
+          },
+          "pretix_organizer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Organizer"
+          },
+          "pretix_event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Event"
+          },
+          "pretix_ticket_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretix Ticket Ids"
           },
           "ust_id": {
             "type": "string",
@@ -14016,6 +14270,7 @@
         },
         "type": "object",
         "required": [
+          "pretix_api_key",
           "currency_identifier",
           "max_account_balance",
           "sumup_topup_enabled",
@@ -14024,6 +14279,11 @@
           "customer_portal_about_page_url",
           "customer_portal_data_privacy_url",
           "customer_portal_contact_email",
+          "pretix_presale_enabled",
+          "pretix_shop_url",
+          "pretix_organizer",
+          "pretix_event",
+          "pretix_ticket_ids",
           "ust_id",
           "bon_issuer",
           "bon_address",

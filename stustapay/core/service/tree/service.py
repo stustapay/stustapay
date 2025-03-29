@@ -218,9 +218,10 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
         "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
         "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_sender, "
-        " sumup_oauth_client_id, sumup_oauth_client_secret) "
+        " sumup_oauth_client_id, sumup_oauth_client_secret, pretix_presale_enabled, pretix_shop_url, pretix_api_key, "
+        " pretix_organizer, pretix_event, pretix_ticket_ids) "
         "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, "
-        " $25, $26, $27, $28, $29, $30, $31, $32)"
+        " $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38)"
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
@@ -254,6 +255,12 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.payout_sender,
         event.sumup_oauth_client_id,
         event.sumup_oauth_client_secret,
+        event.pretix_presale_enabled,
+        event.pretix_shop_url,
+        event.pretix_api_key,
+        event.pretix_organizer,
+        event.pretix_event,
+        event.pretix_ticket_ids,
     )
     await _sync_optional_event_metadata(conn, event_id, event)
 
@@ -319,7 +326,8 @@ class TreeService(Service[Config]):
             "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
             "   daily_end_time = $24, email_enabled = $25, email_default_sender = $26, email_smtp_host = $27, "
             "   email_smtp_port = $28, email_smtp_username = $29, email_smtp_password = $30, "
-            "   payout_sender = $31, sumup_oauth_client_id = $32, sumup_oauth_client_secret = $33 "
+            "   payout_sender = $31, sumup_oauth_client_id = $32, sumup_oauth_client_secret = $33, pretix_presale_enabled = $34,"
+            "   pretix_shop_url = $35, pretix_api_key = $36, pretix_organizer = $37, pretix_event = $38, pretix_ticket_ids = $39 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -354,6 +362,12 @@ class TreeService(Service[Config]):
             event.payout_sender,
             event.sumup_oauth_client_id,
             event.sumup_oauth_client_secret,
+            event.pretix_presale_enabled,
+            event.pretix_shop_url,
+            event.pretix_api_key,
+            event.pretix_organizer,
+            event.pretix_event,
+            event.pretix_ticket_ids,
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
         await _sync_optional_event_metadata(conn, event_id, event)

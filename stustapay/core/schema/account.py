@@ -26,7 +26,6 @@ class AccountType(enum.Enum):
     cash_register = "cash_register"
 
 
-
 class UserTagAccountAssociation(BaseModel):
     account_id: int
     mapping_was_valid_until: datetime

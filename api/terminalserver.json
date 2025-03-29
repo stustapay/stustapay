@@ -4789,7 +4789,7 @@
           "tag_pin"
         ],
         "title": "UserTagScan",
-        "description": "a scanned tag before ticket sale "
+        "description": "a scanned tag before ticket sale"
       },
       "UserTagSecret": {
         "properties": {

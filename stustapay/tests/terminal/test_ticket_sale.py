@@ -9,13 +9,12 @@ from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
     CompletedTicketSale,
     NewTicketSale,
-    NewTicketScan,
     PaymentMethod,
     UserTagScan,
 )
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import TaxRate
-from stustapay.core.schema.ticket import NewTicket, Ticket
+from stustapay.core.schema.ticket import NewTicket, NewTicketScan, Ticket
 from stustapay.core.schema.till import NewTillLayout, NewTillProfile, Till, TillLayout
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.order.order import OrderService, TillPermissionException
@@ -129,6 +128,7 @@ async def test_only_ticket_till_profiles_can_sell_tickets(
             allow_top_up=False,
             allow_cash_out=False,
             allow_ticket_sale=False,
+            allow_ticket_vouchers=False,
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
@@ -339,7 +339,7 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
         payment_method=PaymentMethod.cash,
     )
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
-    assert 4 == pending_ticket.item_count
+    assert 7 == pending_ticket.item_count
     assert 4 == len(pending_ticket.scanned_tickets)
     assert (
         2 * sale_tickets.ticket.total_price + sale_tickets.ticket_u18.total_price + sale_tickets.ticket_u16.total_price
@@ -360,8 +360,8 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
     }
     for product_id, quantity in expected_line_items.items():
         items = [line_item for line_item in completed_ticket.line_items if line_item.product.id == product_id]
-        assert 1 == len(items)
-        assert quantity == items[0].quantity
+        assert quantity == len(items)
+        assert 1 == items[0].quantity
 
     assert (
         sale_tickets.ticket.initial_top_up_amount

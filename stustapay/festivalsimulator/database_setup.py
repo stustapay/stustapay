@@ -757,6 +757,12 @@ class DatabaseSetup:
                     payout_registered_subject="[StuStaPay] Registered for Payout",
                     payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
                     payout_sender=None,
+                    pretix_presale_enabled=False,
+                    pretix_api_key=None,
+                    pretix_event=None,
+                    pretix_organizer=None,
+                    pretix_shop_url=None,
+                    pretix_ticket_ids=None,
                 ),
             )
             beer_team_node = await create_node(

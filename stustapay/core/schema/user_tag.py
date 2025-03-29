@@ -17,7 +17,8 @@ class UserTag(BaseModel):
 
 
 class UserTagScan(BaseModel):
-    """ a scanned tag before ticket sale """
+    """a scanned tag before ticket sale"""
+
     tag_uid: int
     tag_pin: str
 
