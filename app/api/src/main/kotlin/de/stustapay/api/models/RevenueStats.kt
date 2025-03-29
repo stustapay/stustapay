@@ -45,5 +45,8 @@ data class RevenueStats (
     @SerialName(value = "hourly_intervals")
     val hourlyIntervals: kotlin.collections.List<StatInterval>
 
-)
+) {
+
+
+}
 

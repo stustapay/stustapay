@@ -15,6 +15,7 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.UserTagSecret
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -23,14 +24,14 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param registrationUuid 
+ * @param userTagSecret 
  */
 @Serializable
 
-data class TerminalRegistrationPayload (
+data class TerminalUserTagSecrets (
 
-    @SerialName(value = "registration_uuid")
-    val registrationUuid: kotlin.String
+    @SerialName(value = "user_tag_secret")
+    val userTagSecret: UserTagSecret
 
 ) {
 

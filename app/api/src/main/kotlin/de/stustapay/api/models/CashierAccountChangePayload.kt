@@ -36,5 +36,8 @@ data class CashierAccountChangePayload (
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double
 
-)
+) {
+
+
+}
 

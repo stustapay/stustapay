@@ -40,5 +40,8 @@ data class RegisterStockUpPayload (
     @SerialName(value = "register_stocking_id")
     val registerStockingId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

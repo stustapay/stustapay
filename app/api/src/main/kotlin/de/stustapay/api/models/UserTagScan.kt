@@ -36,5 +36,8 @@ data class UserTagScan (
     @SerialName(value = "tag_pin")
     val tagPin: kotlin.String
 
-)
+) {
+
+
+}
 

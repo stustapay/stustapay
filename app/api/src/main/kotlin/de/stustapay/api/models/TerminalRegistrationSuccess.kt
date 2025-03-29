@@ -37,5 +37,8 @@ data class TerminalRegistrationSuccess (
     @SerialName(value = "token")
     val token: kotlin.String
 
-)
+) {
+
+
+}
 

@@ -95,5 +95,8 @@ data class Order (
     @SerialName(value = "customer_tag_uid_hex")
     val customerTagUidHex: kotlin.String?
 
-)
+) {
+
+
+}
 

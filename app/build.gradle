@@ -4,25 +4,37 @@ import org.apache.tools.ant.filters.BaseParamFilterReader
 
 buildscript {
     ext {
-        compose_ui_version = '1.4.3'
-        camerax_version = '1.2.3'
-        ktor_version = '2.3.11'
-        protobuf_version = '3.23.4'
-        hilt_version = '2.47'
-        hilt_android_version = '1.0.0'
-        lifecycle_version = '2.6.1'
+        kotlin_version = '2.1.10'
+        compose_ui_version = '1.7.8'
+        camerax_version = '1.4.1'
+        ktor_version = '3.1.1'
+        protobuf_version = '4.29.3'
+        hilt_version = '2.55'
+        hilt_android_version = '1.2.0'
+        lifecycle_version = '2.8.7'
+        bignum_version = '0.3.10'
+        core_ktx_version = '1.15.0'
+        preference_ktx_version = '1.2.1'
+        navigation_compose_version = '2.8.8'
+        activity_compose_version = '1.10.1'
+        serialization_json_version = '1.8.0'
+        targetJavaVersion = JavaVersion.VERSION_17
     }
 }
 
 plugins {
-    id 'com.android.application' version '8.0.2' apply false
-    id 'com.android.library' version '8.0.2' apply false
-    id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.10' apply false
-    id "com.google.dagger.hilt.android" version "2.44" apply false
-    id "com.google.protobuf" version "0.9.1" apply false
-    id "org.openapi.generator" version "7.1.0"
+    id 'com.android.application' version '8.8.2' apply false
+    id 'com.android.library' version '8.8.2' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.25' apply false
+    id "org.jetbrains.kotlin.plugin.compose" version "$kotlin_version" apply false
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.25' apply false
+    // https://github.com/google/ksp/releases  must be the same as plugin.compose version!
+    id 'com.google.devtools.ksp' version "$kotlin_version-1.0.31" apply false
+    id "com.google.dagger.hilt.android" version "2.51.1" apply false
+    id "com.google.protobuf" version "0.9.4" apply false
+    id "org.openapi.generator" version "7.12.0"
 }
+
 
 tasks.register('api') {
     dependsOn tasks.modApi
@@ -74,8 +86,19 @@ tasks.register('modApi') {
             filter(
                     ReplaceFilter,
                     find: 'dependencies {\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version\"\n',
-                    replace: 'dependencies {\n    implementation \"com.ionspin.kotlin:bignum:0.3.9\"\n    implementation \"com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.2\"\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version\"\n'
+                    replace: 'dependencies {\n    implementation \"com.ionspin.kotlin:bignum:$bignum_version\"\n    implementation \"com.ionspin.kotlin:bignum-serialization-kotlinx:$bignum_version\"\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version\"\n'
             )
+            filter { String line ->
+                // we define this globally, and versions have to match. otherwise the api client has a different ktor version...
+                line.replaceFirst("^\\s*(ext\\.ktor_version|ext\\.kotlin_version)\\s*=.*\$", "")
+            }
+            filter { String line ->
+                // don't hardcode the version, use our global setting
+                line.replaceFirst(
+                        "implementation ['\"]org.jetbrains.kotlinx:kotlinx-serialization-json:[^\"']+[\"']",
+                        'implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:\\$serialization_json_version"'
+                )
+            }
         }
     }
 }
@@ -85,9 +108,12 @@ tasks.register('genApi', GenerateTask) {
     generatorName.set("kotlin")
     inputSpec.set("$projectDir/../api/terminalserver.json")
     outputDir.set("$projectDir/build/generated/api")
+    generateApiTests.set(false)
+    generateModelTests.set(false)
     skipValidateSpec.set(true)
     generateApiDocumentation.set(false)
     generateModelDocumentation.set(false)
+    typeMappings.put("AnyType", "kotlin.Unit")   // otherwise it would be kotlin.Any
     configOptions.set([library             : "jvm-ktor",
                        serializationLibrary: "kotlinx_serialization",
                        packageName         : "de.stustapay.api",
@@ -144,4 +170,17 @@ final class ReplaceFilter extends BaseParamFilterReader {
 
         this.contents = this.contents.replace(this.find, this.replace)
     }
+}
+
+
+ext.getSSPVersionCode = { ->
+    def commitCount = "git -C ${rootDir} rev-list --count HEAD".execute().text.trim()
+
+    return commitCount.toInteger()
+}
+
+ext.getSSPVersionName = { ->
+    def versionDesc = "git -C ${rootDir} describe --tags --dirty --always".execute().text.trim()
+
+    return versionDesc
 }

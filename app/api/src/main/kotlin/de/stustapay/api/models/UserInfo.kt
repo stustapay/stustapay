@@ -35,7 +35,6 @@ import kotlinx.serialization.Contextual
  * @param description 
  * @param userTagId 
  * @param transportAccountId 
- * @param cashierAccountId 
  * @param cashRegisterId 
  * @param cashRegisterName 
  * @param cashDrawerBalance 
@@ -78,9 +77,6 @@ data class UserInfo (
     @SerialName(value = "transport_account_id")
     val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
-    @SerialName(value = "cashier_account_id")
-    val cashierAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
-
     @SerialName(value = "cash_register_id")
     val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
@@ -93,5 +89,8 @@ data class UserInfo (
     @Contextual @SerialName(value = "transport_account_balance")
     val transportAccountBalance: kotlin.Double? = null
 
-)
+) {
+
+
+}
 

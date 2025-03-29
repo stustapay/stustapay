@@ -57,5 +57,8 @@ data class PendingLineItem (
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double
 
-)
+) {
+
+
+}
 

@@ -39,6 +39,7 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * GET /customer/{customer_tag_uid}
         * Obtain a customer by tag uid
         * 
          * @param customerTagUid  
@@ -72,6 +73,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * GET /customer/{customer_tag_uid}/orders
         * Obtain all orders of a customer by tag uid
         * 
          * @param customerTagUid  
@@ -105,12 +107,14 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /customer/switch_tag
         * Switch Tag
         * 
          * @param switchTagPayload  
-         * @return void
+         * @return kotlin.Unit
         */
-        open suspend fun switchTag(switchTagPayload: SwitchTagPayload): HttpResponse<Unit> {
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun switchTag(switchTagPayload: SwitchTagPayload): HttpResponse<kotlin.Unit> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 

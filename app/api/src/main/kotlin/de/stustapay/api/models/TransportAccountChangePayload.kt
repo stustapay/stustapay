@@ -36,5 +36,8 @@ data class TransportAccountChangePayload (
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double
 
-)
+) {
+
+
+}
 

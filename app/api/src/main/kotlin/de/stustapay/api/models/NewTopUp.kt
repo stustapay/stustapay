@@ -45,5 +45,8 @@ data class NewTopUp (
     @SerialName(value = "customer_tag_uid")
     val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

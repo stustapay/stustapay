@@ -36,5 +36,8 @@ data class TransferCashRegisterPayload (
     @SerialName(value = "target_cashier_tag_uid")
     val targetCashierTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

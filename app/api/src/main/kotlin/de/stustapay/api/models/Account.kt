@@ -83,5 +83,8 @@ data class Account (
     @SerialName(value = "user_tag_comment")
     val userTagComment: kotlin.String? = null
 
-)
+) {
+
+
+}
 

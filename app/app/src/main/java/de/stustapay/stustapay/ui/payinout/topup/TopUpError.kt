@@ -17,19 +17,13 @@ fun TopUpError(
     viewModel: TopUpViewModel
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val actuallyOk by viewModel.actuallyOk.collectAsStateWithLifecycle()
 
     ErrorScreen(
         modifier = Modifier.fillMaxSize(),
-        onDismiss = onDismiss,
-        actuallyOk = actuallyOk,
+        onDismiss = onDismiss
     ) {
-        if (actuallyOk) {
-            Text(text = stringResource(R.string.success), fontSize = 30.sp)
-        }
-        else {
-            Text(text = stringResource(R.string.error), fontSize = 30.sp)
-        }
+        Text(text = stringResource(R.string.error), fontSize = 30.sp)
+
         Text(status, fontSize = 24.sp)
     }
 }

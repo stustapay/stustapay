@@ -37,5 +37,8 @@ data class LoginPayload (
     @SerialName(value = "user_role_id")
     val userRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

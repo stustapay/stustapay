@@ -52,5 +52,8 @@ data class PendingPayOut (
     @Contextual @SerialName(value = "new_balance")
     val newBalance: kotlin.Double
 
-)
+) {
+
+
+}
 

@@ -42,5 +42,8 @@ data class NewTicketSale (
     @Contextual @SerialName(value = "payment_method")
     val paymentMethod: PaymentMethod?
 
-)
+) {
+
+
+}
 

@@ -20,6 +20,10 @@ class TicketRemoteDataSource @Inject constructor(
         return terminalApiAccessor.execute { it.order()?.checkTicketSale(newTicketSale) }
     }
 
+    suspend fun registerTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
+        return terminalApiAccessor.execute { it.order()?.registerPendingTicketSale(newTicketSale) }
+    }
+
     suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
         return terminalApiAccessor.execute { it.order()?.bookTicketSale(newTicketSale) }
     }

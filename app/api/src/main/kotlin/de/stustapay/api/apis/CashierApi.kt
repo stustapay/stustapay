@@ -40,12 +40,14 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * POST /change-cash-register-balance
         * update the balance of a cash register by transferring money from / to a orga transport account
         * 
          * @param cashierAccountChangePayload  
-         * @return void
+         * @return kotlin.Unit
         */
-        open suspend fun changeCashRegisterBalance(cashierAccountChangePayload: CashierAccountChangePayload): HttpResponse<Unit> {
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun changeCashRegisterBalance(cashierAccountChangePayload: CashierAccountChangePayload): HttpResponse<kotlin.Unit> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
@@ -71,12 +73,14 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /change-transport-register-balance
         * update the balance of a transport account by transferring money from / to the cash vault
         * 
          * @param transportAccountChangePayload  
-         * @return void
+         * @return kotlin.Unit
         */
-        open suspend fun changeTransportAccountBalance(transportAccountChangePayload: TransportAccountChangePayload): HttpResponse<Unit> {
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun changeTransportAccountBalance(transportAccountChangePayload: TransportAccountChangePayload): HttpResponse<kotlin.Unit> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
@@ -102,6 +106,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /transfer-cash-register
         * transfer a cash register between two cashiers
         * 
          * @param transferCashRegisterPayload  

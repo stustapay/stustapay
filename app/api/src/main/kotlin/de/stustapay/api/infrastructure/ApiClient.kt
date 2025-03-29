@@ -48,8 +48,8 @@ open class ApiClient(
     }
 
     companion object {
-          const val BASE_URL = "http://localhost"
-          protected val UNSAFE_HEADERS = listOf(HttpHeaders.ContentType)
+          const val BASE_URL: String = "http://localhost"
+          protected val UNSAFE_HEADERS: List<String> = listOf(HttpHeaders.ContentType)
     }
 
     /**

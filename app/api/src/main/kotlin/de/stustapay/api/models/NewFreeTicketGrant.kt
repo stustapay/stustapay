@@ -40,5 +40,8 @@ data class NewFreeTicketGrant (
     @SerialName(value = "initial_voucher_amount")
     val initialVoucherAmount: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = com.ionspin.kotlin.bignum.integer.BigInteger(0)
 
-)
+) {
+
+
+}
 

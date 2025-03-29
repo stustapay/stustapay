@@ -30,6 +30,8 @@ import kotlinx.serialization.Contextual
  * @param sessionUuid 
  * @param registrationUuid 
  * @param description 
+ * @param activeUserId 
+ * @param activeUserRoleId 
  */
 @Serializable
 
@@ -54,7 +56,16 @@ data class Terminal (
     val registrationUuid: java.util.UUID?,
 
     @SerialName(value = "description")
-    val description: kotlin.String? = null
+    val description: kotlin.String? = null,
 
-)
+    @SerialName(value = "active_user_id")
+    val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+
+    @SerialName(value = "active_user_role_id")
+    val activeUserRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
+
+) {
+
+
+}
 

@@ -181,17 +181,17 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
             label = R.string.root_item_sale
             amount = -order.totalPrice
         }
-        OrderType.cancelSale -> {
+        OrderType.cancel_sale -> {
             icon = Icons.Filled.Clear
             label = R.string.common_action_cancel
             amount = -order.totalPrice
         }
-        OrderType.topUp -> {
+        OrderType.top_up -> {
             icon = Icons.Filled.KeyboardArrowUp
             label = R.string.topup
             amount = order.totalPrice
         }
-        OrderType.payOut -> {
+        OrderType.pay_out -> {
             icon = Icons.Filled.KeyboardArrowDown
             label = R.string.payout
             amount = order.totalPrice
@@ -201,8 +201,8 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
             label = R.string.root_item_ticket
             amount = -order.totalPrice
         }
-        OrderType.moneyTransfer -> {}
-        OrderType.moneyTransferImbalance -> {}
+        OrderType.money_transfer -> {}
+        OrderType.money_transfer_imbalance -> {}
     }
 
     Row(

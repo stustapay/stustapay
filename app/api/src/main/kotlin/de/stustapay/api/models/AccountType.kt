@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: `private`,saleExit,cashEntry,cashExit,cashTopupSource,cashImbalance,cashVault,sumupEntry,sumupOnlineEntry,transport,cashier,voucherCreate,donationExit,sepaExit
+ * Values: `private`,sale_exit,cash_entry,cash_exit,cash_topup_source,cash_imbalance,cash_vault,sumup_entry,sumup_online_entry,transport,voucher_create,donation_exit,sepa_exit,cash_register
  */
 @Serializable
 enum class AccountType(val value: kotlin.String) {
@@ -31,43 +31,43 @@ enum class AccountType(val value: kotlin.String) {
     `private`("private"),
 
     @SerialName(value = "sale_exit")
-    saleExit("sale_exit"),
+    sale_exit("sale_exit"),
 
     @SerialName(value = "cash_entry")
-    cashEntry("cash_entry"),
+    cash_entry("cash_entry"),
 
     @SerialName(value = "cash_exit")
-    cashExit("cash_exit"),
+    cash_exit("cash_exit"),
 
     @SerialName(value = "cash_topup_source")
-    cashTopupSource("cash_topup_source"),
+    cash_topup_source("cash_topup_source"),
 
     @SerialName(value = "cash_imbalance")
-    cashImbalance("cash_imbalance"),
+    cash_imbalance("cash_imbalance"),
 
     @SerialName(value = "cash_vault")
-    cashVault("cash_vault"),
+    cash_vault("cash_vault"),
 
     @SerialName(value = "sumup_entry")
-    sumupEntry("sumup_entry"),
+    sumup_entry("sumup_entry"),
 
     @SerialName(value = "sumup_online_entry")
-    sumupOnlineEntry("sumup_online_entry"),
+    sumup_online_entry("sumup_online_entry"),
 
     @SerialName(value = "transport")
     transport("transport"),
 
-    @SerialName(value = "cashier")
-    cashier("cashier"),
-
     @SerialName(value = "voucher_create")
-    voucherCreate("voucher_create"),
+    voucher_create("voucher_create"),
 
     @SerialName(value = "donation_exit")
-    donationExit("donation_exit"),
+    donation_exit("donation_exit"),
 
     @SerialName(value = "sepa_exit")
-    sepaExit("sepa_exit");
+    sepa_exit("sepa_exit"),
+
+    @SerialName(value = "cash_register")
+    cash_register("cash_register");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use

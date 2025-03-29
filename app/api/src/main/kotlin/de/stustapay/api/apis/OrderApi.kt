@@ -51,6 +51,7 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * POST /order/book-payout
         * finish the pay out and book the transactions
         * 
          * @param newPayOut  
@@ -83,6 +84,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/book-sale
         * finish the sale and book the transactions
         * 
          * @param newSale  
@@ -115,6 +117,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/book-ticket-sale
         * finish a ticket sale and book the transactions
         * 
          * @param newTicketSale  
@@ -147,6 +150,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/book-topup
         * finish the top up and book the transactions
         * 
          * @param newTopUp  
@@ -179,12 +183,14 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/{order_id}/cancel
         * cancel information about an order
         * 
          * @param orderId  
-         * @return void
+         * @return kotlin.Unit
         */
-        open suspend fun cancelOrder(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Unit> {
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun cancelOrder(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<kotlin.Unit> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
@@ -211,6 +217,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/check-payout
         * check if a pay out is valid
         * 
          * @param newPayOut  
@@ -243,6 +250,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/check-sale
         * check if a sale is valid
         * 
          * @param newSale  
@@ -275,6 +283,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/check-ticket-sale
         * check if a ticket sale is valid
         * 
          * @param newTicketSale  
@@ -307,6 +316,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/check-ticket-scan
         * check if a ticket sale is valid
         * 
          * @param newTicketScan  
@@ -339,6 +349,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/check-topup
         * check if a top up is valid
         * 
          * @param newTopUp  
@@ -371,6 +382,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * GET /order
         * list all orders
         * List all the order of the currently logged in Cashier
          * @return kotlin.collections.List<Order>
@@ -403,6 +415,73 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/register-pending-ticket-sale
+        * Register a pending topup with the server where the sumup payment is still pending
+        * 
+         * @param newTicketSale  
+         * @return CompletedTicketSale
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun registerPendingTicketSale(newTicketSale: NewTicketSale): HttpResponse<CompletedTicketSale> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = newTicketSale
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/register-pending-ticket-sale",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * POST /order/register-pending-topup
+        * Register a pending topup with the server where the sumup payment is still pending
+        * 
+         * @param newTopUp  
+         * @return CompletedTopUp
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun registerPendingTopup(newTopUp: NewTopUp): HttpResponse<CompletedTopUp> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = newTopUp
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/register-pending-topup",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * GET /order/{order_id}
         * get information about an order
         * 
          * @param orderId  

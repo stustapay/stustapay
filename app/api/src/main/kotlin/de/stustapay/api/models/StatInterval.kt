@@ -44,5 +44,8 @@ data class StatInterval (
     @Contextual @SerialName(value = "revenue")
     val revenue: kotlin.Double
 
-)
+) {
+
+
+}
 

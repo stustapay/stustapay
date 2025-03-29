@@ -56,5 +56,8 @@ data class UserTagHistoryEntry (
     @SerialName(value = "comment")
     val comment: kotlin.String? = null
 
-)
+) {
+
+
+}
 

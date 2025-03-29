@@ -36,5 +36,8 @@ data class GrantVoucherPayload (
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

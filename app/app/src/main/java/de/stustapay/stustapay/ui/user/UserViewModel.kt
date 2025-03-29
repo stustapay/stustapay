@@ -73,7 +73,7 @@ class UserViewModel @Inject constructor(
 
     val availableRoles = terminalConfigRepository.terminalConfigState.map { state ->
         if (state is TerminalConfigState.Success) {
-            state.config.till?.availableRoles.orEmpty()
+            state.config.availableRoles
         } else {
             listOf()
         }

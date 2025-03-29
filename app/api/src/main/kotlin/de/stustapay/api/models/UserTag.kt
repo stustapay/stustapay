@@ -32,5 +32,8 @@ data class UserTag (
     @SerialName(value = "uid")
     val uid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

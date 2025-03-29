@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: cash,sumup,tag,sumupOnline
+ * Values: cash,sumup,tag,sumup_online
  */
 @Serializable
 enum class PaymentMethod(val value: kotlin.String) {
@@ -37,7 +37,7 @@ enum class PaymentMethod(val value: kotlin.String) {
     tag("tag"),
 
     @SerialName(value = "sumup_online")
-    sumupOnline("sumup_online");
+    sumup_online("sumup_online");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use

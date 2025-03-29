@@ -33,5 +33,8 @@ data class NewTicketScan (
     @SerialName(value = "customer_tags")
     val customerTags: kotlin.collections.List<UserTagScan>
 
-)
+) {
+
+
+}
 

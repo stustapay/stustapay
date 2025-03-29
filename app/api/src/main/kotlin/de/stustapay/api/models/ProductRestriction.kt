@@ -22,16 +22,16 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: _16,_18
+ * Values: under_16,under_18
  */
 @Serializable
 enum class ProductRestriction(val value: kotlin.String) {
 
     @SerialName(value = "under_16")
-    _16("under_16"),
+    under_16("under_16"),
 
     @SerialName(value = "under_18")
-    _18("under_18");
+    under_18("under_18");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use

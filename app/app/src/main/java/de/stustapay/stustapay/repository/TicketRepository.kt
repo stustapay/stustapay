@@ -22,6 +22,10 @@ class TicketRepository @Inject constructor(
         return ticketRemoteDataSource.checkTicketSale(newTicketSale)
     }
 
+    suspend fun registerTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
+        return ticketRemoteDataSource.registerTicketSale(newTicketSale)
+    }
+
     suspend fun bookTicketSale(newTicketSale: NewTicketSale): Response<CompletedTicketSale> {
         return ticketRemoteDataSource.bookTicketSale(newTicketSale)
     }

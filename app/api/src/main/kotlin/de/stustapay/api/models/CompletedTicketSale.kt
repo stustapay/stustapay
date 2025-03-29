@@ -30,7 +30,6 @@ import kotlinx.serialization.Contextual
  * @param paymentMethod 
  * @param lineItems 
  * @param scannedTickets 
- * @param id 
  * @param bookedAt 
  * @param customerAccountId 
  * @param cashierId 
@@ -54,14 +53,11 @@ data class CompletedTicketSale (
     @SerialName(value = "scanned_tickets")
     val scannedTickets: kotlin.collections.List<TicketScanResultEntry>,
 
-    @SerialName(value = "id")
-    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
-
     @Contextual @SerialName(value = "booked_at")
     val bookedAt: java.time.OffsetDateTime,
 
     @SerialName(value = "customer_account_id")
-    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "cashier_id")
     val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
@@ -75,5 +71,8 @@ data class CompletedTicketSale (
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double
 
-)
+) {
+
+
+}
 

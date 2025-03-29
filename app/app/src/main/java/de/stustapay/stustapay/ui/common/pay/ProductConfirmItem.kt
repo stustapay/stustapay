@@ -35,7 +35,7 @@ fun PreviewProductConfirmLineItem() {
                 nodeId = 0.toBigInteger(),
                 restrictions = listOf(),
                 taxRateId = 0.toBigInteger(),
-                type = ProductType.userDefined
+                type = ProductType.user_defined
             ),
             taxName = "eust",
             productPrice = 13.37,

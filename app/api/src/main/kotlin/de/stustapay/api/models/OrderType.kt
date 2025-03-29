@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: sale,cancelSale,topUp,payOut,ticket,moneyTransfer,moneyTransferImbalance
+ * Values: sale,cancel_sale,top_up,pay_out,ticket,money_transfer,money_transfer_imbalance
  */
 @Serializable
 enum class OrderType(val value: kotlin.String) {
@@ -31,22 +31,22 @@ enum class OrderType(val value: kotlin.String) {
     sale("sale"),
 
     @SerialName(value = "cancel_sale")
-    cancelSale("cancel_sale"),
+    cancel_sale("cancel_sale"),
 
     @SerialName(value = "top_up")
-    topUp("top_up"),
+    top_up("top_up"),
 
     @SerialName(value = "pay_out")
-    payOut("pay_out"),
+    pay_out("pay_out"),
 
     @SerialName(value = "ticket")
     ticket("ticket"),
 
     @SerialName(value = "money_transfer")
-    moneyTransfer("money_transfer"),
+    money_transfer("money_transfer"),
 
     @SerialName(value = "money_transfer_imbalance")
-    moneyTransferImbalance("money_transfer_imbalance");
+    money_transfer_imbalance("money_transfer_imbalance");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use

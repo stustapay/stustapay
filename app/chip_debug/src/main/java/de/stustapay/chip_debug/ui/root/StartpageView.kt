@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,7 +46,7 @@ fun StartpageView(
 ) {
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val scope = rememberCoroutineScope()
-    val activity = LocalContext.current as Activity
+    val activity = LocalActivity.current!!
 
     val navigateToHook = fun(dest: NavDest): Unit {
         navigateTo(dest)

@@ -42,6 +42,7 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * GET /config
         * obtain the current terminal config
         * 
          * @return TerminalConfig
@@ -74,11 +75,13 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * GET /health
         * health check endpoint
         * 
-         * @return void
+         * @return kotlin.Unit
         */
-        open suspend fun health(): HttpResponse<Unit> {
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun health(): HttpResponse<kotlin.Unit> {
 
             val localVariableAuthNames = listOf<String>()
 
@@ -105,6 +108,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * GET /cash-register-stockings
         * obtain the list of available cash register stockings
         * 
          * @return kotlin.collections.List<CashRegisterStocking>
@@ -137,6 +141,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * GET /cash-registers
         * list all cash registers
         * 
          * @param hideAssigned  (optional, default to true)
@@ -171,12 +176,14 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /stock-up-cash-register
         * stock up a cash register
         * 
          * @param registerStockUpPayload  
-         * @return void
+         * @return kotlin.Unit
         */
-        open suspend fun stockUpCashRegister(registerStockUpPayload: RegisterStockUpPayload): HttpResponse<Unit> {
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun stockUpCashRegister(registerStockUpPayload: RegisterStockUpPayload): HttpResponse<kotlin.Unit> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
@@ -202,6 +209,7 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /user-info
         * Obtain information about a user tag
         * 
          * @param userInfoPayload  

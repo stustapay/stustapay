@@ -38,6 +38,7 @@ import io.ktor.http.ParametersBuilder
     ) {
 
         /**
+        * POST /mgmtrevenue-stats
         * Get revenue statistics for the current node
         * 
          * @param timeseriesStatsQuery  

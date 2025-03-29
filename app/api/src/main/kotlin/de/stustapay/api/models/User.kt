@@ -33,7 +33,6 @@ import kotlinx.serialization.Contextual
  * @param description 
  * @param userTagId 
  * @param transportAccountId 
- * @param cashierAccountId 
  */
 @Serializable
 
@@ -67,10 +66,10 @@ data class User (
     val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "transport_account_id")
-    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
 
-    @SerialName(value = "cashier_account_id")
-    val cashierAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
+) {
 
-)
+
+}
 

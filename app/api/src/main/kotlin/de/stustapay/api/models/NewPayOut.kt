@@ -40,5 +40,8 @@ data class NewPayOut (
     @Contextual @SerialName(value = "amount")
     val amount: kotlin.Double? = null
 
-)
+) {
+
+
+}
 

@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: discount,topup,payout,moneyTransfer,imbalance,userDefined,ticket
+ * Values: discount,topup,payout,money_transfer,imbalance,user_defined,ticket
  */
 @Serializable
 enum class ProductType(val value: kotlin.String) {
@@ -37,13 +37,13 @@ enum class ProductType(val value: kotlin.String) {
     payout("payout"),
 
     @SerialName(value = "money_transfer")
-    moneyTransfer("money_transfer"),
+    money_transfer("money_transfer"),
 
     @SerialName(value = "imbalance")
     imbalance("imbalance"),
 
     @SerialName(value = "user_defined")
-    userDefined("user_defined"),
+    user_defined("user_defined"),
 
     @SerialName(value = "ticket")
     ticket("ticket");

@@ -16,6 +16,10 @@ class TopUpRepository @Inject constructor(
         return TopUpRemoteDataSource.checkTopUp(newTopUp)
     }
 
+    suspend fun registerTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
+        return TopUpRemoteDataSource.registerTopUp(newTopUp)
+    }
+
     suspend fun bookTopUp(newTopUp: NewTopUp): Response<CompletedTopUp> {
         return TopUpRemoteDataSource.bookTopUp(newTopUp)
     }

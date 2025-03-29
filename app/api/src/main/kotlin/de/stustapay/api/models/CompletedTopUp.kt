@@ -69,5 +69,8 @@ data class CompletedTopUp (
     @SerialName(value = "till_id")
     val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger
 
-)
+) {
+
+
+}
 

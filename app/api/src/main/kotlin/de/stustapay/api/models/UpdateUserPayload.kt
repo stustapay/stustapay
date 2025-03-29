@@ -36,5 +36,8 @@ data class UpdateUserPayload (
     @SerialName(value = "role_ids")
     val roleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>
 
-)
+) {
+
+
+}
 

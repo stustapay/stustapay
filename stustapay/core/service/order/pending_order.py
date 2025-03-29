@@ -141,9 +141,10 @@ async def make_ticket_sale_bookings(
         ] = total_ticket_price
         for customer_account_id in customers.keys():
             topup_amount = customers[customer_account_id][0]
-            prepared_bookings[
-                BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer_account_id)
-            ] = topup_amount
+            if topup_amount > 0:
+                prepared_bookings[
+                    BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer_account_id)
+                ] = topup_amount
     elif ticket_sale.payment_method == PaymentMethod.sumup:
         prepared_bookings[
             BookingIdentifier(source_account_id=sumup_entry_acc.id, target_account_id=sale_exit_acc.id)

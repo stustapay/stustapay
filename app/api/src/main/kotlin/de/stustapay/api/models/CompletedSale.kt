@@ -99,5 +99,8 @@ data class CompletedSale (
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double
 
-)
+) {
+
+
+}
 

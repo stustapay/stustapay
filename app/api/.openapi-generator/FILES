@@ -63,8 +63,9 @@ src/main/kotlin/de/stustapay/api/models/TerminalButton.kt
 src/main/kotlin/de/stustapay/api/models/TerminalConfig.kt
 src/main/kotlin/de/stustapay/api/models/TerminalRegistrationPayload.kt
 src/main/kotlin/de/stustapay/api/models/TerminalRegistrationSuccess.kt
-src/main/kotlin/de/stustapay/api/models/TerminalSecrets.kt
+src/main/kotlin/de/stustapay/api/models/TerminalSumupSecrets.kt
 src/main/kotlin/de/stustapay/api/models/TerminalTillConfig.kt
+src/main/kotlin/de/stustapay/api/models/TerminalUserTagSecrets.kt
 src/main/kotlin/de/stustapay/api/models/Ticket.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResult.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResultEntry.kt

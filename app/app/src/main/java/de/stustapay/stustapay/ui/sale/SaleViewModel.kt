@@ -317,8 +317,11 @@ class SaleViewModel @Inject constructor(
             val payment = ECPayment(
                 id = sale.uuid.toString(),
                 amount = BigDecimal(sale.totalPrice),
+                // we don't have a NFC tag for direct card sales.
                 tag = NfcTag(BigInteger(0), null),
             )
+
+            // TODO: register pending sale for guaranteed sumup processing
 
             _status.update { "Starting EC transaction..." }
 

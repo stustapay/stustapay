@@ -40,5 +40,8 @@ data class Button (
     @Contextual @SerialName(value = "price")
     val price: kotlin.Double? = null
 
-)
+) {
+
+
+}
 

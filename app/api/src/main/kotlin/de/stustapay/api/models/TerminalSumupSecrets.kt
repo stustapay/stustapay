@@ -15,7 +15,6 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.UserTagSecret
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -27,11 +26,10 @@ import kotlinx.serialization.Contextual
  * @param sumupAffiliateKey 
  * @param sumupApiKey 
  * @param sumupApiKeyExpiresAt 
- * @param userTagSecret 
  */
 @Serializable
 
-data class TerminalSecrets (
+data class TerminalSumupSecrets (
 
     @SerialName(value = "sumup_affiliate_key")
     val sumupAffiliateKey: kotlin.String,
@@ -40,10 +38,10 @@ data class TerminalSecrets (
     val sumupApiKey: kotlin.String,
 
     @Contextual @SerialName(value = "sumup_api_key_expires_at")
-    val sumupApiKeyExpiresAt: java.time.OffsetDateTime?,
+    val sumupApiKeyExpiresAt: java.time.OffsetDateTime?
 
-    @SerialName(value = "user_tag_secret")
-    val userTagSecret: UserTagSecret
+) {
 
-)
+
+}
 

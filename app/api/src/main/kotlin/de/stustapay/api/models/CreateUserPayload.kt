@@ -52,5 +52,8 @@ data class CreateUserPayload (
     @SerialName(value = "description")
     val description: kotlin.String? = null
 
-)
+) {
+
+
+}
 

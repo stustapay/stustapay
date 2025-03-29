@@ -15,9 +15,8 @@
 
 package de.stustapay.api.models
 
-
-import de.stustapay.api.models.TerminalSecrets
-import de.stustapay.api.models.UserRole
+import de.stustapay.api.models.TerminalButton
+import de.stustapay.api.models.TerminalSumupSecrets
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -29,9 +28,7 @@ import kotlinx.serialization.Contextual
  * @param id 
  * @param name 
  * @param description 
- * @param eventName 
  * @param profileName 
- * @param userPrivileges 
  * @param cashRegisterId 
  * @param cashRegisterName 
  * @param allowTopUp 
@@ -41,9 +38,7 @@ import kotlinx.serialization.Contextual
  * @param enableCashPayment 
  * @param enableCardPayment 
  * @param buttons 
- * @param secrets 
- * @param activeUserId 
- * @param availableRoles 
+ * @param sumupSecrets 
  */
 @Serializable
 
@@ -58,14 +53,8 @@ data class TerminalTillConfig (
     @SerialName(value = "description")
     val description: kotlin.String?,
 
-    @SerialName(value = "event_name")
-    val eventName: kotlin.String,
-
     @SerialName(value = "profile_name")
     val profileName: kotlin.String,
-
-    @SerialName(value = "user_privileges")
-    val userPrivileges: kotlin.collections.List<Privilege>?,
 
     @SerialName(value = "cash_register_id")
     val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
@@ -94,14 +83,11 @@ data class TerminalTillConfig (
     @SerialName(value = "buttons")
     val buttons: kotlin.collections.List<TerminalButton>?,
 
-    @SerialName(value = "secrets")
-    val secrets: TerminalSecrets?,
+    @SerialName(value = "sumup_secrets")
+    val sumupSecrets: TerminalSumupSecrets?
 
-    @SerialName(value = "active_user_id")
-    val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
+) {
 
-    @SerialName(value = "available_roles")
-    val availableRoles: kotlin.collections.List<UserRole>
 
-)
+}
 

@@ -60,5 +60,8 @@ data class TerminalButton (
     @Contextual @SerialName(value = "price_per_voucher")
     val pricePerVoucher: kotlin.Double? = null
 
-)
+) {
+
+
+}
 
