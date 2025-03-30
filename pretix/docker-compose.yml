@@ -1,12 +1,46 @@
 services:
-  pretix:
-    image: pretix/standalone:stable
+  app:
+    container_name: pretix_app
     build:
       dockerfile: Dockerfile
       context: .
-    container_name: pretix
+    restart: always
+    depends_on:
+      - database
+      - cache
     volumes:
+      - pretix_data:/data
       - ./pretix.cfg:/etc/pretix/pretix.cfg
-      - /var/run/redis:/var/run/redis
-      - ./data:/data
-    network_mode: host
+    ports:
+      - "8000:80"
+    networks:
+      - backend
+
+  database:
+    image: postgres:17-alpine3.20
+    container_name: database
+    environment:
+      - POSTGRES_USER=pretix
+      - POSTGRES_PASSWORD=pretix
+      - POSTGRES_DBNAME=pretix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  cache:
+    image: redis:alpine3.20
+    container_name: redis
+    restart: always
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local
+  pretix_data:
+    driver: local
+
+networks:
+  backend:
+    external: false

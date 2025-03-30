@@ -10,7 +10,6 @@ To create a new database migration run
 sftkit create-migration <new-migration-name>
 ```
 
-
 ## Reverting a Ticket Sale
 
 For testing (ticket sales, order, ...),
