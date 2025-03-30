@@ -1,0 +1,12 @@
+services:
+  pretix:
+    image: pretix/standalone:stable
+    build:
+      dockerfile: Dockerfile
+      context: .
+    container_name: pretix
+    volumes:
+      - ./pretix.cfg:/etc/pretix/pretix.cfg
+      - /var/run/redis:/var/run/redis
+      - ./data:/data
+    network_mode: host
