@@ -61,6 +61,7 @@ export const UserRoutes = new RouteBuilder("users", "user_management", "user");
 export const UserRoleRoutes = new RouteBuilder("users/roles", "user_management", "user_role");
 export const UserToRoleRoutes = new RouteBuilder("user-to-roles", "node_administration");
 export const TicketRoutes = new RouteBuilder("tickets", "node_administration", "ticket");
+export const ExternalTicketRoutes = new RouteBuilder("tickets/external-tickets", "node_administration", "ticket");
 export const CashierRoutes = new RouteBuilder("cashiers", "node_administration", "user");
 export const ProductRoutes = new RouteBuilder("products", "node_administration", "product");
 export const TaxRateRoutes = new RouteBuilder("tax-rates", "node_administration", "tax_rate");

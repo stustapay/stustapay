@@ -5111,6 +5111,60 @@
         }
       }
     },
+    "/tickets/external-tickets": {
+      "get": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "List External Tickets",
+        "operationId": "list_external_tickets",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalTicket"
+                  },
+                  "title": "Response List External Tickets Tickets External Tickets Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tickets/{ticket_id}": {
       "get": {
         "tags": [
@@ -9250,6 +9304,67 @@
           "products"
         ],
         "title": "EditSaleProducts"
+      },
+      "ExternalTicket": {
+        "properties": {
+          "external_reference": {
+            "type": "string",
+            "title": "External Reference"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "ticket_type": {
+            "$ref": "#/components/schemas/ExternalTicketType"
+          },
+          "external_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Link"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "customer_account_id": {
+            "type": "integer",
+            "title": "Customer Account Id"
+          },
+          "has_checked_in": {
+            "type": "boolean",
+            "title": "Has Checked In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "external_reference",
+          "created_at",
+          "token",
+          "ticket_type",
+          "id",
+          "customer_account_id",
+          "has_checked_in"
+        ],
+        "title": "ExternalTicket"
+      },
+      "ExternalTicketType": {
+        "type": "string",
+        "enum": [
+          "pretix"
+        ],
+        "title": "ExternalTicketType"
       },
       "FindAccountPayload": {
         "properties": {

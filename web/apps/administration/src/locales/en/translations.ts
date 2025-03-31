@@ -264,6 +264,16 @@ export const translations = {
     delete: "Delete ticket",
     deleteDescription: "Confirm ticket deletion",
   },
+  externalTicket: {
+    id: "ID",
+    externalReference: "External reference",
+    type: "Type",
+    createdAt: "Created at",
+    presaleTickets: "Presale tickets",
+    customerAccount: "Customer",
+    hasCheckedIn: "Checked in ",
+    token: "Token",
+  },
   product: {
     name: "Name",
     price: "Price",

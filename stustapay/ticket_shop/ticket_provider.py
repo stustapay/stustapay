@@ -1,3 +1,4 @@
+import enum
 from abc import abstractmethod
 from datetime import datetime
 
@@ -9,9 +10,34 @@ from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node
 
 
-class ExternalTicket(BaseModel):
+class ExternalTicketType(enum.Enum):
+    pretix = "pretix"
+
+
+class CreateExternalTicket(BaseModel):
+    external_reference: str
     created_at: datetime
-    ticket_code: str
+    token: str
+    ticket_type: ExternalTicketType
+    external_link: str | None = None
+
+
+class ExternalTicket(CreateExternalTicket):
+    id: int
+    customer_account_id: int
+    has_checked_in: bool
+
+
+async def fetch_external_tickets(conn: Connection, node: Node) -> list[ExternalTicket]:
+    return await conn.fetch_many(
+        ExternalTicket,
+        "select "
+        "   tv.*, "
+        "   case when a.user_tag_id is null then false else true end as has_checked_in "
+        "from ticket_voucher tv join account a on tv.customer_account_id = a.id "
+        "where tv.node_id = $1",
+        node.event_node_id,
+    )
 
 
 class TicketProvider:
@@ -23,11 +49,11 @@ class TicketProvider:
     async def synchronize_tickets(self):
         pass
 
-    async def store_external_ticket(self, conn: Connection, node: Node, ticket: ExternalTicket):
+    async def store_external_ticket(self, conn: Connection, node: Node, ticket: CreateExternalTicket) -> bool:
         exists_already = await conn.fetchval(
             "select exists(select from ticket_voucher where node_id = $1 and token = $2)",
             node.event_node_id,
-            ticket.ticket_code,
+            ticket.token,
         )
         if not exists_already:
             customer_account_id = await conn.fetchval(
@@ -35,9 +61,14 @@ class TicketProvider:
                 node.event_node_id,
             )
             await conn.execute(
-                "insert into ticket_voucher(node_id, created_at, customer_account_id, token) values ($1, $2, $3, $4)",
+                "insert into ticket_voucher(node_id, created_at, customer_account_id, token, ticket_type, external_link, external_reference) "
+                "   values ($1, $2, $3, $4, $5, $6, $7)",
                 node.event_node_id,
                 ticket.created_at,
                 customer_account_id,
-                ticket.ticket_code,
+                ticket.token,
+                ticket.ticket_type.name,
+                ticket.external_link,
+                ticket.external_reference,
             )
+        return not exists_already
