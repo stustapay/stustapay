@@ -11,7 +11,7 @@ from sftkit.error import ServiceException
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
-from stustapay.ticket_shop.ticket_provider import ExternalTicket, TicketProvider
+from stustapay.ticket_shop.ticket_provider import CreateExternalTicket, ExternalTicketType, TicketProvider
 
 
 class PretixError(ServiceException):
@@ -53,7 +53,9 @@ class PretixApi:
         self.event = event
         self.api_key = api_key
 
-        self.base_url = f"{base_url}/api/v1/organizers/{organizer}/events/{event}"
+        self.base_url = base_url
+        self.api_base_url = f"{base_url}/api/v1/organizers/{organizer}/events/{event}"
+        self.timeout = 30
 
     def _get_pretix_auth_headers(self) -> dict:
         return {
@@ -65,7 +67,7 @@ class PretixApi:
     async def _get(self, url: str, query: dict | None = None) -> dict:
         async with aiohttp.ClientSession(trust_env=True, headers=self._get_pretix_auth_headers()) as session:
             try:
-                async with session.get(url, params=query, timeout=10) as response:
+                async with session.get(url, params=query, timeout=self.timeout) as response:
                     if not response.ok:
                         resp = await response.json()
                         err = _PretixErrorFormat.model_validate(resp)
@@ -80,12 +82,15 @@ class PretixApi:
                 raise PretixError("Pretix API returned an unknown error") from e
 
     async def fetch_orders(self) -> list[PretixOrder]:
-        resp = await self._get(f"{self.base_url}/orders")
+        resp = await self._get(f"{self.api_base_url}/orders")
         validated_resp = PretixListApiResponse.model_validate(resp)
         orders = []
         for item in validated_resp.results:
             orders.append(PretixOrder.model_validate(item))
         return orders
+
+    def get_link_to_order(self, order_code: str) -> str:
+        return f"{self.base_url}/control/event/{self.organizer}/{self.event}/orders/{order_code}"
 
     @classmethod
     def from_event(cls, event_settings: RestrictedEventSettings):
@@ -115,15 +120,22 @@ class PretixTicketProvider(TicketProvider):
         pretix_ticket_product_ids = event_settings.pretix_ticket_ids
         orders = await api.fetch_orders()
         for order in orders:
-            self.logger.debug(f"Importing ticket from pretix order {order.code}")
             async with conn.transaction(isolation="serializable"):
                 for position in order.positions:
                     if position.item in pretix_ticket_product_ids:
-                        await self.store_external_ticket(
+                        imported = await self.store_external_ticket(
                             conn=conn,
                             node=node,
-                            ticket=ExternalTicket(created_at=order.datetime, ticket_code=position.secret),
+                            ticket=CreateExternalTicket(
+                                external_reference=order.code,
+                                created_at=order.datetime,
+                                token=position.secret,
+                                ticket_type=ExternalTicketType.pretix,
+                                external_link=api.get_link_to_order(order.code),
+                            ),
                         )
+                        if imported:
+                            self.logger.debug(f"Imported ticket from pretix order {order.code}")
 
     async def synchronize_tickets(self):
         pretix_enabled = self.config.core.pretix_enabled
@@ -135,7 +147,6 @@ class PretixTicketProvider(TicketProvider):
 
         self.logger.info("Staring periodic job to synchronize pretix tickets")
         while True:
-            await asyncio.sleep(self.config.core.pretix_synchronization_interval.seconds)
             try:
                 async with self.db_pool.acquire() as conn:
                     relevant_node_ids = await conn.fetchval(
@@ -149,6 +160,8 @@ class PretixTicketProvider(TicketProvider):
                         await self._synchronize_tickets_for_node(conn=conn, node=node)
             except Exception:
                 self.logger.exception("process pending orders threw an error")
+
+            await asyncio.sleep(self.config.core.pretix_synchronization_interval.seconds)
 
 
 async def check_connection(event_settings: RestrictedEventSettings):

@@ -871,6 +871,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tickets"],
       }),
+      listExternalTickets: build.query<ListExternalTicketsApiResponse, ListExternalTicketsApiArg>({
+        query: (queryArg) => ({
+          url: `/tickets/external-tickets`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["tickets"],
+      }),
       getTicket: build.query<GetTicketApiResponse, GetTicketApiArg>({
         query: (queryArg) => ({
           url: `/tickets/${queryArg.ticketId}`,
@@ -1749,6 +1758,10 @@ export type CreateTicketApiResponse = /** status 200 Successful Response */ Tick
 export type CreateTicketApiArg = {
   nodeId: number;
   newTicket: NewTicket;
+};
+export type ListExternalTicketsApiResponse = /** status 200 Successful Response */ ExternalTicket[];
+export type ListExternalTicketsApiArg = {
+  nodeId: number;
 };
 export type GetTicketApiResponse = /** status 200 Successful Response */ Ticket;
 export type GetTicketApiArg = {
@@ -2829,6 +2842,17 @@ export type NewTicket = {
   is_locked: boolean;
   initial_top_up_amount: number;
 };
+export type ExternalTicketType = "pretix";
+export type ExternalTicket = {
+  external_reference: string;
+  created_at: string;
+  token: string;
+  ticket_type: ExternalTicketType;
+  external_link?: string | null;
+  id: number;
+  customer_account_id: number;
+  has_checked_in: boolean;
+};
 export type UserTagSecret = {
   key0: string;
   key1: string;
@@ -3464,6 +3488,8 @@ export const {
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,
+  useListExternalTicketsQuery,
+  useLazyListExternalTicketsQuery,
   useGetTicketQuery,
   useLazyGetTicketQuery,
   useUpdateTicketMutation,

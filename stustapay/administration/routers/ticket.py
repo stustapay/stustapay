@@ -4,6 +4,7 @@ from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTicketService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.ticket import NewTicket, Ticket
+from stustapay.ticket_shop.ticket_provider import ExternalTicket
 
 router = APIRouter(
     prefix="/tickets",
@@ -20,6 +21,11 @@ async def list_tickets(token: CurrentAuthToken, ticket_service: ContextTicketSer
 @router.post("", response_model=Ticket)
 async def create_ticket(ticket: NewTicket, token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: int):
     return await ticket_service.create_ticket(token=token, ticket=ticket, node_id=node_id)
+
+
+@router.get("/external-tickets", response_model=list[ExternalTicket])
+async def list_external_tickets(token: CurrentAuthToken, ticket_service: ContextTicketService, node_id: int):
+    return await ticket_service.list_external_tickets(token=token, node_id=node_id)
 
 
 @router.get("/{ticket_id}", response_model=Ticket)

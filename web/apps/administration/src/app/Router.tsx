@@ -11,7 +11,14 @@ import { OrderBon, OrderDetail, SaleEdit, TransactionDetail } from "./routes/ord
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
-import { TicketCreate, TicketDetail, TicketList, TicketUpdate } from "./routes/tickets";
+import {
+  ExternalTicketList,
+  TicketCreate,
+  TicketDetail,
+  TicketList,
+  TicketPageLayout,
+  TicketUpdate,
+} from "./routes/tickets";
 import {
   TillButtonCreate,
   TillButtonList,
@@ -197,7 +204,12 @@ const router = createBrowserRouter([
           },
           {
             path: "tickets",
+            element: <TicketPageLayout />,
             children: [
+              {
+                path: "external-tickets",
+                element: <ExternalTicketList />,
+              },
               {
                 index: true,
                 element: <TicketList />,
