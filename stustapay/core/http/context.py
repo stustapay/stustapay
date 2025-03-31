@@ -24,6 +24,7 @@ from stustapay.core.service.tree.service import TreeService
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService
 from stustapay.core.service.user_tag import UserTagService
+from stustapay.core.service.webhook import WebhookService
 
 
 @dataclass
@@ -49,6 +50,7 @@ class Context:
     tree_service: Optional[TreeService] = None
     sumup_service: Optional[SumUpService] = None
     terminal_service: Optional[TerminalService] = None
+    webhook_service: Optional[WebhookService] = None
     mail_service: Optional[MailService] = None
 
 
@@ -116,6 +118,10 @@ def get_terminal_service(request: Request) -> TerminalService:
     return request.state.context.terminal_service
 
 
+def get_webhook_service(request: Request) -> WebhookService:
+    return request.state.context.webhook_service
+
+
 def get_mail_service(request: Request) -> MailService:
     return request.state.context.mail_service
 
@@ -135,4 +141,5 @@ ContextTseService = Annotated[TseService, Depends(get_tse_service)]
 ContextTreeService = Annotated[TreeService, Depends(get_tree_service)]
 ContextSumUpService = Annotated[SumUpService, Depends(get_sumup_service)]
 ContextTerminalService = Annotated[TerminalService, Depends(get_terminal_service)]
+ContextWebhookService = Annotated[WebhookService, Depends(get_webhook_service)]
 ContextMailService = Annotated[MailService, Depends(get_mail_service)]

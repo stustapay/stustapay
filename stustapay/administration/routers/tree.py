@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextTreeService
+from stustapay.core.http.context import ContextTreeService, ContextWebhookService
 from stustapay.core.schema.tree import (
     NewEvent,
     NewNode,
@@ -12,6 +12,7 @@ from stustapay.core.schema.tree import (
     RestrictedEventSettings,
     UpdateEvent,
 )
+from stustapay.core.service.webhook import WebhookType
 
 router = APIRouter(
     prefix="/tree",
@@ -78,6 +79,22 @@ async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeSe
 @router.post("/events/{node_id}/check-pretix-connection")
 async def check_pretix_connection(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.check_pretix_connection(token=token, node_id=node_id)
+
+
+class GenerateWebhookPayload(BaseModel):
+    webhook_type: WebhookType
+
+
+class GenerateWebhookResponse(BaseModel):
+    webhook_url: str
+
+
+@router.post("/events/{node_id}/generate-webhook-url", response_model=GenerateWebhookResponse)
+async def generate_webhook_url(
+    token: CurrentAuthToken, webhook_service: ContextWebhookService, node_id: int, payload: GenerateWebhookPayload
+):
+    url = await webhook_service.get_webhook_url(token=token, node_id=node_id, webhook_type=payload.webhook_type)
+    return GenerateWebhookResponse(webhook_url=url)
 
 
 @router.post(

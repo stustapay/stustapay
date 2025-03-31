@@ -6923,6 +6923,66 @@
         }
       }
     },
+    "/tree/events/{node_id}/generate-webhook-url": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Webhook Url",
+        "operationId": "generate_webhook_url",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateWebhookPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateWebhookResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/events/{node_id}/generate-test-report": {
       "post": {
         "tags": [
@@ -7995,6 +8055,49 @@
                 "schema": {
                   "$ref": "#/components/schemas/Transaction"
                 }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/hook": {
+      "get": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Trigger Webhook",
+        "operationId": "trigger_webhook",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -9404,6 +9507,31 @@
           "search_term"
         ],
         "title": "FindUserTagPayload"
+      },
+      "GenerateWebhookPayload": {
+        "properties": {
+          "webhook_type": {
+            "$ref": "#/components/schemas/WebhookType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhook_type"
+        ],
+        "title": "GenerateWebhookPayload"
+      },
+      "GenerateWebhookResponse": {
+        "properties": {
+          "webhook_url": {
+            "type": "string",
+            "title": "Webhook Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhook_url"
+        ],
+        "title": "GenerateWebhookResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -15043,6 +15171,13 @@
           "vouchers_spent"
         ],
         "title": "VoucherStats"
+      },
+      "WebhookType": {
+        "type": "string",
+        "enum": [
+          "pretix_order_update"
+        ],
+        "title": "WebhookType"
       }
     },
     "securitySchemes": {

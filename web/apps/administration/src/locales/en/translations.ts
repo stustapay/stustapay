@@ -39,6 +39,7 @@ export const translations = {
   common: {
     id: "ID",
     node: "Node",
+    copiedToClipboard: "Copied to clipboard",
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
     configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
@@ -370,6 +371,9 @@ export const translations = {
       checkConnection: "Check Connection",
       checkSuccessful: "Pretix integration configured correctly",
       checkFailed: "Pretix integration configured incorrectly",
+      generateWebhook: "Generate webhook url for live pretix updates",
+      webhookGenerated: "Successfully setup webhook",
+      webhookUrlFailed: "Failed to setup webhook",
     },
     agb: {
       tabLabel: "AGB",

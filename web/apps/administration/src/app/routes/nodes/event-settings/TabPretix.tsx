@@ -1,5 +1,11 @@
-import { RestrictedEventSettings, useCheckPretixConnectionMutation, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack } from "@mui/material";
+import {
+  RestrictedEventSettings,
+  useCheckPretixConnectionMutation,
+  useGenerateWebhookUrlMutation,
+  useUpdateEventMutation,
+} from "@/api";
+import { ContentCopy as ContentCopyIcon } from "@mui/icons-material";
+import { Button, IconButton, LinearProgress, ListItem, ListItemText, Stack } from "@mui/material";
 import { ArrayTextInput } from "@stustapay/components";
 import { FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -80,6 +86,8 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
   const [checkConnection] = useCheckPretixConnectionMutation();
+  const [generateWebhook] = useGenerateWebhookUrlMutation();
+  const [webhookUrl, setWebhookUrl] = React.useState("");
 
   const handleSubmit = (values: PretixSettings, { setSubmitting }: FormikHelpers<PretixSettings>) => {
     setSubmitting(true);
@@ -93,6 +101,17 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
         setSubmitting(false);
         toast.error(t("settings.updateEventFailed", { reason: err.error }));
       });
+  };
+
+  const handleGenerateWebhook = () => {
+    generateWebhook({ generateWebhookPayload: { webhook_type: "pretix_order_update" }, nodeId }).then((resp) => {
+      if (resp.data) {
+        setWebhookUrl(resp.data.webhook_url);
+        toast.success(t("settings.pretix.webhookGenerated"));
+      } else {
+        toast.error(t("settings.pretix.webhookUrlFailed"));
+      }
+    });
   };
 
   const checkPretixConnection = () => {
@@ -117,6 +136,25 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
               <PretixSettingsForm {...formik} />
+              <Button color="primary" variant="outlined" onClick={handleGenerateWebhook}>
+                {t("settings.pretix.generateWebhook")}
+              </Button>
+              {webhookUrl && (
+                <ListItem
+                  secondaryAction={
+                    <IconButton
+                      onClick={() => {
+                        navigator.clipboard.writeText(webhookUrl);
+                        toast.success(t("common.copiedToClipboard"));
+                      }}
+                    >
+                      <ContentCopyIcon />
+                    </IconButton>
+                  }
+                >
+                  <ListItemText primary="Pretix webhook" secondary={webhookUrl} />
+                </ListItem>
+              )}
               <Button color="primary" variant="outlined" onClick={checkPretixConnection}>
                 {t("settings.pretix.checkConnection")}
               </Button>
