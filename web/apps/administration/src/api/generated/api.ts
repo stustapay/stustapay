@@ -25,6 +25,7 @@ export const addTagTypes = [
   "tree",
   "sumup",
   "transactions",
+  "webhooks",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -1148,6 +1149,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      generateWebhookUrl: build.mutation<GenerateWebhookUrlApiResponse, GenerateWebhookUrlApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/generate-webhook-url`,
+          method: "POST",
+          body: queryArg.generateWebhookPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
       generateTestReport: build.mutation<GenerateTestReportApiResponse, GenerateTestReportApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-report`, method: "POST" }),
         invalidatesTags: ["tree"],
@@ -1320,6 +1329,15 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ["transactions"],
+      }),
+      triggerWebhook: build.query<TriggerWebhookApiResponse, TriggerWebhookApiArg>({
+        query: (queryArg) => ({
+          url: `/webhooks/hook`,
+          params: {
+            token: queryArg.token,
+          },
+        }),
+        providesTags: ["webhooks"],
       }),
     }),
     overrideExisting: false,
@@ -1910,6 +1928,11 @@ export type CheckPretixConnectionApiResponse = /** status 200 Successful Respons
 export type CheckPretixConnectionApiArg = {
   nodeId: number;
 };
+export type GenerateWebhookUrlApiResponse = /** status 200 Successful Response */ GenerateWebhookResponse;
+export type GenerateWebhookUrlApiArg = {
+  nodeId: number;
+  generateWebhookPayload: GenerateWebhookPayload;
+};
 export type GenerateTestReportApiResponse = /** status 200 Successful Response */ any;
 export type GenerateTestReportApiArg = {
   nodeId: number;
@@ -2001,6 +2024,10 @@ export type GetTransactionApiResponse = /** status 200 Successful Response */ Tr
 export type GetTransactionApiArg = {
   transactionId: number;
   nodeId: number;
+};
+export type TriggerWebhookApiResponse = /** status 200 Successful Response */ any;
+export type TriggerWebhookApiArg = {
+  token: string;
 };
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
@@ -3257,6 +3284,13 @@ export type RestrictedEventSettings = {
   languages: Language[];
   sumup_oauth_refresh_token: string;
 };
+export type GenerateWebhookResponse = {
+  webhook_url: string;
+};
+export type WebhookType = "pretix_order_update";
+export type GenerateWebhookPayload = {
+  webhook_type: WebhookType;
+};
 export type SumUpTokenPayload = {
   authorization_code: string;
 };
@@ -3530,6 +3564,7 @@ export const {
   useDeleteNodeMutation,
   useGenerateTestBonMutation,
   useCheckPretixConnectionMutation,
+  useGenerateWebhookUrlMutation,
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,
   useConfigureSumupTokenMutation,
@@ -3556,4 +3591,6 @@ export const {
   useForceLogoutUserMutation,
   useGetTransactionQuery,
   useLazyGetTransactionQuery,
+  useTriggerWebhookQuery,
+  useLazyTriggerWebhookQuery,
 } = injectedRtkApi;

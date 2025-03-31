@@ -137,6 +137,19 @@ class PretixTicketProvider(TicketProvider):
                         if imported:
                             self.logger.debug(f"Imported ticket from pretix order {order.code}")
 
+    async def synchronize_tickets_for_node(self, node_id: int):
+        async with self.db_pool.acquire() as conn:
+            node = await fetch_node(conn=conn, node_id=node_id)
+            assert node is not None
+            settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
+            if not settings.pretix_presale_enabled:
+                self.logger.warning(
+                    f"Skipping pretix ticket synchronization for event {node.name} as pretix presale is disabled"
+                )
+                return
+            self.logger.debug(f"Synchronizing pretix tickets for event {node.name}")
+            await self._synchronize_tickets_for_node(conn=conn, node=node)
+
     async def synchronize_tickets(self):
         pretix_enabled = self.config.core.pretix_enabled
         if not pretix_enabled:
