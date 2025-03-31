@@ -1135,6 +1135,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-bon`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      checkPretixConnection: build.mutation<CheckPretixConnectionApiResponse, CheckPretixConnectionApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
       generateTestReport: build.mutation<GenerateTestReportApiResponse, GenerateTestReportApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-report`, method: "POST" }),
         invalidatesTags: ["tree"],
@@ -1887,6 +1891,10 @@ export type DeleteNodeApiArg = {
 };
 export type GenerateTestBonApiResponse = /** status 200 Successful Response */ BonJsonRead;
 export type GenerateTestBonApiArg = {
+  nodeId: number;
+};
+export type CheckPretixConnectionApiResponse = /** status 200 Successful Response */ any;
+export type CheckPretixConnectionApiArg = {
   nodeId: number;
 };
 export type GenerateTestReportApiResponse = /** status 200 Successful Response */ any;
@@ -3495,6 +3503,7 @@ export const {
   useLazyGetRestrictedEventSettingsQuery,
   useDeleteNodeMutation,
   useGenerateTestBonMutation,
+  useCheckPretixConnectionMutation,
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,
   useConfigureSumupTokenMutation,

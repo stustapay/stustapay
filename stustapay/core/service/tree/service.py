@@ -23,6 +23,7 @@ from stustapay.core.service.tree.common import (
     get_tree_for_current_user,
 )
 from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
+from stustapay.ticket_shop import pretix
 
 
 async def _check_if_object_exists(conn: Connection, node: Node, object_type: ObjectType, in_subtree: bool):
@@ -390,10 +391,17 @@ class TreeService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def generate_test_bon(self, *, conn: Connection, node: Node) -> BonJson:
-        if node.event_node_id is None:
-            raise InvalidArgument("Cannot generate bon for a node not associated with an event")
+        assert node.event_node_id is not None
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         return await generate_dummy_bon_json(node_id=node.event_node_id, event=event)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def check_pretix_connection(self, *, conn: Connection, node: Node) -> BonJson:
+        assert node.event_node_id is not None
+        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        return await pretix.check_connection(event)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)

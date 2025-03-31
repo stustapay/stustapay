@@ -9,7 +9,7 @@ from sftkit.database import Connection
 from sftkit.error import ServiceException
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
 from stustapay.ticket_shop.ticket_provider import ExternalTicket, TicketProvider
 
@@ -87,6 +87,21 @@ class PretixApi:
             orders.append(PretixOrder.model_validate(item))
         return orders
 
+    @classmethod
+    def from_event(cls, event_settings: RestrictedEventSettings):
+        assert event_settings.pretix_presale_enabled
+        assert event_settings.pretix_shop_url is not None
+        assert event_settings.pretix_api_key is not None
+        assert event_settings.pretix_organizer is not None
+        assert event_settings.pretix_event is not None
+        assert event_settings.pretix_ticket_ids is not None
+        return cls(
+            base_url=event_settings.pretix_shop_url,
+            api_key=event_settings.pretix_api_key,
+            organizer=event_settings.pretix_organizer,
+            event=event_settings.pretix_event,
+        )
+
 
 class PretixTicketProvider(TicketProvider):
     def __init__(self, config: Config, db_pool: asyncpg.Pool):
@@ -95,18 +110,8 @@ class PretixTicketProvider(TicketProvider):
 
     async def _synchronize_tickets_for_node(self, conn: Connection, node: Node):
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
-        assert event_settings.pretix_presale_enabled
-        assert event_settings.pretix_shop_url is not None
-        assert event_settings.pretix_api_key is not None
-        assert event_settings.pretix_organizer is not None
-        assert event_settings.pretix_event is not None
+        api = PretixApi.from_event(event_settings)
         assert event_settings.pretix_ticket_ids is not None
-        api = PretixApi(
-            base_url=event_settings.pretix_shop_url,
-            api_key=event_settings.pretix_api_key,
-            organizer=event_settings.pretix_organizer,
-            event=event_settings.pretix_event,
-        )
         pretix_ticket_product_ids = event_settings.pretix_ticket_ids
         orders = await api.fetch_orders()
         for order in orders:
@@ -144,3 +149,8 @@ class PretixTicketProvider(TicketProvider):
                         await self._synchronize_tickets_for_node(conn=conn, node=node)
             except Exception:
                 self.logger.exception("process pending orders threw an error")
+
+
+async def check_connection(event_settings: RestrictedEventSettings):
+    api = PretixApi.from_event(event_settings)
+    await api.fetch_orders()

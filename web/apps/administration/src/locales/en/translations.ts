@@ -357,6 +357,9 @@ export const translations = {
       organizer: "Short name of pretix organizer",
       event: "Short name of pretix event",
       ticketIds: 'Ticket IDs in pretix event, separated by ","',
+      checkConnection: "Check Connection",
+      checkSuccessful: "Pretix integration configured correctly",
+      checkFailed: "Pretix integration configured incorrectly",
     },
     agb: {
       tabLabel: "AGB",
