@@ -1,4 +1,4 @@
-import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
+import { RestrictedEventSettings, useCheckPretixConnectionMutation, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { ArrayTextInput } from "@stustapay/components";
 import { FormSwitch, FormTextField } from "@stustapay/form-components";
@@ -79,6 +79,7 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
 }) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
+  const [checkConnection] = useCheckPretixConnectionMutation();
 
   const handleSubmit = (values: PretixSettings, { setSubmitting }: FormikHelpers<PretixSettings>) => {
     setSubmitting(true);
@@ -94,6 +95,16 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
       });
   };
 
+  const checkPretixConnection = () => {
+    checkConnection({ nodeId }).then((resp) => {
+      if (resp.error) {
+        toast.error(t("settings.pretix.checkFailed"));
+      } else {
+        toast.success(t("settings.pretix.checkSuccessful"));
+      }
+    });
+  };
+
   return (
     <Stack spacing={2}>
       <Formik
@@ -106,6 +117,9 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
               <PretixSettingsForm {...formik} />
+              <Button color="primary" variant="outlined" onClick={checkPretixConnection}>
+                {t("settings.pretix.checkConnection")}
+              </Button>
               {formik.isSubmitting && <LinearProgress />}
               <Button
                 type="submit"

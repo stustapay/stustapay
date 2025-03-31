@@ -75,6 +75,11 @@ async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeSe
     return await tree_service.generate_test_bon(token=token, node_id=node_id)
 
 
+@router.post("/events/{node_id}/check-pretix-connection")
+async def check_pretix_connection(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.check_pretix_connection(token=token, node_id=node_id)
+
+
 @router.post(
     "/events/{node_id}/generate-test-report",
     responses={

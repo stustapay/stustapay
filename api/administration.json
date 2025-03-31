@@ -6821,6 +6821,54 @@
         }
       }
     },
+    "/tree/events/{node_id}/check-pretix-connection": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Check Pretix Connection",
+        "operationId": "check_pretix_connection",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/events/{node_id}/generate-test-report": {
       "post": {
         "tags": [
