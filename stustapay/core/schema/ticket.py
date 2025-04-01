@@ -27,15 +27,7 @@ class Ticket(NewTicket):
     total_price: float
 
 
-class NewTicketVoucher(BaseModel):
-    # what ticket was bought
-    ticket: Ticket
-
-    # additional to the ticket's initial_top_up_amount
-    top_up_amount: float
-
-
-class TicketVoucher(NewTicketVoucher):
+class TicketVoucher(BaseModel):
     id: int
     node_id: int
     created_at: datetime
@@ -56,7 +48,7 @@ class TicketScanResultEntry(BaseModel):
     total_price: float
 
     # what the user requested at ticket sale
-    top_up_amount: float = 0
+    top_up_amount: float = 0.0
 
     # which ticket voucher was used
     ticket_voucher: TicketVoucher | None = None
