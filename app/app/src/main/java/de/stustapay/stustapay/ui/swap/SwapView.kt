@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.swap
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
@@ -34,6 +37,7 @@ import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.common.CloseContent
+import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
@@ -81,7 +85,8 @@ fun SwapView(
     ) {
         Box(modifier = Modifier.padding(it)) {
             Scaffold(content = {
-                Box(modifier = Modifier.padding(it)) {
+                val scrollState = rememberScrollState()
+                Box(modifier = Modifier.padding(it).verticalScroll(scrollState)) {
                     when (uiState.nav) {
                         is SwapNavState.Root, SwapNavState.ScanNew, SwapNavState.ScanOld -> {
                             Column(
@@ -168,30 +173,21 @@ fun SwapView(
                     }
                 }
             }, bottomBar = {
-                Column {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Divider()
-                    Box(
-                        modifier = Modifier.padding(
-                            top = 10.dp, bottom = 10.dp, start = 10.dp, end = 10.dp
-                        )
-                    ) {
-                        val text = when (val state = uiState.request) {
-                            is SwapRequestState.Failed -> {
-                                state.msg
-                            }
-
-                            is SwapRequestState.Fetching -> {
-                                stringResource(R.string.common_status_fetching)
-                            }
-
-                            is SwapRequestState.Done -> {
-                                stringResource(R.string.common_status_done)
-                            }
+                StatusText(
+                    status = when (val state = uiState.request) {
+                        is SwapRequestState.Failed -> {
+                            state.msg
                         }
-                        Text(text, fontSize = 24.sp)
+
+                        is SwapRequestState.Fetching -> {
+                            stringResource(R.string.common_status_fetching)
+                        }
+
+                        is SwapRequestState.Done -> {
+                            stringResource(R.string.common_status_done)
+                        }
                     }
-                }
+                )
             })
         }
     }
