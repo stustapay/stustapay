@@ -36,10 +36,6 @@ alter table till add constraint virtual_till_cannot_be_registered
 alter table ordr add constraint only_cancel_orders_can_reference_orders
     check ((order_type != 'cancel_sale') = (cancels_order is null));
 
-alter table ordr add constraint cash_orders_need_cash_register
-    check ((payment_method = 'cash' and cash_register_id is not null)
-            or (payment_method != 'cash' and cash_register_id is null));
-
 alter table ordr add constraint till_required_for_non_online_orders
     check ((payment_method = 'sumup_online' and cashier_id is null)
             or (payment_method != 'sumup_online' and cashier_id is not null));
