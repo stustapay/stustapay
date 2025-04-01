@@ -109,7 +109,12 @@ async def make_ticket_sale_bookings(
             )
 
         else:
-            customer_account_id = scanned_ticket.account.id
+            customer_account_id = await conn.fetchval(
+                "update account set node_id = $1, user_tag_id = $2 where id = $3 returning id",
+                node.event_node_id,
+                user_tag_id,
+                scanned_ticket.account.id,
+            )
 
         customers.append(
             CustomerRegistration(
