@@ -47,7 +47,7 @@ fun AccountStatus(
             ) {
                 when (val customer = uiState.customer) {
                     is CustomerStatusRequestState.Failed -> {
-                        Text(stringResource(R.string.failed_fetching))
+                        Text(stringResource(R.string.common_error_failed_fetch))
                     }
 
                     is CustomerStatusRequestState.Idle -> {}

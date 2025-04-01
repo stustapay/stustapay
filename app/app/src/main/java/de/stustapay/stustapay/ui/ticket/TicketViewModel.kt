@@ -4,12 +4,9 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.CancelOrderPayload
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketSale
-import de.stustapay.api.models.NewTicketScan
 import de.stustapay.api.models.PaymentMethod
-import de.stustapay.api.models.UserTagScan
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.ResourcesProvider
@@ -113,49 +110,108 @@ class TicketViewModel @Inject constructor(
      * this function is only called if the tag is not already known.
      */
     suspend fun tagScanned(tag: NfcTag) {
-        val response =
-            ticketApi.checkTicketScan(NewTicketScan(customerTags = listOf(tag).mapNotNull {
-                UserTagScan(
-                    it.uid, it.pin ?: return@mapNotNull null
-                )
-            }))
+        // duplicates were already checked by checkTagScan
+        if (tag.pin == null) {
+            _status.update { "no pin in tag scan" }
+            return
+        }
+
+        _ticketDraft.update { oldDraft ->
+            val draft = oldDraft.copy()
+            draft.addScan(tag)
+            if (!checkTicketDraft(draft)) {
+                return@update oldDraft
+            }
+            _status.update { resourcesProvider.getString(R.string.ticket_valid) }
+            draft
+        }
+
+    }
+
+    private suspend fun checkTicketDraft(draft: TicketDraft): Boolean {
+        val response = ticketApi.checkTicketScan(draft.getTicketScan())
 
         when (response) {
             is Response.OK -> {
-                _ticketDraft.update { status ->
-                    val scanned = response.data.scannedTickets
-                    if (scanned.isEmpty()) {
-                        _status.update { resourcesProvider.getString(R.string.ticket_unknown) }
-                        return
-                    }
 
-                    val scanResult = scanned[0]
-                    if (scanResult.customerTagUid != tag.uid) {
-                        _status.update { "returned ticket id != ticket unknown" }
-                        return
-                    }
-
-                    val newStatus = status.copy()
-                    val ret = newStatus.addTicket(
-                        ScannedTicket(
-                            tag = tag, ticket = scanResult.ticket
-                        )
-                    )
-                    if (!ret) {
-                        _status.update { "failed to store new ticket" }
-                    }
-                    newStatus
+                val scanned = response.data.scannedTickets
+                if (scanned.size != draft.scans.size) {
+                    _status.update { resourcesProvider.getString(R.string.ticket_unknown) }
+                    return false
                 }
-                _status.update { resourcesProvider.getString(R.string.ticket_valid) }
+
+                // this is displayed in ui
+                draft.tickets = scanned.map {
+                    val tag = NfcTag(
+                        uid = it.customerTagUid,
+                        pin = it.customerTagPin,
+                    )
+
+                    // update draft, which is used for getting the editing amount
+                    val topUpAmount = it.topUpAmount
+                    if (topUpAmount != null) {
+                        draft.setTopUpAmount(tag, topUpAmount)
+                    }
+
+                    ScannedTicket(
+                        nfcTag = tag,
+                        ticket = it.ticket,
+                        plannedTopUp = topUpAmount ?: 0.0,
+                        accountBalance = it.account?.balance,
+                        voucherToken = it.ticketVoucher?.token,
+                    )
+                }
+                return true
             }
 
             is Response.Error.Service -> {
                 _status.update { response.msg() }
+                return false
             }
 
             is Response.Error -> {
                 _status.update { response.msg() }
+                return false
             }
+        }
+    }
+
+    fun getTagTopUp(tag: NfcTag?): UInt {
+        return ((_ticketDraft.value.scans[tag]?.topUpAmount ?: 0.0) * 100.0).toUInt()
+    }
+
+    suspend fun setTagTopUp(tag: NfcTag?, amount: UInt) {
+        if (tag == null) {
+            return
+        }
+        _ticketDraft.update { oldDraft ->
+            val draft = oldDraft.copy()
+            val amountD = amount.toDouble() / 100.0
+            if (!draft.setTopUpAmount(tag, amountD)) {
+                return@update oldDraft
+            }
+            if (!checkTicketDraft(draft)) {
+                return@update oldDraft
+            }
+            _status.update { resourcesProvider.getString(R.string.common_action_topup_validated) }
+            draft
+        }
+    }
+
+    suspend fun setTagTicketVoucherToken(tag: NfcTag?, voucherToken: String) {
+        if (tag == null) {
+            return
+        }
+        _ticketDraft.update { oldDraft ->
+            val draft = oldDraft.copy()
+            if (!draft.setVoucherToken(tag, voucherToken)) {
+                return@update oldDraft
+            }
+            if (!checkTicketDraft(draft)) {
+                return@update oldDraft
+            }
+            _status.update { resourcesProvider.getString(R.string.ticket_voucher_valid) }
+            draft
         }
     }
 
@@ -172,6 +228,7 @@ class TicketViewModel @Inject constructor(
 
     fun dismissError() {
         _navState.update { TicketPage.Scan }
+        // TODO: clearTicketSale(success = false)?
     }
 
     /** once the sale was booked completely */
@@ -193,24 +250,29 @@ class TicketViewModel @Inject constructor(
 
     /** test if we can sell this */
     suspend fun checkSale() {
-        val selection = _ticketDraft.value
+        val draft = _ticketDraft.value
 
-        _status.update { resourcesProvider.getString(R.string.order_checking) }
+        _status.update { resourcesProvider.getString(R.string.sale_order_checking) }
 
         // check if the sale is nice and well
         val response = ticketApi.checkTicketSale(
-            selection.getNewTicketSale(null)
+            draft.getNewTicketSale(null)
         )
 
         when (response) {
             is Response.OK -> {
-                _ticketDraft.update { status ->
-                    val newSale = status.copy()
-                    newSale.updateWithPendingTicketSale(response.data)
-                    newSale
+                _ticketDraft.update { draft ->
+                    draft.copy(response.data)
                 }
                 _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
-                _navState.update { TicketPage.Confirm }
+
+                if (response.data.totalPrice == 0.0) {
+                    // when response has item and totalprice zero, skip to process sale directly!
+                    processSale(paymentMethod = PaymentMethod.cash)
+                }
+                else {
+                    _navState.update { TicketPage.Confirm }
+                }
             }
 
             is Response.Error.Service -> {
@@ -224,17 +286,17 @@ class TicketViewModel @Inject constructor(
         }
     }
 
-    /** let's start the payment process */
-    suspend fun processSale(context: Activity, paymentMethod: PaymentMethod) {
+    /** let's start the payment process. context needed for sumup. */
+    suspend fun processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
         // checks
         if (_ticketDraft.value.scans.isEmpty()) {
-            _status.update { "Not all tags were scanned!" }
+            _status.update { "No tags were scanned!" }
             return
         }
 
         val pendingSale = _ticketDraft.value.pendingSale
         if (pendingSale == null) {
-            _status.update { "no ticket sale check present" }
+            _status.update { "Ticket sales were not checked yet" }
             return
         }
 
@@ -247,18 +309,23 @@ class TicketViewModel @Inject constructor(
             return
         }
 
+        if (context == null) {
+            error("process sale for PaymentMethod.sumup needs activity as context")
+        }
+
         // otherwise, perform ec payment
+        val firstTag = _ticketDraft.value.scans.keys.first()
         val payment = ECPayment(
             id = newSale.uuid.toString(),
             amount = BigDecimal(pendingSale.totalPrice),
-            tag = _ticketDraft.value.scans[0].tag,
+            tag = firstTag,
         )
 
         // register the sale so the backend can ask sumup for completion
         val response = ticketApi.registerTicketSale(newSale)
         when (response) {
             is Response.OK -> {
-                _status.update { "Ticket order announced!" }
+                _status.update { resourcesProvider.getString(R.string.ticket_order_announced) }
             }
 
             is Response.Error.Service -> {

@@ -49,7 +49,7 @@ fun ErrorScreen(
                         .height(70.dp)
                         .padding(10.dp)
                 ) {
-                    Text(text = stringResource(R.string.back))
+                    Text(text = stringResource(R.string.common_back))
                 }
             }
         }

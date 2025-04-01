@@ -17,7 +17,7 @@ import de.stustapay.libssp.ui.theme.ProductConfirmItemBigStyle
 import de.stustapay.libssp.ui.theme.ProductConfirmItemStyle
 import de.stustapay.libssp.util.formatCurrencyValue
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewProductConfirmLineItem() {
     ProductConfirmLineItem(
@@ -57,7 +57,7 @@ fun ProductConfirmLineItem(
     )
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewSaleConfirmItem() {
     Column {

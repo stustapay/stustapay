@@ -70,6 +70,7 @@ src/main/kotlin/de/stustapay/api/models/TerminalUserTagSecrets.kt
 src/main/kotlin/de/stustapay/api/models/Ticket.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResult.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResultEntry.kt
+src/main/kotlin/de/stustapay/api/models/TicketVoucher.kt
 src/main/kotlin/de/stustapay/api/models/TimeseriesStatsQuery.kt
 src/main/kotlin/de/stustapay/api/models/TransferCashRegisterPayload.kt
 src/main/kotlin/de/stustapay/api/models/TransportAccountChangePayload.kt

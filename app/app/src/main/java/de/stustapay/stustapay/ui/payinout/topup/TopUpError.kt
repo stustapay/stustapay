@@ -22,7 +22,7 @@ fun TopUpError(
         modifier = Modifier.fillMaxSize(),
         onDismiss = onDismiss
     ) {
-        Text(text = stringResource(R.string.error), fontSize = 30.sp)
+        Text(text = stringResource(R.string.common_error), fontSize = 30.sp)
 
         Text(status, fontSize = 24.sp)
     }

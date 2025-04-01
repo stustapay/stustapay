@@ -78,7 +78,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     .fillMaxSize()
                     .padding(10.dp)
             ) {
-                ListItem(text = { Text(stringResource(R.string.tag_uid)) },
+                ListItem(text = { Text(stringResource(R.string.common_tag_id)) },
                     secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue(true))) })
                 ListItem(text = { Text(stringResource(R.string.user_username)) },
                     secondaryText = { Text(currentUserV.login) })

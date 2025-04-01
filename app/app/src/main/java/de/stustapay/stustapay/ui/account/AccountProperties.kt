@@ -129,11 +129,11 @@ fun AccountProperties(
                     stringResource(R.string.customer_restriction),
                     when (restriction.value) {
                         "under_18" -> {
-                            stringResource(R.string.under_18_years)
+                            stringResource(R.string.customer_under_18_years)
                         }
 
                         "under_16" -> {
-                            stringResource(R.string.under_16_years)
+                            stringResource(R.string.customer_under_16_years)
                         }
 
                         else -> restriction.value

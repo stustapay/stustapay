@@ -9,6 +9,8 @@ import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
+import de.stustapay.libssp.util.ResourcesProvider
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.netsource.TopUpRemoteDataSource
 import de.stustapay.stustapay.repository.ECPaymentRepository
@@ -49,7 +51,8 @@ class TopUpViewModel @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
     userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
-    private val infallibleRepository: InfallibleRepository
+    private val infallibleRepository: InfallibleRepository,
+    private val resourcesProvider: ResourcesProvider,
 ) : ViewModel() {
     private val _navState = MutableStateFlow(TopUpPage.Selection)
     val navState = _navState.asStateFlow()
@@ -114,7 +117,7 @@ class TopUpViewModel @Inject constructor(
         // server-side check
         return when (val response = topUpApi.checkTopUp(newTopUp)) {
             is Response.OK -> {
-                _status.update { "TopUp possible" }
+                _status.update { resourcesProvider.getString(R.string.common_action_topup_validated) }
                 true
             }
 

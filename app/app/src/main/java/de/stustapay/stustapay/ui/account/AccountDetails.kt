@@ -94,7 +94,7 @@ fun AccountDetails(
                     Divider()
 
                     ProductConfirmItem(
-                        name = stringResource(R.string.history_sum),
+                        name = stringResource(R.string.sale_history_sum),
                         price = sale.totalPrice,
                     )
                 }
@@ -173,7 +173,7 @@ fun AccountDetails(
 @Composable
 fun OrderListEntry(order: Order, onClick: () -> Unit) {
     var icon = Icons.Filled.Warning
-    var label = R.string.error
+    var label = R.string.common_error
     var amount = 0.0;
     when (order.orderType) {
         OrderType.sale -> {
@@ -188,12 +188,12 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
         }
         OrderType.top_up -> {
             icon = Icons.Filled.KeyboardArrowUp
-            label = R.string.topup
+            label = R.string.common_topup
             amount = order.totalPrice
         }
         OrderType.pay_out -> {
             icon = Icons.Filled.KeyboardArrowDown
-            label = R.string.payout
+            label = R.string.sale_payout
             amount = order.totalPrice
         }
         OrderType.ticket -> {

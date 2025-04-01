@@ -82,7 +82,7 @@ fun CashOutConfirmCard(
             CashConfirmView(
                 status = status,
                 getAmount = getAmount,
-                question = stringResource(R.string.payed_to_user_q),
+                question = stringResource(R.string.sale_paid_to_user_q),
                 goBack = onAbort,
                 onPay = CashECCallback.NoTag(onCash = onConfirm)
             )

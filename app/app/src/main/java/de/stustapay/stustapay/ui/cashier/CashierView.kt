@@ -471,7 +471,7 @@ fun CashierView(
                                             viewModel.transfer()
                                         }
                                     }) {
-                                    Text(stringResource(R.string.transfer_cash_register))
+                                    Text(stringResource(R.string.cash_register_transfer))
                                 }
 
                                 Row(modifier = Modifier.fillMaxWidth()) {

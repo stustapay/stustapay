@@ -54,7 +54,7 @@ fun SaleSelectionList(
             // allow adjustment here
             item {
                 SaleSelectionItem(
-                    caption = stringResource(R.string.voucher),
+                    caption = stringResource(R.string.common_voucher),
                     type = SaleSelectionItemType.Vouchers(
                         amount = vouchers,
                         maxAmount = saleStatus.checkedSale?.oldVoucherBalance?.intValue() ?: -1,

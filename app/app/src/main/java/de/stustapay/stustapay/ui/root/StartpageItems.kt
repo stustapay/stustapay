@@ -1,17 +1,16 @@
 package de.stustapay.stustapay.ui.root
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.ThumbUp
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
 
@@ -21,11 +20,11 @@ val startpageItems = listOf(
         label = R.string.root_item_sale,
         navDestination = RootNavDests.sale,
         canAccess = { u, t -> Access.canSell(u, t) }),
-    StartpageItem(icon = Icons.Filled.KeyboardArrowUp,
+    StartpageItem(icon = Icons.Filled.AccountBalanceWallet,
         label = R.string.root_item_topup,
         navDestination = RootNavDests.topup,
         canAccess = { u, t -> Access.canTopUp(t, u) }),
-    StartpageItem(icon = Icons.Filled.Face,
+    StartpageItem(icon = Icons.Filled.LocalActivity,
         label = R.string.root_item_ticket,
         navDestination = RootNavDests.ticket,
         canAccess = { u, t -> Access.canSellTicket(t, u) }),
@@ -33,8 +32,8 @@ val startpageItems = listOf(
         label = R.string.root_item_rewards,
         navDestination = RootNavDests.rewards,
         canAccess = { u, _ -> Access.canGiveVouchers(u) || Access.canGiveFreeTickets(u) }),
-    StartpageItem(icon = Icons.Filled.List,
-        label = R.string.history_title,
+    StartpageItem(icon = Icons.AutoMirrored.Filled.ViewList,
+        label = R.string.sale_history_title,
         navDestination = RootNavDests.history,
         canAccess = { u, t -> Access.canSell(u, t) }),
     StartpageItem(icon = Icons.Filled.Info,

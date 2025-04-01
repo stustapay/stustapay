@@ -19,7 +19,7 @@ fun FailureIcon(modifier: Modifier = Modifier) {
         imageVector = Icons.Filled.Warning,
         modifier = modifier
             .padding(top = 2.dp),
-        contentDescription = stringResource(R.string.error),
+        contentDescription = stringResource(R.string.common_error),
         colorFilter = ColorFilter.tint(MaterialTheme.colors.error),
     )
 }

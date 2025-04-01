@@ -3,7 +3,6 @@ package de.stustapay.stustapay.ui.reward
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.libssp.net.Response
@@ -59,7 +58,7 @@ class RewardViewModel @Inject constructor(
             is Response.OK -> {
                 _status.update {
                     RewardStatus.Success(
-                        resourcesProvider.getString(R.string.vouchers_granted).format(vouchers)
+                        resourcesProvider.getString(R.string.common_vouchers_granted).format(vouchers)
                     )
                 }
                 clearSelection()
@@ -75,11 +74,11 @@ class RewardViewModel @Inject constructor(
         when (val resp = customerRepository.grantFreeTicket(tag, vouchers)) {
             is Response.OK -> {
                 val voucherAmount = if (vouchers > 0u) {
-                    " " + resourcesProvider.getString(R.string.with_n_vouchers).format(vouchers)
+                    " " + resourcesProvider.getString(R.string.sale_pay_n_vouchers).format(vouchers)
                 } else {
                     ""
                 }
-                _status.update { RewardStatus.Success(resourcesProvider.getString(R.string.free_ticket_activated) + voucherAmount) }
+                _status.update { RewardStatus.Success(resourcesProvider.getString(R.string.ticket_free_activated) + voucherAmount) }
                 clearSelection()
             }
 

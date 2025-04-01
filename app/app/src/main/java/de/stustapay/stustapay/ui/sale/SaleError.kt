@@ -58,7 +58,7 @@ fun SaleError(
                 ) {
                     FailureIcon(modifier = Modifier.size(60.dp))
 
-                    Text(text = stringResource(R.string.sale_check_error), fontSize = 30.sp)
+                    Text(text = stringResource(R.string.sale_error_check), fontSize = 30.sp)
 
                     Text(status, fontSize = 24.sp)
                 }
