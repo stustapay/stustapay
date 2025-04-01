@@ -437,8 +437,7 @@ class OrderService(Service[Config]):
         if new_balance > max_limit:
             too_much = new_balance - max_limit
             raise InvalidArgument(
-                f"More than {max_limit:.02f}€ on accounts is disallowed! "
-                f"New balance would be {new_balance:.02f}€, which is {too_much:.02f}€ too much."
+                f"Max {max_limit:.02f}€ allowed on account! {new_balance:.02f}€ is {too_much:.02f}€ too much."
             )
 
         return PendingTopUp(
@@ -639,8 +638,7 @@ class OrderService(Service[Config]):
             if order.new_balance > max_limit:
                 too_much = order.new_balance - max_limit
                 raise InvalidArgument(
-                    f"More than {max_limit:.02f}€ on accounts is disallowed! "
-                    f"New balance would be {order.new_balance:.02f}€, which is {too_much:.02f}€ too much."
+                    f"Max {max_limit:.02f}€ allowed on account! {order.new_balance:.02f}€ is {too_much:.02f}€ too much."
                 )
 
             if order.new_balance < 0:
@@ -1299,8 +1297,7 @@ class OrderService(Service[Config]):
             if new_balance > max_limit:
                 too_much = new_balance - max_limit
                 raise InvalidArgument(
-                    f"Max {max_limit:.02f}€ allowed on account! "
-                    f"{new_balance:.02f}€ is {too_much:.02f}€ too much."
+                    f"Max {max_limit:.02f}€ allowed on account! {new_balance:.02f}€ is {too_much:.02f}€ too much."
                 )
 
             scanned_tickets.append(
@@ -1333,17 +1330,6 @@ class OrderService(Service[Config]):
         if uuid_exists:
             # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
             raise AlreadyProcessedException("Successfully booked order")
-
-        if new_ticket_sale.payment_method is not None:
-            if new_ticket_sale.payment_method == PaymentMethod.tag:
-                raise InvalidArgument("Cannot pay with tag for a ticket")
-
-            if new_ticket_sale.payment_method == PaymentMethod.cash:
-                cash_register_id = await conn.fetchval(
-                    "select t.active_cash_register_id from till t where id = $1", current_till.id
-                )
-                if cash_register_id is None:
-                    raise InvalidArgument("This till needs a cash register for cash payments")
 
         ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
             conn=conn,
@@ -1393,12 +1379,25 @@ class OrderService(Service[Config]):
                     )
                 )
 
-        return PendingTicketSale(
+        sale = PendingTicketSale(
             uuid=new_ticket_sale.uuid,
             payment_method=new_ticket_sale.payment_method,
             line_items=line_items,
             scanned_tickets=ticket_scan_result.scanned_tickets,
         )
+
+        if new_ticket_sale.payment_method is not None:
+            if new_ticket_sale.payment_method == PaymentMethod.tag:
+                raise InvalidArgument("Cannot pay with tag for a ticket")
+
+            if new_ticket_sale.payment_method == PaymentMethod.cash and sale.total_price > 0.0:
+                cash_register_id = await conn.fetchval(
+                    "select t.active_cash_register_id from till t where id = $1", current_till.id
+                )
+                if cash_register_id is None:
+                    raise InvalidArgument("This till needs a cash register for cash payments")
+
+        return sale
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
