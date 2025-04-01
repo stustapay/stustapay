@@ -8,6 +8,7 @@ from sftkit.error import InvalidArgument
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
     CompletedTicketSale,
+    CustomerRegistration,
     NewTicketSale,
     PaymentMethod,
     UserTagScan,
@@ -17,6 +18,7 @@ from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.ticket import NewTicket, NewTicketScan, Ticket
 from stustapay.core.schema.till import NewTillLayout, NewTillProfile, Till, TillLayout
 from stustapay.core.schema.tree import Node
+from stustapay.core.service.order.age_checks import find_oldest_customer
 from stustapay.core.service.order.order import OrderService, TillPermissionException
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till.till import TillService
@@ -100,6 +102,50 @@ async def sale_tickets(
         ticket=ticket,
         ticket_u16=ticket_u16,
         ticket_u18=ticket_u18,
+    )
+
+
+def test_find_oldest_customer():
+    with pytest.raises(AssertionError):
+        find_oldest_customer([])
+
+    assert 1 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 2 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 3 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 2 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 1 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+        ]
     )
 
 
