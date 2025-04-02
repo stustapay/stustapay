@@ -104,7 +104,7 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
   };
 
   const handleGenerateWebhook = () => {
-    generateWebhook({ generateWebhookPayload: { webhook_type: "pretix_order_update" }, nodeId }).then((resp) => {
+    generateWebhook({ generateWebhookPayload: { webhook_type: "pretix" }, nodeId }).then((resp) => {
       if (resp.data) {
         setWebhookUrl(resp.data.webhook_url);
         toast.success(t("settings.pretix.webhookGenerated"));

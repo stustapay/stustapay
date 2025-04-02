@@ -8075,7 +8075,7 @@
       }
     },
     "/webhooks/hook": {
-      "get": {
+      "post": {
         "tags": [
           "webhooks"
         ],
@@ -15175,7 +15175,7 @@
       "WebhookType": {
         "type": "string",
         "enum": [
-          "pretix_order_update"
+          "pretix"
         ],
         "title": "WebhookType"
       }

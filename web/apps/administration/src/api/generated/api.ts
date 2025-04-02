@@ -1330,14 +1330,15 @@ const injectedRtkApi = api
         }),
         providesTags: ["transactions"],
       }),
-      triggerWebhook: build.query<TriggerWebhookApiResponse, TriggerWebhookApiArg>({
+      triggerWebhook: build.mutation<TriggerWebhookApiResponse, TriggerWebhookApiArg>({
         query: (queryArg) => ({
           url: `/webhooks/hook`,
+          method: "POST",
           params: {
             token: queryArg.token,
           },
         }),
-        providesTags: ["webhooks"],
+        invalidatesTags: ["webhooks"],
       }),
     }),
     overrideExisting: false,
@@ -3287,7 +3288,7 @@ export type RestrictedEventSettings = {
 export type GenerateWebhookResponse = {
   webhook_url: string;
 };
-export type WebhookType = "pretix_order_update";
+export type WebhookType = "pretix";
 export type GenerateWebhookPayload = {
   webhook_type: WebhookType;
 };
@@ -3591,6 +3592,5 @@ export const {
   useForceLogoutUserMutation,
   useGetTransactionQuery,
   useLazyGetTransactionQuery,
-  useTriggerWebhookQuery,
-  useLazyTriggerWebhookQuery,
+  useTriggerWebhookMutation,
 } = injectedRtkApi;
