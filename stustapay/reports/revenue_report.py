@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from sftkit.database import Connection
 
 from stustapay.bon.bon import BonConfig, gen_dummy_order
-from stustapay.bon.pdflatex import File, PdfRenderResult, pdflatex, render_template
 from stustapay.core.currency import get_currency_symbol
 from stustapay.core.schema.media import Blob
 from stustapay.core.schema.order import Order
@@ -18,6 +17,7 @@ from stustapay.core.service.order.stats import (
     get_hourly_sales_stats,
 )
 from stustapay.core.service.tree.common import fetch_event_design, fetch_event_for_node, fetch_node
+from stustapay.reports.render import render_report
 
 
 class DailyRevenue(BaseModel):
@@ -27,10 +27,16 @@ class DailyRevenue(BaseModel):
     revenue_minus_fees: float
 
 
+class OrderWithFees(Order):
+    fees: float
+    total_price_minus_fees: float
+
+
 class NodeReportContext(BaseModel):
+    event_name: str
     render_logo: bool
     config: BonConfig
-    orders: list[Order]
+    orders: list[OrderWithFees]
     daily_revenue_stats: list[DailyRevenue]
     from_time: datetime
     to_time: datetime
@@ -44,24 +50,13 @@ class NodeReportContext(BaseModel):
     currency_symbol: str
 
 
-class OrderWithFees(Order):
-    fees: float
-    total_price_minus_fees: float
-
-
-async def render_report(context: NodeReportContext, logo: Blob | None):
-    rendered = await render_template("revenue_report.tex", context, context.currency_symbol)
-    return await pdflatex(
-        file_content=rendered, additional_files=[File(name="logo.svg", content=logo.data)] if logo is not None else []
-    )
-
-
-async def generate_dummy_report(node_id: int, event: RestrictedEventSettings, logo: Blob | None) -> PdfRenderResult:
+async def generate_dummy_report(node: Node, event: RestrictedEventSettings, logo: Blob | None) -> bytes:
     """Generate a dummy bon for the given event and return the pdf as bytes"""
     fee = 0.01
 
-    dummy_orders = [gen_dummy_order(node_id)]
+    dummy_orders = [gen_dummy_order(node.id, i) for i in range(200)]
     ctx = NodeReportContext(
+        event_name=node.name,
         render_logo=logo is not None,
         config=BonConfig(
             title=event.bon_title,
@@ -88,9 +83,9 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings, lo
         ),
         orders=[
             OrderWithFees(
+                **dummy_order.model_dump(),
                 fees=dummy_order.total_price * fee,
                 total_price_minus_fees=dummy_order.total_price - dummy_order.total_price * fee,
-                **dummy_order.model_dump(),
             )
             for dummy_order in dummy_orders
         ],
@@ -116,7 +111,10 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings, lo
         revenue_minus_fees=13212.23 - 13212.23 * fee,
         currency_symbol=get_currency_symbol(event.currency_identifier),
     )
-    return await render_report(context=ctx, logo=logo)
+    files = {}
+    if logo:
+        files["logo.svg"] = logo
+    return await render_report(template="report", template_context=ctx.model_dump(), files=files)
 
 
 def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: list[OrderWithFees], total: float):
@@ -136,7 +134,7 @@ def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: lis
         )
 
 
-async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRenderResult:
+async def generate_report(conn: Connection, node_id: int, fees=0.01) -> bytes:
     node = await fetch_node(conn=conn, node_id=node_id)
     assert node is not None
     assert node.event_node_id is not None
@@ -179,6 +177,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
     if event_design.bon_logo_blob_id is not None:
         logo = await fetch_blob(conn=conn, blob_id=event_design.bon_logo_blob_id)
     context = NodeReportContext(
+        event_name=node.name,
         render_logo=logo is not None,
         node=node,
         orders=orders,
@@ -192,4 +191,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
         fees_percent=fees,
         revenue_minus_fees=total - fees_of_total,
     )
-    return await render_report(context=context, logo=logo)
+    files = {}
+    if logo:
+        files["logo.svg"] = logo
+    return await render_report(template="report", template_context=context.model_dump(), files=files)

@@ -15,8 +15,8 @@ def is_valid_base64(data: str) -> str:
     try:
         base64.b64decode(data)
         return data
-    except binascii.Error:
-        raise ValueError("Invalid base64 string")
+    except binascii.Error as e:
+        raise ValueError("Invalid base64 string") from e
 
 
 class NewBlob(BaseModel):

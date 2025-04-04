@@ -133,9 +133,9 @@ async def generate_webhook_url(
     },
 )
 async def generate_test_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
-    mime_type, content = await tree_service.generate_test_report(token=token, node_id=node_id)
+    content = await tree_service.generate_test_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="test_report.pdf"'}
-    return Response(content, headers=headers, media_type=mime_type)
+    return Response(content, headers=headers, media_type="application/pdf")
 
 
 @router.post(
@@ -148,9 +148,9 @@ async def generate_test_report(token: CurrentAuthToken, tree_service: ContextTre
     },
 )
 async def generate_revenue_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
-    mime_type, content = await tree_service.generate_revenue_report(token=token, node_id=node_id)
+    content = await tree_service.generate_revenue_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="revenue_report.pdf"'}
-    return Response(content, headers=headers, media_type=mime_type)
+    return Response(content, headers=headers, media_type="application/pdf")
 
 
 class SumUpTokenPayload(BaseModel):

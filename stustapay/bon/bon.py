@@ -86,9 +86,9 @@ class DummyBon:
     error: str | None
 
 
-def gen_dummy_order(node_id: int):
+def gen_dummy_order(node_id: int, order_id: int = 1):
     return OrderWithTse(
-        id=1,
+        id=order_id,
         node_id=node_id,
         uuid=uuid.uuid4(),
         total_price=16.00,

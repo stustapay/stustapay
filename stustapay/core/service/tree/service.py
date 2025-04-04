@@ -3,7 +3,6 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import BonJson, generate_dummy_bon_json
-from stustapay.bon.revenue_report import generate_dummy_report, generate_report
 from stustapay.core.config import Config
 from stustapay.core.schema.media import EventDesign, MimeType, NewBlob
 from stustapay.core.schema.tree import (
@@ -26,6 +25,7 @@ from stustapay.core.service.tree.common import (
     get_tree_for_current_user,
 )
 from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
+from stustapay.reports.revenue_report import generate_dummy_report, generate_report
 from stustapay.ticket_shop import pretix
 
 
@@ -429,29 +429,24 @@ class TreeService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
-    async def generate_test_report(self, *, conn: Connection, node: Node) -> tuple[str, bytes]:
+    async def generate_test_report(self, *, conn: Connection, node: Node) -> bytes:
         assert node.event_node_id is not None
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         event_design = await fetch_event_design(conn=conn, node_id=node.id)
         logo = None
         if event_design.bon_logo_blob_id is not None:
             logo = await fetch_blob(conn=conn, blob_id=event_design.bon_logo_blob_id)
-        dummy_report = await generate_dummy_report(node_id=node.event_node_id, event=event, logo=logo)
-        if not dummy_report.success or dummy_report.bon is None:
-            print("failed repot", dummy_report.msg)
-            raise InvalidArgument(f"Error while generating dummy report: {dummy_report.msg}")
-        return dummy_report.bon.mime_type, dummy_report.bon.content
+        content = await generate_dummy_report(node=node, event=event, logo=logo)
+        return content
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def generate_revenue_report(self, *, conn: Connection, node: Node) -> tuple[str, bytes]:
+    async def generate_revenue_report(self, *, conn: Connection, node: Node) -> bytes:
         if node.event_node_id is None:
             raise InvalidArgument("Cannot generate test report for a node not associated with an event")
-        report = await generate_report(conn=conn, node_id=node.id)
-        if not report.success or report.bon is None:
-            raise InvalidArgument(f"Error while generating report: {report.msg}")
-        return report.bon.mime_type, report.bon.content
+        content = await generate_report(conn=conn, node_id=node.id)
+        return content
 
     @with_db_transaction
     @requires_node(event_only=True)
