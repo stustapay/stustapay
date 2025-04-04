@@ -365,7 +365,7 @@ class OrderService(Service[Config]):
             TicketVoucher,
             "select t.* "
             "from ticket_voucher t "
-            "join account a on (a.id = t.account_id) "
+            "join account a on (a.id = t.customer_account_id) "
             "where t.token = $1 and a.user_tag_id is null and t.node_id = any($2)",
             voucher_token,
             node.ids_to_root,
@@ -381,15 +381,18 @@ class OrderService(Service[Config]):
     ) -> Account:
         account = await conn.fetch_maybe_one(
             Account,
-            "select a.*, (select t.restriction from user_tag t where t.pin = $1) as restriction "
+            "select a.*, "
+            "(select t.restriction from user_tag t where t.pin = $1) as restriction, "
+            "null as user_tag_uid, "
+            "'[]'::json as tag_history "
             "from account a "
-            "where a.type = 'private' and a.node_id = any($2) and a.id = $3",
+            "where a.type = 'private' and a.node_id = any($2) and a.id = $3 and a.user_tag_id is null",
             tag_pin,
             node.ids_to_root,
             ticket_voucher.customer_account_id,
         )
         if account is None:
-            raise InvalidArgument("couldn't find account assigned to voucher")
+            raise InvalidArgument("couldn't find account assigned to unredeemed voucher")
         return account
 
     @with_db_transaction(read_only=True)
@@ -434,8 +437,7 @@ class OrderService(Service[Config]):
         if new_balance > max_limit:
             too_much = new_balance - max_limit
             raise InvalidArgument(
-                f"More than {max_limit:.02f}€ on accounts is disallowed! "
-                f"New balance would be {new_balance:.02f}€, which is {too_much:.02f}€ too much."
+                f"Max {max_limit:.02f}€ allowed on account! {new_balance:.02f}€ is {too_much:.02f}€ too much."
             )
 
         return PendingTopUp(
@@ -636,8 +638,7 @@ class OrderService(Service[Config]):
             if order.new_balance > max_limit:
                 too_much = order.new_balance - max_limit
                 raise InvalidArgument(
-                    f"More than {max_limit:.02f}€ on accounts is disallowed! "
-                    f"New balance would be {order.new_balance:.02f}€, which is {too_much:.02f}€ too much."
+                    f"Max {max_limit:.02f}€ allowed on account! {order.new_balance:.02f}€ is {too_much:.02f}€ too much."
                 )
 
             if order.new_balance < 0:
@@ -1209,6 +1210,9 @@ class OrderService(Service[Config]):
         if total_top_up > 0.0 and not can_top_up:
             raise TillPermissionException("This terminal is not allowed to sell tickets with topup")
 
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_till.node_id)
+        max_limit = event_settings.max_account_balance
+
         layout_id = await conn.fetchval(
             "select layout_id from till_profile tp where id = $1", current_till.active_profile_id
         )
@@ -1260,6 +1264,7 @@ class OrderService(Service[Config]):
             ticket_voucher: TicketVoucher | None = None
 
             account: Account | None = None
+            account_balance: float = 0.0
 
             # check if the given scanned voucher token is still valid
             if voucher_token := customer_tag.voucher_token:
@@ -1273,8 +1278,11 @@ class OrderService(Service[Config]):
                     conn=conn, node=node, ticket_voucher=ticket_voucher, tag_pin=customer_tag.tag_pin
                 )
                 # ticket was already sold due to voucher
+                ticket.price = 0.0
                 ticket.total_price = 0.0
                 ticket.initial_top_up_amount = 0.0
+
+                account_balance = account.balance
 
             else:
                 total_price += ticket.total_price
@@ -1284,6 +1292,13 @@ class OrderService(Service[Config]):
 
             if total_price < 0.0:
                 raise InvalidArgument("negative ticket sale price")
+
+            new_balance = account_balance + customer_tag.top_up_amount
+            if new_balance > max_limit:
+                too_much = new_balance - max_limit
+                raise InvalidArgument(
+                    f"Max {max_limit:.02f}€ allowed on account! {new_balance:.02f}€ is {too_much:.02f}€ too much."
+                )
 
             scanned_tickets.append(
                 TicketScanResultEntry(
@@ -1315,17 +1330,6 @@ class OrderService(Service[Config]):
         if uuid_exists:
             # raise AlreadyProcessedException("This order has already been booked (duplicate order uuid)")
             raise AlreadyProcessedException("Successfully booked order")
-
-        if new_ticket_sale.payment_method is not None:
-            if new_ticket_sale.payment_method == PaymentMethod.tag:
-                raise InvalidArgument("Cannot pay with tag for a ticket")
-
-            if new_ticket_sale.payment_method == PaymentMethod.cash:
-                cash_register_id = await conn.fetchval(
-                    "select t.active_cash_register_id from till t where id = $1", current_till.id
-                )
-                if cash_register_id is None:
-                    raise InvalidArgument("This till needs a cash register for cash payments")
 
         ticket_scan_result: TicketScanResult = await self.check_ticket_scan(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
             conn=conn,
@@ -1375,12 +1379,25 @@ class OrderService(Service[Config]):
                     )
                 )
 
-        return PendingTicketSale(
+        sale = PendingTicketSale(
             uuid=new_ticket_sale.uuid,
             payment_method=new_ticket_sale.payment_method,
             line_items=line_items,
             scanned_tickets=ticket_scan_result.scanned_tickets,
         )
+
+        if new_ticket_sale.payment_method is not None:
+            if new_ticket_sale.payment_method == PaymentMethod.tag:
+                raise InvalidArgument("Cannot pay with tag for a ticket")
+
+            if new_ticket_sale.payment_method == PaymentMethod.cash and sale.total_price > 0.0:
+                cash_register_id = await conn.fetchval(
+                    "select t.active_cash_register_id from till t where id = $1", current_till.id
+                )
+                if cash_register_id is None:
+                    raise InvalidArgument("This till needs a cash register for cash payments")
+
+        return sale
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])

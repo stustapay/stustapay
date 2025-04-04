@@ -53,7 +53,7 @@ fun PayOutSelection(
                 )
 
                 Text(
-                    stringResource(R.string.credit_amount).format(payout.maxAmount),
+                    stringResource(R.string.sale_credit).format(payout.maxAmount),
                     style = MaterialTheme.typography.h5,
                 )
 
@@ -89,7 +89,7 @@ fun PayOutSelection(
                 ) {
                     Text(
                         // unicode "Coin"
-                        stringResource(R.string.payout_payout), fontSize = 28.sp,
+                        stringResource(R.string.sale_payout_action), fontSize = 28.sp,
                         textAlign = TextAlign.Center,
                     )
                 }

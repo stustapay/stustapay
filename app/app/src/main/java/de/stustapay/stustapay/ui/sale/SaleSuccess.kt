@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +23,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -103,14 +101,14 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     SuccessIcon(modifier = Modifier.size(120.dp))
 
                     ProductConfirmItem(
-                        name = stringResource(R.string.price),
+                        name = stringResource(R.string.common_price),
                         price = saleCompletedV.totalPrice,
                         bigStyle = true,
                     )
 
                     if (saleCompletedV.paymentMethod == PaymentMethod.tag) {
                         ProductConfirmItem(
-                            name = stringResource(R.string.new_balance),
+                            name = stringResource(R.string.sale_new_balance),
                             price = saleCompletedV.newBalance,
                             bigStyle = true,
                         )
@@ -121,13 +119,13 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                         if (saleCompletedV.usedVouchers > 0) {
                             ProductConfirmItem(
-                                name = stringResource(R.string.used_vouchers),
+                                name = stringResource(R.string.customer_used_vouchers),
                                 quantity = saleCompletedV.usedVouchers.intValue(),
                             )
                         }
 
                         ProductConfirmItem(
-                            name = stringResource(R.string.remaining_vouchers),
+                            name = stringResource(R.string.customer_remaining_vouchers),
                             quantity = saleCompletedV.newVoucherBalance.intValue(),
                         )
                     }
@@ -137,12 +135,12 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
                         if (returnableCount > 0) {
                             ProductConfirmItem(
-                                name = stringResource(R.string.deposit_handout),
+                                name = stringResource(R.string.sale_deposit_handout),
                                 quantity = returnableCount,
                             )
                         } else {
                             ProductConfirmItem(
-                                name = stringResource(R.string.deposit_returned),
+                                name = stringResource(R.string.sale_deposit_returned),
                                 quantity = -returnableCount,
                             )
                         }

@@ -4179,7 +4179,7 @@
           "top_up_amount": {
             "type": "number",
             "title": "Top Up Amount",
-            "default": 0
+            "default": 0.0
           },
           "ticket_voucher": {
             "anyOf": [
@@ -4213,13 +4213,6 @@
       },
       "TicketVoucher": {
         "properties": {
-          "ticket": {
-            "$ref": "#/components/schemas/Ticket"
-          },
-          "top_up_amount": {
-            "type": "number",
-            "title": "Top Up Amount"
-          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -4244,8 +4237,6 @@
         },
         "type": "object",
         "required": [
-          "ticket",
-          "top_up_amount",
           "id",
           "node_id",
           "created_at",

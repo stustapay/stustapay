@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.sale
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.material.MaterialTheme
@@ -9,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -71,7 +69,7 @@ fun SaleView(
 
     if (error != null) {
         ErrorDialog(onDismiss = { viewModel.errorPopupDismissed() }) {
-            Text(text = stringResource(R.string.error), style = MaterialTheme.typography.h3)
+            Text(text = stringResource(R.string.common_error), style = MaterialTheme.typography.h3)
 
             Text(error, style = MaterialTheme.typography.h4)
         }

@@ -13,10 +13,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.UserRolesState
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
@@ -147,7 +145,7 @@ fun UserLoginView(
         var subtext: String? = null
         when (userUIStateV) {
             is UserUIState.NotLoggedIn -> {
-                user = stringResource(R.string.not_logged_in)
+                user = stringResource(R.string.user_error_no_login)
             }
 
             is UserUIState.LoggedIn -> {
@@ -156,7 +154,7 @@ fun UserLoginView(
             }
 
             is UserUIState.Error -> {
-                user = stringResource(R.string.error)
+                user = stringResource(R.string.common_error)
                 subtext = userUIStateV.message
             }
         }

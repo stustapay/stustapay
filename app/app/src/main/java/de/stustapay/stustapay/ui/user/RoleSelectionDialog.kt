@@ -108,7 +108,7 @@ fun RoleSelectionCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 15.dp),
-                text = stringResource(R.string.user_select),
+                text = stringResource(R.string.user_role_select),
                 textAlign = TextAlign.Center,
                 fontSize = 30.sp,
             )

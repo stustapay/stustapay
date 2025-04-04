@@ -36,9 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
-import de.stustapay.stustapay.ui.chipscan.NfcScanState
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
@@ -120,7 +118,7 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                         .fillMaxSize()
                         .padding(10.dp)
                 ) {
-                    ListItem(text = { Text(stringResource(R.string.tag_uid)) },
+                    ListItem(text = { Text(stringResource(R.string.common_tag_id)) },
                         secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue())) })
 
                     Divider()

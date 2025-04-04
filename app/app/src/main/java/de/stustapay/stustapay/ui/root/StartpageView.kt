@@ -1,9 +1,5 @@
 package de.stustapay.stustapay.ui.root
 
-import android.app.Activity
-import android.content.ComponentName
-import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,32 +7,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
-import de.stustapay.libssp.ui.common.Spinner
-import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.ui.nav.NavDest
-import kotlinx.coroutines.launch
-
-@Preview
-@Composable
-fun PreviewStartpageView() {
-    StartpageView(viewModel = hiltViewModel())
-}
 
 
 @Composable
@@ -47,9 +32,8 @@ fun StartpageView(
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
-    val activity = LocalActivity.current!!
 
-    val navigateToHook = fun(dest: NavDest): Unit {
+    val navigateToHook = fun(dest: NavDest) {
         // only allow navigation if we have a config
         // but always allow entering settings!
         if (!configLoading || dest == RootNavDests.settings) {
@@ -117,7 +101,7 @@ fun StartpageView(
                 if (loginState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
                     StartpageEntry(
                         item = StartpageItem(
-                            icon = Icons.Filled.Send,
+                            icon = Icons.AutoMirrored.Filled.Send,
                             label = R.string.root_item_development,
                             navDestination = RootNavDests.development,
                         ),
@@ -125,7 +109,7 @@ fun StartpageView(
                     )
                 }
 
-
+                val activity = LocalActivity.current
                 StartpageEntry(
                     item = StartpageItem(
                         icon = Icons.Filled.Refresh,
@@ -133,7 +117,9 @@ fun StartpageView(
                         navDestination = RootNavDests.startpage,
                     ),
                     navigateTo = {
-                        restartApp(activity)
+                        if (activity != null) {
+                            restartApp(activity)
+                        }
                     }
                 )
             }

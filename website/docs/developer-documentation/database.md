@@ -35,3 +35,10 @@ with tags as (
 )
 delete from account where id in (select * from accounts);
 ```
+
+To revert a ticket sale by ticket voucher, the account must remain.
+Change the last statement to instead clear the `user_tag_id`:
+
+```sql
+update account set user_tag_id = null where id in (select * from accounts);
+```

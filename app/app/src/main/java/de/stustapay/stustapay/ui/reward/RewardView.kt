@@ -82,13 +82,13 @@ fun RewardView(
                             onEnter = { viewModel.vouchersChanged(it) },
                             onClear = { viewModel.vouchersCleared() }
                         ) {
-                            Text(stringResource(R.string.voucher_amount), fontSize = 30.sp)
+                            Text(stringResource(R.string.common_voucher_amount), fontSize = 30.sp)
                         }
 
                         if (config.checkAccess { u, _ -> Access.canGiveVouchers(u) }) {
                             ProductSelectionItem(
                                 itemPrice = vouchers.toString(),
-                                leftButtonText = stringResource(R.string.vouchers),
+                                leftButtonText = stringResource(R.string.common_vouchers),
                                 leftButtonPress = { selectVoucherAmount.open() },
                                 rightButtonPress = { viewModel.vouchersCleared() },
                             )
@@ -101,7 +101,7 @@ fun RewardView(
                                 } else {
                                     ""
                                 },
-                                leftButtonText = stringResource(R.string.wristband),
+                                leftButtonText = stringResource(R.string.common_wristband),
                                 leftButtonPress = { viewModel.selectNewTicket() },
                                 rightButtonPress = { viewModel.clearNewTicket() },
                             )
@@ -157,9 +157,9 @@ fun RewardView(
 
                         Text(
                             if (newTicket) {
-                                stringResource(R.string.grant_new_wristband)
+                                stringResource(R.string.reward_grant_wristband)
                             } else {
-                                stringResource(R.string.grant)
+                                stringResource(R.string.reward_grant)
                             }, fontSize = 24.sp
                         )
                     }

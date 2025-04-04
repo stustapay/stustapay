@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.sale
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +47,10 @@ fun SaleConfirm(
         return
     }
 
+    BackHandler {
+        // don't allow pressing back here.
+    }
+
     Scaffold(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -63,18 +68,18 @@ fun SaleConfirm(
                 )
                 Column(modifier = Modifier.padding(horizontal = 10.dp)) {
                     ProductConfirmItem(
-                        name = stringResource(R.string.price),
+                        name = stringResource(R.string.common_price),
                         price = checkedSale.totalPrice,
                         bigStyle = true,
                     )
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(
-                        name = stringResource(R.string.credit_left),
+                        name = stringResource(R.string.customer_credit_left),
                         price = checkedSale.newBalance,
                     )
                     if (checkedSale.newVoucherBalance > 0) {
                         ProductConfirmItem(
-                            name = stringResource(R.string.remaining_vouchers),
+                            name = stringResource(R.string.customer_remaining_vouchers),
                             quantity = checkedSale.newVoucherBalance.intValue(),
                         )
                     }
@@ -93,7 +98,7 @@ fun SaleConfirm(
                 if (checkedSale.usedVouchers > 0) {
                     item {
                         ProductConfirmItem(
-                            name = stringResource(R.string.used_vouchers),
+                            name = stringResource(R.string.customer_used_vouchers),
                             quantity = checkedSale.usedVouchers.intValue(),
                         )
                     }
@@ -110,9 +115,9 @@ fun SaleConfirm(
         },
         bottomBar = {
             ProductConfirmBottomBar(
-                abortText = stringResource(R.string.edit),
+                abortText = stringResource(R.string.sale_abort),
                 submitSize = 24.sp,
-                submitText = stringResource(R.string.book_order),
+                submitText = stringResource(R.string.sale_order_book),
                 status = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(

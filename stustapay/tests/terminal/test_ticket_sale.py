@@ -8,6 +8,7 @@ from sftkit.error import InvalidArgument
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
     CompletedTicketSale,
+    CustomerRegistration,
     NewTicketSale,
     PaymentMethod,
     UserTagScan,
@@ -17,10 +18,11 @@ from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.ticket import NewTicket, NewTicketScan, Ticket
 from stustapay.core.schema.till import NewTillLayout, NewTillProfile, Till, TillLayout
 from stustapay.core.schema.tree import Node
+from stustapay.core.service.order.age_checks import find_oldest_customer
 from stustapay.core.service.order.order import OrderService, TillPermissionException
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till.till import TillService
-from stustapay.tests.conftest import Cashier, CreateRandomUserTag
+from stustapay.tests.conftest import Cashier, CreateRandomTicketVoucher, CreateRandomUserTag
 from stustapay.tests.sumup_mock import MockSumUpApi
 from stustapay.tests.terminal.conftest import (
     AssertAccountBalance,
@@ -100,6 +102,50 @@ async def sale_tickets(
         ticket=ticket,
         ticket_u16=ticket_u16,
         ticket_u18=ticket_u18,
+    )
+
+
+def test_find_oldest_customer():
+    with pytest.raises(AssertionError):
+        find_oldest_customer([])
+
+    assert 1 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 2 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 3 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 2 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+        ]
+    )
+
+    assert 1 == find_oldest_customer(
+        [
+            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=3, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+        ]
     )
 
 
@@ -261,15 +307,14 @@ async def test_ticket_flow_with_user_defined_topup_sumup(
     unused_tag = await create_random_user_tag()
 
     topup_amount = 10
-    new_scan = NewTicketScan(
-        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin, top_up_amount=topup_amount)]
-    )
+    tag_config = UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin, top_up_amount=topup_amount)
+    new_scan = NewTicketScan(customer_tags=[tag_config])
     scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
     assert scan_result is not None
 
     new_ticket = NewTicketSale(
         uuid=uuid.uuid4(),
-        customer_tags=[UserTagScan(tag_uid=unused_tag.uid, tag_pin=unused_tag.pin, top_up_amount=topup_amount)],
+        customer_tags=[tag_config],
         payment_method=PaymentMethod.sumup,
     )
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
@@ -286,6 +331,111 @@ async def test_ticket_flow_with_user_defined_topup_sumup(
     await assert_system_account_balance(
         account_type=AccountType.sale_exit, expected_balance=sale_exit_start_balance + sale_tickets.ticket.price
     )
+
+
+async def test_ticket_flow_with_ticket_voucher_and_topup(
+    order_service: OrderService,
+    till_service: TillService,
+    get_system_account_balance: GetSystemAccountBalance,
+    assert_system_account_balance: AssertSystemAccountBalance,
+    terminal_token: str,
+    sale_tickets: SaleTickets,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+    create_random_ticket_voucher: CreateRandomTicketVoucher,
+):
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
+    sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
+    unused_tag = await create_random_user_tag()
+
+    voucher = await create_random_ticket_voucher()
+    # TODO test that sale_tickets.ticket.initial_top_up_amount was added to customer.balance
+
+    topup_amount = 10.0
+    tag_config = UserTagScan(
+        tag_uid=unused_tag.uid,
+        tag_pin=unused_tag.pin,
+        top_up_amount=topup_amount,
+        voucher_token=voucher.token,
+    )
+
+    new_scan = NewTicketScan(customer_tags=[tag_config])
+    scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
+    assert scan_result is not None
+
+    new_ticket = NewTicketSale(
+        uuid=uuid.uuid4(),
+        customer_tags=[tag_config],
+        payment_method=PaymentMethod.sumup,
+    )
+    pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert 2 == pending_ticket.item_count  # ticket and topup
+    assert sale_tickets.ticket.total_price != 0.0  # ticket has a >0 price
+    assert pending_ticket.total_price == topup_amount  # ticket is now free
+
+    completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert completed_ticket is not None
+
+    customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
+    assert topup_amount == customer.balance
+    await assert_system_account_balance(
+        account_type=AccountType.sumup_entry, expected_balance=sumup_start_balance - completed_ticket.total_price
+    )
+    await assert_system_account_balance(account_type=AccountType.sale_exit, expected_balance=sale_exit_start_balance)
+
+
+async def test_ticket_flow_with_ticket_voucher_and_no_topup(
+    order_service: OrderService,
+    till_service: TillService,
+    get_system_account_balance: GetSystemAccountBalance,
+    assert_system_account_balance: AssertSystemAccountBalance,
+    terminal_token: str,
+    sale_tickets: SaleTickets,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+    create_random_ticket_voucher: CreateRandomTicketVoucher,
+):
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    cash_start_balance = await get_system_account_balance(account_type=AccountType.cash_entry)
+    sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
+    unused_tag = await create_random_user_tag()
+
+    voucher = await create_random_ticket_voucher()
+
+    topup_amount = 0.0
+    tag_config = UserTagScan(
+        tag_uid=unused_tag.uid,
+        tag_pin=unused_tag.pin,
+        top_up_amount=topup_amount,
+        voucher_token=voucher.token,
+    )
+
+    new_scan = NewTicketScan(customer_tags=[tag_config])
+    scan_result = await order_service.check_ticket_scan(token=terminal_token, new_ticket_scan=new_scan)
+    assert scan_result is not None
+
+    new_ticket = NewTicketSale(
+        uuid=uuid.uuid4(),
+        customer_tags=[tag_config],
+        payment_method=PaymentMethod.cash,
+    )
+    pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert 1 == pending_ticket.item_count  # just ticket, no top up
+    assert sale_tickets.ticket.total_price != 0.0  # ticket has a >0 price
+    assert pending_ticket.total_price == 0.0  # ticket is now free
+
+    completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
+    assert completed_ticket is not None
+
+    customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
+    assert topup_amount == customer.balance
+    await assert_system_account_balance(
+        account_type=AccountType.cash_entry, expected_balance=cash_start_balance - completed_ticket.total_price
+    )
+    await assert_system_account_balance(account_type=AccountType.sale_exit, expected_balance=sale_exit_start_balance)
 
 
 async def test_ticket_flow_with_deferred_sumup_payment(

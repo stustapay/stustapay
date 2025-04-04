@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.root
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +28,7 @@ fun RootWrapper(
 
     when (val border = borderState) {
         is BorderState.NoBorder -> {
-            RootWrapperContent(infallibleVisible, content)
+            InfallibleContent(infallibleVisible, content)
         }
 
         is BorderState.Border -> {
@@ -54,7 +53,7 @@ fun RootWrapper(
                         )
                     }
 
-                    RootWrapperContent(infallibleVisible, content)
+                    InfallibleContent(infallibleVisible, content)
                 }
             }
         }
@@ -63,12 +62,10 @@ fun RootWrapper(
 
 
 @Composable
-fun RootWrapperContent(infallibleVisible: Boolean, content: @Composable () -> Unit) {
+fun InfallibleContent(infallibleVisible: Boolean, content: @Composable () -> Unit) {
     if (infallibleVisible) {
-        Log.e("render", "render infallible")
         InfallibleError()
     } else {
-        Log.e("render", "render content")
         content()
     }
 }

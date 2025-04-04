@@ -73,7 +73,7 @@ fun SaleHistoryView(
     }
 
     NavScaffold(
-        title = { Text(stringResource(R.string.history_title)) },
+        title = { Text(stringResource(R.string.sale_history_title)) },
         navigateBack = leaveView
     ) {
         Scaffold(
@@ -183,7 +183,7 @@ fun SaleHistoryView(
                     Divider()
 
                     ProductConfirmItem(
-                        name = stringResource(R.string.history_sum),
+                        name = stringResource(R.string.sale_history_sum),
                         price = sale.totalPrice,
                     )
 
@@ -197,7 +197,7 @@ fun SaleHistoryView(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 cancelOrder = true
                             }) {
-                            Text(stringResource(R.string.history_cancel), fontSize = 24.sp)
+                            Text(stringResource(R.string.sale_history_cancel), fontSize = 24.sp)
                         }
                     }
                 }
@@ -247,7 +247,7 @@ fun SaleHistoryView(
             ) {
                 Column {
                     Text(
-                        stringResource(R.string.history_confirm),
+                        stringResource(R.string.sale_history_confirm),
                         textAlign = TextAlign.Center,
                         fontSize = 48.sp
                     )
@@ -264,7 +264,7 @@ fun SaleHistoryView(
                                 cancelOrder = false
                             }
                         }) {
-                        Text(stringResource(R.string.history_cancel), fontSize = 24.sp)
+                        Text(stringResource(R.string.sale_history_cancel), fontSize = 24.sp)
                     }
                 }
             }

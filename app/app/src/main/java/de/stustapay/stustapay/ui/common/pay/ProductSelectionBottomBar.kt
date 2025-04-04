@@ -70,7 +70,7 @@ fun ProductSelectionBottomBar(
         if (price != null) {
             Divider()
             ProductConfirmItem(
-                name = stringResource(R.string.history_sum),
+                name = stringResource(R.string.sale_history_sum),
                 price = price,
             )
             Divider()
@@ -115,7 +115,7 @@ fun ProductSelectionBottomBar(
                         .padding(start = 5.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.pay_no_payment_method_configured),
+                        text = stringResource(R.string.sale_no_pay_method),
                         fontSize = 12.sp,
                         textAlign = TextAlign.Center,
                         style = LargeButtonStyle
@@ -188,9 +188,9 @@ fun ProductSelectionBottomBar(
                 ) {
                     Text(
                         text = if (sspEnabled) {
-                            stringResource(R.string.pay_stustapay)
+                            stringResource(R.string.sale_pay_stustapay)
                         } else {
-                            stringResource(R.string.pay_cash)
+                            stringResource(R.string.sale_pay_cash)
                         },
                         fontSize = submitSize,
                         textAlign = TextAlign.Center,
@@ -215,9 +215,9 @@ fun ProductSelectionBottomBar(
                 ) {
                     Text(
                         text = if (cardEnabled) {
-                            stringResource(R.string.pay_card)
+                            stringResource(R.string.sale_pay_card)
                         } else {
-                            stringResource(R.string.pay_cash)
+                            stringResource(R.string.sale_pay_cash)
                         },
                         textAlign = TextAlign.Center,
                         style = LargeButtonStyle,
@@ -255,7 +255,7 @@ fun ProductSelectionBottomBar(
                         .padding(horizontal = 5.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.pay_stustapay),
+                        text = stringResource(R.string.sale_pay_stustapay),
                         fontSize = 25.sp,
                         textAlign = TextAlign.Center,
                         style = LargeButtonStyle
@@ -274,7 +274,7 @@ fun ProductSelectionBottomBar(
                     enabled = ready && cashierHasRegister,
                 ) {
                     Text(
-                        stringResource(R.string.pay_cash),
+                        stringResource(R.string.sale_pay_cash),
                         textAlign = TextAlign.Center,
                         style = LargeButtonStyle,
                         fontSize = 25.sp,
@@ -293,7 +293,7 @@ fun ProductSelectionBottomBar(
                     enabled = ready && amountIsPositive,
                 ) {
                     Text(
-                        stringResource(R.string.pay_card),
+                        stringResource(R.string.sale_pay_card),
                         textAlign = TextAlign.Center,
                         style = LargeButtonStyle,
                         fontSize = 25.sp,

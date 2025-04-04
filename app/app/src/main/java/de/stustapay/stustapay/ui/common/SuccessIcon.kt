@@ -23,6 +23,6 @@ fun SuccessIcon(modifier: Modifier = Modifier) {
             .clip(shape = CircleShape)
             .padding(top = 2.dp),
         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-        contentDescription = stringResource(R.string.success),
+        contentDescription = stringResource(R.string.common_status_success),
     )
 }

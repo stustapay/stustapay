@@ -12,11 +12,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.repository.ForceDeregisterState
 import de.stustapay.stustapay.ui.barcode.QRScanView
 import de.stustapay.stustapay.ui.common.PrefGroup
 import de.stustapay.stustapay.ui.settings.RegistrationUiState.*
 import de.stustapay.libssp.ui.theme.errorButtonColors
+import de.stustapay.stustapay.ui.barcode.QRScanDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -103,7 +105,7 @@ fun Registered(
 @Composable
 fun RegistrationOverview(
     scope: CoroutineScope,
-    navController: NavController,
+    startScan: () -> Unit,
     registrationUiState: RegistrationUiState,
     onDeregister: () -> Unit,
     allowForceDeregister: ForceDeregisterState,
@@ -118,9 +120,11 @@ fun RegistrationOverview(
             Idle -> {
                 message = "waiting for input"
             }
+
             is Message -> {
                 message = registrationUiState.msg
             }
+
             is HasEndpoint -> {
                 endpointUrl = registrationUiState.endpointUrl
                 message = registrationUiState.msg
@@ -149,9 +153,7 @@ fun RegistrationOverview(
                 )
             } else {
                 Button(modifier = Modifier.padding(start = 10.dp, end = 10.dp), onClick = {
-                    scope.launch {
-                        navController.navigate("scan")
-                    }
+                    startScan()
                 }) {
                     Text(text = "Scan Registration QR Code")
                 }
@@ -164,6 +166,7 @@ fun RegistrationOverview(
 @Composable
 fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
 
+    // (this was the first usage of state flows in StuStaPay :)
     // when the registrationUiState flow changes, re-draw this function (collect)
     // we only want the latest value of the flow, i.e. a state (asState)
     // we want to pause subscription when the application is no longer visible (withLifecycle)
@@ -172,31 +175,23 @@ fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
     val allowForceDeregister: ForceDeregisterState by viewModel.allowForceDeregister.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
-    val navController = rememberNavController()
+    val registerScanState = rememberDialogDisplayState()
 
-    NavHost(
-        navController = navController,
-        startDestination = "register",
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        composable("register") {
-            RegistrationOverview(
-                scope = scope,
-                navController = navController,
-                registrationUiState = registrationUiState,
-                onDeregister = { scope.launch { viewModel.deregister() } },
-                allowForceDeregister = allowForceDeregister,
-                onForceDeregister = { scope.launch { viewModel.deregister(force = true) } },
-            )
-        }
-        composable("scan") {
-            QRScanView { qrcode ->
-                scope.launch {
-                    viewModel.register(qrcode)
-                }
-                navController.navigate("register")
+    QRScanDialog(
+        state = registerScanState,
+        onScan = { qrcode ->
+            scope.launch {
+                viewModel.register(qrcode)
             }
         }
-    }
+    )
+
+    RegistrationOverview(
+        scope = scope,
+        startScan = { registerScanState.open() },
+        registrationUiState = registrationUiState,
+        onDeregister = { scope.launch { viewModel.deregister() } },
+        allowForceDeregister = allowForceDeregister,
+        onForceDeregister = { scope.launch { viewModel.deregister(force = true) } },
+    )
 }

@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 import asyncio
+import datetime
 import os
 import random
 import secrets
@@ -22,6 +23,7 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.terminal import NewTerminal, Terminal
+from stustapay.core.schema.ticket import TicketVoucher
 from stustapay.core.schema.till import (
     NewTill,
     NewTillLayout,
@@ -218,6 +220,43 @@ async def create_random_user_tag(
                 return UserTag(id=user_tag_id, uid=uid, pin=pin)
             except asyncpg.DataError:
                 pass
+
+    return func
+
+
+class CreateRandomTicketVoucher(Protocol):
+    def __call__(self) -> Awaitable[TicketVoucher]: ...
+
+
+@pytest.fixture
+async def create_random_ticket_voucher(
+    db_connection: Connection,
+    event_node: Node,
+) -> CreateRandomTicketVoucher:
+    async def func() -> TicketVoucher:
+        token = secrets.token_hex(20)
+        reference = secrets.token_hex(20)
+
+        customer_account_id = await db_connection.fetchval(
+            "insert into account(node_id, type) values ($1, 'private') returning id",
+            event_node.event_node_id,
+        )
+        ticket_voucher_id = await db_connection.fetchval(
+            "insert into ticket_voucher(node_id, customer_account_id, token, ticket_type, external_reference) "
+            "   values ($1, $2, $3, $4, $5) returning id",
+            event_node.event_node_id,
+            customer_account_id,
+            token,
+            "pretix",
+            f"ref-{reference}",
+        )
+        return TicketVoucher(
+            id=ticket_voucher_id,
+            node_id=event_node.event_node_id,
+            created_at=datetime.datetime.now(),
+            customer_account_id=customer_account_id,
+            token=token,
+        )
 
     return func
 

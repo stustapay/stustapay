@@ -37,7 +37,7 @@ fun NoCashRegisterWarning(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    stringResource(R.string.no_cash_register),
+                    stringResource(R.string.cash_register_none),
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colors.onError,
                     style = if (bigStyle) {MaterialTheme.typography.h4 } else {MaterialTheme.typography.h5}

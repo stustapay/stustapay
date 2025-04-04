@@ -121,7 +121,7 @@ fun CashECSelection(
                     ) {
                         // unicode "Coin"
                         Text(
-                            stringResource(R.string.pay_cash),
+                            stringResource(R.string.sale_pay_cash),
                             textAlign = TextAlign.Center,
                             style = LargeButtonStyle,
                         )
@@ -167,7 +167,7 @@ fun CashECSelection(
                     ) {
                         // unicode "Credit Card"
                         Text(
-                            stringResource(R.string.pay_card),
+                            stringResource(R.string.sale_pay_card),
                             textAlign = TextAlign.Center,
                             style = LargeButtonStyle,
                         )

@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewStatusText() {
     StatusText("roflcopter bla bla important message pls read me srsly gnampf")

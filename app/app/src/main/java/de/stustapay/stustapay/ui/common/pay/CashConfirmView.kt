@@ -40,7 +40,7 @@ fun CashConfirmView(
     goBack: () -> Unit,
     getAmount: () -> UInt,
     status: @Composable () -> Unit = {},
-    question: String = stringResource(R.string.received_q),
+    question: String = stringResource(R.string.common_received_q),
     onPay: CashECCallback,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -109,7 +109,7 @@ fun CashConfirmView(
                             .height(70.dp)
                             .padding(end = 10.dp)
                     ) {
-                        Text(text = stringResource(R.string.back), fontSize = 24.sp)
+                        Text(text = stringResource(R.string.common_back), fontSize = 24.sp)
                     }
                     Button(
                         onClick = {

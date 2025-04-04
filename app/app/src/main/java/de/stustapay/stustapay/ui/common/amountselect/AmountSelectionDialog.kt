@@ -20,7 +20,7 @@ import de.stustapay.stustapay.ui.common.ConfirmCard
 import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewAmountSelectionDialog() {
     val state = rememberDialogDisplayState()

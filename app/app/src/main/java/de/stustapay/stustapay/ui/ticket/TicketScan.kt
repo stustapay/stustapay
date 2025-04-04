@@ -10,22 +10,27 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.model.NfcTag
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
+import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.barcode.QRScanDialog
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
+import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
+import de.stustapay.stustapay.ui.common.amountselect.AmountSelectionDialog
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
-import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
+import de.stustapay.stustapay.ui.common.pay.ProductConfirmBottomBar
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
-import de.stustapay.libssp.ui.theme.NfcScanStyle
-import de.stustapay.stustapay.ui.common.pay.ProductConfirmBottomBar
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Composable
@@ -41,6 +46,40 @@ fun TicketScan(
     val status by viewModel.status.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
+
+    val editTicketTopUpAmount = rememberDialogDisplayState()
+    val ticketTargetTag = remember { MutableStateFlow<NfcTag?>(null) }
+
+    AmountSelectionDialog(
+        state = editTicketTopUpAmount,
+
+        config = AmountConfig.Money(cents = false, limit = 150u),
+        initialAmount = {
+            viewModel.getTagTopUp(ticketTargetTag.value)
+        },
+        onEnter = { amount ->
+            scope.launch {
+                viewModel.setTagTopUp(ticketTargetTag.value, amount)
+            }
+        },
+        onClear = {
+            scope.launch {
+                viewModel.setTagTopUp(ticketTargetTag.value, 0u)
+            }
+        },
+    )
+
+    val scanTicketVoucherState = rememberDialogDisplayState()
+    QRScanDialog(
+        state = scanTicketVoucherState,
+        onScan = { scanned ->
+            scope.launch {
+                viewModel.setTagTicketVoucherToken(ticketTargetTag.value, scanned)
+            }
+        }
+    ) {
+        Text(stringResource(R.string.ticket_scan_voucher))
+    }
 
     Scaffold(
         topBar = {
@@ -89,11 +128,11 @@ fun TicketScan(
                         val scanText = when (tagScanStatus) {
                             is TagScanStatus.Scan -> {
                                 // TICKET
-                                stringResource(R.string.scan_ticket)
+                                stringResource(R.string.ticket_scan)
                             }
 
                             is TagScanStatus.Duplicate -> {
-                                stringResource(R.string.duplicate_ticket_scan)
+                                stringResource(R.string.ticket_error_duplicate)
                             }
 
                             is TagScanStatus.NoScan -> {
@@ -108,9 +147,27 @@ fun TicketScan(
                     }
                 }
 
-                for (scannedTicket in ticketStatus.scans) {
+                for (scan in ticketStatus.tickets) {
                     item {
-                        TicketListItem(scannedTicket)
+                        TicketListItem(
+                            scan,
+                            setTopUp = if (config.allowTopUp()) {
+                                {
+                                    ticketTargetTag.update { scan.nfcTag }
+                                    editTicketTopUpAmount.open()
+                                }
+                            } else {
+                                null
+                            },
+                            setTicketVoucher = if (config.canScanTicketVouchers()) {
+                                {
+                                    ticketTargetTag.update { scan.nfcTag }
+                                    scanTicketVoucherState.open()
+                                }
+                            } else {
+                                null
+                            },
+                        )
                     }
                 }
             }

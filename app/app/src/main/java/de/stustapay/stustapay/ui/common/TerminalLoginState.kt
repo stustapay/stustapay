@@ -39,8 +39,22 @@ class TerminalLoginState(
 
     fun canHandleCash(): Boolean {
         if (terminal !is TerminalConfigState.Success) {
-            return false;
+            return false
         }
         return terminal.config.till?.cashRegisterId != null;
+    }
+
+    fun allowTopUp(): Boolean {
+        if (terminal !is TerminalConfigState.Success) {
+            return false
+        }
+        return terminal.config.till?.allowTopUp == true
+    }
+
+    fun canScanTicketVouchers(): Boolean {
+        if (terminal !is TerminalConfigState.Success) {
+            return false
+        }
+        return terminal.config.till?.allowTicketVouchers == true
     }
 }

@@ -19,7 +19,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,22 +68,22 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                             .clip(shape = CircleShape)
                             .padding(top = 2.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = stringResource(R.string.success),
+                        contentDescription = stringResource(R.string.common_status_success),
                     )
 
                     TopUpConfirmItem(
-                        name = stringResource(R.string.previous_balance),
+                        name = stringResource(R.string.customer_previous_balance),
                         price = completedTopUp.oldBalance,
                     )
                     TopUpConfirmItem(
-                        name = stringResource(R.string.topup),
+                        name = stringResource(R.string.common_topup),
                         price = completedTopUp.amount,
                     )
 
                     Divider(modifier = Modifier.padding(vertical = 10.dp))
 
                     TopUpConfirmItem(
-                        name = stringResource(R.string.new_balance),
+                        name = stringResource(R.string.sale_new_balance),
                         price = completedTopUp.newBalance,
                         bigStyle = true,
                     )
@@ -113,7 +112,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = stringResource(R.string.done))
+                    Text(text = stringResource(R.string.common_action_done))
                 }
             }
         }

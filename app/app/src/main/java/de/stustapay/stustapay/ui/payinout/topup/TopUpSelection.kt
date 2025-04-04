@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
-import android.app.Activity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,16 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
 import de.stustapay.stustapay.ui.common.pay.CashECCallback
 import de.stustapay.stustapay.ui.common.pay.CashECPay
-import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
 import kotlinx.coroutines.launch
 

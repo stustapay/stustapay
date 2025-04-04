@@ -4,12 +4,17 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.util.Log
 import android.util.Size
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -29,11 +34,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.stustapay.barcode.ZXingQRCode
+import de.stustapay.stustapay.ui.common.ConfirmCard
 import androidx.camera.core.Preview as CameraPreview
 import androidx.compose.ui.geometry.Size as geomSize
 
@@ -98,8 +108,12 @@ fun CameraOverlay(
 @Preview
 @Composable
 fun QRScanView(
+    modifier: Modifier = Modifier,
+    viewModifier: Modifier = Modifier,
+    cameraSelector: Int = CameraSelector.LENS_FACING_BACK,
     continuous: Boolean = false,
-    onScanSuccess: (String) -> Unit = {},
+    onScan: (String) -> Unit = {},
+    title: @Composable () -> Unit = {},
 ) {
     var code: String? by remember {
         mutableStateOf(null)
@@ -109,10 +123,7 @@ fun QRScanView(
     }
 
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraProviderFeature = remember {
-        ProcessCameraProvider.getInstance(context)
-    }
+
     var hasCamPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -127,25 +138,21 @@ fun QRScanView(
         }
     )
 
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(Unit) {
         launcher.launch(Manifest.permission.CAMERA)
     }
 
     Column(
-        modifier = Modifier,
+        modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            if (code != null) code!! else "",
-            fontSize = 14.sp,
-        )
+        title()
 
         Row(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier
                 .padding(start = 10.dp, top = 8.dp, bottom = 20.dp)
-                .fillMaxWidth()
         ) {
             Text(
                 "status: ",
@@ -157,62 +164,142 @@ fun QRScanView(
             )
         }
 
-        Box(contentAlignment = Alignment.Center) {
-            if (hasCamPermission) {
-                AndroidView(
-                    factory = { context ->
-                        val previewView = PreviewView(context)
-                        val preview = CameraPreview.Builder().build()
-                        val selector = CameraSelector.Builder()
-                            .requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-                        preview.setSurfaceProvider(previewView.surfaceProvider)
-                        previewView.scaleType = PreviewView.ScaleType.FIT_CENTER
-                        val imageAnalysis = ImageAnalysis.Builder().setTargetResolution(
-                            Size(
-                                previewView.width, previewView.height
-                            )
-                        ).setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST).build()
-                        imageAnalysis.setAnalyzer(
-                            ContextCompat.getMainExecutor(context),
-                            ZXingQRCode(
-                                scanned = { result ->
-                                    if (code == null || continuous) {
-                                        code = result
-                                        onScanSuccess(result)
-                                    }
-                                },
-                                status = { message ->
-                                    status = message
-                                },
-                            )
-                        )
-                        try {
-                            cameraProviderFeature.get().bindToLifecycle(
-                                lifecycleOwner, selector, preview, imageAnalysis
-                            )
-                        } catch (e: Exception) {
-                            Log.e("qrcode", "failed in qrcode scanning")
-                            e.printStackTrace()
-                        }
-                        previewView
-                    },
-                    modifier = Modifier.fillMaxHeight()
-                )
+        if (!hasCamPermission) {
+            Text("no camera permission!")
+            return
+        }
 
-            } else {
-                Text("no camera permission")
+        Box(
+            modifier = viewModifier.sizeIn(minWidth = 400.dp, minHeight = 400.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val lifecycleOwner = LocalLifecycleOwner.current
+            val cameraProviderFeature = remember {
+                ProcessCameraProvider.getInstance(context)
             }
 
+            val cameraController = remember {
+                LifecycleCameraController(context).apply {
+                    bindToLifecycle(lifecycleOwner)
+                }
+            }
+
+            AndroidView(
+                modifier = Modifier.matchParentSize(),
+                factory = { context ->
+                    val previewView = PreviewView(context)
+                    previewView.apply {
+                        controller = cameraController
+                        clipToOutline = true  // lol https://android-review.googlesource.com/c/platform/frameworks/support/+/2302880
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                        )
+                        scaleType = PreviewView.ScaleType.FIT_CENTER
+                    }
+
+                    val preview = CameraPreview.Builder().build()
+                    preview.surfaceProvider = previewView.surfaceProvider
+
+                    val directionSelector =
+                        CameraSelector.Builder().requireLensFacing(cameraSelector).build()
+
+                    val imageAnalysis =
+                        ImageAnalysis.Builder()
+                            .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST).build()
+
+                    imageAnalysis.setAnalyzer(
+                        ContextCompat.getMainExecutor(context),
+                        ZXingQRCode(
+                            scanned = { result ->
+                                if (code == null || continuous) {
+                                    code = result
+                                    onScan(result)
+                                }
+                            },
+                            status = { message ->
+                                status = message
+                            },
+                        )
+                    )
+
+                    runCatching {
+                        cameraProviderFeature.get().bindToLifecycle(
+                            lifecycleOwner, directionSelector, preview, imageAnalysis
+                        )
+                    }.onFailure {
+                        Log.e("ssp.qrcode", "failed in qrcode scanning")
+                        it.printStackTrace()
+                    }
+
+                    previewView
+                },
+                onRelease = {
+                    cameraController.unbind()
+                    cameraProviderFeature.get().unbindAll()
+                }
+            )
+
             CameraOverlay(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.matchParentSize(),
                 width = 300.dp,
                 height = 300.dp,
-                offsetY = 150.dp,
+                offsetY = 50.dp,
                 color = if (code != null) {
                     MaterialTheme.colors.primary
                 } else {
                     MaterialTheme.colors.error
                 }
+            )
+        }
+    }
+}
+
+
+@Composable
+fun QRScanCard(
+    state: DialogDisplayState,
+    modifier: Modifier = Modifier,
+    onScan: (String) -> Unit = {},
+    title: @Composable () -> Unit = {},
+) {
+    ConfirmCard(
+        modifier = modifier,
+        showConfirmButton = false,
+        onBack = {
+            state.close()
+        },
+    ) {
+        // TODO use camerax compose
+        QRScanView(
+            onScan = { qrcode ->
+                onScan(qrcode)
+                state.close()
+            },
+            title = title,
+        )
+    }
+}
+
+
+@Composable
+fun QRScanDialog(
+    state: DialogDisplayState,
+    modifier: Modifier = Modifier,
+    onScan: (String) -> Unit,
+    title: @Composable () -> Unit = {},
+) {
+    if (state.isOpen()) {
+        Dialog(
+            onDismissRequest = {
+                state.close()
+            },
+        ) {
+            QRScanCard(
+                modifier = modifier,
+                state = state,
+                onScan = onScan,
+                title = title,
             )
         }
     }

@@ -109,7 +109,12 @@ async def make_ticket_sale_bookings(
             )
 
         else:
-            customer_account_id = scanned_ticket.account.id
+            customer_account_id = await conn.fetchval(
+                "update account set user_tag_id = $2 where node_id = $1 and id = $3 returning id",
+                node.event_node_id,
+                user_tag_id,
+                scanned_ticket.account.id,
+            )
 
         customers.append(
             CustomerRegistration(
@@ -147,24 +152,29 @@ async def make_ticket_sale_bookings(
     prepared_bookings: dict[BookingIdentifier, float] = {}
 
     if ticket_sale.payment_method == PaymentMethod.cash:
-        if current_till.active_cash_register_id is None:
-            raise InvalidArgument("Cash payments require a cash register")
-        cash_register_account_id = await get_cash_register_account_id(
-            conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
-        )
-        prepared_bookings[
-            BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=cash_register_account_id)
-        ] = ticket_sale.total_price
-        prepared_bookings[
-            BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=sale_exit_acc.id)
-        ] = total_ticket_price
+        if ticket_sale.total_price == 0.0:
+            # price was 0 -> no booking necessary
+            pass
 
-        for customer in customers:
-            topup_amount = customer.top_up_amount + customer.ticket_included_top_up
-            if topup_amount > 0:
-                prepared_bookings[
-                    BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer.account_id)
-                ] = topup_amount
+        else:
+            if current_till.active_cash_register_id is None:
+                raise InvalidArgument("Cash payments require a cash register")
+            cash_register_account_id = await get_cash_register_account_id(
+                conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
+            )
+            prepared_bookings[
+                BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=cash_register_account_id)
+            ] = ticket_sale.total_price
+            prepared_bookings[
+                BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=sale_exit_acc.id)
+            ] = total_ticket_price
+
+            for customer in customers:
+                topup_amount = customer.top_up_amount + customer.ticket_included_top_up
+                if topup_amount > 0:
+                    prepared_bookings[
+                        BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer.account_id)
+                    ] = topup_amount
 
     elif ticket_sale.payment_method == PaymentMethod.sumup:
         prepared_bookings[

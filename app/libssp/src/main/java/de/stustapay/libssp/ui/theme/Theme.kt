@@ -1,14 +1,10 @@
 package de.stustapay.libssp.ui.theme
 
-import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 
 private val DarkColorPalette = darkColors(
     primary = md_theme_dark_primary,
@@ -41,25 +37,22 @@ private val LightColorPalette = lightColors(
 )
 
 @Composable
-fun Theme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun Theme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
     val colors = if (darkTheme) {
         DarkColorPalette
     } else {
         LightColorPalette
     }
 
-    val view = LocalView.current
-
-    SideEffect {
-        val window = (view.context as Activity).window
-        window.statusBarColor = colors.primary.toArgb()
-        window.navigationBarColor = colors.primary.toArgb()
-    }
-
     MaterialTheme(
         colors = colors,
         typography = Typography,
         shapes = Shapes,
-        content = content
+        content = {
+            content()
+        }
     )
 }

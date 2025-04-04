@@ -6,7 +6,7 @@ buildscript {
     ext {
         kotlin_version = '2.1.10'
         compose_ui_version = '1.7.8'
-        camerax_version = '1.4.1'
+        camerax_version = '1.4.2'
         ktor_version = '3.1.1'
         protobuf_version = '4.29.3'
         hilt_version = '2.55'
@@ -15,7 +15,7 @@ buildscript {
         bignum_version = '0.3.10'
         core_ktx_version = '1.15.0'
         preference_ktx_version = '1.2.1'
-        navigation_compose_version = '2.8.8'
+        navigation_compose_version = '2.8.9'
         activity_compose_version = '1.10.1'
         serialization_json_version = '1.8.0'
         targetJavaVersion = JavaVersion.VERSION_17
@@ -37,11 +37,11 @@ plugins {
 
 
 tasks.register('api') {
-    dependsOn tasks.modApi
+    dependsOn tasks._modApi
 }
 
-tasks.register('modApi') {
-    dependsOn tasks.genApi
+tasks.register('_modApi') {
+    dependsOn tasks._genApi
     doLast {
         copy {
             from("$projectDir/build/generated/api")
@@ -103,8 +103,8 @@ tasks.register('modApi') {
     }
 }
 
-tasks.register('genApi', GenerateTask) {
-    dependsOn tasks.cleanApi
+tasks.register('_genApi', GenerateTask) {
+    dependsOn tasks._cleanApi
     generatorName.set("kotlin")
     inputSpec.set("$projectDir/../api/terminalserver.json")
     outputDir.set("$projectDir/build/generated/api")
@@ -120,7 +120,7 @@ tasks.register('genApi', GenerateTask) {
                        omitGradleWrapper   : "true"])
 }
 
-tasks.register('cleanApi') {
+tasks.register('_cleanApi') {
     doLast {
         delete("$projectDir/build/generated/api")
         delete("$projectDir/api")

@@ -66,16 +66,16 @@ fun TicketConfirm(
                     onEC = {
                         scope.launch {
                             viewModel.processSale(
+                                paymentMethod = PaymentMethod.sumup,
                                 context = context,
-                                paymentMethod = PaymentMethod.sumup
                             )
                         }
                     },
                     onCash = {
                         scope.launch {
                             viewModel.processSale(
+                                paymentMethod = PaymentMethod.cash,
                                 context = context,
-                                paymentMethod = PaymentMethod.cash
                             )
                         }
                     },
@@ -94,7 +94,7 @@ fun TicketConfirm(
 
                     item {
                         ProductConfirmItem(
-                            name = stringResource(R.string.price),
+                            name = stringResource(R.string.common_price),
                             price = checkedSale.totalPrice,
                             bigStyle = true,
                         )

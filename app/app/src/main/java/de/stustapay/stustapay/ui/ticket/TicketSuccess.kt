@@ -86,7 +86,7 @@ fun TicketSuccess(
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = stringResource(R.string.done))
+                    Text(text = stringResource(R.string.common_action_done))
                 }
             }
         }
@@ -109,12 +109,12 @@ fun TicketSuccess(
                         .clip(shape = CircleShape)
                         .padding(top = 2.dp),
                     colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                    contentDescription = stringResource(R.string.success),
+                    contentDescription = stringResource(R.string.common_status_success),
                 )
 
 
                 ProductConfirmItem(
-                    name = stringResource(R.string.price),
+                    name = stringResource(R.string.common_price),
                     price = saleCompletedV.totalPrice,
                     bigStyle = true,
                 )

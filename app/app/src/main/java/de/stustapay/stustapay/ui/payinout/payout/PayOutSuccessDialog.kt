@@ -4,10 +4,8 @@ package de.stustapay.stustapay.ui.payinout.payout
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -133,17 +131,17 @@ fun CashOutSuccessCard(
                             .clip(shape = CircleShape)
                             .padding(top = 2.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = stringResource(R.string.success),
+                        contentDescription = stringResource(R.string.common_status_success),
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     ProductConfirmItem(
-                        name = stringResource(R.string.payout),
+                        name = stringResource(R.string.sale_payout),
                         price = completedPayOut.amount,
                         bigStyle = true,
                     )
                     Divider(thickness = 2.dp)
                     ProductConfirmItem(
-                        name = stringResource(R.string.credit_left),
+                        name = stringResource(R.string.customer_credit_left),
                         price = completedPayOut.newBalance,
                     )
 
@@ -161,7 +159,7 @@ fun CashOutSuccessCard(
                         .fillMaxWidth()
                         .height(70.dp)
                 ) {
-                    Text(text = stringResource(R.string.done))
+                    Text(text = stringResource(R.string.common_action_done))
                 }
             }
         )
