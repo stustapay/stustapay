@@ -31,6 +31,13 @@ async def get_customer(token: CurrentAuthToken, account_service: ContextAccountS
     return await account_service.get_customer(token=token, customer_id=customer_id, node_id=node_id)
 
 
+@router.get("/customers-with-blocked-payout", response_model=list[Customer])
+async def get_customers_with_blocked_payout(
+    token: CurrentAuthToken, account_service: ContextAccountService, node_id: int
+):
+    return await account_service.get_customers_with_blocked_payout(token=token, node_id=node_id)
+
+
 @router.post("/customers/{customer_id}/prevent-payout")
 async def prevent_customer_payout(
     token: CurrentAuthToken, customer_service: ContextCustomerService, customer_id: int, node_id: int

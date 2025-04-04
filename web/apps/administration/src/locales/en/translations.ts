@@ -659,6 +659,7 @@ export const translations = {
   customer: {
     search: "Search for Customers",
     customers: "Customers",
+    customersWithBlockedPayout: "Customers prevented from payout",
     bankAccountHolder: "Account holder",
     donation: "Donation",
     payoutRun: "Payout Run",

@@ -1228,6 +1228,18 @@ const injectedRtkApi = api
         }),
         providesTags: ["accounts"],
       }),
+      getCustomersWithBlockedPayout: build.query<
+        GetCustomersWithBlockedPayoutApiResponse,
+        GetCustomersWithBlockedPayoutApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/customers-with-blocked-payout`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["accounts"],
+      }),
       preventCustomerPayout: build.mutation<PreventCustomerPayoutApiResponse, PreventCustomerPayoutApiArg>({
         query: (queryArg) => ({
           url: `/customers/${queryArg.customerId}/prevent-payout`,
@@ -1981,6 +1993,10 @@ export type FindCustomersApiArg = {
 export type GetCustomerApiResponse = /** status 200 Successful Response */ CustomerRead;
 export type GetCustomerApiArg = {
   customerId: number;
+  nodeId: number;
+};
+export type GetCustomersWithBlockedPayoutApiResponse = /** status 200 Successful Response */ CustomerRead[];
+export type GetCustomersWithBlockedPayoutApiArg = {
   nodeId: number;
 };
 export type PreventCustomerPayoutApiResponse = /** status 200 Successful Response */ any;
@@ -3605,6 +3621,8 @@ export const {
   useFindCustomersMutation,
   useGetCustomerQuery,
   useLazyGetCustomerQuery,
+  useGetCustomersWithBlockedPayoutQuery,
+  useLazyGetCustomersWithBlockedPayoutQuery,
   usePreventCustomerPayoutMutation,
   useAllowCustomerPayoutMutation,
   useListTerminalsQuery,
