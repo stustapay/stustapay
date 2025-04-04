@@ -84,6 +84,16 @@ class AccountService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.customer_management])
+    async def get_customers_with_blocked_payout(self, *, conn: Connection, node: Node) -> list[Customer]:
+        return await conn.fetch_many(
+            Customer,
+            "select c.* from customer c where c.node_id = any($1) and not c.payout_export",
+            node.ids_to_root,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
         return await conn.fetch_many(
             Customer,

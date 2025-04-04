@@ -7493,6 +7493,60 @@
         }
       }
     },
+    "/customers-with-blocked-payout": {
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Get Customers With Blocked Payout",
+        "operationId": "get_customers_with_blocked_payout",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Customer"
+                  },
+                  "title": "Response Get Customers With Blocked Payout Customers With Blocked Payout Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/customers/{customer_id}/prevent-payout": {
       "post": {
         "tags": [

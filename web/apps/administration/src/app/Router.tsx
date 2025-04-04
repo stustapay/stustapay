@@ -70,7 +70,7 @@ import {
 } from "./routes/users";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
-import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
+import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, CustomerSearch } from "./routes/customers";
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
@@ -172,11 +172,11 @@ const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <CustomerOverview />,
+                element: <CustomerSearch />,
               },
               {
-                path: "search",
-                element: <CustomerSearch />,
+                path: "blocked-payout",
+                element: <CustomersWithBlockedPayout />,
               },
               {
                 path: ":customerId",
