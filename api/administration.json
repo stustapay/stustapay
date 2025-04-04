@@ -6923,6 +6923,70 @@
         }
       }
     },
+    "/tree/events/{node_id}/fetch-pretix-products": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Fetch Pretix Products",
+        "operationId": "fetch_pretix_products",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PretixFetchProductsPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PretixProduct"
+                  },
+                  "title": "Response Fetch Pretix Products Tree Events  Node Id  Fetch Pretix Products Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/events/{node_id}/generate-webhook-url": {
       "post": {
         "tags": [
@@ -12179,6 +12243,60 @@
           "n_payouts"
         ],
         "title": "PendingPayoutDetail"
+      },
+      "PretixFetchProductsPayload": {
+        "properties": {
+          "organizer": {
+            "type": "string",
+            "title": "Organizer"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "apiKey": {
+            "type": "string",
+            "title": "Apikey"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organizer",
+          "event",
+          "apiKey",
+          "url"
+        ],
+        "title": "PretixFetchProductsPayload"
+      },
+      "PretixProduct": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Name"
+          },
+          "default_price": {
+            "type": "number",
+            "title": "Default Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "default_price"
+        ],
+        "title": "PretixProduct"
       },
       "Privilege": {
         "type": "string",

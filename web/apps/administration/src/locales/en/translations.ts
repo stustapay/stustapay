@@ -367,7 +367,7 @@ export const translations = {
       apiKey: "Pretix API Key",
       organizer: "Short name of pretix organizer",
       event: "Short name of pretix event",
-      ticketIds: 'Ticket IDs in pretix event, separated by ","',
+      ticketIds: "Pretix products whose sales should trigger ticket voucher generation",
       checkConnection: "Check Connection",
       checkSuccessful: "Pretix integration configured correctly",
       checkFailed: "Pretix integration configured incorrectly",

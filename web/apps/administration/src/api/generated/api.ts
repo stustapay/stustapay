@@ -1149,6 +1149,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      fetchPretixProducts: build.mutation<FetchPretixProductsApiResponse, FetchPretixProductsApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/fetch-pretix-products`,
+          method: "POST",
+          body: queryArg.pretixFetchProductsPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
       generateWebhookUrl: build.mutation<GenerateWebhookUrlApiResponse, GenerateWebhookUrlApiArg>({
         query: (queryArg) => ({
           url: `/tree/events/${queryArg.nodeId}/generate-webhook-url`,
@@ -1928,6 +1936,11 @@ export type GenerateTestBonApiArg = {
 export type CheckPretixConnectionApiResponse = /** status 200 Successful Response */ any;
 export type CheckPretixConnectionApiArg = {
   nodeId: number;
+};
+export type FetchPretixProductsApiResponse = /** status 200 Successful Response */ PretixProduct[];
+export type FetchPretixProductsApiArg = {
+  nodeId: number;
+  pretixFetchProductsPayload: PretixFetchProductsPayload;
 };
 export type GenerateWebhookUrlApiResponse = /** status 200 Successful Response */ GenerateWebhookResponse;
 export type GenerateWebhookUrlApiArg = {
@@ -3285,6 +3298,19 @@ export type RestrictedEventSettings = {
   languages: Language[];
   sumup_oauth_refresh_token: string;
 };
+export type PretixProduct = {
+  id: number;
+  name: {
+    [key: string]: string;
+  };
+  default_price: number;
+};
+export type PretixFetchProductsPayload = {
+  organizer: string;
+  event: string;
+  apiKey: string;
+  url: string;
+};
 export type GenerateWebhookResponse = {
   webhook_url: string;
 };
@@ -3565,6 +3591,7 @@ export const {
   useDeleteNodeMutation,
   useGenerateTestBonMutation,
   useCheckPretixConnectionMutation,
+  useFetchPretixProductsMutation,
   useGenerateWebhookUrlMutation,
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,

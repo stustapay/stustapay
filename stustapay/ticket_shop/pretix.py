@@ -47,6 +47,12 @@ class PretixOrderStatus(enum.Enum):
     canceled = "c"
 
 
+class PretixProduct(BaseModel):
+    id: int
+    name: dict[str, str]
+    default_price: float
+
+
 class PretixOrder(BaseModel):
     code: str
     event: str
@@ -100,6 +106,14 @@ class PretixApi:
                 if isinstance(e, PretixError):
                     raise e
                 raise PretixError("Pretix API returned an unknown error") from e
+
+    async def fetch_products(self) -> list[PretixProduct]:
+        resp = await self._get(f"{self.api_base_url}/items")
+        validated_resp = PretixListApiResponse.model_validate(resp)
+        orders = []
+        for item in validated_resp.results:
+            orders.append(PretixProduct.model_validate(item))
+        return orders
 
     async def fetch_orders(self) -> list[PretixOrder]:
         resp = await self._get(f"{self.api_base_url}/orders")

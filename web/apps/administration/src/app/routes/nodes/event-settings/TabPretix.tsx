@@ -1,13 +1,14 @@
 import {
+  PretixProduct,
   RestrictedEventSettings,
   useCheckPretixConnectionMutation,
+  useFetchPretixProductsMutation,
   useGenerateWebhookUrlMutation,
   useUpdateEventMutation,
 } from "@/api";
 import { ContentCopy as ContentCopyIcon } from "@mui/icons-material";
 import { Button, IconButton, LinearProgress, ListItem, ListItemText, Stack } from "@mui/material";
-import { ArrayTextInput } from "@stustapay/components";
-import { FormSwitch, FormTextField } from "@stustapay/form-components";
+import { FormSelect, FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import * as React from "react";
@@ -52,7 +53,61 @@ export const PretixSettingsSchema = z
 
 export type PretixSettings = z.infer<typeof PretixSettingsSchema>;
 
-export const PretixSettingsForm: React.FC<FormikProps<PretixSettings>> = (formik) => {
+const PretixProductSelect: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({ nodeId, formik }) => {
+  const { t, i18n } = useTranslation();
+  const languageBaseCode = i18n.language.split("-")[0];
+  const [products, setProducts] = React.useState<PretixProduct[]>([]);
+  const productIds = products.map((p) => p.id);
+  const [fetchProducts] = useFetchPretixProductsMutation();
+
+  const pretixApiKey = formik.values.pretix_api_key;
+  const pretixUrl = formik.values.pretix_shop_url;
+  const pretixOrganizer = formik.values.pretix_organizer;
+  const pretixEvent = formik.values.pretix_event;
+
+  React.useEffect(() => {
+    if (!pretixUrl || !pretixApiKey || !pretixOrganizer || !pretixEvent) {
+      return;
+    }
+
+    fetchProducts({
+      nodeId,
+      pretixFetchProductsPayload: {
+        apiKey: pretixApiKey,
+        organizer: pretixOrganizer,
+        event: pretixEvent,
+        url: pretixUrl,
+      },
+    }).then((resp) => {
+      if (resp.data) {
+        setProducts(resp.data);
+      } else {
+        toast.error("Failed to fetch pretix products");
+      }
+    });
+  }, [pretixApiKey, pretixUrl, pretixOrganizer, pretixEvent, fetchProducts, nodeId]);
+
+  return (
+    <FormSelect
+      name="pretix_ticket_ids"
+      label={t("settings.pretix.ticketIds")}
+      formik={formik}
+      options={productIds}
+      multiple={true}
+      checkboxes={true}
+      formatOption={(productId) => {
+        const product = products.find((p) => p.id === productId);
+        const name = product?.name[languageBaseCode] ?? "";
+        return name;
+      }}
+    />
+  );
+};
+
+export const PretixSettingsForm: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({
+  nodeId,
+  formik,
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -62,19 +117,7 @@ export const PretixSettingsForm: React.FC<FormikProps<PretixSettings>> = (formik
       <FormTextField label={t("settings.pretix.apiKey")} name="pretix_api_key" formik={formik} />
       <FormTextField label={t("settings.pretix.organizer")} name="pretix_organizer" formik={formik} />
       <FormTextField label={t("settings.pretix.event")} name="pretix_event" formik={formik} />
-      <ArrayTextInput
-        label={t("settings.pretix.ticketIds")}
-        name="pretix_ticket_ids"
-        variant={"standard"}
-        fullWidth={true}
-        onChange={(value) => {
-          formik.setFieldValue("pretix_ticket_ids", value);
-          formik.setFieldTouched("pretix_ticket_ids");
-        }}
-        value={formik.values.pretix_ticket_ids}
-        error={formik.touched.pretix_ticket_ids && !!formik.errors.pretix_ticket_ids}
-        helperText={(formik.touched.pretix_ticket_ids && formik.errors.pretix_ticket_ids) as string}
-      />
+      <PretixProductSelect nodeId={nodeId} formik={formik} />
     </>
   );
 };
@@ -135,7 +178,7 @@ export const TabPretix: React.FC<{ nodeId: number; eventSettings: RestrictedEven
         {(formik) => (
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
-              <PretixSettingsForm {...formik} />
+              <PretixSettingsForm nodeId={nodeId} formik={formik} />
               <Button color="primary" variant="outlined" onClick={handleGenerateWebhook}>
                 {t("settings.pretix.generateWebhook")}
               </Button>
