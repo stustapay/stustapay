@@ -13,7 +13,7 @@ jobs:
       - name: Set up Nodejs
         uses: actions/setup-node@v2
         with:
-          node-version: "18"
+          node-version: 22
           cache: "npm"
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
@@ -30,7 +30,7 @@ jobs:
       - name: Set up Nodejs
         uses: actions/setup-node@v2
         with:
-          node-version: "18"
+          node-version: 22
           cache: "npm"
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
@@ -47,7 +47,7 @@ jobs:
       - name: Set up Nodejs
         uses: actions/setup-node@v2
         with:
-          node-version: "18"
+          node-version: 22
           cache: "npm"
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies

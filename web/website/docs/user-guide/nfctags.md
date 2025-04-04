@@ -55,9 +55,9 @@ So we provide for each chip:
 * individual 12 character random `pin` engraved on back of chip (also stored in chip memory)
 
 
-## Feedback from manufacturer 
+## Feedback from manufacturer
 
-No feedback is required (the list of pins we generated ourselves is used to verify chips and register them in the backend with an associated chip UID). 
+No feedback is required (the list of pins we generated ourselves is used to verify chips and register them in the backend with an associated chip UID).
 
 
 ## Laser

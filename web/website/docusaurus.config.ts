@@ -55,17 +55,17 @@ const config: Config = {
         specs: [
           {
             id: "administration-api",
-            spec: "../api/administration.json",
+            spec: "../../api/administration.json",
             route: "/api/administration",
           },
           {
             id: "terminalserver-api",
-            spec: "../api/terminalserver.json",
+            spec: "../../api/terminalserver.json",
             route: "/api/terminalserver",
           },
           {
             id: "customerportal-api",
-            spec: "../api/customer_portal.json",
+            spec: "../../api/customer_portal.json",
             route: "/api/customer_portal",
           },
         ],

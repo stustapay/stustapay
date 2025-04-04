@@ -1,0 +1,33 @@
+{
+  "name": "website",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "website/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx docusaurus start",
+        "cwd": "website"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx docusaurus build",
+        "cwd": "website"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx docusaurus deploy",
+        "cwd": "website"
+      }
+    }
+  }
+}

@@ -11,6 +11,8 @@
   "devDependencies": {
     "@babel/core": "^7.26.10",
     "@babel/preset-react": "^7.26.3",
+    "@docusaurus/core": "^3.7.0",
+    "@docusaurus/preset-classic": "^3.7.0",
     "@nrwl/js": "19.8.4",
     "@nx/eslint": "20.7.1",
     "@nx/eslint-plugin": "20.7.1",
@@ -44,7 +46,9 @@
     "jest-environment-jsdom": "29.7.0",
     "nx": "20.7.1",
     "prettier": "^3.5.3",
+    "prism-react-renderer": "^2.4.1",
     "react-refresh": "^0.17.0",
+    "redocusaurus": "^2.2.2",
     "ts-jest": "29.3.1",
     "ts-node": "10.9.2",
     "typescript": "5.8.2",
