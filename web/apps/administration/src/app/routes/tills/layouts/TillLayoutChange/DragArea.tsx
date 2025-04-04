@@ -3,13 +3,15 @@ import { Identifier } from "dnd-core";
 import * as React from "react";
 import { useDrop } from "react-dnd";
 import { DragButton } from "./DraggableButton";
+import { Box, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export interface EmptyDragProps {
   moveButton: (buttonId: number) => void;
-  children?: React.ReactNode;
 }
 
-export const DragArea: React.FC<EmptyDragProps> = ({ moveButton, children }) => {
+export const DragArea: React.FC<EmptyDragProps> = ({ moveButton }) => {
+  const { t } = useTranslation();
   const [, drop] = useDrop<DragButton, void, { handlerId: Identifier | null }>({
     accept: DraggableItemTypes.TILL_BUTTON,
     collect(monitor) {
@@ -23,8 +25,8 @@ export const DragArea: React.FC<EmptyDragProps> = ({ moveButton, children }) => 
   });
 
   return (
-    <div ref={drop} style={{ minHeight: "200px" }}>
-      {children ?? "drag button here"}
-    </div>
+    <Box ref={drop} minHeight="200px" display="flex" alignItems="center" justifyContent="center">
+      <Typography>{t("button.dragButtonHere")}</Typography>
+    </Box>
   );
 };

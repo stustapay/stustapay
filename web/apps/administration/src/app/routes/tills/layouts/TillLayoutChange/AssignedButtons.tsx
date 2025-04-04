@@ -33,11 +33,11 @@ export const AssignedButtons: React.FC<AssignedButtonsProps> = ({
     newButtons.splice(hoveredIndex + addMode, 0, buttonId);
     setAssignedButtonIds(newButtons);
   };
+  const moveButtonEmpty = (buttonId: number) => {
+    setAssignedButtonIds([buttonId]);
+  };
 
   if (assignedButtonIds.length === 0) {
-    const moveButtonEmpty = (buttonId: number) => {
-      setAssignedButtonIds([buttonId]);
-    };
     return (
       <Typography variant="h5">
         {t("button.assignedButtons")}

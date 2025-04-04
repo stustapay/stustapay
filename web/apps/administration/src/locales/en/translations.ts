@@ -515,6 +515,7 @@ export const translations = {
     deleteDescription: "Confirm button deletion",
     availableButtons: "Available buttons",
     assignedButtons: "Assigned buttons",
+    dragButtonHere: "Drag button here",
     name: "Name",
     price: "Price",
     addProductToButton: "Add a product",
