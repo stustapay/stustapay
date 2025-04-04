@@ -169,7 +169,7 @@ async def event_node(db_connection: Connection) -> Node:
             pretix_event=None,
             pretix_organizer=None,
             pretix_shop_url=None,
-            pretix_ticket_ids=None,
+            pretix_ticket_ids=[],
         ),
     )
 

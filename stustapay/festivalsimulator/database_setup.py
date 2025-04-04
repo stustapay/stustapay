@@ -762,7 +762,7 @@ class DatabaseSetup:
                     pretix_event=None,
                     pretix_organizer=None,
                     pretix_shop_url=None,
-                    pretix_ticket_ids=None,
+                    pretix_ticket_ids=[],
                 ),
             )
             beer_team_node = await create_node(
