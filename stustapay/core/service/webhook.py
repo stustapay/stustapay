@@ -15,7 +15,7 @@ from stustapay.ticket_shop.pretix import PretixTicketProvider
 
 
 class WebhookType(enum.Enum):
-    pretix_order_update = "pretix_order_update"
+    pretix = "pretix"
 
 
 class WebhookSecret(BaseModel):
@@ -44,9 +44,6 @@ class WebhookService(Service[Config]):
         to_encode = {"node_id": token_metadata.node_id, "webhook_type": token_metadata.webhook_type.name}
         return jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
 
-    async def pretix_order_update(self, payload: WebhookSecret):
-        await self.pretix_provider.synchronize_tickets_for_node(node_id=payload.node_id)
-
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
@@ -58,12 +55,12 @@ class WebhookService(Service[Config]):
         full_url = f"{self.config.administration.base_url}/webhooks/hook?token={secret}"
         return full_url
 
-    async def trigger_webhook(self, token: str):
-        decoded = self._decode_webhook_jwt_secret(token)
-        if decoded is None:
+    async def trigger_webhook(self, token: str, payload: dict):
+        webhook_config = self._decode_webhook_jwt_secret(token)
+        if webhook_config is None:
             self.logger.info("received invalid webhook event")
             return
 
-        self.logger.debug(f"Received webhook: {decoded.webhook_type} for node_id: {decoded.node_id}")
-        if decoded.webhook_type == WebhookType.pretix_order_update:
-            await self.pretix_order_update(decoded)
+        self.logger.debug(f"Received webhook: {webhook_config.webhook_type} for node_id: {webhook_config.node_id}")
+        if webhook_config.webhook_type == WebhookType.pretix:
+            await self.pretix_provider.pretix_webhook(node_id=webhook_config.node_id, payload=payload)

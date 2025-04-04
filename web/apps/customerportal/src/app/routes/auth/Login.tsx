@@ -28,6 +28,19 @@ export const Login: React.FC = () => {
   const [query] = useSearchParams();
   const [login] = useLoginMutation();
 
+  const ticketVoucher = query.get("ticketVoucher");
+  React.useEffect(() => {
+    if (isLoggedIn || !ticketVoucher) {
+      return;
+    }
+
+    login({ loginPayload: { pin: ticketVoucher } })
+      .unwrap()
+      .catch((err) => {
+        toast.error(t("loginFailed", { reason: err.error }));
+      });
+  }, [query, isLoggedIn, ticketVoucher, login, t]);
+
   if (isLoggedIn) {
     const next = query.get("next");
     const redirectUrl = next != null ? next : "/";
