@@ -6,7 +6,7 @@ alter table event add column pretix_shop_url text;
 alter table event add column pretix_api_key text;
 alter table event add column pretix_organizer text;
 alter table event add column pretix_event text;
-alter table event add column pretix_ticket_ids int array;
+alter table event add column pretix_ticket_ids int array not null default '{}';
 
 alter table till_profile add column allow_ticket_vouchers boolean not null default false;
 
