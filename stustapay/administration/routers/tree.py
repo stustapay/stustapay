@@ -13,6 +13,7 @@ from stustapay.core.schema.tree import (
     UpdateEvent,
 )
 from stustapay.core.service.webhook import WebhookType
+from stustapay.ticket_shop.pretix import PretixApi, PretixProduct
 
 router = APIRouter(
     prefix="/tree",
@@ -79,6 +80,20 @@ async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeSe
 @router.post("/events/{node_id}/check-pretix-connection")
 async def check_pretix_connection(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.check_pretix_connection(token=token, node_id=node_id)
+
+
+class PretixFetchProductsPayload(BaseModel):
+    organizer: str
+    event: str
+    apiKey: str
+    url: str
+
+
+@router.post("/events/{node_id}/fetch-pretix-products", response_model=list[PretixProduct])
+async def fetch_pretix_products(token: CurrentAuthToken, payload: PretixFetchProductsPayload, node_id: int):
+    del token, node_id  # unused
+    api = PretixApi(api_key=payload.apiKey, organizer=payload.organizer, event=payload.event, base_url=payload.url)
+    return await api.fetch_products()
 
 
 class GenerateWebhookPayload(BaseModel):
