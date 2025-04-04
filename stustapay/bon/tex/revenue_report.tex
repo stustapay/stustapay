@@ -12,6 +12,7 @@
 \usepackage{lastpage}
 \usepackage{xpatch}
 \usepackage{seqsplit}
+\usepackage{svg}
 
 % use sans serif font
 \renewcommand{\familydefault}{\sfdefault}
@@ -25,7 +26,7 @@
   bottom=35mm,
   heightrounded,
  }
- 
+
  %Thanks, Ulrike: https://github.com/u-fischer/putfenc
  \makeatletter
 
@@ -84,11 +85,15 @@
 
 
     \noindent
+
+    \BLOCK[ if render_logo ]
     \makebox[17cm]{
     \vspace{-35mm}
-    \includegraphics[width=21cm,trim={15.5cm 0 10.15cm 0},clip]{stustaculum24_wristband.pdf}
+    %\includesvg[width=21cm,trim={15.5cm 0 10.15cm 0},clip]{\VAR[logo_path]}
+    \includesvg{logo}
     }
     \vspace{1em}
+    \BLOCK[endif]
 
     \begin{center}
         \LARGE\textsf{StuStaPay} \\
@@ -132,7 +137,7 @@
         \LARGE\textbf{Nach Tagen} \\
     \end{center}
     \vspace{2em}
-    
+
     % Auflistung nach Tagen
     \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
     \rowcolors{2}{}{bgcolor!80}
@@ -162,18 +167,18 @@
 
     \begin{center}
     \begin{longtable}{lllll}
-    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline 
+    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
     \endfirsthead
-    
+
     \hline
     \multicolumn{5}{l}
     {{... Fortsetzung der vorherigen Seite}} \\
     \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
     \endhead
-    
+
     \hline \multicolumn{5}{r}{{Fortsetzung auf der nächsten Seite ...}} \\ \hline
     \endfoot
-    
+
     \hline \hline
     \endlastfoot
         \BLOCK[ for order in orders ]

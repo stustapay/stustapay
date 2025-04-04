@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from sftkit.database import Connection
 
+from stustapay.core.schema.media import EventDesign
 from stustapay.core.schema.tree import (
     Language,
     Node,
@@ -130,3 +131,10 @@ async def fetch_restricted_event_settings_for_node(conn: Connection, node_id: in
     )
     settings.translation_texts = await _fetch_translation_textx(conn=conn, event_id=settings.id)
     return settings
+
+
+async def fetch_event_design(conn: Connection, node_id: int) -> EventDesign:
+    design = await conn.fetch_maybe_one(EventDesign, "select * from event_design where node_id = $1", node_id)
+    if design is None:
+        return EventDesign(bon_logo_blob_id=None)
+    return design

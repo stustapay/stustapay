@@ -47,6 +47,7 @@ dev = [
     "types-python-dateutil",
     "types-pytz",
     "bump-my-version~=0.15",
+    "websockets~=15.0.1",
 ]
 
 [project.urls]

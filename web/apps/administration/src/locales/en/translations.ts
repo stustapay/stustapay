@@ -360,6 +360,11 @@ export const translations = {
       data_privacy_url: "Data privacy URL",
       about_page_url: "About page URL",
     },
+    design: {
+      tabLabel: "Design",
+      bonLogo: "Logo displayed on bons and reports",
+      changeBonLogo: "Change bon logo",
+    },
     pretix: {
       tabLabel: "Pretix",
       presaleEnabled: "Pretix presale enabled",

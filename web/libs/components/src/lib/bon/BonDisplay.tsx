@@ -15,7 +15,6 @@ import * as React from "react";
 import { createCurrencyFormatter } from "@stustapay/framework";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
-import LogoSvg from "./stustaculum24_wristband.svg";
 import styles from "./BonDisplay.module.css";
 
 type BonConfig = {
@@ -88,6 +87,7 @@ export interface IBon {
 
 export interface BonProps {
   bon: IBon;
+  bonLogoUrl?: string;
 }
 
 const useCurrencyFormatter = (bon: IBon) => {
@@ -140,7 +140,7 @@ const BonTotal: React.FC<{ bon: IBon }> = ({ bon }) => {
 
 const LineItemTable: React.FC<{ bon: IBon }> = ({ bon }) => {
   const { t } = useTranslation("common");
-  const { order, currency_identifier } = bon;
+  const { order } = bon;
   const formatCurrency = useCurrencyFormatter(bon);
 
   return (
@@ -175,7 +175,7 @@ const LineItemTable: React.FC<{ bon: IBon }> = ({ bon }) => {
 
 const TaxRateTable: React.FC<{ bon: IBon }> = ({ bon }) => {
   const { t } = useTranslation("common");
-  const { order, currency_identifier, tax_rate_aggregations } = bon;
+  const { order, tax_rate_aggregations } = bon;
   const formatCurrency = useCurrencyFormatter(bon);
 
   return (
@@ -290,10 +290,10 @@ const SignatureDetails: React.FC<{ bon: IBon }> = ({ bon: { order } }) => {
   );
 };
 
-export const BonDisplay: React.FC<BonProps> = ({ bon }) => {
+export const BonDisplay: React.FC<BonProps> = ({ bon, bonLogoUrl }) => {
   return (
     <>
-      <img src={LogoSvg} width="100%" />
+      {bonLogoUrl && <img src={bonLogoUrl} width="100%" alt="Logo" />}
       <Container>
         <Stack spacing={3}>
           <BonHeader bon={bon} />

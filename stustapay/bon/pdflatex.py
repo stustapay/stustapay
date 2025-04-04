@@ -98,7 +98,12 @@ class PdfRenderResult(BaseModel):
     bon: RenderedPdf | None = None
 
 
-async def pdflatex(file_content: str) -> PdfRenderResult:
+class File(BaseModel):
+    name: str
+    content: bytes
+
+
+async def pdflatex(file_content: str, additional_files: list[File]) -> PdfRenderResult:
     """
     renders the given latex template with the context and saves the resulting pdf to out_file
     returns <True, ""> if the pdf was compiled successfully
@@ -112,8 +117,11 @@ async def pdflatex(file_content: str) -> PdfRenderResult:
 
         newenv = os.environ.copy()
         newenv["TEXINPUTS"] = os.pathsep.join([TEX_PATH]) + os.pathsep
+        for file in additional_files:
+            with open(os.path.join(tmp_dir, file.name), "wb+") as f:
+                f.write(file.content)
 
-        latexmk = ["latexmk", "-xelatex", "-halt-on-error", main_tex]
+        latexmk = ["latexmk", "-shell-escape", "-xelatex", "-halt-on-error", main_tex]
 
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -126,6 +134,7 @@ async def pdflatex(file_content: str) -> PdfRenderResult:
             stdout, _ = await proc.communicate()
             # latex failed
             if proc.returncode != 0:
+                print(stdout.decode())
                 msg = stdout.decode("utf-8")[-800:]
                 logger.debug(f"Error generating latex pdf: {msg}")
                 return PdfRenderResult(success=False, msg=msg)

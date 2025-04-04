@@ -6727,6 +6727,114 @@
         }
       }
     },
+    "/tree/events/{node_id}/event-design/bon-logo": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Update Bon Logo",
+        "operationId": "update_bon_logo",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewBlob"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/event-design": {
+      "get": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Get Event Design",
+        "operationId": "get_event_design",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDesign"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/events/{node_id}/settings": {
       "get": {
         "tags": [
@@ -8234,6 +8342,45 @@
           }
         }
       }
+    },
+    "/media/blob/{blob_id}": {
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Get Blob",
+        "operationId": "get_blob",
+        "parameters": [
+          {
+            "name": "blob_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Blob Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -9526,6 +9673,27 @@
         ],
         "title": "EditSaleProducts"
       },
+      "EventDesign": {
+        "properties": {
+          "bon_logo_blob_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bon Logo Blob Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bon_logo_blob_id"
+        ],
+        "title": "EventDesign"
+      },
       "ExternalTicket": {
         "properties": {
           "external_reference": {
@@ -9753,6 +9921,24 @@
           "password"
         ],
         "title": "LoginPayload"
+      },
+      "NewBlob": {
+        "properties": {
+          "data": {
+            "type": "string",
+            "title": "Data"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "mime_type"
+        ],
+        "title": "NewBlob"
       },
       "NewCashRegister": {
         "properties": {

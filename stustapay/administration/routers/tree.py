@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService, ContextWebhookService
+from stustapay.core.schema.media import EventDesign, NewBlob
 from stustapay.core.schema.tree import (
     NewEvent,
     NewNode,
@@ -58,6 +59,16 @@ async def update_event(
     token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: UpdateEvent
 ) -> Node:
     return await tree_service.update_event(token=token, node_id=node_id, event=payload)
+
+
+@router.post("/events/{node_id}/event-design/bon-logo")
+async def update_bon_logo(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: NewBlob):
+    await tree_service.update_bon_logo(token=token, node_id=node_id, image=payload)
+
+
+@router.get("/events/{node_id}/event-design")
+async def get_event_design(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int) -> EventDesign:
+    return await tree_service.get_event_design(token=token, node_id=node_id)
 
 
 @router.get("/events/{node_id}/settings")

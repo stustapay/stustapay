@@ -1,17 +1,13 @@
-"""
-perform schema updates and get a db shell.
-"""
-
 import logging
 
-import asyncpg.exceptions
+import asyncpg
 from sftkit.database import Database, DatabaseConfig
 
 from .schema import DB_CODE_PATH, MIGRATION_PATH
 
 logger = logging.getLogger(__name__)
 
-CURRENT_REVISION = "546c41ca"
+CURRENT_REVISION = "e517a853"
 
 
 def get_database(config: DatabaseConfig) -> Database:

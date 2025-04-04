@@ -26,6 +26,7 @@ export const addTagTypes = [
   "sumup",
   "transactions",
   "webhooks",
+  "media",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -1133,6 +1134,18 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
+      updateBonLogo: build.mutation<UpdateBonLogoApiResponse, UpdateBonLogoApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/event-design/bon-logo`,
+          method: "POST",
+          body: queryArg.newBlob,
+        }),
+        invalidatesTags: ["tree"],
+      }),
+      getEventDesign: build.query<GetEventDesignApiResponse, GetEventDesignApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/event-design` }),
+        providesTags: ["tree"],
+      }),
       getRestrictedEventSettings: build.query<GetRestrictedEventSettingsApiResponse, GetRestrictedEventSettingsApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/settings` }),
         providesTags: ["tree"],
@@ -1359,6 +1372,10 @@ const injectedRtkApi = api
           },
         }),
         invalidatesTags: ["webhooks"],
+      }),
+      getBlob: build.query<GetBlobApiResponse, GetBlobApiArg>({
+        query: (queryArg) => ({ url: `/media/blob/${queryArg.blobId}` }),
+        providesTags: ["media"],
       }),
     }),
     overrideExisting: false,
@@ -1933,6 +1950,15 @@ export type UpdateEventApiArg = {
   nodeId: number;
   updateEvent: UpdateEvent;
 };
+export type UpdateBonLogoApiResponse = /** status 200 Successful Response */ any;
+export type UpdateBonLogoApiArg = {
+  nodeId: number;
+  newBlob: NewBlob;
+};
+export type GetEventDesignApiResponse = /** status 200 Successful Response */ EventDesign;
+export type GetEventDesignApiArg = {
+  nodeId: number;
+};
 export type GetRestrictedEventSettingsApiResponse = /** status 200 Successful Response */ RestrictedEventSettings;
 export type GetRestrictedEventSettingsApiArg = {
   nodeId: number;
@@ -2058,6 +2084,10 @@ export type GetTransactionApiArg = {
 export type TriggerWebhookApiResponse = /** status 200 Successful Response */ any;
 export type TriggerWebhookApiArg = {
   token: string;
+};
+export type GetBlobApiResponse = unknown;
+export type GetBlobApiArg = {
+  blobId: string;
 };
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
@@ -3261,6 +3291,13 @@ export type UpdateEvent = {
     };
   };
 };
+export type NewBlob = {
+  data: string;
+  mime_type: string;
+};
+export type EventDesign = {
+  bon_logo_blob_id: string | null;
+};
 export type RestrictedEventSettings = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
@@ -3602,6 +3639,9 @@ export const {
   useArchiveNodeMutation,
   useCreateEventMutation,
   useUpdateEventMutation,
+  useUpdateBonLogoMutation,
+  useGetEventDesignQuery,
+  useLazyGetEventDesignQuery,
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
   useDeleteNodeMutation,
@@ -3638,4 +3678,6 @@ export const {
   useGetTransactionQuery,
   useLazyGetTransactionQuery,
   useTriggerWebhookMutation,
+  useGetBlobQuery,
+  useLazyGetBlobQuery,
 } = injectedRtkApi;

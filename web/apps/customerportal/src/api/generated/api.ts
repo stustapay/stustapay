@@ -54,6 +54,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/bon/${queryArg.orderUuid}` }),
         providesTags: ["base"],
       }),
+      getBlob: build.query<GetBlobApiResponse, GetBlobApiArg>({
+        query: (queryArg) => ({ url: `/blob/${queryArg.blobId}` }),
+        providesTags: ["base"],
+      }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
         query: (queryArg) => ({ url: `/sumup/create-checkout`, method: "POST", body: queryArg.createCheckoutPayload }),
         invalidatesTags: ["sumup"],
@@ -93,6 +97,10 @@ export type GetCustomerConfigApiArg = {
 export type GetBonApiResponse = /** status 200 Successful Response */ BonJsonRead;
 export type GetBonApiArg = {
   orderUuid: string;
+};
+export type GetBlobApiResponse = unknown;
+export type GetBlobApiArg = {
+  blobId: string;
 };
 export type CreateCheckoutApiResponse = /** status 200 Successful Response */ CreateCheckoutResponse;
 export type CreateCheckoutApiArg = {
@@ -236,7 +244,9 @@ export type OrderType =
   | "pay_out"
   | "ticket"
   | "money_transfer"
-  | "money_transfer_imbalance";
+  | "money_transfer_imbalance"
+  | "cashier_shift_start"
+  | "cashier_shift_end";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
@@ -288,6 +298,7 @@ export type OrderWithBon = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -306,6 +317,7 @@ export type OrderWithBonRead = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -330,6 +342,9 @@ export type PayoutTransaction = {
   target_account_type: string;
   transaction_id: number;
 };
+export type EventDesign = {
+  bon_logo_blob_id: string | null;
+};
 export type CustomerPortalApiConfig = {
   test_mode: boolean;
   test_mode_message: string;
@@ -345,6 +360,7 @@ export type CustomerPortalApiConfig = {
       [key: string]: string;
     };
   };
+  event_design: EventDesign;
 };
 export type OrderWithTse = {
   id: number;
@@ -358,6 +374,7 @@ export type OrderWithTse = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -387,6 +404,7 @@ export type OrderWithTseRead = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -462,6 +480,8 @@ export const {
   useLazyGetCustomerConfigQuery,
   useGetBonQuery,
   useLazyGetBonQuery,
+  useGetBlobQuery,
+  useLazyGetBlobQuery,
   useCreateCheckoutMutation,
   useCheckCheckoutMutation,
 } = injectedRtkApi;
