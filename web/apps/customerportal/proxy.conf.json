@@ -1,7 +1,12 @@
-{
-    "/api": {
-        "target": "http://localhost:8082",
-        "secure": false,
-        "pathRewrite": {"^/api": ""}
+[
+  {
+    "context": [
+      "/api"
+    ],
+    "target": "http://localhost:8082",
+    "secure": false,
+    "pathRewrite": {
+      "^/api": ""
     }
-}
+  }
+]
