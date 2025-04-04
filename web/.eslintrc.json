@@ -23,19 +23,11 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nx/typescript"],
-      "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
-        "no-extra-semi": "off"
-      }
+      "extends": ["plugin:@nx/typescript"]
     },
     {
       "files": ["*.js", "*.jsx"],
-      "extends": ["plugin:@nx/javascript"],
-      "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
-        "no-extra-semi": "off"
-      }
+      "extends": ["plugin:@nx/javascript"]
     },
     {
       "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
