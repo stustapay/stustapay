@@ -29,6 +29,7 @@ dependencies = [
     "ecdsa==0.18.0",
     "dateutils==0.6.12",
     "aiosmtplib==3.0.1",
+    "reportlab==4.3.1",
 ]
 
 [project.scripts]
