@@ -70,7 +70,7 @@ const reducer = (state: TopUpState, action: TopUpStateAction): TopUpState => {
 const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
-      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
+      <Grid size={{ xs: 12, sm: 8 }} sx={{ mt: 2 }}>
         {children}
       </Grid>
     </Grid>

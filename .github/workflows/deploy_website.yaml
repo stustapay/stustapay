@@ -1,39 +1,23 @@
 name: Deploy to GitHub Pages
 
 on:
-  pull_request:
-    branches: [master]
   push:
     branches: [master]
 
 jobs:
-  website-test-deploy:
-    if: github.event_name != 'push'
+  website-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - name: Set up Nodejs
+        uses: actions/setup-node@v2
         with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: website/package-lock.json
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
-        working-directory: ./website
-      - name: Test build website
-        run: npm run build
-        working-directory: ./website
-
-  website-deploy:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: website/package-lock.json
+        working-directory: ./web
       - uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: ${{ secrets.GH_PAGES_DEPLOY }}
@@ -43,6 +27,5 @@ jobs:
         run: |
           git config --global user.email "gh-actions@stustapay.de"
           git config --global user.name "gh-actions"
-          npm ci
-          npm run deploy
-        working-directory: ./website
+          npx nx deploy website
+        working-directory: ./web

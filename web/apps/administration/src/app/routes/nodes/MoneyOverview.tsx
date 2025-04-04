@@ -27,12 +27,12 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
     <Card>
       <CardContent>
         <Grid container alignItems="center" justifyContent="center" direction="column">
-          <Grid item>
+          <Grid>
             <Typography variant="h6" component="div">
               {account.name}
             </Typography>
           </Grid>
-          <Grid item>
+          <Grid>
             <Typography component="span" variant="body1">
               {formatCurrency(account.balance)}
             </Typography>
@@ -70,31 +70,31 @@ export const MoneyOverview: React.FC = () => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("cash_vault")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("sumup_entry")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("sumup_online_entry")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("sale_exit")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("cash_imbalance")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("cash_entry")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("cash_exit")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("sepa_exit")} />
       </Grid>
-      <Grid item sm={4} md={2}>
+      <Grid size={{ sm: 4, md: 2 }}>
         <BalanceCard account={selectAccountByType("donation_exit")} />
       </Grid>
     </Grid>

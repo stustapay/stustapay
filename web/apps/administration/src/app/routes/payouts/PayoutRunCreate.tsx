@@ -63,7 +63,7 @@ export const PayoutRunCreate: React.FC = () => {
   return (
     <Stack spacing={2}>
       <Grid container spacing={1}>
-        <Grid item display="flex" alignItems="center">
+        <Grid display="flex" alignItems="center">
           <IconButton onClick={() => navigate(-1)}>
             <ChevronLeft />
           </IconButton>

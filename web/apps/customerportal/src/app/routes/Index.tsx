@@ -53,14 +53,14 @@ export const Index: React.FC = () => {
   return (
     <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
       {config.sumup_topup_enabled && (
-        <Grid item xs={12} sm={8}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="info" onClick={() => navigate("/topup")} sx={{ cursor: "pointer" }}>
             <AlertTitle>{t("topup.onlineTopUp")}</AlertTitle>
             {t("topup.description")}
           </Alert>
         </Grid>
       )}
-      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
+      <Grid size={{ xs: 12, sm: 8 }} sx={{ mt: 2 }}>
         <Grid container justifyContent="center">
           <Paper
             sx={{
@@ -106,7 +106,7 @@ export const Index: React.FC = () => {
       </Grid>
 
       {config.payout_enabled && (
-        <Grid item xs={12} sm={8}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
             {payout_info}
           </Alert>
@@ -114,14 +114,14 @@ export const Index: React.FC = () => {
       )}
 
       {!config.payout_enabled && (
-        <Grid item xs={12} sm={8}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="warning" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
             <b>{t("payout.onlyDuringEvent")}</b>
           </Alert>
         </Grid>
       )}
 
-      <Grid item xs={12} sm={8}>
+      <Grid size={{ xs: 12, sm: 8 }}>
         <OrderList />
       </Grid>
     </Grid>
