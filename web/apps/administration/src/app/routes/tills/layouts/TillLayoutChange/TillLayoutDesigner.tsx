@@ -20,14 +20,14 @@ export const TillLayoutDesigner: React.FC<TillLayoutDesignerProps> = ({ selected
 
   return (
     <Grid container sx={{ padding: 2 }}>
-      <Grid item xs={6}>
+      <Grid size={{ xs: 6 }}>
         <AvailableButtons
           assignedButtonIds={selectedIds}
           setAssignedButtonIds={setAssignedButtonIds}
           selectables={selectables}
         />
       </Grid>
-      <Grid item xs={6}>
+      <Grid size={{ xs: 6 }}>
         <AssignedButtons
           assignedButtonIds={selectedIds}
           setAssignedButtonIds={setAssignedButtonIds}

@@ -25,10 +25,10 @@ const EntryStats: React.FC<{
       <>
         <Typography variant="h5">Entry Stats</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={10} height={300}>
+          <Grid size={{ xs: 12, md: 10 }} height={300}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
-          <Grid item xs={12} md={2} height={300}>
+          <Grid size={{ xs: 12, md: 2 }} height={300}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
         </Grid>
@@ -40,10 +40,10 @@ const EntryStats: React.FC<{
     <>
       <Typography variant="h5">Entry Stats</Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={10} height={300}>
+        <Grid size={{ xs: 12, md: 10 }} height={300}>
           <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
         </Grid>
-        <Grid item xs={12} md={2} height={300}>
+        <Grid size={{ xs: 12, md: 2 }} height={300}>
           <DailyStatsTable data={data} useRevenue={useRevenue} />
         </Grid>
       </Grid>
@@ -71,10 +71,10 @@ const TopUpStats: React.FC<{
       <>
         <Typography variant="h5">Top Up Stats</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={9} height={300}>
+          <Grid size={{ xs: 12, md: 9 }} height={300}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
-          <Grid item xs={12} md={3} height={300}>
+          <Grid size={{ xs: 12, md: 3 }} height={300}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
         </Grid>
@@ -86,10 +86,10 @@ const TopUpStats: React.FC<{
     <>
       <Typography variant="h5">Top Up Stats</Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={9} height={300}>
+        <Grid size={{ xs: 12, md: 9 }} height={300}>
           <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
         </Grid>
-        <Grid item xs={12} md={3} height={300}>
+        <Grid size={{ xs: 12, md: 3 }} height={300}>
           <DailyStatsTable data={data} useRevenue={useRevenue} />
         </Grid>
       </Grid>
@@ -117,10 +117,10 @@ const PayOutStats: React.FC<{
       <>
         <Typography variant="h5">Pay out Stats</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={9} height={300}>
+          <Grid size={{ xs: 12, md: 9 }} height={300}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
-          <Grid item xs={12} md={3} height={300}>
+          <Grid size={{ xs: 12, md: 3 }} height={300}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
         </Grid>
@@ -132,10 +132,10 @@ const PayOutStats: React.FC<{
     <>
       <Typography variant="h5">Pay Out Stats</Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={9} height={300}>
+        <Grid size={{ xs: 12, md: 9 }} height={300}>
           <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
         </Grid>
-        <Grid item xs={12} md={3} height={300}>
+        <Grid size={{ xs: 12, md: 3 }} height={300}>
           <DailyStatsTable data={data} useRevenue={useRevenue} />
         </Grid>
       </Grid>
@@ -163,13 +163,13 @@ export const EventStats: React.FC<EventStatsProps> = ({
 
   return (
     <>
-      <Grid item xs={4}>
+      <Grid size={{ xs: 4 }}>
         <VoucherStatsCard
           fromTimestamp={fromTimestamp?.toISO() ?? undefined}
           toTimestamp={toTimestamp?.toISO() ?? undefined}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Card>
           <CardContent>
             <EntryStats
@@ -183,7 +183,7 @@ export const EventStats: React.FC<EventStatsProps> = ({
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Card>
           <CardContent>
             <TopUpStats
@@ -197,7 +197,7 @@ export const EventStats: React.FC<EventStatsProps> = ({
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Card>
           <CardContent>
             <PayOutStats

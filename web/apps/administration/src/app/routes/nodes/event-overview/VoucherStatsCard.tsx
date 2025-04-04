@@ -36,16 +36,14 @@ export const VoucherStatsCard: React.FC<VoucherStatsCardProps> = ({ fromTimestam
       </CardContent>
       <Grid container>
         <Grid
-          item
-          xs={6}
+          size={{ xs: 6 }}
           sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
         >
           <Typography variant="h6">{t("overview.vouchersIssued")}</Typography>
           <Typography variant="body1">{data.vouchers_issued}</Typography>
         </Grid>
         <Grid
-          item
-          xs={6}
+          size={{ xs: 6 }}
           sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
         >
           <Typography variant="h6">{t("overview.vouchersSpent")}</Typography>

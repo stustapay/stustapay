@@ -52,7 +52,7 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
   };
 
   return (
-    <Grid item>
+    <Grid>
       <Stack spacing={2}>
         <DetailView sx={{ height: "100%" }}>
           {customer.payout_export === false && (
@@ -200,7 +200,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   return (
     <DetailLayout title={`Customer Account ${customer.id}`} routes={AccountRoutes} actions={actions}>
       <Grid container spacing={1} display="grid" alignItems="stretch" gridTemplateColumns="1fr 1fr">
-        <Grid item>
+        <Grid>
           <DetailView sx={{ height: "100%" }}>
             <DetailField label={t("account.id")} value={customer.id} />
             <DetailField label={t("account.type")} value={customer.type} />
