@@ -83,7 +83,7 @@ export const Login: React.FC = () => {
                   variant="outlined"
                   autoFocus
                   type="text"
-                  autoComplete="current-password"
+                  autoComplete="username"
                   name="userTagPin"
                   label={t("userTagPin")}
                   formik={formik}
@@ -91,8 +91,8 @@ export const Login: React.FC = () => {
 
                 <FormTextField
                   variant="outlined"
-                  type="text"
-                  autoComplete="username"
+                  type="password"
+                  autoComplete="current-password"
                   label={t("userTagUid")}
                   name="userTagUid"
                   formik={formik}
