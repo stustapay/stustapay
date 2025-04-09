@@ -67,13 +67,44 @@ export const SumupSettingsForm: React.FC<FormikProps<SumUpSettings>> = (formik) 
   const { t } = useTranslation();
   return (
     <>
-      <FormSwitch label={t("settings.sumup.sumup_topup_enabled")} name="sumup_topup_enabled" formik={formik} />
-      <FormSwitch label={t("settings.sumup.sumup_payment_enabled")} name="sumup_payment_enabled" formik={formik} />
-      <FormTextField label={t("settings.sumup.sumup_affiliate_key")} name="sumup_affiliate_key" formik={formik} />
-      <FormTextField label={t("settings.sumup.sumup_api_key")} name="sumup_api_key" formik={formik} />
-      <FormTextField label={t("settings.sumup.sumup_merchant_code")} name="sumup_merchant_code" formik={formik} />
-      <FormTextField label={t("settings.sumup.sumup_oauth_client_id")} name="sumup_oauth_client_id" formik={formik} />
+      <FormSwitch
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.sumup_topup_enabled")}
+        name="sumup_topup_enabled"
+        formik={formik}
+      />
+      <FormSwitch
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.sumup_payment_enabled")}
+        name="sumup_payment_enabled"
+        formik={formik}
+      />
       <FormTextField
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.sumup_affiliate_key")}
+        name="sumup_affiliate_key"
+        formik={formik}
+      />
+      <FormTextField
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.sumup_api_key")}
+        name="sumup_api_key"
+        formik={formik}
+      />
+      <FormTextField
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.sumup_merchant_code")}
+        name="sumup_merchant_code"
+        formik={formik}
+      />
+      <FormTextField
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.sumup_oauth_client_id")}
+        name="sumup_oauth_client_id"
+        formik={formik}
+      />
+      <FormTextField
+        disabled={!config.sumupTopupEnabledGlobally}
         label={t("settings.sumup.sumup_oauth_client_secret")}
         name="sumup_oauth_client_secret"
         formik={formik}

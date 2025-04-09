@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.debug
 
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,8 +31,7 @@ fun ECDebugView(viewModel: ECDebugViewModel = hiltViewModel()) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
-    val context = LocalContext.current as Activity
-
+    val context = LocalActivity.current!!
 
     Column(
         modifier = Modifier

@@ -1,5 +1,5 @@
--- migration: 9999998
--- requires: 9999999
+-- migration: 0000028
+-- requires: 546c41ca
 
 -- Add is_vip flag to user_tag table
 ALTER TABLE user_tag ADD COLUMN IF NOT EXISTS is_vip BOOLEAN NOT NULL DEFAULT FALSE;

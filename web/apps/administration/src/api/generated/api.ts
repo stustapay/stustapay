@@ -2276,6 +2276,7 @@ export type TillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
+  allow_ticket_vouchers: boolean;
   enable_ssp_payment: boolean;
   enable_cash_payment: boolean;
   enable_card_payment: boolean;
@@ -2295,6 +2296,7 @@ export type NewTillProfile = {
   allow_top_up: boolean;
   allow_cash_out: boolean;
   allow_ticket_sale: boolean;
+  allow_ticket_vouchers: boolean;
   enable_ssp_payment: boolean;
   enable_cash_payment: boolean;
   enable_card_payment: boolean;
@@ -3034,6 +3036,11 @@ export type PublicEventSettings = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  pretix_presale_enabled: boolean;
+  pretix_shop_url: string | null;
+  pretix_organizer: string | null;
+  pretix_event: string | null;
+  pretix_ticket_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3121,6 +3128,7 @@ export type NewEvent = {
   sumup_merchant_code?: string;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
+  pretix_api_key: string | null;
   email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
@@ -3133,6 +3141,11 @@ export type NewEvent = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  pretix_presale_enabled: boolean;
+  pretix_shop_url: string | null;
+  pretix_organizer: string | null;
+  pretix_event: string | null;
+  pretix_ticket_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3170,6 +3183,7 @@ export type UpdateEvent = {
   sumup_merchant_code?: string;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
+  pretix_api_key: string | null;
   email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
@@ -3182,6 +3196,11 @@ export type UpdateEvent = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  pretix_presale_enabled: boolean;
+  pretix_shop_url: string | null;
+  pretix_organizer: string | null;
+  pretix_event: string | null;
+  pretix_ticket_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3215,6 +3234,7 @@ export type RestrictedEventSettings = {
   sumup_merchant_code?: string;
   sumup_oauth_client_id?: string;
   sumup_oauth_client_secret?: string;
+  pretix_api_key: string | null;
   email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
@@ -3228,6 +3248,11 @@ export type RestrictedEventSettings = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  pretix_presale_enabled: boolean;
+  pretix_shop_url: string | null;
+  pretix_organizer: string | null;
+  pretix_event: string | null;
+  pretix_ticket_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;

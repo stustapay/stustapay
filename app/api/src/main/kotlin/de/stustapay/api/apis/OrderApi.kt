@@ -17,6 +17,7 @@ package de.stustapay.api.apis
 
 import kotlinx.serialization.Contextual
 
+import de.stustapay.api.models.CancelOrderPayload
 import de.stustapay.api.models.CompletedPayOut
 import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.CompletedTicketSale
@@ -210,6 +211,72 @@ import io.ktor.http.ParametersBuilder
             )
 
             return request(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * POST /order/cancel-pending-ticket-sale
+        * Mark a pending ticket sale as cancelled, e.g. because the sumup booking failed
+        * 
+         * @param cancelOrderPayload  
+         * @return kotlin.Unit
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun cancelPendingTicketSale(cancelOrderPayload: CancelOrderPayload): HttpResponse<kotlin.Unit> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = cancelOrderPayload
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/cancel-pending-ticket-sale",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * POST /order/cancel-pending-topup
+        * Mark a pending topup as cancelled, e.g. because the sumup booking failed
+        * 
+         * @param cancelOrderPayload  
+         * @return kotlin.Unit
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun cancelPendingTopup(cancelOrderPayload: CancelOrderPayload): HttpResponse<kotlin.Unit> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = cancelOrderPayload
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/cancel-pending-topup",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
             localVariableConfig,
             localVariableBody,
             localVariableAuthNames

@@ -32,8 +32,8 @@ class TillProfileService(Service[Config]):
     async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
         profile_id = await conn.fetchval(
             "insert into till_profile (node_id, name, description, allow_top_up, allow_cash_out, "
-            "allow_ticket_sale, enable_ssp_payment, enable_cash_payment, enable_card_payment, layout_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) "
+            "allow_ticket_sale, allow_ticket_vouchers, enable_ssp_payment, enable_cash_payment, enable_card_payment, layout_id) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) "
             "returning id",
             node.id,
             profile.name,
@@ -41,6 +41,7 @@ class TillProfileService(Service[Config]):
             profile.allow_top_up,
             profile.allow_cash_out,
             profile.allow_ticket_sale,
+            profile.allow_ticket_vouchers,
             profile.enable_ssp_payment,
             profile.enable_cash_payment,
             profile.enable_card_payment,
@@ -74,7 +75,7 @@ class TillProfileService(Service[Config]):
         p_id = await conn.fetchval(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
             "   allow_ticket_sale = $6, enable_ssp_payment = $7, enable_cash_payment = $8, "
-            "   enable_card_payment = $9, layout_id = $10 "
+            "   enable_card_payment = $9, layout_id = $10, allow_ticket_vouchers = $12 "
             "where id = $1 and node_id = any($11) returning id ",
             profile_id,
             profile.name,
@@ -87,6 +88,7 @@ class TillProfileService(Service[Config]):
             profile.enable_card_payment,
             profile.layout_id,
             node.ids_to_event_node,
+            profile.allow_ticket_vouchers,
         )
         if p_id is None:
             return None

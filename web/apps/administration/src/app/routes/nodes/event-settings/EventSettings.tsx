@@ -18,6 +18,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { toast } from "react-toastify";
 import { NodeConfiguration } from "../node-settings";
+import { TabPretix } from "./TabPretix";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -74,6 +75,7 @@ export const EventSettings: React.FC = () => {
               <Tab label={t("common.node")} value="node" />
               <Tab label={t("settings.general.tabLabel")} value="general" />
               <Tab label={t("settings.customerPortal.tabLabel")} value="customerPortal" />
+              <Tab label={t("settings.pretix.tabLabel")} value="pretix" />
               <Tab label={t("settings.agb.tabLabel")} value="agb" />
               <Tab label={t("settings.faq.tabLabel")} value="faq" />
               <Tab label={t("settings.sumup.tabLabel")} value="sumup" />
@@ -90,6 +92,9 @@ export const EventSettings: React.FC = () => {
           </TabPanel>
           <TabPanel value="customerPortal">
             <TabCustomerPortal nodeId={currentNode.id} eventSettings={eventSettings} />
+          </TabPanel>
+          <TabPanel value="pretix">
+            <TabPretix nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
           <TabPanel value="agb">
             <TabAgb nodeId={currentNode.id} eventSettings={eventSettings} />

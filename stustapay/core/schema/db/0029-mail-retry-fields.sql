@@ -1,5 +1,5 @@
--- migration: 9999997
--- requires: 9999998
+-- migration: 0000029
+-- requires: 0000028
 
 alter table mails add column if not exists retry_count int not null default 0;
 alter table mails add column if not exists retry_max int not null default 5;

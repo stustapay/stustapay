@@ -9,6 +9,8 @@ import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.model.InfallibleApiRequest
 import de.stustapay.stustapay.model.InfallibleApiResponse
+import de.stustapay.stustapay.netsource.TicketRemoteDataSource
+import de.stustapay.stustapay.netsource.TopUpRemoteDataSource
 import de.stustapay.stustapay.storage.InfallibleApiRequestLocalDataSource
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +20,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -46,8 +47,8 @@ sealed interface InfallibleState {
 @Singleton
 class InfallibleRepository @Inject constructor(
     private val dataSource: InfallibleApiRequestLocalDataSource,
-    private val topUpRepository: TopUpRepository,
-    private val ticketRepository: TicketRepository
+    private val topUpApi: TopUpRemoteDataSource,
+    private val ticketApi: TicketRemoteDataSource
 ) {
     private val scope: CoroutineScope =
         CoroutineScope(Dispatchers.Default + CoroutineName("infallible"))
@@ -143,13 +144,13 @@ class InfallibleRepository @Inject constructor(
                     Log.i("infallible", "attempt ${attempt} to send")
                     response = when (request) {
                         is InfallibleApiRequest.TopUp -> {
-                            val repoResponse = topUpRepository.bookTopUp(request.topUp)
+                            val repoResponse = topUpApi.bookTopUp(request.topUp)
                             success = repoResponse.submitSuccess()
                             InfallibleApiResponse.TopUp(repoResponse)
                         }
 
                         is InfallibleApiRequest.TicketSale -> {
-                            val repoResponse = ticketRepository.bookTicketSale(request.ticketSale)
+                            val repoResponse = ticketApi.bookTicketSale(request.ticketSale)
                             success = repoResponse.submitSuccess()
                             InfallibleApiResponse.TicketSale(repoResponse)
                         }

@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,7 +39,7 @@ fun TopUpSelection(
     val errorMessage_ by viewModel.errorMessage.collectAsStateWithLifecycle()
     val errorMessage = errorMessage_
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current as Activity
+    val context = LocalActivity.current!!
 
     if (errorMessage != null) {
         ErrorDialog(onDismiss = { scope.launch { viewModel.dismissError() } }) {

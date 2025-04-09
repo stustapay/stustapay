@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Annotated
@@ -13,6 +14,7 @@ from stustapay.customer_portal import server as customerportal_server
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
 from stustapay.payment.payment_processor import run as run_payment_processor
 from stustapay.terminalserver import server as terminal_server
+from stustapay.ticket_shop.ticket_processor import run as run_ticket_processor
 
 from .admin import admin_cli
 from .database import database_cli
@@ -41,7 +43,7 @@ def get_config(
     asyncio.get_event_loop().set_debug(debug)
 
     if not config_path.exists():
-        print(f"Config file does not exist: {config_path}")
+        sys.stderr.write(f"Config file does not exist: {config_path}")
         raise typer.Exit(1)
 
     config = read_config(config_path)
@@ -119,6 +121,12 @@ def customerportal_api(ctx: typer.Context, show_openapi: bool = False):
 def payment_processor(ctx: typer.Context):
     """Run the payment processor."""
     asyncio.run(run_payment_processor(config=ctx.obj.config))
+
+
+@cli.command()
+def ticket_processor(ctx: typer.Context):
+    """Run the ticket processor."""
+    asyncio.run(run_ticket_processor(config=ctx.obj.config))
 
 
 cli.add_typer(

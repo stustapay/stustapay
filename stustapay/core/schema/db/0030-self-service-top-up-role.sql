@@ -1,5 +1,5 @@
--- migration: 9999999
--- requires: 395fe4fd
+-- migration: 0000030
+-- requires: 0000029
 
 -- Add new privilege
 insert into privilege (
@@ -14,7 +14,7 @@ on conflict do nothing;
 INSERT INTO user_role (name, is_privileged, node_id)
 SELECT DISTINCT 'self-service-top-up', false, id
 FROM node
-WHERE id > 0 AND event_id IS NOT NULL
+WHERE id > 0 AND event_id IS NOT NULL AND 'self-service-top-up' NOT IN (SELECT name FROM user_role WHERE node_id = node.id)
 ON CONFLICT DO NOTHING;
 
 -- Add the can_topup privilege to all self-service-top-up roles

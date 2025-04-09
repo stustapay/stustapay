@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.root
 
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -57,7 +58,7 @@ fun InfallibleError(
 
 @Composable
 fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: InfallibleState) {
-    val activity = LocalContext.current as Activity
+    val activity = LocalActivity.current!!
     LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
         when (state) {
             is InfallibleState.CanRetry, is InfallibleState.Retrying -> {

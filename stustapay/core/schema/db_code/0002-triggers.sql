@@ -290,12 +290,28 @@ begin
 
     if NEW.active_cash_register_id is null then
         locals.cash_register_id := OLD.active_cash_register_id;
-        select t.active_user_id into locals.logged_in_cashier
-        from terminal t where t.id = OLD.terminal_id;
+        
+        -- Get cashier ID from cash register relationship instead of terminal
+        select u.id into locals.logged_in_cashier
+        from usr u where u.cash_register_id = locals.cash_register_id;
+        
+        -- If still NULL, try getting from terminal as a fallback
+        if locals.logged_in_cashier is null then
+            select t.active_user_id into locals.logged_in_cashier
+            from terminal t where t.id = OLD.terminal_id;
+        end if;
     else
         locals.cash_register_id := NEW.active_cash_register_id;
-        select t.active_user_id into locals.logged_in_cashier
-        from terminal t where t.id = NEW.terminal_id;
+        
+        -- Get cashier ID from cash register relationship
+        select u.id into locals.logged_in_cashier
+        from usr u where u.cash_register_id = locals.cash_register_id;
+        
+        -- If still NULL, try getting from terminal as a fallback
+        if locals.logged_in_cashier is null then
+            select t.active_user_id into locals.logged_in_cashier
+            from terminal t where t.id = NEW.terminal_id;
+        end if;
     end if;
 
     select

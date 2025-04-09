@@ -1,7 +1,11 @@
 package de.stustapay.stustapay.ui.root
 
 import android.app.Activity
+import android.content.ComponentName
+import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,11 +35,8 @@ fun StartpageView(
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
-    val gradientColors = listOf(
-        MaterialTheme.colors.background,
-        MaterialTheme.colors.onSecondary
-    )
-    val activity = LocalContext.current as Activity
+    val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
+    val activity = LocalActivity.current!!
 
     // Automatically navigate to topup view for users with only the can_topup privilege
     LaunchedEffect(loginState) {

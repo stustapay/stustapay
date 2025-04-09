@@ -13,18 +13,23 @@ git clone https://github.com/stustapay/stustapay.git
 ## Developing on your local machine
 
 Install system requirements:
+
 - `python >= 3.11`
-- `nodejs >= 18`
+- `nodejs >= 20`
 - `docker` (optional, recommended for running postgresql in a docker container)
 
 ### Setup Backend for Development
-Create a python virtualenv 
+
+Create a python virtualenv
+
 ```shell
 python3 -m virtualenv -p python3 .venv
 source .venv/bin/activate
 ```
-Install backend python module as a local editable python module. 
+
+Install backend python module as a local editable python module.
 This will install all python requirements needed for development and testing as well.
+
 ```shell
 pip install -e '.[dev,test]'
 ```
@@ -38,7 +43,8 @@ Start a local postgres instance via docker compose.
 ```shell
 docker compose -f docker/docker-compose.devel.yaml up
 ```
-This will start a postgresql instance and bind it to the local port `5433` 
+
+This will start a postgresql instance and bind it to the local port `5433`
 (to not conflict with already locally running postgres databases on the default port.)
 
 <details>
@@ -48,10 +54,12 @@ Another option is to run a local postgresql instance.
 
 In that case you have to take care of setting up a database user and database yourself.
 You'll probably want to copy `etc/config.devel.yaml` and adapt the database connection settings.
+
 </div>
 </details>
 
 Apply the database schema
+
 ```shell
 stustapay -c etc/config.devel.yaml db migrate
 ```
@@ -63,12 +71,14 @@ Head over to the [simulator docs](simulator.md) to see how to generate test data
 ### Setup web frontend for development
 
 To install the web ui requirements run
+
 ```shell
 cd web
 npm install
 ```
 
 ### Running
+
 To start the administration web and customer web interfaces in development mode (supports live code reloading) run
 
 ```shell
@@ -77,12 +87,14 @@ npx nx serve customerportal
 ```
 
 Other usefull commands for development (where `project` is either `customerportal` or `administration`) are
+
 ```shell
 npx nx build <project>
 npx nx lint <project>
 ```
 
 ### Formatting, Linting and Testing
+
 ```shell
 # check format
 make check-format
@@ -93,7 +105,9 @@ make lint
 # run tests (nondocker based postgres instance only)
 make tests
 ```
+
 When using a docker based postgres instance as mentioned above, start the docker compose setup and run the tests using the following commands:
+
 ```shell
 docker compose -f docker/docker-compose.devel.yaml up
 TEST_DB_USER=stustapay_test TEST_DB_PASSWORD=stustapay_test TEST_DB_HOST=localhost TEST_DB_DATABASE=stustapay_test TEST_DB_PORT=5434 make test

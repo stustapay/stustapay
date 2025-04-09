@@ -9,6 +9,7 @@ core:
   test_mode: true
   test_mode_message: "using test instance"
   secret_key: "dummy secret key"
+  sumup_enabled: true
 
 administration:
   base_url: "http://localhost:8081"

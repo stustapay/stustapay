@@ -204,7 +204,7 @@ async def _sync_optional_event_metadata(conn: Connection, event_id: int, event: 
         )
     if event.payout_registered_message is not None:
         await conn.execute(
-            "update event set payout_registered_message = $1 where id = $2", event.payout_registered_subject, event_id
+            "update event set payout_registered_message = $1 where id = $2", event.payout_registered_message, event_id
         )
 
 
@@ -218,9 +218,10 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
         "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
         "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_sender, "
-        "sumup_oauth_client_id, sumup_oauth_client_secret, post_payment_allowed, donation_enabled) "
+        "sumup_oauth_client_id, sumup_oauth_client_secret,pretix_presale_enabled, pretix_shop_url, pretix_api_key, "
+        "pretix_organizer, pretix_event, pretix_ticket_ids, post_payment_allowed, donation_enabled) "
         "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, "
-        "$25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35)"
+        "$25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41)"
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
@@ -255,6 +256,12 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.payout_sender,
         event.sumup_oauth_client_id,
         event.sumup_oauth_client_secret,
+        event.pretix_presale_enabled,
+        event.pretix_shop_url,
+        event.pretix_api_key,
+        event.pretix_organizer,
+        event.pretix_event,
+        event.pretix_ticket_ids,
         event.post_payment_allowed,
         event.donation_enabled,
     )
@@ -315,27 +322,27 @@ class TreeService(Service[Config]):
 
         await conn.fetchval(
             "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
-            "   vip_max_account_balance = $5, customer_portal_contact_email = $6, ust_id = $7, bon_issuer = $8, "
-            "   bon_address = $9, bon_title = $10, sepa_enabled = $11, sepa_sender_name = $12, sepa_sender_iban = $13, "
+            "   vip_max_account_balance = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
+            "   customer_portal_contact_email = $10, sepa_enabled = $11, sepa_sender_name = $12, sepa_sender_iban = $13, "
             "   sepa_description = $14, sepa_allowed_country_codes = $15, customer_portal_url = $16, "
             "   customer_portal_about_page_url = $17, customer_portal_data_privacy_url = $18, sumup_payment_enabled = $19, "
             "   sumup_api_key = $20, sumup_affiliate_key = $21, sumup_merchant_code = $22, start_date = $23, "
             "   end_date = $24, daily_end_time = $25, email_enabled = $26, email_default_sender = $27, "
             "   email_smtp_host = $28, email_smtp_port = $29, email_smtp_username = $30, email_smtp_password = $31, "
-            "   payout_done_subject = $32, payout_done_message = $33, payout_registered_subject = $34, "
-            "   payout_registered_message = $35, payout_sender = $36, sumup_oauth_client_id = $37, "
-            "   sumup_oauth_client_secret = $38, post_payment_allowed = $39, donation_enabled = $40 "
+            "   payout_sender = $32, sumup_oauth_client_id = $33, sumup_oauth_client_secret = $34, "
+            "   pretix_presale_enabled = $35, pretix_shop_url = $36, pretix_api_key = $37, pretix_organizer = $38, "
+            "   pretix_event = $39, pretix_ticket_ids = $40, post_payment_allowed = $41, donation_enabled = $42 "
             "where id = $1",
             event_id,
             event.currency_identifier,
             event.sumup_topup_enabled,
             event.max_account_balance,
             event.vip_max_account_balance,
-            event.customer_portal_contact_email,
             event.ust_id,
             event.bon_issuer,
             event.bon_address,
             event.bon_title,
+            event.customer_portal_contact_email,
             event.sepa_enabled,
             event.sepa_sender_name,
             event.sepa_sender_iban,
@@ -357,13 +364,15 @@ class TreeService(Service[Config]):
             event.email_smtp_port,
             event.email_smtp_username,
             event.email_smtp_password,
-            event.payout_done_subject,
-            event.payout_done_message,
-            event.payout_registered_subject,
-            event.payout_registered_message,
             event.payout_sender,
             event.sumup_oauth_client_id,
             event.sumup_oauth_client_secret,
+            event.pretix_presale_enabled,
+            event.pretix_shop_url,
+            event.pretix_api_key,
+            event.pretix_organizer,
+            event.pretix_event,
+            event.pretix_ticket_ids,
             event.post_payment_allowed,
             event.donation_enabled,
         )

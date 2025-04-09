@@ -1,4 +1,5 @@
 import { useLoginMutation } from "@/api";
+import { config } from "@/api/common";
 import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
@@ -39,7 +40,14 @@ export const Login: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    login({ loginPayload: { username: values.userTagUid,  pin: values.userTagPin } })
+    
+    login({ 
+      loginPayload: { 
+        username: values.userTagUid,  
+        pin: values.userTagPin,
+        node_id: config.apiConfig.node_id
+      } 
+    })
       .unwrap()
       .then(() => {
         setSubmitting(false);
@@ -75,7 +83,7 @@ export const Login: React.FC = () => {
                   variant="outlined"
                   autoFocus
                   type="text"
-                  autoComplete="current-password"
+                  autoComplete="username"
                   name="userTagPin"
                   label={t("userTagPin")}
                   formik={formik}
@@ -83,8 +91,8 @@ export const Login: React.FC = () => {
 
                 <FormTextField
                   variant="outlined"
-                  type="text"
-                  autoComplete="username"
+                  type="password"
+                  autoComplete="current-password"
                   label={t("userTagUid")}
                   name="userTagUid"
                   formik={formik}

@@ -151,7 +151,7 @@ data class SaleStatus(
             is SaleItemPrice.FixedPrice,
             is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
-                    current.amount = current.amount + 1
+                    buttonSelection[buttonId] = SaleItemAmount.FixedPrice(current.amount + 1)
                 } else {
                     buttonSelection += Pair(
                         buttonId,
@@ -176,7 +176,7 @@ data class SaleStatus(
                 if (current is SaleItemAmount.FixedPrice) {
                     val newAmount = max(0, current.amount - 1)
                     if (newAmount != 0) {
-                        current.amount = newAmount
+                        buttonSelection[buttonId] = SaleItemAmount.FixedPrice(newAmount)
                     } else {
                         buttonSelection.remove(buttonId)
                     }
@@ -187,8 +187,10 @@ data class SaleStatus(
 
             is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
-                    current.amount = current.amount - 1
-                    if (current.amount == 0) {
+                    val newAmount = current.amount - 1
+                    if (newAmount != 0) {
+                        buttonSelection[buttonId] = SaleItemAmount.FixedPrice(newAmount)
+                    } else {
                         buttonSelection.remove(buttonId)
                     }
                 } else {

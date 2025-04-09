@@ -1,0 +1,12 @@
+[Unit]
+Description=StuStaPay Ticket Processor
+After=postgresql.service
+
+[Service]
+ExecStartPre=/usr/lib/stustapay/systemd-exec-start-pre.sh
+ExecStart=/usr/lib/stustapay/venv/bin/stustapay ticket-processor
+User=stustapay
+Group=stustapay
+
+[Install]
+WantedBy=multi-user.target

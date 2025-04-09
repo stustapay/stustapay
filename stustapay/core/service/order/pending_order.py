@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sftkit.database import Connection
@@ -8,6 +8,7 @@ from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
     CompletedTicketSale,
     CompletedTopUp,
+    CustomerRegistration,
     OrderType,
     PaymentMethod,
     PendingOrder,
@@ -42,8 +43,18 @@ async def fetch_order_by_uuid(conn: Connection, uuid: UUID) -> PendingOrder:
     )
 
 
+SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
+
+
 async def fetch_pending_orders(conn: Connection) -> list[PendingOrder]:
-    return await conn.fetch_many(PendingOrder, "select * from pending_sumup_order where status = 'pending'")
+    return await conn.fetch_many(
+        PendingOrder,
+        "select o.* from pending_sumup_order o "
+        "where o.status = 'pending' "
+        "and ((o.last_checked is null and now() > o.created_at + $1) "
+        "   or now() > o.last_checked + make_interval(secs => o.check_interval))",
+        SUMUP_INITIAL_CHECK_TIMEOUT,
+    )
 
 
 async def save_pending_ticket_sale(
@@ -77,30 +88,47 @@ async def make_ticket_sale_bookings(
     ticket_sale: PendingTicketSale | CompletedTicketSale,
     booked_at: datetime,
 ) -> int:
-    # create a new customer account for the given tag ,
+    # reuse or create a new customer account for the given tag
     # store the initial topup amount as well as restriction for each newly created customer
-    customers: dict[int, tuple[float, str | None]] = {}
+    customers: list[CustomerRegistration] = []
+
     for scanned_ticket in ticket_sale.scanned_tickets:
         restriction = await conn.fetchval(
             "select restriction from user_tag where pin = $1 and node_id = any($2)",
             scanned_ticket.customer_tag_pin,
             node.ids_to_root,
         )
+        # register tag uid
         user_tag_id = await conn.fetchval(
             "update user_tag set uid = $1 where pin = $2 and node_id = any($3) returning id",
             scanned_ticket.customer_tag_uid,
             scanned_ticket.customer_tag_pin,
             node.ids_to_root,
         )
-        customer_account_id = await conn.fetchval(
-            "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
-            node.event_node_id,
-            user_tag_id,
+
+        customer_account_id: int
+        if scanned_ticket.account is None:
+            customer_account_id = await conn.fetchval(
+                "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
+                node.event_node_id,
+                user_tag_id,
+            )
+
+        else:
+            customer_account_id = scanned_ticket.account.id
+
+        customers.append(
+            CustomerRegistration(
+                account_id=customer_account_id,
+                restriction=restriction,
+                ticket_included_top_up=scanned_ticket.ticket.initial_top_up_amount,
+                top_up_amount=scanned_ticket.top_up_amount,
+            )
         )
-        customers[customer_account_id] = (scanned_ticket.ticket.initial_top_up_amount, restriction)
 
     oldest_customer_account_id = find_oldest_customer(customers)
 
+    # TODO: allow to book PendingLineItem, then remove this conversion
     line_items = []
     for line_item in ticket_sale.line_items:
         line_items.append(
@@ -123,6 +151,7 @@ async def make_ticket_sale_bookings(
     sale_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sale_exit)
 
     prepared_bookings: dict[BookingIdentifier, float] = {}
+
     if ticket_sale.payment_method == PaymentMethod.cash:
         if current_till.active_cash_register_id is None:
             raise InvalidArgument("Cash payments require a cash register")
@@ -135,21 +164,26 @@ async def make_ticket_sale_bookings(
         prepared_bookings[
             BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=sale_exit_acc.id)
         ] = total_ticket_price
-        for customer_account_id in customers.keys():
-            topup_amount = customers[customer_account_id][0]
+
+        for customer in customers:
+            topup_amount = customer.top_up_amount + customer.ticket_included_top_up
             if topup_amount > 0:
                 prepared_bookings[
-                    BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer_account_id)
+                    BookingIdentifier(source_account_id=cash_topup_acc.id, target_account_id=customer.account_id)
                 ] = topup_amount
+
     elif ticket_sale.payment_method == PaymentMethod.sumup:
         prepared_bookings[
             BookingIdentifier(source_account_id=sumup_entry_acc.id, target_account_id=sale_exit_acc.id)
         ] = total_ticket_price
-        for customer_account_id in customers.keys():
-            topup_amount = customers[customer_account_id][0]
-            prepared_bookings[
-                BookingIdentifier(source_account_id=sumup_entry_acc.id, target_account_id=customer_account_id)
-            ] = topup_amount
+
+        for customer in customers:
+            topup_amount = customer.top_up_amount + customer.ticket_included_top_up
+            if topup_amount > 0:
+                prepared_bookings[
+                    BookingIdentifier(source_account_id=sumup_entry_acc.id, target_account_id=customer.account_id)
+                ] = topup_amount
+
     else:
         raise InvalidArgument("Invalid payment method")
 

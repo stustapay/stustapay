@@ -105,7 +105,7 @@ fun SaleSelectionItem(
         is SaleSelectionItemType.FixedPrice -> {
             val amount: Int = type.amount?.amount ?: 0
             itemPrice = "%.02f€".format(type.price.price)
-            itemAmount = "%2d".format(amount)
+            itemAmount = "%d".format(amount)
             rightButtonText = "‒"
         }
 
@@ -115,7 +115,7 @@ fun SaleSelectionItem(
                 sameSizeButtons = true
                 val amount: Int = type.amount?.amount ?: 0
                 itemPrice = "%.02f€".format(type.price.price)
-                itemAmount = "%2d".format(amount)
+                itemAmount = "%d".format(amount)
                 rightButtonText = type.incrementText
                 rightButtonStyle = ProductButtonStyle
                 leftButtonColors = errorButtonColors()
@@ -124,7 +124,7 @@ fun SaleSelectionItem(
             else {
                 val amount: Int = type.amount?.amount ?: 0
                 itemPrice = "%.02f€".format(type.price.price)
-                itemAmount = "%2d".format(amount)
+                itemAmount = "%d".format(amount)
                 leftButtonColors = errorButtonColors()
                 rightButtonText = "‒"
             }
@@ -138,8 +138,8 @@ fun SaleSelectionItem(
         }
 
         is SaleSelectionItemType.Vouchers -> {
-            itemPrice = "%2d".format(type.amount)
-            itemAmount = "%2d".format(type.maxAmount)
+            itemPrice = "%d".format(type.amount)
+            itemAmount = "%d".format(type.maxAmount)
             itemAmountDelimiter = "/"
             rightButtonText = "‒"
         }

@@ -22,6 +22,7 @@ src/main/kotlin/de/stustapay/api/infrastructure/RequestMethod.kt
 src/main/kotlin/de/stustapay/api/models/Account.kt
 src/main/kotlin/de/stustapay/api/models/AccountType.kt
 src/main/kotlin/de/stustapay/api/models/Button.kt
+src/main/kotlin/de/stustapay/api/models/CancelOrderPayload.kt
 src/main/kotlin/de/stustapay/api/models/CashRegister.kt
 src/main/kotlin/de/stustapay/api/models/CashRegisterStocking.kt
 src/main/kotlin/de/stustapay/api/models/CashierAccountChangePayload.kt

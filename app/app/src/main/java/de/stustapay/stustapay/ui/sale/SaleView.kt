@@ -2,6 +2,7 @@ package de.stustapay.stustapay.ui.sale
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +41,7 @@ fun SaleView(
     val error_ by viewModel.error.collectAsStateWithLifecycle()
     val error = error_
     val enableScan by viewModel.enableScan.collectAsStateWithLifecycle()
-    val context = LocalContext.current as Activity
+    val context = LocalActivity.current!!
 
     LaunchedEffect(navTarget) {
         if (nav.currentDestination?.route != navTarget.route) {

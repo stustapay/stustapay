@@ -29,7 +29,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
   },
   errorPage: {
     error: "Fehler",
-    currentlyUnavailable: "Das StuStaPay Kundenportal ist aktuell nicht verfügbar",
+    currentlyUnavailable: "Das TeamFestlichPay Kundenportal ist aktuell nicht verfügbar",
   },
   transaction:
   {
@@ -70,7 +70,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       "Du bist für unsere nächste manuell ausgelöste Auszahlung eingeplant, daher kannst du deine Bankinformationen nicht mehr ändern. Halte durch, wir werden dich benachrichtigen, sobald wir die Banküberweisung von unserer Seite aus initiiert haben.",
     infoPayoutCompleted:
       "Vielen Dank für deine Geduld, wir haben die Banküberweisung von unserer Seite aus am {{payout_date}} initiiert. Möglicherweise hast du die Gelder bereits erhalten, andernfalls sollten sie innerhalb der nächsten Tage eintreffen. Du kannst die Überweisungsdetails in der Transaktionsliste auf der Hauptseite einsehen.",
-    info: "Damit wir dein Restguthaben überweisen können, trage bitte Deine Bankdaten hier ein. Wenn Du unser ehrenamtliches Engagement unterstützen möchtest, kannst Du bei dem Punkt „Spendenbetrag“ einen Betrag Deiner Wahl eingegeben. Das System errechnet nach dem Drücken des Buttons „Bankdaten speichern“ dann automatisch den Auszahlungsbetrag. Möchtest Du keinen Betrag spenden bitte einfach nur den Button „Bankdaten speichern“ drücken, der auf der Karte verfügbare Betrag wird dann zur Auszahlung vorgemerkt.Die erste Auszahlung findet voraussichtlich 3 Wochen nach Veranstaltungsende statt.",
+    info: "Damit wir dein Restguthaben überweisen können, trage bitte Deine Bankdaten hier ein. Wenn Du unser ehrenamtliches Engagement unterstützen möchtest, kannst Du bei dem Punkt \"Spendenbetrag\" einen Betrag Deiner Wahl eingegeben. Das System errechnet nach dem Drücken des Buttons \"Bankdaten speichern\" dann automatisch den Auszahlungsbetrag. Möchtest Du keinen Betrag spenden bitte einfach nur den Button \"Bankdaten speichern\" drücken, der auf der Karte verfügbare Betrag wird dann zur Auszahlung vorgemerkt.Die erste Auszahlung findet voraussichtlich 3 Wochen nach Veranstaltungsende statt.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     nameHasSpecialChars: "Der Accountname enthält nicht valide Sonderzeichen",
@@ -106,6 +106,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     errorAmountMustBeIntegral: "Centbeträge sind nicht erlaubt.",
     sumupTopupDisabled: "Online-Aufladung ist deaktiviert.",
     tryAgain: "Versuche es noch einmal",
+    paymentTakingTooLong: "Die Zahlung dauert länger als erwartet. Du kannst warten oder es noch einmal versuchen.",
+    unexpectedError: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später noch einmal.",
     success: {
       title: "Aufladung erfolgreich",
       message: "Bitte gehe weiter zur <1>Übersichtsseite</1>.",
@@ -113,6 +115,11 @@ export const translations: NestedPartialAsStrings<Translations> = {
     error: {
       title: "Aufladung fehlgeschlagen",
       message: "Ein unbekannter Fehler ist aufgetreten.",
+    },
+    cancelled: {
+      title: "Zahlung abgebrochen",
+      message: "Die Zahlung wurde abgebrochen oder ist abgelaufen.",
+      defaultMessage: "Die Zahlung wurde abgebrochen oder ist abgelaufen. Du kannst es erneut versuchen.",
     },
   },
 } as const;

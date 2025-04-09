@@ -12,12 +12,12 @@ import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.ec.ECPayment
+import de.stustapay.stustapay.netsource.TopUpRemoteDataSource
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.PayOutRepository
 import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
-import de.stustapay.stustapay.repository.TopUpRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import de.stustapay.stustapay.ui.payinout.payout.PayOutState
@@ -48,7 +48,7 @@ enum class PostPaymentPage(val route: String) {
 
 @HiltViewModel
 class PostPaymentViewModel @Inject constructor(
-    private val topUpRepository: TopUpRepository,
+    private val topUpApi: TopUpRemoteDataSource,
     private val terminalConfigRepository: TerminalConfigRepository,
     userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
@@ -200,7 +200,7 @@ class PostPaymentViewModel @Inject constructor(
     private suspend fun checkTopUp(newTopUp: NewTopUp): Boolean {
 
         // server-side check
-        return when (val response = topUpRepository.checkTopUp(newTopUp)) {
+        return when (val response = topUpApi.checkTopUp(newTopUp)) {
             is Response.OK -> {
                 _status.update { "TopUp possible" }
                 true

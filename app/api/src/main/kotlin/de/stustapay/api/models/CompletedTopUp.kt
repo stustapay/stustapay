@@ -64,7 +64,7 @@ data class CompletedTopUp (
     val bookedAt: java.time.OffsetDateTime,
 
     @SerialName(value = "cashier_id")
-    val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    val cashierId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "till_id")
     val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger

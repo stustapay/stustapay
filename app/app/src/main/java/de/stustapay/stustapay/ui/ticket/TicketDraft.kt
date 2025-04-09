@@ -21,19 +21,12 @@ data class TicketDraft(
     /**
      * when checking the sale, server returns this.
      */
-    var checkedSale: PendingTicketSale? = null,
+    var pendingSale: PendingTicketSale? = null,
 
     /**
      * status serial so objects are different..
      */
     var statusSerial: ULong = 0u,
-
-    /**
-     * sumup payment identifier suffix
-     * because for the same checked order we can have multiple sumup attempts.
-     * and each of them needs a unique identifier.
-     */
-    var ecRetry: ULong = 0u,
 
     /**
      * association of scanned tags with their sold tickets.
@@ -42,21 +35,17 @@ data class TicketDraft(
     var scans: List<ScannedTicket> = listOf(),
 ) {
     fun updateWithPendingTicketSale(pendingTicketSale: PendingTicketSale) {
-        checkedSale = pendingTicketSale
+        pendingSale = pendingTicketSale
     }
 
     fun tagKnown(tag: NfcTag): Boolean {
         return scans.any { it.tag == tag }
     }
 
-    /** ec transaction has failed, so we need a new transaction id. */
-    fun ecFailure() {
-        ecRetry += 1u
-    }
-
+    /** generate a ticket sale - always fresh UUID */
     fun getNewTicketSale(paymentMethod: PaymentMethod?): NewTicketSale {
         return NewTicketSale(
-            uuid = checkedSale?.uuid ?: UUID.randomUUID(),
+            uuid = UUID.randomUUID(),
             customerTags = scans.mapNotNull {
                 UserTagScan(
                     it.tag.uid, it.tag.pin ?: return@mapNotNull null
