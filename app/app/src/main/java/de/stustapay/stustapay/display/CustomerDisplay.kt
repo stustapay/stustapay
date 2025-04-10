@@ -172,75 +172,226 @@ class CustomerDisplayManager @Inject constructor(
                 // Clear existing views
                 rootView?.removeAllViews()
                 
-                // Handle InsufficientFunds separately with a custom view
-                if (state is CustomerDisplayState.InsufficientFunds) {
-                    showInsufficientFundsView(state, rootView)
-                    return
-                }
-                
-                // Get event name from TerminalConfig
-                val eventName = getEventName()
-                
-                // Create a TextView to display the content
-                val textView = android.widget.TextView(context).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT, 
-                        FrameLayout.LayoutParams.MATCH_PARENT
-                    )
-                    gravity = android.view.Gravity.CENTER
-                    textSize = 24f
-                    setTextColor(android.graphics.Color.BLACK)
-                    
-                    // Set the appropriate text based on the state
-                    when (state) {
-                        is CustomerDisplayState.Welcome -> {
-                            text = "Willkommen bei $eventName\n\nBitte treffen Sie eine Auswahl"
-                        }
-                        is CustomerDisplayState.ScanChip -> {
-                            text = "Bitte scannen Sie Ihren Chip/Tag\n\nHalten Sie Ihren Chip an das Lesegerät"
-                        }
-                        is CustomerDisplayState.SaleCompleted -> {
-                            text = "Kauf abgeschlossen\n\nGesamtbetrag: ${state.sale.totalPrice}" + 
-                                  (state.sale.newBalance?.let { "\n\nNeues Guthaben: $it" } ?: "")
-                        }
-                        is CustomerDisplayState.TopUpCompleted -> {
-                            text = "Aufladung abgeschlossen\n\nAufgeladener Betrag: ${state.topUpAmount}\n\nNeues Guthaben: ${state.newBalance}"
-                        }
-                        is CustomerDisplayState.ValidatingSale -> {
-                            val productsText = if (state.products.isNotEmpty()) {
-                                "\n\nProdukte:\n" + state.products.joinToString("\n") { "${it.first}: ${it.second}" }
-                            } else {
-                                ""
-                            }
-                            
-                            // If we're in validation mode (with balance info), show full details
-                            if (state.currentBalance.isNotEmpty()) {
-                                val newBalanceText = if (state.newBalance != null) {
-                                    "\nNeues Guthaben: ${state.newBalance} €"
-                                } else {
-                                    ""
-                                }
-                                text = "Validierung läuft...\n\nGESAMTBETRAG: ${state.totalPrice} €\nAktuelles Guthaben: ${state.currentBalance} €$newBalanceText$productsText"
-                            } else {
-                                // Otherwise just show products and total price for typing in products
-                                text = "GESAMTBETRAG: ${state.totalPrice} €$productsText"
-                            }
-                        }
-                        else -> {
-                            text = "Unbekannter Status"
-                        }
+                // Create custom views for each state
+                when (state) {
+                    is CustomerDisplayState.Welcome -> {
+                        showWelcomeView(rootView)
+                    }
+                    is CustomerDisplayState.ScanChip -> {
+                        showScanChipView(rootView)
+                    }
+                    is CustomerDisplayState.SaleCompleted -> {
+                        showSaleCompletedView(state, rootView)
+                    }
+                    is CustomerDisplayState.TopUpCompleted -> {
+                        showTopUpCompletedView(state, rootView)
+                    }
+                    is CustomerDisplayState.ValidatingSale -> {
+                        showValidatingSaleView(state, rootView)
+                    }
+                    is CustomerDisplayState.InsufficientFunds -> {
+                        showInsufficientFundsView(state, rootView)
                     }
                 }
-                
-                // Add the TextView to the root view
-                rootView?.addView(textView)
-                
             } catch (e: Exception) {
                 // Handle any exceptions
                 e.printStackTrace()
             }
         }
         
+        /**
+         * Shows a styled welcome view
+         */
+        private fun showWelcomeView(rootView: FrameLayout?) {
+            // Get event name
+                val eventName = getEventName()
+            
+            // Main container
+            val container = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+                setPadding(50, 50, 50, 50)
+                
+                // Set a gradient background
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
+                    colors = intArrayOf(
+                        android.graphics.Color.parseColor("#F5F9FF"),
+                        android.graphics.Color.parseColor("#E1EDFF")
+                    )
+                }
+            }
+            
+            // Event logo/name section with blue box
+            val logoContainer = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(50, 0, 50, 80)
+                }
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#3366CC"))
+                    cornerRadius = 20f
+                }
+                setPadding(30, 30, 30, 30)
+            }
+            
+            // Welcome text
+            val welcomeText = android.widget.TextView(context).apply {
+                text = "Willkommen bei"
+                textSize = 24f
+                setTextColor(android.graphics.Color.WHITE)
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 10)
+                }
+            }
+            
+            // Event name text
+            val eventText = android.widget.TextView(context).apply {
+                text = eventName
+                textSize = 36f
+                setTextColor(android.graphics.Color.WHITE)
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            
+            // Instructions text
+            val instructionsText = android.widget.TextView(context).apply {
+                text = "Bitte treffen Sie eine Auswahl"
+                textSize = 26f
+                setTextColor(android.graphics.Color.parseColor("#333333"))
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 30)
+                }
+            }
+            
+            // Add all elements to their containers
+            logoContainer.addView(welcomeText)
+            logoContainer.addView(eventText)
+            
+            container.addView(logoContainer)
+            container.addView(instructionsText)
+            
+            // Add the container to the root view
+            rootView?.addView(container)
+        }
+
+        /**
+         * Shows a styled scan chip view
+         */
+        private fun showScanChipView(rootView: FrameLayout?) {
+            // Main container with a subtle gradient
+            val container = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+                setPadding(50, 50, 50, 50)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
+                    colors = intArrayOf(
+                        android.graphics.Color.parseColor("#FFFFFF"),
+                        android.graphics.Color.parseColor("#F0F8FF")
+                    )
+                }
+            }
+            
+            // Animation indicator (pulsing circle)
+            val scanImage = android.widget.FrameLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 50)
+                    gravity = android.view.Gravity.CENTER
+                }
+                
+                // Create circle background
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(android.graphics.Color.parseColor("#4CAF50"))
+                    setSize(200, 200)
+                }
+                
+                // Start animation
+                startAnimation(android.view.animation.AlphaAnimation(0.4f, 1.0f).apply {
+                    duration = 1000
+                    repeatMode = android.view.animation.Animation.REVERSE
+                    repeatCount = android.view.animation.Animation.INFINITE
+                    interpolator = android.view.animation.LinearInterpolator()
+                })
+            }
+            
+            // NFC icon
+            val nfcIcon = android.widget.TextView(context).apply {
+                text = "📱"  // Use emoji for NFC/phone
+                textSize = 40f
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+            
+            // Title text
+            val titleText = android.widget.TextView(context).apply {
+                text = "Bitte scannen Sie Ihren Chip/Tag"
+                textSize = 28f
+                setTextColor(android.graphics.Color.parseColor("#333333"))
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 30)
+                }
+            }
+            
+            // Instructions text
+            val instructionsText = android.widget.TextView(context).apply {
+                text = "Halten Sie Ihren Chip an das Lesegerät"
+                textSize = 22f
+                setTextColor(android.graphics.Color.parseColor("#666666"))
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            
+            // Add elements to containers
+            scanImage.addView(nfcIcon)
+            
+            container.addView(titleText)
+            container.addView(scanImage)
+            container.addView(instructionsText)
+            
+            // Add container to root view
+            rootView?.addView(container)
+        }
+
         /**
          * Shows the custom insufficient funds view
          */
@@ -269,7 +420,7 @@ class CustomerDisplayManager @Inject constructor(
             // Header text
             val headerTextView = android.widget.TextView(context).apply {
                 text = "⚠️ NICHT GENUG GUTHABEN ⚠️"
-                textSize = 24f
+                    textSize = 24f
                 setTextColor(android.graphics.Color.RED)
                 gravity = android.view.Gravity.CENTER
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -345,7 +496,7 @@ class CustomerDisplayManager @Inject constructor(
             val messageTextView = android.widget.TextView(context).apply {
                 text = "Bitte laden Sie Ihr Konto auf, um fortzufahren."
                 textSize = 18f
-                setTextColor(android.graphics.Color.BLACK)
+                    setTextColor(android.graphics.Color.BLACK)
                 gravity = android.view.Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -366,6 +517,666 @@ class CustomerDisplayManager @Inject constructor(
             
             // Add the error box to the root view
             rootView?.addView(errorBox)
+        }
+
+        /**
+         * Shows a styled sale completed view
+         */
+        private fun showSaleCompletedView(state: CustomerDisplayState.SaleCompleted, rootView: FrameLayout?) {
+            // Main container with a green success gradient
+            val container = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+                setPadding(30, 30, 30, 30)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
+                    colors = intArrayOf(
+                        android.graphics.Color.parseColor("#F0FFF0"),
+                        android.graphics.Color.parseColor("#E0FFE0")
+                    )
+                }
+            }
+            
+            // Success icon and title in a horizontal layout to save vertical space
+            val headerLayout = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 20)
+                }
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+            
+            // Success icon (checkmark in circle)
+            val successIcon = android.widget.FrameLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 20, 0)
+                }
+                
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(android.graphics.Color.parseColor("#4CAF50"))
+                    setSize(100, 100)
+                }
+            }
+            
+            // Checkmark symbol
+            val checkmark = android.widget.TextView(context).apply {
+                text = "✓"
+                textSize = 40f
+                setTextColor(android.graphics.Color.WHITE)
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+            
+            // Completion text
+            val titleText = android.widget.TextView(context).apply {
+                text = "Kauf abgeschlossen"
+                textSize = 26f
+                setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.START;android.view.Gravity.CENTER_VERTICAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    0,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+            
+            successIcon.addView(checkmark)
+            headerLayout.addView(successIcon)
+            headerLayout.addView(titleText)
+            
+            // Information box (make it take the full width with less padding)
+            val infoBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.WHITE)
+                    cornerRadius = 10f
+                    setStroke(2, android.graphics.Color.parseColor("#DDDDDD"))
+                }
+                setPadding(20, 20, 20, 20)
+            }
+            
+            // Total price (make more compact)
+            val totalPriceBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 10)
+                }
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                    cornerRadius = 8f
+                }
+                setPadding(15, 10, 15, 10)
+            }
+            
+            val totalPriceLabel = android.widget.TextView(context).apply {
+                text = "Gesamtbetrag:"
+                textSize = 18f
+                setTextColor(android.graphics.Color.parseColor("#333333"))
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    0,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+            
+            val totalPriceValue = android.widget.TextView(context).apply {
+                text = "${state.sale.totalPrice} €"
+                textSize = 18f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+                gravity = android.view.Gravity.END
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            
+            totalPriceBox.addView(totalPriceLabel)
+            totalPriceBox.addView(totalPriceValue)
+            infoBox.addView(totalPriceBox)
+            
+            // New balance row (only if available)
+            if (state.sale.newBalance != null) {
+                val newBalanceBox = android.widget.LinearLayout(context).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                        cornerRadius = 8f
+                    }
+                    setPadding(15, 10, 15, 10)
+                }
+                
+                val newBalanceLabel = android.widget.TextView(context).apply {
+                    text = "Neues Guthaben:"
+                    textSize = 18f
+                    setTextColor(android.graphics.Color.parseColor("#333333"))
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    )
+                }
+                
+                val newBalanceValue = android.widget.TextView(context).apply {
+                    text = "${state.sale.newBalance} €"
+                    textSize = 18f
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    setTextColor(android.graphics.Color.parseColor("#3366CC"))
+                    gravity = android.view.Gravity.END
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                
+                newBalanceBox.addView(newBalanceLabel)
+                newBalanceBox.addView(newBalanceValue)
+                infoBox.addView(newBalanceBox)
+            }
+            
+            // Add all elements to container
+            container.addView(headerLayout)
+            container.addView(infoBox)
+            
+            // Add container to root view
+            rootView?.addView(container)
+        }
+
+        /**
+         * Shows a styled top-up completed view
+         */
+        private fun showTopUpCompletedView(state: CustomerDisplayState.TopUpCompleted, rootView: FrameLayout?) {
+            // Main container with a blue success gradient
+            val container = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+                setPadding(30, 30, 30, 30) // Reduced padding
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
+                    colors = intArrayOf(
+                        android.graphics.Color.parseColor("#F0F8FF"),
+                        android.graphics.Color.parseColor("#E0F0FF")
+                    )
+                }
+            }
+            
+            // Icon and title in a horizontal layout to save vertical space
+            val headerLayout = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 20)
+                }
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+            
+            // Success icon (plus in circle)
+            val successIcon = android.widget.FrameLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 20, 0)
+                }
+                
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(android.graphics.Color.parseColor("#3366CC"))
+                    setSize(100, 100) // Smaller icon
+                }
+            }
+            
+            // Plus symbol
+            val plusSymbol = android.widget.TextView(context).apply {
+                text = "+"
+                textSize = 40f // Smaller text
+                setTextColor(android.graphics.Color.WHITE)
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+            
+            // Completion text
+            val titleText = android.widget.TextView(context).apply {
+                text = "Aufladung abgeschlossen"
+                textSize = 26f // Smaller text
+                setTextColor(android.graphics.Color.parseColor("#3366CC"))
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.START
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    0,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+            
+            successIcon.addView(plusSymbol)
+            headerLayout.addView(successIcon)
+            headerLayout.addView(titleText)
+            
+            // Information box (more compact)
+            val infoBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.WHITE)
+                    cornerRadius = 10f
+                    setStroke(2, android.graphics.Color.parseColor("#DDDDDD"))
+                }
+                setPadding(20, 20, 20, 20) // Reduced padding
+            }
+            
+            // Top-up amount box (more compact)
+            val topUpAmountBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 10) // Reduced margin
+                }
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                    cornerRadius = 8f // Smaller radius
+                }
+                setPadding(15, 10, 15, 10) // Reduced padding
+            }
+            
+            val topUpAmountLabel = android.widget.TextView(context).apply {
+                text = "Aufgeladener Betrag:"
+                textSize = 18f // Smaller text
+                setTextColor(android.graphics.Color.parseColor("#333333"))
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    0,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+            
+            val topUpAmountValue = android.widget.TextView(context).apply {
+                text = "${state.topUpAmount} €"
+                textSize = 18f // Smaller text
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setTextColor(android.graphics.Color.parseColor("#3366CC"))
+                gravity = android.view.Gravity.END
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            
+            // New balance box (more compact)
+            val newBalanceBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                    cornerRadius = 8f // Smaller radius
+                }
+                setPadding(15, 10, 15, 10) // Reduced padding
+            }
+            
+            val newBalanceLabel = android.widget.TextView(context).apply {
+                text = "Neues Guthaben:"
+                textSize = 18f // Smaller text
+                setTextColor(android.graphics.Color.parseColor("#333333"))
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    0,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
+            
+            val newBalanceValue = android.widget.TextView(context).apply {
+                text = "${state.newBalance} €"
+                textSize = 18f // Smaller text
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setTextColor(android.graphics.Color.parseColor("#4CAF50"))  // Use green for new balance
+                gravity = android.view.Gravity.END
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            
+            // Add elements to their containers
+            topUpAmountBox.addView(topUpAmountLabel)
+            topUpAmountBox.addView(topUpAmountValue)
+            
+            newBalanceBox.addView(newBalanceLabel)
+            newBalanceBox.addView(newBalanceValue)
+            
+            infoBox.addView(topUpAmountBox)
+            infoBox.addView(newBalanceBox)
+            
+            // Add all elements to container
+            container.addView(headerLayout)
+            container.addView(infoBox)
+            
+            // Add container to root view
+            rootView?.addView(container)
+        }
+
+        /**
+         * Shows a styled validating sale view
+         */
+        private fun showValidatingSaleView(state: CustomerDisplayState.ValidatingSale, rootView: FrameLayout?) {
+            // Main container with a light blue background
+            val container = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                setPadding(20, 20, 20, 20) // Reduced padding
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
+                    colors = intArrayOf(
+                        android.graphics.Color.parseColor("#FFFFFF"),
+                        android.graphics.Color.parseColor("#F5F9FF")
+                    )
+                }
+            }
+            
+            // Header section (more compact)
+            val headerSection = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 15) // Reduced margin
+                }
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+            }
+            
+            // Total price highlight box
+            val priceHighlightBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#3366CC"))
+                    cornerRadius = 15f
+                }
+                setPadding(20, 10, 20, 10) // Reduced padding
+            }
+            
+            val totalPriceValue = android.widget.TextView(context).apply {
+                text = "GESAMTBETRAG: ${state.totalPrice} €"
+                textSize = 20f // Reduced text size
+                setTextColor(android.graphics.Color.WHITE)
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+            }
+            
+            priceHighlightBox.addView(totalPriceValue)
+            headerSection.addView(priceHighlightBox)
+            
+            // Add balance info if available (more compact)
+            if (state.currentBalance.isNotEmpty() && state.currentBalance != "0") {
+                val balanceInfoBox = android.widget.LinearLayout(context).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 10, 0, 0) // Reduced margin
+                    }
+                    orientation = android.widget.LinearLayout.HORIZONTAL // Side by side layout
+                    gravity = android.view.Gravity.CENTER
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                        cornerRadius = 10f
+                    }
+                    setPadding(15, 15, 15, 15)
+                }
+                
+                // Current balance container (left side)
+                val currentBalanceContainer = android.widget.LinearLayout(context).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    )
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    gravity = android.view.Gravity.CENTER
+                }
+                
+                // Current balance label
+                val currentBalanceText = android.widget.TextView(context).apply {
+                    text = "Aktuelles Guthaben:"
+                    textSize = 18f
+                    setTextColor(android.graphics.Color.parseColor("#333333"))
+                    gravity = android.view.Gravity.CENTER
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                
+                // Current balance value
+                val currentBalanceValue = android.widget.TextView(context).apply {
+                    text = "${state.currentBalance} €"
+                    textSize = 22f // Large value
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    setTextColor(android.graphics.Color.parseColor("#333333"))
+                    gravity = android.view.Gravity.CENTER
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 5, 0, 0)
+                    }
+                }
+                
+                // Add current balance components to container
+                currentBalanceContainer.addView(currentBalanceText)
+                currentBalanceContainer.addView(currentBalanceValue)
+                balanceInfoBox.addView(currentBalanceContainer)
+                
+                // Add vertical separator if new balance is available
+                if (state.newBalance != null) {
+                    // Vertical separator
+                    val separator = android.view.View(context).apply {
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            1, // 1px width
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                        ).apply {
+                            setMargins(15, 10, 15, 10)
+                            height = 0 // Match parent with weight
+                        }
+                        setBackgroundColor(android.graphics.Color.parseColor("#DDDDDD"))
+                    }
+                    
+                    balanceInfoBox.addView(separator)
+                    
+                    // New balance container (right side)
+                    val newBalanceContainer = android.widget.LinearLayout(context).apply {
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            0,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                        orientation = android.widget.LinearLayout.VERTICAL
+                        gravity = android.view.Gravity.CENTER
+                    }
+                    
+                    // New balance label
+                    val newBalanceText = android.widget.TextView(context).apply {
+                        text = "Neues Guthaben:"
+                        textSize = 18f
+                        setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+                        gravity = android.view.Gravity.CENTER
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                    }
+                    
+                    // New balance value
+                    val newBalanceValue = android.widget.TextView(context).apply {
+                        text = "${state.newBalance} €"
+                        textSize = 24f // Larger value
+                        typeface = android.graphics.Typeface.DEFAULT_BOLD
+                        setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+                        gravity = android.view.Gravity.CENTER
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(0, 5, 0, 0)
+                        }
+                    }
+                    
+                    // Add new balance components to container
+                    newBalanceContainer.addView(newBalanceText)
+                    newBalanceContainer.addView(newBalanceValue)
+                    balanceInfoBox.addView(newBalanceContainer)
+                }
+                
+                headerSection.addView(balanceInfoBox)
+            }
+            
+            // Add header to container
+            container.addView(headerSection)
+            
+            // Products list section (if available)
+            if (state.products.isNotEmpty()) {
+                // Compact title for products
+                val productsTitle = android.widget.TextView(context).apply {
+                    text = "Produkte:"
+                    textSize = 16f // Reduced text size
+                    setTextColor(android.graphics.Color.parseColor("#333333"))
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 5, 0, 5) // Minimal margins
+                    }
+                }
+                
+                // Scrollable container for products - increase weight to take available space
+                val scrollView = android.widget.ScrollView(context).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        0,  // Height 0 with weight
+                        1.0f // Take all available space
+                    )
+                }
+                
+                // Product list container - more compact
+                val productsList = android.widget.LinearLayout(context).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setColor(android.graphics.Color.WHITE)
+                        cornerRadius = 8f // Smaller radius
+                        setStroke(1, android.graphics.Color.parseColor("#DDDDDD"))
+                    }
+                }
+                
+                // Add each product (more compact rows)
+                state.products.forEachIndexed { index, product ->
+                    val productRow = android.widget.LinearLayout(context).apply {
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = android.widget.LinearLayout.HORIZONTAL
+                        setPadding(10, 6, 10, 6) // Smaller padding
+                        
+                        // Add alternating background colors
+                        if (index % 2 == 0) {
+                            setBackgroundColor(android.graphics.Color.parseColor("#F9F9F9"))
+                        }
+                    }
+                    
+                    val productName = android.widget.TextView(context).apply {
+                        text = product.first
+                        textSize = 16f // Smaller text
+                        setTextColor(android.graphics.Color.parseColor("#333333"))
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            0,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        maxLines = 1
+                    }
+                    
+                    val productQuantity = android.widget.TextView(context).apply {
+                        text = product.second
+                        textSize = 16f // Smaller text
+                        setTextColor(android.graphics.Color.parseColor("#3366CC"))
+                        typeface = android.graphics.Typeface.DEFAULT_BOLD
+                        gravity = android.view.Gravity.END
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                    }
+                    
+                    productRow.addView(productName)
+                    productRow.addView(productQuantity)
+                    productsList.addView(productRow)
+                }
+                
+                scrollView.addView(productsList)
+                
+                container.addView(productsTitle)
+                container.addView(scrollView)
+            }
+            
+            // Add the container to the root view
+            rootView?.addView(container)
         }
     }
 }
