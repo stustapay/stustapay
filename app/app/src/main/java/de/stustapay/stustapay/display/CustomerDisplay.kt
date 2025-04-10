@@ -172,6 +172,12 @@ class CustomerDisplayManager @Inject constructor(
                 // Clear existing views
                 rootView?.removeAllViews()
                 
+                // Handle InsufficientFunds separately with a custom view
+                if (state is CustomerDisplayState.InsufficientFunds) {
+                    showInsufficientFundsView(state, rootView)
+                    return
+                }
+                
                 // Get event name from TerminalConfig
                 val eventName = getEventName()
                 
@@ -220,18 +226,8 @@ class CustomerDisplayManager @Inject constructor(
                                 text = "GESAMTBETRAG: ${state.totalPrice} €$productsText"
                             }
                         }
-                        is CustomerDisplayState.InsufficientFunds -> {
-                            val totalPrice = state.totalPrice.toDoubleOrNull() ?: 0.0
-                            val currentBalance = state.currentBalance.toDoubleOrNull() ?: 0.0
-                            val missingAmount = (totalPrice - currentBalance).coerceAtLeast(0.0)
-                            
-                            val missingText = if (missingAmount > 0) {
-                                String.format("\nFehlender Betrag: %.2f €", missingAmount)
-                            } else {
-                                ""
-                            }
-                            
-                            text = "NICHT GENUG GUTHABEN\n\nBenötigter Betrag: ${String.format("%.2f", totalPrice)} €\nVerfügbares Guthaben: ${String.format("%.2f", currentBalance)} €$missingText\n\nBitte laden Sie Ihr Konto auf."
+                        else -> {
+                            text = "Unbekannter Status"
                         }
                     }
                 }
@@ -243,6 +239,133 @@ class CustomerDisplayManager @Inject constructor(
                 // Handle any exceptions
                 e.printStackTrace()
             }
+        }
+        
+        /**
+         * Shows the custom insufficient funds view
+         */
+        private fun showInsufficientFundsView(state: CustomerDisplayState.InsufficientFunds, rootView: FrameLayout?) {
+            val totalPrice = state.totalPrice.toDoubleOrNull() ?: 0.0
+            val currentBalance = state.currentBalance.toDoubleOrNull() ?: 0.0
+            val missingAmount = (totalPrice - currentBalance).coerceAtLeast(0.0)
+            
+            // Create a box with red border for the error message
+            val errorBox = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(50, 50, 50, 50)
+                }
+                orientation = android.widget.LinearLayout.VERTICAL
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setStroke(8, android.graphics.Color.RED)
+                    setColor(android.graphics.Color.parseColor("#FFEEEE"))
+                    cornerRadius = 20f
+                }
+                setPadding(30, 30, 30, 30)
+            }
+            
+            // Header text
+            val headerTextView = android.widget.TextView(context).apply {
+                text = "⚠️ NICHT GENUG GUTHABEN ⚠️"
+                textSize = 24f
+                setTextColor(android.graphics.Color.RED)
+                gravity = android.view.Gravity.CENTER
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 30)
+                }
+            }
+            
+            // Funds info layout
+            val infoLayout = android.widget.LinearLayout(context).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(20, 20, 20, 20)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.WHITE)
+                    cornerRadius = 10f
+                }
+            }
+            
+            // Needed amount
+            val neededTextView = android.widget.TextView(context).apply {
+                text = "Benötigter Betrag: ${String.format("%.2f €", totalPrice)}"
+                textSize = 20f
+                setTextColor(android.graphics.Color.BLACK)
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 15)
+                }
+            }
+            
+            // Available amount
+            val availableTextView = android.widget.TextView(context).apply {
+                text = "Verfügbares Guthaben: ${String.format("%.2f €", currentBalance)}"
+                textSize = 20f
+                setTextColor(android.graphics.Color.BLACK)
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 0, 15)
+                }
+            }
+            
+            // Missing amount with red background
+            val missingTextView = android.widget.TextView(context).apply {
+                text = "Fehlender Betrag: ${String.format("%.2f €", missingAmount)}"
+                textSize = 22f
+                setTextColor(android.graphics.Color.WHITE)
+                gravity = android.view.Gravity.CENTER
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.RED)
+                    cornerRadius = 10f
+                }
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 15, 0, 0)
+                }
+                setPadding(10, 10, 10, 10)
+            }
+            
+            // Message
+            val messageTextView = android.widget.TextView(context).apply {
+                text = "Bitte laden Sie Ihr Konto auf, um fortzufahren."
+                textSize = 18f
+                setTextColor(android.graphics.Color.BLACK)
+                gravity = android.view.Gravity.CENTER
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 30, 0, 0)
+                }
+            }
+            
+            // Add views to layouts
+            infoLayout.addView(neededTextView)
+            infoLayout.addView(availableTextView)
+            infoLayout.addView(missingTextView)
+            
+            errorBox.addView(headerTextView)
+            errorBox.addView(infoLayout)
+            errorBox.addView(messageTextView)
+            
+            // Add the error box to the root view
+            rootView?.addView(errorBox)
         }
     }
 }
