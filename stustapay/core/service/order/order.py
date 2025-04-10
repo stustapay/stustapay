@@ -1238,10 +1238,10 @@ class OrderService(Service[Config]):
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
                 source_account_id=pending_pay_out.customer_account_id, target_account_id=cash_topup_acc.id
-            ): -pending_pay_out.amount,
+            ): pending_pay_out.amount,
             BookingIdentifier(
                 source_account_id=cash_register_account_id, target_account_id=cash_exit_acc.id
-            ): -pending_pay_out.amount,
+            ): pending_pay_out.amount,
         }
 
         order_info = await book_order(
@@ -1256,13 +1256,20 @@ class OrderService(Service[Config]):
             line_items=line_items,
             bookings=prepared_bookings,
         )
+        
+        # Fetch the current account balance after the transaction
+        updated_account = await conn.fetchrow(
+            "SELECT balance FROM account WHERE id = $1", 
+            pending_pay_out.customer_account_id
+        )
+        actual_new_balance = updated_account["balance"] if updated_account else 0.0
 
         return CompletedPayOut(
             amount=pending_pay_out.amount,
             customer_tag_uid=pending_pay_out.customer_tag_uid,
             customer_account_id=pending_pay_out.customer_account_id,
             old_balance=pending_pay_out.old_balance,
-            new_balance=pending_pay_out.new_balance,
+            new_balance=actual_new_balance,
             uuid=order_info.uuid,
             booked_at=order_info.booked_at,
             cashier_id=current_user.id,
