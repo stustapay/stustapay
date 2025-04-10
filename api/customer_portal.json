@@ -400,6 +400,51 @@
         }
       }
     },
+    "/blob/{blob_id}": {
+      "get": {
+        "tags": [
+          "base"
+        ],
+        "summary": "Get Blob",
+        "operationId": "get_blob",
+        "parameters": [
+          {
+            "name": "blob_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Blob Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sumup/create-checkout": {
       "post": {
         "tags": [
@@ -953,6 +998,9 @@
             },
             "type": "object",
             "title": "Translation Texts"
+          },
+          "event_design": {
+            "$ref": "#/components/schemas/EventDesign"
           }
         },
         "type": "object",
@@ -966,9 +1014,31 @@
           "currency_identifier",
           "sumup_topup_enabled",
           "allowed_country_codes",
-          "translation_texts"
+          "translation_texts",
+          "event_design"
         ],
         "title": "CustomerPortalApiConfig"
+      },
+      "EventDesign": {
+        "properties": {
+          "bon_logo_blob_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bon Logo Blob Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bon_logo_blob_id"
+        ],
+        "title": "EventDesign"
       },
       "HTTPValidationError": {
         "properties": {

@@ -3,6 +3,7 @@ import {
   RestrictedEventSettings,
   useGenerateTestBonMutation,
   useGenerateTestReportMutation,
+  useGetEventDesignQuery,
   useUpdateEventMutation,
 } from "@/api";
 import { Button, LinearProgress, Stack, Dialog, DialogTitle, DialogContent } from "@mui/material";
@@ -16,6 +17,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { getBlobUrl } from "@/core/blobs";
 
 export const BonSettingsSchema = z.object({
   bon_title: z.string(),
@@ -36,12 +38,19 @@ export const BonSettingsForm: React.FC<FormikProps<BonSettings>> = (formik) => {
   );
 };
 
-const BonPreviewPopup: React.FC<{ bon: BonJsonRead | null; closePreview: () => void }> = ({ bon, closePreview }) => {
+const BonPreviewPopup: React.FC<{ bon: BonJsonRead | null; nodeId: number; closePreview: () => void }> = ({
+  bon,
+  nodeId,
+  closePreview,
+}) => {
   const { t } = useTranslation();
+  const { data: eventDesign } = useGetEventDesignQuery({ nodeId });
   return (
     <Dialog open={bon != null} onClose={closePreview} maxWidth="lg" fullWidth={true}>
       <DialogTitle>{t("settings.bon.previewBon")}</DialogTitle>
-      <DialogContent>{bon && <BonDisplay bon={bon} />}</DialogContent>
+      <DialogContent>
+        {bon && <BonDisplay bon={bon} bonLogoUrl={getBlobUrl(eventDesign?.bon_logo_blob_id)} />}
+      </DialogContent>
     </Dialog>
   );
 };
@@ -151,7 +160,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
       >
         {t("settings.bon.previewReport")}
       </LoadingButton>
-      <BonPreviewPopup bon={bonPreview} closePreview={closeBonPreview} />
+      <BonPreviewPopup bon={bonPreview} nodeId={nodeId} closePreview={closeBonPreview} />
     </Stack>
   );
 };

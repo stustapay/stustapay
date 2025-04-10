@@ -1,0 +1,101 @@
+* {
+    font-family: sans-serif;
+}
+
+@page {
+    margin: 15mm 0;
+    size: A4;
+
+    @bottom-center {
+        content: counter(page);
+        height: 1cm;
+        text-align: center;
+        width: 1cm;
+    }
+}
+
+@page :first {
+    margin: 0;
+}
+
+body {
+    margin: 0;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+.centered  {
+    text-align: center;
+}
+
+article {
+    margin: 15mm;
+    break-before: always;
+}
+article:first-of-type {
+    break-before: avoid;
+}
+
+#logo {
+    width: 100%;
+    height: 100px;
+    background: no-repeat top left / 200% url('logo.svg');
+}
+
+#header {
+    width: 100%;
+    font-weight: 400;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+#header-name {
+    font-size: 20px;
+}
+#header-title {
+    font-size: 30px;
+}
+#header-event {
+    font-size: 20px;
+}
+
+aside {
+    display: grid;
+    grid: auto auto;
+}
+aside address {
+    font-style: normal;
+    white-space: pre-line;
+}
+aside address#from {
+    grid-column: 1;
+    grid-row: 2;
+    text-align: left;
+}
+aside address#to {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+}
+
+.overview-table {
+    width: 100%;
+}
+
+#daily-overview {
+    text-align: center;
+}
+
+.daily-revenue-table {
+    width: 100%
+}
+
+.table-header  {
+    border-bottom: 1px solid black;
+}
+
+.transaction-table {
+    width: 100%
+}

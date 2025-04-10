@@ -2,13 +2,16 @@
 some basic api endpoints.
 """
 
-from fastapi import APIRouter, status
+from uuid import UUID
+
+from fastapi import APIRouter, Response, status
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import (
     ContextCustomerService,
     ContextMailService,
+    ContextMediaService,
     ContextOrderService,
 )
 from stustapay.core.schema.customer import (
@@ -105,3 +108,13 @@ async def get_bon(order_service: ContextOrderService, order_uuid: str):
     return await order_service.get_bon_by_uuid(
         order_uuid=order_uuid,
     )
+
+
+@router.get(
+    "/blob/{blob_id}",
+    response_class=Response,
+)
+async def get_blob(media_service: ContextMediaService, blob_id: UUID):
+    blob = await media_service.get_blob(blob_id=blob_id)
+
+    return Response(content=blob.data, media_type=blob.mime_type)

@@ -4,10 +4,11 @@ from pydantic import BaseModel
 from sftkit.database import Connection
 
 from stustapay.bon.bon import BonConfig, gen_dummy_order
-from stustapay.bon.pdflatex import PdfRenderResult, pdflatex, render_template
 from stustapay.core.currency import get_currency_symbol
+from stustapay.core.schema.media import Blob
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
+from stustapay.core.service.media import fetch_blob
 from stustapay.core.service.order.stats import (
     Timeseries,
     TimeseriesStatsQuery,
@@ -15,7 +16,8 @@ from stustapay.core.service.order.stats import (
     get_event_time_bounds,
     get_hourly_sales_stats,
 )
-from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
+from stustapay.core.service.tree.common import fetch_event_design, fetch_event_for_node, fetch_node
+from stustapay.reports.render import render_report
 
 
 class DailyRevenue(BaseModel):
@@ -25,9 +27,16 @@ class DailyRevenue(BaseModel):
     revenue_minus_fees: float
 
 
+class OrderWithFees(Order):
+    fees: float
+    total_price_minus_fees: float
+
+
 class NodeReportContext(BaseModel):
+    event_name: str
+    render_logo: bool
     config: BonConfig
-    orders: list[Order]
+    orders: list[OrderWithFees]
     daily_revenue_stats: list[DailyRevenue]
     from_time: datetime
     to_time: datetime
@@ -41,22 +50,14 @@ class NodeReportContext(BaseModel):
     currency_symbol: str
 
 
-class OrderWithFees(Order):
-    fees: float
-    total_price_minus_fees: float
-
-
-async def render_report(context: NodeReportContext):
-    rendered = await render_template("revenue_report.tex", context, context.currency_symbol)
-    return await pdflatex(file_content=rendered)
-
-
-async def generate_dummy_report(node_id: int, event: RestrictedEventSettings) -> PdfRenderResult:
+async def generate_dummy_report(node: Node, event: RestrictedEventSettings, logo: Blob | None) -> bytes:
     """Generate a dummy bon for the given event and return the pdf as bytes"""
     fee = 0.01
 
-    dummy_orders = [gen_dummy_order(node_id)]
+    dummy_orders = [gen_dummy_order(node.id, i) for i in range(200)]
     ctx = NodeReportContext(
+        event_name=node.name,
+        render_logo=logo is not None,
         config=BonConfig(
             title=event.bon_title,
             issuer=event.bon_issuer,
@@ -82,9 +83,9 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings) ->
         ),
         orders=[
             OrderWithFees(
+                **dummy_order.model_dump(),
                 fees=dummy_order.total_price * fee,
                 total_price_minus_fees=dummy_order.total_price - dummy_order.total_price * fee,
-                **dummy_order.dict(),
             )
             for dummy_order in dummy_orders
         ],
@@ -110,7 +111,10 @@ async def generate_dummy_report(node_id: int, event: RestrictedEventSettings) ->
         revenue_minus_fees=13212.23 - 13212.23 * fee,
         currency_symbol=get_currency_symbol(event.currency_identifier),
     )
-    return await render_report(context=ctx)
+    files = {}
+    if logo:
+        files["logo.svg"] = logo
+    return await render_report(template="report", template_context=ctx.model_dump(), files=files)
 
 
 def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: list[OrderWithFees], total: float):
@@ -130,17 +134,20 @@ def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: lis
         )
 
 
-async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRenderResult:
+async def generate_report(conn: Connection, node_id: int, fees=0.01) -> bytes:
     node = await fetch_node(conn=conn, node_id=node_id)
     assert node is not None
+    assert node.event_node_id is not None
     event = await fetch_event_for_node(conn=conn, node=node)
     from_time, to_time = get_event_time_bounds(TimeseriesStatsQuery(from_time=None, to_time=None), event)
     orders = await conn.fetch_many(
         OrderWithFees,
         "select o.*, o.total_price * $2 as fees, o.total_price - o.total_price * $2 as total_price_minus_fees "
-        "from orders_at_node_and_children($1) o where o.payment_method = 'tag' order by o.booked_at",
+        "from orders_at_node_and_children($1) o where o.payment_method = 'tag' and o.booked_at >= $3 and o.booked_at <= $4 order by o.booked_at",
         node_id,
         fees,
+        from_time,
+        to_time,
     )
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
@@ -164,7 +171,14 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
     _check_order_revenue_consistency(hourly_revenue_stats, orders, total)
 
     fees_of_total = total * fees
+
+    event_design = await fetch_event_design(conn=conn, node_id=node.event_node_id)
+    logo = None
+    if event_design.bon_logo_blob_id is not None:
+        logo = await fetch_blob(conn=conn, blob_id=event_design.bon_logo_blob_id)
     context = NodeReportContext(
+        event_name=node.name,
+        render_logo=logo is not None,
         node=node,
         orders=orders,
         currency_symbol=get_currency_symbol(event.currency_identifier),
@@ -177,4 +191,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
         fees_percent=fees,
         revenue_minus_fees=total - fees_of_total,
     )
-    return await render_report(context=context)
+    files = {}
+    if logo:
+        files["logo.svg"] = logo
+    return await render_report(template="report", template_context=context.model_dump(), files=files)

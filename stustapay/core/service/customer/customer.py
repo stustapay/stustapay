@@ -17,6 +17,7 @@ from stustapay.core.schema.customer import (
     PayoutInfo,
     PayoutTransaction,
 )
+from stustapay.core.schema.media import EventDesign
 from stustapay.core.schema.tree import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.decorators import requires_customer
@@ -29,6 +30,7 @@ from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
 )
+from stustapay.core.service.tree.service import fetch_event_design
 
 
 class CustomerPortalApiConfig(BaseModel):
@@ -42,6 +44,7 @@ class CustomerPortalApiConfig(BaseModel):
     sumup_topup_enabled: bool
     allowed_country_codes: Optional[list[str]]
     translation_texts: dict[Language, dict[str, str]]
+    event_design: EventDesign
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -248,6 +251,7 @@ class CustomerService(Service[Config]):
         node = await fetch_event_node_for_node(conn=conn, node_id=node_id)
         assert node is not None
         assert node.event is not None
+        event_design = await fetch_event_design(conn=conn, node_id=node_id)
         return CustomerPortalApiConfig(
             test_mode=self.config.core.test_mode,
             test_mode_message=self.config.core.test_mode_message,
@@ -259,4 +263,5 @@ class CustomerService(Service[Config]):
             sumup_topup_enabled=self.config.core.sumup_enabled and node.event.sumup_topup_enabled,
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,
+            event_design=event_design,
         )

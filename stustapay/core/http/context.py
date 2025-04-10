@@ -13,6 +13,7 @@ from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.mail import MailService
+from stustapay.core.service.media import MediaService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.sumup import SumUpService
@@ -52,6 +53,7 @@ class Context:
     terminal_service: Optional[TerminalService] = None
     webhook_service: Optional[WebhookService] = None
     mail_service: Optional[MailService] = None
+    media_service: Optional[MediaService] = None
 
 
 def get_context(request: Request):
@@ -126,6 +128,10 @@ def get_mail_service(request: Request) -> MailService:
     return request.state.context.mail_service
 
 
+def get_media_service(request: Request) -> MediaService:
+    return request.state.context.media_service
+
+
 ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
 ContextProductService = Annotated[ProductService, Depends(get_product_service)]
 ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
@@ -143,3 +149,4 @@ ContextSumUpService = Annotated[SumUpService, Depends(get_sumup_service)]
 ContextTerminalService = Annotated[TerminalService, Depends(get_terminal_service)]
 ContextWebhookService = Annotated[WebhookService, Depends(get_webhook_service)]
 ContextMailService = Annotated[MailService, Depends(get_mail_service)]
+ContextMediaService = Annotated[MediaService, Depends(get_media_service)]

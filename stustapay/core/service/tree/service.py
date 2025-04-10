@@ -3,8 +3,8 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import BonJson, generate_dummy_bon_json
-from stustapay.bon.revenue_report import generate_dummy_report, generate_report
 from stustapay.core.config import Config
+from stustapay.core.schema.media import EventDesign, MimeType, NewBlob
 from stustapay.core.schema.tree import (
     NewEvent,
     NewNode,
@@ -17,12 +17,15 @@ from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
+from stustapay.core.service.media import delete_blob, fetch_blob, store_blob
 from stustapay.core.service.tree.common import (
+    fetch_event_design,
     fetch_node,
     fetch_restricted_event_settings_for_node,
     get_tree_for_current_user,
 )
 from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
+from stustapay.reports.revenue_report import generate_dummy_report, generate_report
 from stustapay.ticket_shop import pretix
 
 
@@ -311,7 +314,7 @@ class TreeService(Service[Config]):
         return await create_event(conn=conn, parent_id=node.id, event=event)
 
     @with_db_transaction
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def update_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
         event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
@@ -376,6 +379,20 @@ class TreeService(Service[Config]):
         assert updated_node is not None
         return updated_node
 
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def update_bon_logo(self, conn: Connection, node: Node, image: NewBlob):
+        if image.mime_type != MimeType.svg.value:
+            raise InvalidArgument("Only svg logos are supported")
+        await conn.execute("insert into event_design (node_id) values ($1) on conflict do nothing", node.id)
+        existing_blob_id = await conn.fetchval("select bon_logo_blob_id from event_design where node_id = $1", node.id)
+
+        blob_id = await store_blob(conn=conn, blob=image)
+        await conn.execute("update event_design set bon_logo_blob_id = $2 where node_id = $1", node.id, blob_id)
+        if existing_blob_id is not None:
+            await delete_blob(conn=conn, blob_id=existing_blob_id)
+
     @with_db_transaction(read_only=True)
     @requires_user(node_required=False)
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> NodeSeenByUser:
@@ -386,6 +403,12 @@ class TreeService(Service[Config]):
     @requires_user(privileges=[Privilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
         return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(privileges=[])
+    async def get_event_design(self, *, conn: Connection, node: Node) -> EventDesign:
+        return await fetch_event_design(conn=conn, node_id=node.id)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
@@ -406,26 +429,24 @@ class TreeService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
-    async def generate_test_report(self, *, conn: Connection, node: Node) -> tuple[str, bytes]:
-        if node.event_node_id is None:
-            raise InvalidArgument("Cannot generate test report for a node not associated with an event")
+    async def generate_test_report(self, *, conn: Connection, node: Node) -> bytes:
+        assert node.event_node_id is not None
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
-        dummy_report = await generate_dummy_report(node_id=node.event_node_id, event=event)
-        if not dummy_report.success or dummy_report.bon is None:
-            print("failed repot", dummy_report.msg)
-            raise InvalidArgument(f"Error while generating dummy report: {dummy_report.msg}")
-        return dummy_report.bon.mime_type, dummy_report.bon.content
+        event_design = await fetch_event_design(conn=conn, node_id=node.id)
+        logo = None
+        if event_design.bon_logo_blob_id is not None:
+            logo = await fetch_blob(conn=conn, blob_id=event_design.bon_logo_blob_id)
+        content = await generate_dummy_report(node=node, event=event, logo=logo)
+        return content
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def generate_revenue_report(self, *, conn: Connection, node: Node) -> tuple[str, bytes]:
+    async def generate_revenue_report(self, *, conn: Connection, node: Node) -> bytes:
         if node.event_node_id is None:
             raise InvalidArgument("Cannot generate test report for a node not associated with an event")
-        report = await generate_report(conn=conn, node_id=node.id)
-        if not report.success or report.bon is None:
-            raise InvalidArgument(f"Error while generating report: {report.msg}")
-        return report.bon.mime_type, report.bon.content
+        content = await generate_report(conn=conn, node_id=node.id)
+        return content
 
     @with_db_transaction
     @requires_node(event_only=True)

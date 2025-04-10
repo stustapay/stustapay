@@ -15,6 +15,7 @@ from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.mail import MailService
+from stustapay.core.service.media import MediaService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.sumup import SumUpService
@@ -33,6 +34,7 @@ from .routers import (
     auth,
     cashier,
     customer,
+    media,
     order,
     payout,
     product,
@@ -91,6 +93,7 @@ def get_server(config: Config):
     server.add_router(terminal.router)
     server.add_router(transaction.router)
     server.add_router(webhooks.router)
+    server.add_router(media.router)
     return server
 
 
@@ -140,6 +143,7 @@ class Api:
             sumup_service=SumUpService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             webhook_service=WebhookService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            media_service=MediaService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             mail_service=mail_service,
         )
         try:

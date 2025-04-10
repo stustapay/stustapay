@@ -19,6 +19,7 @@ import { useOpenModal } from "@stustapay/modal-provider";
 import { toast } from "react-toastify";
 import { NodeConfiguration } from "../node-settings";
 import { TabPretix } from "./TabPretix";
+import { TabDesign } from "./TabDesign";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -75,6 +76,7 @@ export const EventSettings: React.FC = () => {
               <Tab label={t("common.node")} value="node" />
               <Tab label={t("settings.general.tabLabel")} value="general" />
               <Tab label={t("settings.customerPortal.tabLabel")} value="customerPortal" />
+              <Tab label={t("settings.design.tabLabel")} value="design" />
               <Tab label={t("settings.pretix.tabLabel")} value="pretix" />
               <Tab label={t("settings.agb.tabLabel")} value="agb" />
               <Tab label={t("settings.faq.tabLabel")} value="faq" />
@@ -89,6 +91,9 @@ export const EventSettings: React.FC = () => {
           </TabPanel>
           <TabPanel value="general">
             <TabGeneral nodeId={currentNode.id} eventSettings={eventSettings} />
+          </TabPanel>
+          <TabPanel value="design">
+            <TabDesign nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
           <TabPanel value="customerPortal">
             <TabCustomerPortal nodeId={currentNode.id} eventSettings={eventSettings} />
