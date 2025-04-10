@@ -36,6 +36,8 @@ sealed class CustomerDisplayState {
     object ScanChip : CustomerDisplayState()
     data class SaleCompleted(val sale: CompletedSale) : CustomerDisplayState()
     data class TopUpCompleted(val newBalance: String, val topUpAmount: String) : CustomerDisplayState()
+    data class ValidatingSale(val totalPrice: String, val currentBalance: String, val newBalance: String? = null, val products: List<Pair<String, String>> = emptyList()) : CustomerDisplayState()
+    data class InsufficientFunds(val totalPrice: String, val currentBalance: String) : CustomerDisplayState()
 }
 
 /**
@@ -197,6 +199,39 @@ class CustomerDisplayManager @Inject constructor(
                         }
                         is CustomerDisplayState.TopUpCompleted -> {
                             text = "Aufladung abgeschlossen\n\nAufgeladener Betrag: ${state.topUpAmount}\n\nNeues Guthaben: ${state.newBalance}"
+                        }
+                        is CustomerDisplayState.ValidatingSale -> {
+                            val productsText = if (state.products.isNotEmpty()) {
+                                "\n\nProdukte:\n" + state.products.joinToString("\n") { "${it.first}: ${it.second}" }
+                            } else {
+                                ""
+                            }
+                            
+                            // If we're in validation mode (with balance info), show full details
+                            if (state.currentBalance.isNotEmpty()) {
+                                val newBalanceText = if (state.newBalance != null) {
+                                    "\nNeues Guthaben: ${state.newBalance} €"
+                                } else {
+                                    ""
+                                }
+                                text = "Validierung läuft...\n\nGESAMTBETRAG: ${state.totalPrice} €\nAktuelles Guthaben: ${state.currentBalance} €$newBalanceText$productsText"
+                            } else {
+                                // Otherwise just show products and total price for typing in products
+                                text = "GESAMTBETRAG: ${state.totalPrice} €$productsText"
+                            }
+                        }
+                        is CustomerDisplayState.InsufficientFunds -> {
+                            val totalPrice = state.totalPrice.toDoubleOrNull() ?: 0.0
+                            val currentBalance = state.currentBalance.toDoubleOrNull() ?: 0.0
+                            val missingAmount = (totalPrice - currentBalance).coerceAtLeast(0.0)
+                            
+                            val missingText = if (missingAmount > 0) {
+                                String.format("\nFehlender Betrag: %.2f €", missingAmount)
+                            } else {
+                                ""
+                            }
+                            
+                            text = "NICHT GENUG GUTHABEN\n\nBenötigter Betrag: ${String.format("%.2f", totalPrice)} €\nVerfügbares Guthaben: ${String.format("%.2f", currentBalance)} €$missingText\n\nBitte laden Sie Ihr Konto auf."
                         }
                     }
                 }

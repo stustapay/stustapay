@@ -21,7 +21,9 @@ sealed interface SaleConfig {
     /**
      * Can we create a new order?
      */
-    object NotReady : SaleConfig
+    object NotReady : SaleConfig {
+        override fun getButtonConfig(buttonId: Int): SaleItemConfig? = null
+    }
 
     data class Ready(
         /**
@@ -35,5 +37,9 @@ sealed interface SaleConfig {
         var buttons: Map<Int, SaleItemConfig> = mapOf(),
 
         var till: TerminalTillConfig,
-    ) : SaleConfig
+    ) : SaleConfig {
+        override fun getButtonConfig(buttonId: Int): SaleItemConfig? = buttons[buttonId]
+    }
+    
+    fun getButtonConfig(buttonId: Int): SaleItemConfig?
 }

@@ -103,6 +103,9 @@ class SaleViewModel @Inject constructor(
             newSale.incrementButton(buttonId, saleConfig.value)
             newSale
         }
+        
+        // Update customer display with current products
+        updateCustomerDisplayWithCurrentProducts()
     }
 
     fun decrementButton(buttonId: Int) {
@@ -111,6 +114,9 @@ class SaleViewModel @Inject constructor(
             newSale.decrementButton(buttonId, saleConfig.value)
             newSale
         }
+        
+        // Update customer display with current products
+        updateCustomerDisplayWithCurrentProducts()
     }
 
     fun adjustPrice(buttonId: Int, newPrice: FreePrice) {
@@ -126,6 +132,9 @@ class SaleViewModel @Inject constructor(
             )
             newSale
         }
+        
+        // Update customer display with current products
+        updateCustomerDisplayWithCurrentProducts()
     }
 
     /** called when clicking "back" after the order preview */
@@ -199,15 +208,41 @@ class SaleViewModel @Inject constructor(
         // and not fold them and check if sum == 0
         // because one can have negative returnable items!
         if (_saleStatus.value.buttonSelection.isEmpty()) {
-            _status.update { "Nothing ordered!" }
+            _error.update { "No items in sale" }
+            _navState.update { SalePage.Error }
             return
         }
+
+        // Get the products information for display
+        val productsList = _saleStatus.value.buttonSelection.map { (buttonId, amount) ->
+            val buttonConfig = saleConfig.value.getButtonConfig(buttonId)
+            val quantity = when (amount) {
+                is SaleItemAmount.FixedPrice -> amount.amount.toString()
+                is SaleItemAmount.FreePrice -> "1x"
+            }
+            Pair(buttonConfig?.caption ?: "Unknown", quantity)
+        }
+
+        // Show validation state on customer display
+        val checkedSale = _saleStatus.value.checkedSale
+        customerDisplayManager.updateState(
+            CustomerDisplayState.ValidatingSale(
+                totalPrice = checkedSale?.totalPrice?.toString() ?: "0",
+                currentBalance = checkedSale?.oldBalance?.toString() ?: "0",
+                newBalance = checkedSale?.newBalance?.toString(),
+                products = productsList
+            )
+        )
 
         val tag = _saleStatus.value.tag
         if (tag == null) {
             _status.update { "Scanning tag..." }
             scanTarget.update { ScanTarget.CheckSale }
             _enableScan.update { true }
+            
+            // Update customer display to show scan chip message
+            customerDisplayManager.updateState(CustomerDisplayState.ScanChip)
+            
             return
         }
 
@@ -226,10 +261,52 @@ class SaleViewModel @Inject constructor(
                     newSale
                 }
                 _status.update { "Order validated!" }
+                
+                // Update customer display with the validated sale
+                val pendingSale = response.data
+                val productsList = pendingSale.lineItems.map { item ->
+                    Pair<String, String>(item.product.name, "${item.quantity}x")
+                }
+                
+                customerDisplayManager.updateState(
+                    CustomerDisplayState.ValidatingSale(
+                        totalPrice = pendingSale.totalPrice.toString(),
+                        currentBalance = pendingSale.oldBalance.toString(),
+                        newBalance = pendingSale.newBalance.toString(),
+                        products = productsList
+                    )
+                )
+                
                 _navState.update { SalePage.Confirm }
             }
 
             is Response.Error.Service -> {
+                // Check if the error is related to insufficient funds
+                val isInsufficientFunds = response.msg().contains("Not enough funds available", ignoreCase = true)
+                
+                if (isInsufficientFunds) {
+                    // Parse the specific error message format from the backend
+                    // Format: "Not enough funds available:\nNeeded: X\nAvailable: Y"
+                    val neededRegex = "Needed: ([0-9.]+)".toRegex()
+                    val availableRegex = "Available: ([0-9.]+)".toRegex()
+                    
+                    val neededAmount = neededRegex.find(response.msg())?.groupValues?.get(1) ?: 
+                        _saleStatus.value.getRoughTotalPrice(saleConfig.value).toString()
+                    
+                    val availableAmount = availableRegex.find(response.msg())?.groupValues?.get(1) ?: "0"
+                    
+                    // Show insufficient funds message on customer display
+                    customerDisplayManager.updateState(
+                        CustomerDisplayState.InsufficientFunds(
+                            totalPrice = neededAmount,
+                            currentBalance = availableAmount
+                        )
+                    )
+                } else {
+                    // Reset customer display to welcome state for other errors
+                    customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+                }
+                
                 // maybe only clear tag for some errors.
                 clearScannedTag()
                 _error.update { response.msg() }
@@ -396,6 +473,37 @@ class SaleViewModel @Inject constructor(
                 customerDisplayManager.updateState(CustomerDisplayState.Welcome)
             }
         }
+    }
+
+    // Helper function to update customer display with current product list
+    private fun updateCustomerDisplayWithCurrentProducts() {
+        if (_saleStatus.value.buttonSelection.isEmpty()) {
+            // If no products, revert to welcome screen
+            customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+            return
+        }
+        
+        // Get the products information for display
+        val productsList = _saleStatus.value.buttonSelection.map { (buttonId, amount) ->
+            val buttonConfig = saleConfig.value.getButtonConfig(buttonId)
+            val quantity = when (amount) {
+                is SaleItemAmount.FixedPrice -> amount.amount.toString()
+                is SaleItemAmount.FreePrice -> "1x"
+            }
+            Pair(buttonConfig?.caption ?: "Unknown", quantity)
+        }
+        
+        // Calculate rough total price based on current selections
+        val roughTotalPrice = _saleStatus.value.getRoughTotalPrice(saleConfig.value).toString()
+        
+        // Show products and total price on customer display
+        customerDisplayManager.updateState(
+            CustomerDisplayState.ValidatingSale(
+                totalPrice = roughTotalPrice,
+                currentBalance = "", // Remove the current balance
+                products = productsList
+            )
+        )
     }
 
     private fun mapSaleConfig(

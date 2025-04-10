@@ -274,4 +274,39 @@ data class SaleStatus(
             uuid = checkedSale?.uuid ?: UUID.randomUUID()
         )
     }
+
+    /**
+     * Calculate a rough total price based on current selections
+     * This is an estimate before the server validates the sale
+     */
+    fun getRoughTotalPrice(saleConfig: SaleConfig): Double {
+        if (saleConfig !is SaleConfig.Ready) return 0.0
+        
+        var total = 0.0
+        
+        // Sum up all selected products
+        for ((buttonId, amount) in buttonSelection) {
+            val button = saleConfig.buttons[buttonId] ?: continue
+            
+            when (amount) {
+                is SaleItemAmount.FixedPrice -> {
+                    when (val price = button.price) {
+                        is SaleItemPrice.FixedPrice -> {
+                            total += price.price * amount.amount
+                        }
+                        is SaleItemPrice.Returnable -> {
+                            total += (price.price ?: 0.0) * amount.amount
+                        }
+                        else -> { /* Ignore */ }
+                    }
+                }
+                is SaleItemAmount.FreePrice -> {
+                    // Convert from cents to euros
+                    total += amount.price.toDouble() / 100.0
+                }
+            }
+        }
+        
+        return total
+    }
 }
