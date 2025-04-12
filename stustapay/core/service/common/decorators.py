@@ -276,6 +276,8 @@ def requires_terminal(
             if terminal is None:
                 raise Unauthorized("invalid terminal token")
 
+            await conn.execute("update terminal set last_seen = now() where id = $1", terminal.id)
+
             till = await conn.fetch_maybe_one(
                 Till,
                 "select * from till_with_cash_register where terminal_id = $1",

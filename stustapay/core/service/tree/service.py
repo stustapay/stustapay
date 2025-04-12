@@ -4,6 +4,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import BonJson, generate_dummy_bon_json
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditLog, AuditType
 from stustapay.core.schema.media import EventDesign, MimeType, NewBlob
 from stustapay.core.schema.tree import (
     NewEvent,
@@ -15,6 +16,7 @@ from stustapay.core.schema.tree import (
 )
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log, fetch_audit_logs
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.media import delete_blob, fetch_blob, store_blob
@@ -284,13 +286,21 @@ class TreeService(Service[Config]):
     @with_db_transaction
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def create_node(self, conn: Connection, node: Node, new_node: NewNode) -> Node:
-        return await create_node(conn=conn, parent_id=node.id, new_node=new_node)
+    async def create_node(self, conn: Connection, node: Node, current_user: CurrentUser, new_node: NewNode) -> Node:
+        created_node = await create_node(conn=conn, parent_id=node.id, new_node=new_node)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.node_created,
+            content={"id": created_node.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return created_node
 
     @with_db_transaction
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def update_node(self, conn: Connection, node: Node, updated_node: NewNode) -> Node:
+    async def update_node(self, conn: Connection, node: Node, current_user: CurrentUser, updated_node: NewNode) -> Node:
         await conn.execute(
             "update node set name = $2, description = $3 where id = $1",
             node.id,
@@ -305,18 +315,33 @@ class TreeService(Service[Config]):
         )
         result = await fetch_node(conn=conn, node_id=node.id)
         assert result is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.node_updated,
+            content={"id": node.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return result
 
     @with_db_transaction
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def create_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
-        return await create_event(conn=conn, parent_id=node.id, event=event)
+    async def create_event(self, conn: Connection, node: Node, current_user: CurrentUser, event: NewEvent) -> Node:
+        new_node = await create_event(conn=conn, parent_id=node.id, event=event)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.event_created,
+            content={"id": new_node.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return new_node
 
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
-    async def update_event(self, conn: Connection, node: Node, event: NewEvent) -> Node:
+    async def update_event(self, conn: Connection, node: Node, current_user: CurrentUser, event: NewEvent) -> Node:
         event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
         if event_id is None:
             raise NotFound(element_type="event", element_id=node.id)
@@ -377,6 +402,13 @@ class TreeService(Service[Config]):
         await _sync_optional_event_metadata(conn, event_id, event)
         updated_node = await fetch_node(conn=conn, node_id=node.id)
         assert updated_node is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.event_updated,
+            content={"id": updated_node.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated_node
 
     @with_db_transaction
@@ -451,17 +483,32 @@ class TreeService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
-    async def archive_node(self, *, conn: Connection, node: Node):
+    async def archive_node(self, *, conn: Connection, node: Node, current_user: CurrentUser):
         if node.read_only:
             raise InvalidArgument("Node is already read only")
 
         await conn.execute("update node set read_only = true where id = $1 or $1 = any(parent_ids)", node.id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.node_archived,
+            content={"id": node.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def delete_node(self, *, conn: Connection, node: Node):
+    async def delete_node(self, *, conn: Connection, node: Node, current_user: CurrentUser):
         await conn.execute("delete from node where id = $1", node.id)
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.node_deleted,
+            content={"id": node.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)
@@ -478,3 +525,9 @@ class TreeService(Service[Config]):
         await conn.execute(
             "update event set sumup_oauth_refresh_token = $1 where id = $2", token.refresh_token, node.event.id
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def list_audit_logs(self, *, conn: Connection, node: Node) -> list[AuditLog]:
+        return await fetch_audit_logs(conn=conn, node=node)

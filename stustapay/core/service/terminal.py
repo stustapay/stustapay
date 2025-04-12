@@ -8,6 +8,7 @@ from sftkit.error import InvalidArgument
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.terminal import (
     CurrentTerminal,
     NewTerminal,
@@ -30,6 +31,7 @@ from stustapay.core.schema.user import (
     format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, TerminalTokenMetadata
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
@@ -73,7 +75,9 @@ class TerminalService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
-    async def create_terminal(self, *, conn: Connection, node: Node, terminal: NewTerminal) -> Terminal:
+    async def create_terminal(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, terminal: NewTerminal
+    ) -> Terminal:
         terminal_id = await conn.fetchval(
             "insert into terminal (node_id, name, description) values ($1, $2, $3) returning id",
             node.id,
@@ -82,6 +86,13 @@ class TerminalService(Service[Config]):
         )
         t = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert t is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.terminal_created,
+            content=t,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return t
 
     @with_db_transaction(read_only=True)
@@ -105,7 +116,7 @@ class TerminalService(Service[Config]):
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
     async def update_terminal(
-        self, *, conn: Connection, node: Node, terminal_id: int, terminal: NewTerminal
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, terminal_id: int, terminal: NewTerminal
     ) -> Terminal:
         term_id = await conn.fetchval(
             "update terminal set name = $1, description = $2 where id = $3 and node_id = $4 returning id",
@@ -118,13 +129,30 @@ class TerminalService(Service[Config]):
             raise NotFound(element_type="terminal", element_id=terminal_id)
         updated_terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert updated_terminal is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.terminal_updated,
+            content=updated_terminal,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated_terminal
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
-    async def delete_terminal(self, *, conn: Connection, node: Node, terminal_id: int) -> bool:
+    async def delete_terminal(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, terminal_id: int
+    ) -> bool:
         result = await conn.execute("delete from terminal where id = $1 and node_id = $2", terminal_id, node.id)
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.terminal_deleted,
+            content={"id": terminal_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=False)
@@ -148,6 +176,13 @@ class TerminalService(Service[Config]):
         )
         token = self.auth_service.create_terminal_access_token(
             TerminalTokenMetadata(terminal_id=terminal.id, session_uuid=session_uuid)
+        )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.terminal_registered,
+            content={"id": terminal.id},
+            user_id=None,
+            node_id=terminal.node_id,
         )
         return TerminalRegistrationSuccess(terminal=terminal, token=token)
 
@@ -174,7 +209,9 @@ class TerminalService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
-    async def switch_till(self, *, conn: Connection, node: Node, terminal_id: int, new_till_id: int):
+    async def switch_till(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, terminal_id: int, new_till_id: int
+    ):
         terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         if terminal is None:
             raise NotFound(element_type="terminal", element_id=terminal_id)
@@ -183,6 +220,13 @@ class TerminalService(Service[Config]):
             await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)
 
         await assign_till_to_terminal(conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.terminal_to_till_changed,
+            content={"terminal_id": terminal.id, "old_till_id": terminal.till_id, "new_till_id": new_till_id},
+            user_id=current_user.id,
+            node_id=terminal.node_id,
+        )
 
     @with_db_transaction
     @requires_terminal(requires_till=False)
@@ -471,6 +515,13 @@ class TerminalService(Service[Config]):
             conn=conn, token=token
         )
         assert current_user is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.terminal_user_logged_in,
+            content={"terminal_id": current_terminal.id, "user_id": current_user.id},
+            user_id=current_user.id,
+            node_id=current_terminal.node_id,
+        )
         return current_user
 
     @with_db_transaction(read_only=True)

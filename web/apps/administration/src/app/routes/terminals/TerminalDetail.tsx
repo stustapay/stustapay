@@ -167,6 +167,7 @@ export const TerminalDetail: React.FC = () => {
         <DetailField label={t("terminal.id")} value={terminal.id} />
         <DetailField label={t("common.name")} value={terminal.name} />
         <DetailField label={t("common.description")} value={terminal.description} />
+        <DetailField label={t("terminal.lastSeen")} value={terminal.last_seen} />
         {till != null && (
           <DetailField linkTo={TillRoutes.detail(till.id, till.node_id)} label={t("terminal.till")} value={till.name} />
         )}

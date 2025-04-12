@@ -74,6 +74,7 @@ import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, Custome
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
+import { AuditLogList } from "./routes/nodes/audit-logs/AuditLogList";
 
 const router = createBrowserRouter([
   {
@@ -102,6 +103,10 @@ const router = createBrowserRouter([
               {
                 path: "settings",
                 element: <NodeSettings />,
+              },
+              {
+                path: "audit-logs",
+                element: <AuditLogList />,
               },
               {
                 path: "system-accounts",

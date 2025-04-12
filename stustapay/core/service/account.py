@@ -6,11 +6,13 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.tree import Node
-from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
@@ -155,7 +157,7 @@ class AccountService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
-    async def disable_account(self, *, conn: Connection, node: Node, account_id: int):
+    async def disable_account(self, *, conn: Connection, node: Node, current_user: CurrentUser, account_id: int):
         row = await conn.fetchval(
             "update account set user_tag_id = null where id = $1 and node_id = any($2) returning id",
             account_id,
@@ -163,6 +165,14 @@ class AccountService(Service[Config]):
         )
         if row is None:
             raise NotFound(element_type="account", element_id=str(account_id))
+
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.account_disabled,
+            content={"id": account_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)
@@ -290,7 +300,9 @@ class AccountService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
-    async def update_account_comment(self, *, conn: Connection, node: Node, account_id: int, comment: str) -> Account:
+    async def update_account_comment(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, account_id: int, comment: str
+    ) -> Account:
         ret = await conn.fetchval(
             "update account set comment = $1 where id = $2 and node_id = any($3) returning id",
             comment,
@@ -302,6 +314,13 @@ class AccountService(Service[Config]):
 
         acc = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         assert acc is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.account_comment_updated,
+            content={"id": account_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return acc
 
     @staticmethod
@@ -356,6 +375,7 @@ class AccountService(Service[Config]):
         *,
         conn: Connection,
         node: Node,
+        current_user: CurrentUser,
         old_user_tag_pin: str,
         new_user_tag_pin: str,
         new_user_tag_uid: int,
@@ -368,4 +388,11 @@ class AccountService(Service[Config]):
             new_user_tag_pin=new_user_tag_pin,
             new_user_tag_uid=new_user_tag_uid,
             comment=comment,
+        )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.account_user_tag_changed,
+            content={"old_user_tag_pin": old_user_tag_pin, "new_user_tag_pin": new_user_tag_pin, "comment": comment},
+            user_id=current_user.id,
+            node_id=node.id,
         )

@@ -5,10 +5,12 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.ticket import NewTicket, Ticket
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
 from stustapay.ticket_shop.ticket_provider import ExternalTicket, fetch_external_tickets
@@ -31,7 +33,9 @@ class TicketService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def create_ticket(self, *, conn: Connection, node: Node, ticket: NewTicket) -> Ticket:
+    async def create_ticket(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, ticket: NewTicket
+    ) -> Ticket:
         ticket_metadata_id = await conn.fetchval(
             "insert into product_ticket_metadata (initial_top_up_amount) values ($1) returning id",
             ticket.initial_top_up_amount,
@@ -59,6 +63,13 @@ class TicketService(Service[Config]):
 
         created_ticket = await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
         assert created_ticket is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.ticket_created,
+            content=created_ticket,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return created_ticket
 
     @with_db_transaction(read_only=True)
@@ -78,7 +89,9 @@ class TicketService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def update_ticket(self, *, conn: Connection, node: Node, ticket_id: int, ticket: NewTicket) -> Ticket:
+    async def update_ticket(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, ticket_id: int, ticket: NewTicket
+    ) -> Ticket:
         ticket_metadata_id = await conn.fetchval(
             "select ticket_metadata_id from product where type = 'ticket' and id = $1 and node_id = any($2)",
             ticket_id,
@@ -108,12 +121,19 @@ class TicketService(Service[Config]):
 
         updated_ticket = await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
         assert updated_ticket is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.ticket_updated,
+            content=updated_ticket,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated_ticket
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def delete_ticket(self, *, conn: Connection, node: Node, ticket_id: int) -> bool:
+    async def delete_ticket(self, *, conn: Connection, node: Node, current_user: CurrentUser, ticket_id: int) -> bool:
         ticket_metadata_id = await conn.fetchval(
             "select ticket_metadata_id from product where id = $1 and node_id = any($2)",
             ticket_id,
@@ -127,6 +147,14 @@ class TicketService(Service[Config]):
             ticket_id,
         )
         await conn.execute("delete from product_ticket_metadata where id = $1", ticket_metadata_id)
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.ticket_deleted,
+            content={"id": ticket_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return result != "DELETE 0"
 
     @with_db_transaction
