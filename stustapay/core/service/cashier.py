@@ -7,11 +7,13 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege, User
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.order.booking import (
     book_cashier_shift_end_order,
@@ -248,5 +250,13 @@ class CashierService(Service[Config]):
             conn=conn, node=node, cash_register_id=cashier.cash_register_id
         )
         await conn.execute("update account set balance = 0 where id = $1", cash_register_account_id)
+        close_out_result = CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cashier_closed_out,
+            content={"close_out": close_out.model_dump(), "result": close_out_result.model_dump()},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
-        return CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)
+        return close_out_result

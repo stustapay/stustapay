@@ -5,10 +5,12 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.product import NewProduct, Product, ProductType
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound, ServiceException
 
@@ -70,7 +72,9 @@ class ProductService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.product], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def create_product(self, *, conn: Connection, node: Node, product: NewProduct) -> Product:
+    async def create_product(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, product: NewProduct
+    ) -> Product:
         product_id = await conn.fetchval(
             "insert into product "
             "(node_id, name, price, tax_rate_id, target_account_id, fixed_price, price_in_vouchers, is_locked, "
@@ -100,6 +104,13 @@ class ProductService(Service[Config]):
         assert product_id is not None
         created_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         assert created_product is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.product_created,
+            content=created_product,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return created_product
 
     @with_db_transaction(read_only=True)
@@ -122,7 +133,9 @@ class ProductService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.product], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def update_product(self, *, conn: Connection, node: Node, product_id: int, product: NewProduct) -> Product:
+    async def update_product(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, product_id: int, product: NewProduct
+    ) -> Product:
         current_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         if current_product is None:
             raise NotFound(element_type="product", element_id=product_id)
@@ -172,15 +185,30 @@ class ProductService(Service[Config]):
 
         updated_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         assert updated_product is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.product_updated,
+            content=updated_product,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated_product
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.product], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def delete_product(self, *, conn: Connection, node: Node, product_id: int) -> bool:
+    async def delete_product(self, *, conn: Connection, node: Node, current_user: CurrentUser, product_id: int) -> bool:
         result = await conn.execute(
             "delete from product where id = $1 and type = 'user_defined' and node_id = any($2)",
             product_id,
             node.ids_to_event_node,
+        )
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.product_deleted,
+            content={"id": product_id},
+            user_id=current_user.id,
+            node_id=node.id,
         )
         return result != "DELETE 0"

@@ -6,11 +6,13 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import NewTill, Till
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import Privilege, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
@@ -84,8 +86,16 @@ class TillService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def create_till(self, *, conn: Connection, node: Node, till: NewTill) -> Till:
-        return await create_till(conn=conn, node_id=node.id, till=till)
+    async def create_till(self, *, conn: Connection, node: Node, current_user: CurrentUser, till: NewTill) -> Till:
+        new_till = await create_till(conn=conn, node_id=node.id, till=till)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_created,
+            content=new_till,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return new_till
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -109,7 +119,9 @@ class TillService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def update_till(self, *, conn: Connection, node: Node, till_id: int, till: NewTill) -> Till:
+    async def update_till(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int, till: NewTill
+    ) -> Till:
         row = await conn.fetchrow(
             "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5, terminal_id = $6 "
             "where id = $1 and node_id = $7 returning id",
@@ -126,27 +138,58 @@ class TillService(Service[Config]):
 
         updated_till = await fetch_till(conn=conn, node=node, till_id=till_id)
         assert updated_till is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_updated,
+            content=updated_till,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated_till
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_till(self, *, conn: Connection, node: Node, till_id: int) -> bool:
+    async def delete_till(self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int) -> bool:
         result = await conn.execute("delete from till where id = $1 and node_id = $2", till_id, node.id)
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_deleted,
+            content={"id": till_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return result != "DELETE 0"
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def remove_from_terminal(self, *, conn: Connection, node: Node, till_id: int):
+    async def remove_from_terminal(self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int):
         await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=till_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_to_terminal_changed,
+            content={"till_id": till_id, "new_terminal_id": None},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def switch_terminal(self, *, conn: Connection, node: Node, till_id: int, new_terminal_id: int):
+    async def switch_terminal(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int, new_terminal_id: int
+    ):
         await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=till_id)
         await assign_till_to_terminal(conn=conn, node=node, till_id=till_id, terminal_id=new_terminal_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_to_terminal_changed,
+            content={"till_id": till_id, "new_terminal_id": new_terminal_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction(read_only=True)
     @requires_terminal(requires_till=False)

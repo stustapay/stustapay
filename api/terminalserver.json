@@ -3696,6 +3696,11 @@
               }
             ],
             "title": "Active User Role Id"
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Seen"
           }
         },
         "type": "object",
@@ -3705,7 +3710,8 @@
           "node_id",
           "till_id",
           "session_uuid",
-          "registration_uuid"
+          "registration_uuid",
+          "last_seen"
         ],
         "title": "Terminal"
       },

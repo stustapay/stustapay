@@ -21,6 +21,7 @@ class Terminal(NewTerminal):
     registration_uuid: UUID | None
     active_user_id: Optional[int] = None
     active_user_role_id: Optional[int] = None
+    last_seen: datetime
 
 
 class UserTagSecret(BaseModel):

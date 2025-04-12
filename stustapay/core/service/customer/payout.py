@@ -11,6 +11,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.config import SEPAConfig
 from stustapay.core.schema.payout import (
     NewPayoutRun,
@@ -23,6 +24,7 @@ from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.config import ConfigService
@@ -327,11 +329,18 @@ class PayoutService(Service[Config]):
                 to_addr=payout.email,
                 node_id=node.id,
             )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.payout_run_marked_done,
+            content={"id": payout_run.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.payout_management])
-    async def revoke_payout_run(self, *, conn: Connection, node: Node, payout_run_id: int):
+    async def revoke_payout_run(self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int):
         payout = await fetch_payout_run(conn=conn, node=node, payout_run_id=payout_run_id)
         if payout.done:
             raise InvalidArgument("Cannot revoke a payout run which has been marked as done")
@@ -341,6 +350,13 @@ class PayoutService(Service[Config]):
 
         await conn.execute("delete from payout where payout_run_id = $1", payout_run_id)
         await conn.execute("update payout_run set revoked = true where id = $1", payout_run_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.payout_run_revoked,
+            content={"id": payout_run_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)
@@ -435,7 +451,15 @@ class PayoutService(Service[Config]):
         csv_content = dump_payout_run_as_csv(payouts, event_settings.sepa_config, event_settings.currency_identifier)
         await conn.execute("update payout_run set csv = $1 where id = $2", csv_content, payout_run_id)
 
-        return await fetch_payout_run_with_stats(conn=conn, node=node, payout_run_id=payout_run_id)
+        final_payout_run = await fetch_payout_run_with_stats(conn=conn, node=node, payout_run_id=payout_run_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.payout_run_created,
+            content=final_payout_run,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return final_payout_run
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
@@ -461,7 +485,9 @@ class PayoutService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.payout_management, Privilege.customer_management])
-    async def prevent_customer_payout(self, *, conn: Connection, node: Node, customer_id: int):
+    async def prevent_customer_payout(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, customer_id: int
+    ):
         customer = await fetch_customer(conn=conn, node=node, customer_id=customer_id)
         if customer.payout is not None:
             raise InvalidArgument("Customer is already included in a payout")
@@ -476,12 +502,26 @@ class PayoutService(Service[Config]):
             await conn.execute(
                 "insert into customer_info (customer_account_id, payout_export) values ($1, false)", customer.id
             )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.customer_payout_prevention_changed,
+            content={"customer_id": customer.id, "payout_prevented": True},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.payout_management, Privilege.customer_management])
-    async def allow_customer_payout(self, *, conn: Connection, node: Node, customer_id: int):
+    async def allow_customer_payout(self, *, conn: Connection, node: Node, current_user: CurrentUser, customer_id: int):
         customer = await fetch_customer(conn=conn, node=node, customer_id=customer_id)
         if customer.payout is not None:
             raise InvalidArgument("Customer is already included in a payout")
         await conn.execute("update customer_info set payout_export = true where customer_account_id = $1", customer.id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.customer_payout_prevention_changed,
+            content={"customer_id": customer.id, "payout_prevented": False},
+            user_id=current_user.id,
+            node_id=node.id,
+        )

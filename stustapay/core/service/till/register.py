@@ -6,6 +6,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import (
     CashRegister,
@@ -22,6 +23,7 @@ from stustapay.core.service.account import (
     get_transport_account_by_tag_uid,
 )
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
@@ -74,20 +76,22 @@ async def _list_cash_registers(*, conn: Connection, node: Node, hide_assigned_re
         )
 
 
-async def _select_till_for_cash_register_insertion(conn: Connection, user_id: int, cash_register_id: int):
+async def _select_till_for_cash_register_insertion(conn: Connection, user_id: int, cash_register_id: int) -> int | None:
     tills = await conn.fetch(
         "select t.id, t.name from till t join terminal tm on t.terminal_id = tm.id join till_profile tp on t.active_profile_id = tp.id "
         "where tm.active_user_id = $1 and tp.enable_cash_payment",
         user_id,
     )
     if len(tills) == 0:  # nothing to do
-        return
+        return None
     if len(tills) > 1:
         till_names = ", ".join([till["name"] for till in tills])
         raise InvalidArgument(
             f'Cannot assign cash register to cashier as it is not clear which till should be used for the cash register. User is logged in at the following tills: "{till_names}".'
         )
-    await conn.execute("update till set active_cash_register_id = $1 where id = $2", tills[0]["id"], cash_register_id)
+    till_id = tills[0]["id"]
+    await conn.execute("update till set active_cash_register_id = $1 where id = $2", till_id, cash_register_id)
+    return till_id
 
 
 class TillRegisterService(Service[Config]):
@@ -114,7 +118,7 @@ class TillRegisterService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_cash_register_stockings(
-        self, *, conn: Connection, node: Node, stocking: NewCashRegisterStocking
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "insert into cash_register_stocking "
@@ -142,13 +146,26 @@ class TillRegisterService(Service[Config]):
         )
         updated = await _get_cash_register_stocking(conn=conn, node=node, stocking_id=stocking_id)
         assert updated is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_stocking_created,
+            content=updated,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def update_cash_register_stockings(
-        self, *, conn: Connection, node: Node, stocking_id: int, stocking: NewCashRegisterStocking
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        current_user: CurrentUser,
+        stocking_id: int,
+        stocking: NewCashRegisterStocking,
     ) -> CashRegisterStocking:
         stocking_id = await conn.fetchval(
             "update cash_register_stocking set "
@@ -178,14 +195,31 @@ class TillRegisterService(Service[Config]):
             raise NotFound(element_type="cash_register_stocking", element_id=str(stocking_id))
         updated = await _get_cash_register_stocking(conn=conn, node=node, stocking_id=stocking_id)
         assert updated is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_stocking_updated,
+            content=updated,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_cash_register_stockings(self, *, conn: Connection, node: Node, stocking_id: int):
+    async def delete_cash_register_stockings(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, stocking_id: int
+    ):
         result = await conn.execute(
             "delete from cash_register_stocking where id = $1 and node_id = $2", stocking_id, node.id
+        )
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_stocking_deleted,
+            content={"id": stocking_id},
+            user_id=current_user.id,
+            node_id=node.id,
         )
         return result != "DELETE 0"
 
@@ -216,15 +250,23 @@ class TillRegisterService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_cash_register(
-        self, *, conn: Connection, node: Node, new_register: NewCashRegister
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, new_register: NewCashRegister
     ) -> CashRegister:
-        return await create_cash_register(conn=conn, node=node, new_register=new_register)
+        register = await create_cash_register(conn=conn, node=node, new_register=new_register)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_created,
+            content=register,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return register
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def update_cash_register(
-        self, *, conn: Connection, node: Node, register_id: int, register: NewCashRegister
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, register_id: int, register: NewCashRegister
     ) -> CashRegister:
         row = await conn.fetchrow(
             "update cash_register set name = $2 where id = $1 and node_id = $3 returning id, name",
@@ -235,13 +277,28 @@ class TillRegisterService(Service[Config]):
         if row is None:
             raise NotFound(element_type="cash_register", element_id=str(register_id))
         r = await get_cash_register(conn=conn, node=node, register_id=register_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_updated,
+            content=r,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return r
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_cash_register(self, *, conn: Connection, node: Node, register_id: int):
+    async def delete_cash_register(self, *, conn: Connection, node: Node, current_user: CurrentUser, register_id: int):
         result = await conn.execute("delete from cash_register where id = $1 and node_id = $2", register_id, node.id)
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_deleted,
+            content={"id": register_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=False)
@@ -294,11 +351,12 @@ class TillRegisterService(Service[Config]):
         assert node is not None
         cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
 
+        stock_up_amount = 0.0
         if stocking_id is not None:
             register_stocking = await _get_cash_register_stocking(conn=conn, node=node, stocking_id=stocking_id)
             if register_stocking is None:
                 raise InvalidArgument("cash register stocking template does not exist")
-
+            stock_up_amount = register_stocking.total
             await book_transaction(
                 conn=conn,
                 description=f"cash register stock up using template: {register_stocking.name}",
@@ -308,7 +366,16 @@ class TillRegisterService(Service[Config]):
                 conducting_user_id=current_user.id,
             )
 
-        await _select_till_for_cash_register_insertion(conn, user_id=user_row["id"], cash_register_id=cash_register_id)
+        till_id = await _select_till_for_cash_register_insertion(
+            conn, user_id=user_row["id"], cash_register_id=cash_register_id
+        )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_stocked_up,
+            content={"cash_register_id": cash_register_id, "amount": stock_up_amount, "till_id": till_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return True
 
     @with_db_transaction(read_only=False)
@@ -371,6 +438,18 @@ class TillRegisterService(Service[Config]):
             cash_register_id=cash_register_id,
             amount=amount,
         )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cashier_account_balance_changed,
+            content={
+                "cash_register_id": cash_register_id,
+                "amount": amount,
+                "cashier_till_id": row["till_id"],
+                "transport_account_id": transport_account.id,
+            },
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction(read_only=False)
     @requires_terminal([Privilege.cash_transport])
@@ -402,10 +481,17 @@ class TillRegisterService(Service[Config]):
             amount=amount,
             conducting_user_id=current_user.id,
         )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.transport_account_balance_changed,
+            content={"amount": amount, "transport_account_id": transport_account.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @staticmethod
     async def _transfer_cash_register(
-        conn: Connection, node: Node, source_cashier_id: int, target_cashier_id: int
+        conn: Connection, node: Node, source_cashier_id: int, target_cashier_id: int, originating_user_id: int
     ) -> CashRegister:
         if source_cashier_id == target_cashier_id:
             raise InvalidArgument("Cashiers must differ")
@@ -458,16 +544,31 @@ class TillRegisterService(Service[Config]):
         )
 
         reg = await get_cash_register(conn=conn, node=node, register_id=cash_register_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.cash_register_transferred,
+            content={
+                "cash_register_id": cash_register_id,
+                "source_cashier_id": source_cashier_id,
+                "target_cashier_id": target_cashier_id,
+            },
+            user_id=originating_user_id,
+            node_id=node.id,
+        )
         return reg
 
     @with_db_transaction(read_only=False)
     @requires_node()
     @requires_user([Privilege.node_administration])
     async def transfer_cash_register_admin(
-        self, *, conn: Connection, node: Node, source_cashier_id: int, target_cashier_id: int
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:
         return await self._transfer_cash_register(
-            conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
+            conn=conn,
+            node=node,
+            source_cashier_id=source_cashier_id,
+            target_cashier_id=target_cashier_id,
+            originating_user_id=current_user.id,
         )
 
     @with_db_transaction(read_only=False)
@@ -491,5 +592,9 @@ class TillRegisterService(Service[Config]):
             node.ids_to_event_node,
         )
         return await self._transfer_cash_register(
-            conn=conn, node=node, source_cashier_id=source_cashier_id, target_cashier_id=target_cashier_id
+            conn=conn,
+            node=node,
+            source_cashier_id=source_cashier_id,
+            target_cashier_id=target_cashier_id,
+            originating_user_id=source_cashier_id,
         )

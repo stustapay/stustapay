@@ -39,6 +39,7 @@ export const translations = {
   common: {
     id: "ID",
     node: "Node",
+    createdAt: "Created at",
     copiedToClipboard: "Copied to clipboard",
     definedAtNode: "Node",
     loadingError: "Errors while loading page",
@@ -62,6 +63,10 @@ export const translations = {
     overview: "Overview",
     statistics: "Stats",
     settings: "Settings",
+  },
+  auditLog: {
+    auditLogs: "Audit logs",
+    logType: "Type",
   },
   account: {
     overview: "Overview",
@@ -686,6 +691,7 @@ export const translations = {
     till: "Till",
     id: "ID",
     registrationUUID: "Registration ID",
+    lastSeen: "Last seen",
     loggedIn: "Terminal registered",
     logout: "Unregister Terminal",
     create: "Add a new terminal",

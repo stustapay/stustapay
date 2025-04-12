@@ -6,10 +6,12 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import UserTagDetail
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 
@@ -90,9 +92,17 @@ class UserTagService(Service[Config]):
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
     @requires_user([Privilege.node_administration])
     async def create_user_tag_secret(
-        self, *, conn: Connection, node: Node, new_secret: NewUserTagSecret
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, new_secret: NewUserTagSecret
     ) -> UserTagSecret:
-        return await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
+        secret = await create_user_tag_secret(conn=conn, node_id=node.id, secret=new_secret)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_tag_secret_created,
+            content={"id": secret.id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return secret
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
@@ -108,7 +118,16 @@ class UserTagService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
     @requires_user([Privilege.node_administration])
-    async def create_user_tags(self, *, conn: Connection, node: Node, new_user_tags: list[NewUserTag]):
+    async def create_user_tags(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, new_user_tags: list[NewUserTag]
+    ):
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_tags_created,
+            content={"num_tags": len(new_user_tags)},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return await create_user_tags(conn=conn, node_id=node.id, tags=new_user_tags)
 
     @with_db_transaction(read_only=True)
@@ -141,6 +160,13 @@ class UserTagService(Service[Config]):
             conn=conn, node_id=node.id, current_user=current_user, user_tag_id=user_tag_id
         )
         assert detail is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_tag_comment_updated,
+            content=detail,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return detail
 
     @with_db_transaction(read_only=True)

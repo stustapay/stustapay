@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService, ContextWebhookService
+from stustapay.core.schema.audit_logs import AuditLog
 from stustapay.core.schema.media import EventDesign, NewBlob
 from stustapay.core.schema.tree import (
     NewEvent,
@@ -164,3 +165,8 @@ async def configure_sumup_token(
     return await tree_service.sumup_auth_code_flow(
         token=token, node_id=node_id, authorization_code=payload.authorization_code
     )
+
+
+@router.get("/nodes/{node_id}/audit-logs", response_model=list[AuditLog])
+async def list_audit_logs(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.list_audit_logs(token=token, node_id=node_id)

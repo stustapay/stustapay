@@ -5,9 +5,11 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.till import NewTillProfile, TillProfile
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.user import AuthService
 
@@ -29,7 +31,9 @@ class TillProfileService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def create_profile(self, *, conn: Connection, node: Node, profile: NewTillProfile) -> TillProfile:
+    async def create_profile(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, profile: NewTillProfile
+    ) -> TillProfile:
         profile_id = await conn.fetchval(
             "insert into till_profile (node_id, name, description, allow_top_up, allow_cash_out, "
             "allow_ticket_sale, allow_ticket_vouchers, enable_ssp_payment, enable_cash_payment, enable_card_payment, layout_id) "
@@ -50,6 +54,13 @@ class TillProfileService(Service[Config]):
 
         resulting_profile = await _get_profile(conn=conn, node=node, profile_id=profile_id)
         assert resulting_profile is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_profile_created,
+            content=resulting_profile,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return resulting_profile
 
     @with_db_transaction(read_only=True)
@@ -70,7 +81,7 @@ class TillProfileService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def update_profile(
-        self, *, conn: Connection, node: Node, profile_id: int, profile: NewTillProfile
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
         p_id = await conn.fetchval(
             "update till_profile set name = $2, description = $3, allow_top_up = $4, allow_cash_out = $5, "
@@ -95,11 +106,27 @@ class TillProfileService(Service[Config]):
 
         resulting_profile = await _get_profile(conn=conn, node=node, profile_id=profile_id)
         assert resulting_profile is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_profile_updated,
+            content=resulting_profile,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return resulting_profile
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def delete_profile(self, *, conn: Connection, node: Node, till_profile_id: int) -> bool:
+    async def delete_profile(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, till_profile_id: int
+    ) -> bool:
         result = await conn.execute("delete from till_profile where id = $1 and node_id = $2", till_profile_id, node.id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.till_profile_deleted,
+            content={"id": till_profile_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return result != "DELETE 0"

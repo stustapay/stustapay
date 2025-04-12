@@ -3,6 +3,7 @@ import {
   Dashboard as DashboardIcon,
   Leaderboard as LeaderboardIcon,
   Settings as SettingsIcon,
+  List as ListIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -17,6 +18,9 @@ const getActiveTab = (nodeId: number, location: string) => {
   }
   if (location.startsWith(`/node/${nodeId}/settings`)) {
     return `/node/${nodeId}/settings`;
+  }
+  if (location.startsWith(`/node/${nodeId}/audit-logs`)) {
+    return `/node/${nodeId}/audit-logs`;
   }
   return `/node/${nodeId}`;
 };
@@ -66,6 +70,14 @@ export const NodePageLayout: React.FC = () => {
             to={`${nodeUrl}/stats`}
           />
         )}
+        <Tab
+          label={t("auditLog.auditLogs")}
+          component={RouterLink}
+          value={`${nodeUrl}/audit-logs`}
+          icon={<ListIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/audit-logs`}
+        />
         <Tab
           label={t("nodes.settings")}
           component={RouterLink}

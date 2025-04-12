@@ -8,6 +8,7 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import (
     CurrentUser,
@@ -23,6 +24,7 @@ from stustapay.core.schema.user import (
     format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
@@ -86,7 +88,15 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
     if row is None:
         raise NotFound(element_type="user", element_id=str(user_id))
 
-    return await fetch_user(conn=conn, node=node, user_id=user_id)
+    updated_user = await fetch_user(conn=conn, node=node, user_id=user_id)
+    await create_audit_log(
+        conn=conn,
+        log_type=AuditType.user_updated,
+        content=updated_user,
+        user_id=None,  # TODO: AUDIT
+        node_id=node.id,
+    )
+    return updated_user
 
 
 async def list_user_roles(*, conn: Connection, node: Node) -> list[UserRole]:
@@ -197,7 +207,9 @@ class UserService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user_role])
     @requires_user([Privilege.user_management])
-    async def create_user_role(self, *, conn: Connection, node: Node, new_role: NewUserRole) -> UserRole:
+    async def create_user_role(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, new_role: NewUserRole
+    ) -> UserRole:
         role_id = await conn.fetchval(
             "insert into user_role (node_id, name, is_privileged) values ($1, $2, $3) returning id",
             node.id,
@@ -212,13 +224,27 @@ class UserService(Service[Config]):
         assert role_id is not None
         role = await _get_user_role(conn=conn, role_id=role_id)
         assert role is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_role_created,
+            content=role,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return role
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user_role])
     @requires_user([Privilege.user_management])
     async def update_user_role_privileges(
-        self, *, conn: Connection, node: Node, role_id: int, is_privileged: bool, privileges: list[Privilege]
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        current_user: CurrentUser,
+        role_id: int,
+        is_privileged: bool,
+        privileges: list[Privilege],
     ) -> UserRole:
         role = await _get_user_role(conn=conn, role_id=role_id)
         if role is None or role.node_id not in node.ids_to_root:
@@ -234,14 +260,29 @@ class UserService(Service[Config]):
 
         role = await _get_user_role(conn=conn, role_id=role_id)
         assert role is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_role_updated,
+            content=role,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return role
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user_role])
     @requires_user([Privilege.user_management])
-    async def delete_user_role(self, *, conn: Connection, node: Node, role_id: int) -> bool:
+    async def delete_user_role(self, *, conn: Connection, node: Node, current_user: CurrentUser, role_id: int) -> bool:
         result = await conn.execute(
             "delete from user_role where id = $1 and node_id = any($2)", role_id, node.ids_to_root
+        )
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_role_deleted,
+            content={"id": role_id},
+            user_id=current_user.id,
+            node_id=node.id,
         )
         return result != "DELETE 0"
 
@@ -311,7 +352,15 @@ class UserService(Service[Config]):
                 role_id=role.role_id,
             )
 
-        return await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
+        user = await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_created,
+            content=user,
+            user_id=creating_user_id,
+            node_id=node.id,
+        )
+        return user
 
     @with_db_transaction
     async def create_user_no_auth(
@@ -402,13 +451,21 @@ class UserService(Service[Config]):
         if any([role.is_privileged for role in roles]):
             raise InvalidArgument("This user has privileged roles assigned, updates are not allowed at a terminal")
 
+        user_to_roles = NewUserToRoles(user_id=user_id, role_ids=role_ids)
         await self.update_user_to_roles(
             conn=conn,
             node=node,
             current_user=current_user,
-            user_to_roles=NewUserToRoles(user_id=user_id, role_ids=role_ids),
+            user_to_roles=user_to_roles,
         )
 
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_updated,
+            content=user_to_roles,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
 
     @with_db_transaction(read_only=True)
@@ -453,7 +510,7 @@ class UserService(Service[Config]):
     @requires_node(object_types=[ObjectType.user])
     @requires_user([Privilege.user_management])
     async def change_user_password(
-        self, *, conn: Connection, node: Node, user_id: int, new_password: str
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, user_id: int, new_password: str
     ) -> Optional[User]:
         new_password_hashed = self._hash_password(new_password)
 
@@ -465,16 +522,32 @@ class UserService(Service[Config]):
         )
         if ret is None:
             raise InvalidArgument("User not found")
+
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_password_changed,
+            content={"id": user_id},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return await fetch_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
     @requires_user([Privilege.user_management])
-    async def delete_user(self, *, conn: Connection, node: Node, user_id: int) -> bool:
+    async def delete_user(self, *, conn: Connection, node: Node, current_user: CurrentUser, user_id: int) -> bool:
         result = await conn.execute(
             "delete from usr where id = $1 and node_id = $2",
             user_id,
             node.id,
+        )
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_deleted,
+            content={"id": user_id},
+            user_id=current_user.id,
+            node_id=node.id,
         )
         return result != "DELETE 0"
 
@@ -492,7 +565,6 @@ class UserService(Service[Config]):
     async def update_user_to_roles(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, user_to_roles: NewUserToRoles
     ) -> UserToRoles:
-        print("updating user to roles ...")
         if len(user_to_roles.role_ids) == 0:
             await conn.execute(
                 "delete from user_to_role where node_id = $1 and user_id = $2", node.id, user_to_roles.user_id
@@ -528,7 +600,15 @@ class UserService(Service[Config]):
                 role_ids_to_remove,
             )
 
-        return await fetch_user_to_roles(conn=conn, node=node, user_id=user_to_roles.user_id)
+        new_user_to_roles = await fetch_user_to_roles(conn=conn, node=node, user_id=user_to_roles.user_id)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_to_roles_updated,
+            content=new_user_to_roles,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
+        return new_user_to_roles
 
     @with_db_transaction
     async def login_user(
@@ -585,6 +665,13 @@ class UserService(Service[Config]):
         new_password_hashed = self._hash_password(new_password)
 
         await conn.execute("update usr set password = $2 where id = $1", current_user.id, new_password_hashed)
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.user_password_changed,
+            content={"id": current_user.id},
+            user_id=current_user.id,
+            node_id=current_user.node_id,
+        )
 
     @with_db_transaction
     @requires_user(node_required=False)

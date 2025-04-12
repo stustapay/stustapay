@@ -5,10 +5,12 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
+from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
 
@@ -33,7 +35,9 @@ class TaxRateService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def create_tax_rate(self, *, conn: Connection, node: Node, tax_rate: NewTaxRate) -> TaxRate:
+    async def create_tax_rate(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate: NewTaxRate
+    ) -> TaxRate:
         tax_rate_id = await conn.fetchval(
             "insert into tax_rate (node_id, name, rate, description) values ($1, $2, $3, $4) returning id",
             node.id,
@@ -43,6 +47,13 @@ class TaxRateService(Service[Config]):
         )
         tax = await _fetch_tax_rate(conn=conn, node=node, tax_rate_id=tax_rate_id)
         assert tax is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.tax_rate_created,
+            content=tax,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return tax
 
     @with_db_transaction(read_only=True)
@@ -62,7 +73,9 @@ class TaxRateService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def update_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int, tax_rate: NewTaxRate) -> TaxRate:
+    async def update_tax_rate(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate_id: int, tax_rate: NewTaxRate
+    ) -> TaxRate:
         tax_id = await conn.fetchval(
             "update tax_rate set name = $1, rate = $2, description = $3 "
             "where id = $4 and node_id = any($5) returning id",
@@ -76,13 +89,30 @@ class TaxRateService(Service[Config]):
             raise NotFound(element_type="tax_rate", element_id=tax_rate_id)
         updated_tax = await _fetch_tax_rate(conn=conn, node=node, tax_rate_id=tax_rate_id)
         assert updated_tax is not None
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.tax_rate_updated,
+            content=updated_tax,
+            user_id=current_user.id,
+            node_id=node.id,
+        )
         return updated_tax
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
     @requires_user([Privilege.node_administration])
-    async def delete_tax_rate(self, *, conn: Connection, node: Node, tax_rate_id: int) -> bool:
+    async def delete_tax_rate(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate_id: int
+    ) -> bool:
         result = await conn.execute(
             "delete from tax_rate where id = $1 and node_id = any($2)", tax_rate_id, node.ids_to_event_node
+        )
+        # TODO: AUDIT_DELETE
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.tax_rate_deleted,
+            content={"id": tax_rate_id},
+            user_id=current_user.id,
+            node_id=node.id,
         )
         return result != "DELETE 0"

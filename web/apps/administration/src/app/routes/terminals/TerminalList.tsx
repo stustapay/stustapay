@@ -93,6 +93,13 @@ export const TerminalList: React.FC = () => {
       renderCell: (params) => renderTill(params.row.till_id),
     },
     {
+      field: "last_seen",
+      headerName: t("terminal.lastSeen"),
+      type: "dateTime",
+      valueGetter: (val) => new Date(val),
+      minWidth: 200,
+    },
+    {
       field: "session_uuid",
       headerName: t("terminal.loggedIn"),
       type: "boolean",

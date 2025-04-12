@@ -7,6 +7,7 @@ import {
   Percent as PercentIcon,
   Settings as SettingsIcon,
   HistoryEdu as HistoryEduIcon,
+  List as ListIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import * as React from "react";
@@ -31,6 +32,9 @@ const getActiveTab = (nodeId: number, location: string) => {
   }
   if (location.startsWith(`/node/${nodeId}/dsfinvk`)) {
     return `/node/${nodeId}/dsfinvk`;
+  }
+  if (location.startsWith(`/node/${nodeId}/audit-logs`)) {
+    return `/node/${nodeId}/audit-logs`;
   }
   return `/node/${nodeId}`;
 };
@@ -93,6 +97,14 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
           icon={<HistoryEduIcon />}
           iconPosition="start"
           to={`${nodeUrl}/dsfinvk`}
+        />
+        <Tab
+          label={t("auditLog.auditLogs")}
+          component={RouterLink}
+          value={`${nodeUrl}/audit-logs`}
+          icon={<ListIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/audit-logs`}
         />
         <Tab
           label={t("nodes.settings")}
