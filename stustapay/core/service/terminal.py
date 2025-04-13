@@ -443,10 +443,18 @@ class TerminalService(Service[Config]):
         """
 
         # First, get the event node ID for the current terminal
-        event_node_id = await fetch_event_node_for_node(conn=conn, node_id=node.id)
-        if event_node_id is None:
+        event_node_result = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        
+        # Handle the case where event_node_result might be a Node object or an integer
+        if event_node_result is None:
             # If no event node is found, use the current node
             event_node_id = node.id
+        elif isinstance(event_node_result, Node):
+            # If we got a Node object, extract its ID
+            event_node_id = event_node_result.id
+        else:
+            # Otherwise assume it's an integer ID
+            event_node_id = event_node_result
 
         # Fetch the event node and its children IDs
         event_node = await fetch_node(conn=conn, node_id=event_node_id)
@@ -522,9 +530,18 @@ class TerminalService(Service[Config]):
         assert node is not None
         
         # Get the event node for the terminal
-        event_node_id = await fetch_event_node_for_node(conn=conn, node_id=node.id)
-        if event_node_id is None:
+        event_node_result = await fetch_event_node_for_node(conn=conn, node_id=node.id)
+        
+        # Handle the case where event_node_result might be a Node object or an integer
+        if event_node_result is None:
+            # If no event node is found, use the current node
             event_node_id = node.id
+        elif isinstance(event_node_result, Node):
+            # If we got a Node object, extract its ID
+            event_node_id = event_node_result.id
+        else:
+            # Otherwise assume it's an integer ID
+            event_node_id = event_node_result
             
         event_node = await fetch_node(conn=conn, node_id=event_node_id)
         assert event_node is not None
@@ -735,9 +752,18 @@ class TerminalService(Service[Config]):
         terminal_node = await fetch_node(conn=conn, node_id=node.id)
         assert terminal_node is not None
         
-        event_node_id = await fetch_event_node_for_node(conn=conn, node_id=terminal_node.id)
-        if event_node_id is None:
+        event_node_result = await fetch_event_node_for_node(conn=conn, node_id=terminal_node.id)
+        
+        # Handle the case where event_node_result might be a Node object or an integer
+        if event_node_result is None:
+            # If no event node is found, use the current node
             event_node_id = terminal_node.id
+        elif isinstance(event_node_result, Node):
+            # If we got a Node object, extract its ID
+            event_node_id = event_node_result.id
+        else:
+            # Otherwise assume it's an integer ID
+            event_node_id = event_node_result
             
         event_node = await fetch_node(conn=conn, node_id=event_node_id)
         assert event_node is not None
