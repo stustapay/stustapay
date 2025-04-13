@@ -442,26 +442,7 @@ class TerminalService(Service[Config]):
         Check if a user can log in to the terminal and return the available roles he can log in as
         """
 
-        # First, get the event node ID for the current terminal
-        event_node_result = await fetch_event_node_for_node(conn=conn, node_id=node.id)
-        
-        # Handle the case where event_node_result might be a Node object or an integer
-        if event_node_result is None:
-            # If no event node is found, use the current node
-            event_node_id = node.id
-        elif isinstance(event_node_result, Node):
-            # If we got a Node object, extract its ID
-            event_node_id = event_node_result.id
-        else:
-            # Otherwise assume it's an integer ID
-            event_node_id = event_node_result
-
-        # Fetch the event node and its children IDs
-        event_node = await fetch_node(conn=conn, node_id=event_node_id)
-        assert event_node is not None
-
         # we fetch all roles that contain either the terminal login or supervised terminal login privilege
-        # IMPORTANT: We restrict search to users within the current event node hierarchy
         available_roles = await conn.fetch_many(
             UserRole,
             "select urwp.* "
@@ -471,12 +452,11 @@ class TerminalService(Service[Config]):
             "join user_tag ut on usr.user_tag_id = ut.id "
             "where ut.uid = $1 "
             "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) "
-            "   and urt.node_id = any($4) "
-            "   and usr.node_id = any($4)",  # Added this line to restrict by user's node_id
+            "   and urt.node_id = any($4)",
             user_tag.uid,
             Privilege.terminal_login.name,
             Privilege.supervised_terminal_login.name,
-            event_node.ids_to_root,  # Use event node's hierarchy rather than the terminal's full node hierarchy
+            node.ids_to_root,
         )
         if len(available_roles) == 0:
             raise AccessDenied(
@@ -484,19 +464,14 @@ class TerminalService(Service[Config]):
                 "have permission to login at a terminal"
             )
 
-        # Get user from the correct event node
-        new_user_id = await conn.fetchval(
-            "select id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
-            user_tag.uid,
-            event_node.ids_to_root,  # Use event node's hierarchy
-        )
+        new_user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
         assert new_user_id is not None
 
         new_user_is_supervisor = await conn.fetchval(
             "select true from user_privileges_at_node($1) where $2 = any(privileges_at_node) and node_id = $3",
             new_user_id,
             Privilege.terminal_login.name,
-            node.id,  # This should be the node ID, not the node object
+            node.id,
         )
         if not new_user_is_supervisor:
             if current_user is None or Privilege.terminal_login not in current_user.privileges:
@@ -525,51 +500,16 @@ class TerminalService(Service[Config]):
 
         returns the newly logged-in User if successful
         """
-        # First, get the event node for the current terminal
-        node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
-        assert node is not None
-        
-        # Get the event node for the terminal
-        event_node_result = await fetch_event_node_for_node(conn=conn, node_id=node.id)
-        
-        # Handle the case where event_node_result might be a Node object or an integer
-        if event_node_result is None:
-            # If no event node is found, use the current node
-            event_node_id = node.id
-        elif isinstance(event_node_result, Node):
-            # If we got a Node object, extract its ID
-            event_node_id = event_node_result.id
-        else:
-            # Otherwise assume it's an integer ID
-            event_node_id = event_node_result
-            
-        event_node = await fetch_node(conn=conn, node_id=event_node_id)
-        assert event_node is not None
-        
-        # Get the current user from the terminal if available
-        current_user = None
-        if current_terminal.active_user_id is not None:
-            current_user = await self.get_current_user(
-                conn=conn, current_terminal=current_terminal
-            )
-        
-        # Pass current_user to check_user_login
         available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
-            conn=conn, node=node, current_user=current_user, user_tag=user_tag
+            conn=conn, current_terminal=current_terminal, user_tag=user_tag
         )
         if not any(x.id == user_role_id for x in available_roles):
             raise AccessDenied("The user does not have the requested role")
 
-        # Important: Restrict user lookup to the current event node hierarchy
         user_id, cash_register_id = await conn.fetchrow(
-            "select id, cash_register_id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
-            user_tag.uid,
-            event_node.ids_to_root  # Use event node hierarchy instead of global search
+            "select id, cash_register_id from user_with_tag where user_tag_uid = $1", user_tag.uid
         )
-        
-        if user_id is None:
-            raise AccessDenied(f"User with tag UID {user_tag.uid} not found in this event")
-        
+        assert user_id is not None
         if current_terminal.till is not None:
             await conn.execute("update till set active_cash_register_id = null where id = $1", current_terminal.till.id)
 
@@ -747,50 +687,21 @@ class TerminalService(Service[Config]):
         
         if terminal is None:
             raise NotFound(f"Terminal with id {terminal_id} not found")
-        
-        # Get the event node for the terminal
-        terminal_node = await fetch_node(conn=conn, node_id=node.id)
-        assert terminal_node is not None
-        
-        event_node_result = await fetch_event_node_for_node(conn=conn, node_id=terminal_node.id)
-        
-        # Handle the case where event_node_result might be a Node object or an integer
-        if event_node_result is None:
-            # If no event node is found, use the current node
-            event_node_id = terminal_node.id
-        elif isinstance(event_node_result, Node):
-            # If we got a Node object, extract its ID
-            event_node_id = event_node_result.id
-        else:
-            # Otherwise assume it's an integer ID
-            event_node_id = event_node_result
-            
-        event_node = await fetch_node(conn=conn, node_id=event_node_id)
-        assert event_node is not None
-            
-        # Verify the user belongs to the same event as the terminal
-        user_node_id = await conn.fetchval(
-            "select node_id from usr where id = $1", user_id
-        )
-        
-        if user_node_id is None:
-            raise NotFound(f"User with id {user_id} not found")
-            
-        user_node = await fetch_node(conn=conn, node_id=user_node_id)
-        assert user_node is not None
-        
-        # Check if user belongs to the same event as the terminal
-        if event_node_id not in user_node.ids_to_root:
-            raise AccessDenied(f"User with id {user_id} does not belong to the same event as the terminal")
             
         # Check if the user has the requested role
         has_role = await conn.fetchval(
             "select exists(select 1 from user_to_role where user_id = $1 and role_id = $2 and node_id = any($3))", 
-            user_id, role_id, event_node.ids_to_root  # Use event node's hierarchy
+            user_id, role_id, node.ids_to_root
         )
         
         if not has_role:
             raise AccessDenied("The user does not have the requested role")
+            
+        # Check if the user exists
+        user_exists = await conn.fetchval("select exists(select 1 from usr where id = $1)", user_id)
+        
+        if not user_exists:
+            raise NotFound(f"User with id {user_id} not found")
             
         # Get the cash register id of the user if any
         cash_register_id = await conn.fetchval("select cash_register_id from usr where id = $1", user_id)
@@ -815,10 +726,4 @@ class TerminalService(Service[Config]):
             await assign_cash_register_to_till_if_available(
                 conn=conn, till_id=till["id"], cash_register_id=cash_register_id
             )
-
-        # Return terminal as a proper Terminal object, not as a fetchrow result
-        t = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
-        assert t is not None
-        return t
-
         
