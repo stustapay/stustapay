@@ -488,7 +488,7 @@ class TerminalService(Service[Config]):
             "select true from user_privileges_at_node($1) where $2 = any(privileges_at_node) and node_id = $3",
             new_user_id,
             Privilege.terminal_login.name,
-            node.id,
+            node.id,  # This should be the node ID, not the node object
         )
         if not new_user_is_supervisor:
             if current_user is None or Privilege.terminal_login not in current_user.privileges:
@@ -529,8 +529,16 @@ class TerminalService(Service[Config]):
         event_node = await fetch_node(conn=conn, node_id=event_node_id)
         assert event_node is not None
         
+        # Get the current user from the terminal if available
+        current_user = None
+        if current_terminal.active_user_id is not None:
+            current_user = await self.get_current_user(
+                conn=conn, current_terminal=current_terminal
+            )
+        
+        # Pass current_user to check_user_login
         available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
-            conn=conn, current_terminal=current_terminal, user_tag=user_tag
+            conn=conn, node=node, current_user=current_user, user_tag=user_tag
         )
         if not any(x.id == user_role_id for x in available_roles):
             raise AccessDenied("The user does not have the requested role")
@@ -541,7 +549,9 @@ class TerminalService(Service[Config]):
             user_tag.uid,
             event_node.ids_to_root  # Use event node hierarchy instead of global search
         )
-        assert user_id is not None
+        
+        if user_id is None:
+            raise AccessDenied(f"User with tag UID {user_tag.uid} not found in this event")
         
         if current_terminal.till is not None:
             await conn.execute("update till set active_cash_register_id = null where id = $1", current_terminal.till.id)
@@ -780,6 +790,9 @@ class TerminalService(Service[Config]):
                 conn=conn, till_id=till["id"], cash_register_id=cash_register_id
             )
 
-        return terminal
+        # Return terminal as a proper Terminal object, not as a fetchrow result
+        t = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        assert t is not None
+        return t
 
         
