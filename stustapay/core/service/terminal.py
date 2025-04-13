@@ -441,8 +441,15 @@ class TerminalService(Service[Config]):
         """
         Check if a user can log in to the terminal and return the available roles he can log in as
         """
+        
+        # Get the event node for the terminal
+        event_node_id = node.event_node_id
+        if event_node_id is None:
+            # If we're not in an event, use the node_id
+            event_node_id = node.id
 
         # we fetch all roles that contain either the terminal login or supervised terminal login privilege
+        # restricting to users in the same event
         available_roles = await conn.fetch_many(
             UserRole,
             "select urwp.* "
@@ -450,13 +457,16 @@ class TerminalService(Service[Config]):
             "join user_to_role urt on urwp.id = urt.role_id "
             "join usr on urt.user_id = usr.id "
             "join user_tag ut on usr.user_tag_id = ut.id "
+            "join node n on usr.node_id = n.id "
             "where ut.uid = $1 "
             "   and ($2 = any(urwp.privileges) or $3 = any(urwp.privileges)) "
-            "   and urt.node_id = any($4)",
+            "   and urt.node_id = any($4) "
+            "   and (usr.node_id = $5 OR n.event_node_id = $5)",
             user_tag.uid,
             Privilege.terminal_login.name,
             Privilege.supervised_terminal_login.name,
             node.ids_to_root,
+            event_node_id,
         )
         if len(available_roles) == 0:
             raise AccessDenied(
@@ -464,8 +474,17 @@ class TerminalService(Service[Config]):
                 "have permission to login at a terminal"
             )
 
-        new_user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
-        assert new_user_id is not None
+        # Get user info, making sure we get a user from the same event
+        new_user_id = await conn.fetchval(
+            "select u.id from user_with_tag u "
+            "join node n on u.node_id = n.id "
+            "where u.user_tag_uid = $1 and (u.node_id = $2 OR n.event_node_id = $2)",
+            user_tag.uid,
+            event_node_id
+        )
+        
+        if new_user_id is None:
+            raise AccessDenied("User not found in this event")
 
         new_user_is_supervisor = await conn.fetchval(
             "select true from user_privileges_at_node($1) where $2 = any(privileges_at_node) and node_id = $3",
@@ -506,10 +525,27 @@ class TerminalService(Service[Config]):
         if not any(x.id == user_role_id for x in available_roles):
             raise AccessDenied("The user does not have the requested role")
 
+        # Get the terminal's node and event_node_id
+        terminal_node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
+        assert terminal_node is not None
+        
+        # Get the event node for the terminal
+        event_node_id = terminal_node.event_node_id
+        if event_node_id is None:
+            # If we're not in an event, use the node_id
+            event_node_id = terminal_node.id
+
+        # Get user_id matching both the tag_uid AND the terminal's event node hierarchy
         user_id, cash_register_id = await conn.fetchrow(
-            "select id, cash_register_id from user_with_tag where user_tag_uid = $1", user_tag.uid
+            "select u.id, u.cash_register_id from user_with_tag u "
+            "join node n on u.node_id = n.id "
+            "where u.user_tag_uid = $1 and (u.node_id = $2 OR n.event_node_id = $2)",
+            user_tag.uid, event_node_id
         )
-        assert user_id is not None
+        
+        if user_id is None:
+            raise AccessDenied("User not found in this event")
+
         if current_terminal.till is not None:
             await conn.execute("update till set active_cash_register_id = null where id = $1", current_terminal.till.id)
 
@@ -627,42 +663,55 @@ class TerminalService(Service[Config]):
         ):
             raise AccessDenied("cannot retrieve user info for someone other than yourself")
 
-        info = await conn.fetch_maybe_one(
+        # Get the event node for the terminal
+        event_node_id = node.event_node_id
+        if event_node_id is None:
+            # If we're not in an event, use the node_id
+            event_node_id = node.id
+
+        # Find the user in the same event as the terminal
+        user = await conn.fetch_maybe_one(
             UserInfo,
-            "select "
-            "   u.*, "
-            "   cr.balance as cash_drawer_balance, "
-            "   transp_a.balance as transport_account_balance, "
-            "   cr.id as cash_register_id, "
-            "   cr.name as cash_register_name,"
-            "   '[]'::json as assigned_roles "
-            "from user_with_tag u "
-            "left join account transp_a on transp_a.id = u.transport_account_id "
-            "left join cash_register_with_balance cr on u.cash_register_id = cr.id "
-            "where u.user_tag_uid = $1",
+            """
+            select u.*, r.id as role_id, r.name as role_name, cash_register_id is not null as has_cashregister
+            from user_with_tag u
+            join node n on u.node_id = n.id
+            left join user_to_role urt on (u.id = urt.user_id)
+            left join user_role r on (urt.role_id = r.id and r.node_id = urt.node_id)
+            where u.user_tag_uid = $1 and (u.node_id = $2 OR n.event_node_id = $2)
+            limit 1
+            """,
             user_tag_uid,
+            event_node_id,
         )
-        if info is None:
-            raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")
-
-        assigned_roles = await conn.fetch_many(
-            UserRoleInfo,
-            "select "
-            "   ur.*, "
-            "   utr.node_id,"
-            "   n.name as node_name, "
-            "   utr.node_id = $3 as is_at_current_node "
-            "from user_role_with_privileges ur "
-            "join user_to_role utr on ur.id = utr.role_id "
-            "join node n on utr.node_id = n.id "
-            "where n.id = any($2) and utr.user_id = $1",
-            info.id,
-            node.ids_to_root,
-            node.id,
+        if user is None:
+            raise NotFound(element_type="user_with_tag", element_id=user_tag_uid)
+            
+        if node.event_node_id:
+            available_roles = await conn.fetch_many(
+                UserRoleInfo, "select * from user_role where node_id = $1 order by name", node.event_node_id
+            )
+        else:
+            available_roles = await conn.fetch_many(
+                UserRoleInfo, "select * from user_role where node_id = $1 order by name", node.id
+            )
+            
+        return UserInfo(
+            id=user.id,
+            login=user.login,
+            display_name=user.display_name,
+            description=user.description,
+            node_id=user.node_id,
+            user_tag_id=user.user_tag_id,
+            transport_account_id=user.transport_account_id,
+            cashier_account_id=user.cashier_account_id,
+            cash_register_id=user.cash_register_id,
+            user_tag_pin=user.user_tag_pin,
+            user_tag_uid=user.user_tag_uid,
+            has_cashregister=user.has_cashregister,
+            active_role=None if user.role_id is None else UserRoleInfo(id=user.role_id, name=user.role_name),
+            available_roles=available_roles,
         )
-
-        info.assigned_roles = assigned_roles
-        return info
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
