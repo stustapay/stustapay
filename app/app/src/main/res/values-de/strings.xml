@@ -38,7 +38,6 @@
     <string name="root_item_development">Entwicklung</string>
     <string name="root_item_restart_app">App neu starten</string>
     <string name="root_item_stats">Statistik</string>
-    <string name="device_test_title">Gerätetest</string>
 
     <string name="cashier_title">Kassiererstatus</string>
     <string name="cashier_drawer">Kassenname</string>

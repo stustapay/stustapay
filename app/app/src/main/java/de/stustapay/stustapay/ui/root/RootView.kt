@@ -8,7 +8,6 @@ import de.stustapay.libssp.util.SysUiController
 import de.stustapay.stustapay.ui.account.AccountView
 import de.stustapay.stustapay.ui.cashier.CashierView
 import de.stustapay.stustapay.ui.debug.DebugView
-import de.stustapay.stustapay.ui.device.DeviceTestView
 import de.stustapay.stustapay.ui.history.SaleHistoryView
 import de.stustapay.stustapay.ui.nav.NavChangeHandler
 import de.stustapay.stustapay.ui.nav.navigateDestination
@@ -86,9 +85,6 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.vault.route) {
             VaultView(leaveView = { navController.navigateUp() })
-        }
-        composable(RootNavDests.device_test.route) {
-            DeviceTestView(leaveView = { navController.navigateUp() })
         }
     }
 }
