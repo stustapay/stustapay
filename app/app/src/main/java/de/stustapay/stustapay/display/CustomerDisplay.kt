@@ -246,7 +246,7 @@ class CustomerDisplayManager @Inject constructor(
             // Welcome text
             val welcomeText = android.widget.TextView(context).apply {
                 text = "Willkommen bei"
-                textSize = 24f
+                textSize = 32f
                 setTextColor(android.graphics.Color.WHITE)
                 gravity = android.view.Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -260,7 +260,7 @@ class CustomerDisplayManager @Inject constructor(
             // Event name text
             val eventText = android.widget.TextView(context).apply {
                 text = eventName
-                textSize = 36f
+                textSize = 48f
                 setTextColor(android.graphics.Color.WHITE)
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.CENTER
@@ -273,7 +273,7 @@ class CustomerDisplayManager @Inject constructor(
             // Instructions text
             val instructionsText = android.widget.TextView(context).apply {
                 text = "Bitte treffen Sie eine Auswahl"
-                textSize = 26f
+                textSize = 34f
                 setTextColor(android.graphics.Color.parseColor("#333333"))
                 gravity = android.view.Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -357,7 +357,7 @@ class CustomerDisplayManager @Inject constructor(
             // Title text
             val titleText = android.widget.TextView(context).apply {
                 text = "Bitte scannen Sie Ihren Chip/Tag"
-                textSize = 28f
+                textSize = 36f
                 setTextColor(android.graphics.Color.parseColor("#333333"))
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.CENTER
@@ -372,7 +372,7 @@ class CustomerDisplayManager @Inject constructor(
             // Instructions text
             val instructionsText = android.widget.TextView(context).apply {
                 text = "Halten Sie Ihren Chip an das Lesegerät"
-                textSize = 22f
+                textSize = 30f
                 setTextColor(android.graphics.Color.parseColor("#666666"))
                 gravity = android.view.Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -420,7 +420,7 @@ class CustomerDisplayManager @Inject constructor(
             // Header text
             val headerTextView = android.widget.TextView(context).apply {
                 text = "⚠️ NICHT GENUG GUTHABEN ⚠️"
-                    textSize = 24f
+                textSize = 32f
                 setTextColor(android.graphics.Color.RED)
                 gravity = android.view.Gravity.CENTER
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -449,7 +449,7 @@ class CustomerDisplayManager @Inject constructor(
             // Needed amount
             val neededTextView = android.widget.TextView(context).apply {
                 text = "Benötigter Betrag: ${String.format("%.2f €", totalPrice)}"
-                textSize = 20f
+                textSize = 28f
                 setTextColor(android.graphics.Color.BLACK)
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -462,7 +462,7 @@ class CustomerDisplayManager @Inject constructor(
             // Available amount
             val availableTextView = android.widget.TextView(context).apply {
                 text = "Verfügbares Guthaben: ${String.format("%.2f €", currentBalance)}"
-                textSize = 20f
+                textSize = 28f
                 setTextColor(android.graphics.Color.BLACK)
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -475,7 +475,7 @@ class CustomerDisplayManager @Inject constructor(
             // Missing amount with red background
             val missingTextView = android.widget.TextView(context).apply {
                 text = "Fehlender Betrag: ${String.format("%.2f €", missingAmount)}"
-                textSize = 22f
+                textSize = 30f
                 setTextColor(android.graphics.Color.WHITE)
                 gravity = android.view.Gravity.CENTER
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -495,8 +495,8 @@ class CustomerDisplayManager @Inject constructor(
             // Message
             val messageTextView = android.widget.TextView(context).apply {
                 text = "Bitte laden Sie Ihr Konto auf, um fortzufahren."
-                textSize = 18f
-                    setTextColor(android.graphics.Color.BLACK)
+                textSize = 26f
+                setTextColor(android.graphics.Color.BLACK)
                 gravity = android.view.Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -584,7 +584,7 @@ class CustomerDisplayManager @Inject constructor(
             // Completion text
             val titleText = android.widget.TextView(context).apply {
                 text = "Kauf abgeschlossen"
-                textSize = 26f
+                textSize = 34f
                 setTextColor(android.graphics.Color.parseColor("#4CAF50"))
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.START;android.view.Gravity.CENTER_VERTICAL
@@ -632,7 +632,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val totalPriceLabel = android.widget.TextView(context).apply {
                 text = "Gesamtbetrag:"
-                textSize = 18f
+                textSize = 26f
                 setTextColor(android.graphics.Color.parseColor("#333333"))
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     0,
@@ -643,7 +643,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val totalPriceValue = android.widget.TextView(context).apply {
                 text = "${state.sale.totalPrice} €"
-                textSize = 18f
+                textSize = 26f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setTextColor(android.graphics.Color.parseColor("#4CAF50"))
                 gravity = android.view.Gravity.END
@@ -674,7 +674,7 @@ class CustomerDisplayManager @Inject constructor(
                 
                 val newBalanceLabel = android.widget.TextView(context).apply {
                     text = "Neues Guthaben:"
-                    textSize = 18f
+                    textSize = 26f
                     setTextColor(android.graphics.Color.parseColor("#333333"))
                     layoutParams = android.widget.LinearLayout.LayoutParams(
                         0,
@@ -685,7 +685,7 @@ class CustomerDisplayManager @Inject constructor(
                 
                 val newBalanceValue = android.widget.TextView(context).apply {
                     text = "${state.sale.newBalance} €"
-                    textSize = 18f
+                    textSize = 26f
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                     setTextColor(android.graphics.Color.parseColor("#3366CC"))
                     gravity = android.view.Gravity.END
@@ -773,7 +773,7 @@ class CustomerDisplayManager @Inject constructor(
             // Completion text
             val titleText = android.widget.TextView(context).apply {
                 text = "Aufladung abgeschlossen"
-                textSize = 26f // Smaller text
+                textSize = 34f
                 setTextColor(android.graphics.Color.parseColor("#3366CC"))
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.START
@@ -821,7 +821,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val topUpAmountLabel = android.widget.TextView(context).apply {
                 text = "Aufgeladener Betrag:"
-                textSize = 18f // Smaller text
+                textSize = 26f
                 setTextColor(android.graphics.Color.parseColor("#333333"))
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     0,
@@ -832,7 +832,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val topUpAmountValue = android.widget.TextView(context).apply {
                 text = "${state.topUpAmount} €"
-                textSize = 18f // Smaller text
+                textSize = 26f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setTextColor(android.graphics.Color.parseColor("#3366CC"))
                 gravity = android.view.Gravity.END
@@ -858,7 +858,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val newBalanceLabel = android.widget.TextView(context).apply {
                 text = "Neues Guthaben:"
-                textSize = 18f // Smaller text
+                textSize = 26f
                 setTextColor(android.graphics.Color.parseColor("#333333"))
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     0,
@@ -869,7 +869,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val newBalanceValue = android.widget.TextView(context).apply {
                 text = "${state.newBalance} €"
-                textSize = 18f // Smaller text
+                textSize = 26f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setTextColor(android.graphics.Color.parseColor("#4CAF50"))  // Use green for new balance
                 gravity = android.view.Gravity.END
@@ -948,7 +948,7 @@ class CustomerDisplayManager @Inject constructor(
             
             val totalPriceValue = android.widget.TextView(context).apply {
                 text = "GESAMTBETRAG: ${state.totalPrice} €"
-                textSize = 20f // Reduced text size
+                textSize = 28f
                 setTextColor(android.graphics.Color.WHITE)
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.CENTER
@@ -989,7 +989,7 @@ class CustomerDisplayManager @Inject constructor(
                 // Current balance label
                 val currentBalanceText = android.widget.TextView(context).apply {
                     text = "Aktuelles Guthaben:"
-                    textSize = 18f
+                    textSize = 26f
                     setTextColor(android.graphics.Color.parseColor("#333333"))
                     gravity = android.view.Gravity.CENTER
                     layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -1001,7 +1001,7 @@ class CustomerDisplayManager @Inject constructor(
                 // Current balance value
                 val currentBalanceValue = android.widget.TextView(context).apply {
                     text = "${state.currentBalance} €"
-                    textSize = 22f // Large value
+                    textSize = 30f
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                     setTextColor(android.graphics.Color.parseColor("#333333"))
                     gravity = android.view.Gravity.CENTER
@@ -1048,7 +1048,7 @@ class CustomerDisplayManager @Inject constructor(
                     // New balance label
                     val newBalanceText = android.widget.TextView(context).apply {
                         text = "Neues Guthaben:"
-                        textSize = 18f
+                        textSize = 26f
                         setTextColor(android.graphics.Color.parseColor("#4CAF50"))
                         gravity = android.view.Gravity.CENTER
                         layoutParams = android.widget.LinearLayout.LayoutParams(
@@ -1060,7 +1060,7 @@ class CustomerDisplayManager @Inject constructor(
                     // New balance value
                     val newBalanceValue = android.widget.TextView(context).apply {
                         text = "${state.newBalance} €"
-                        textSize = 24f // Larger value
+                        textSize = 32f
                         typeface = android.graphics.Typeface.DEFAULT_BOLD
                         setTextColor(android.graphics.Color.parseColor("#4CAF50"))
                         gravity = android.view.Gravity.CENTER
@@ -1089,14 +1089,14 @@ class CustomerDisplayManager @Inject constructor(
                 // Compact title for products
                 val productsTitle = android.widget.TextView(context).apply {
                     text = "Produkte:"
-                    textSize = 16f // Reduced text size
+                    textSize = 24f
                     setTextColor(android.graphics.Color.parseColor("#333333"))
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                     layoutParams = android.widget.LinearLayout.LayoutParams(
                         android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                         android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
                     ).apply {
-                        setMargins(0, 5, 0, 5) // Minimal margins
+                        setMargins(0, 5, 0, 5)
                     }
                 }
                 
@@ -1141,7 +1141,7 @@ class CustomerDisplayManager @Inject constructor(
                     
                     val productName = android.widget.TextView(context).apply {
                         text = product.first
-                        textSize = 16f // Smaller text
+                        textSize = 24f
                         setTextColor(android.graphics.Color.parseColor("#333333"))
                         layoutParams = android.widget.LinearLayout.LayoutParams(
                             0,
@@ -1154,7 +1154,7 @@ class CustomerDisplayManager @Inject constructor(
                     
                     val productQuantity = android.widget.TextView(context).apply {
                         text = product.second
-                        textSize = 16f // Smaller text
+                        textSize = 24f
                         setTextColor(android.graphics.Color.parseColor("#3366CC"))
                         typeface = android.graphics.Typeface.DEFAULT_BOLD
                         gravity = android.view.Gravity.END
