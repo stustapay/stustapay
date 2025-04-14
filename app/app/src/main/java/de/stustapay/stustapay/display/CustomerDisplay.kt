@@ -496,7 +496,7 @@ class CustomerDisplayManager @Inject constructor(
             val messageTextView = android.widget.TextView(context).apply {
                 text = "Bitte laden Sie Ihr Konto auf, um fortzufahren."
                 textSize = 26f
-                setTextColor(android.graphics.Color.BLACK)
+                    setTextColor(android.graphics.Color.BLACK)
                 gravity = android.view.Gravity.CENTER
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
