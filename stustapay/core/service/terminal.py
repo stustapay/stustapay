@@ -256,18 +256,33 @@ class TerminalService(Service[Config]):
             profile.layout_id,
         )
 
-        cash_register_id = None
+        # Get cash register information for the terminal
+        cash_register_id = till.active_cash_register_id
         cash_register_name = None
-        cash_reg = await conn.fetchrow(
-            "select cr.id, cr.name "
-            "from cash_register cr "
-            "join till t on cr.id = t.active_cash_register_id "
-            "where t.id = $1",
-            till.id,
-        )
-        if cash_reg is not None:
-            cash_register_id = cash_reg["id"]
-            cash_register_name = cash_reg["name"]
+        
+        # If we have a cash register ID, verify it exists and get its name
+        if cash_register_id is not None:
+            cash_reg = await conn.fetchrow(
+                "select cr.id, cr.name "
+                "from cash_register cr "
+                "join node n on cr.node_id = n.id "
+                "where cr.id = $1 and (cr.node_id = any($2) OR n.event_node_id = $3)",
+                cash_register_id,
+                event_node.ids_to_root,
+                event_node.id
+            )
+            
+            if cash_reg is not None:
+                cash_register_id = cash_reg["id"]
+                cash_register_name = cash_reg["name"]
+            else:
+                # If we didn't find the cash register, set it to None
+                cash_register_id = None
+                # Update the till to remove the invalid cash register
+                await conn.execute(
+                    "update till set active_cash_register_id = null where id = $1", 
+                    till.id
+                )
 
         sumup_secrets = None
         if event_settings.sumup_payment_enabled:
@@ -407,6 +422,39 @@ class TerminalService(Service[Config]):
 
         till_config = None
         if current_terminal.till is not None:
+            # If the till doesn't have an active cash register, but the user does,
+            # try to assign it now to fix the "no cash register" issue
+            user_cash_register_id = None
+            if current_terminal.active_user_id is not None:
+                user_cash_register_id = await conn.fetchval(
+                    "select cash_register_id from usr where id = $1", 
+                    current_terminal.active_user_id
+                )
+                
+                # If user has a cash register, verify it's from the same event
+                if user_cash_register_id is not None:
+                    cash_register_exists = await conn.fetchval(
+                        "select exists(select 1 from cash_register cr "
+                        "join node n on cr.node_id = n.id "
+                        "where cr.id = $1 and (cr.node_id = $2 OR n.event_node_id = $2))", 
+                        user_cash_register_id, event_node.id
+                    )
+                    
+                    if cash_register_exists:
+                        # Check if till already has an active cash register
+                        till_cash_register = await conn.fetchval(
+                            "select active_cash_register_id from till where id = $1", 
+                            current_terminal.till.id
+                        )
+                        
+                        # If till doesn't have a cash register, assign the user's
+                        if till_cash_register is None:
+                            await conn.execute(
+                                "update till set active_cash_register_id = $1 where id = $2", 
+                                user_cash_register_id, 
+                                current_terminal.till.id
+                            )
+            
             till_config = await self._get_terminal_till_config(
                 conn=conn, terminal_id=current_terminal.id, till=current_terminal.till, event_node=event_node
             )
@@ -428,7 +476,7 @@ class TerminalService(Service[Config]):
             test_mode_message=self.config.core.test_mode_message,
         )
 
-    @with_db_transaction(read_only=True)
+    @with_db_transaction
     @requires_terminal()
     async def check_user_login(
         self,
@@ -557,10 +605,20 @@ class TerminalService(Service[Config]):
             current_terminal.id,
         )
 
+        # If user has a cash register and we have a till, assign the cash register to the till
         if current_terminal.till is not None and cash_register_id is not None:
-            await assign_cash_register_to_till_if_available(
-                conn=conn, till_id=current_terminal.till.id, cash_register_id=cash_register_id
+            # First verify the cash register is in the same event as the terminal
+            cash_register_exists = await conn.fetchval(
+                "select exists(select 1 from cash_register cr "
+                "join node n on cr.node_id = n.id "
+                "where cr.id = $1 and (cr.node_id = $2 OR n.event_node_id = $2))", 
+                cash_register_id, event_node_id
             )
+            
+            if cash_register_exists:
+                await assign_cash_register_to_till_if_available(
+                    conn=conn, till_id=current_terminal.till.id, cash_register_id=cash_register_id
+                )
 
         # Directly query for the user information instead of using get_current_user
         user = await conn.fetch_maybe_one(
@@ -673,11 +731,22 @@ class TerminalService(Service[Config]):
         user = await conn.fetch_maybe_one(
             UserInfo,
             """
-            select u.*, r.id as role_id, r.name as role_name, cash_register_id is not null as has_cashregister
+            select 
+                u.*,
+                r.id as role_id,
+                r.name as role_name,
+                cr.balance as cash_drawer_balance,
+                transp_a.balance as transport_account_balance,
+                cr.id as cash_register_id,
+                cr.name as cash_register_name,
+                cash_register_id is not null as has_cashregister,
+                '[]'::json as assigned_roles
             from user_with_tag u
             join node n on u.node_id = n.id
             left join user_to_role urt on (u.id = urt.user_id)
             left join user_role r on (urt.role_id = r.id and r.node_id = urt.node_id)
+            left join account transp_a on transp_a.id = u.transport_account_id
+            left join cash_register_with_balance cr on u.cash_register_id = cr.id
             where u.user_tag_uid = $1 and (u.node_id = $2 OR n.event_node_id = $2)
             limit 1
             """,
@@ -687,31 +756,29 @@ class TerminalService(Service[Config]):
         if user is None:
             raise NotFound(element_type="user_with_tag", element_id=user_tag_uid)
             
-        if node.event_node_id:
-            available_roles = await conn.fetch_many(
-                UserRoleInfo, "select * from user_role where node_id = $1 order by name", node.event_node_id
-            )
-        else:
-            available_roles = await conn.fetch_many(
-                UserRoleInfo, "select * from user_role where node_id = $1 order by name", node.id
-            )
-            
-        return UserInfo(
-            id=user.id,
-            login=user.login,
-            display_name=user.display_name,
-            description=user.description,
-            node_id=user.node_id,
-            user_tag_id=user.user_tag_id,
-            transport_account_id=user.transport_account_id,
-            cashier_account_id=user.cashier_account_id,
-            cash_register_id=user.cash_register_id,
-            user_tag_pin=user.user_tag_pin,
-            user_tag_uid=user.user_tag_uid,
-            has_cashregister=user.has_cashregister,
-            active_role=None if user.role_id is None else UserRoleInfo(id=user.role_id, name=user.role_name),
-            available_roles=available_roles,
+        # Get the assigned roles for the user
+        assigned_roles = await conn.fetch_many(
+            UserRoleInfo,
+            """
+            select 
+                ur.*,
+                utr.node_id,
+                n.name as node_name,
+                utr.node_id = $3 as is_at_current_node
+            from user_role_with_privileges ur
+            join user_to_role utr on ur.id = utr.role_id
+            join node n on utr.node_id = n.id
+            where n.id = any($2) and utr.user_id = $1
+            """,
+            user.id,
+            node.ids_to_root,
+            node.id,
         )
+        
+        # Set the assigned roles
+        user.assigned_roles = assigned_roles
+  
+        return user
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
