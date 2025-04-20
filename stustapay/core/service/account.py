@@ -119,7 +119,7 @@ class AccountService(Service[Config]):
     async def list_system_accounts(self, *, conn: Connection, node: Node) -> list[Account]:
         return await conn.fetch_many(
             Account,
-            "select * from account_with_history where type != 'private' and node_id = any($1)",
+            "select * from account_with_history where type != 'private' and type != 'cashier' and node_id = any($1)",
             node.ids_to_event_node,
         )
 

@@ -200,7 +200,7 @@ export const EventCreate: React.FC = withPrivilegeGuard("node_administration", (
           pretix_api_key: null,
           pretix_organizer: null,
           pretix_event: null,
-          pretix_ticket_ids: null,
+          pretix_ticket_ids: [],
           ...values,
         },
       }).unwrap();
