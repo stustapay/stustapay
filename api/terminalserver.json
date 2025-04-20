@@ -2395,7 +2395,14 @@
             "$ref": "#/components/schemas/PaymentMethod"
           },
           "customer_tag_uid": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Customer Tag Uid"
           },
           "customer_account_id": {

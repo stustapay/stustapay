@@ -76,7 +76,8 @@ class PendingTopUp(NewTopUp):
 class CompletedTopUp(BaseModel):
     payment_method: PaymentMethod
 
-    customer_tag_uid: int
+    # can be none in online topups with presale
+    customer_tag_uid: int | None
     customer_account_id: int
 
     amount: float
