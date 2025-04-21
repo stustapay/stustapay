@@ -24,7 +24,7 @@ class PayoutRunForReport(BaseModel):
 
 
 class RemainingBalances(BaseModel):
-    remaining_balances: float
+    remaining_balances: float | None = 0.
 
 
 class PayoutReportContext(BaseModel):
@@ -33,7 +33,7 @@ class PayoutReportContext(BaseModel):
     config: BonConfig
     date: datetime
     payouts: list[PayoutRunForReport]
-    remaining_balances: float
+    remaining_balances: RemainingBalances
     currency_symbol: str
 
 
@@ -47,7 +47,7 @@ async def generate_payout_report(conn: Connection, year: int) -> bytes:
     payouts = await conn.fetch_many(PayoutRunForReport, query_string)
 
     #TODO: Is node id 1 always correct?
-    remaining_balance_query = "SELECT sum(balance) FROM account WHERE node_id=cast(1 as bigint) AND type='private';"
+    remaining_balance_query = "SELECT sum(balance) FROM account WHERE node_id=cast(1000 as bigint) AND type='private'"
     remaining_balances = await conn.fetch_one(RemainingBalances, remaining_balance_query)
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
@@ -71,4 +71,4 @@ async def generate_payout_report(conn: Connection, year: int) -> bytes:
         files["logo.svg"] = logo
 
     # TODO: Specify save location
-    return await render_report(template="payout_report", template_context=context.model_dump(), files=files)
+    return await render_report(template="payouts", template_context=context.model_dump(), files=files)

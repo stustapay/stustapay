@@ -41,7 +41,7 @@ def format_percent(value):
             </tr>
             <tr>
               <td>Summe übriger Guthaben</td>
-              <td>${format_money(remaining_balances)}</td>
+              <td>${format_money(remaining_balances["remaining_balances"])}</td>
             </tr>
           </tbody>
         </table>
