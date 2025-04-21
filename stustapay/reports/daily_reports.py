@@ -278,7 +278,7 @@ async def generate_dummy_daily_report(date: str, event: RestrictedEventSettings,
     return await render_report(template="daily_totals", template_context=ctx.model_dump(), files=files)
 
 
-async def generate_daily_report(conn: Connection, date: str, day_starts_at_7: bool = True):
+async def generate_daily_report(conn: Connection, date: str, day_starts_at_7: bool = True) -> bytes:
     node = await fetch_node(conn=conn, node_id=1)
     assert node is not None
     assert node.event_node_id is not None
