@@ -2,11 +2,13 @@ import {
   Terminal,
   selectTerminalAll,
   selectTillById,
+  selectUserById,
   useDeleteTerminalMutation,
   useListTerminalsQuery,
   useListTillsQuery,
+  useListUsersQuery,
 } from "@/api";
-import { TerminalRoutes, TillRoutes } from "@/app/routes";
+import { TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
@@ -17,6 +19,7 @@ import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { getUserName } from "@stustapay/models";
 
 export const TerminalList: React.FC = () => {
   const { t } = useTranslation();
@@ -36,10 +39,11 @@ export const TerminalList: React.FC = () => {
     }
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const [deleteTerminal] = useDeleteTerminalMutation();
   const { dataGridNodeColumn } = useRenderNode();
 
-  if (isTerminalsLoading || isTillsLoading) {
+  if (isTerminalsLoading || isTillsLoading || isUsersLoading) {
     return <Loading />;
   }
 
@@ -57,6 +61,19 @@ export const TerminalList: React.FC = () => {
         {till.name}
       </Link>
     );
+  };
+
+  const renderUser = (id?: number | null) => {
+    if (!id || !users) {
+      return "";
+    }
+
+    const user = selectUserById(users, id);
+    if (!user) {
+      return "";
+    }
+
+    return getUserName(user);
   };
 
   const openConfirmDeleteDialog = (terminalId: number) => {
@@ -84,6 +101,16 @@ export const TerminalList: React.FC = () => {
             {params.row.name}
           </Link>
         </Tooltip>
+      ),
+    },
+    {
+      field: "active_user_id",
+      headerName: t("till.activeUser"),
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Link component={RouterLink} to={UserRoutes.detail(row.active_user_id)}>
+          {renderUser(row.active_user_id)}
+        </Link>
       ),
     },
     {
