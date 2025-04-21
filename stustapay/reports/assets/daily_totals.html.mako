@@ -55,7 +55,7 @@ def format_percent(value):
               <th>Art</th>
               <th>Zahlung</th>
               <th>Kunden</th>
-              <th>Proukte</th>
+              <th>Produkte</th>
               <th>Summe</th>
             </tr>
           </thead>
@@ -66,13 +66,15 @@ def format_percent(value):
               <td>${line["payment_method"]}</td>
               <td>${line["no_customers"]}</td>
               <td>${line["no_products"]}</td>
-              <td>${format_money(daily["total_price"])}</td>
+              <td>${format_money(line["total_price"])}</td>
             </tr>
             % endfor
           </tbody>
         </table>
       </div>
+    </article>
 
+    <article>
       <div id="location-table">
         <h3 class="centered">Nach Stand/Ort</h3>
         <table class="daily-revenue-table">
@@ -82,7 +84,7 @@ def format_percent(value):
               <th>Stand/Ort</th>
               <th>Zahlung</th>
               <th>Kunden</th>
-              <th>Proukte</th>
+              <th>Produkte</th>
               <th>Summe</th>
             </tr>
           </thead>
@@ -94,7 +96,7 @@ def format_percent(value):
               <td>${line["payment_method"]}</td>
               <td>${line["no_customers"]}</td>
               <td>${line["no_products"]}</td>
-              <td>${format_money(daily["total_price"])}</td>
+              <td>${format_money(line["total_price"])}</td>
             </tr>
             % endfor
           </tbody>

@@ -46,6 +46,7 @@ node_modules/
 
 # local
 TODO.md
+*.DS_Store
 
 # nix
 /.direnv
