@@ -67,6 +67,7 @@ export const translations = {
   auditLog: {
     auditLogs: "Audit logs",
     logType: "Type",
+    originatingUser: "User",
   },
   account: {
     overview: "Overview",

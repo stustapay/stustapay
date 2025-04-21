@@ -6,10 +6,11 @@ import asyncpg
 from sftkit.database import Connection, DatabaseHook
 
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
 from stustapay.core.schema.tse import Tse
+from stustapay.core.service.tree.common import fetch_node
 
-from ..core.database import get_database
 from .config import get_tse_handler
 from .wrapper import TSEWrapper
 
@@ -28,6 +29,8 @@ class SignatureProcessor:
         self.db_pool = await db.create_pool()
 
         async with contextlib.AsyncExitStack() as aes:
+            aes.push_async_callback(self.db_pool.close)
+
             # Clean up pending signatures.
             # We have no idea what state the assigned TSE was in when our predecessor
             # process was stopped.
@@ -63,7 +66,6 @@ class SignatureProcessor:
                     aes.push_async_callback(tse.stop)
                     self.tses[tse_in_db.id] = tse
 
-            # TODO Task to assign feral tills to a TSE
             LOGGER.info(f"Configured TSEs: {self.tses}")
 
             db_hook = DatabaseHook(self.db_pool, "tse_signature", self.handle_hook, initial_run=True)
@@ -74,7 +76,56 @@ class SignatureProcessor:
                 return_exceptions=True,
             )
 
-        await self.db_pool.close()
+    async def _handle_feral_tses(self, conn: Connection):
+        feral_till_id_rows = await conn.fetch(
+            """
+                select distinct
+                    till.id as till_id
+                    till.node_id as node_id
+                from
+                    tse_signature
+                    join ordr on ordr.id = tse_signature.id
+                    join till on ordr.till_id = till.id
+                where
+                    tse_signature.signature_status = 'new' and
+                    till.tse_id is null
+                """
+        )
+        if feral_till_id_rows is None:
+            return
+
+        LOGGER.info(f"till(s) without TSE but an order {feral_till_id_rows}")
+        LOGGER.info(f"{len(feral_till_id_rows)} till(s) need a TSE")
+        # assign TSEs
+        for till in feral_till_id_rows:
+            node = await fetch_node(conn=conn, node_id=till["node_id"])
+            assert node is not None
+            # get number of assigned tills per tse, but only of active TSEs
+            tse_stats = dict()
+            active_tses = await conn.fetch(
+                "select id from tse where status='active' and node_id = any($1)", node.ids_to_event_node
+            )
+            for tse in active_tses:
+                # TODO optimize this statement for really really large installations...
+                tse_stats[tse["id"]] = await conn.fetchval(
+                    "select count(*) from till join tse on till.tse_id = tse.id where tse.id = $1 and tse.status='active'",
+                    tse["id"],
+                )
+            tse_ranked = sorted(tse_stats.items(), key=lambda x: x[1])
+            # assign this till to tse with the lowest number
+            till_id_to_assign_to_tse = till["till_id"]
+            try:
+                tse_id_to_assign_to_till = tse_ranked[0][0]
+                await conn.execute(
+                    "update till set tse_id = $1 where id = $2", tse_id_to_assign_to_till, till_id_to_assign_to_tse
+                )
+                LOGGER.info(f"Till with ID={till_id_to_assign_to_tse} is assigned to TSE: {tse_id_to_assign_to_till}")
+            except IndexError:
+                LOGGER.error("ERROR: no more active TSEs available")
+                LOGGER.warning("will set all signature requests to 'failure'")
+                await conn.execute(
+                    "update tse_signature set signature_status = 'failure', result_message = 'TSE failure, no active TSE available', tse_id = 1 where signature_status='new'"
+                )
 
     async def handle_hook(self, payload):
         assert self.db_pool is not None
@@ -82,58 +133,8 @@ class SignatureProcessor:
         LOGGER.info("tse_signature hook")
 
         # check if it is from a till without an assigned TSE
-        async with contextlib.AsyncExitStack() as aes:
-            psql: Connection = await aes.enter_async_context(self.db_pool.acquire())
-
-            feral_till_id_rows = await psql.fetch(
-                """
-                    select
-                        till.id as till_id
-                    from
-                        tse_signature
-                        join ordr on ordr.id=tse_signature.id
-                        join till on ordr.till_id=till.id
-                    where
-                        tse_signature.signature_status='new' and
-                        till.tse_id is Null
-                    """
-            )
-            if feral_till_id_rows is None:
-                pass  # all fine
-            else:
-                LOGGER.info(f"till(s) without TSE but an order {feral_till_id_rows}")
-                LOGGER.info(f"{len(feral_till_id_rows)} till(s) need a TSE")
-                # assign TSEs
-                for till in feral_till_id_rows:
-                    # get number of assigned tills per tse, but only of active TSEs
-                    tse_stats = dict()
-                    active_tses = await psql.fetch("select name from tse where status='active'")
-                    for tse in active_tses:
-                        # TODO optimize this statement for really really large installations...
-                        tse_stats[tse["name"]] = await psql.fetchval(
-                            "select count(*) from till join tse on till.tse_id = tse.id where tse.name=$1 and tse.status='active'",
-                            tse["name"],
-                        )
-                    tse_ranked = sorted(tse_stats.items(), key=lambda x: x[1])
-                    # assign this till to tse with the lowest number
-                    till_id_to_assign_to_tse = till["till_id"]
-                    try:
-                        tse_name_to_assign_to_till = tse_ranked[0][0]
-
-                        tse_id = await psql.fetchval("select id from tse where name = $1 ", tse_name_to_assign_to_till)
-                        assert tse_id is not None
-                        await psql.execute(
-                            "update till set tse_id = $1 where id = $2", tse_id, till_id_to_assign_to_tse
-                        )
-                        LOGGER.info(
-                            f"Till with ID={till_id_to_assign_to_tse} is assigned to TSE: {tse_name_to_assign_to_till}"
-                        )
-                    except IndexError:
-                        LOGGER.error("ERROR: no more active TSEs available")
-                        LOGGER.warning("will set all signature requests to 'failure'")
-                        await psql.execute(
-                            "update tse_signature set signature_status='failure',result_message='TSE failure, no active TSE available', tse_id=1 where signature_status='new'"
-                        )
+        async with self.db_pool.acquire() as conn:
+            await self._handle_feral_tses(conn=conn)
 
         # notify all TSEs
         for tse in self.tses.values():

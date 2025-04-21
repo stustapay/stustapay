@@ -2,27 +2,43 @@ services:
   postgres:
     image: docker.io/postgres:14-alpine
     healthcheck:
-      test: ["CMD", "/usr/local/bin/pg_isready"]
-      start_period: 10s
+      test:
+        [
+          "CMD",
+          "/usr/local/bin/pg_isready",
+          "-U",
+          "stustapay",
+          "-d",
+          "stustapay",
+        ]
+      start_period: 1s
     environment:
       POSTGRES_USER: stustapay
       POSTGRES_DB: stustapay
       POSTGRES_PASSWORD: stustapay
     ports:
-    - 5433:5432
+      - 5433:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
   postgres_test:
     image: docker.io/postgres:14-alpine
     healthcheck:
-      test: ["CMD", "/usr/local/bin/pg_isready"]
-      start_period: 10s
+      test:
+        [
+          "CMD",
+          "/usr/local/bin/pg_isready",
+          "-U",
+          "stustapay_test",
+          "-d",
+          "stustapay_test",
+        ]
+      start_period: 1s
     environment:
       POSTGRES_USER: stustapay_test
       POSTGRES_DB: stustapay_test
       POSTGRES_PASSWORD: stustapay_test
     ports:
-    - 5434:5432
+      - 5434:5432
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
 
