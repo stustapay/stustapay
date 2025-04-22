@@ -1,16 +1,9 @@
-from calendar import day_name
-from datetime import datetime, timedelta
-from typing import Optional
-
-import numpy as np
-import pandas as pd
+from datetime import datetime
 from pydantic import BaseModel
 from sftkit.database import Connection
 
 from stustapay.bon.bon import BonConfig
 from stustapay.core.currency import get_currency_symbol
-from stustapay.core.schema.media import Blob
-from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.service.media import fetch_blob
 from stustapay.core.service.tree.common import fetch_event_design, fetch_event_for_node, fetch_node
 from stustapay.reports.render import render_report
@@ -43,7 +36,7 @@ async def generate_payout_report(conn: Connection, year: int) -> bytes:
     assert node.event_node_id is not None
     event = await fetch_event_for_node(conn=conn, node=node)
 
-    query_string = f"SELECT set_done_at, n_payouts, total_payout_amount, total_donation_amount FROM payout_run_with_stats WHERE created_at > '{year}-01-01' AND done=TRUE ORDER BY set_done_at;"
+    query_string = f"SELECT set_done_at, n_payouts, total_payout_amount, total_donation_amount FROM payout_run_with_stats WHERE created_at > '{year}-01-01' AND done=TRUE ORDER BY set_done_at"
     payouts = await conn.fetch_many(PayoutRunForReport, query_string)
 
     #TODO: Is node id 1 always correct?
