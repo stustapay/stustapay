@@ -43,10 +43,18 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (project.hasProperty('ANDROID_KEY_STORE_FILE')) {
                 signingConfig signingConfigs.release
+            }
+            
+            // Optimize for release
+            debuggable false
+            renderscriptOptimLevel 3
+            ndk {
+                debugSymbolLevel 'NONE'
             }
         }
         debug {
