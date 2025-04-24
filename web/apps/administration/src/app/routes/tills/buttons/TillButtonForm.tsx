@@ -8,18 +8,25 @@ import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-interface ProductSelectProps {
+export type ProductSelectProps = {
   productIds: number[];
   onChange: (productIds: number[]) => void;
-}
+};
 
 const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
 
-  const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
-  const mapped = products ? (productIds.map((id) => getProductById(id)) as Product[]) : [];
+  const allProducts = React.useMemo(() => {
+    if (!products) return [];
+    return Object.values(products.entities)
+      .filter(Boolean)
+      .filter(product => product.node_id === currentNode.id);
+  }, [products, currentNode.id]);
+
+  const getProductById = (id: number) => (allProducts ? allProducts.find(p => p.id === id) : undefined);
+  const mapped = productIds.map(id => getProductById(id)).filter(Boolean) as Product[];
 
   const removeProduct = (productId: number) => {
     onChange(productIds.filter((pId) => pId !== productId));

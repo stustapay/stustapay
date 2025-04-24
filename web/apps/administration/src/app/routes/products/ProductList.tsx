@@ -38,7 +38,7 @@ export const ProductList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        products: data ? selectProductAll(data) : undefined,
+        products: data ? selectProductAll(data).filter(product => product.node_id === currentNode.id) : undefined,
       }),
     }
   );

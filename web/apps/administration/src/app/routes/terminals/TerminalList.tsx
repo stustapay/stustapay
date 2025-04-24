@@ -31,7 +31,7 @@ export const TerminalList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        terminals: data ? selectTerminalAll(data) : undefined,
+        terminals: data ? selectTerminalAll(data).filter(terminal => terminal.node_id === currentNode.id) : undefined,
       }),
     }
   );

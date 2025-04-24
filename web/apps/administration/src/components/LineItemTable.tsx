@@ -8,9 +8,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-export interface LineItemTableProps {
+export type LineItemTableProps = {
   lineItems: LineItem[];
-}
+};
 
 export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const { t } = useTranslation();
@@ -28,7 +28,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       return "";
     }
     const product = selectProductById(products, productId);
-    if (!product) {
+    if (!product || product.node_id !== currentNode.id) {
       return "";
     }
 

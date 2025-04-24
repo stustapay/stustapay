@@ -15,7 +15,11 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({ onlyLocked = false
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        products: data ? selectProductAll(data).filter((p) => p.is_locked || !onlyLocked) : [],
+        products: data 
+          ? selectProductAll(data)
+              .filter(p => p.node_id === currentNode.id)  
+              .filter(p => p.is_locked || !onlyLocked) 
+          : [],
       }),
     }
   );

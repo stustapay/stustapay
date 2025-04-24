@@ -33,7 +33,7 @@ export const TillList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        tills: data ? selectTillAll(data) : undefined,
+        tills: data ? selectTillAll(data).filter(till => till.node_id === currentNode.id) : undefined,
       }),
     }
   );
