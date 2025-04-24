@@ -1,4 +1,5 @@
-import { useLoginUserMutation, useListUserToRoleQuery, useListUserRolesQuery } from "@/api/generated/api";
+import { useLoginUserMutation, useListUserToRoleQuery, useListUserRolesQuery, useListTerminalsQuery } from "@/api/generated/api";
+import { selectTerminalAll } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useFormik } from "formik";
@@ -33,6 +34,7 @@ export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, on
   const [loginUser] = useLoginUserMutation();
   const { data: userToRoles, isLoading: isLoadingUserToRoles } = useListUserToRoleQuery({ nodeId: currentNode.id });
   const { data: userRoles, isLoading: isLoadingUserRoles } = useListUserRolesQuery({ nodeId: currentNode.id });
+  const { data: terminals, isLoading: isLoadingTerminals } = useListTerminalsQuery({ nodeId: currentNode.id });
 
   const formik = useFormik<FormValues>({
     initialValues: {
@@ -60,7 +62,36 @@ export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, on
     },
   });
 
-  if (isLoadingUserToRoles || isLoadingUserRoles) {
+  // Filter users to show only those who are not already logged into another terminal
+  const availableUsers = React.useMemo(() => {
+    if (!users || !terminals) return [];
+    
+    // Get all terminals
+    const allTerminals = selectTerminalAll(terminals);
+    
+    // Find the current terminal
+    const currentTerminal = allTerminals.find(t => t.id === terminalId);
+    
+    // Collect all user IDs that are already logged into terminals (except current)
+    const loggedInUsers = new Set<number>();
+    for (const terminal of allTerminals) {
+      if (terminal.id !== terminalId && terminal.active_user_id) {
+        loggedInUsers.add(terminal.active_user_id);
+      }
+    }
+    
+    // Filter user IDs
+    return users.ids.filter(userId => {
+      // Always include the current terminal's active user
+      if (currentTerminal?.active_user_id === userId) {
+        return true;
+      }
+      // Filter out users already logged into other terminals
+      return !loggedInUsers.has(userId);
+    });
+  }, [users, terminals, terminalId]);
+
+  if (isLoadingUserToRoles || isLoadingUserRoles || isLoadingTerminals) {
     return <Loading />;
   }
 
@@ -89,7 +120,7 @@ export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, on
               }}
               error={formik.touched.userId && Boolean(formik.errors.userId)}
             >
-              {users.ids.map((id) => {
+              {availableUsers.map((id) => {
                 const user = users.entities[id];
                 return (
                   <MenuItem key={id} value={id}>
