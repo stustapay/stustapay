@@ -1231,8 +1231,7 @@ class OrderService(Service[Config]):
             raise InvalidArgument(f"Ticket already has account: {formatted_pins}")
 
         known_pins = await conn.fetch(
-            "select pin from user_tag where pin = any($1)",
-            customer_pins,
+            "select pin from user_tag where pin = any($1) and u.node_id = any($2)", customer_pins, node.ids_to_root
         )
         if len(known_pins) != len(new_ticket_scan.customer_tags):
             unknown_ids = set(customer_pins) - set(i["pin"] for i in known_pins)
