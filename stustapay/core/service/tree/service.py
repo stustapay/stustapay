@@ -488,6 +488,13 @@ class TreeService(Service[Config]):
             raise InvalidArgument("Node is already read only")
 
         await conn.execute("update node set read_only = true where id = $1 or $1 = any(parent_ids)", node.id)
+        await conn.execute(
+            "update event set customer_portal_url = '' "
+            "where id in ("
+            "   select e.id from event as e join node as n on n.event_id = e.id where n.id = $1 or $1 = any(n.parent_ids)"
+            ")",
+            node.id,
+        )
         await create_audit_log(
             conn=conn,
             log_type=AuditType.node_archived,
