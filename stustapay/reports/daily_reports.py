@@ -48,7 +48,9 @@ class OrderDaily(BaseModel):
     product_name: Optional[str]
 
 
-async def prep_all_data(conn: Connection, daily_end_time: time, relevant_node_id: int, date: date) -> pd.DataFrame:
+async def prep_all_data(
+    conn: Connection, daily_end_time: time, relevant_node_id: int, relevant_date: date
+) -> pd.DataFrame:
     orders = await conn.fetch_many(
         OrderDaily,
         "select o.id as order_id, booked_at, payment_method, order_type, cancels_order, quantity, total_price, n.name as node_name, p.name as product_name "
@@ -84,7 +86,9 @@ async def prep_all_data(conn: Connection, daily_end_time: time, relevant_node_id
     all_relevant_transactions = data_all[
         data_all["order_type"].isin(["sale", "ticket", "top_up", "pay_out", "money_transfer_imbalance"])
     ].copy()
-    all_relevant_transactions = all_relevant_transactions[all_relevant_transactions["date"] == date].reset_index()
+    all_relevant_transactions = all_relevant_transactions[
+        all_relevant_transactions["date"] == relevant_date
+    ].reset_index()
 
     all_relevant_transactions["sale_type"] = ""
     all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "ticket", "sale_type"] = "Eintrittsticket"
@@ -115,14 +119,14 @@ async def make_daily_table(
 
     daily_table = (
         all_transactions.groupby(group_by)
-        .agg({"order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)), "total_price": lambda x: np.sum(x)})
+        .agg({"order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)), "total_price": np.sum})
         .reset_index()
     )
 
     return daily_table
 
 
-async def generate_dummy_daily_report(node: Node, event: RestrictedEventSettings, logo: Blob | None) -> bytes:
+async def generate_dummy_daily_report(event: RestrictedEventSettings, logo: Blob | None) -> bytes:
     """Generate a dummy bon for the given event and return the pdf as bytes"""
     ctx = DailyReportContext(
         event_name=event.bon_title,
@@ -135,6 +139,8 @@ async def generate_dummy_daily_report(node: Node, event: RestrictedEventSettings
         ),
         from_time=datetime.now() - timedelta(days=3),
         to_time=datetime.now(),
+        min_order_id=1,
+        max_order_id=9999,
         currency_symbol=get_currency_symbol(event.currency_identifier),
         lines_location=[
             DailyRevenueLineLocation(
@@ -196,9 +202,8 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
 
     for node in relevant_nodes:
         all_relevant_transactions = await prep_all_data(
-            conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=node.id, date=report_date
+            conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=node.id, relevant_date=report_date
         )
-
         daily_location_table = await make_daily_table(
             all_relevant_transactions,
             break_down_products=False,
