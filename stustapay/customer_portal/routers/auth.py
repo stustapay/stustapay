@@ -14,6 +14,7 @@ router = APIRouter(
 
 class LoginPayload(BaseModel):
     pin: str
+    node_id: int
 
 
 class LoginResponse(BaseModel):
@@ -27,7 +28,7 @@ async def login(
     payload: LoginPayload,
     customer_service: ContextCustomerService,
 ):
-    response = await customer_service.login_customer(pin=payload.pin)
+    response = await customer_service.login_customer(pin=payload.pin, node_id=payload.node_id)
     return {"customer": response.customer, "access_token": response.token, "grant_type": "bearer"}
 
 

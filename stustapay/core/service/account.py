@@ -140,10 +140,11 @@ class AccountService(Service[Config]):
             node.ids_to_event_node,
         )
         total_customer_account_balance = await conn.fetchval(
-            "select sum(a.balance) from account a where type = 'private' and node_id = any($1)", node.ids_to_event_node
+            "select coalesce(sum(a.balance), 0.0) from account a where type = 'private' and node_id = any($1)",
+            node.ids_to_event_node,
         )
         total_cash_register_balance = await conn.fetchval(
-            "select sum(a.balance) from account a where type = 'cash_register' and node_id = any($1)",
+            "select coalesce(sum(a.balance), 0.0) from account a where type = 'cash_register' and node_id = any($1)",
             node.ids_to_event_node,
         )
         return MoneyOverview(

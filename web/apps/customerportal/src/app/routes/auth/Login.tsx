@@ -1,4 +1,5 @@
 import { useLoginMutation } from "@/api";
+import { config } from "@/api/common";
 import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
@@ -34,7 +35,7 @@ export const Login: React.FC = () => {
       return;
     }
 
-    login({ loginPayload: { pin: ticketVoucher } })
+    login({ loginPayload: { pin: ticketVoucher, node_id: config.apiConfig.node_id } })
       .unwrap()
       .catch((err) => {
         toast.error(t("loginFailed", { reason: err.error }));
@@ -49,7 +50,7 @@ export const Login: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    login({ loginPayload: { pin: values.userTagPin } })
+    login({ loginPayload: { pin: values.userTagPin, node_id: config.apiConfig.node_id } })
       .unwrap()
       .then(() => {
         setSubmitting(false);

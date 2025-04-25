@@ -1001,6 +1001,10 @@
           },
           "event_design": {
             "$ref": "#/components/schemas/EventDesign"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
           }
         },
         "type": "object",
@@ -1015,7 +1019,8 @@
           "sumup_topup_enabled",
           "allowed_country_codes",
           "translation_texts",
-          "event_design"
+          "event_design",
+          "node_id"
         ],
         "title": "CustomerPortalApiConfig"
       },
@@ -1119,11 +1124,16 @@
           "pin": {
             "type": "string",
             "title": "Pin"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
           }
         },
         "type": "object",
         "required": [
-          "pin"
+          "pin",
+          "node_id"
         ],
         "title": "LoginPayload"
       },
