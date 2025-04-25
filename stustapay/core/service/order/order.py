@@ -382,7 +382,7 @@ class OrderService(Service[Config]):
         account = await conn.fetch_maybe_one(
             Account,
             "select a.*, "
-            "(select t.restriction from user_tag t where t.pin = $1) as restriction, "
+            "(select t.restriction from user_tag t where t.pin = $1 and t.node_id = any($2)) as restriction, "
             "null as user_tag_uid, "
             "'[]'::json as tag_history "
             "from account a "
