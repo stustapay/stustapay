@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.stustapay.barcode.ZXingQRCode
+import de.stustapay.stustapay.barcode.ZXingQRCodeStatus
 import de.stustapay.stustapay.ui.common.ConfirmCard
 import androidx.camera.core.Preview as CameraPreview
 import androidx.compose.ui.geometry.Size as geomSize
@@ -218,7 +219,12 @@ fun QRScanView(
                                 }
                             },
                             status = { message ->
-                                status = message
+
+                                status = when (message) {
+                                    is ZXingQRCodeStatus.Found -> "found"
+                                    is ZXingQRCodeStatus.KeepScanning -> "keep scanning"
+                                    is ZXingQRCodeStatus.Error -> "error"
+                                }
                             },
                         )
                     )
