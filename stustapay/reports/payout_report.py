@@ -19,7 +19,8 @@ class PayoutRunForReport(BaseModel):
 
 
 class RemainingBalances(BaseModel):
-    remaining_balances: float | None = 0.0
+    remaining_balances: float
+    remaining_customers: int
 
 
 class PayoutReportContext(BaseModel):
@@ -42,8 +43,8 @@ async def generate_payout_report(conn: Connection, node: Node) -> bytes:
         node.event_node_id,
     )
 
-    remaining_balances = await conn.fetch_one(
-        RemainingBalances, "SELECT sum(balance) FROM account WHERE node_id=$1 AND type='private'", node.event_node_id
+    remaining_accounts = await conn.fetch_one(
+        RemainingBalances, "SELECT sum(balance) as remaining_balances, count(balance) as remaining_customers FROM account WHERE node_id=$1 AND type='private'", node.event_node_id
     )
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
@@ -59,12 +60,11 @@ async def generate_payout_report(conn: Connection, node: Node) -> bytes:
         config=config,
         date=datetime.today().date(),
         payouts=payouts,
-        remaining_balances=remaining_balances,
+        remaining_balances=remaining_accounts,
         currency_symbol=get_currency_symbol(event.currency_identifier),
     )
     files = {}
     if logo:
         files["logo.svg"] = logo
 
-    # TODO: Specify save location
     return await render_report(template="payouts", template_context=context.model_dump(), files=files)

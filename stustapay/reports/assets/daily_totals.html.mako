@@ -28,14 +28,21 @@
               <td>${format_datetime(from_time)}</td>
             </tr>
             <tr>
+              <td>Erste Transaktions-ID</td>
+              <td>${"-" if min_order_id is None else min_order_id}</td>
+            </tr>
+            <tr>
               <td>Letzer berücksichtigter Zeitpunkt</td>
               <td>${format_datetime(to_time)}</td>
+            </tr>
+            <tr>
+              <td>Letzte Transaktions-ID</td>
+              <td>${"-" if max_order_id is None else max_order_id}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-    <article>
       <div id="location-table">
         <h3 class="centered">Nach Stand/Ort</h3>
         <table class="daily-revenue-table">
@@ -44,7 +51,7 @@
               <th>Art</th>
               <th>Stand/Ort</th>
               <th>Zahlung</th>
-              <th>Kunden</th>
+              <th>Transaktionen</th>
               <th>Produkte</th>
               <th>Summe</th>
             </tr>
@@ -64,6 +71,5 @@
         </table>
       </div>
     </article>
-
   </body>
 </html>

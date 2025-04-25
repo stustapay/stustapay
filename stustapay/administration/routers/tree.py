@@ -205,7 +205,7 @@ async def generate_test_daily_report(token: CurrentAuthToken, tree_service: Cont
     },
 )
 async def generate_payout_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
-    content = await tree_service.generate_daily_report(token=token, node_id=node_id)
+    content = await tree_service.generate_payout_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="payout_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
 

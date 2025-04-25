@@ -25,7 +25,11 @@
           <tbody>
             <tr>
               <td>Stand</td>
-              <td>${format_date(date)}</td>
+              <td>${format_datetime(date)}</td>
+            </tr>
+            <tr>
+              <td>Anzahl nicht zurückgeforderter Guthaben</td>
+              <td>${remaining_balances["remaining_customers"]}</td>
             </tr>
             <tr>
               <td>Summe übriger Guthaben</td>

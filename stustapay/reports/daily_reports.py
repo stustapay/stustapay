@@ -32,6 +32,8 @@ class DailyReportContext(BaseModel):
     lines_location: list[DailyRevenueLineLocation]
     from_time: datetime
     to_time: datetime
+    min_order_id: int | None
+    max_order_id: int | None
     currency_symbol: str
 
 
@@ -47,16 +49,15 @@ class OrderDaily(BaseModel):
     product_name: Optional[str]
 
 
-async def prep_all_data(conn: Connection, daily_end_time: time) -> pd.DataFrame:
-    query_string = """
-        select o.id as order_id, booked_at, payment_method, order_type, cancels_order, quantity, total_price, n.name as node_name, p.name as product_name
-        from order_items o
-        left join till t on o.till_id = t.id
-        left join product p on o.product_id = p.id
-        left join usr u on o.cashier_id = u.id
-        left join node n on t.node_id = n.id
-    """
-    orders = await conn.fetch_many(OrderDaily, query_string)
+async def prep_all_data(conn: Connection, daily_end_time: time, relevant_node_id: int, date: date) -> pd.DataFrame:
+
+    orders = await conn.fetch_many(
+        OrderDaily,
+        "select o.id as order_id, booked_at, payment_method, order_type, cancels_order, quantity, total_price, n.name as node_name, p.name as product_name "
+        "from order_items o left join till t on o.till_id = t.id left join product p on o.product_id = p.id left join usr u on o.cashier_id = u.id join node n on t.node_id = n.id "
+        "where $1=any(n.parents_until_event_node) or n.id=$1",
+        relevant_node_id)
+
     data_all = pd.DataFrame(
         {
             "order_id": [line.order_id for line in orders],
@@ -71,12 +72,8 @@ async def prep_all_data(conn: Connection, daily_end_time: time) -> pd.DataFrame:
         }
     )
 
-    # get weekday (everything before 7AM counts to previous day)
-    data_all["weekday"] = data_all["booked_at"].dt.dayofweek
-    data_all.loc[data_all["booked_at"].dt.hour < 7, "weekday"] -= 1
-    data_all["weekday"] = data_all["weekday"].apply(lambda x: day_name[int(x)])
+    # Adjust days based on daily end time
     data_all["date"] = data_all["booked_at"].dt.normalize()
-    # TODO: Get day start/end from tree
     data_all.loc[data_all["booked_at"].dt.time < daily_end_time, "date"] -= timedelta(days=1)
     data_all["date"] = data_all["date"].dt.date
 
@@ -88,51 +85,9 @@ async def prep_all_data(conn: Connection, daily_end_time: time) -> pd.DataFrame:
     all_relevant_transactions = data_all[
         data_all["order_type"].isin(["sale", "ticket", "top_up", "pay_out", "money_transfer_imbalance"])
     ].copy()
-
-    # TODO: How to add location categories?
-    location_color_palette_internal = {
-        "Brotladen": "peru",
-        "Cocktailzelt": "darkorchid",
-        "Cubalounge": "red",
-        "Festzelt": "lightskyblue",
-        "Infozelt": "darkgrey",
-        "Kade": "gold",
-        "Weißbierkarussell": "darkgreen",
-        "MKH Ausschank": "darkred",
-        "Pfandkasse": "black",
-        "Potzelt": "darkorange",
-        "Tribühne": "darkred",
-        "Turniere": "palegreen",
-        "Weinzelt": "pink",
-        "Weißbierinsel": "mediumblue",
-        # 'StuStaCulum 2024': "orchid",
-    }
-
-    external_dict = {
-        "Sunny's Churros": "Sunny's Churros",
-        "Cheese & Beef": "Cheese & Beef",
-        "Mezze Kebap": "Mezze Kebap",
-        "Holzofendinnede Abt": "Holzofendinnede",
-        "Event Gastronomie Weiß": "Crepes",
-        "Kati’s Tolle Knolle": "Kati’s Tolle Knolle",
-        "Christian UG": "Fish & Chips",
-        "Der Zwerg": "Guaranawein",
-        "Ümit Patir": "Kartoffelchips",
-        "Ayur Aahar": "Indian Streetfood",
-        "Tobias Mörtl": "Kartoffelpuffer",
-        "Coni's Schwenkgrill": "Coni's Schwenkgrill",
-        "Kreitz": "Pizzabaguette",
-    }
-    locations_internal = list(location_color_palette_internal.keys())
-    locations_external = list(external_dict.keys())
+    all_relevant_transactions = all_relevant_transactions[all_relevant_transactions["date"] == date].reset_index()
 
     all_relevant_transactions["sale_type"] = ""
-    all_relevant_transactions.loc[all_relevant_transactions["node_name"].isin(locations_internal), "sale_type"] = (
-        "Verkauf interne Stände"
-    )
-    all_relevant_transactions.loc[all_relevant_transactions["node_name"].isin(locations_external), "sale_type"] = (
-        "Verkauf externe Stände"
-    )
     all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "ticket", "sale_type"] = "Eintrittsticket"
     all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "top_up", "sale_type"] = (
         "Aufladung Guthaben"
@@ -143,36 +98,30 @@ async def prep_all_data(conn: Connection, daily_end_time: time) -> pd.DataFrame:
     all_relevant_transactions.loc[
         all_relevant_transactions["order_type"] == "money_transfer_imbalance", "sale_type"
     ] = "Fehlbetrag Barkassen"
-    all_relevant_transactions.loc[all_relevant_transactions["sale_type"] == "", "sale_type"] = "Sonstige"
+    all_relevant_transactions.loc[all_relevant_transactions["sale_type"] == "", "sale_type"] = "Verkauf"
 
     return all_relevant_transactions
 
 
 async def make_daily_table(
     all_transactions: pd.DataFrame,
-    date: date,
-    relevant_nodes: list[Node],
     break_down_products: bool = False,
     break_down_payment_methods: bool = False,
-) -> tuple[pd.DataFrame, date]:
-    day_transactions = all_transactions[all_transactions["date"] == date].reset_index()
+) -> pd.DataFrame:
 
-    group_by = ["sale_type"]
-    # TODO
-    # if break_down_locations:
-    #     group_by.append("node_name")
+    group_by = ["sale_type", "node_name"]
     if break_down_products:
         group_by.append("product_name")
     if break_down_payment_methods:
         group_by.append("payment_method")
 
     daily_table = (
-        day_transactions.groupby(group_by)
+        all_transactions.groupby(group_by)
         .agg({"order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)), "total_price": lambda x: np.sum(x)})
         .reset_index()
     )
 
-    return daily_table, date
+    return daily_table
 
 
 async def generate_dummy_daily_report(node: Node, event: RestrictedEventSettings, logo: Blob | None) -> bytes:
@@ -243,31 +192,50 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     assert event.daily_end_time is not None
     assert node.event_node_id is not None
 
-    all_relevant_transactions = await prep_all_data(conn=conn, daily_end_time=event.daily_end_time)
-
-    daily_location_table, _ = await make_daily_table(
-        all_relevant_transactions,
-        report_date,
-        relevant_nodes=relevant_nodes,
-        break_down_products=False,
-        break_down_payment_methods=True,
-    )
     lines_location_table = []
-    for line in daily_location_table.itertuples():
-        lines_location_table.append(
-            DailyRevenueLineLocation(
-                order_type=line.sale_type,
-                node_name=line.node_name,
-                payment_method=line.payment_method,
-                no_customers=line.order_id,
-                no_products=line.quantity,
-                total_price=line.total_price,
-            )
+    min_order_id = None
+    max_order_id = None
+
+    for node in relevant_nodes:
+
+        all_relevant_transactions = await prep_all_data(conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=node.id, date=report_date)
+
+        daily_location_table = await make_daily_table(
+            all_relevant_transactions,
+            break_down_products=False,
+            break_down_payment_methods=True,
         )
 
-    # TODO: Get day start/end from tree
-    from_time = datetime.combine(report_date, datetime.min.time()) + timedelta(hours=7)
-    to_time = datetime.combine(report_date, datetime.min.time()) + timedelta(days=1, hours=7)
+        # Aggregate all sales lines
+        agg_location_table = daily_location_table.groupby(["sale_type", "payment_method"]).agg({
+            "node_name": "first",
+            "order_id": "sum",
+            "quantity": "sum",
+            "total_price": "sum",
+        }).reset_index()
+        agg_location_table.loc[agg_location_table["sale_type"] == "Verkauf", "node_name"] = node.name
+
+        for line in agg_location_table.itertuples():
+            lines_location_table.append(
+                DailyRevenueLineLocation(
+                    order_type=line.sale_type,
+                    node_name=line.node_name,
+                    payment_method=line.payment_method,
+                    no_customers=line.order_id,
+                    no_products=line.quantity,
+                    total_price=line.total_price,
+                )
+            )
+
+        min_id = min(all_relevant_transactions["order_id"]) if not all_relevant_transactions["order_id"].empty else None
+        max_id = max(all_relevant_transactions["order_id"]) if not all_relevant_transactions["order_id"].empty else None
+        if min_order_id is None or min_order_id > min_id:
+            min_order_id = min_id
+        if max_order_id is None or max_order_id < max_id:
+            max_order_id = max_id
+
+    from_time = datetime.combine(report_date, datetime.min.time()) + (datetime.combine(date.min, event.daily_end_time) - datetime.min)
+    to_time = from_time + timedelta(days=1)
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
 
@@ -283,6 +251,8 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         lines_location=lines_location_table,
         from_time=from_time,
         to_time=to_time,
+        min_order_id=min_order_id,
+        max_order_id=max_order_id,
         currency_symbol=get_currency_symbol(event.currency_identifier),
     )
     files = {}

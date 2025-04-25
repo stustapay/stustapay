@@ -89,7 +89,8 @@ aside address#to {
 }
 
 .daily-revenue-table {
-    width: 100%
+    width: 100%;
+    font-size: 12px;
 }
 
 .table-header  {
