@@ -53,9 +53,13 @@ async def prep_all_data(
 ) -> pd.DataFrame:
     orders = await conn.fetch_many(
         OrderDaily,
-        "select o.id as order_id, booked_at, payment_method, order_type, cancels_order, quantity, total_price, n.name as node_name, p.name as product_name "
-        "from order_items o left join till t on o.till_id = t.id left join product p on o.product_id = p.id left join usr u on o.cashier_id = u.id join node n on t.node_id = n.id "
-        "where $1=any(n.parents_until_event_node) or n.id=$1",
+        "select o.id as order_id, o.booked_at, o.payment_method, o.order_type, o.cancels_order, o.quantity, o.total_price, n.name as node_name, p.name as product_name "
+        "from order_items o "
+        "left join till t on o.till_id = t.id "
+        "left join product p on o.product_id = p.id "
+        "join node n on t.node_id = n.id "
+        "left join order_items oo on o.id = oo.cancels_order "
+        "where ($1=any(n.parents_until_event_node) or n.id=$1) and oo.id is null",
         relevant_node_id,
     )
 
