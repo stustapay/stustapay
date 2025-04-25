@@ -7365,6 +7365,65 @@
         }
       }
     },
+    "/tree/nodes/{node_id}/audit-logs/{audit_log_id}": {
+      "get": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Get Audit Log",
+        "operationId": "get_audit_log",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "audit_log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Audit Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sumup/checkouts": {
       "get": {
         "tags": [
@@ -8634,6 +8693,64 @@
           "originating_terminal_id"
         ],
         "title": "AuditLog"
+      },
+      "AuditLogDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "log_type": {
+            "type": "string",
+            "title": "Log Type"
+          },
+          "originating_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating User Id"
+          },
+          "originating_terminal_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating Terminal Id"
+          },
+          "content": {
+            "type": "object",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "node_id",
+          "log_type",
+          "originating_user_id",
+          "originating_terminal_id",
+          "content"
+        ],
+        "title": "AuditLogDetail"
       },
       "BonConfig": {
         "properties": {

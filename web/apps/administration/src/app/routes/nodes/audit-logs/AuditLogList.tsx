@@ -1,27 +1,14 @@
-import {
-  AuditLog,
-  Terminal,
-  selectTerminalAll,
-  selectTillById,
-  selectUserById,
-  useDeleteTerminalMutation,
-  useListAuditLogsQuery,
-  useListTerminalsQuery,
-  useListTillsQuery,
-  useListUsersQuery,
-} from "@/api";
-import { TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
+import { AuditLog, selectUserById, useListAuditLogsQuery, useListUsersQuery } from "@/api";
+import { AuditLogRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
+import { useCurrentNode, useRenderNode } from "@/hooks";
+import { Link } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
+import { DataGrid, GridColDef } from "@stustapay/framework";
+import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { getUserName } from "@stustapay/models";
+import { Link as RouterLink } from "react-router-dom";
 
 export const AuditLogList: React.FC = () => {
   const { t } = useTranslation();
@@ -51,6 +38,11 @@ export const AuditLogList: React.FC = () => {
     {
       field: "id",
       headerName: t("common.id"),
+      renderCell: ({ row }) => (
+        <Link component={RouterLink} to={AuditLogRoutes.detail(row.id)}>
+          {row.id}
+        </Link>
+      ),
     },
     {
       field: "log_type",
