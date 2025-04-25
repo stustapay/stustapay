@@ -482,7 +482,7 @@ class TreeService(Service[Config]):
     async def generate_test_daily_report(self, *, conn: Connection, node: Node) -> bytes:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         logo = await fetch_event_logo(conn=conn, node_id=node.id)
-        return await generate_dummy_daily_report(node=node, event=event, logo=logo)
+        return await generate_dummy_daily_report(event=event, logo=logo)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
