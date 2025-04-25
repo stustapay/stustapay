@@ -74,3 +74,4 @@ export const SumUpTransactionRoutes = new RouteBuilder("sumup", "node_administra
 export const SumUpCheckoutRoutes = new RouteBuilder("sumup/checkouts", "node_administration");
 export const CustomerRoutes = new RouteBuilder("customers", "node_administration", "account");
 export const TerminalRoutes = new RouteBuilder("terminals", "node_administration", "terminal");
+export const AuditLogRoutes = new RouteBuilder("audit-logs", "node_administration", "account");

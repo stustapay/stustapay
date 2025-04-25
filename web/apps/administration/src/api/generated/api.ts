@@ -1198,6 +1198,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/audit-logs` }),
         providesTags: ["tree"],
       }),
+      getAuditLog: build.query<GetAuditLogApiResponse, GetAuditLogApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/audit-logs/${queryArg.auditLogId}` }),
+        providesTags: ["tree"],
+      }),
       listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
         query: (queryArg) => ({
           url: `/sumup/checkouts`,
@@ -2005,6 +2009,11 @@ export type ConfigureSumupTokenApiArg = {
 export type ListAuditLogsApiResponse = /** status 200 Successful Response */ AuditLog[];
 export type ListAuditLogsApiArg = {
   nodeId: number;
+};
+export type GetAuditLogApiResponse = /** status 200 Successful Response */ AuditLogDetail;
+export type GetAuditLogApiArg = {
+  nodeId: number;
+  auditLogId: number;
 };
 export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response */ SumUpCheckout[];
 export type ListSumupCheckoutsApiArg = {
@@ -3390,6 +3399,15 @@ export type AuditLog = {
   originating_user_id: number | null;
   originating_terminal_id: number | null;
 };
+export type AuditLogDetail = {
+  id: number;
+  created_at: string;
+  node_id: number;
+  log_type: string;
+  originating_user_id: number | null;
+  originating_terminal_id: number | null;
+  content: object;
+};
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type SumUpTransaction = {
   amount: number;
@@ -3671,6 +3689,8 @@ export const {
   useConfigureSumupTokenMutation,
   useListAuditLogsQuery,
   useLazyListAuditLogsQuery,
+  useGetAuditLogQuery,
+  useLazyGetAuditLogQuery,
   useListSumupCheckoutsQuery,
   useLazyListSumupCheckoutsQuery,
   useListSumupTransactionsQuery,
