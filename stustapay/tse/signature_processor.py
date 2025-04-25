@@ -80,7 +80,7 @@ class SignatureProcessor:
         feral_till_id_rows = await conn.fetch(
             """
                 select distinct
-                    till.id as till_id
+                    till.id as till_id,
                     till.node_id as node_id
                 from
                     tse_signature
