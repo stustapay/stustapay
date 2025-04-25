@@ -3546,6 +3546,56 @@
         }
       }
     },
+    "/money-overview": {
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Get Money Overview",
+        "operationId": "get_money_overview",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoneyOverview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/accounts/find-accounts": {
       "post": {
         "tags": [
@@ -10145,6 +10195,32 @@
           "password"
         ],
         "title": "LoginPayload"
+      },
+      "MoneyOverview": {
+        "properties": {
+          "system_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            },
+            "type": "array",
+            "title": "System Accounts"
+          },
+          "total_customer_account_balance": {
+            "type": "number",
+            "title": "Total Customer Account Balance"
+          },
+          "total_cash_register_balance": {
+            "type": "number",
+            "title": "Total Cash Register Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "system_accounts",
+          "total_customer_account_balance",
+          "total_cash_register_balance"
+        ],
+        "title": "MoneyOverview"
       },
       "NewBlob": {
         "properties": {

@@ -634,6 +634,15 @@ const injectedRtkApi = api
         }),
         providesTags: ["accounts"],
       }),
+      getMoneyOverview: build.query<GetMoneyOverviewApiResponse, GetMoneyOverviewApiArg>({
+        query: (queryArg) => ({
+          url: `/money-overview`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["accounts"],
+      }),
       findAccounts: build.mutation<FindAccountsApiResponse, FindAccountsApiArg>({
         query: (queryArg) => ({
           url: `/accounts/find-accounts`,
@@ -1695,6 +1704,10 @@ export type ListSystemAccountsApiResponse = /** status 200 Successful Response *
 export type ListSystemAccountsApiArg = {
   nodeId: number;
 };
+export type GetMoneyOverviewApiResponse = /** status 200 Successful Response */ MoneyOverviewRead;
+export type GetMoneyOverviewApiArg = {
+  nodeId: number;
+};
 export type FindAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type FindAccountsApiArg = {
   nodeId: number;
@@ -2663,6 +2676,16 @@ export type NormalizedListAccountInt = {
     [key: string]: AccountRead;
   };
 };
+export type MoneyOverview = {
+  system_accounts: Account[];
+  total_customer_account_balance: number;
+  total_cash_register_balance: number;
+};
+export type MoneyOverviewRead = {
+  system_accounts: AccountRead[];
+  total_customer_account_balance: number;
+  total_cash_register_balance: number;
+};
 export type FindAccountPayload = {
   search_term: string;
 };
@@ -3598,6 +3621,8 @@ export const {
   useSetConfigEntryMutation,
   useListSystemAccountsQuery,
   useLazyListSystemAccountsQuery,
+  useGetMoneyOverviewQuery,
+  useLazyGetMoneyOverviewQuery,
   useFindAccountsMutation,
   useGetAccountQuery,
   useLazyGetAccountQuery,

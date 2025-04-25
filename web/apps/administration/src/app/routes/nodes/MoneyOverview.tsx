@@ -1,27 +1,21 @@
-import { Account, AccountRead, AccountType, selectAccountAll, useListSystemAccountsQuery } from "@/api";
+import { Account, AccountRead, AccountType, useGetMoneyOverviewQuery } from "@/api";
 import { AccountRoutes } from "@/app/routes";
 import { ButtonLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { Card, CardActions, CardContent, Grid, Typography } from "@mui/material";
+import { Card, CardActions, CardContent, Grid, Typography, useTheme } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 interface BalanceCardProps {
-  account?: Account;
+  amount: number;
+  label?: string | null;
+  actions?: React.ReactNode;
 }
 
-const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
+const BalanceCard: React.FC<BalanceCardProps> = ({ amount, label, actions }) => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
-
-  if (!account) {
-    return (
-      <Card>
-        <Loading />
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -29,74 +23,73 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
         <Grid container alignItems="center" justifyContent="center" direction="column">
           <Grid>
             <Typography variant="h6" component="div">
-              {account.name}
+              {label}
             </Typography>
           </Grid>
           <Grid>
             <Typography component="span" variant="body1">
-              {formatCurrency(account.balance)}
+              {formatCurrency(amount)}
             </Typography>
           </Grid>
         </Grid>
       </CardContent>
-      <CardActions>
-        <ButtonLink size="small" to={AccountRoutes.detail(account.id)}>
-          {t("overview.showDetails")}
-        </ButtonLink>
-      </CardActions>
+      {actions && <CardActions>{actions}</CardActions>}
     </Card>
   );
 };
 
-export const MoneyOverview: React.FC = () => {
-  const { currentNode } = useCurrentNode();
-  const { accounts, isLoading: isAccountsLoading } = useListSystemAccountsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        accounts: data ? selectAccountAll(data) : undefined,
-      }),
-    }
-  );
+interface AccountBalanceCardProps {
+  account?: Account;
+}
 
-  if (!accounts || isAccountsLoading) {
+const AccountBalanceCard: React.FC<AccountBalanceCardProps> = ({ account }) => {
+  const { t } = useTranslation();
+
+  if (!account) {
+    return null;
+  }
+
+  return (
+    <BalanceCard
+      amount={account.balance}
+      label={account.name}
+      actions={
+        <ButtonLink size="small" to={AccountRoutes.detail(account.id)}>
+          {t("overview.showDetails")}
+        </ButtonLink>
+      }
+    />
+  );
+};
+
+export const MoneyOverview: React.FC = () => {
+  const theme = useTheme();
+  const { currentNode } = useCurrentNode();
+  const { data: moneyOverviewData, isLoading: isAccountsLoading } = useGetMoneyOverviewQuery({
+    nodeId: currentNode.id,
+  });
+
+  if (!moneyOverviewData || isAccountsLoading) {
     return <Loading />;
   }
 
   const selectAccountByType = (type: AccountType): AccountRead | undefined => {
-    return accounts.find((a) => a.type === type);
+    return moneyOverviewData?.system_accounts.find((a) => a.type === type);
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("cash_vault")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("sumup_entry")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("sumup_online_entry")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("sale_exit")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("cash_imbalance")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("cash_entry")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("cash_exit")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("sepa_exit")} />
-      </Grid>
-      <Grid size={{ sm: 4, md: 2 }}>
-        <BalanceCard account={selectAccountByType("donation_exit")} />
-      </Grid>
-    </Grid>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: theme.spacing(1) }}>
+      <AccountBalanceCard account={selectAccountByType("cash_vault")} />
+      <AccountBalanceCard account={selectAccountByType("sumup_entry")} />
+      <AccountBalanceCard account={selectAccountByType("sumup_online_entry")} />
+      <AccountBalanceCard account={selectAccountByType("sale_exit")} />
+      <AccountBalanceCard account={selectAccountByType("cash_imbalance")} />
+      <AccountBalanceCard account={selectAccountByType("cash_entry")} />
+      <AccountBalanceCard account={selectAccountByType("cash_exit")} />
+      <AccountBalanceCard account={selectAccountByType("sepa_exit")} />
+      <AccountBalanceCard account={selectAccountByType("donation_exit")} />
+      <BalanceCard label="Customer balance" amount={moneyOverviewData.total_customer_account_balance} />
+      <BalanceCard label="Cash registers" amount={moneyOverviewData.total_cash_register_balance} />
+    </div>
   );
 };
