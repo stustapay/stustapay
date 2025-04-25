@@ -6,7 +6,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import BonJson, generate_dummy_bon_json
 from stustapay.core.config import Config
-from stustapay.core.schema.audit_logs import AuditLog, AuditType
+from stustapay.core.schema.audit_logs import AuditLog, AuditLogDetail, AuditType
 from stustapay.core.schema.media import EventDesign, MimeType, NewBlob
 from stustapay.core.schema.tree import (
     NewEvent,
@@ -18,7 +18,7 @@ from stustapay.core.schema.tree import (
 )
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
-from stustapay.core.service.common.audit_logs import create_audit_log, fetch_audit_logs
+from stustapay.core.service.common.audit_logs import create_audit_log, fetch_audit_log, fetch_audit_logs
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.media import delete_blob, store_blob
@@ -564,3 +564,9 @@ class TreeService(Service[Config]):
     @requires_user(privileges=[Privilege.node_administration])
     async def list_audit_logs(self, *, conn: Connection, node: Node) -> list[AuditLog]:
         return await fetch_audit_logs(conn=conn, node=node)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def get_audit_log(self, *, conn: Connection, node: Node, audit_log_id: int) -> AuditLogDetail:
+        return await fetch_audit_log(conn=conn, node=node, audit_log_id=audit_log_id)

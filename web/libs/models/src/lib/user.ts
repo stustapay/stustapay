@@ -76,10 +76,10 @@ export const getUserName = (user?: Pick<User, "login" | "display_name">) => {
   if (!user) {
     return "";
   }
-  if (user.display_name === "" || user.display_name == null) {
+  if (!user.display_name) {
     return user.login;
   }
-  return `${user.display_name} (${user.login})`;
+  return user.display_name;
 };
 
 export const CurrentUserSchema = UserSchema.merge(

@@ -5,6 +5,7 @@ from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.account import Account
+from stustapay.core.service.account import MoneyOverview
 
 router = APIRouter(
     prefix="",
@@ -16,6 +17,11 @@ router = APIRouter(
 @router.get("/system-accounts", response_model=NormalizedList[Account, int])
 async def list_system_accounts(token: CurrentAuthToken, account_service: ContextAccountService, node_id: int):
     return normalize_list(await account_service.list_system_accounts(token=token, node_id=node_id))
+
+
+@router.get("/money-overview", response_model=MoneyOverview)
+async def get_money_overview(token: CurrentAuthToken, account_service: ContextAccountService, node_id: int):
+    return await account_service.get_money_overview(token=token, node_id=node_id)
 
 
 class FindAccountPayload(BaseModel):

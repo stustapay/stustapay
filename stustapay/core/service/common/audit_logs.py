@@ -3,7 +3,7 @@ import json
 from pydantic import BaseModel
 from sftkit.database import Connection
 
-from stustapay.core.schema.audit_logs import AuditLog, AuditType
+from stustapay.core.schema.audit_logs import AuditLog, AuditLogDetail, AuditType
 from stustapay.core.schema.tree import Node
 
 
@@ -13,8 +13,33 @@ async def fetch_audit_logs(
 ) -> list[AuditLog]:
     return await conn.fetch_many(
         AuditLog,
-        "select a.* from audit_log as a join node as n on a.node_id = n.id where $1 = any(n.parent_ids) or n.id = $1",
+        "select a.id, a.created_at, a.node_id, a.log_type, a.originating_user_id, a.originating_terminal_id "
+        "from audit_log as a join node as n on a.node_id = n.id where $1 = any(n.parent_ids) or n.id = $1",
         node.id,
+    )
+
+
+async def fetch_audit_log(
+    conn: Connection,
+    node: Node,
+    audit_log_id: int,
+) -> AuditLogDetail:
+    row = await conn.fetchrow(
+        "select a.id, a.created_at, a.node_id, a.log_type, a.originating_user_id, a.originating_terminal_id, a.content "
+        "from audit_log as a join node as n on a.node_id = n.id where $1 = any(n.parent_ids) or n.id = $1 and a.id = $2",
+        node.id,
+        audit_log_id,
+    )
+    content = row["content"]
+
+    return AuditLogDetail(
+        id=row["id"],
+        created_at=row["created_at"],
+        node_id=row["node_id"],
+        log_type=row["log_type"],
+        originating_user_id=row["originating_user_id"],
+        originating_terminal_id=row["originating_terminal_id"],
+        content=json.loads(content) if content is not None else None,
     )
 
 
