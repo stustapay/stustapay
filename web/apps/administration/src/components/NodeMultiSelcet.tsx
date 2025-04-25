@@ -3,13 +3,13 @@ import { useCurrentNode } from "@/hooks";
 import { Select } from "@stustapay/components";
 import * as React from "react";
 
-export type NodeSelectProps = {
+export type NodeMultiSelectProps = {
   label: string;
-  value: NodeSeenByUser;
-  onChange: (value: NodeSeenByUser | null) => void;
+  value: NodeSeenByUser[];
+  onChange: (value: NodeSeenByUser[]) => void;
 };
 
-export const NodeSelect: React.FC<NodeSelectProps> = ({ ...props }) => {
+export const NodeMultiSelect: React.FC<NodeMultiSelectProps> = ({ onChange, ...props }) => {
   const { currentNode } = useCurrentNode();
 
   const options = React.useMemo(() => {
@@ -22,5 +22,21 @@ export const NodeSelect: React.FC<NodeSelectProps> = ({ ...props }) => {
     return result;
   }, [currentNode]);
 
-  return <Select multiple={false} options={options} formatOption={(v: NodeSeenByUser) => v.name} {...props} />;
+  const handleChange = React.useCallback(
+    (value: NodeSeenByUser[] | null) => {
+      onChange(value ?? []);
+    },
+    [onChange]
+  );
+
+  return (
+    <Select
+      checkboxes={true}
+      multiple={true}
+      options={options}
+      formatOption={(v: NodeSeenByUser) => v.name}
+      onChange={handleChange}
+      {...props}
+    />
+  );
 };

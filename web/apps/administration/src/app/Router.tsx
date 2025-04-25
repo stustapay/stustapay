@@ -5,7 +5,15 @@ import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, NodeCreate } from "./routes/nodes";
+import {
+  EventCreate,
+  NodeOverview,
+  MoneyOverview,
+  NodePageLayout,
+  NodeSettings,
+  NodeCreate,
+  RevenueReports,
+} from "./routes/nodes";
 import { NodeStats } from "./routes/nodes/stats";
 import { OrderBon, OrderDetail, SaleEdit, TransactionDetail } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
@@ -111,6 +119,10 @@ const router = createBrowserRouter([
               {
                 path: "audit-logs",
                 element: <AuditLogList />,
+              },
+              {
+                path: "reports",
+                element: <RevenueReports />,
               },
               {
                 path: "system-accounts",

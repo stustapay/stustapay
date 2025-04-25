@@ -1,3 +1,5 @@
+from datetime import date
+
 import asyncpg
 from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
@@ -19,15 +21,18 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log, fetch_audit_log, fetch_audit_logs
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
-from stustapay.core.service.media import delete_blob, fetch_blob, store_blob
+from stustapay.core.service.media import delete_blob, store_blob
 from stustapay.core.service.tree.common import (
     fetch_event_design,
+    fetch_event_logo,
     fetch_node,
     fetch_restricted_event_settings_for_node,
     get_tree_for_current_user,
 )
 from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
-from stustapay.reports.revenue_report import generate_dummy_report, generate_report
+from stustapay.reports.daily_reports import generate_daily_report, generate_dummy_daily_report
+from stustapay.reports.payout_report import generate_payout_report
+from stustapay.reports.revenue_report import generate_dummy_report, generate_revenue_report
 from stustapay.ticket_shop import pretix
 
 
@@ -454,31 +459,52 @@ class TreeService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def check_pretix_connection(self, *, conn: Connection, node: Node) -> BonJson:
-        assert node.event_node_id is not None
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         return await pretix.check_connection(event)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
-    async def generate_test_report(self, *, conn: Connection, node: Node) -> bytes:
-        assert node.event_node_id is not None
+    async def generate_test_revenue_report(self, *, conn: Connection, node: Node) -> bytes:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
-        event_design = await fetch_event_design(conn=conn, node_id=node.id)
-        logo = None
-        if event_design.bon_logo_blob_id is not None:
-            logo = await fetch_blob(conn=conn, blob_id=event_design.bon_logo_blob_id)
-        content = await generate_dummy_report(node=node, event=event, logo=logo)
-        return content
+        logo = await fetch_event_logo(conn=conn, node_id=node.id)
+        return await generate_dummy_report(node=node, event=event, logo=logo)
 
     @with_db_transaction(read_only=True)
-    @requires_node()
+    @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def generate_revenue_report(self, *, conn: Connection, node: Node) -> bytes:
-        if node.event_node_id is None:
-            raise InvalidArgument("Cannot generate test report for a node not associated with an event")
-        content = await generate_report(conn=conn, node_id=node.id)
-        return content
+        return await generate_revenue_report(conn=conn, node=node)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def generate_test_daily_report(self, *, conn: Connection, node: Node) -> bytes:
+        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        logo = await fetch_event_logo(conn=conn, node_id=node.id)
+        return await generate_dummy_daily_report(event=event, logo=logo)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def generate_daily_report(
+        self, *, conn: Connection, node: Node, relevant_node_ids: list[int], report_date: date
+    ) -> bytes:
+        relevant_nodes: list[Node] = []
+        for relevant_node_id in relevant_node_ids:
+            rel_node = await fetch_node(conn=conn, node_id=relevant_node_id)
+            if rel_node is None:
+                raise InvalidArgument("Invalid node id")
+            if node.id not in rel_node.ids_to_root:
+                raise InvalidArgument("Invalid node id")
+            relevant_nodes.append(rel_node)
+        return await generate_daily_report(conn=conn, node=node, relevant_nodes=relevant_nodes, report_date=report_date)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def generate_payout_report(self, *, conn: Connection, node: Node) -> bytes:
+        return await generate_payout_report(conn=conn, node=node)
 
     @with_db_transaction
     @requires_node(event_only=True)

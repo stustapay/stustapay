@@ -1187,12 +1187,28 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
-      generateTestReport: build.mutation<GenerateTestReportApiResponse, GenerateTestReportApiArg>({
+      generateTestRevenueReport: build.mutation<GenerateTestRevenueReportApiResponse, GenerateTestRevenueReportApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      generateDailyReport: build.mutation<GenerateDailyReportApiResponse, GenerateDailyReportApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/nodes/${queryArg.nodeId}/generate-daily-report`,
+          method: "POST",
+          body: queryArg.generateDailyReportPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
+      generateTestDailyReport: build.mutation<GenerateTestDailyReportApiResponse, GenerateTestDailyReportApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      generatePayoutReport: build.mutation<GeneratePayoutReportApiResponse, GeneratePayoutReportApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
@@ -2006,12 +2022,25 @@ export type GenerateWebhookUrlApiArg = {
   nodeId: number;
   generateWebhookPayload: GenerateWebhookPayload;
 };
-export type GenerateTestReportApiResponse = /** status 200 Successful Response */ any;
-export type GenerateTestReportApiArg = {
+export type GenerateTestRevenueReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestRevenueReportApiArg = {
   nodeId: number;
 };
 export type GenerateRevenueReportApiResponse = /** status 200 Successful Response */ any;
 export type GenerateRevenueReportApiArg = {
+  nodeId: number;
+};
+export type GenerateDailyReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateDailyReportApiArg = {
+  nodeId: number;
+  generateDailyReportPayload: GenerateDailyReportPayload;
+};
+export type GenerateTestDailyReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestDailyReportApiArg = {
+  nodeId: number;
+};
+export type GeneratePayoutReportApiResponse = /** status 200 Successful Response */ any;
+export type GeneratePayoutReportApiArg = {
   nodeId: number;
 };
 export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ any;
@@ -3411,6 +3440,10 @@ export type WebhookType = "pretix";
 export type GenerateWebhookPayload = {
   webhook_type: WebhookType;
 };
+export type GenerateDailyReportPayload = {
+  relevant_node_ids: number[];
+  report_date: string;
+};
 export type SumUpTokenPayload = {
   authorization_code: string;
 };
@@ -3709,8 +3742,11 @@ export const {
   useCheckPretixConnectionMutation,
   useFetchPretixProductsMutation,
   useGenerateWebhookUrlMutation,
-  useGenerateTestReportMutation,
+  useGenerateTestRevenueReportMutation,
   useGenerateRevenueReportMutation,
+  useGenerateDailyReportMutation,
+  useGenerateTestDailyReportMutation,
+  useGeneratePayoutReportMutation,
   useConfigureSumupTokenMutation,
   useListAuditLogsQuery,
   useLazyListAuditLogsQuery,

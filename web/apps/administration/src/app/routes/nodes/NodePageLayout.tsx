@@ -4,6 +4,7 @@ import {
   Leaderboard as LeaderboardIcon,
   Settings as SettingsIcon,
   List as ListIcon,
+  Receipt as ReceiptIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -21,6 +22,9 @@ const getActiveTab = (nodeId: number, location: string) => {
   }
   if (location.startsWith(`/node/${nodeId}/audit-logs`)) {
     return `/node/${nodeId}/audit-logs`;
+  }
+  if (location.startsWith(`/node/${nodeId}/reports`)) {
+    return `/node/${nodeId}/reports`;
   }
   return `/node/${nodeId}`;
 };
@@ -61,14 +65,24 @@ export const NodePageLayout: React.FC = () => {
           to={nodeUrl}
         />
         {node.event_node_id != null && (
-          <Tab
-            label={t("nodes.statistics")}
-            component={RouterLink}
-            value={`${nodeUrl}/stats`}
-            icon={<LeaderboardIcon />}
-            iconPosition="start"
-            to={`${nodeUrl}/stats`}
-          />
+          <>
+            <Tab
+              label={t("nodes.statistics")}
+              component={RouterLink}
+              value={`${nodeUrl}/stats`}
+              icon={<LeaderboardIcon />}
+              iconPosition="start"
+              to={`${nodeUrl}/stats`}
+            />
+            <Tab
+              label={t("nodes.reports")}
+              component={RouterLink}
+              value={`${nodeUrl}/reports`}
+              icon={<ReceiptIcon />}
+              iconPosition="start"
+              to={`${nodeUrl}/reports`}
+            />
+          </>
         )}
         <Tab
           label={t("auditLog.auditLogs")}

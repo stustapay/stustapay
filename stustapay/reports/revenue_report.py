@@ -16,7 +16,7 @@ from stustapay.core.service.order.stats import (
     get_event_time_bounds,
     get_hourly_sales_stats,
 )
-from stustapay.core.service.tree.common import fetch_event_design, fetch_event_for_node, fetch_node
+from stustapay.core.service.tree.common import fetch_event_design, fetch_event_for_node
 from stustapay.reports.render import render_report
 
 
@@ -134,9 +134,7 @@ def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: lis
         )
 
 
-async def generate_report(conn: Connection, node_id: int, fees=0.01) -> bytes:
-    node = await fetch_node(conn=conn, node_id=node_id)
-    assert node is not None
+async def generate_revenue_report(conn: Connection, node: Node, fees=0.01) -> bytes:
     assert node.event_node_id is not None
     event = await fetch_event_for_node(conn=conn, node=node)
     from_time, to_time = get_event_time_bounds(TimeseriesStatsQuery(from_time=None, to_time=None), event)
@@ -144,7 +142,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> bytes:
         OrderWithFees,
         "select o.*, o.total_price * $2 as fees, o.total_price - o.total_price * $2 as total_price_minus_fees "
         "from orders_at_node_and_children($1) o where o.payment_method = 'tag' and o.booked_at >= $3 and o.booked_at <= $4 order by o.booked_at",
-        node_id,
+        node.id,
         fees,
         from_time,
         to_time,
