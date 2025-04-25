@@ -235,6 +235,7 @@ export type HttpValidationError = {
 };
 export type LoginPayload = {
   pin: string;
+  node_id: number;
 };
 export type PaymentMethod = "cash" | "sumup" | "tag" | "sumup_online";
 export type OrderType =
@@ -361,6 +362,7 @@ export type CustomerPortalApiConfig = {
     };
   };
   event_design: EventDesign;
+  node_id: number;
 };
 export type OrderWithTse = {
   id: number;
