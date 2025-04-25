@@ -200,9 +200,9 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     min_order_id = None
     max_order_id = None
 
-    for node in relevant_nodes:
+    for relevant_node in relevant_nodes:
         all_relevant_transactions = await prep_all_data(
-            conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=node.id, relevant_date=report_date
+            conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=relevant_node.id, relevant_date=report_date
         )
         daily_location_table = await make_daily_table(
             all_relevant_transactions,
@@ -223,7 +223,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
             )
             .reset_index()
         )
-        agg_location_table.loc[agg_location_table["sale_type"] == "Verkauf", "node_name"] = node.name
+        agg_location_table.loc[agg_location_table["sale_type"] == "Verkauf", "node_name"] = relevant_node.name
 
         for line in agg_location_table.itertuples():
             lines_location_table.append(
