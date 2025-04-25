@@ -20,10 +20,13 @@ import {
   UserTagDetailRead,
   api as generatedApi,
   GenerateTestBonApiArg,
-  GenerateTestReportApiArg,
+  GenerateTestRevenueReportApiArg,
   Terminal,
   GenerateRevenueReportApiArg,
   Transaction,
+  GenerateTestDailyReportApiArg,
+  GeneratePayoutReportApiArg,
+  GenerateDailyReportApiArg,
 } from "./generated/api";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
@@ -176,9 +179,9 @@ export const api = generatedApi.enhanceEndpoints({
     listPayoutRuns: {
       providesTags: (result) => generateCacheKeys("payouts", result),
     },
-    generateTestReport: {
-      query: (queryArg: GenerateTestReportApiArg) => ({
-        url: `/tree/events/${queryArg.nodeId}/generate-test-report`,
+    generateTestRevenueReport: {
+      query: (queryArg: GenerateTestRevenueReportApiArg) => ({
+        url: `/tree/events/${queryArg.nodeId}/generate-test-revenuereport`,
         method: "POST",
         responseHandler: async (resp: Response) => {
           const blob = await resp.blob();
@@ -190,6 +193,40 @@ export const api = generatedApi.enhanceEndpoints({
     generateRevenueReport: {
       query: (queryArg: GenerateRevenueReportApiArg) => ({
         url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
+        method: "POST",
+        responseHandler: async (resp: Response) => {
+          const blob = await resp.blob();
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+      invalidatesTags: [],
+    },
+    generateTestDailyReport: {
+      query: (queryArg: GenerateTestDailyReportApiArg) => ({
+        url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`,
+        method: "POST",
+        responseHandler: async (resp: Response) => {
+          const blob = await resp.blob();
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+      invalidatesTags: [],
+    },
+    generateDailyReport: {
+      query: (queryArg: GenerateDailyReportApiArg) => ({
+        url: `/tree/nodes/${queryArg.nodeId}/generate-daily-report`,
+        method: "POST",
+        body: queryArg.generateDailyReportPayload,
+        responseHandler: async (resp: Response) => {
+          const blob = await resp.blob();
+          return window.URL.createObjectURL(blob);
+        },
+      }),
+      invalidatesTags: [],
+    },
+    generatePayoutReport: {
+      query: (queryArg: GeneratePayoutReportApiArg) => ({
+        url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`,
         method: "POST",
         responseHandler: async (resp: Response) => {
           const blob = await resp.blob();

@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
 
@@ -133,9 +135,9 @@ async def generate_webhook_url(
         }
     },
 )
-async def generate_test_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
-    content = await tree_service.generate_test_report(token=token, node_id=node_id)
-    headers = {"Content-Disposition": 'inline; filename="test_report.pdf"'}
+async def generate_test_revenue_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    content = await tree_service.generate_test_revenue_report(token=token, node_id=node_id)
+    headers = {"Content-Disposition": 'inline; filename="test_revenue_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
 
 
@@ -151,6 +153,60 @@ async def generate_test_report(token: CurrentAuthToken, tree_service: ContextTre
 async def generate_revenue_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     content = await tree_service.generate_revenue_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="revenue_report.pdf"'}
+    return Response(content, headers=headers, media_type="application/pdf")
+
+
+class GenerateDailyReportPayload(BaseModel):
+    relevant_node_ids: list[int]
+    report_date: date
+
+
+@router.post(
+    "/nodes/{node_id}/generate-daily-report",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/pdf": {}},
+        }
+    },
+)
+async def generate_daily_report(
+    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: GenerateDailyReportPayload
+):
+    content = await tree_service.generate_daily_report(
+        token=token, node_id=node_id, relevant_node_ids=payload.relevant_node_ids, report_date=payload.report_date
+    )
+    headers = {"Content-Disposition": 'inline; filename="daily_report.pdf"'}
+    return Response(content, headers=headers, media_type="application/pdf")
+
+
+@router.post(
+    "/events/{node_id}/generate-test-daily-report",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/pdf": {}},
+        }
+    },
+)
+async def generate_test_daily_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    content = await tree_service.generate_test_daily_report(token=token, node_id=node_id)
+    headers = {"Content-Disposition": 'inline; filename="test_daily_report.pdf"'}
+    return Response(content, headers=headers, media_type="application/pdf")
+
+
+@router.post(
+    "/nodes/{node_id}/generate-payout-report",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/pdf": {}},
+        }
+    },
+)
+async def generate_payout_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    content = await tree_service.generate_daily_report(token=token, node_id=node_id)
+    headers = {"Content-Disposition": 'inline; filename="payout_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
 
 

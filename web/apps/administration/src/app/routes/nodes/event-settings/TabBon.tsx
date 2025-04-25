@@ -2,7 +2,7 @@ import {
   BonJsonRead,
   RestrictedEventSettings,
   useGenerateTestBonMutation,
-  useGenerateTestReportMutation,
+  useGenerateTestRevenueReportMutation,
   useGetEventDesignQuery,
   useUpdateEventMutation,
 } from "@/api";
@@ -63,7 +63,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
   const [updateEvent] = useUpdateEventMutation();
   const [previewBon, { isLoading: bonPreviewGenerating }] = useGenerateTestBonMutation();
   const [bonPreview, setBonPreview] = React.useState<BonJsonRead | null>(null);
-  const [previewReport, { isLoading: reportPreviewGenerating }] = useGenerateTestReportMutation();
+  const [previewReport, { isLoading: reportPreviewGenerating }] = useGenerateTestRevenueReportMutation();
 
   const handleSubmit = (values: BonSettings, { setSubmitting }: FormikHelpers<BonSettings>) => {
     setSubmitting(true);

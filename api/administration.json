@@ -7160,8 +7160,8 @@
         "tags": [
           "tree"
         ],
-        "summary": "Generate Test Report",
-        "operationId": "generate_test_report",
+        "summary": "Generate Test Revenue Report",
+        "operationId": "generate_test_revenue_report",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -7211,6 +7211,163 @@
         ],
         "summary": "Generate Revenue Report",
         "operationId": "generate_revenue_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/nodes/{node_id}/generate-daily-report": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Daily Report",
+        "operationId": "generate_daily_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateDailyReportPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/generate-test-daily-report": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Test Daily Report",
+        "operationId": "generate_test_daily_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/nodes/{node_id}/generate-payout-report": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Payout Report",
+        "operationId": "generate_payout_report",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -9900,6 +10057,28 @@
           "search_term"
         ],
         "title": "FindUserTagPayload"
+      },
+      "GenerateDailyReportPayload": {
+        "properties": {
+          "relevant_node_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Relevant Node Ids"
+          },
+          "report_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Report Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "relevant_node_ids",
+          "report_date"
+        ],
+        "title": "GenerateDailyReportPayload"
       },
       "GenerateWebhookPayload": {
         "properties": {

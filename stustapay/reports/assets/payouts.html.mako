@@ -1,15 +1,3 @@
-<%
-def format_money(value):
-  return f"{value:8.2f}{currency_symbol}".replace(".", ",")
-
-def format_date(value):
-  return value.strftime("%Y-%m-%d")
-
-def format_percent(value):
-  return f"{value * 100:5.2f}%".replace(".", ",")
-
-%>
-
 <html>
   <head>
     <meta charset="utf-8">

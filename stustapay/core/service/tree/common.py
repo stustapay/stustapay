@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from sftkit.database import Connection
 
-from stustapay.core.schema.media import EventDesign
+from stustapay.core.schema.media import Blob, EventDesign
 from stustapay.core.schema.tree import (
     Language,
     Node,
@@ -11,6 +11,7 @@ from stustapay.core.schema.tree import (
 )
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.common.error import NotFound
+from stustapay.core.service.media import fetch_blob
 
 
 class TranslationText(BaseModel):
@@ -138,3 +139,10 @@ async def fetch_event_design(conn: Connection, node_id: int) -> EventDesign:
     if design is None:
         return EventDesign(bon_logo_blob_id=None)
     return design
+
+
+async def fetch_event_logo(conn: Connection, node_id: int) -> Blob | None:
+    event_design = await fetch_event_design(conn=conn, node_id=node_id)
+    if event_design.bon_logo_blob_id is not None:
+        return await fetch_blob(conn=conn, blob_id=event_design.bon_logo_blob_id)
+    return None

@@ -1,15 +1,3 @@
-<%
-def format_money(value):
-  return f"{value:8.2f}{currency_symbol}".replace(".", ",")
-
-def format_datetime(value):
-  return value.strftime("%Y-%m-%d %H:%M:%S")
-
-def format_percent(value):
-  return f"{value * 100:5.2f}%".replace(".", ",")
-
-%>
-
 <html>
   <head>
     <meta charset="utf-8">
@@ -46,33 +34,6 @@ def format_percent(value):
           </tbody>
         </table>
       </div>
-
-      <div id="base-table">
-        <h3 class="centered">Nach Transaktionsart</h3>
-        <table class="daily-revenue-table">
-          <thead>
-            <tr class="table-header">
-              <th>Art</th>
-              <th>Zahlung</th>
-              <th>Kunden</th>
-              <th>Produkte</th>
-              <th>Summe</th>
-            </tr>
-          </thead>
-          <tbody>
-            % for line in lines_base:
-            <tr>
-              <td>${line["order_type"]}</td>
-              <td>${line["payment_method"]}</td>
-              <td>${line["no_customers"]}</td>
-              <td>${line["no_products"]}</td>
-              <td>${format_money(line["total_price"])}</td>
-            </tr>
-            % endfor
-          </tbody>
-        </table>
-      </div>
-    </article>
 
     <article>
       <div id="location-table">
