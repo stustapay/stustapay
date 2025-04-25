@@ -29,6 +29,7 @@ import kotlinx.serialization.Contextual
  * @param tillId 
  * @param sessionUuid 
  * @param registrationUuid 
+ * @param lastSeen 
  * @param description 
  * @param activeUserId 
  * @param activeUserRoleId 
@@ -54,6 +55,9 @@ data class Terminal (
 
     @Contextual @SerialName(value = "registration_uuid")
     val registrationUuid: java.util.UUID?,
+
+    @Contextual @SerialName(value = "last_seen")
+    val lastSeen: java.time.OffsetDateTime,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,

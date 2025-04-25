@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.user
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,7 +76,11 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
 
     val currentTag = currentTagState;
     if (currentTag == null) {
-        nfcScanState.open()
+        LaunchedEffect(Unit) {
+            scope.launch {
+                nfcScanState.open()
+            }
+        }
 
         Scaffold(content = { padding ->
             Box(

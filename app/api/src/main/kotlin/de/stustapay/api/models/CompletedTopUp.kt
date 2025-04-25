@@ -43,7 +43,7 @@ data class CompletedTopUp (
     val paymentMethod: PaymentMethod,
 
     @SerialName(value = "customer_tag_uid")
-    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    val customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
     @SerialName(value = "customer_account_id")
     val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
