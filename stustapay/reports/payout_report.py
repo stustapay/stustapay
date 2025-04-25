@@ -44,7 +44,9 @@ async def generate_payout_report(conn: Connection, node: Node) -> bytes:
     )
 
     remaining_accounts = await conn.fetch_one(
-        RemainingBalances, "SELECT sum(balance) as remaining_balances, count(balance) as remaining_customers FROM account WHERE node_id=$1 AND type='private'", node.event_node_id
+        RemainingBalances,
+        "SELECT sum(balance) as remaining_balances, count(balance) as remaining_customers FROM account WHERE node_id=$1 AND type='private'",
+        node.event_node_id,
     )
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)

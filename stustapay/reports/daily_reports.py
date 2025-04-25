@@ -1,4 +1,3 @@
-from calendar import day_name
 from datetime import date, datetime, time, timedelta
 from typing import Optional
 
@@ -50,13 +49,13 @@ class OrderDaily(BaseModel):
 
 
 async def prep_all_data(conn: Connection, daily_end_time: time, relevant_node_id: int, date: date) -> pd.DataFrame:
-
     orders = await conn.fetch_many(
         OrderDaily,
         "select o.id as order_id, booked_at, payment_method, order_type, cancels_order, quantity, total_price, n.name as node_name, p.name as product_name "
         "from order_items o left join till t on o.till_id = t.id left join product p on o.product_id = p.id left join usr u on o.cashier_id = u.id join node n on t.node_id = n.id "
         "where $1=any(n.parents_until_event_node) or n.id=$1",
-        relevant_node_id)
+        relevant_node_id,
+    )
 
     data_all = pd.DataFrame(
         {
@@ -108,7 +107,6 @@ async def make_daily_table(
     break_down_products: bool = False,
     break_down_payment_methods: bool = False,
 ) -> pd.DataFrame:
-
     group_by = ["sale_type", "node_name"]
     if break_down_products:
         group_by.append("product_name")
@@ -197,8 +195,9 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     max_order_id = None
 
     for node in relevant_nodes:
-
-        all_relevant_transactions = await prep_all_data(conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=node.id, date=report_date)
+        all_relevant_transactions = await prep_all_data(
+            conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=node.id, date=report_date
+        )
 
         daily_location_table = await make_daily_table(
             all_relevant_transactions,
@@ -207,12 +206,18 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         )
 
         # Aggregate all sales lines
-        agg_location_table = daily_location_table.groupby(["sale_type", "payment_method"]).agg({
-            "node_name": "first",
-            "order_id": "sum",
-            "quantity": "sum",
-            "total_price": "sum",
-        }).reset_index()
+        agg_location_table = (
+            daily_location_table.groupby(["sale_type", "payment_method"])
+            .agg(
+                {
+                    "node_name": "first",
+                    "order_id": "sum",
+                    "quantity": "sum",
+                    "total_price": "sum",
+                }
+            )
+            .reset_index()
+        )
         agg_location_table.loc[agg_location_table["sale_type"] == "Verkauf", "node_name"] = node.name
 
         for line in agg_location_table.itertuples():
@@ -234,7 +239,9 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         if max_order_id is None or max_order_id < max_id:
             max_order_id = max_id
 
-    from_time = datetime.combine(report_date, datetime.min.time()) + (datetime.combine(date.min, event.daily_end_time) - datetime.min)
+    from_time = datetime.combine(report_date, datetime.min.time()) + (
+        datetime.combine(date.min, event.daily_end_time) - datetime.min
+    )
     to_time = from_time + timedelta(days=1)
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
