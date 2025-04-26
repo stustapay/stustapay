@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from functools import wraps
 from inspect import Parameter, signature
 from itertools import chain
@@ -23,6 +24,30 @@ R = TypeVar("R")
 
 
 _READONLY_KWARG_NAME = "__read_only__"
+
+
+def with_perf_measurement(
+    log_template: str, log_after_n: int = 50
+) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
+    def f(func: Callable[..., Awaitable[R]]):
+        durations: list[timedelta] = []
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            nonlocal durations
+            start_time = datetime.now()
+            result = await func(*args, **kwargs)
+            duration = datetime.now() - start_time
+            durations.append(duration)
+            avg = sum(map(lambda x: x.total_seconds(), durations)) / len(durations)
+            if len(durations) % log_after_n == 0:
+                print(log_template.format(avg_duration=avg))
+
+            return result
+
+        return wrapper
+
+    return f
 
 
 def _is_func_read_only(kwargs, func):
@@ -249,10 +274,14 @@ def requires_terminal(
     Further, if privileges are provided, checks if a user is logged in and if it has ALL provided privileges
     Sets the arguments current_terminal and current_user in the wrapped function
     """
+    durations: list[timedelta] = []
 
     def f(func: Callable[..., Awaitable[R]]):
         @wraps(func)
+        @with_perf_measurement(log_template=f"requires_terminal from {func.__name__} takes: {{avg_duration}}")
         async def wrapper(self, **kwargs):
+            nonlocal durations
+            start_time = datetime.now()
             if "token" not in kwargs and "current_terminal" not in kwargs:
                 raise RuntimeError("token was not provided to service function call")
 
@@ -358,6 +387,12 @@ def requires_terminal(
 
             if "conn" not in signature_params:
                 kwargs.pop("conn")
+
+            duration = datetime.now() - start_time
+            durations.append(duration)
+            avg = sum(map(lambda x: x.total_seconds(), durations)) / len(durations)
+            if len(durations) % 50 == 0:
+                print(f"requires_terminal from {func.__name__} takes: {avg}")
 
             return await func(self, **kwargs)
 

@@ -29,6 +29,7 @@ from stustapay.core.schema.ticket import (
     NewTicketScan,
     TicketScanResult,
 )
+from stustapay.core.service.common.decorators import with_perf_measurement
 
 router = APIRouter(prefix="/order", tags=["order"])
 
@@ -54,6 +55,7 @@ async def check_sale(
 
 
 @router.post("/book-sale", summary="finish the sale and book the transactions", response_model=CompletedSale)
+@with_perf_measurement(log_template="book_sale inside http takes: {avg_duration}")
 async def book_sale(
     sale: NewSale,
     token: CurrentAuthToken,

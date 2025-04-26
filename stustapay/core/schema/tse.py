@@ -24,7 +24,7 @@ class UpdateTse(BaseModel):
 
 class NewTse(UpdateTse):
     type: TseType
-    serial: Optional[str]
+    serial: str
 
 
 class Tse(NewTse):

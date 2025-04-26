@@ -66,6 +66,7 @@ from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
+    with_perf_measurement,
 )
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.order.pending_order import (
@@ -856,6 +857,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @with_perf_measurement(log_template="book_sale inside service takes: {avg_duration}")
     async def book_sale(
         self,
         *,

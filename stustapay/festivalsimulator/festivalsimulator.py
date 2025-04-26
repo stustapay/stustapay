@@ -5,7 +5,7 @@ import random
 import sys
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import aiohttp
 import asyncpg
@@ -16,6 +16,8 @@ from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
 from stustapay.core.schema.user import Privilege
+
+order_sale_durations: list[timedelta] = []
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -537,12 +539,18 @@ class Simulator:
                             )
                         self.unlock_customer(customer_tag_uid)
                         continue
+                start_time = datetime.now()
                 async with client.post("/order/book-sale", json=payload, headers=terminal.get_headers()) as resp:
                     if resp.status != 200:
                         self.logger.warning(f"Error in book sale, { resp.status = }, payload = {await resp.json()}")
                         self.unlock_customer(customer_tag_uid)
                         continue
                 self.unlock_customer(customer_tag_uid)
+                duration = datetime.now() - start_time
+                order_sale_durations.append(duration)
+                if len(order_sale_durations) % 50 == 0:
+                    avg = sum(map(lambda x: x.total_seconds(), order_sale_durations)) / len(order_sale_durations)
+                    self.logger.warning(f"Average book order duration = {avg}s")
 
                 if random.randint(0, 100) == 0:
                     await self.perform_cashier_shift_change(terminal=terminal, perform_close_out=False)
@@ -557,7 +565,7 @@ class Simulator:
 
     async def login_customer(self, pin: str) -> str:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
-            async with client.post("/auth/login", json={"pin": pin}) as resp:
+            async with client.post("/auth/login", json={"pin": pin, "node_id": self.event_node_id}) as resp:
                 if resp.status == 503:
                     self.logger.warning(f"Customer with pin {pin} problem logging in, {await resp.text()}")
                     await self.sleep()

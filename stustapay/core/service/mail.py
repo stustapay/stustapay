@@ -44,9 +44,9 @@ class MailService(Service[Config]):
     ):
         res_config = await fetch_restricted_event_settings_for_node(conn, node_id)
         if not res_config.email_enabled:
-            self.logger.warning(
-                f"Mail to {to_addr} was not scheduled for sending because event with node id {node_id} has mail sending deactivated"
-            )
+            # self.logger.warning(
+            #     f"Mail to {to_addr} was not scheduled for sending because event with node id {node_id} has mail sending deactivated"
+            # )
             return
         mail_id = await conn.fetchval(
             """
@@ -112,9 +112,9 @@ class MailService(Service[Config]):
         res_config = await fetch_restricted_event_settings_for_node(conn, mail.node_id)
         smtp_config = res_config.smtp_config
         if not smtp_config:
-            self.logger.info(
-                f"The mail was not send because event with node id {mail.node_id} has mail sending deactivated"
-            )
+            # self.logger.info(
+            #     f"The mail was not send because event with node id {mail.node_id} has mail sending deactivated"
+            # )
             return
 
         message = MIMEMultipart()
