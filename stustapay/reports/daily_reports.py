@@ -24,11 +24,24 @@ class DailyRevenueLineLocation(BaseModel):
     total_price: float
 
 
+class TaxLineLocation(BaseModel):
+    node_name: str
+    tax_rate: float | str
+    no_customers: int
+    no_products: int
+    total_price: float
+    total_tax: float
+    total_notax: float
+    no_cancels: int
+    total_cancels: float
+
+
 class DailyReportContext(BaseModel):
     event_name: str
     render_logo: bool
     config: BonConfig
     lines_location: list[DailyRevenueLineLocation]
+    tax_tables: list[list[TaxLineLocation]]
     from_time: datetime
     to_time: datetime
     min_order_id: int | None
@@ -44,8 +57,12 @@ class OrderDaily(BaseModel):
     cancels_order: Optional[int]
     quantity: Optional[int]
     total_price: Optional[float]
+    tax_rate: Optional[float]
+    tax_rate_id: Optional[int]
+    total_tax: Optional[float]
     node_name: str
     product_name: Optional[str]
+    is_cancelled: bool
 
 
 async def prep_all_data(
@@ -53,13 +70,15 @@ async def prep_all_data(
 ) -> pd.DataFrame:
     orders = await conn.fetch_many(
         OrderDaily,
-        "select o.id as order_id, o.booked_at, o.payment_method, o.order_type, o.cancels_order, o.quantity, o.total_price, n.name as node_name, p.name as product_name "
+        "select o.id as order_id, o.booked_at, o.payment_method, o.order_type, o.cancels_order, o.quantity, "
+        "o.total_price, o.tax_rate, o.tax_rate_id, o.total_tax, "
+        "n.name as node_name, p.name as product_name, (oo.id is not null) as is_cancelled "
         "from order_items o "
         "left join till t on o.till_id = t.id "
         "left join product p on o.product_id = p.id "
         "join node n on t.node_id = n.id "
-        "left join order_items oo on o.id = oo.cancels_order "
-        "where ($1=any(n.parents_until_event_node) or n.id=$1) and oo.id is null",
+        "left join order_items oo on (o.id = oo.cancels_order) and (o.product_id = oo.product_id) "
+        "where ($1=any(n.parents_until_event_node) or n.id=$1) and o.order_type!='cancel_sale'",
         relevant_node_id,
     )
 
@@ -72,20 +91,22 @@ async def prep_all_data(
             "cancels_order": [line.cancels_order for line in orders],
             "quantity": [line.quantity for line in orders],
             "total_price": [line.total_price for line in orders],
+            "tax_rate": [line.tax_rate for line in orders],
+            "tax_rate_id": [line.tax_rate_id for line in orders],
+            "total_tax": [line.total_tax for line in orders],
             "node_name": [line.node_name for line in orders],
             "product_name": [line.product_name for line in orders],
+            "is_cancelled": [line.is_cancelled for line in orders],
         }
     )
+    print(data_all.loc[data_all["is_cancelled"], ["order_id", "quantity", "total_price", "product_name", "is_cancelled"]])
+    print(data_all.loc[data_all["order_id"] == 885, ["order_id", "quantity", "total_price", "product_name", "is_cancelled"]])
+    data_all["total_notax"] = data_all["total_price"] - data_all["total_tax"]
 
     # Adjust days based on daily end time
     data_all["date"] = data_all["booked_at"].dt.normalize()
     data_all.loc[data_all["booked_at"].dt.time < daily_end_time, "date"] -= timedelta(days=1)
     data_all["date"] = data_all["date"].dt.date
-
-    # remove canceled sales
-    canceled_orders = pd.unique(data_all[data_all["order_type"] == "cancel_sale"]["cancels_order"])
-    data_all = data_all[~(data_all.index.isin(canceled_orders))]
-    data_all = data_all[data_all["order_type"] != "cancel_sale"]
 
     all_relevant_transactions = data_all[
         data_all["order_type"].isin(["sale", "ticket", "top_up", "pay_out", "money_transfer_imbalance"])
@@ -105,7 +126,8 @@ async def prep_all_data(
     all_relevant_transactions.loc[
         all_relevant_transactions["order_type"] == "money_transfer_imbalance", "sale_type"
     ] = "Fehlbetrag Barkassen"
-    all_relevant_transactions.loc[all_relevant_transactions["sale_type"] == "", "sale_type"] = "Verkauf"
+    all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "sale", "sale_type"] = "Verkauf"
+    all_relevant_transactions.loc[all_relevant_transactions["sale_type"] == "", "sale_type"] = "Sonstige"
 
     return all_relevant_transactions
 
@@ -122,12 +144,35 @@ async def make_daily_table(
         group_by.append("payment_method")
 
     daily_table = (
-        all_transactions.groupby(group_by)
-        .agg({"order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)), "total_price": np.sum})
+        all_transactions[~all_transactions["is_cancelled"]].groupby(group_by)
+        .agg({"order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)), "total_price": "sum"})
         .reset_index()
     )
 
     return daily_table
+
+
+async def make_tax_table(
+    all_transactions: pd.DataFrame,
+) -> pd.DataFrame:
+    tax_table = (
+        all_transactions[(~all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))].groupby("tax_rate_id")
+        .agg({"tax_rate": "first", "order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)),
+              "total_price": "sum", "total_tax": "sum", "total_notax": "sum"})
+        .reset_index()
+    )
+
+    cancel_table = (
+        all_transactions[(all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))].groupby("tax_rate_id")
+        .agg({"tax_rate": "first", "order_id": pd.Series.nunique, "total_price": "sum"})
+        .reset_index()
+    )
+
+    tax_table["no_cancels"] = cancel_table["order_id"]
+    tax_table["total_cancels"] = cancel_table["total_price"]
+    tax_table["no_cancels"].fillna(0, inplace=True)
+    tax_table["total_cancels"].fillna(0., inplace=True)
+    return tax_table
 
 
 async def generate_dummy_daily_report(event: RestrictedEventSettings, logo: Blob | None) -> bytes:
@@ -201,10 +246,12 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     assert node.event_node_id is not None
 
     lines_location_table = []
+    tax_tables = []
     min_order_id = None
     max_order_id = None
 
     for relevant_node in relevant_nodes:
+        lines_tax_table = []
         all_relevant_transactions = await prep_all_data(
             conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=relevant_node.id, relevant_date=report_date
         )
@@ -248,6 +295,37 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         if max_order_id is None or max_order_id < max_id:
             max_order_id = max_id
 
+        tax_table = await make_tax_table(all_relevant_transactions)
+        for line in tax_table.itertuples():
+            lines_tax_table.append(
+                TaxLineLocation(
+                    node_name=relevant_node.name,
+                    tax_rate=line.tax_rate,
+                    no_customers=line.order_id,
+                    no_products=line.quantity,
+                    total_price=line.total_price,
+                    total_tax=line.total_tax,
+                    total_notax=line.total_notax,
+                    no_cancels=line.no_cancels,
+                    total_cancels=line.total_cancels,
+                )
+            )
+
+        lines_tax_table.append(
+            TaxLineLocation(
+                node_name=relevant_node.name,
+                tax_rate="Gesamt",
+                no_customers=np.sum(tax_table["order_id"]),
+                no_products=np.sum(tax_table["quantity"]),
+                total_price=np.sum(tax_table["total_price"]),
+                total_tax=np.sum(tax_table["total_tax"]),
+                total_notax=np.sum(tax_table["total_notax"]),
+                no_cancels=np.sum(tax_table["no_cancels"]),
+                total_cancels=np.sum(tax_table["total_cancels"]),
+            )
+        )
+        tax_tables.append(lines_tax_table)
+
     from_time = datetime.combine(report_date, datetime.min.time()) + (
         datetime.combine(date.min, event.daily_end_time) - datetime.min
     )
@@ -265,6 +343,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         render_logo=logo is not None,
         config=config,
         lines_location=lines_location_table,
+        tax_tables=tax_tables,
         from_time=from_time,
         to_time=to_time,
         min_order_id=min_order_id,

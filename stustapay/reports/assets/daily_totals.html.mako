@@ -49,7 +49,7 @@
           <thead>
             <tr class="table-header">
               <th>Art</th>
-              <th>Stand/Ort</th>
+              <th>Betrieb</th>
               <th>Zahlung</th>
               <th>Transaktionen</th>
               <th>Produkte</th>
@@ -70,6 +70,43 @@
           </tbody>
         </table>
       </div>
+    </article>
+
+    <article>
+      % for table in tax_tables:
+        <div id="tax-table-${table[0]["node_name"]}">
+          <h3 class="centered">Nach Steuersatz (nur Eintritt und Verkauf) - ${table[0]["node_name"]}</h3>
+            <table class="daily-revenue-table">
+              <thead>
+                <tr class="table-header">
+                  <th>Steuersatz</th>
+                  <th>Transaktionen</th>
+                  <th>Produkte</th>
+                  <th>Summe inkl. USt</th>
+                  <th>Summe USt.</th>
+                  <th>Summe exkl. USt</th>
+                  <th>Stornos</th>
+                  <th>Summe Stornos</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                % for line in table:
+                <tr>
+                  <td>${format_percent(line["tax_rate"]) if type(line["tax_rate"]) == float else line["tax_rate"]}</td>
+                  <td>${line["no_customers"]}</td>
+                  <td>${line["no_products"]}</td>
+                  <td>${format_money(line["total_price"])}</td>
+                  <td>${format_money(line["total_tax"])}</td>
+                  <td>${format_money(line["total_notax"])}</td>
+                  <td>${line["no_cancels"]}</td>
+                  <td>${format_money(line["total_cancels"])}</td>
+                </tr>
+                % endfor
+              </tbody>
+            </table>
+        </div>
+      % endfor
     </article>
   </body>
 </html>
