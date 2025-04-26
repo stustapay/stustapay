@@ -108,5 +108,38 @@
         </div>
       % endfor
     </article>
+
+    % for table in product_tables:
+      <article>
+        <div id="product-table-${table[0]["node_name"]}">
+          <h3 class="centered">Nach Produkt - ${table[0]["node_name"]}</h3>
+            <table class="daily-revenue-table">
+              <thead>
+                <tr class="table-header">
+                  <th>Name</th>
+                  <th>Anzahl Verkauft</th>
+                  <th>Summe inkl. USt</th>
+                  <th>Steuersatz</th>
+                  <th>Summe USt.</th>
+                  <th>Summe exkl. USt</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                % for line in table:
+                <tr>
+                  <td>${line["product_name"]}</td>
+                  <td>${line["no_products"]}</td>
+                  <td>${format_money(line["total_price"])}</td>
+                  <td>${format_percent(line["tax_rate"]) if type(line["tax_rate"]) == float else line["tax_rate"]}</td>
+                  <td>${format_money(line["total_tax"])}</td>
+                  <td>${format_money(line["total_notax"])}</td>
+                </tr>
+                % endfor
+              </tbody>
+            </table>
+        </div>
+      </article>
+    % endfor
   </body>
 </html>

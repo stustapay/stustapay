@@ -36,12 +36,23 @@ class TaxLineLocation(BaseModel):
     total_cancels: float
 
 
+class ProductLineLocation(BaseModel):
+    node_name: str
+    product_name: str
+    no_products: int
+    total_price: float
+    tax_rate: float | str
+    total_tax: float
+    total_notax: float
+
+
 class DailyReportContext(BaseModel):
     event_name: str
     render_logo: bool
     config: BonConfig
     lines_location: list[DailyRevenueLineLocation]
     tax_tables: list[list[TaxLineLocation]]
+    product_tables: list[list[ProductLineLocation]]
     from_time: datetime
     to_time: datetime
     min_order_id: int | None
@@ -99,8 +110,6 @@ async def prep_all_data(
             "is_cancelled": [line.is_cancelled for line in orders],
         }
     )
-    print(data_all.loc[data_all["is_cancelled"], ["order_id", "quantity", "total_price", "product_name", "is_cancelled"]])
-    print(data_all.loc[data_all["order_id"] == 885, ["order_id", "quantity", "total_price", "product_name", "is_cancelled"]])
     data_all["total_notax"] = data_all["total_price"] - data_all["total_tax"]
 
     # Adjust days based on daily end time
@@ -144,7 +153,8 @@ async def make_daily_table(
         group_by.append("payment_method")
 
     daily_table = (
-        all_transactions[~all_transactions["is_cancelled"]].groupby(group_by)
+        all_transactions[~all_transactions["is_cancelled"]]
+        .groupby(group_by)
         .agg({"order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)), "total_price": "sum"})
         .reset_index()
     )
@@ -156,23 +166,60 @@ async def make_tax_table(
     all_transactions: pd.DataFrame,
 ) -> pd.DataFrame:
     tax_table = (
-        all_transactions[(~all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))].groupby("tax_rate_id")
-        .agg({"tax_rate": "first", "order_id": pd.Series.nunique, "quantity": lambda x: int(np.sum(x)),
-              "total_price": "sum", "total_tax": "sum", "total_notax": "sum"})
+        all_transactions[
+            (~all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))
+        ]
+        .groupby("tax_rate_id")
+        .agg(
+            {
+                "tax_rate": "first",
+                "order_id": pd.Series.nunique,
+                "quantity": lambda x: int(np.sum(x)),
+                "total_price": "sum",
+                "total_tax": "sum",
+                "total_notax": "sum",
+            }
+        )
         .reset_index()
     )
 
     cancel_table = (
-        all_transactions[(all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))].groupby("tax_rate_id")
+        all_transactions[
+            (all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))
+        ]
+        .groupby("tax_rate_id")
         .agg({"tax_rate": "first", "order_id": pd.Series.nunique, "total_price": "sum"})
         .reset_index()
     )
 
     tax_table["no_cancels"] = cancel_table["order_id"]
     tax_table["total_cancels"] = cancel_table["total_price"]
-    tax_table["no_cancels"].fillna(0, inplace=True)
-    tax_table["total_cancels"].fillna(0., inplace=True)
+    tax_table["no_cancels"] = tax_table["no_cancels"].fillna(0)
+    tax_table["total_cancels"] = tax_table["total_cancels"].fillna(0.0)
     return tax_table
+
+
+async def make_product_table(
+    all_transactions: pd.DataFrame,
+) -> pd.DataFrame:
+    product_table = (
+        all_transactions[
+            (~all_transactions["is_cancelled"]) & (all_transactions["sale_type"].isin(["Verkauf", "Eintrittsticket"]))
+        ]
+        .groupby("product_name")
+        .agg(
+            {
+                "quantity": lambda x: int(np.sum(x)),
+                "total_price": "sum",
+                "tax_rate": "first",
+                "total_tax": "sum",
+                "total_notax": "sum",
+            }
+        )
+        .reset_index()
+    )
+
+    return product_table
 
 
 async def generate_dummy_daily_report(event: RestrictedEventSettings, logo: Blob | None) -> bytes:
@@ -247,11 +294,13 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
 
     lines_location_table = []
     tax_tables = []
+    product_tables = []
     min_order_id = None
     max_order_id = None
 
     for relevant_node in relevant_nodes:
         lines_tax_table = []
+        lines_product_table = []
         all_relevant_transactions = await prep_all_data(
             conn=conn, daily_end_time=event.daily_end_time, relevant_node_id=relevant_node.id, relevant_date=report_date
         )
@@ -311,6 +360,20 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
                 )
             )
 
+        product_table = await make_product_table(all_relevant_transactions)
+        for line in product_table.itertuples():
+            lines_product_table.append(
+                ProductLineLocation(
+                    node_name=relevant_node.name,
+                    product_name=line.product_name,
+                    no_products=line.quantity,
+                    total_price=line.total_price,
+                    tax_rate=line.tax_rate,
+                    total_tax=line.total_tax,
+                    total_notax=line.total_notax,
+                )
+            )
+
         lines_tax_table.append(
             TaxLineLocation(
                 node_name=relevant_node.name,
@@ -325,6 +388,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
             )
         )
         tax_tables.append(lines_tax_table)
+        product_tables.append(lines_product_table)
 
     from_time = datetime.combine(report_date, datetime.min.time()) + (
         datetime.combine(date.min, event.daily_end_time) - datetime.min
@@ -344,6 +408,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         config=config,
         lines_location=lines_location_table,
         tax_tables=tax_tables,
+        product_tables=product_tables,
         from_time=from_time,
         to_time=to_time,
         min_order_id=min_order_id,
@@ -354,5 +419,4 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     if logo:
         files["logo.svg"] = logo
 
-    # TODO: Specify save location
     return await render_report(template="daily_totals", template_context=context.model_dump(), files=files)
