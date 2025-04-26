@@ -395,6 +395,11 @@ export const translations = {
       preview: "Show Preview",
       content: "AGB (in markdown formatting)",
     },
+    privacypolicy: {
+      tabLabel: "privacy policy",
+      preview: "Show Preview",
+      content: "Privacy policy (in markdown formatting)",
+    },
     faq: {
       tabLabel: "FAQ",
       preview: "Show Preview",

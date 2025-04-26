@@ -220,7 +220,7 @@ export const PayoutInfo: React.FC = () => {
                     label={
                       <Trans i18nKey="payout.privacyPolicyCheck">
                         please accept the
-                        <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
+                        <Link component={RouterLink} to={"/privacypolicy"} target="_blank" rel="noopener">
                           privacy policy
                         </Link>
                       </Trans>

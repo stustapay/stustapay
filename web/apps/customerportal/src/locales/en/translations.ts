@@ -9,6 +9,7 @@ export const translations = {
     topup: "Top Up",
     agb: "AGB",
     faq: "FAQ",
+    privacypolicy: "Privacy Policy",
   },
   loginFailed: "Login failed: {{reason}}.",
   errorLoadingCustomer: "Error loading customer",
@@ -21,10 +22,6 @@ export const translations = {
   wristbandTagExampleTitle: "Wristband Tag Example with PIN",
   wristbandTagExampleDescription:
     "You can find your wristband tag PIN on the back of your wristband tag. It should look like the example given below:",
-  termsAndConditionsHeader:
-    "Our Terms and Conditions are only available in German. You can access our privacy policy on <1>here</1>.",
-  privacyPolicyHeader:
-    "Our Privacy Policy is only available in German. You can access our terms and conditions on <1>here</1>.",
   languages: {
     en: "English",
     de: "Deutsch",
