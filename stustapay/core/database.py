@@ -7,7 +7,7 @@ from .schema import DB_CODE_PATH, MIGRATION_PATH
 
 logger = logging.getLogger(__name__)
 
-CURRENT_REVISION = "7b3d1202"
+CURRENT_REVISION = "b81c90f4"
 
 
 def get_database(config: DatabaseConfig) -> Database:

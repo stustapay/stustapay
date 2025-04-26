@@ -2,7 +2,7 @@
 this code will simulate the dn TSE webservice (more or less)
 """
 
-# TODO should we rename Transaction to Order here as well?
+# should we rename Transaction to Order here as well? -- NO, Transaction is a TSE transaction =/= Order!
 
 import base64
 import binascii
@@ -458,7 +458,12 @@ class VirtualTSE:
         return {"Status": "ok"}
 
     def getdevicestatus(self, msg) -> TseResponse:
-        response: TseSuccess = {"Status": "ok", "Parameters": {"SignatureAlgorithm": "ecdsa-plain-SHA384"}}
+        response: TseSuccess = {
+            "Status": "ok",
+            "TSEDescription": "BSI-K-TR-1337",
+            "CertificateDate": "2029-08-01T23:59:59+00:00",
+            "Parameters": {"SignatureAlgorithm": "ecdsa-plain-SHA384"},
+        }
         password = msg.get("Password")
         if password is not None:
             # check if blocked
