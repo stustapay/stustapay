@@ -101,11 +101,12 @@ export const PrivacyPolicy = () => {
         </p>
         <h3 id="beschreibung-der-erhobenen-daten">Beschreibung der erhobenen Daten</h3>
         <h4 id="definition-der-betroffenen">Definition der Betroffenen</h4>
-        <p>Teilnehmer des bargeldlosen Zahlungssystems</p>
+        <p>Teilnehmer des bargeldlosen Zahlungssystems und Nutzer des Online-Shops</p>
         <h4 id="erhobene-verarbeitete-daten">Erhobene / Verarbeitete Daten</h4>
         <p>
-          Chipdaten (Chip-Nummer, Verbrauchergruppe), Artikeldaten, Kassendaten (Uhrzeit, Ort, Kassennummer), im Fall
-          von Beschwerden Name, Vorname und Kontaktdaten und Betrag, ggf. Korrespondenz
+	  Chipdaten (Chip-Nummer, Verbrauchergruppe), Artikeldaten, Kassendaten (Uhrzeit, Ort, Kassennummer),
+	  Name, Vorname, Kontaktdaten, Bankverbindung und andere im elektronischen Zahlungsverkehr nötigen Daten,
+	  ggf. Korrespondenz
         </p>
         <h4 id="rechtsgrundlage-der-verarbeitung">Rechtsgrundlage der Verarbeitung</h4>
         <p>Art. 6 (1) b DS-GVO: Kaufvertrag</p>
