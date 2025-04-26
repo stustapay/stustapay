@@ -16,15 +16,6 @@ export const Agb = () => {
     <Container component="main" maxWidth="md">
       <Box sx={{ flexDirection: "column", alignItems: "center", width: "100%", textAlign: "justify" }}>
         <h1 id="stustapay-agb">StuStaPay AGB</h1>
-        <p>
-          <Trans i18nKey="termsAndConditionsHeader">
-            Link to
-            <Link component={RouterLink} to="/datenschutz">
-              privacy policy
-            </Link>
-            .
-          </Trans>
-        </p>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{agbContent}</ReactMarkdown>
       </Box>
     </Container>

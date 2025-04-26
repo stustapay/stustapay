@@ -54,7 +54,7 @@ const router = createBrowserRouter([
         element: <Agb />,
       },
       {
-        path: "datenschutz",
+        path: "/privacypolicy",
         element: <PrivacyPolicy />,
       },
     ],

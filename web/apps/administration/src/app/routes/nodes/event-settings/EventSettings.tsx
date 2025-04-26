@@ -7,6 +7,7 @@ import { useQueryVar } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { TabAgb } from "./TabAgb";
+import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
 import { TabBon } from "./TabBon";
 import { TabCustomerPortal } from "./TabCustomerPortal";
 import { TabFaq } from "./TabFaq";
@@ -79,6 +80,7 @@ export const EventSettings: React.FC = () => {
               <Tab label={t("settings.design.tabLabel")} value="design" />
               <Tab label={t("settings.pretix.tabLabel")} value="pretix" />
               <Tab label={t("settings.agb.tabLabel")} value="agb" />
+              <Tab label={t("settings.privacypolicy.tabLabel")} value="privacypolicy" />
               <Tab label={t("settings.faq.tabLabel")} value="faq" />
               <Tab label={t("settings.sumup.tabLabel")} value="sumup" />
               <Tab label={t("settings.payout.tabLabel")} value="payout" />
@@ -103,6 +105,9 @@ export const EventSettings: React.FC = () => {
           </TabPanel>
           <TabPanel value="agb">
             <TabAgb nodeId={currentNode.id} eventSettings={eventSettings} />
+          </TabPanel>
+          <TabPanel value="privacypolicy">
+            <TabPrivacyPolicy nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
           <TabPanel value="faq">
             <TabFaq nodeId={currentNode.id} eventSettings={eventSettings} />
