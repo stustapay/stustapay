@@ -59,6 +59,14 @@ class SignatureProcessor:
                 tses_in_db = await conn.fetch_many(
                     Tse, "select t.* from tse t join node n on t.node_id = n.id where not n.read_only"
                 )
+                serial_numbers = list(map(lambda t: t.serial, tses_in_db))
+                unique_serials = set(serial_numbers)
+                if len(serial_numbers) != len(unique_serials):
+                    duplicate_serials = set(x for x in serial_numbers if serial_numbers.count(x) > 1)
+                    LOGGER.fatal(
+                        f"Multiple TSEs with the same serial number configured. Duplicate serial numbers are: {duplicate_serials}"
+                    )
+                    return
                 for tse_in_db in tses_in_db:
                     factory = get_tse_handler(tse_in_db)
                     tse = TSEWrapper(tse_id=tse_in_db.id, factory_function=factory)
