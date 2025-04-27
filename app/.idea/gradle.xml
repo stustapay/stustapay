@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/api" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/chip_debug" />
+            <option value="$PROJECT_DIR$/deviceapi" />
             <option value="$PROJECT_DIR$/libssp" />
           </set>
         </option>

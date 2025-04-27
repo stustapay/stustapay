@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation project(":deviceapi")
     implementation "androidx.core:core-ktx:$core_ktx_version"
     implementation "androidx.compose.material:material:$compose_ui_version"
     implementation "androidx.compose.material:material-icons-core:$compose_ui_version"
@@ -62,5 +63,4 @@ dependencies {
     implementation "androidx.camera:camera-view:$camerax_version"
     implementation "androidx.camera:camera-camera2:$camerax_version"
     implementation "androidx.activity:activity-compose:$activity_compose_version"
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
 }
