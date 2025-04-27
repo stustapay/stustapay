@@ -14,11 +14,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.repository.ForceDeregisterState
-import de.stustapay.stustapay.ui.barcode.QRScanView
+import de.stustapay.libssp.ui.barcode.QRScanView
 import de.stustapay.stustapay.ui.common.PrefGroup
 import de.stustapay.stustapay.ui.settings.RegistrationUiState.*
 import de.stustapay.libssp.ui.theme.errorButtonColors
-import de.stustapay.stustapay.ui.barcode.QRScanDialog
+import de.stustapay.libssp.ui.barcode.QRScanDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 

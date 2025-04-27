@@ -1,4 +1,4 @@
-package de.stustapay.stustapay.barcode
+package de.stustapay.libssp.barcode
 
 
 import android.graphics.ImageFormat
