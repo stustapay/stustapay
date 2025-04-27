@@ -1,3 +1,4 @@
+import warnings
 from datetime import date, datetime, time, timedelta
 from typing import Optional
 
@@ -211,21 +212,24 @@ async def make_product_table(
         .groupby("product_name")
         .agg(
             {
-                "quantity": lambda x: int(np.sum(x)),
+                "quantity": lambda x: float(np.sum(x)),
                 "total_price": "sum",
                 "tax_rate": "first",
             }
         )
         .reset_index()
     )
-    product_table["total_discounted"] = 0.
-    product_table["no_discounted"] = 0.
+    product_table["total_discounted"] = 0.0
+    product_table["no_discounted"] = 0.0
 
     # remove vouchers from sales statistics
     orders_with_discounts = all_transactions[
-        all_transactions["order_id"].isin(all_transactions[all_transactions["product_name"] == "Rabatt"]["order_id"])]
-    orders_with_discounts["price_per_voucher"] = orders_with_discounts["product_price"] / orders_with_discounts[
-        "price_in_vouchers"]
+        (all_transactions["order_id"].isin(all_transactions[all_transactions["product_name"] == "Rabatt"]["order_id"]))
+        & (~all_transactions["is_cancelled"])
+    ].copy()
+    orders_with_discounts.loc[:, "price_per_voucher"] = (
+        orders_with_discounts.loc[:, "product_price"] / orders_with_discounts.loc[:, "price_in_vouchers"]
+    )
     for oid in orders_with_discounts.order_id.unique():
         ordr = orders_with_discounts.loc[orders_with_discounts.order_id == oid]
         ordr = ordr.sort_values(by="price_per_voucher", ascending=False).reset_index()
@@ -247,25 +251,22 @@ async def make_product_table(
                 no_products_discounted = 0
                 discounted_amount_for_product = 0
 
-            product_table.loc[
-                (product_table["product_name"] == current_product_name),
-                "quantity"
-            ] -= no_products_discounted
-            product_table.loc[
-                (product_table["product_name"] == current_product_name),
-                "no_discounted"
-            ] += no_products_discounted
-            product_table.loc[
-                (product_table["product_name"] == current_product_name),
-                "total_price"
-            ] -= discounted_amount_for_product
-            product_table.loc[
-                (product_table["product_name"] == current_product_name),
-                "total_discounted"
-            ] += discounted_amount_for_product
+            product_table.loc[(product_table["product_name"] == current_product_name), "quantity"] -= (
+                no_products_discounted
+            )
+            product_table.loc[(product_table["product_name"] == current_product_name), "no_discounted"] += (
+                no_products_discounted
+            )
+            product_table.loc[(product_table["product_name"] == current_product_name), "total_price"] -= (
+                discounted_amount_for_product
+            )
+            product_table.loc[(product_table["product_name"] == current_product_name), "total_discounted"] += (
+                discounted_amount_for_product
+            )
 
         if order_voucher_value != 0:
-            print(f"Remaining balance not 0! Order_id: {oid}; Remaining balance: {order_voucher_value}")
+            warnings.warn(f"Remaining voucher value not 0! Order_id: {oid}; Remaining balance: {order_voucher_value}")
+    product_table = product_table[product_table["product_name"] != "Rabatt"]
 
     return product_table
 
