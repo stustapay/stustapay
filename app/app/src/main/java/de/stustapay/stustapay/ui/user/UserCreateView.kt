@@ -42,6 +42,12 @@ import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import de.stustapay.libssp.ui.barcode.QRScanDialog
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
+import de.stustapay.stustapay.model.UserCreateQRContent
+import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -73,6 +79,25 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
             }
         }
     })
+
+    val registerScanState = rememberDialogDisplayState()
+    val context = LocalContext.current
+    QRScanDialog(
+        state = registerScanState,
+        onScan = { qrcode ->
+            try {
+                val obj = Json.decodeFromString(UserCreateQRContent.serializer(), qrcode)
+                firstName = obj.firstName ?: ""
+                lastName = obj.lastName ?: ""
+                description = obj.description ?: ""
+            } catch (e: Exception) {
+                Log.e("UserCreateView", "Failed to parse QR code: $qrcode", e)
+                Toast
+                    .makeText(context, "QR has wrong format!", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    )
 
     val currentTag = currentTagState;
     if (currentTag == null) {
@@ -242,6 +267,18 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                     Text(text, fontSize = 24.sp)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    onClick = {
+                        registerScanState.open()
+                    }
+                ) {
+                    Text(stringResource(R.string.user_load_data_from_qr), fontSize = 24.sp)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Button(modifier = Modifier
                     .fillMaxWidth()
