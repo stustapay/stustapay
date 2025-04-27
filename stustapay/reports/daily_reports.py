@@ -51,8 +51,7 @@ class DailyReportContext(BaseModel):
     render_logo: bool
     config: BonConfig
     lines_location: list[DailyRevenueLineLocation]
-    tax_tables: list[list[TaxLineLocation]]
-    product_tables: list[list[ProductLineLocation]]
+    location_tables: list[tuple[list[TaxLineLocation], list[ProductLineLocation]]]
     from_time: datetime
     to_time: datetime
     min_order_id: int | None
@@ -124,7 +123,7 @@ async def prep_all_data(
         all_relevant_transactions["date"] == relevant_date
     ].reset_index()
 
-    all_relevant_transactions["sale_type"] = ""
+    all_relevant_transactions["sale_type"] = "Sonstige"
     all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "ticket", "sale_type"] = "Eintrittsticket"
     all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "top_up", "sale_type"] = (
         "Aufladung Guthaben"
@@ -136,7 +135,6 @@ async def prep_all_data(
         all_relevant_transactions["order_type"] == "money_transfer_imbalance", "sale_type"
     ] = "Fehlbetrag Barkassen"
     all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "sale", "sale_type"] = "Verkauf"
-    all_relevant_transactions.loc[all_relevant_transactions["sale_type"] == "", "sale_type"] = "Sonstige"
 
     return all_relevant_transactions
 
@@ -293,8 +291,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     assert node.event_node_id is not None
 
     lines_location_table = []
-    tax_tables = []
-    product_tables = []
+    location_tables = []
     min_order_id = None
     max_order_id = None
 
@@ -387,8 +384,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
                 total_cancels=np.sum(tax_table["total_cancels"]),
             )
         )
-        tax_tables.append(lines_tax_table)
-        product_tables.append(lines_product_table)
+        location_tables.append((lines_tax_table, lines_product_table))
 
     from_time = datetime.combine(report_date, datetime.min.time()) + (
         datetime.combine(date.min, event.daily_end_time) - datetime.min
@@ -407,8 +403,7 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
         render_logo=logo is not None,
         config=config,
         lines_location=lines_location_table,
-        tax_tables=tax_tables,
-        product_tables=product_tables,
+        location_tables=location_tables,
         from_time=from_time,
         to_time=to_time,
         min_order_id=min_order_id,

@@ -20,7 +20,7 @@
       </div>
 
       <div id="overview">
-        <h3 class="centered">Übersicht Online-Payouts</h3>
+        <h3 class="centered">Übersicht Online-Auszahlungen</h3>
         <table class="overview-table">
           <tbody>
             <tr>
