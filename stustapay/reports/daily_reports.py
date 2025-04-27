@@ -39,11 +39,11 @@ class TaxLineLocation(BaseModel):
 class ProductLineLocation(BaseModel):
     node_name: str
     product_name: str
-    no_products: int
+    no_products: int | float
     total_price: float
     tax_rate: float | str
-    total_tax: float
-    total_notax: float
+    no_discounted: float
+    total_discounted: float
 
 
 class DailyReportContext(BaseModel):
@@ -70,6 +70,8 @@ class OrderDaily(BaseModel):
     tax_rate: Optional[float]
     tax_rate_id: Optional[int]
     total_tax: Optional[float]
+    price_in_vouchers: Optional[float]
+    product_price: Optional[float]
     node_name: str
     product_name: Optional[str]
     is_cancelled: bool
@@ -81,7 +83,7 @@ async def prep_all_data(
     orders = await conn.fetch_many(
         OrderDaily,
         "select o.id as order_id, o.booked_at, o.payment_method, o.order_type, o.cancels_order, o.quantity, "
-        "o.total_price, o.tax_rate, o.tax_rate_id, o.total_tax, "
+        "o.total_price, o.tax_rate, o.tax_rate_id, o.total_tax, p.price_in_vouchers, o.product_price, "
         "n.name as node_name, p.name as product_name, (oo.id is not null) as is_cancelled "
         "from order_items o "
         "left join till t on o.till_id = t.id "
@@ -104,6 +106,8 @@ async def prep_all_data(
             "tax_rate": [line.tax_rate for line in orders],
             "tax_rate_id": [line.tax_rate_id for line in orders],
             "total_tax": [line.total_tax for line in orders],
+            "price_in_vouchers": [line.price_in_vouchers for line in orders],
+            "product_price": [line.product_price for line in orders],
             "node_name": [line.node_name for line in orders],
             "product_name": [line.product_name for line in orders],
             "is_cancelled": [line.is_cancelled for line in orders],
@@ -210,12 +214,58 @@ async def make_product_table(
                 "quantity": lambda x: int(np.sum(x)),
                 "total_price": "sum",
                 "tax_rate": "first",
-                "total_tax": "sum",
-                "total_notax": "sum",
             }
         )
         .reset_index()
     )
+    product_table["total_discounted"] = 0.
+    product_table["no_discounted"] = 0.
+
+    # remove vouchers from sales statistics
+    orders_with_discounts = all_transactions[
+        all_transactions["order_id"].isin(all_transactions[all_transactions["product_name"] == "Rabatt"]["order_id"])]
+    orders_with_discounts["price_per_voucher"] = orders_with_discounts["product_price"] / orders_with_discounts[
+        "price_in_vouchers"]
+    for oid in orders_with_discounts.order_id.unique():
+        ordr = orders_with_discounts.loc[orders_with_discounts.order_id == oid]
+        ordr = ordr.sort_values(by="price_per_voucher", ascending=False).reset_index()
+
+        order_voucher_value = -1 * np.sum(ordr[ordr["product_name"] == "Rabatt"]["total_price"])
+        for n in range(len(ordr) - 1):
+            current_product_name = ordr.loc[n, "product_name"]
+            product_price_per_voucher = ordr.loc[n, "price_per_voucher"]
+            if not np.isnan(product_price_per_voucher):
+                vouchers_for_product = np.floor(order_voucher_value / product_price_per_voucher)
+                discounted_amount_for_product = product_price_per_voucher * vouchers_for_product
+                no_products_discounted = discounted_amount_for_product / ordr.loc[n, "product_price"]
+                if no_products_discounted > ordr.loc[n, "quantity"]:
+                    no_products_discounted = ordr.loc[n, "quantity"]
+                    vouchers_for_product = no_products_discounted * ordr.loc[n, "price_in_vouchers"]
+                    discounted_amount_for_product = product_price_per_voucher * vouchers_for_product
+                order_voucher_value -= discounted_amount_for_product
+            else:
+                no_products_discounted = 0
+                discounted_amount_for_product = 0
+
+            product_table.loc[
+                (product_table["product_name"] == current_product_name),
+                "quantity"
+            ] -= no_products_discounted
+            product_table.loc[
+                (product_table["product_name"] == current_product_name),
+                "no_discounted"
+            ] += no_products_discounted
+            product_table.loc[
+                (product_table["product_name"] == current_product_name),
+                "total_price"
+            ] -= discounted_amount_for_product
+            product_table.loc[
+                (product_table["product_name"] == current_product_name),
+                "total_discounted"
+            ] += discounted_amount_for_product
+
+        if order_voucher_value != 0:
+            print(f"Remaining balance not 0! Order_id: {oid}; Remaining balance: {order_voucher_value}")
 
     return product_table
 
@@ -366,8 +416,8 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
                     no_products=line.quantity,
                     total_price=line.total_price,
                     tax_rate=line.tax_rate,
-                    total_tax=line.total_tax,
-                    total_notax=line.total_notax,
+                    no_discounted=line.no_discounted,
+                    total_discounted=line.total_discounted,
                 )
             )
 

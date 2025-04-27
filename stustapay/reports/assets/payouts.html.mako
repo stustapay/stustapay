@@ -45,7 +45,7 @@
           <thead>
             <tr class="table-header">
               <th>Ausgeführt am</th>
-              <th>Anzahl Auszahlungen</th>
+              <th>Anzahl Auszahlungen/Spenden</th>
               <th>Summe Auszahlungen</th>
               <th>Summe Spenden</th>
             </tr>
@@ -53,10 +53,10 @@
           <tbody>
             % for payout in payouts:
             <tr>
-              <td>${format_date(payout["set_done_at"])}</td>
-              <td>${line["n_payouts"]}</td>
-              <td>${format_money(line["total_payout_amount"])}</td>
-              <td>${format_money(line["total_donation_amount"])}</td>
+              <td>${format_datetime(payout["set_done_at"])}</td>
+              <td>${payout["n_payouts"]}</td>
+              <td>${format_money(payout["total_payout_amount"])}</td>
+              <td>${format_money(payout["total_donation_amount"])}</td>
             </tr>
             % endfor
           </tbody>

@@ -117,9 +117,8 @@
                   <th class="table-field">Anzahl Verkauft</th>
                   <th class="table-field">Summe inkl. USt</th>
                   <th class="table-field">Steuersatz</th>
-                  <th class="table-field">Summe USt.</th>
-                  <th class="table-field">Summe exkl. USt</th>
-
+                  <th class="table-field">Gegen Gutschein</th>
+                  <th class="table-field">Wert Gutscheine</th>
                 </tr>
               </thead>
               <tbody>
@@ -129,8 +128,8 @@
                   <td class="table-field">${line["no_products"]}</td>
                   <td class="table-field">${format_money(line["total_price"])}</td>
                   <td class="table-field">${format_percent(line["tax_rate"]) if type(line["tax_rate"]) == float else line["tax_rate"]}</td>
-                  <td class="table-field">${format_money(line["total_tax"])}</td>
-                  <td class="table-field">${format_money(line["total_notax"])}</td>
+                  <td class="table-field">${line["no_discounted"]}</td>
+                  <td class="table-field">${format_money(line["total_discounted"])}</td>
                 </tr>
                 % endfor
               </tbody>
