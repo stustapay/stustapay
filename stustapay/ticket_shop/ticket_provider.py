@@ -74,7 +74,7 @@ class TicketProvider:
             )
             if ticket.customer_email:
                 await conn.execute(
-                    "insert into customer_info (customer_account_id, email) values ($1, $2)",
+                    "insert into customer_info (customer_account_id, email) values ($1, $2) on conflict (customer_account_id) do update set email = $2",
                     customer_account_id,
                     ticket.customer_email,
                 )
