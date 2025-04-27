@@ -329,6 +329,7 @@ async def generate_dummy_daily_report(event: RestrictedEventSettings, logo: Blob
                 total_price=10475.74 * 1 / 3,
             ),
         ],
+        location_tables=[]
     )
     files = {}
     if logo:
