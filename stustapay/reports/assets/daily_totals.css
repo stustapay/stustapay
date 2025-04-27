@@ -100,3 +100,7 @@ aside address#to {
 .transaction-table {
     width: 100%
 }
+
+.table-field:not(:first-child) {
+    padding-left:8px;
+}
