@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('DeviceAPI_ver20250209_release.aar'))

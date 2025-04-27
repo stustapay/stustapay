@@ -20,7 +20,7 @@ import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.barcode.QRScanDialog
+import de.stustapay.libssp.ui.barcode.QRScanDialog
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
