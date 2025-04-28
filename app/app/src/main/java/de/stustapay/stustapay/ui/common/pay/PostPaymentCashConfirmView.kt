@@ -138,6 +138,7 @@ fun PostPaymentCashConfirmView(
                                     }
                                 } else {
                                     // Open NFC scan dialog
+                                    viewModel.showScanChipOnCustomerDisplay()
                                     scanState.open()
                                 }
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -157,20 +158,29 @@ fun PostPaymentCashConfirmView(
 
     // NFC scan dialog for cases without an existing tag
     if (existingTag == null) {
-        NfcScanDialog(state = scanState, onScan = { tag ->
-            scope.launch {
-                scanState.close()
-                when (onPay) {
-                    is CashECCallback.Tag -> {
-                        onPay.onCash(tag)
-                        goBack()
-                    }
-                    is CashECCallback.NoTag -> {
-                        // This shouldn't be reached
-                        error("Unexpected NoTag callback during NFC scan.")
+        NfcScanDialog(
+            state = scanState, 
+            onDismiss = {
+                // Reset customer display when scan dialog is dismissed
+                viewModel.resetCustomerDisplay()
+            },
+            onScan = { tag ->
+                // Reset customer display when tag is scanned
+                viewModel.resetCustomerDisplay()
+                scope.launch {
+                    scanState.close()
+                    when (onPay) {
+                        is CashECCallback.Tag -> {
+                            onPay.onCash(tag)
+                            goBack()
+                        }
+                        is CashECCallback.NoTag -> {
+                            // This shouldn't be reached
+                            error("Unexpected NoTag callback during NFC scan.")
+                        }
                     }
                 }
             }
-        })
+        )
     }
 }

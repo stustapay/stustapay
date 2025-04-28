@@ -65,7 +65,13 @@ fun CashConfirmView(
     val scanState = rememberNfcScanDialogState()
     NfcScanDialog(
         state = scanState,
+        onDismiss = {
+            // Reset customer display when scan dialog is dismissed
+            viewModel.resetCustomerDisplay()
+        },
         onScan = { tag ->
+            // Reset customer display when a tag is scanned
+            viewModel.resetCustomerDisplay()
             when (onPay) {
                 is CashECCallback.Tag -> {
                     onPay.onCash(tag)
@@ -130,6 +136,8 @@ fun CashConfirmView(
                         onClick = {
                             when (onPay) {
                                 is CashECCallback.Tag -> {
+                                    // Update customer display to show scan chip message
+                                    viewModel.showScanChipOnCustomerDisplay()
                                     scanState.open()
                                 }
 

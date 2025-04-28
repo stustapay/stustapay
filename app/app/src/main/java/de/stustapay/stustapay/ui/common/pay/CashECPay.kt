@@ -134,7 +134,13 @@ fun CashECSelection(
                     val scanState = rememberNfcScanDialogState()
                     NfcScanDialog(
                         state = scanState,
+                        onDismiss = {
+                            // Reset customer display when scan dialog is dismissed
+                            viewModel.resetCustomerDisplay()
+                        },
                         onScan = { tag ->
+                            // Reset customer display when a tag is scanned
+                            viewModel.resetCustomerDisplay()
                             when (onPayRequested) {
                                 is CashECCallback.Tag -> {
                                     onPayRequested.onEC(tag)
@@ -164,6 +170,8 @@ fun CashECSelection(
                             if (checkAmount()) {
                                 when (onPayRequested) {
                                     is CashECCallback.Tag -> {
+                                        // Update customer display to show scan chip message
+                                        viewModel.showScanChipOnCustomerDisplay()
                                         scanState.open()
                                     }
 
