@@ -85,20 +85,22 @@ fun AccountStatus(
         Column {
             Divider(modifier = Modifier.padding(vertical = 10.dp))
 
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-                enabled = uiState.canViewCustomerOrders,
-                onClick = {
-                    scope.launch {
-                        viewModel.fetchCustomerOrders()
-                        navigateTo(CustomerStatusNavDests.details)
-                    }
-                }) {
-                Text(stringResource(R.string.customer_details))
+            // Only show the Transaction History button if the user has permission to view customer orders
+            if (uiState.canViewCustomerOrders) {
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
+                    onClick = {
+                        scope.launch {
+                            viewModel.fetchCustomerOrders()
+                            navigateTo(CustomerStatusNavDests.details)
+                        }
+                    }) {
+                    Text(stringResource(R.string.customer_details))
+                }
+                
+                Divider(modifier = Modifier.padding(vertical = 10.dp))
             }
-
-            Divider(modifier = Modifier.padding(vertical = 10.dp))
 
             Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
                 val text = when (val state = uiState.customer) {

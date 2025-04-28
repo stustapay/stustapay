@@ -108,12 +108,14 @@ fun AccountProperties(
                     style = MoneyAmountStyle,
                 )
 
-                // only show if they have vouchers?
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    "${account.vouchers} ${stringResource(R.string.customer_vouchers)}",
-                    fontSize = 36.sp
-                )
+                // Only show vouchers if the customer has vouchers (count > 0)
+                if (account.vouchers > 0) {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Text(
+                        "${account.vouchers} ${stringResource(R.string.customer_vouchers)}",
+                        fontSize = 36.sp
+                    )
+                }
             }
         }
 

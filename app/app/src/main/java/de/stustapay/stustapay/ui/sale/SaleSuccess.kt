@@ -41,6 +41,7 @@ import de.stustapay.api.models.PaymentMethod
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -77,6 +78,12 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
     LaunchedEffect(Unit) {
         vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
+    }
+    
+    // Auto-close the success page after 5 seconds
+    LaunchedEffect(saleCompletedV) {
+        delay(5000) // 5 seconds
+        onConfirm()
     }
 
     Scaffold(
