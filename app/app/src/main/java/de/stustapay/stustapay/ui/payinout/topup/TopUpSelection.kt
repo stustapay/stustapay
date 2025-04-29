@@ -70,7 +70,7 @@ fun TopUpSelection(
     ) { paddingValues ->
         val scrollState = rememberScrollState()
         Column(modifier = Modifier.verticalScroll(scrollState, reverseScrolling = true)) {
-            if (!topUpConfig.canHandleCash()) {
+            if (!topUpConfig.canHandleCash() && !topUpConfig.hasOnlyTopUpPrivilege()) {
                 NoCashRegisterWarning(modifier = Modifier.padding(4.dp))
             }
             AmountSelection(
