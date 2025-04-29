@@ -50,11 +50,56 @@ fun PreviewProductConfirmLineItem() {
 fun ProductConfirmLineItem(
     lineItem: PendingLineItem,
 ) {
-    ProductConfirmItem(
-        name = lineItem.product.name,
-        quantity = lineItem.quantity.intValue(),
-        price = lineItem.productPrice,
-    )
+    val style = ProductConfirmItemStyle
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.weight(0.5f),
+        ) {
+            Text(
+                text = lineItem.product.name,
+                style = style,
+                modifier = Modifier.padding(5.dp)
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .weight(0.5f),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            // Quantity
+            Text(
+                text = "×" + "%3d".format(lineItem.quantity.intValue()),
+                textAlign = TextAlign.Right,
+                modifier = Modifier.weight(0.3f),
+                style = style,
+            )
+
+            // Single price
+            Text(
+                text = formatCurrencyValue(lineItem.productPrice),
+                textAlign = TextAlign.Right,
+                modifier = Modifier.weight(0.35f),
+                style = style,
+            )
+            
+            // Total price
+            Text(
+                text = formatCurrencyValue(lineItem.totalPrice),
+                textAlign = TextAlign.Right,
+                modifier = Modifier.weight(0.35f),
+                style = style,
+            )
+        }
+    }
 }
 
 @Preview
