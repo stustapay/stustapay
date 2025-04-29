@@ -578,7 +578,9 @@ class CustomerDisplayManager @Inject constructor(
                 layoutParams = android.widget.FrameLayout.LayoutParams(
                     android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                     android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-                )
+                ).apply {
+                    gravity = android.view.Gravity.CENTER
+                }
             }
             
             // Completion text
