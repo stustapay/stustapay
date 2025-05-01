@@ -3,3 +3,4 @@
 
 alter table tse add column TSEDescription text;
 alter table tse add column CertificateDate text;
+alter table tse add column first_operation timestamptz;
