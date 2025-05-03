@@ -9,6 +9,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.PendingLineItem
 import de.stustapay.api.models.Product
@@ -49,15 +50,23 @@ fun PreviewProductConfirmLineItem() {
 @Composable
 fun ProductConfirmLineItem(
     lineItem: PendingLineItem,
+    isSmallScreen: Boolean = false
 ) {
-    val style = ProductConfirmItemStyle
+    val style = if (isSmallScreen) {
+        ProductConfirmItemStyle.copy(fontSize = 14.sp)
+    } else {
+        ProductConfirmItemStyle
+    }
+    
+    val verticalPadding = if (isSmallScreen) 1.dp else 2.dp
+    val horizontalPadding = if (isSmallScreen) 2.dp else 5.dp
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp)
+            .padding(vertical = verticalPadding)
     ) {
         Row(
             modifier = Modifier.weight(0.5f),
@@ -65,13 +74,13 @@ fun ProductConfirmLineItem(
             Text(
                 text = lineItem.product.name,
                 style = style,
-                modifier = Modifier.padding(5.dp)
+                modifier = Modifier.padding(horizontalPadding)
             )
         }
 
         Row(
             modifier = Modifier
-                .padding(horizontal = 5.dp)
+                .padding(horizontal = horizontalPadding)
                 .weight(0.5f),
             horizontalArrangement = Arrangement.End,
         ) {
@@ -131,19 +140,35 @@ fun ProductConfirmItem(
     price: Double? = null,
     quantity: Int? = null,
     bigStyle: Boolean = false,
+    isSmallScreen: Boolean = false
 ) {
-    val style: TextStyle = if (bigStyle) {
-        ProductConfirmItemBigStyle
+    val normalStyle = if (isSmallScreen) {
+        ProductConfirmItemStyle.copy(fontSize = 14.sp)
     } else {
         ProductConfirmItemStyle
     }
+    
+    val biggerStyle = if (isSmallScreen) {
+        ProductConfirmItemBigStyle.copy(fontSize = 18.sp)
+    } else {
+        ProductConfirmItemBigStyle
+    }
+    
+    val style: TextStyle = if (bigStyle) {
+        biggerStyle
+    } else {
+        normalStyle
+    }
+    
+    val verticalPadding = if (isSmallScreen) 1.dp else 2.dp
+    val horizontalPadding = if (isSmallScreen) 2.dp else 5.dp
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp)
+            .padding(vertical = verticalPadding)
     ) {
         Row(
             modifier = Modifier.weight(0.5f),
@@ -151,13 +176,13 @@ fun ProductConfirmItem(
             Text(
                 text = name,
                 style = style,
-                modifier = Modifier.padding(5.dp)
+                modifier = Modifier.padding(horizontalPadding)
             )
         }
 
         Row(
             modifier = Modifier
-                .padding(horizontal = 5.dp)
+                .padding(horizontal = horizontalPadding)
                 .weight(0.5f),
             horizontalArrangement = Arrangement.End,
         ) {
@@ -185,6 +210,5 @@ fun ProductConfirmItem(
                 style = style,
             )
         }
-
     }
 }

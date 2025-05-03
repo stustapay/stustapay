@@ -59,32 +59,25 @@ fun PayOutScan(
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            // Create a much larger Box to ensure no clipping occurs
-            Box(
+            // Use a centered approach similar to NfcScanDialog
+            NfcScanCard(
                 modifier = Modifier
-                    .size(1000.dp, 800.dp)
-                    .padding(start = 350.dp), // Add padding from the start to shift the starting point
-                contentAlignment = Alignment.CenterStart // Align from the start rather than center
-            ) {
-                // Apply the offset directly as a modifier on the NfcScanCard
-                NfcScanCard(
-                    modifier = Modifier
-                        .size(350.dp, 350.dp)
-                        .offset(
-                            x = deviceConfig.nfcScanDialogOffset.x,
-                            y = deviceConfig.nfcScanDialogOffset.y
-                        ),
-                    onScan = onScan,
-                    showStatus = false,
-                    content = { scanStatus ->
-                        // Use the enhanced NFC scan content
-                        EnhancedNfcScanContent(
-                            isIminFalcons2 = deviceConfig.isIminFalcons2,
-                            scanStatus = scanStatus
-                        )
-                    }
-                )
-            }
+                    .size((350 * deviceConfig.nfcScanDialogScale).dp, (350 * deviceConfig.nfcScanDialogScale).dp)
+                    .offset(
+                        x = deviceConfig.nfcScanDialogOffset.x,
+                        y = deviceConfig.nfcScanDialogOffset.y
+                    ),
+                onScan = onScan,
+                showStatus = false,
+                content = { scanStatus ->
+                    // Use the enhanced NFC scan content
+                    EnhancedNfcScanContent(
+                        isIminFalcons2 = deviceConfig.isIminFalcons2,
+                        isSmallScreen = deviceConfig.isSmallScreen,
+                        scanStatus = scanStatus
+                    )
+                }
+            )
         }
     }
 }

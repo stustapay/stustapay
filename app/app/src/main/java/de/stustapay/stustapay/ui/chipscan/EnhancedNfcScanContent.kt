@@ -52,6 +52,7 @@ import de.stustapay.stustapay.R
 @Composable
 fun EnhancedNfcScanContent(
     isIminFalcons2: Boolean,
+    isSmallScreen: Boolean = false,
     scanStatus: String
 ) {
     // Pulsing animation for the NFC icon
@@ -75,33 +76,45 @@ fun EnhancedNfcScanContent(
         )
     )
     
+    // Even more aggressive size adjustments for very small screens
+    val headerFontSize = if (isSmallScreen) 16.sp else 24.sp
+    val iconSize = if (isSmallScreen) 50.dp else 80.dp
+    val touchIconSize = if (isSmallScreen) 24.dp else 40.dp
+    val arrowIconSize = if (isSmallScreen) 16.dp else 24.dp
+    val chipBoxWidth = if (isSmallScreen) 80.dp else 120.dp
+    val chipBoxHeight = if (isSmallScreen) 40.dp else 60.dp
+    val statusFontSize = if (isSmallScreen) 12.sp else 16.sp
+    val cardPadding = if (isSmallScreen) 4.dp else 16.dp
+    val contentPadding = if (isSmallScreen) 4.dp else 16.dp
+    val spacerHeight = if (isSmallScreen) 4.dp else 16.dp
+    
     Card(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(if (isSmallScreen) 2.dp else 8.dp)
             .fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = 8.dp
+        shape = RoundedCornerShape(12.dp),
+        elevation = 4.dp
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp),
+                .padding(cardPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Header text - different for Falcon 2
+            // Header text - different for Falcon 2 and uses smaller text for small screens
             Text(
                 text = if (isIminFalcons2) "Chip hier vorhalten" else "Scan a Chip",
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontSize = headerFontSize,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = if (isSmallScreen) 4.dp else 16.dp)
             )
             
             // Main visual container
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(contentPadding),
                 contentAlignment = Alignment.Center
             ) {
                 // NFC Icon with pulse animation
@@ -109,7 +122,7 @@ fun EnhancedNfcScanContent(
                     imageVector = Icons.Filled.NearMe,
                     contentDescription = "NFC",
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(iconSize)
                         .scale(pulseAnimation)
                         .alpha(0.9f),
                     tint = MaterialTheme.colors.primary
@@ -124,7 +137,7 @@ fun EnhancedNfcScanContent(
                             if (isIminFalcons2) Alignment.CenterStart else Alignment.Center
                         )
                         .padding(start = if (isIminFalcons2) 8.dp else 0.dp)
-                        .size(40.dp),
+                        .size(touchIconSize),
                     tint = MaterialTheme.colors.secondary
                 )
                 
@@ -142,7 +155,7 @@ fun EnhancedNfcScanContent(
                                 imageVector = Icons.Filled.ArrowForward,
                                 contentDescription = "Arrow",
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(arrowIconSize)
                                     .rotate(180f) // Rotate to point left
                                     .alpha(1f - (index * 0.2f)), // Fade out as they go further
                                 tint = MaterialTheme.colors.secondary
@@ -152,38 +165,40 @@ fun EnhancedNfcScanContent(
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(spacerHeight))
             
-            // Visual chip indicator
-            Box(
-                modifier = Modifier
-                    .size(width = 120.dp, height = 60.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFEEEEEE))
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colors.primary,
-                        shape = RoundedCornerShape(8.dp)
+            // Visual chip indicator - simplified on small screens
+            if (!isSmallScreen) {
+                Box(
+                    modifier = Modifier
+                        .size(width = chipBoxWidth, height = chipBoxHeight)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFEEEEEE))
+                        .border(
+                            width = 2.dp,
+                            color = MaterialTheme.colors.primary,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "NFC Chip",
+                        fontSize = if (isSmallScreen) 12.sp else 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.DarkGray
                     )
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "NFC Chip",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.DarkGray
-                )
+                }
+                
+                Spacer(modifier = Modifier.height(spacerHeight))
             }
-            
-            Spacer(modifier = Modifier.height(16.dp))
             
             // Status text
             Text(
                 text = scanStatus,
-                fontSize = 16.sp,
+                fontSize = statusFontSize,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = if (isSmallScreen) 2.dp else 8.dp)
             )
         }
     }

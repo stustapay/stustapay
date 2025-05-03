@@ -48,90 +48,92 @@ fun CashConfirmView(
     question: String = stringResource(R.string.received_q),
     onPay: CashECCallback,
     viewModel: CashECSelectionViewModel = hiltViewModel(),
+    isSmallScreen: Boolean = false
 ) {
+    val scanState = rememberNfcScanDialogState()
     val haptic = LocalHapticFeedback.current
-    val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
-    
-    // If the user only has the can_topup privilege, don't show the cash confirmation dialog
-    if (config.hasOnlyTopUpPrivilege()) {
-        // Navigate back to avoid showing this screen
-        LaunchedEffect(Unit) {
-            goBack()
+
+    // Adjust sizes based on screen size
+    val questionFontSize = if (isSmallScreen) 18.sp else 22.sp
+    val amountFontSize = if (isSmallScreen) 28.sp else 36.sp
+    val statusVerticalPadding = if (isSmallScreen) 6.dp else 12.dp
+    val buttonHeight = if (isSmallScreen) 50.dp else 70.dp
+    val buttonTextSize = if (isSmallScreen) 18.sp else 24.sp
+    val buttonPadding = if (isSmallScreen) 6.dp else 10.dp
+    val dividerVerticalPadding = if (isSmallScreen) 4.dp else 8.dp
+
+    // use our helper here to get a tag
+    when (onPay) {
+        is CashECCallback.Tag -> {
+            NfcScanDialog(
+                state = scanState,
+                onScan = {
+                    onPay.onCash(it)
+                }
+            )
         }
-        return
+
+        else -> {}
     }
 
-    // Check if we actually want to pay a tag without having to scan it again
-    val scanState = rememberNfcScanDialogState()
-    NfcScanDialog(
-        state = scanState,
-        onDismiss = {
-            // Reset customer display when scan dialog is dismissed
-            viewModel.resetCustomerDisplay()
-        },
-        onScan = { tag ->
-            // Reset customer display when a tag is scanned
-            viewModel.resetCustomerDisplay()
-            when (onPay) {
-                is CashECCallback.Tag -> {
-                    onPay.onCash(tag)
-                }
-
-                is CashECCallback.NoTag -> {
-                    // never reached.
-                    error("nfc scanned in cash NoTag mode")
-                }
-            }
-        }
-    )
-
     Scaffold(
-        content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding()),
-                contentAlignment = Alignment.Center
+        topBar = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "%.2f€".format(getAmount().toDouble() / 100),
-                        style = MoneyAmountStyle,
-                    )
-                    Text(
-                        text = question,
-                        style = MaterialTheme.typography.h4,
-                        textAlign = TextAlign.Center,
-                    )
+                Text(
+                    question,
+                    modifier = Modifier.padding(
+                        start = 10.dp, 
+                        end = 10.dp, 
+                        top = if (isSmallScreen) 6.dp else 10.dp
+                    ),
+                    fontSize = questionFontSize,
+                    textAlign = TextAlign.Center,
+                )
+
+                // Convert cents to euros by dividing by 100
+                Text(
+                    "%.2f €".format(getAmount().toDouble() / 100),
+                    style = MoneyAmountStyle,
+                    fontSize = amountFontSize
+                )
+
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = statusVerticalPadding)
+                        .fillMaxWidth()
+                ) {
+                    status()
                 }
             }
         },
         bottomBar = {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = 5.dp)
-                    .fillMaxWidth()
-            ) {
-                Divider(modifier = Modifier.fillMaxWidth())
-                status()
+            Column(modifier = Modifier.padding(bottom = if (isSmallScreen) 4.dp else 10.dp)) {
+                Divider(
+                    modifier = Modifier.padding(vertical = dividerVerticalPadding)
+                )
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Button(
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
                         onClick = {
-                            goBack()
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            goBack()
                         },
                         modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(70.dp)
-                            .padding(end = 10.dp)
+                            .fillMaxWidth()
+                            .height(buttonHeight)
+                            .padding(end = buttonPadding)
+                            .weight(1f),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary),
                     ) {
-                        Text(text = stringResource(R.string.back), fontSize = 24.sp)
+                        Text(text = "✕", fontSize = buttonTextSize)
                     }
+
                     Button(
                         onClick = {
                             when (onPay) {
@@ -150,13 +152,20 @@ fun CashConfirmView(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(70.dp)
-                            .padding(start = 10.dp)
+                            .height(buttonHeight)
+                            .padding(start = buttonPadding)
+                            .weight(1f)
                     ) {
-                        Text(text = "✓", fontSize = 24.sp)
+                        Text(text = "✓", fontSize = buttonTextSize)
                     }
                 }
             }
         }
-    )
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+        ) {}
+    }
 }

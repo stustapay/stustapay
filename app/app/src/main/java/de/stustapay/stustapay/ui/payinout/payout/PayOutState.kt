@@ -44,8 +44,8 @@ data class PayOutState(
         val tagV = tag ?: return null
 
         // payout amount is always negative for the api
-        // pass null (meaning max amount) if we didn't change the amount locally.
-        val amount = currentAmount?.let { it.toDouble() / -100 }
+        // Always ensure the amount is negative regardless of whether it's a full or partial payout
+        val amount = currentAmount?.let { -(it.toDouble() / 100) } ?: null
 
         val _checkedPayOut = checkedPayOut
         return NewPayOut(
@@ -74,6 +74,7 @@ data class PayOutState(
         checkedPayOut = CheckedPayOut(
             uuid = pendingPayOut.uuid.toString(),
             maxAmount = pendingPayOut.oldBalance,
+            // Ensure the amount is negative for payout
             amount = pendingPayOut.amount,
             // we couldn't have created a newpayout to request the pendingpayout
             // in getNewPayout if tag was null.

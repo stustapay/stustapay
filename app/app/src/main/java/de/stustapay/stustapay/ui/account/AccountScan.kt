@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.account
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -33,38 +34,65 @@ fun AccountScan(onScan: (NfcTag) -> Unit) {
     
     val deviceConfig = deviceConfigProvider.getDeviceConfig()
     
-    // Use the same large container with offset approach as the NfcScanDialog
+    // Calculate adjusted size based on device config scale factor
+    val adjustedWidth = (350 * deviceConfig.nfcScanDialogScale).dp
+    val adjustedHeight = (350 * deviceConfig.nfcScanDialogScale).dp
+    
+    // Use the same responsive approach as in NfcScanDialog
     Box(
         modifier = Modifier
             .padding(20.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-        // Create a much larger Box to ensure no clipping occurs
-        Box(
-            modifier = Modifier
-                .size(1000.dp, 800.dp)
-                .padding(start = 350.dp), // Add padding from the start to shift the starting point
-            contentAlignment = Alignment.CenterStart // Align from the start rather than center
-        ) {
-            // Apply the offset directly as a modifier on the NfcScanCard
-            NfcScanCard(
+        if (deviceConfig.useCenteredDialog) {
+            // For small screens like Sunmi L2S Pro, use a simple centered approach
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                NfcScanCard(
+                    modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
+                    onScan = onScan,
+                    keepScanning = true,
+                    content = { status ->
+                        // Use our enhanced content with small screen awareness
+                        EnhancedAccountScanContent(
+                            isIminFalcons2 = deviceConfig.isIminFalcons2,
+                            isSmallScreen = deviceConfig.isSmallScreen,
+                            scanStatus = status
+                        )
+                    }
+                )
+            }
+        } else {
+            // For other devices, use the original approach with offset positioning
+            Box(
                 modifier = Modifier
-                    .size(350.dp, 350.dp)
-                    .offset(
-                        x = deviceConfig.nfcScanDialogOffset.x,
-                        y = deviceConfig.nfcScanDialogOffset.y
+                    .size(1000.dp, 800.dp)
+                    .padding(
+                        start = if (deviceConfig.isSmallScreen) 150.dp else 350.dp
                     ),
-                onScan = onScan,
-                keepScanning = true,
-                content = { status ->
-                    // Use our enhanced content
-                    EnhancedAccountScanContent(
-                        isIminFalcons2 = deviceConfig.isIminFalcons2,
-                        scanStatus = status
-                    )
-                }
-            )
+                contentAlignment = Alignment.CenterStart
+            ) {
+                NfcScanCard(
+                    modifier = Modifier
+                        .size(width = adjustedWidth, height = adjustedHeight)
+                        .offset(
+                            x = deviceConfig.nfcScanDialogOffset.x,
+                            y = deviceConfig.nfcScanDialogOffset.y
+                        ),
+                    onScan = onScan,
+                    keepScanning = true,
+                    content = { status ->
+                        EnhancedAccountScanContent(
+                            isIminFalcons2 = deviceConfig.isIminFalcons2,
+                            isSmallScreen = deviceConfig.isSmallScreen,
+                            scanStatus = status
+                        )
+                    }
+                )
+            }
         }
     }
 }

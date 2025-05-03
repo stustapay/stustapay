@@ -15,7 +15,13 @@ data class DeviceConfig(
     // Whether this device is an imin Falcons 2 terminal
     val isIminFalcons2: Boolean = false,
     // The offset for NFC scan dialog for this specific device
-    val nfcScanDialogOffset: DpOffset = DpOffset(0.dp, 0.dp)
+    val nfcScanDialogOffset: DpOffset = DpOffset(0.dp, 0.dp),
+    // Scaling factor for the NFC scan dialog (1.0f is standard size)
+    val nfcScanDialogScale: Float = 1.0f,
+    // Whether this is a small screen device
+    val isSmallScreen: Boolean = false,
+    // Whether to use centered positioning for the dialog
+    val useCenteredDialog: Boolean = false
 )
 
 /**
@@ -40,6 +46,16 @@ class DeviceConfigProvider @Inject constructor(
             return DeviceConfig(
                 isIminFalcons2 = true,
                 nfcScanDialogOffset = DpOffset((-300).dp, 0.dp) // Move dialog much further to the left
+            )
+        }
+        
+        // Sunmi L2S Pro configuration - Small screen device
+        if (model.contains("l2s") || model.contains("l2k") || model.contains("sunmi")) {
+            return DeviceConfig(
+                isSmallScreen = true,
+                nfcScanDialogScale = 0.7f,  // Reduce the size by 30%
+                useCenteredDialog = true,    // Use centered positioning instead of offset
+                nfcScanDialogOffset = DpOffset(0.dp, 0.dp)  // No offset needed with centered positioning
             )
         }
         
