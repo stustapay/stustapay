@@ -46,6 +46,8 @@ TseSuccess = TypedDict(
         "Value": NotRequired[str],
         "Length": NotRequired[int],
         "ClientIDs": NotRequired[list],
+        "TSEDescription": NotRequired[str],
+        "CertificateDate": NotRequired[str],
     },
 )
 TseError = TypedDict(

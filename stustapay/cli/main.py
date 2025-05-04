@@ -11,8 +11,8 @@ from stustapay.administration import server as admin_server
 from stustapay.bon.generator import Generator
 from stustapay.core.config import read_config
 from stustapay.customer_portal import server as customerportal_server
+from stustapay.dsfinvk.ao146a_xml_generator import AO146Aexporter
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
-from stustapay.dsfinvk.ao146a_xml_generator import AO146Aexporter as AO146Aexporter
 from stustapay.payment.payment_processor import run as run_payment_processor
 from stustapay.terminalserver import server as terminal_server
 from stustapay.ticket_shop.ticket_processor import run as run_ticket_processor
@@ -87,6 +87,7 @@ def dsfinvk_export(
     )
     asyncio.run(generator.run())
 
+
 @cli.command()
 def ao146a_export(
     ctx: typer.Context,
@@ -113,6 +114,7 @@ def ao146a_export(
         event_node_id=node_id,
     )
     asyncio.run(generator.run())
+
 
 @cli.command()
 def administration_api(ctx: typer.Context, show_openapi: bool = False):

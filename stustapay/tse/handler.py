@@ -22,8 +22,8 @@ class TSEMasterData:
     tse_time_format: str
     tse_public_key: str
     tse_certificate: str
-    tse_TSEDescription: str
-    tse_CertificateDate: str
+    tse_tse_description: str
+    tse_certificate_date: str
     tse_process_data_encoding: str
 
 

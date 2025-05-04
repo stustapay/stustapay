@@ -113,7 +113,7 @@ class TSEWrapper:
                     if delta > datetime.timedelta(seconds=10):
                         LOGGER.warning(f"new signing request for ordr {request['order_id']} is to old -> failing")
                         await conn.execute(
-                            """ 
+                            """
                             update
                                 tse_signature
                             set
@@ -161,8 +161,8 @@ class TSEWrapper:
                 public_key=$4,
                 certificate=$5,
                 process_data_encoding=$6,
-                tsedescription=$7,
-                certificatedate=$8
+                tse_description=$7,
+                certificate_date=$8
             where
                 id=$9
             """,
@@ -172,8 +172,8 @@ class TSEWrapper:
                 masterdata.tse_public_key,
                 masterdata.tse_certificate,
                 masterdata.tse_process_data_encoding,
-                masterdata.tse_TSEDescription,
-                masterdata.tse_CertificateDate,
+                masterdata.tse_tse_description,
+                masterdata.tse_certificate_date,
                 self.tse_id,
             )
             LOGGER.info("New TSE registered in database")
@@ -189,26 +189,26 @@ class TSEWrapper:
 
             ## add further info from TSE masterdata
             tse_data_in_db = await conn.fetchrow(
-                "select tsedescription, certificatedate from tse where id = $1",
+                "select tse_description, certificate_date from tse where id = $1",
                 self.tse_id,
             )
             LOGGER.info(tse_data_in_db)
             if (
-                tse_data_in_db["tsedescription"] != masterdata.tse_TSEDescription
-                or tse_data_in_db["certificatedate"] != masterdata.tse_CertificateDate
+                tse_data_in_db["tse_description"] != masterdata.tse_tse_description
+                or tse_data_in_db["certificate_date"] != masterdata.tse_certificate_date
             ):
                 await conn.execute(
                     """
                 update
                     tse
                 set
-                    tsedescription=$1,
-                    certificatedate=$2
+                    tse_description=$1,
+                    certificate_date=$2
                 where
                     id=$3
                 """,
-                    masterdata.tse_TSEDescription,
-                    masterdata.tse_CertificateDate,
+                    masterdata.tse_tse_description,
+                    masterdata.tse_certificate_date,
                     self.tse_id,
                 )
 
