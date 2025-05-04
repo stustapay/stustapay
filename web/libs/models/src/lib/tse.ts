@@ -5,6 +5,7 @@ export const UpdateTseSchema = z.object({
   ws_url: z.string().min(1),
   ws_timeout: z.number(),
   password: z.string(),
+  first_operation: z.string().nullable(),
 });
 export type UpdateTse = z.infer<typeof UpdateTseSchema>;
 

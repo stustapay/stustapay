@@ -10154,6 +10154,17 @@
             ],
             "title": "External Link"
           },
+          "customer_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Email"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -11327,6 +11338,18 @@
             "type": "string",
             "title": "Password"
           },
+          "first_operation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Operation"
+          },
           "type": {
             "$ref": "#/components/schemas/TseType"
           },
@@ -11348,6 +11371,7 @@
           "ws_url",
           "ws_timeout",
           "password",
+          "first_operation",
           "type",
           "serial"
         ],
@@ -14909,6 +14933,18 @@
             "type": "string",
             "title": "Password"
           },
+          "first_operation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Operation"
+          },
           "type": {
             "$ref": "#/components/schemas/TseType"
           },
@@ -14988,6 +15024,28 @@
               }
             ],
             "title": "Process Data Encoding"
+          },
+          "tse_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tse Description"
+          },
+          "certificate_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Date"
           }
         },
         "type": "object",
@@ -14996,6 +15054,7 @@
           "ws_url",
           "ws_timeout",
           "password",
+          "first_operation",
           "type",
           "serial",
           "node_id",
@@ -15005,7 +15064,9 @@
           "time_format",
           "public_key",
           "certificate",
-          "process_data_encoding"
+          "process_data_encoding",
+          "tse_description",
+          "certificate_date"
         ],
         "title": "Tse"
       },
@@ -15448,6 +15509,18 @@
           "password": {
             "type": "string",
             "title": "Password"
+          },
+          "first_operation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Operation"
           }
         },
         "type": "object",
@@ -15455,7 +15528,8 @@
           "name",
           "ws_url",
           "ws_timeout",
-          "password"
+          "password",
+          "first_operation"
         ],
         "title": "UpdateTse"
       },

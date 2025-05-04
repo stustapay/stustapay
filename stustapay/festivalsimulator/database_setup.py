@@ -3,6 +3,7 @@ import logging
 import math
 import random
 import secrets
+from datetime import datetime
 from typing import Optional
 
 import asyncpg
@@ -690,6 +691,7 @@ class DatabaseSetup:
                 ws_url="http://localhost:10001",
                 ws_timeout=5,
                 password="12345",
+                first_operation=datetime.now(),
             ),
         )
 
