@@ -7,7 +7,9 @@ from decimal import Decimal
 from dateutil import parser
 from sftkit.database import Connection
 
+from stustapay import __version__ as stustapay_version
 from stustapay.core.config import Config
+from stustapay.core.database import get_database
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.tree.common import (
     fetch_node,
@@ -15,7 +17,6 @@ from stustapay.core.service.tree.common import (
 )
 from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
 
-from ..core.database import get_database
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
     Bonkopf,
@@ -431,15 +432,19 @@ class Generator:
         ### \locations.csv ###
 
         ### cashregister.csv ###
+
+        kasse_brand, kasse_modell, kasse_sw_brand = await conn.fetchrow(
+            "select dsfinvk_brand, dsfinvk_model, dsfinvk_software_brand from till where id = $1", Z_KASSE_ID
+        )
         a = Stamm_Kassen()
         a.Z_KASSE_ID = Z_KASSE_ID
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
-        a.KASSE_BRAND = "StuStaPay"
-        a.KASSE_MODELL = "v0"  # TODO version?
+        a.KASSE_BRAND = kasse_brand
+        a.KASSE_MODELL = kasse_modell
         a.KASSE_SERIENNR = str(Z_KASSE_ID)
-        a.KASSE_SW_BRAND = "StuStaPay Enterprise Payment Solutions Festival Edition Pro"
-        a.KASSE_SW_VERSION = "v0"  # TODO version?
+        a.KASSE_SW_BRAND = kasse_sw_brand
+        a.KASSE_SW_VERSION = stustapay_version
         a.KASSE_BASISWAEH_CODE = event_settings.currency_identifier
         a.KASSE_UST_ZUORDNUNG = ""  # puh?
 
