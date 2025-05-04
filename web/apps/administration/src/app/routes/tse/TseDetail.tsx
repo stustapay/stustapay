@@ -1,6 +1,6 @@
 import { selectTseById, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
+import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
@@ -45,43 +45,22 @@ export const TseDetail: React.FC = () => {
         },
       ]}
     >
-      <Paper>
-        <List>
-          <ListItem>
-            <ListItemText primary={t("tse.name")} secondary={tse.name} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.type")} secondary={tse.type} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.status")} secondary={tse.status} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.serial")} secondary={tse.serial} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.wsUrl")} secondary={tse.ws_url} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.wsTimeout")} secondary={tse.ws_timeout} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.hashalgo")} secondary={tse.hashalgo} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.timeFormat")} secondary={tse.time_format} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.publicKey")} secondary={tse.public_key} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.certificate")} secondary={tse.certificate} />
-          </ListItem>
-          <ListItem>
-            <ListItemText primary={t("tse.processDataEncoding")} secondary={tse.process_data_encoding} />
-          </ListItem>
-        </List>
-      </Paper>
+      <DetailView>
+        <DetailField label={t("tse.name")} value={tse.name} />
+        <DetailField label={t("tse.type")} value={tse.type} />
+        <DetailField label={t("tse.status")} value={tse.status} />
+        <DetailField label={t("tse.serial")} value={tse.serial} />
+        <DetailField label={t("tse.wsUrl")} value={tse.ws_url} />
+        <DetailField label={t("tse.wsTimeout")} value={tse.ws_timeout} />
+        <DetailField label={t("tse.hashalgo")} value={tse.hashalgo} />
+        <DetailField label={t("tse.timeFormat")} value={tse.time_format} />
+        <DetailField label={t("tse.publicKey")} value={tse.public_key} />
+        <DetailField label={t("tse.certificate")} value={tse.certificate} />
+        <DetailField label={t("tse.processDataEncoding")} value={tse.process_data_encoding} />
+        <DetailField label={t("tse.certificateDate")} value={tse.certificate_date} />
+        <DetailField label={t("common.description")} value={tse.tse_description} />
+        <DetailField label={t("tse.firstOperation")} value={tse.first_operation} />
+      </DetailView>
     </DetailLayout>
   );
 };

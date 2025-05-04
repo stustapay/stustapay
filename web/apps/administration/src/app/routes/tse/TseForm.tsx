@@ -1,6 +1,6 @@
 import { NewTse } from "@/api";
 import { InputAdornment } from "@mui/material";
-import { FormNumericInput, FormTextField } from "@stustapay/form-components";
+import { FormDateTimePicker, FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
@@ -21,6 +21,7 @@ export function TseForm<T extends NewTse>(props: TseFormProps<T>) {
         formik={props}
       />
       <FormTextField name="password" label={t("tse.password")} formik={props} />
+      <FormDateTimePicker name="first_operation" label={t("tse.firstOperation")} formik={props} />
     </>
   );
 }

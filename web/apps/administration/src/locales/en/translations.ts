@@ -627,11 +627,12 @@ export const translations = {
   },
   tse: {
     tses: "TSE",
+    create: "Create a new TSE",
+    update: "Update TSE",
     name: "Name",
     type: "Type",
     status: "Status",
     serial: "Serial",
-    create: "Create a new TSE",
     wsUrl: "Websocket URL",
     wsTimeout: "Websocket Timeout in seconds",
     password: "TSE Password",
@@ -640,6 +641,8 @@ export const translations = {
     publicKey: "Public Key",
     certificate: "Certificate",
     processDataEncoding: "Data Encoding",
+    certificateDate: "Certificate Date",
+    firstOperation: "First Operation",
   },
   payoutRun: {
     id: "ID",

@@ -113,7 +113,7 @@ class TSEWrapper:
                     if delta > datetime.timedelta(seconds=10):
                         LOGGER.warning(f"new signing request for ordr {request['order_id']} is to old -> failing")
                         await conn.execute(
-                            """ 
+                            """
                             update
                                 tse_signature
                             set
@@ -160,9 +160,11 @@ class TSEWrapper:
                 time_format=$3,
                 public_key=$4,
                 certificate=$5,
-                process_data_encoding=$6
+                process_data_encoding=$6,
+                tse_description=$7,
+                certificate_date=$8
             where
-                id=$7
+                id=$9
             """,
                 masterdata.tse_serial,
                 masterdata.tse_hashalgo,
@@ -170,6 +172,8 @@ class TSEWrapper:
                 masterdata.tse_public_key,
                 masterdata.tse_certificate,
                 masterdata.tse_process_data_encoding,
+                masterdata.tse_tse_description,
+                masterdata.tse_certificate_date,
                 self.tse_id,
             )
             LOGGER.info("New TSE registered in database")
@@ -182,6 +186,31 @@ class TSEWrapper:
                     f"TSE missmatch: TSE recorded in database different from TSE connected for TSE name {self.name}"
                 )
             LOGGER.info("TSE matches with database entry")
+
+            ## add further info from TSE masterdata
+            tse_data_in_db = await conn.fetchrow(
+                "select tse_description, certificate_date from tse where id = $1",
+                self.tse_id,
+            )
+            LOGGER.info(tse_data_in_db)
+            if (
+                tse_data_in_db["tse_description"] != masterdata.tse_tse_description
+                or tse_data_in_db["certificate_date"] != masterdata.tse_certificate_date
+            ):
+                await conn.execute(
+                    """
+                update
+                    tse
+                set
+                    tse_description=$1,
+                    certificate_date=$2
+                where
+                    id=$3
+                """,
+                    masterdata.tse_tse_description,
+                    masterdata.tse_certificate_date,
+                    self.tse_id,
+                )
 
         elif tse_status == "disabled":
             # TODO switch till to new tse in processor (manual intervention neccessary)

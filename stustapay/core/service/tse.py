@@ -27,14 +27,15 @@ class TseService(Service[Config]):
     @requires_user([Privilege.node_administration])
     async def create_tse(self, *, conn: Connection, node: Node, current_user: CurrentUser, new_tse: NewTse) -> Tse:
         tse_id = await conn.fetchval(
-            "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status) "
-            "values ($1, $2, $3, $4, $5, $6, 'new') returning id",
+            "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status, first_operation) "
+            "values ($1, $2, $3, $4, $5, $6, 'new', $7) returning id",
             node.id,
             new_tse.name,
             new_tse.serial,
             new_tse.ws_url,
             new_tse.ws_timeout,
             new_tse.password,
+            new_tse.first_operation,
         )
         tse = await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
         await create_audit_log(
@@ -53,7 +54,7 @@ class TseService(Service[Config]):
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tse_id: int, updated_tse: UpdateTse
     ) -> Tse:
         tse_id = await conn.fetchval(
-            "update tse set name = $1, ws_timeout = $2, ws_url = $3, password = $4 "
+            "update tse set name = $1, ws_timeout = $2, ws_url = $3, password = $4, first_operation = $7 "
             "where id = $5 and node_id = any($6) returning id",
             updated_tse.name,
             updated_tse.ws_timeout,
@@ -61,6 +62,7 @@ class TseService(Service[Config]):
             updated_tse.password,
             tse_id,
             node.ids_to_event_node,
+            updated_tse.first_operation,
         )
         if tse_id is None:
             raise NotFound(element_type="tse", element_id=str(tse_id))

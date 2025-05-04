@@ -14,6 +14,7 @@ const initialValues: NewTse = {
   ws_url: "",
   ws_timeout: 5,
   password: "",
+  first_operation: null,
 };
 
 export const TseCreate: React.FC = () => {

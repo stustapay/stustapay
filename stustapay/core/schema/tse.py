@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -20,6 +21,7 @@ class UpdateTse(BaseModel):
     ws_url: str
     ws_timeout: float
     password: str
+    first_operation: Optional[datetime]
 
 
 class NewTse(UpdateTse):
@@ -36,3 +38,5 @@ class Tse(NewTse):
     public_key: Optional[str]
     certificate: Optional[str]
     process_data_encoding: Optional[str]
+    tse_description: Optional[str]
+    certificate_date: Optional[str]

@@ -3005,6 +3005,7 @@ export type ExternalTicket = {
   token: string;
   ticket_type: ExternalTicketType;
   external_link?: string | null;
+  customer_email?: string | null;
   id: number;
   customer_account_id: number;
   has_checked_in: boolean;
@@ -3070,6 +3071,7 @@ export type Tse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
+  first_operation: string | null;
   type: TseType;
   serial: string | null;
   node_id: number;
@@ -3080,6 +3082,8 @@ export type Tse = {
   public_key: string | null;
   certificate: string | null;
   process_data_encoding: string | null;
+  tse_description: string | null;
+  certificate_date: string | null;
 };
 export type NormalizedListTseInt = {
   ids: number[];
@@ -3092,6 +3096,7 @@ export type NewTse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
+  first_operation: string | null;
   type: TseType;
   serial: string | null;
 };
@@ -3100,6 +3105,7 @@ export type UpdateTse = {
   ws_url: string;
   ws_timeout: number;
   password: string;
+  first_operation: string | null;
 };
 export type PayoutRunWithStats = {
   id: number;

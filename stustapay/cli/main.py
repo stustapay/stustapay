@@ -11,6 +11,7 @@ from stustapay.administration import server as admin_server
 from stustapay.bon.generator import Generator
 from stustapay.core.config import read_config
 from stustapay.customer_portal import server as customerportal_server
+from stustapay.dsfinvk.ao146a_xml_generator import AO146Aexporter
 from stustapay.dsfinvk.generator import Generator as DsfinvkGenerator
 from stustapay.payment.payment_processor import run as run_payment_processor
 from stustapay.terminalserver import server as terminal_server
@@ -77,6 +78,34 @@ def dsfinvk_export(
 ):
     """Export all data required by dsfinvk to the given zip file."""
     generator = DsfinvkGenerator(
+        config=ctx.obj.config,
+        filename=str(filename),
+        xml=str(index_xml),
+        dtd=str(dtd_file),
+        simulate=dry_run,
+        event_node_id=node_id,
+    )
+    asyncio.run(generator.run())
+
+
+@cli.command()
+def ao146a_export(
+    ctx: typer.Context,
+    node_id: Annotated[int, typer.Option("--node-id", help="id of node to run the export for")],
+    filename: Annotated[
+        Path,
+        typer.Option("--filename", "-f", help="output file path of resulting zip file"),
+    ] = Path("dsfinV_k.zip"),
+    index_xml: Annotated[Path, typer.Option("--xml", help="index.xml file to include")] = Path(
+        "./stustapay/dsfinvk/assets/index.xml"
+    ),
+    dtd_file: Annotated[Path, typer.Option(help="*.dtd file to include")] = Path(
+        "./stustapay/dsfinvk/assets/gdpdu-01-09-2004.dtd"
+    ),
+    dry_run: bool = False,
+):
+    """Exportiere ein XML um Kassen in ELSTER nach AO146a zu melden."""
+    generator = AO146Aexporter(
         config=ctx.obj.config,
         filename=str(filename),
         xml=str(index_xml),

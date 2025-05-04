@@ -46,6 +46,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self._name = name
         self._signature_algorithm: typing.Optional[str] = None
+        self._tse_description: typing.Optional[str] = None
+        self._certificate_date: typing.Optional[str] = None
         self._log_time_format: typing.Optional[str] = None
         self._public_key: typing.Optional[str] = None  # base64
         self._certificate: typing.Optional[str] = None  # long string
@@ -103,6 +105,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                     self._log_time_format = "unixTime"  # ¯\_(ツ)_/¯
 
                 device_status = await self.request("GetDeviceStatus")
+                self._tse_description = device_status["TSEDescription"]
+                self._certificate_date = device_status["CertificateDate"]
                 self._signature_algorithm = device_status["Parameters"]["SignatureAlgorithm"]
                 self._public_key = await self.get_device_data("PublicKey", Format="Base64")
                 self._certificate = await self.get_device_data("Certificates", Format="Base64")
@@ -236,6 +240,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
 
     def get_master_data(self) -> TSEMasterData:
         assert self._signature_algorithm is not None
+        assert self._tse_description is not None
+        assert self._certificate_date is not None
         assert self._log_time_format is not None
         assert self._public_key is not None
         assert self._certificate is not None
@@ -245,6 +251,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
             tse_time_format=self._log_time_format,
             tse_public_key=self._public_key,
             tse_certificate=self._certificate,
+            tse_certificate_date=self._certificate_date,
+            tse_tse_description=self._tse_description,
             tse_process_data_encoding="UTF-8",
         )
 
