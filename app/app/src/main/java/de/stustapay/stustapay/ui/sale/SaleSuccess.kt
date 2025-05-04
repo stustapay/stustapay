@@ -23,7 +23,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -32,13 +31,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
+import de.stustapay.libssp.ui.barcode.QRCode
 
 
 @Composable
@@ -147,23 +144,7 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     }
 
                     if (saleCompletedV.paymentMethod != PaymentMethod.tag) {
-                        val hints =
-                            hashMapOf<EncodeHintType, Int>().also { it[EncodeHintType.MARGIN] = 1 }
-                        val qrCodeRaw = QRCodeWriter().encode(
-                            saleCompletedV.bonUrl,
-                            BarcodeFormat.QR_CODE,
-                            512,
-                            512,
-                            hints
-                        )
-                        val qrCodeBitmap = Bitmap.createBitmap(512, 512, Bitmap.Config.RGB_565).also {
-                            for (x in 0 until 512) {
-                                for (y in 0 until 512) {
-                                    it.setPixel(x, y, if (qrCodeRaw[x, y]) Color.BLACK else Color.WHITE)
-                                }
-                            }
-                        }
-                        Image(qrCodeBitmap.asImageBitmap(), "Bon QR Code")
+                        QRCode(saleCompletedV.bonUrl)
                     }
                 }
             }

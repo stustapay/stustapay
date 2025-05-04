@@ -63,6 +63,7 @@ export const translations = {
     overview: "Overview",
     statistics: "Stats",
     settings: "Settings",
+    reports: "Reports",
   },
   auditLog: {
     auditLogs: "Audit logs",
@@ -254,7 +255,10 @@ export const translations = {
     showRevenue: "Show revenue",
     warningEventDatesNeedConfiguration:
       "Please configure the start / end times for this event as well as the daily end time in the event settings",
+    selectedNodesForReport: "Selected nodes for report",
     generateRevenueReport: "Generate revenue report",
+    generateDailyReport: "Generate daily report",
+    generatePayoutReport: "Generate payout report",
   },
   ticket: {
     name: "Name",
@@ -390,6 +394,11 @@ export const translations = {
       tabLabel: "AGB",
       preview: "Show Preview",
       content: "AGB (in markdown formatting)",
+    },
+    privacypolicy: {
+      tabLabel: "privacy policy",
+      preview: "Show Preview",
+      content: "Privacy policy (in markdown formatting)",
     },
     faq: {
       tabLabel: "FAQ",

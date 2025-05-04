@@ -130,6 +130,7 @@
     <string name="ticket_voucher_valid">Ticket-Gutschein ist gültig.</string>
     <string name="tickets">Tickets</string>
     <string name="user_create_title">Benutzer erstellen</string>
+    <string name="user_load_data_from_qr">Aus QR Code</string>
     <string name="user_description">Beschreibung</string>
     <string name="user_display_title">Benutzer anzeigen und verwalten</string>
     <string name="user_displayname">Name</string>

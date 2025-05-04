@@ -8,6 +8,7 @@ import {
   Settings as SettingsIcon,
   HistoryEdu as HistoryEduIcon,
   List as ListIcon,
+  Receipt as ReceiptIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import * as React from "react";
@@ -35,6 +36,9 @@ const getActiveTab = (nodeId: number, location: string) => {
   }
   if (location.startsWith(`/node/${nodeId}/audit-logs`)) {
     return `/node/${nodeId}/audit-logs`;
+  }
+  if (location.startsWith(`/node/${nodeId}/reports`)) {
+    return `/node/${nodeId}/reports`;
   }
   return `/node/${nodeId}`;
 };
@@ -66,6 +70,14 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
           icon={<LeaderboardIcon />}
           iconPosition="start"
           to={`${nodeUrl}/stats`}
+        />
+        <Tab
+          label={t("nodes.reports")}
+          component={RouterLink}
+          value={`${nodeUrl}/reports`}
+          icon={<ReceiptIcon />}
+          iconPosition="start"
+          to={`${nodeUrl}/reports`}
         />
         <Tab
           label={t("systemAccounts")}

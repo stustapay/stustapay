@@ -5,3 +5,4 @@ export * from "./node-overview";
 export * from "./node-settings";
 export * from "./EventCreate";
 export * from "./NodeCreate";
+export * from "./RevenueReports";

@@ -1,4 +1,4 @@
-package de.stustapay.stustapay.barcode
+package de.stustapay.libssp.barcode
 
 
 import android.graphics.ImageFormat
@@ -12,7 +12,7 @@ import java.nio.ByteBuffer
 
 class ZXingQRCode(
     private val scanned: (String) -> Unit,
-    private val status: (String) -> Unit,
+    private val status: (ZXingQRCodeStatus) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
     private val supportedImageFormats = listOf(
@@ -23,7 +23,7 @@ class ZXingQRCode(
 
     override fun analyze(image: ImageProxy) {
         if (image.format !in supportedImageFormats) {
-            status("image format unsupported")
+            status(ZXingQRCodeStatus.Error("image format unsupported"))
             Log.e("qrcode", "unsupported analysis image format: ${image.format}")
             return
         }
@@ -39,18 +39,24 @@ class ZXingQRCode(
 
         try {
             val result = QRCodeReader().decode(binaryBmp)
-            status("found")
+            status(ZXingQRCodeStatus.Found)
             scanned(result.text)
         } catch (e: ReaderException) {
             when (e) {
                 is NotFoundException -> {
-                    status("no qrcode detected")
+                    status(ZXingQRCodeStatus.KeepScanning)
                 }
+
                 is ChecksumException -> {
-                    status("checksum error")
+                    status(ZXingQRCodeStatus.KeepScanning)
                 }
+
+                is FormatException -> {
+                    status(ZXingQRCodeStatus.KeepScanning)
+                }
+
                 else -> {
-                    status("error: $e")
+                    status(ZXingQRCodeStatus.Error(e.toString()))
                     Log.e("qrscan", "failed to scan: $e")
                 }
             }
@@ -65,4 +71,10 @@ class ZXingQRCode(
             get(it)
         }
     }
+}
+
+sealed class ZXingQRCodeStatus {
+    object Found : ZXingQRCodeStatus()
+    object KeepScanning : ZXingQRCodeStatus()
+    class Error(val msg: String) : ZXingQRCodeStatus()
 }

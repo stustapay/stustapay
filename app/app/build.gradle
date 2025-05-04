@@ -82,11 +82,6 @@ dependencies {
     implementation "androidx.compose.material:material-icons-extended:$compose_ui_version"
     implementation "androidx.navigation:navigation-compose:$navigation_compose_version"
     implementation "androidx.preference:preference-ktx:$preference_ktx_version"
-    implementation "androidx.camera:camera-core:$camerax_version"
-    implementation "androidx.camera:camera-lifecycle:$camerax_version"
-    implementation "androidx.camera:camera-view:$camerax_version"
-    implementation "androidx.camera:camera-camera2:$camerax_version"
-    implementation 'com.google.zxing:core:3.5.1'
     implementation "com.google.accompanist:accompanist-permissions:0.37.2"
     implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-cio:$ktor_version"

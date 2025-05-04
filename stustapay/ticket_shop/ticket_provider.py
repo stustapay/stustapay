@@ -20,6 +20,7 @@ class CreateExternalTicket(BaseModel):
     token: str
     ticket_type: ExternalTicketType
     external_link: str | None = None
+    customer_email: str | None = None
 
 
 class ExternalTicket(CreateExternalTicket):
@@ -71,4 +72,10 @@ class TicketProvider:
                 ticket.external_link,
                 ticket.external_reference,
             )
+            if ticket.customer_email:
+                await conn.execute(
+                    "insert into customer_info (customer_account_id, email) values ($1, $2) on conflict (customer_account_id) do update set email = $2",
+                    customer_account_id,
+                    ticket.customer_email,
+                )
         return not exists_already

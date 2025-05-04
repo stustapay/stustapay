@@ -38,6 +38,7 @@ class PretixOrderPosition(BaseModel):
     positionid: int
     item: int
     secret: str
+    attendee_email: str | None
 
 
 class PretixOrderStatus(enum.Enum):
@@ -174,6 +175,7 @@ class PretixTicketProvider(TicketProvider):
                             token=position.secret,
                             ticket_type=ExternalTicketType.pretix,
                             external_link=api.get_link_to_order(order.code),
+                            customer_email=position.attendee_email,
                         ),
                     )
                     if imported:

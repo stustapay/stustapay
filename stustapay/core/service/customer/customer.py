@@ -28,6 +28,7 @@ from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.sumup import SumupService
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
+    fetch_node,
     fetch_restricted_event_settings_for_node,
 )
 from stustapay.core.service.tree.service import fetch_event_design
@@ -45,6 +46,7 @@ class CustomerPortalApiConfig(BaseModel):
     allowed_country_codes: Optional[list[str]]
     translation_texts: dict[Language, dict[str, str]]
     event_design: EventDesign
+    node_id: int
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -72,18 +74,26 @@ class CustomerService(Service[Config]):
         )
 
     @with_db_transaction
-    async def login_customer(self, *, conn: Connection, pin: str) -> CustomerLoginSuccess:
+    async def login_customer(self, *, conn: Connection, pin: str, node_id: int) -> CustomerLoginSuccess:
+        node = await fetch_node(conn=conn, node_id=node_id)
+        if node is None:
+            raise AccessDenied("customer portal configured incorrectly")
+
+        if node.read_only:
+            raise AccessDenied("customer portal configured incorrectly - read only")
+
         # Customer has hardware tag and pin
         customer = await conn.fetch_maybe_one(
             Customer,
             "select c.* from customer c "
             "   left join user_tag ut on ut.id = c.user_tag_id "
             "   left join ticket_voucher tv on tv.customer_account_id = c.id "
-            "where ut.pin = $1 or ut.pin = $2 or tv.token = $3",
+            "where ((ut.pin = $1 or ut.pin = $2) and ut.node_id = $4) or (tv.token_hash = $3 and tv.node_id = $4)",
             # TODO: restore case sensitivity
             pin.lower(),  # for simulator
             pin.upper(),  # for humans
             pin,
+            node_id,
         )
         if customer is None:
             raise AccessDenied("Invalid pin")
@@ -264,4 +274,5 @@ class CustomerService(Service[Config]):
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,
             event_design=event_design,
+            node_id=node.id,
         )

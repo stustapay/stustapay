@@ -164,7 +164,6 @@ export const TerminalList: React.FC = () => {
   return (
     <ListLayout title={t("terminal.terminals")} routes={TerminalRoutes}>
       <DataGrid
-        autoHeight
         rows={terminals ?? []}
         columns={columns}
         disableRowSelectionOnClick

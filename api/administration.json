@@ -3546,6 +3546,56 @@
         }
       }
     },
+    "/money-overview": {
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Get Money Overview",
+        "operationId": "get_money_overview",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoneyOverview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/accounts/find-accounts": {
       "post": {
         "tags": [
@@ -7160,8 +7210,8 @@
         "tags": [
           "tree"
         ],
-        "summary": "Generate Test Report",
-        "operationId": "generate_test_report",
+        "summary": "Generate Test Revenue Report",
+        "operationId": "generate_test_revenue_report",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -7211,6 +7261,163 @@
         ],
         "summary": "Generate Revenue Report",
         "operationId": "generate_revenue_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/nodes/{node_id}/generate-daily-report": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Daily Report",
+        "operationId": "generate_daily_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateDailyReportPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/generate-test-daily-report": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Test Daily Report",
+        "operationId": "generate_test_daily_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/nodes/{node_id}/generate-payout-report": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Generate Payout Report",
+        "operationId": "generate_payout_report",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -7345,6 +7552,65 @@
                     "$ref": "#/components/schemas/AuditLog"
                   },
                   "title": "Response List Audit Logs Tree Nodes  Node Id  Audit Logs Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/nodes/{node_id}/audit-logs/{audit_log_id}": {
+      "get": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Get Audit Log",
+        "operationId": "get_audit_log",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "audit_log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Audit Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogDetail"
                 }
               }
             }
@@ -8635,6 +8901,64 @@
         ],
         "title": "AuditLog"
       },
+      "AuditLogDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "log_type": {
+            "type": "string",
+            "title": "Log Type"
+          },
+          "originating_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating User Id"
+          },
+          "originating_terminal_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating Terminal Id"
+          },
+          "content": {
+            "type": "object",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "node_id",
+          "log_type",
+          "originating_user_id",
+          "originating_terminal_id",
+          "content"
+        ],
+        "title": "AuditLogDetail"
+      },
       "BonConfig": {
         "properties": {
           "title": {
@@ -9901,6 +10225,28 @@
         ],
         "title": "FindUserTagPayload"
       },
+      "GenerateDailyReportPayload": {
+        "properties": {
+          "relevant_node_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Relevant Node Ids"
+          },
+          "report_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Report Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "relevant_node_ids",
+          "report_date"
+        ],
+        "title": "GenerateDailyReportPayload"
+      },
       "GenerateWebhookPayload": {
         "properties": {
           "webhook_type": {
@@ -10028,6 +10374,32 @@
           "password"
         ],
         "title": "LoginPayload"
+      },
+      "MoneyOverview": {
+        "properties": {
+          "system_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            },
+            "type": "array",
+            "title": "System Accounts"
+          },
+          "total_customer_account_balance": {
+            "type": "number",
+            "title": "Total Customer Account Balance"
+          },
+          "total_cash_register_balance": {
+            "type": "number",
+            "title": "Total Cash Register Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "system_accounts",
+          "total_customer_account_balance",
+          "total_cash_register_balance"
+        ],
+        "title": "MoneyOverview"
       },
       "NewBlob": {
         "properties": {

@@ -1,4 +1,4 @@
-import { Node, NodeSeenByUser } from "@/api";
+import { NodeSeenByUser } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { Select } from "@stustapay/components";
 import * as React from "react";
@@ -22,5 +22,5 @@ export const NodeSelect: React.FC<NodeSelectProps> = ({ ...props }) => {
     return result;
   }, [currentNode]);
 
-  return <Select multiple={false} options={options} formatOption={(v: Node) => v.name} {...props} />;
+  return <Select multiple={false} options={options} formatOption={(v: NodeSeenByUser) => v.name} {...props} />;
 };

@@ -1,6 +1,7 @@
 from typing import Optional
 
 import asyncpg
+from pydantic import BaseModel
 from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
@@ -21,6 +22,12 @@ from stustapay.core.service.common.decorators import (
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
+
+
+class MoneyOverview(BaseModel):
+    system_accounts: list[Account]
+    total_customer_account_balance: float
+    total_cash_register_balance: float
 
 
 async def get_system_account_for_node(*, conn: Connection, node: Node, account_type: AccountType) -> Account:
@@ -121,6 +128,29 @@ class AccountService(Service[Config]):
             Account,
             "select * from account_with_history where type != 'private' and type != 'cashier' and node_id = any($1)",
             node.ids_to_event_node,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def get_money_overview(self, *, conn: Connection, node: Node) -> MoneyOverview:
+        system_accounts = await conn.fetch_many(
+            Account,
+            "select * from account_with_history where type != 'private' and type != 'cashier' and node_id = any($1)",
+            node.ids_to_event_node,
+        )
+        total_customer_account_balance = await conn.fetchval(
+            "select coalesce(sum(a.balance), 0.0) from account a where type = 'private' and node_id = any($1)",
+            node.ids_to_event_node,
+        )
+        total_cash_register_balance = await conn.fetchval(
+            "select coalesce(sum(a.balance), 0.0) from account a where type = 'cash_register' and node_id = any($1)",
+            node.ids_to_event_node,
+        )
+        return MoneyOverview(
+            system_accounts=system_accounts,
+            total_customer_account_balance=total_customer_account_balance,
+            total_cash_register_balance=total_cash_register_balance,
         )
 
     @with_db_transaction(read_only=True)

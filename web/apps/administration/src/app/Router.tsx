@@ -5,7 +5,15 @@ import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, NodeCreate } from "./routes/nodes";
+import {
+  EventCreate,
+  NodeOverview,
+  MoneyOverview,
+  NodePageLayout,
+  NodeSettings,
+  NodeCreate,
+  RevenueReports,
+} from "./routes/nodes";
 import { NodeStats } from "./routes/nodes/stats";
 import { OrderBon, OrderDetail, SaleEdit, TransactionDetail } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
@@ -74,7 +82,7 @@ import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, Custome
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
-import { AuditLogList } from "./routes/nodes/audit-logs/AuditLogList";
+import { AuditLogList, AuditLogDetail } from "./routes/nodes/audit-logs";
 
 const router = createBrowserRouter([
   {
@@ -105,8 +113,16 @@ const router = createBrowserRouter([
                 element: <NodeSettings />,
               },
               {
+                path: "audit-logs/:auditLogId",
+                element: <AuditLogDetail />,
+              },
+              {
                 path: "audit-logs",
                 element: <AuditLogList />,
+              },
+              {
+                path: "reports",
+                element: <RevenueReports />,
               },
               {
                 path: "system-accounts",

@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import de.stustapay.libssp.ui.common.DialogCard
 import de.stustapay.stustapay.R
 
 @Composable

@@ -1,4 +1,4 @@
-package de.stustapay.stustapay.ui.common
+package de.stustapay.libssp.ui.common
 
 
 import androidx.compose.foundation.layout.Box
@@ -28,7 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustapay.stustapay.R
+import de.stustapay.libssp.R
 import de.stustapay.libssp.ui.theme.errorButtonColors
 
 @Composable

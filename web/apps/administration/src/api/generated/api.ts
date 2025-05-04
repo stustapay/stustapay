@@ -634,6 +634,15 @@ const injectedRtkApi = api
         }),
         providesTags: ["accounts"],
       }),
+      getMoneyOverview: build.query<GetMoneyOverviewApiResponse, GetMoneyOverviewApiArg>({
+        query: (queryArg) => ({
+          url: `/money-overview`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["accounts"],
+      }),
       findAccounts: build.mutation<FindAccountsApiResponse, FindAccountsApiArg>({
         query: (queryArg) => ({
           url: `/accounts/find-accounts`,
@@ -1178,12 +1187,28 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
-      generateTestReport: build.mutation<GenerateTestReportApiResponse, GenerateTestReportApiArg>({
+      generateTestRevenueReport: build.mutation<GenerateTestRevenueReportApiResponse, GenerateTestRevenueReportApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      generateDailyReport: build.mutation<GenerateDailyReportApiResponse, GenerateDailyReportApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/nodes/${queryArg.nodeId}/generate-daily-report`,
+          method: "POST",
+          body: queryArg.generateDailyReportPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
+      generateTestDailyReport: build.mutation<GenerateTestDailyReportApiResponse, GenerateTestDailyReportApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      generatePayoutReport: build.mutation<GeneratePayoutReportApiResponse, GeneratePayoutReportApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
@@ -1196,6 +1221,10 @@ const injectedRtkApi = api
       }),
       listAuditLogs: build.query<ListAuditLogsApiResponse, ListAuditLogsApiArg>({
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/audit-logs` }),
+        providesTags: ["tree"],
+      }),
+      getAuditLog: build.query<GetAuditLogApiResponse, GetAuditLogApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/audit-logs/${queryArg.auditLogId}` }),
         providesTags: ["tree"],
       }),
       listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
@@ -1691,6 +1720,10 @@ export type ListSystemAccountsApiResponse = /** status 200 Successful Response *
 export type ListSystemAccountsApiArg = {
   nodeId: number;
 };
+export type GetMoneyOverviewApiResponse = /** status 200 Successful Response */ MoneyOverviewRead;
+export type GetMoneyOverviewApiArg = {
+  nodeId: number;
+};
 export type FindAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type FindAccountsApiArg = {
   nodeId: number;
@@ -1989,12 +2022,25 @@ export type GenerateWebhookUrlApiArg = {
   nodeId: number;
   generateWebhookPayload: GenerateWebhookPayload;
 };
-export type GenerateTestReportApiResponse = /** status 200 Successful Response */ any;
-export type GenerateTestReportApiArg = {
+export type GenerateTestRevenueReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestRevenueReportApiArg = {
   nodeId: number;
 };
 export type GenerateRevenueReportApiResponse = /** status 200 Successful Response */ any;
 export type GenerateRevenueReportApiArg = {
+  nodeId: number;
+};
+export type GenerateDailyReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateDailyReportApiArg = {
+  nodeId: number;
+  generateDailyReportPayload: GenerateDailyReportPayload;
+};
+export type GenerateTestDailyReportApiResponse = /** status 200 Successful Response */ any;
+export type GenerateTestDailyReportApiArg = {
+  nodeId: number;
+};
+export type GeneratePayoutReportApiResponse = /** status 200 Successful Response */ any;
+export type GeneratePayoutReportApiArg = {
   nodeId: number;
 };
 export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ any;
@@ -2005,6 +2051,11 @@ export type ConfigureSumupTokenApiArg = {
 export type ListAuditLogsApiResponse = /** status 200 Successful Response */ AuditLog[];
 export type ListAuditLogsApiArg = {
   nodeId: number;
+};
+export type GetAuditLogApiResponse = /** status 200 Successful Response */ AuditLogDetail;
+export type GetAuditLogApiArg = {
+  nodeId: number;
+  auditLogId: number;
 };
 export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response */ SumUpCheckout[];
 export type ListSumupCheckoutsApiArg = {
@@ -2653,6 +2704,16 @@ export type NormalizedListAccountInt = {
   entities: {
     [key: string]: AccountRead;
   };
+};
+export type MoneyOverview = {
+  system_accounts: Account[];
+  total_customer_account_balance: number;
+  total_cash_register_balance: number;
+};
+export type MoneyOverviewRead = {
+  system_accounts: AccountRead[];
+  total_customer_account_balance: number;
+  total_cash_register_balance: number;
 };
 export type FindAccountPayload = {
   search_term: string;
@@ -3379,6 +3440,10 @@ export type WebhookType = "pretix";
 export type GenerateWebhookPayload = {
   webhook_type: WebhookType;
 };
+export type GenerateDailyReportPayload = {
+  relevant_node_ids: number[];
+  report_date: string;
+};
 export type SumUpTokenPayload = {
   authorization_code: string;
 };
@@ -3389,6 +3454,15 @@ export type AuditLog = {
   log_type: string;
   originating_user_id: number | null;
   originating_terminal_id: number | null;
+};
+export type AuditLogDetail = {
+  id: number;
+  created_at: string;
+  node_id: number;
+  log_type: string;
+  originating_user_id: number | null;
+  originating_terminal_id: number | null;
+  content: object;
 };
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type SumUpTransaction = {
@@ -3580,6 +3654,8 @@ export const {
   useSetConfigEntryMutation,
   useListSystemAccountsQuery,
   useLazyListSystemAccountsQuery,
+  useGetMoneyOverviewQuery,
+  useLazyGetMoneyOverviewQuery,
   useFindAccountsMutation,
   useGetAccountQuery,
   useLazyGetAccountQuery,
@@ -3666,11 +3742,16 @@ export const {
   useCheckPretixConnectionMutation,
   useFetchPretixProductsMutation,
   useGenerateWebhookUrlMutation,
-  useGenerateTestReportMutation,
+  useGenerateTestRevenueReportMutation,
   useGenerateRevenueReportMutation,
+  useGenerateDailyReportMutation,
+  useGenerateTestDailyReportMutation,
+  useGeneratePayoutReportMutation,
   useConfigureSumupTokenMutation,
   useListAuditLogsQuery,
   useLazyListAuditLogsQuery,
+  useGetAuditLogQuery,
+  useLazyGetAuditLogQuery,
   useListSumupCheckoutsQuery,
   useLazyListSumupCheckoutsQuery,
   useListSumupTransactionsQuery,

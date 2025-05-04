@@ -119,8 +119,8 @@ async def order_with_bon(
     return order
 
 
-async def test_auth_customer(customer_service: CustomerService, test_customer: Customer):
-    auth = await customer_service.login_customer(pin=test_customer.user_tag_pin)
+async def test_auth_customer(customer_service: CustomerService, test_customer: Customer, event_node: Node):
+    auth = await customer_service.login_customer(pin=test_customer.user_tag_pin, node_id=event_node.id)
     assert auth is not None
     assert auth.customer.id == test_customer.id
     assert auth.customer.balance == test_customer.balance
@@ -142,16 +142,18 @@ async def test_auth_customer(customer_service: CustomerService, test_customer: C
 
     # test wrong pin
     with pytest.raises(AccessDenied):
-        await customer_service.login_customer(pin="wrong")
+        await customer_service.login_customer(pin="wrong", node_id=event_node.id)
 
 
-async def test_get_orders_with_bon(customer_service: CustomerService, order_with_bon: Order, test_customer: Customer):
+async def test_get_orders_with_bon(
+    customer_service: CustomerService, order_with_bon: Order, test_customer: Customer, event_node: Node
+):
     # test get_orders_with_bon with wrong token, should raise Unauthorized error
     with pytest.raises(Unauthorized):
         await customer_service.get_orders_with_bon(token="wrong")
 
     # login
-    login_result = await customer_service.login_customer(pin=test_customer.user_tag_pin)
+    login_result = await customer_service.login_customer(pin=test_customer.user_tag_pin, node_id=event_node.id)
     assert login_result is not None
 
     # test get_orders_with_bon
@@ -166,9 +168,9 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
 
 
 async def test_update_customer_info(
-    test_customer: Customer, customer_service: CustomerService, mail_service: MailService
+    test_customer: Customer, customer_service: CustomerService, mail_service: MailService, event_node: Node
 ):
-    auth = await customer_service.login_customer(pin=test_customer.user_tag_pin)
+    auth = await customer_service.login_customer(pin=test_customer.user_tag_pin, node_id=event_node.id)
     assert auth is not None
 
     valid_IBAN = "DE89370400440532013000"
