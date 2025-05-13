@@ -351,12 +351,33 @@ class TopUpViewModel @Inject constructor(
     }
 
     /**
+     * Shows a logout message as visual feedback before actually logging out
+     */
+    fun showLogoutMessage() {
+        _status.update { "Logging out... Please wait" }
+    }
+    
+    /**
      * Performs a logout operation securely
      * To be triggered via the secret gesture in the TopUpSelection screen
+     * The parent view will handle the actual navigation back to login screen
      */
     suspend fun secretLogout() {
-        _status.update { "Logging out..." }
-        userRepository.logout()
-        _status.update { "Logged out successfully" }
+        try {
+            // Set status that we're logging out
+            _status.update { "Logging out..." }
+            
+            // Clear state
+            clearDraft()
+            
+            // Call the logout function
+            userRepository.logout()
+            
+            // Set status (may not be seen by user)
+            _status.update { "Logged out." }
+        } catch (e: Exception) {
+            // Log error but don't set message as the view will be gone
+            _status.update { "Logout failed: ${e.message}" }
+        }
     }
 }

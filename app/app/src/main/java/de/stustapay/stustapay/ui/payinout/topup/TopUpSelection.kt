@@ -1,7 +1,6 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
 import android.app.Activity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -31,6 +31,7 @@ import de.stustapay.stustapay.ui.common.pay.CashECCallback
 import de.stustapay.stustapay.ui.common.pay.CashECPay
 import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -46,20 +47,20 @@ fun TopUpSelection(
     val errorMessage_ by viewModel.errorMessage.collectAsStateWithLifecycle()
     val errorMessage = errorMessage_
     val scope = rememberCoroutineScope()
-    val context = LocalActivity.current!!
+    val context = LocalContext.current as Activity
     
     // Secret logout gesture detection
     var tapCount by remember { mutableIntStateOf(0) }
     var lastTapTime by remember { mutableLongStateOf(0L) }
+    var timeoutJob by remember { mutableStateOf<Job?>(null) }
     val SECRET_TAP_COUNT = 5
-    val TAP_TIMEOUT_MS = 2000 // Reset tap count after 2 seconds of inactivity
+    val TAP_TIMEOUT_MS = 1500 // Reset tap count after 1.5 seconds of inactivity
     
-    // Reset tap count after timeout
-    LaunchedEffect(tapCount) {
-        if (tapCount > 0) {
-            delay(TAP_TIMEOUT_MS.toLong())
-            tapCount = 0
-        }
+    // Function to reset tap count
+    val resetTapCount = {
+        tapCount = 0
+        timeoutJob?.cancel()
+        timeoutJob = null
     }
 
     if (errorMessage != null) {
@@ -81,21 +82,37 @@ fun TopUpSelection(
                         onTap = {
                             val currentTime = System.currentTimeMillis()
                             
-                            // Reset counter if too much time has passed
-                            if (currentTime - lastTapTime > TAP_TIMEOUT_MS) {
-                                tapCount = 1
-                            } else {
-                                tapCount++
-                            }
+                            // Cancel existing timeout job
+                            timeoutJob?.cancel()
                             
-                            lastTapTime = currentTime
+                            // Increment tap count
+                            tapCount++
+                            
+                            // Start new timeout
+                            timeoutJob = scope.launch {
+                                delay(TAP_TIMEOUT_MS.toLong())
+                                tapCount = 0
+                            }
                             
                             // Trigger logout if secret tap count reached
                             if (tapCount >= SECRET_TAP_COUNT) {
+                                resetTapCount()
                                 scope.launch {
-                                    viewModel.secretLogout()
-                                    // Navigate back to login screen would happen automatically
-                                    // after logout due to authentication state changes
+                                    try {
+                                        // Show logout message as visual feedback
+                                        viewModel.showLogoutMessage()
+                                        
+                                        // Give time for the message to be seen
+                                        delay(500)
+                                        
+                                        // Perform the logout
+                                        viewModel.secretLogout()
+                                        
+                                        // The parent view will handle navigation
+                                    } catch (e: Exception) {
+                                        // If anything goes wrong, just reset the tap count
+                                        resetTapCount()
+                                    }
                                 }
                             }
                         }
