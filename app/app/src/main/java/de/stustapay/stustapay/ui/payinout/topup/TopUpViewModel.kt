@@ -49,7 +49,7 @@ data class TopUpState(
 class TopUpViewModel @Inject constructor(
     private val topUpApi: TopUpRemoteDataSource,
     private val terminalConfigRepository: TerminalConfigRepository,
-    userRepository: UserRepository,
+    private val userRepository: UserRepository,
     private val ecPaymentRepository: ECPaymentRepository,
     private val infallibleRepository: InfallibleRepository,
     private val customerDisplayManager: CustomerDisplayManager
@@ -348,5 +348,15 @@ class TopUpViewModel @Inject constructor(
 
     fun dismissError() {
         _errorMessage.update { null }
+    }
+
+    /**
+     * Performs a logout operation securely
+     * To be triggered via the secret gesture in the TopUpSelection screen
+     */
+    suspend fun secretLogout() {
+        _status.update { "Logging out..." }
+        userRepository.logout()
+        _status.update { "Logged out successfully" }
     }
 }
