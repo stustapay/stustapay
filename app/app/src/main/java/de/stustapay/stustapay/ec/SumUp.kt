@@ -490,7 +490,7 @@ class SumUp @Inject constructor(
             // optional: skip the success screen
             .skipSuccessScreen()
             // optional: skip the failed screen
-            //.skipFailedScreen()
+            .skipFailedScreen()
             .build()
 
         _paymentStatus.update { SumUpState.Started(payment.id) }
