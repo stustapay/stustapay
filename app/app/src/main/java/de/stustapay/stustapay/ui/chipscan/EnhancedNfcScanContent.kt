@@ -107,7 +107,7 @@ fun EnhancedNfcScanContent(
                 fontWeight = FontWeight.Bold,
                 fontSize = headerFontSize,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = if (isSmallScreen) 4.dp else 16.dp)
+                modifier = Modifier.padding(bottom = if (isSmallScreen) 4.dp else 8.dp)
             )
             
             // Main visual container

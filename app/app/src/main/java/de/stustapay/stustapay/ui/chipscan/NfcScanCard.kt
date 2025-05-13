@@ -10,9 +10,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +44,7 @@ fun NfcScanCard(
     scan: Boolean = true,  // is scanning active?
     keepScanning: Boolean = false,  // after a successful scan, keep on scanning?
     showStatus: Boolean = true,  // display scan status below the content.
+    onCancel: () -> Unit = { viewModel.stopScan() },  // Called when cancel button is pressed
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
         Text(
@@ -97,13 +103,32 @@ fun NfcScanCard(
     ) {
         Box(
             modifier = Modifier
-                .padding(10.dp)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
+            // Cancel button in the top-right corner of the card, moved outside padding area
+            IconButton(
+                onClick = onCancel,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "Cancel",
+                    modifier = Modifier.size(20.dp),
+                    tint = androidx.compose.material.MaterialTheme.colors.primary
+                )
+            }
+            
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .padding(top = 36.dp) // Increased padding to prevent content from overlapping with the X button
+                    .fillMaxWidth()
             ) {
                 content(scanState.status)
 

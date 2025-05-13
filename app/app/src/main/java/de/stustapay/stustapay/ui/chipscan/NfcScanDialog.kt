@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -96,6 +100,11 @@ fun NfcScanDialog(
                             state.close()
                             onScan(tag)
                         },
+                        onCancel = {
+                            viewModel.stopScan()
+                            state.close()
+                            onDismiss()
+                        },
                         content = { status -> 
                             EnhancedNfcScanContent(
                                 isIminFalcons2 = deviceConfig.isIminFalcons2,
@@ -128,6 +137,11 @@ fun NfcScanDialog(
                         onScan = { tag ->
                             state.close()
                             onScan(tag)
+                        },
+                        onCancel = {
+                            viewModel.stopScan()
+                            state.close()
+                            onDismiss()
                         },
                         content = { status -> 
                             EnhancedNfcScanContent(
