@@ -45,7 +45,7 @@ class DeviceConfigProvider @Inject constructor(
         if (model.contains("i24t01")) {
             return DeviceConfig(
                 isIminFalcons2 = true,
-                nfcScanDialogOffset = DpOffset((-300).dp, 0.dp) // Move dialog much further to the left
+                nfcScanDialogOffset = DpOffset((-350).dp, 0.dp) // Moved dialog even further to the left
             )
         }
         
