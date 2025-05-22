@@ -338,7 +338,15 @@ class SumUp @Inject constructor(
         context: Activity,
         payment: ECPayment,
     ) {
-        if (setState(target = SumUpAction.Checkout, payment = payment)) {
+        // Create a new payment with the same data but new ID to avoid duplicate foreign transaction IDs
+        val modifiedPayment = payment.copy(
+            id = "${payment.id}_retry_${System.currentTimeMillis()}"
+        )
+        
+        // Reset the payment state to avoid any leftover state from previous attempts
+        _paymentStatus.update { SumUpState.None }
+        
+        if (setState(target = SumUpAction.Checkout, payment = modifiedPayment)) {
             nextAction(context)
         }
     }
@@ -479,8 +487,8 @@ class SumUp @Inject constructor(
         val sumUpPaymentBuilder = SumUpPayment.builder()
             // minimum 1.00
             .total(payment.amount).currency(SumUpPayment.Currency.EUR)
-            // optional: include a tip amount in addition to the total
-            //.tip(payment.tip)
+            // We don't set tip here to avoid issues with the tipOnCardReader option
+            // The tip will be handled by the card reader if enabled
             .title("${cfg.terminal.eventName} ${payment.tag.uidHex()} ${payment.id}")
             //.receiptEmail("dummy@sft.lol") // todo: pre-set if the user has provided their email
             //.receiptSMS("+00000000000")
@@ -511,11 +519,15 @@ class SumUp @Inject constructor(
 
     private fun paymentResult(context: Activity, resultCode: Int, extras: Bundle?) {
         if (!checkResultCode("payment", resultCode)) {
-            _paymentStatus.update { SumUpState.Failed("bad payment result: $resultCode") }
+            // Completely reset state machine on failure
+            sumUpPaymentState = SumUpPaymentState()
+            _paymentStatus.update { SumUpState.Failed("payment was aborted or cancelled: $resultCode") }
             return
         }
 
         if (extras == null) {
+            // Completely reset state machine on failure
+            sumUpPaymentState = SumUpPaymentState()
             _paymentStatus.update { SumUpState.Error("no sumup payment result intent extras") }
             return
         }
@@ -539,15 +551,26 @@ class SumUp @Inject constructor(
                     )
                 }
 
-                // TODO log the payment locally on the terminal,
-                //      and maybe sync it back to the core
+                // Successful payment, set state to None for next payment
+                val config = sumUpPaymentState.config
+                sumUpPaymentState = SumUpPaymentState(config = config)
 
                 nextAction(context)
             }
 
             else -> {
+                // For ERROR_DUPLICATE_FOREIGN_TX_ID, provide a clearer error message
+                val errorMsg = if (result == SumUpResultCode.ERROR_DUPLICATE_FOREIGN_TX_ID) {
+                    "Duplicate transaction ID. Please try again."
+                } else {
+                    "checkout result: $result: $resultMsg"
+                }
+                
+                // Completely reset state machine on failure
+                sumUpPaymentState = SumUpPaymentState()
+                
                 _paymentStatus.update {
-                    SumUpState.Error("checkout result: $result: $resultMsg")
+                    SumUpState.Error(errorMsg)
                 }
             }
         }
