@@ -22,6 +22,7 @@ data class ECTerminalConfig(
     val name: String,
     val id: String,
     val eventName: String,
+    val enableCardPayment: Boolean = false,
 )
 
 data class SumUpConfig(
@@ -277,7 +278,8 @@ class SumUp @Inject constructor(
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString(),
-                        eventName = cfg.eventName
+                        eventName = cfg.eventName,
+                        enableCardPayment = cfg.till?.enableCardPayment ?: false
                     )
                 )
             }
@@ -474,11 +476,11 @@ class SumUp @Inject constructor(
         // wake up pin device
         SumUpAPI.prepareForCheckout()
 
-        val sumUpPayment = SumUpPayment.builder()
+        val sumUpPaymentBuilder = SumUpPayment.builder()
             // minimum 1.00
             .total(payment.amount).currency(SumUpPayment.Currency.EUR)
             // optional: include a tip amount in addition to the total
-            .tip(payment.tip)
+            //.tip(payment.tip)
             .title("${cfg.terminal.eventName} ${payment.tag.uidHex()} ${payment.id}")
             //.receiptEmail("dummy@sft.lol") // todo: pre-set if the user has provided their email
             //.receiptSMS("+00000000000")
@@ -491,7 +493,13 @@ class SumUp @Inject constructor(
             .skipSuccessScreen()
             // optional: skip the failed screen
             .skipFailedScreen()
-            .build()
+        
+        // Only enable tip on card reader if card payment is enabled in the till profile
+        if (cfg.terminal.enableCardPayment) {
+            sumUpPaymentBuilder.tipOnCardReader()
+        }
+        
+        val sumUpPayment = sumUpPaymentBuilder.build()
 
         _paymentStatus.update { SumUpState.Started(payment.id) }
 
