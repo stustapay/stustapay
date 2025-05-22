@@ -148,4 +148,6 @@
     <string name="user_title">User</string>
     <string name="user_update_title">Update User</string>
     <string name="user_username">Username</string>
+    <string name="guid_title">Guide</string>
+    <string name="root_item_guide">Guide</string>
 </resources>

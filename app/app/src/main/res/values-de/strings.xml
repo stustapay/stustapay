@@ -147,4 +147,6 @@
     <string name="user_title">Benutzer</string>
     <string name="user_update_title">Benutzer verwalten</string>
     <string name="user_username">Benutzername</string>
+    <string name="guid_title">Guide</string>
+    <string name="root_item_guide">Guide</string>
 </resources>
