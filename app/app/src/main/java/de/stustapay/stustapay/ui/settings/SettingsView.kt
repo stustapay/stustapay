@@ -1,9 +1,11 @@
 package de.stustapay.stustapay.ui.settings
 
+import android.media.RingtoneManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -73,6 +76,14 @@ fun SettingsRootView(navController: NavHostController) {
                     navController.navigate(SettingsNavDest.about.route)
                 }
             }
+        }
+        item {
+            val ctx = LocalContext.current
+            Button(onClick = {
+                val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                val r = RingtoneManager.getRingtone(ctx, notification)
+                r.play()
+            }) { Text("boing") }
         }
     }
 }
