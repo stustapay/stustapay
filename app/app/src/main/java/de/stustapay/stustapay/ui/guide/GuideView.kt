@@ -56,7 +56,7 @@ fun GuideView(
 
     LifecycleResumeEffect(Unit) {
         player = ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri("https://html5demos.com/assets/dizzy.mp4"))
+            setMediaItem(MediaItem.fromUri("https://cloud.stusta.de/s/364ryemX34rYoyR/download/ssp_quick_guide_25.mp4"))
             prepare()
         }
         onPauseOrDispose {
