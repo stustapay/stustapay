@@ -240,7 +240,7 @@ class AccountService(Service[Config]):
         return True
 
     @with_db_transaction
-    @requires_terminal([Privilege.grant_vouchers])
+    @requires_terminal([Privilege.grant_vouchers], requires_till=False)
     async def grant_vouchers(
         self,
         *,
@@ -278,7 +278,7 @@ class AccountService(Service[Config]):
         return account
 
     @with_db_transaction
-    @requires_terminal([Privilege.grant_free_tickets])
+    @requires_terminal([Privilege.grant_free_tickets], requires_till=False)
     async def grant_free_tickets(
         self,
         *,
@@ -399,7 +399,7 @@ class AccountService(Service[Config]):
         await conn.execute("update user_tag set comment = $2 where id = $1", old_user_tag_id, comment)
 
     @with_db_transaction
-    @requires_terminal([Privilege.customer_management])
+    @requires_terminal([Privilege.customer_management], requires_till=False)
     async def switch_account_tag_uid_terminal(
         self,
         *,

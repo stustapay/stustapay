@@ -399,7 +399,7 @@ class UserService(Service[Config]):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.create_user, Privilege.user_management])
+    @requires_terminal([Privilege.create_user, Privilege.user_management], requires_till=False)
     async def create_user_terminal(
         self,
         *,
@@ -423,7 +423,7 @@ class UserService(Service[Config]):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.user_management])
+    @requires_terminal([Privilege.user_management], requires_till=False)
     async def update_user_roles_terminal(
         self,
         *,

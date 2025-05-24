@@ -209,7 +209,7 @@ class TillService(Service[Config]):
         return customer
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.customer_management])
+    @requires_terminal(user_privileges=[Privilege.customer_management], requires_till=False)
     async def get_customer_orders(self, *, conn: Connection, node: Node, customer_tag_uid: int) -> list[Order]:
         customer_id = await conn.fetchval(
             "select id from account_with_history a where a.user_tag_uid = $1 and node_id = any($2)",
