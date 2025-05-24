@@ -27,10 +27,10 @@ from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.user import AuthService
 
 
-async def logout_user_from_terminal(conn: Connection, node_id: int, terminal_id: int):
+async def logout_user_from_terminal(conn: Connection, node_id: int | None, terminal_id: int):
     result = await conn.fetchval(
         "update terminal set active_user_id = null, active_user_role_id = null "
-        "where id = $1 and node_id = $2 returning id",
+        "where id = $1 and ($2 is null or node_id = $2) returning id",
         terminal_id,
         node_id,
     )
@@ -48,7 +48,7 @@ async def remove_terminal_from_till(conn: Connection, node_id: int, till_id: int
     )
     terminal_id = result["terminal_id"]
     if terminal_id is not None:
-        await logout_user_from_terminal(conn=conn, node_id=node_id, terminal_id=terminal_id)
+        await logout_user_from_terminal(conn=conn, node_id=None, terminal_id=terminal_id)
 
 
 async def assign_till_to_terminal(conn: Connection, node: Node, till_id: int, terminal_id: int):
