@@ -44,6 +44,8 @@ import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import de.stustapay.libssp.ui.barcode.QRScanDialog
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.model.UserCreateQRContent
@@ -144,9 +146,11 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
 
         Scaffold(content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
+                val scroll = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(state = scroll)
                         .padding(10.dp)
                 ) {
                     ListItem(

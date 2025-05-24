@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun UserUpdateView(viewModel: UserViewModel) {
+fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     var roles by remember { mutableStateOf(listOf<ULong>()) }
     val scope = rememberCoroutineScope()
     val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
@@ -78,11 +78,14 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     .fillMaxSize()
                     .padding(10.dp)
             ) {
-                ListItem(text = { Text(stringResource(R.string.common_tag_id)) },
+                ListItem(
+                    text = { Text(stringResource(R.string.common_tag_id)) },
                     secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue(true))) })
-                ListItem(text = { Text(stringResource(R.string.user_username)) },
+                ListItem(
+                    text = { Text(stringResource(R.string.user_username)) },
                     secondaryText = { Text(currentUserV.login) })
-                ListItem(text = { Text(stringResource(R.string.user_displayname)) },
+                ListItem(
+                    text = { Text(stringResource(R.string.user_displayname)) },
                     secondaryText = { Text(currentUserV.displayName) })
 
                 Row(
@@ -94,9 +97,11 @@ fun UserUpdateView(viewModel: UserViewModel) {
                 ) {
                     var expanded by remember { mutableStateOf(false) }
 
-                    ExposedDropdownMenuBox(expanded = expanded,
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
                         onExpandedChange = { expanded = it }) {
-                        OutlinedTextField(label = { Text(stringResource(R.string.user_roles)) },
+                        OutlinedTextField(
+                            label = { Text(stringResource(R.string.user_roles)) },
                             readOnly = true,
                             value = roles.map { id ->
                                 availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
@@ -109,7 +114,8 @@ fun UserUpdateView(viewModel: UserViewModel) {
                             },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        ExposedDropdownMenu(expanded = expanded,
+                        ExposedDropdownMenu(
+                            expanded = expanded,
                             onDismissRequest = { expanded = false }) {
                             for (r in availableRoles) {
                                 if (!r.isPrivileged!!) {
@@ -138,7 +144,8 @@ fun UserUpdateView(viewModel: UserViewModel) {
                     }
                 }
 
-                ListItem(text = { Text(stringResource(R.string.user_description)) },
+                ListItem(
+                    text = { Text(stringResource(R.string.user_description)) },
                     secondaryText = { Text(currentUserV.description ?: "") })
             }
         }
@@ -179,14 +186,18 @@ fun UserUpdateView(viewModel: UserViewModel) {
             }
             Spacer(modifier = Modifier.height(10.dp))
 
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
                 enabled = !isPrivileged,
                 onClick = {
                     scope.launch {
-                        viewModel.update(currentTag,
+                        viewModel.update(
+                            currentTag,
                             roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id })
+                        viewModel.checkCreate(currentTag)
+                        goToUserDisplayView()
                     }
                 }) {
                 Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
