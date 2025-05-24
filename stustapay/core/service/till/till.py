@@ -30,7 +30,7 @@ from stustapay.core.service.user import AuthService
 async def logout_user_from_terminal(conn: Connection, node_id: int | None, terminal_id: int):
     result = await conn.fetchval(
         "update terminal set active_user_id = null, active_user_role_id = null "
-        "where id = $1 and ($2 is null or node_id = $2) returning id",
+        "where id = $1 and ($2::bigint is null or node_id = $2) returning id",
         terminal_id,
         node_id,
     )
