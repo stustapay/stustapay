@@ -149,7 +149,8 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                         .fillMaxSize()
                         .padding(10.dp)
                 ) {
-                    ListItem(text = { Text(stringResource(R.string.common_tag_id)) },
+                    ListItem(
+                        text = { Text(stringResource(R.string.common_tag_id)) },
                         secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue())) })
 
                     Divider()
@@ -280,19 +281,22 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp), onClick = {
-                    scope.launch {
-                        viewModel.create(
-                            userName,
-                            displayName,
-                            currentTag,
-                            roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },
-                            description
-                        )
-                    }
-                }) {
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp), onClick = {
+                        scope.launch {
+                            viewModel.create(
+                                userName,
+                                displayName,
+                                currentTag,
+                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },
+                                description
+                            )
+                            viewModel.checkCreate(currentTag)
+                            goToUserDisplayView()
+                        }
+                    }) {
                     Text(stringResource(R.string.common_action_create), fontSize = 24.sp)
                 }
             }
