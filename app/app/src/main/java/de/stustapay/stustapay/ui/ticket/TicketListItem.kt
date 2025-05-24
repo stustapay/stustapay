@@ -41,18 +41,12 @@ fun TicketListItem(
             Icon(
                 Icons.Filled.LocalActivity,
                 contentDescription = null,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(35.dp)
             )
         },
         text = {
             Column {
                 Row {
-                    Spacer(
-                        modifier = Modifier
-                            .weight(0.4f)
-                            .padding(end = 4.dp),
-                    )
-
                     Text(
                         scannedTicket.nfcTag.pin.orEmpty(),
                         style = MaterialTheme.typography.overline,
@@ -66,7 +60,7 @@ fun TicketListItem(
 
                     Text(
                         ticketPrice,
-                        style = MaterialTheme.typography.body1,
+                        style = MaterialTheme.typography.body2,
                         modifier = Modifier
                             .weight(0.4f)
                             .padding(end = 4.dp),
@@ -75,7 +69,7 @@ fun TicketListItem(
 
                     Text(
                         scannedTicket.ticket.name,
-                        style = MaterialTheme.typography.body1,
+                        style = MaterialTheme.typography.body2,
                         modifier = Modifier.weight(0.6f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -87,7 +81,7 @@ fun TicketListItem(
                     Row {
                         Text(
                             accountBalance,
-                            style = MaterialTheme.typography.body1,
+                            style = MaterialTheme.typography.body2,
                             modifier = Modifier
                                 .weight(0.4f)
                                 .padding(end = 4.dp),
@@ -95,7 +89,7 @@ fun TicketListItem(
                         )
                         Text(
                             stringResource(R.string.customer_in_account),
-                            style = MaterialTheme.typography.body1,
+                            style = MaterialTheme.typography.body2,
                             modifier = Modifier.weight(0.6f),
                         )
                     }
@@ -107,7 +101,7 @@ fun TicketListItem(
                     Row {
                         Text(
                             plannedTopUp,
-                            style = MaterialTheme.typography.body1,
+                            style = MaterialTheme.typography.body2,
                             modifier = Modifier
                                 .weight(0.4f)
                                 .padding(end = 4.dp),
@@ -115,7 +109,7 @@ fun TicketListItem(
                         )
                         Text(
                             stringResource(R.string.common_topup),
-                            style = MaterialTheme.typography.body1,
+                            style = MaterialTheme.typography.body2,
                             modifier = Modifier.weight(0.6f),
                         )
                     }
@@ -127,12 +121,12 @@ fun TicketListItem(
                 if (setTopUp != null) {
                     IconButton(
                         modifier = Modifier
-                            .size(70.dp),
+                            .size(65.dp),
                         onClick = setTopUp,
                     ) {
                         Icon(
                             modifier = Modifier
-                                .size(55.dp),
+                                .size(50.dp),
                             imageVector = Icons.Filled.AddShoppingCart,
                             contentDescription = null,
                         )
@@ -142,13 +136,13 @@ fun TicketListItem(
                 if (setTicketVoucher != null) {
                     IconButton(
                         modifier = Modifier
-                            .size(70.dp),
+                            .size(65.dp),
                         onClick = setTicketVoucher,
                         enabled = scannedTicket.voucherToken == null,
                     ) {
                         Icon(
                             modifier = Modifier
-                                .size(55.dp),
+                                .size(50.dp),
                             imageVector = Icons.Filled.QrCodeScanner,
                             contentDescription = null,
                         )

@@ -109,6 +109,15 @@ fun StartpageView(
                     )
                 }
 
+                StartpageEntry(
+                    item = StartpageItem(
+                        icon = Icons.Filled.QuestionMark,
+                        label = R.string.root_item_guide,
+                        navDestination = RootNavDests.guide,
+                    ),
+                    navigateTo = navigateToHook
+                )
+
                 val activity = LocalActivity.current
                 StartpageEntry(
                     item = StartpageItem(
