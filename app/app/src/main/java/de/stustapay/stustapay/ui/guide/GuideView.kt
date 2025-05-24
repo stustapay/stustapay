@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.guide
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_SURFACE_VIEW
@@ -41,7 +44,9 @@ import androidx.media3.ui.compose.state.rememberPlayPauseButtonState
 import androidx.media3.ui.compose.state.rememberPresentationState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.nav.NavScaffold
+import kotlinx.coroutines.delay
 
+@OptIn(UnstableApi::class)
 @Preview
 @Composable
 fun GuideView(
@@ -77,6 +82,12 @@ fun GuideView(
             val state = rememberPlayPauseButtonState(player)
             val icon = if (state.showPlay) Icons.Default.PlayArrow else Icons.Default.Pause
 
+            LaunchedEffect(Unit) {
+                player.play()
+                delay(1000)
+                showControls = false
+            }
+
             Box(Modifier.fillMaxSize()) {
                 PlayerSurface(
                     player = player,
@@ -97,6 +108,13 @@ fun GuideView(
                     )
                 }
 
+                LaunchedEffect(showControls, player.isPlaying) {
+                    if (showControls && player.isPlaying) {
+                        delay(1000)
+                        showControls = false
+                    }
+                }
+
                 if (showControls) {
                     Row(
                         modifier = Modifier
@@ -109,7 +127,7 @@ fun GuideView(
                             onClick = state::onClick,
                             modifier = Modifier
                                 .size(80.dp)
-                                .background(Color.Gray.copy(alpha = 0.1f), CircleShape),
+                                .background(Color.Gray.copy(alpha = 0.2f), CircleShape),
                             enabled = state.isEnabled
                         ) {
                             Icon(
@@ -117,14 +135,12 @@ fun GuideView(
                                 contentDescription = "",
                                 modifier = Modifier
                                     .size(80.dp)
-                                    .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
+                                    .background(Color.Gray.copy(alpha = 0.2f), CircleShape)
                             )
                         }
                     }
                 }
             }
-
-
         }
     }
 }
