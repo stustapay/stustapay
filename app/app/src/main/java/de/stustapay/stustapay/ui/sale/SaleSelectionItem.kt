@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.sale
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.runtime.Composable

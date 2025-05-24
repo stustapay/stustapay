@@ -40,8 +40,8 @@ sealed interface SaleItemPrice {
  * The price is in cents.
  */
 sealed interface SaleItemAmount {
-    data class FixedPrice(var amount: Int) : SaleItemAmount
-    data class FreePrice(var price: UInt) : SaleItemAmount
+    data class FixedPrice(val amount: Int) : SaleItemAmount
+    data class FreePrice(val price: UInt) : SaleItemAmount
 }
 
 
@@ -148,14 +148,15 @@ data class SaleStatus(
         if (saleConfig !is SaleConfig.Ready) return
         val button = saleConfig.buttons[buttonId] ?: return
         when (button.price) {
-            is SaleItemPrice.FixedPrice,
-            is SaleItemPrice.Returnable -> {
+            is SaleItemPrice.FixedPrice, is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
-                    current.amount = current.amount + 1
+                    buttonSelection.remove(buttonId)
+                    buttonSelection += Pair(
+                        buttonId, SaleItemAmount.FixedPrice(current.amount + 1)
+                    )
                 } else {
                     buttonSelection += Pair(
-                        buttonId,
-                        SaleItemAmount.FixedPrice(amount = 1)
+                        buttonId, SaleItemAmount.FixedPrice(amount = 1)
                     )
                 }
             }
@@ -176,7 +177,10 @@ data class SaleStatus(
                 if (current is SaleItemAmount.FixedPrice) {
                     val newAmount = max(0, current.amount - 1)
                     if (newAmount != 0) {
-                        current.amount = newAmount
+                        buttonSelection.remove(buttonId)
+                        buttonSelection += Pair(
+                            buttonId, SaleItemAmount.FixedPrice(newAmount)
+                        )
                     } else {
                         buttonSelection.remove(buttonId)
                     }
@@ -187,14 +191,16 @@ data class SaleStatus(
 
             is SaleItemPrice.Returnable -> {
                 if (current is SaleItemAmount.FixedPrice) {
-                    current.amount = current.amount - 1
+                    buttonSelection.remove(buttonId)
+                    buttonSelection += Pair(
+                        buttonId, SaleItemAmount.FixedPrice(current.amount - 1)
+                    )
                     if (current.amount == 0) {
                         buttonSelection.remove(buttonId)
                     }
                 } else {
                     buttonSelection += Pair(
-                        buttonId,
-                        SaleItemAmount.FixedPrice(amount = -1)
+                        buttonId, SaleItemAmount.FixedPrice(amount = -1)
                     )
                 }
             }
@@ -215,11 +221,13 @@ data class SaleStatus(
                 when (setPrice) {
                     is FreePrice.Set -> {
                         if (current is SaleItemAmount.FreePrice) {
-                            current.price = setPrice.price
+                            buttonSelection.remove(buttonId)
+                            buttonSelection += Pair(
+                                buttonId, SaleItemAmount.FreePrice(setPrice.price)
+                            )
                         } else {
                             buttonSelection += Pair(
-                                buttonId,
-                                SaleItemAmount.FreePrice(price = setPrice.price)
+                                buttonId, SaleItemAmount.FreePrice(price = setPrice.price)
                             )
                         }
                     }
@@ -234,8 +242,7 @@ data class SaleStatus(
                 }
             }
 
-            is SaleItemPrice.FixedPrice,
-            is SaleItemPrice.Returnable -> {
+            is SaleItemPrice.FixedPrice, is SaleItemPrice.Returnable -> {
                 Log.e("StuStaPay", "adjustprice on non-free-price item invalid!")
             }
         }

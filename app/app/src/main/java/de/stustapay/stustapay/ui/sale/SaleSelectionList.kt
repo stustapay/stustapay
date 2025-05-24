@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.sale
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,8 +20,7 @@ import kotlinx.coroutines.flow.update
 
 @Composable
 fun SaleSelectionList(
-    modifier: Modifier = Modifier,
-    viewModel: SaleViewModel
+    modifier: Modifier = Modifier, viewModel: SaleViewModel
 ) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val saleStatus by viewModel.saleStatus.collectAsStateWithLifecycle()
@@ -81,49 +81,49 @@ fun SaleSelectionList(
                     } else {
                         button.value.caption
                     }
-                    SaleSelectionItem(
-                        caption = saleCaption,
-                        type = when (val price = button.value.price) {
-                            is SaleItemPrice.FixedPrice -> {
-                                SaleSelectionItemType.FixedPrice(
-                                    price = price,
-                                    amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
-                                    onIncr = { viewModel.incrementButton(button.value.id) },
-                                    onDecr = { viewModel.decrementButton(button.value.id) },
-                                )
-                            }
 
-                            is SaleItemPrice.Returnable -> {
-                                // returnable items can become negative and positive.
-                                SaleSelectionItemType.Returnable(
-                                    price = price,
-                                    amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
-                                    onIncr = { viewModel.incrementButton(button.value.id) },
-                                    onDecr = { viewModel.decrementButton(button.value.id) },
-                                    incrementText = returnCaption,
-                                )
-                            }
-
-                            is SaleItemPrice.FreePrice -> {
-                                SaleSelectionItemType.FreePrice(
-                                    // TODO: preselect default price.defaultPrice when no freeprice is set yet
-                                    amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FreePrice),
-                                    onPriceEdit = { clear ->
-                                        if (clear) {
-                                            viewModel.adjustPrice(
-                                                button.value.id,
-                                                newPrice = FreePrice.Unset
-                                            )
-                                        } else {
-                                            // after the price was edited, where do we want to set it to?
-                                            // we could add this mechanism to the PriceSelectionState.
-                                            priceTargetButtonId.update { button.value.id }
-                                            priceSelectionState.open()
-                                        }
-                                    }
-                                )
-                            }
+                    val type = when (val price = button.value.price) {
+                        is SaleItemPrice.FixedPrice -> {
+                            SaleSelectionItemType.FixedPrice(
+                                price = price,
+                                amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
+                                onIncr = { viewModel.incrementButton(button.value.id) },
+                                onDecr = { viewModel.decrementButton(button.value.id) },
+                            )
                         }
+
+                        is SaleItemPrice.Returnable -> {
+                            // returnable items can become negative and positive.
+                            SaleSelectionItemType.Returnable(
+                                price = price,
+                                amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
+                                onIncr = { viewModel.incrementButton(button.value.id) },
+                                onDecr = { viewModel.decrementButton(button.value.id) },
+                                incrementText = returnCaption,
+                            )
+                        }
+
+                        is SaleItemPrice.FreePrice -> {
+                            SaleSelectionItemType.FreePrice(
+                                // TODO: preselect default price.defaultPrice when no freeprice is set yet
+                                amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FreePrice),
+                                onPriceEdit = { clear ->
+                                    if (clear) {
+                                        viewModel.adjustPrice(
+                                            button.value.id, newPrice = FreePrice.Unset
+                                        )
+                                    } else {
+                                        // after the price was edited, where do we want to set it to?
+                                        // we could add this mechanism to the PriceSelectionState.
+                                        priceTargetButtonId.update { button.value.id }
+                                        priceSelectionState.open()
+                                    }
+                                })
+                        }
+                    }
+
+                    SaleSelectionItem(
+                        caption = saleCaption, type = type
                     )
                 }
             }
