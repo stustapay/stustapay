@@ -56,7 +56,7 @@ fun GuideView(
 
     LifecycleResumeEffect(Unit) {
         player = ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri("https://cloud.stusta.de/s/364ryemX34rYoyR/download/ssp_quick_guide_25.mp4"))
+            setMediaItem(MediaItem.fromUri("https://ssp.stusta.de/apps/guide_en.mp4")) // TODO: get url from config
             prepare()
         }
         onPauseOrDispose {
@@ -90,17 +90,35 @@ fun GuideView(
                 )
 
                 if (presentationState.coverSurface) {
-                    Box(Modifier.matchParentSize().background(Color.Black))
+                    Box(
+                        Modifier
+                            .matchParentSize()
+                            .background(Color.Black)
+                    )
                 }
 
                 if (showControls) {
                     Row(
-                        modifier = Modifier.align(Alignment.Center).fillMaxWidth(),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        IconButton(onClick = state::onClick, modifier = Modifier.size(80.dp).background(Color.Gray.copy(alpha = 0.1f), CircleShape), enabled = state.isEnabled) {
-                            Icon(icon, contentDescription = "", modifier = Modifier.size(80.dp).background(Color.Gray.copy(alpha = 0.1f), CircleShape))
+                        IconButton(
+                            onClick = state::onClick,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .background(Color.Gray.copy(alpha = 0.1f), CircleShape),
+                            enabled = state.isEnabled
+                        ) {
+                            Icon(
+                                icon,
+                                contentDescription = "",
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
+                            )
                         }
                     }
                 }
