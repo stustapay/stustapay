@@ -414,7 +414,7 @@ class TerminalService(Service[Config]):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def check_user_login(
         self,
         *,
@@ -465,7 +465,7 @@ class TerminalService(Service[Config]):
         return available_roles
 
     @with_db_transaction
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def login_user(
         self,
         *,
@@ -525,12 +525,12 @@ class TerminalService(Service[Config]):
         return current_user
 
     @with_db_transaction(read_only=True)
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def get_current_user(self, *, current_user: Optional[CurrentUser]) -> Optional[CurrentUser]:
         return current_user
 
     @with_db_transaction
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def logout_user(self, *, conn: Connection, current_terminal: CurrentTerminal):
         """
         Logout the currently logged-in user. This is always possible
@@ -550,7 +550,7 @@ class TerminalService(Service[Config]):
         await logout_user_from_terminal(conn=conn, node_id=node.id, terminal_id=terminal_id)
 
     @with_db_transaction(read_only=True)
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def get_user_info(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, user_tag_uid: int
     ) -> UserInfo:
