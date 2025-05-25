@@ -113,12 +113,16 @@ class SignatureProcessor:
             active_tses = await conn.fetch(
                 "select id from tse where status='active' and node_id = any($1)", node.ids_to_event_node
             )
+            if len(active_tses) == 0:  # no tse found for this node -> ignore this node
+                continue
+
             for tse in active_tses:
                 # TODO optimize this statement for really really large installations...
                 tse_stats[tse["id"]] = await conn.fetchval(
                     "select count(*) from till join tse on till.tse_id = tse.id where tse.id = $1 and tse.status='active'",
                     tse["id"],
                 )
+
             tse_ranked = sorted(tse_stats.items(), key=lambda x: x[1])
             # assign this till to tse with the lowest number
             till_id_to_assign_to_tse = till["till_id"]
