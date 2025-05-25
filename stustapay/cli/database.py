@@ -1,10 +1,19 @@
 import asyncio
+import sys
+from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
 
 from stustapay.core.config import Config
-from stustapay.core.database import get_database, reset_schema
+from stustapay.core.database import (
+    DB_FUNCTION_BLACKLIST,
+    DB_FUNCTION_BLACKLIST_PREFIX,
+    DatabaseRestoreConfig,
+    get_database,
+    load_test_dump,
+    reset_schema,
+)
 from stustapay.core.database import list_revisions as list_revisions_
 
 database_cli = typer.Typer()
@@ -24,7 +33,13 @@ def migrate(
 ):
     """Apply all database migrations."""
     db = get_database(config=ctx.obj.config.database)
-    asyncio.run(db.apply_migrations(until_migration=until_revision))
+    asyncio.run(
+        db.apply_migrations(
+            until_migration=until_revision,
+            function_blacklist=DB_FUNCTION_BLACKLIST,
+            function_blacklist_prefix=DB_FUNCTION_BLACKLIST_PREFIX,
+        )
+    )
 
 
 async def _rebuild(cfg: Config):
@@ -32,7 +47,10 @@ async def _rebuild(cfg: Config):
     db_pool = await db.create_pool(n_connections=2)
     try:
         await reset_schema(db_pool=db_pool)
-        await db.apply_migrations()
+        await db.apply_migrations(
+            function_blacklist=DB_FUNCTION_BLACKLIST,
+            function_blacklist_prefix=DB_FUNCTION_BLACKLIST_PREFIX,
+        )
     finally:
         await db_pool.close()
 
@@ -73,4 +91,22 @@ def list_revisions(
 def reload_code(ctx: typer.Context):
     """List all available database revisions."""
     db = get_database(ctx.obj.config.database)
-    asyncio.run(db.reload_code())
+    asyncio.run(
+        db.reload_code(function_blacklist=DB_FUNCTION_BLACKLIST, function_blacklist_prefix=DB_FUNCTION_BLACKLIST_PREFIX)
+    )
+
+
+@database_cli.command()
+def load_dump(
+    ctx: typer.Context,
+    restore_config_path: Annotated[
+        Path, typer.Option("--restore-config", help="Path to json file containing a restore config")
+    ],
+    dump_file: Annotated[Path, typer.Option("--db-dump", help="Path to database dump file")],
+):
+    """Load a database dump, removing all sensible configs."""
+    restore_config = DatabaseRestoreConfig.model_validate_json(restore_config_path.read_text())
+    db = get_database(ctx.obj.config.database)
+    success = asyncio.run(load_test_dump(db, dump_file, restore_config))
+    if not success:
+        sys.exit(1)

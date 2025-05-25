@@ -283,6 +283,70 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
     return node
 
 
+async def update_event(conn: Connection, node: Node, event: NewEvent) -> Node:
+    event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
+    if event_id is None:
+        raise NotFound(element_type="event", element_id=node.id)
+
+    await conn.fetchval(
+        "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
+        "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
+        "   sepa_enabled = $10, sepa_sender_name = $11, sepa_sender_iban = $12, sepa_description = $13, "
+        "   sepa_allowed_country_codes = $14, customer_portal_url = $15, customer_portal_about_page_url = $16,"
+        "   customer_portal_data_privacy_url = $17, sumup_payment_enabled = $18, sumup_api_key = $19, "
+        "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
+        "   daily_end_time = $24, email_enabled = $25, email_default_sender = $26, email_smtp_host = $27, "
+        "   email_smtp_port = $28, email_smtp_username = $29, email_smtp_password = $30, "
+        "   payout_sender = $31, sumup_oauth_client_id = $32, sumup_oauth_client_secret = $33, pretix_presale_enabled = $34,"
+        "   pretix_shop_url = $35, pretix_api_key = $36, pretix_organizer = $37, pretix_event = $38, pretix_ticket_ids = $39 "
+        "where id = $1",
+        event_id,
+        event.currency_identifier,
+        event.sumup_topup_enabled,
+        event.max_account_balance,
+        event.customer_portal_contact_email,
+        event.ust_id,
+        event.bon_issuer,
+        event.bon_address,
+        event.bon_title,
+        event.sepa_enabled,
+        event.sepa_sender_name,
+        event.sepa_sender_iban,
+        event.sepa_description,
+        event.sepa_allowed_country_codes,
+        event.customer_portal_url,
+        event.customer_portal_about_page_url,
+        event.customer_portal_data_privacy_url,
+        event.sumup_payment_enabled,
+        event.sumup_api_key,
+        event.sumup_affiliate_key,
+        event.sumup_merchant_code,
+        event.start_date,
+        event.end_date,
+        event.daily_end_time,
+        event.email_enabled,
+        event.email_default_sender,
+        event.email_smtp_host,
+        event.email_smtp_port,
+        event.email_smtp_username,
+        event.email_smtp_password,
+        event.payout_sender,
+        event.sumup_oauth_client_id,
+        event.sumup_oauth_client_secret,
+        event.pretix_presale_enabled,
+        event.pretix_shop_url,
+        event.pretix_api_key,
+        event.pretix_organizer,
+        event.pretix_event,
+        event.pretix_ticket_ids,
+    )
+    await conn.execute("delete from translation_text where event_id = $1", event_id)
+    await _sync_optional_event_metadata(conn, event_id, event)
+    updated_node = await fetch_node(conn=conn, node_id=node.id)
+    assert updated_node is not None
+    return updated_node
+
+
 class TreeService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -347,66 +411,7 @@ class TreeService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def update_event(self, conn: Connection, node: Node, current_user: CurrentUser, event: NewEvent) -> Node:
-        event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
-        if event_id is None:
-            raise NotFound(element_type="event", element_id=node.id)
-
-        await conn.fetchval(
-            "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
-            "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
-            "   sepa_enabled = $10, sepa_sender_name = $11, sepa_sender_iban = $12, sepa_description = $13, "
-            "   sepa_allowed_country_codes = $14, customer_portal_url = $15, customer_portal_about_page_url = $16,"
-            "   customer_portal_data_privacy_url = $17, sumup_payment_enabled = $18, sumup_api_key = $19, "
-            "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
-            "   daily_end_time = $24, email_enabled = $25, email_default_sender = $26, email_smtp_host = $27, "
-            "   email_smtp_port = $28, email_smtp_username = $29, email_smtp_password = $30, "
-            "   payout_sender = $31, sumup_oauth_client_id = $32, sumup_oauth_client_secret = $33, pretix_presale_enabled = $34,"
-            "   pretix_shop_url = $35, pretix_api_key = $36, pretix_organizer = $37, pretix_event = $38, pretix_ticket_ids = $39 "
-            "where id = $1",
-            event_id,
-            event.currency_identifier,
-            event.sumup_topup_enabled,
-            event.max_account_balance,
-            event.customer_portal_contact_email,
-            event.ust_id,
-            event.bon_issuer,
-            event.bon_address,
-            event.bon_title,
-            event.sepa_enabled,
-            event.sepa_sender_name,
-            event.sepa_sender_iban,
-            event.sepa_description,
-            event.sepa_allowed_country_codes,
-            event.customer_portal_url,
-            event.customer_portal_about_page_url,
-            event.customer_portal_data_privacy_url,
-            event.sumup_payment_enabled,
-            event.sumup_api_key,
-            event.sumup_affiliate_key,
-            event.sumup_merchant_code,
-            event.start_date,
-            event.end_date,
-            event.daily_end_time,
-            event.email_enabled,
-            event.email_default_sender,
-            event.email_smtp_host,
-            event.email_smtp_port,
-            event.email_smtp_username,
-            event.email_smtp_password,
-            event.payout_sender,
-            event.sumup_oauth_client_id,
-            event.sumup_oauth_client_secret,
-            event.pretix_presale_enabled,
-            event.pretix_shop_url,
-            event.pretix_api_key,
-            event.pretix_organizer,
-            event.pretix_event,
-            event.pretix_ticket_ids,
-        )
-        await conn.execute("delete from translation_text where event_id = $1", event_id)
-        await _sync_optional_event_metadata(conn, event_id, event)
-        updated_node = await fetch_node(conn=conn, node_id=node.id)
-        assert updated_node is not None
+        updated_node = await update_event(conn=conn, node=node, event=event)
         await create_audit_log(
             conn=conn,
             log_type=AuditType.event_updated,
