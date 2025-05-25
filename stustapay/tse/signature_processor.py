@@ -115,7 +115,6 @@ class SignatureProcessor:
             )
             if len(active_tses) == 0:  # no tse found for this node -> ignore this node
                 continue
-
             for tse in active_tses:
                 # TODO optimize this statement for really really large installations...
                 tse_stats[tse["id"]] = await conn.fetchval(
