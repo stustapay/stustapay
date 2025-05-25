@@ -60,6 +60,7 @@ class SumUpTransactionStatus(enum.Enum):
     CANCELLED = "CANCELLED"
     FAILED = "FAILED"
     PENDING = "PENDING"
+    REFUNDED = "REFUNDED"
 
 
 class SumUpTransaction(BaseModel):

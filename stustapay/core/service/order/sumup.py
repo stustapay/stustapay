@@ -145,6 +145,7 @@ class SumupService(Service[Config]):
             if (
                 transaction.status == SumUpTransactionStatus.FAILED
                 or transaction.status == SumUpTransactionStatus.CANCELLED
+                or transaction.status == SumUpTransactionStatus.REFUNDED
             ):
                 return PaymentStatus.failed
             if transaction.status == SumUpTransactionStatus.SUCCESSFUL:
