@@ -1,10 +1,8 @@
 package de.stustapay.stustapay.ui.sale
 
-import android.graphics.Bitmap
-import android.graphics.Color
+import android.media.RingtoneManager
 import android.os.VibrationEffect
 import android.os.Vibrator
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,10 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.PaymentMethod
+import de.stustapay.libssp.ui.barcode.QRCode
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
-import de.stustapay.libssp.ui.barcode.QRCode
 
 
 @Composable
@@ -46,6 +44,10 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
     val config = saleConfig
 
     val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
+    val ringtone = RingtoneManager.getRingtone(
+        LocalContext.current,
+        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+    )
 
     // so we have a regular variable..
     val saleCompletedV = saleCompleted
@@ -72,6 +74,7 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
 
     LaunchedEffect(Unit) {
         vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
+        ringtone.play()
     }
 
     Scaffold(
