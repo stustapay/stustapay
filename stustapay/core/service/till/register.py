@@ -106,7 +106,7 @@ class TillRegisterService(Service[Config]):
         return await _list_cash_register_stockings(conn=conn, node=node)
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(requires_till=False)
+    @requires_terminal()
     async def list_cash_register_stockings_terminal(
         self, *, conn: Connection, current_till: CurrentTerminal
     ) -> list[CashRegisterStocking]:
@@ -224,7 +224,7 @@ class TillRegisterService(Service[Config]):
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=True)
-    @requires_terminal([Privilege.node_administration], requires_till=False)
+    @requires_terminal([Privilege.node_administration])
     async def list_cash_registers_terminal(
         self, *, conn: Connection, current_till: Till, hide_assigned_registers=False
     ) -> list[CashRegister]:
