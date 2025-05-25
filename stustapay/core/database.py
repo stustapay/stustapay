@@ -17,6 +17,13 @@ from .schema import DB_CODE_PATH, MIGRATION_PATH
 logger = logging.getLogger(__name__)
 
 CURRENT_REVISION = "c5c2c8aa"
+DB_FUNCTION_BLACKLIST = [
+    "get_default_till_dsfinvk_brand",
+    "get_default_till_dsfinvk_model",
+    "get_default_till_dsfinvk_software_brand",
+    "hash_voucher_token",
+]
+DB_FUNCTION_BLACKLIST_PREFIX = None
 
 
 def get_database(config: DatabaseConfig) -> Database:
