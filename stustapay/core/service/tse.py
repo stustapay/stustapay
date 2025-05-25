@@ -17,6 +17,21 @@ async def list_tses(conn: Connection, node: Node) -> list[Tse]:
     return await conn.fetch_many(Tse, "select * from tse where node_id = any($1) order by name", node.ids_to_event_node)
 
 
+async def create_tse(conn: Connection, node: Node, new_tse: NewTse) -> Tse:
+    tse_id = await conn.fetchval(
+        "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status, first_operation) "
+        "values ($1, $2, $3, $4, $5, $6, 'new', $7) returning id",
+        node.id,
+        new_tse.name,
+        new_tse.serial,
+        new_tse.ws_url,
+        new_tse.ws_timeout,
+        new_tse.password,
+        new_tse.first_operation,
+    )
+    return await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
+
+
 class TseService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -26,18 +41,7 @@ class TseService(Service[Config]):
     @requires_node(object_types=[ObjectType.tse], event_only=False)
     @requires_user([Privilege.node_administration])
     async def create_tse(self, *, conn: Connection, node: Node, current_user: CurrentUser, new_tse: NewTse) -> Tse:
-        tse_id = await conn.fetchval(
-            "insert into tse (node_id, name, serial, ws_url, ws_timeout, password, status, first_operation) "
-            "values ($1, $2, $3, $4, $5, $6, 'new', $7) returning id",
-            node.id,
-            new_tse.name,
-            new_tse.serial,
-            new_tse.ws_url,
-            new_tse.ws_timeout,
-            new_tse.password,
-            new_tse.first_operation,
-        )
-        tse = await conn.fetch_one(Tse, "select * from tse where id = $1", tse_id)
+        tse = await create_tse(conn=conn, node=node, new_tse=new_tse)
         await create_audit_log(
             conn=conn,
             log_type=AuditType.tse_created,

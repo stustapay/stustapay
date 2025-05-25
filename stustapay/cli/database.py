@@ -1,10 +1,12 @@
 import asyncio
+import sys
+from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
 
 from stustapay.core.config import Config
-from stustapay.core.database import get_database, reset_schema
+from stustapay.core.database import DatabaseRestoreConfig, get_database, load_test_dump, reset_schema
 from stustapay.core.database import list_revisions as list_revisions_
 
 database_cli = typer.Typer()
@@ -74,3 +76,19 @@ def reload_code(ctx: typer.Context):
     """List all available database revisions."""
     db = get_database(ctx.obj.config.database)
     asyncio.run(db.reload_code())
+
+
+@database_cli.command()
+def load_dump(
+    ctx: typer.Context,
+    restore_config_path: Annotated[
+        Path, typer.Option("--restore-config", help="Path to json file containing a restore config")
+    ],
+    dump_file: Annotated[Path, typer.Option("--db-dump", help="Path to database dump file")],
+):
+    """Load a database dump, removing all sensible configs."""
+    restore_config = DatabaseRestoreConfig.model_validate_json(restore_config_path.read_text())
+    db = get_database(ctx.obj.config.database)
+    success = asyncio.run(load_test_dump(db, dump_file, restore_config))
+    if not success:
+        sys.exit(1)
