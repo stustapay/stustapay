@@ -13,9 +13,9 @@ export function FormTimePicker<Name extends string, Values extends Partial<Recor
   formik,
   ...props
 }: FormTimePickerProps<Name, Values>) {
-  const handleChange = (value: DateTime | null) => {
-    formik.setFieldValue(name, value?.toISOTime(), true);
-    formik.setFieldTouched(name, true, false);
+  const handleChange = async (value: DateTime | null) => {
+    await formik.setFieldValue(name, value?.toISOTime(), true);
+    await formik.setFieldTouched(name, true, false);
   };
 
   return (

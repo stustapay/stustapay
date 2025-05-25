@@ -19,9 +19,9 @@ export function FormDateTimePicker<Name extends string, Values extends Partial<R
   formik,
   ...props
 }: FormDateTimePickerProps<Name, Values>) {
-  const handleChange = (value: DateTime | null) => {
-    formik.setFieldValue(name, value?.toISO(), true);
-    formik.setFieldTouched(name, true, false);
+  const handleChange = async (value: DateTime | null) => {
+    await formik.setFieldValue(name, value?.toISO(), true);
+    await formik.setFieldTouched(name, true, false);
   };
 
   return (

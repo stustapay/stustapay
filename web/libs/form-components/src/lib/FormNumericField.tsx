@@ -19,9 +19,9 @@ export function FormNumericInput<Name extends string, Values extends Partial<Rec
   const { setFieldValue, setFieldTouched } = formik;
 
   const handleChange = React.useCallback(
-    (value: number | null) => {
-      setFieldValue(name, value, true);
-      setFieldTouched(name, true, false);
+    async (value: number | null) => {
+      await setFieldValue(name, value, true);
+      await setFieldTouched(name, true, false);
     },
     [setFieldValue, setFieldTouched, name]
   );
