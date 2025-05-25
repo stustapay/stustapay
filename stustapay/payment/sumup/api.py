@@ -55,6 +55,13 @@ class SumUpCreateCheckout(BaseModel):
     description: str
 
 
+class SumUpTransactionStatus(enum.Enum):
+    SUCCESSFUL = "SUCCESSFUL"
+    CANCELLED = "CANCELLED"
+    FAILED = "FAILED"
+    PENDING = "PENDING"
+
+
 class SumUpTransaction(BaseModel):
     amount: float
     currency: str
@@ -63,7 +70,7 @@ class SumUpTransaction(BaseModel):
     product_summary: str | None = None
     card_type: str | None = None
     type: str | None = None
-    status: str
+    status: SumUpTransactionStatus
     timestamp: datetime
     transaction_code: str
 
@@ -266,10 +273,9 @@ class SumUpApi:
 
         return SumUpCheckout.model_validate(resp[0])
 
-    async def get_transaction(self, foreign_transaction_id: str) -> SumUpTransactionDetail:
-        resp = await self._get(
-            f"{SUMUP_API_URL}/me/transactions", query={"foreign_transaction_id": foreign_transaction_id}
-        )
+    async def find_transaction(self, order_uuid: uuid.UUID) -> SumUpTransactionDetail:
+        url = f"{SUMUP_API_BASE_URL}/v2.1/merchants/{self.merchant_code}/transactions"
+        resp = await self._get(url, query={"foreign_transaction_id": str(order_uuid)})
         return SumUpTransactionDetail.model_validate(resp)
 
     async def list_transactions(self) -> list[SumUpTransaction]:

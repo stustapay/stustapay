@@ -33,6 +33,7 @@ from stustapay.core.schema.order import (
     OrderType,
     PaymentMethod,
     PendingLineItem,
+    PendingOrderPaymentType,
     PendingOrderStatus,
     PendingOrderType,
     PendingPayOut,
@@ -498,9 +499,14 @@ class OrderService(Service[Config]):
             till_id=current_till.id,
         )
 
-        if pending:
+        if pending:  # assumes pending_top_up.payment_method == PaymentMethod.sumup as checked above
             await save_pending_topup(
-                conn=conn, node_id=node.id, till_id=current_till.id, cashier_id=current_user.id, topup=completed_top_up
+                conn=conn,
+                node_id=node.id,
+                till_id=current_till.id,
+                cashier_id=current_user.id,
+                topup=completed_top_up,
+                payment_type=PendingOrderPaymentType.sumup_terminal,
             )
 
         return completed_top_up
@@ -1448,13 +1454,14 @@ class OrderService(Service[Config]):
             scanned_tickets=pending_ticket_sale.scanned_tickets,
             till_id=current_till.id,
         )
-        if pending:
+        if pending:  # assumes new_ticket_sale.payment_method == PaymentMethod.sumup as checked above
             await save_pending_ticket_sale(
                 conn=conn,
                 node_id=node.id,
                 till_id=current_till.id,
                 cashier_id=current_user.id,
                 ticket_sale=completed_ticket_sale,
+                payment_type=PendingOrderPaymentType.sumup_terminal,
             )
 
         return completed_ticket_sale

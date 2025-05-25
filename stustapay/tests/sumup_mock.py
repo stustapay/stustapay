@@ -1,7 +1,12 @@
 import uuid
 from datetime import datetime
 
-from stustapay.payment.sumup.api import SumUpCheckout, SumUpCheckoutStatus
+from stustapay.payment.sumup.api import (
+    SumUpCheckout,
+    SumUpCheckoutStatus,
+    SumUpTransactionDetail,
+    SumUpTransactionStatus,
+)
 
 
 class MockSumUpApi:
@@ -21,6 +26,21 @@ class MockSumUpApi:
             merchant_code=self.merchant_code,
             status=SumUpCheckoutStatus.PAID,
             date=datetime.now(),
+        )
+
+    async def find_transaction(self, order_uuid: uuid.UUID) -> SumUpTransactionDetail | None:
+        return SumUpTransactionDetail(
+            id=str(uuid.uuid4()),
+            amount=self.amount,
+            currency="EUR",
+            foreign_transaction_id=str(order_uuid),
+            timestamp=datetime.now(),
+            payment_type="EC",
+            product_summary="",
+            card_type="EC",
+            type="PAYMENT",
+            status=SumUpTransactionStatus.SUCCESSFUL,
+            transaction_code="asdfqweffyfd",
         )
 
     @classmethod

@@ -12,6 +12,7 @@ from stustapay.core.schema.order import (
     OrderType,
     PaymentMethod,
     PendingOrder,
+    PendingOrderPaymentType,
     PendingOrderType,
     PendingTicketSale,
     PendingTopUp,
@@ -52,16 +53,22 @@ async def fetch_pending_orders(conn: Connection) -> list[PendingOrder]:
 
 
 async def save_pending_ticket_sale(
-    conn: Connection, till_id: int, node_id: int, cashier_id: int | None, ticket_sale: CompletedTicketSale
+    conn: Connection,
+    till_id: int,
+    node_id: int,
+    cashier_id: int | None,
+    ticket_sale: CompletedTicketSale,
+    payment_type: PendingOrderPaymentType,
 ):
     await conn.execute(
-        "insert into pending_sumup_order (uuid, node_id, till_id, cashier_id, order_type, order_content_version, order_content) "
-        "values ($1, $2, $3, $4, 'ticket', 1, $5)",
+        "insert into pending_sumup_order (uuid, node_id, till_id, cashier_id, order_type, order_content_version, order_content, payment_type) "
+        "values ($1, $2, $3, $4, 'ticket', 1, $5, $6)",
         ticket_sale.uuid,
         node_id,
         till_id,
         cashier_id,
         ticket_sale.model_dump_json(),
+        payment_type.value,
     )
 
 
@@ -208,16 +215,22 @@ async def make_ticket_sale_bookings(
 
 
 async def save_pending_topup(
-    conn: Connection, till_id: int, node_id: int, cashier_id: int | None, topup: CompletedTopUp
+    conn: Connection,
+    till_id: int,
+    node_id: int,
+    cashier_id: int | None,
+    topup: CompletedTopUp,
+    payment_type: PendingOrderPaymentType,
 ):
     await conn.execute(
-        "insert into pending_sumup_order (uuid, node_id, till_id, cashier_id, order_type, order_content_version, order_content) "
-        "values ($1, $2, $3, $4, 'topup', 1, $5)",
+        "insert into pending_sumup_order (uuid, node_id, till_id, cashier_id, order_type, order_content_version, order_content, payment_type) "
+        "values ($1, $2, $3, $4, 'topup', 1, $5, $6)",
         topup.uuid,
         node_id,
         till_id,
         cashier_id,
         topup.model_dump_json(),
+        payment_type.value,
     )
 
 
