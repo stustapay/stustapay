@@ -146,6 +146,16 @@ fun QRScanView(
 
     val hasScanner = Build.MODEL == "C66"
 
+    Log.i(
+        "barcode", "Starting QR code scan with ${
+            if (hasScanner) {
+                "laser scanner"
+            } else {
+                "camera"
+            }
+        } on device ${Build.MODEL}"
+    )
+
     LaunchedEffect(Unit) {
         if (!hasScanner) {
             launcher.launch(Manifest.permission.CAMERA)
@@ -154,17 +164,17 @@ fun QRScanView(
 
     LaunchedEffect(Unit) {
         if (hasScanner) {
-            Log.e("barcode", "open")
+            Log.i("barcode", "open")
             BarcodeFactory.getInstance().barcodeDecoder.close()
             BarcodeFactory.getInstance().barcodeDecoder.open(context)
             BarcodeFactory.getInstance().barcodeDecoder.stopScan()
             BarcodeFactory.getInstance().barcodeDecoder.setDecodeCallback {
                 if (it.resultCode == 1 && it.barcodeSymbology == 25) {
-                    Log.e("barcode", "closed")
+                    Log.i("barcode", "closed")
                     BarcodeFactory.getInstance().barcodeDecoder.close()
                     onScan(it.barcodeData)
                 } else {
-                    Log.e(
+                    Log.w(
                         "barcode",
                         "error (${it.resultCode}, ${it.barcodeSymbology}): ${it.barcodeData}"
                     )
