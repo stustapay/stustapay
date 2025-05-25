@@ -17,9 +17,9 @@ export function FormSwitch<Name extends string, Values extends Partial<Record<Na
 }: FormSwitchProps<Name, Values>) {
   const helperText = (formik.touched[name] && formik.errors[name]) as string | undefined;
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    formik.setFieldValue(name, event.target.checked, true);
-    formik.setFieldTouched(name, true);
+  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    await formik.setFieldValue(name, event.target.checked, true);
+    await formik.setFieldTouched(name, true);
   };
 
   return (

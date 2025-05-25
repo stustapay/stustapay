@@ -18,9 +18,9 @@ export function FormCheckbox<Name extends string, Values extends Partial<Record<
 }: FormCheckboxProps<Name, Values>) {
   const helperText = (formik.touched[name] && formik.errors[name]) as string | undefined;
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    formik.setFieldValue(name, checked, true);
-    formik.setFieldTouched(name, true);
+  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    await formik.setFieldValue(name, checked, true);
+    await formik.setFieldTouched(name, true);
     onChange?.(event, checked);
   };
 

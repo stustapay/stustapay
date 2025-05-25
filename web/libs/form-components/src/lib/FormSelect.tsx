@@ -16,9 +16,9 @@ export function FormSelect<
 >({ formik, name, ...props }: FormSelectProps<Name, Values, Option, Multiple>) {
   const { setFieldValue, setFieldTouched } = formik;
   const handleChange = React.useCallback(
-    (value: unknown) => {
-      setFieldValue(name, value, true);
-      setFieldTouched(name, true, false);
+    async (value: unknown) => {
+      await setFieldValue(name, value, true);
+      await setFieldTouched(name, true, false);
     },
     [setFieldValue, setFieldTouched, name]
   );
