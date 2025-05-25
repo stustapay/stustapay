@@ -372,6 +372,11 @@ class PendingOrderStatus(enum.Enum):
     cancelled = "cancelled"
 
 
+class PendingOrderPaymentType(enum.Enum):
+    sumup_terminal = "sumup_terminal"
+    sumup_online = "sumup_online"
+
+
 class PendingOrder(BaseModel):
     uuid: UUID
     node_id: int
@@ -384,3 +389,4 @@ class PendingOrder(BaseModel):
     order_content_version: int
     order_content: str
     status: PendingOrderStatus
+    payment_type: PendingOrderPaymentType
