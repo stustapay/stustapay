@@ -109,7 +109,7 @@ async def book_order(
 
     uuid = uuid or uuid4()
     booked_at = booked_at or datetime.now(tz=timezone.utc)
-    order_already_booked = await conn.fetchval("select id, booked_at from ordr where uuid = $1", uuid)
+    order_already_booked = await conn.fetchrow("select id, booked_at from ordr where uuid = $1", uuid)
     if order_already_booked is not None:
         order_id = order_already_booked["id"]
         booked_at = typing.cast(datetime, order_already_booked["booked_at"])
