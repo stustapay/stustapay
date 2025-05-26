@@ -460,9 +460,11 @@ class VirtualTSE:
     def getdevicestatus(self, msg) -> TseResponse:
         response: TseSuccess = {
             "Status": "ok",
-            "TSEDescription": "BSI-K-TR-1337",
-            "CertificateDate": "2029-08-01T23:59:59+00:00",
-            "Parameters": {"SignatureAlgorithm": "ecdsa-plain-SHA384"},
+            "Parameters": {
+                "SignatureAlgorithm": "ecdsa-plain-SHA384",
+                "TSEDescription": "BSI-K-TR-1337",
+                "CertificateDate": "2029-08-01T23:59:59+00:00",
+            },
         }
         password = msg.get("Password")
         if password is not None:

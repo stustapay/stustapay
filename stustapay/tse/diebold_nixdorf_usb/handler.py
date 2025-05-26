@@ -105,8 +105,8 @@ class DieboldNixdorfUSBTSE(TSEHandler):
                     self._log_time_format = "unixTime"  # ¯\_(ツ)_/¯
 
                 device_status = await self.request("GetDeviceStatus")
-                self._tse_description = device_status["TSEDescription"]
-                self._certificate_date = device_status["CertificateDate"]
+                self._tse_description = device_status["Parameters"]["TSEDescription"]
+                self._certificate_date = device_status["Parameters"]["CertificateDate"]
                 self._signature_algorithm = device_status["Parameters"]["SignatureAlgorithm"]
                 self._public_key = await self.get_device_data("PublicKey", Format="Base64")
                 self._certificate = await self.get_device_data("Certificates", Format="Base64")

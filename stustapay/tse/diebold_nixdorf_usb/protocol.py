@@ -28,7 +28,14 @@ errors = {
 }
 
 
-Parameters = TypedDict("Parameters", {"SignatureAlgorithm": str})
+Parameters = TypedDict(
+    "Parameters",
+    {
+        "SignatureAlgorithm": str,
+        "TSEDescription": NotRequired[str],
+        "CertificateDate": NotRequired[str],
+    },
+)
 DeviceInfo = TypedDict("DeviceInfo", {"SerialNumber": str, "TimeFormat": str})
 
 TseSuccess = TypedDict(
@@ -46,8 +53,6 @@ TseSuccess = TypedDict(
         "Value": NotRequired[str],
         "Length": NotRequired[int],
         "ClientIDs": NotRequired[list],
-        "TSEDescription": NotRequired[str],
-        "CertificateDate": NotRequired[str],
     },
 )
 TseError = TypedDict(
