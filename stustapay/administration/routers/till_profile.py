@@ -52,6 +52,6 @@ async def update_till_profile(
 
 @router.delete("/{profile_id}")
 async def delete_till_profile(profile_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    deleted = await till_service.profile.delete_profile(token=token, profile_id=profile_id, node_id=node_id)
+    deleted = await till_service.profile.delete_profile(token=token, till_profile_id=profile_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
