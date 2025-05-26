@@ -36,7 +36,6 @@ export const CashRegisterUpdate: React.FC = withPrivilegeGuard("node_administrat
   return (
     <EditLayout
       title={t("register.update")}
-      submitLabel={t("update")}
       successRoute={CashRegistersRoutes.list()}
       initialValues={register}
       validationSchema={CashRegisterSchema}

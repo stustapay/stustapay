@@ -41,11 +41,11 @@ export const UserToRoleUpdate: React.FC = withPrivilegeGuard("node_administratio
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
         userToRoles: data
-          ? data.find((u) => u.node_id === currentNode.id && u.user_id === userId) ?? {
+          ? (data.find((u) => u.node_id === currentNode.id && u.user_id === userId) ?? {
               user_id: userId,
               node_id: currentNode.id,
               role_ids: [],
-            }
+            })
           : undefined,
       }),
     }
@@ -60,7 +60,6 @@ export const UserToRoleUpdate: React.FC = withPrivilegeGuard("node_administratio
       title={t("userToRole.create", { node: currentNode.name })}
       initialValues={userToRoles}
       validationSchema={UpdateUserToRolesSchema}
-      submitLabel={t("add")}
       successRoute={UserToRoleRoutes.list()}
       onSubmit={(u) =>
         updateUserToRoles({ nodeId: currentNode.id, newUserToRoles: { user_id: userId, role_ids: u.role_ids } })

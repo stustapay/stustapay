@@ -37,7 +37,6 @@ export const UserRoleUpdate: React.FC = withPrivilegeGuard("user_management", ()
   return (
     <EditLayout
       title={t("userRole.update")}
-      submitLabel={t("update")}
       successRoute={UserRoleRoutes.list()}
       initialValues={userRole as UserRoleUpdateType}
       validationSchema={UserRoleUpdateSchema}

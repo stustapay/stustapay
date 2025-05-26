@@ -3,12 +3,14 @@ import { Button, Grid, IconButton, LinearProgress, Paper, Stack, Typography } fr
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/react/index";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
+import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 export interface ChangeLayoutProps<T extends Record<string, any>> {
   title: string;
-  submitLabel?: string;
+  submitLabel: string;
+  saveAndClearLabel?: string;
   initialValues: T;
   validationSchema: z.ZodSchema<T>;
   successRoute: string;
@@ -20,20 +22,33 @@ export function ChangeLayout<T extends Record<string, any>>({
   title,
   successRoute,
   submitLabel,
+  saveAndClearLabel,
   initialValues,
   validationSchema,
   onSubmit,
   form: ChildForm,
 }: ChangeLayoutProps<T>) {
+  const initial = React.useMemo(() => {
+    return { ...initialValues, isAddAnother: false };
+  }, [initialValues]);
   const navigate = useNavigate();
-  const handleSubmit = (values: T, { setSubmitting }: FormikHelpers<T>) => {
+  const handleSubmit = (values: T, { setSubmitting, resetForm }: FormikHelpers<T>) => {
     setSubmitting(true);
 
-    onSubmit(values)
+    const isAddAnother = values.isAddAnother;
+
+    const submittingValues = { ...values };
+    delete submittingValues["isAddAnother"];
+
+    onSubmit(submittingValues)
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate(successRoute);
+        if (isAddAnother) {
+          resetForm();
+        } else {
+          navigate(successRoute);
+        }
       })
       .catch((err) => {
         setSubmitting(false);
@@ -67,9 +82,26 @@ export function ChangeLayout<T extends Record<string, any>>({
                 </Stack>
                 {props.isSubmitting && <LinearProgress />}
               </Paper>
-              <Button type="submit" fullWidth variant="contained" color="primary" disabled={props.isSubmitting}>
-                {submitLabel}
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button type="submit" fullWidth variant="contained" color="primary" disabled={props.isSubmitting}>
+                  {submitLabel}
+                </Button>
+                {saveAndClearLabel && (
+                  <Button
+                    type="submit"
+                    onClick={() => {
+                      props.setFieldValue("isAddAnother", true);
+                      props.handleSubmit();
+                    }}
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    disabled={props.isSubmitting}
+                  >
+                    {saveAndClearLabel}
+                  </Button>
+                )}
+              </Stack>
             </Stack>
           </Form>
         )}

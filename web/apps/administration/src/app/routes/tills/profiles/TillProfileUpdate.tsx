@@ -33,7 +33,6 @@ export const TillProfileUpdate: React.FC = withPrivilegeGuard("node_administrati
     <EditLayout
       title={t("profile.update")}
       successRoute={TillProfileRoutes.detail(profile.id)}
-      submitLabel={t("update")}
       initialValues={profile}
       validationSchema={TillProfileSchema}
       onSubmit={(p) => updateProfile({ nodeId: currentNode.id, profileId: profile.id, newTillProfile: p })}

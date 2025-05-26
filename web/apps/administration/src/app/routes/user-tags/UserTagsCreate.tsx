@@ -182,7 +182,6 @@ export const UserTagsCreate: React.FC = () => {
   return (
     <CreateLayout
       title={t("userTag.create")}
-      submitLabel={t("add")}
       successRoute={UserTagRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewUserTagsSchema}

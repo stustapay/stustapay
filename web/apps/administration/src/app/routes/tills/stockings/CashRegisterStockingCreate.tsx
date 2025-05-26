@@ -35,7 +35,6 @@ export const CashRegisterStockingCreate: React.FC = withPrivilegeGuard("node_adm
   return (
     <CreateLayout
       title={t("register.createStocking")}
-      submitLabel={t("add")}
       successRoute={TillStockingsRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewCashRegisterStockingSchema}

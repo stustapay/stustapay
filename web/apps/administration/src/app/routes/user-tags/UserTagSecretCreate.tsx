@@ -48,7 +48,6 @@ export const UserTagSecretCreate: React.FC = () => {
   return (
     <CreateLayout
       title={t("userTagSecret.create")}
-      submitLabel={t("add")}
       successRoute={UserTagRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewUserTagSecretSchema}

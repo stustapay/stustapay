@@ -28,7 +28,6 @@ export const TillUpdate: React.FC = withPrivilegeGuard("node_administration", ()
   return (
     <EditLayout
       title={t("till.update")}
-      submitLabel={t("update")}
       successRoute={TillRoutes.detail(till.id)}
       initialValues={till}
       form={TillForm}

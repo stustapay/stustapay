@@ -27,7 +27,6 @@ export const ProductCreate: React.FC = withPrivilegeGuard("node_administration",
   return (
     <CreateLayout
       title={t("product.create")}
-      submitLabel={t("add")}
       successRoute={ProductRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewProductSchema}

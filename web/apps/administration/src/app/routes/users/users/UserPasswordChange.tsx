@@ -58,7 +58,6 @@ export const UserPasswordChange: React.FC = withPrivilegeGuard("user_management"
   return (
     <EditLayout
       title={t("user.changePassword.title")}
-      submitLabel={t("save")}
       successRoute={UserRoutes.detail(userId)}
       initialValues={initialValues}
       validationSchema={PasswordChangeSchema}
