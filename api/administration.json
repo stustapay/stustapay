@@ -11217,7 +11217,14 @@
             "title": "Name"
           },
           "description": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Description"
           },
           "button_ids": {
@@ -11251,8 +11258,7 @@
         },
         "type": "object",
         "required": [
-          "name",
-          "description"
+          "name"
         ],
         "title": "NewTillLayout"
       },
@@ -14218,8 +14224,7 @@
             "title": "Type"
           },
           "status": {
-            "type": "string",
-            "title": "Status"
+            "$ref": "#/components/schemas/SumUpTransactionStatus"
           },
           "timestamp": {
             "type": "string",
@@ -14241,6 +14246,17 @@
           "transaction_code"
         ],
         "title": "SumUpTransaction"
+      },
+      "SumUpTransactionStatus": {
+        "type": "string",
+        "enum": [
+          "SUCCESSFUL",
+          "CANCELLED",
+          "FAILED",
+          "PENDING",
+          "REFUNDED"
+        ],
+        "title": "SumUpTransactionStatus"
       },
       "SwitchTerminalPayload": {
         "properties": {
@@ -14664,7 +14680,14 @@
             "title": "Name"
           },
           "description": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Description"
           },
           "button_ids": {
@@ -14707,7 +14730,6 @@
         "type": "object",
         "required": [
           "name",
-          "description",
           "node_id",
           "id"
         ],

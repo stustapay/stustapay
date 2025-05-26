@@ -2373,7 +2373,7 @@ export type SwitchTerminalPayload = {
 };
 export type TillLayout = {
   name: string;
-  description: string;
+  description?: string | null;
   button_ids?: number[] | null;
   ticket_ids?: number[] | null;
   node_id: number;
@@ -2387,7 +2387,7 @@ export type NormalizedListTillLayoutInt = {
 };
 export type NewTillLayout = {
   name: string;
-  description: string;
+  description?: string | null;
   button_ids?: number[] | null;
   ticket_ids?: number[] | null;
 };
@@ -3471,6 +3471,7 @@ export type AuditLogDetail = {
   content: object;
 };
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
+export type SumUpTransactionStatus = "SUCCESSFUL" | "CANCELLED" | "FAILED" | "PENDING" | "REFUNDED";
 export type SumUpTransaction = {
   amount: number;
   currency: string;
@@ -3479,7 +3480,7 @@ export type SumUpTransaction = {
   product_summary?: string | null;
   card_type?: string | null;
   type?: string | null;
-  status: string;
+  status: SumUpTransactionStatus;
   timestamp: string;
   transaction_code: string;
 };
