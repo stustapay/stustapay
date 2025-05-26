@@ -110,13 +110,14 @@ def config() -> Config:
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def setup_test_db_pool(config: Config) -> asyncpg.Pool:
+async def setup_test_db_pool(config: Config) -> AsyncGenerator[asyncpg.Pool, None]:
     db = get_database(config.database)
     pool = await db.create_pool(n_connections=10)
 
     await database.reset_schema(pool)
     await db.apply_migrations()
-    return pool
+    yield pool
+    await pool.close()
 
 
 @pytest.fixture
