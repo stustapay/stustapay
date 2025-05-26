@@ -283,11 +283,11 @@ begin
     end if;
 
     execute format(
-        'select tab.id from %1$s tab join node n on n.id = tab.node_id ' ||
-        'where tab.%2$s = ''%3$s'' and tab.id != %7$L::bigint and (n.id = %6$L or n.id = any(''%4$s''::bigint array) or n.path like ''%5$s/%%'') ' ||
+        'select tab.id from %1$I as tab join node n on n.id = tab.node_id ' ||
+        'where tab.%2$I = %3$L and tab.id != %7$L::bigint and (n.id = %6$L or n.id = any(%4$L) or n.path like (%5$L || ''/%%'')) ' ||
         'limit 1',
         check_unique_in_tree.table_name,
-        quote_ident(check_unique_in_tree.column_name),
+        check_unique_in_tree.column_name,
         check_unique_in_tree.value,
         locals.node_parent_ids,
         locals.node_path,
@@ -298,7 +298,7 @@ begin
 
     if locals.existing_id is not null then
         execute format(
-            'select n.name from node n join %1$s tab on n.id = tab.node_id ' ||
+            'select n.name from node n join %1$I tab on n.id = tab.node_id ' ||
             'where tab.id = %2$L::bigint',
             check_unique_in_tree.table_name,
             locals.existing_id
@@ -338,11 +338,11 @@ begin
     end if;
 
     execute format(
-        'select tab.id from %1$s tab join node n on n.id = tab.node_id ' ||
-        'where tab.%2$s = ''%3$s'' and tab.id != %7$L::bigint and (n.id = %6$L or n.id = any(''%4$s''::bigint array) or n.path like ''%5$s/%%'') ' ||
+        'select tab.id from %1$I tab join node n on n.id = tab.node_id ' ||
+        'where tab.%2$I = %3$L and tab.id != %7$L::bigint and (n.id = %6$L or n.id = any(%4$L) or n.path like (%5$L || ''/%%'')) ' ||
         'limit 1',
         check_unique_in_tree.table_name,
-        quote_ident(check_unique_in_tree.column_name),
+        check_unique_in_tree.column_name,
         check_unique_in_tree.value,
         locals.node_parent_ids,
         locals.node_path,
@@ -353,7 +353,7 @@ begin
 
     if locals.existing_id is not null then
         execute format(
-            'select n.name from node n join %1$s tab on n.id = tab.node_id ' ||
+            'select n.name from node n join %1$I tab on n.id = tab.node_id ' ||
             'where tab.id = %2$L::bigint',
             check_unique_in_tree.table_name,
             locals.existing_id
