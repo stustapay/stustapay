@@ -10,7 +10,7 @@ export const common_en = {
   taxRatePercent: "Tax Rate",
   withTax: "With Tax",
   withoutTax: "Without Tax",
-  totalTax: "Total",
+  totalTax: "VAT",
   paymentMethod: "Payment Method",
   cashier: "Cashier",
   tillSerialNumber: "Serialnumber Till",
