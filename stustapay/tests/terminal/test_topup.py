@@ -117,7 +117,7 @@ async def test_topup_deferred_sumup_order_flow(
     assert completed_topup.new_balance == START_BALANCE + completed_topup.amount
     customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
     assert customer_info.balance == START_BALANCE
-    completed_topup = await order_service.check_pending_topup(token=terminal_token, order_uuid=pending_topup.uuid)
+    completed_topup = await order_service.book_topup(token=terminal_token, new_topup=new_topup)
     assert completed_topup is not None
     assert completed_topup.uuid == new_topup.uuid
     assert completed_topup.old_balance == START_BALANCE

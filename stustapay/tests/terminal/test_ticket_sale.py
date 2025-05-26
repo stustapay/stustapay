@@ -477,10 +477,7 @@ async def test_ticket_flow_with_deferred_sumup_payment(
     with pytest.raises(InvalidArgument):
         await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
 
-    completed_ticket = await order_service.check_pending_ticket_sale(
-        token=terminal_token,
-        order_uuid=new_ticket.uuid,
-    )
+    completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert completed_ticket.uuid == new_ticket.uuid
     customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
     assert sale_tickets.ticket.initial_top_up_amount == customer.balance

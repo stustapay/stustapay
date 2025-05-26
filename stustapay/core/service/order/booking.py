@@ -1,3 +1,5 @@
+import logging
+import typing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -15,6 +17,8 @@ from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.product import fetch_money_difference_product, fetch_money_transfer_product
 from stustapay.core.service.till.common import fetch_virtual_till, get_cash_register_account_id
 from stustapay.core.service.transaction import book_transaction
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(eq=True, frozen=True)
@@ -105,38 +109,44 @@ async def book_order(
 
     uuid = uuid or uuid4()
     booked_at = booked_at or datetime.now(tz=timezone.utc)
-    order_row = await conn.fetchrow(
-        "insert into ordr (uuid, item_count, payment_method, order_type, cancels_order, cashier_id, "
-        "   till_id, customer_account_id, cash_register_id, z_nr, booked_at) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id, uuid, booked_at",
-        uuid,
-        len(line_items),
-        payment_method.name,
-        order_type.name,
-        cancels_order,
-        cashier_id,
-        till_id,
-        customer_account_id,
-        cash_register_id if payment_method == PaymentMethod.cash else None,
-        z_nr,
-        booked_at,
-    )
-    order_id = order_row["id"]
-
-    for i, line_item in enumerate(line_items):
-        await conn.fetchval(
-            "insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_rate_id, "
-            "   tax_name, tax_rate) "
-            "select $1, $2, $3, $4, $5, $6, t.name, t.rate "
-            "from tax_rate t where t.id = $6",
-            order_id,
-            i,
-            line_item.product_id,
-            line_item.product_price,
-            line_item.quantity,
-            line_item.tax_rate_id,
+    order_already_booked = await conn.fetchval("select id, booked_at from ordr where uuid = $1", uuid)
+    if order_already_booked is not None:
+        order_id = order_already_booked["id"]
+        booked_at = typing.cast(datetime, order_already_booked["booked_at"])
+        logger.info(f"Tried to book existing order with {uuid = }, returning existing order ...")
+    else:
+        order_row = await conn.fetchrow(
+            "insert into ordr (uuid, item_count, payment_method, order_type, cancels_order, cashier_id, "
+            "   till_id, customer_account_id, cash_register_id, z_nr, booked_at) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id, uuid, booked_at",
+            uuid,
+            len(line_items),
+            payment_method.name,
+            order_type.name,
+            cancels_order,
+            cashier_id,
+            till_id,
+            customer_account_id,
+            cash_register_id if payment_method == PaymentMethod.cash else None,
+            z_nr,
+            booked_at,
         )
-    await book_prepared_bookings(conn=conn, order_id=order_id, bookings=bookings)
+        order_id = order_row["id"]
+
+        for i, line_item in enumerate(line_items):
+            await conn.fetchval(
+                "insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_rate_id, "
+                "   tax_name, tax_rate) "
+                "select $1, $2, $3, $4, $5, $6, t.name, t.rate "
+                "from tax_rate t where t.id = $6",
+                order_id,
+                i,
+                line_item.product_id,
+                line_item.product_price,
+                line_item.quantity,
+                line_item.tax_rate_id,
+            )
+        await book_prepared_bookings(conn=conn, order_id=order_id, bookings=bookings)
     return OrderInfo(id=order_id, uuid=uuid, booked_at=booked_at)
 
 

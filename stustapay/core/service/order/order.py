@@ -70,6 +70,7 @@ from stustapay.core.service.common.decorators import (
 )
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
 from stustapay.core.service.order.pending_order import (
+    fetch_maybe_pending_order,
     fetch_pending_order,
     load_pending_ticket_sale,
     load_pending_topup,
@@ -464,6 +465,16 @@ class OrderService(Service[Config]):
         new_topup: NewTopUp,
         pending: bool = False,
     ) -> CompletedTopUp:
+        if not pending and new_topup.payment_method == PaymentMethod.sumup:
+            already_completed_topup = await self.check_pending_topup(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
+                conn=conn,
+                current_terminal=current_terminal,
+                current_till=current_till,
+                order_uuid=new_topup.uuid,
+            )
+            if already_completed_topup:
+                return already_completed_topup
+
         pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
             conn=conn,
             node=node,
@@ -520,7 +531,9 @@ class OrderService(Service[Config]):
         current_till: Till,
         order_uuid: UUID,
     ) -> CompletedTopUp | None:
-        pending_order = await fetch_pending_order(conn=conn, uuid=order_uuid)
+        pending_order = await fetch_maybe_pending_order(conn=conn, uuid=order_uuid)
+        if not pending_order:
+            return None
         if pending_order.till_id != current_till.id:
             raise InvalidArgument("Cannot check an order for a different till")
         if pending_order.order_type != PendingOrderType.topup:
@@ -1422,6 +1435,16 @@ class OrderService(Service[Config]):
         if new_ticket_sale.payment_method is None:
             raise InvalidArgument("No payment method provided")
 
+        if not pending and new_ticket_sale.payment_method == PaymentMethod.sumup:
+            already_completed_ticket_sale = await self.check_pending_ticket_sale(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
+                conn=conn,
+                current_terminal=current_terminal,
+                current_till=current_till,
+                order_uuid=new_ticket_sale.uuid,
+            )
+            if already_completed_ticket_sale:
+                return already_completed_ticket_sale
+
         pending_ticket_sale: PendingTicketSale = await self.check_ticket_sale(  # pylint: disable=missing-kwoa
             conn=conn,
             current_terminal=current_terminal,
@@ -1475,7 +1498,9 @@ class OrderService(Service[Config]):
         current_till: Till,
         order_uuid: UUID,
     ) -> CompletedTicketSale | None:
-        pending_order = await fetch_pending_order(conn=conn, uuid=order_uuid)
+        pending_order = await fetch_maybe_pending_order(conn=conn, uuid=order_uuid)
+        if not pending_order:
+            return None
         if pending_order.till_id != current_till.id:
             raise InvalidArgument("Cannot check an order for a different till")
         if pending_order.order_type != PendingOrderType.ticket:

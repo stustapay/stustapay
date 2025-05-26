@@ -32,6 +32,12 @@ from stustapay.core.service.product import fetch_top_up_product
 from stustapay.core.service.till.common import get_cash_register_account_id
 
 
+async def fetch_maybe_pending_order(conn: Connection, uuid: UUID) -> PendingOrder | None:
+    return await conn.fetch_maybe_one(
+        PendingOrder, "select * from pending_sumup_order where uuid = $1 and status = 'pending'", uuid
+    )
+
+
 async def fetch_pending_order(conn: Connection, uuid: UUID) -> PendingOrder:
     return await conn.fetch_one(
         PendingOrder, "select * from pending_sumup_order where uuid = $1 and status = 'pending'", uuid
