@@ -32,7 +32,6 @@ export const ProductUpdate: React.FC = withPrivilegeGuard("node_administration",
   return (
     <EditLayout
       title={t("product.update")}
-      submitLabel={t("update")}
       successRoute={ProductRoutes.detail(product.id)}
       initialValues={product}
       validationSchema={ProductSchema}

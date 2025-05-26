@@ -21,7 +21,6 @@ export const TillButtonCreate: React.FC = withPrivilegeGuard("node_administratio
   return (
     <CreateLayout
       title={t("button.create")}
-      submitLabel={t("add")}
       successRoute={TillButtonsRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillButtonSchema}

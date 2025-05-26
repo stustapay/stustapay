@@ -32,7 +32,6 @@ export const TerminalUpdate: React.FC = withPrivilegeGuard("node_administration"
   return (
     <EditLayout
       title={t("terminal.update")}
-      submitLabel={t("update")}
       successRoute={TerminalRoutes.detail(terminal.id)}
       initialValues={terminal}
       form={TerminalForm}

@@ -27,7 +27,6 @@ export const UserCreate: React.FC = withPrivilegeGuard("user_management", () => 
       title={t("createUser")}
       initialValues={initialValues}
       validationSchema={NewUserSchema}
-      submitLabel={t("add")}
       successRoute={UserRoutes.list()}
       onSubmit={(u) => createUser({ nodeId: currentNode.id, createUserPayload: u })}
       form={UserCreateForm}

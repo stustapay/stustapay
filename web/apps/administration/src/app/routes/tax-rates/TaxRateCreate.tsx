@@ -21,7 +21,6 @@ export const TaxRateCreate: React.FC = () => {
   return (
     <CreateLayout
       title={t("createTaxRate")}
-      submitLabel={t("add")}
       successRoute={TaxRateRoutes.list()}
       initialValues={initialValues}
       validationSchema={TaxRateSchema}

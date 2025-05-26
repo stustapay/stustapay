@@ -20,7 +20,6 @@ export const CashRegisterCreate: React.FC = withPrivilegeGuard("node_administrat
   return (
     <CreateLayout
       title={t("register.createRegister")}
-      submitLabel={t("add")}
       successRoute={CashRegistersRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewCashRegisterSchema}

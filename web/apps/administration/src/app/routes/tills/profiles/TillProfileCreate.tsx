@@ -29,7 +29,6 @@ export const TillProfileCreate: React.FC = withPrivilegeGuard("node_administrati
   return (
     <CreateLayout
       title={t("profile.create")}
-      submitLabel={t("add")}
       successRoute={TillProfileRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTillProfileSchema}

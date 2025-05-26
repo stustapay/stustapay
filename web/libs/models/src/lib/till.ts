@@ -25,7 +25,7 @@ export type TillButton = z.infer<typeof TillButtonSchema>;
 
 export const NewTillLayoutSchema = z.object({
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable().optional(),
   button_ids: z.array(z.number().int()).nullable().optional(),
   ticket_ids: z.array(z.number().int()).nullable().optional(),
 });

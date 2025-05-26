@@ -36,7 +36,6 @@ export const TseUpdate: React.FC = () => {
     <EditLayout
       title={t("tse.update")}
       successRoute={TseRoutes.detail(tse.id)}
-      submitLabel={t("update")}
       initialValues={tse}
       validationSchema={UpdateTseSchema}
       onSubmit={(t) => updateTse({ nodeId: currentNode.id, tseId: tse.id, updateTse: t })}

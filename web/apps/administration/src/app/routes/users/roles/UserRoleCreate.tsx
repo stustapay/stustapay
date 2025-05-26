@@ -23,7 +23,6 @@ export const UserRoleCreate: React.FC = withPrivilegeGuard("user_management", ()
     <CreateLayout
       title={t("userRole.create")}
       initialValues={initialValues}
-      submitLabel={t("add")}
       successRoute={UserRoleRoutes.list()}
       onSubmit={(r) => createUserRole({ nodeId: currentNode.id, newUserRole: r })}
       validationSchema={NewUserRoleSchema}

@@ -28,7 +28,6 @@ export const TicketUpdate: React.FC = withPrivilegeGuard("node_administration", 
   return (
     <EditLayout
       title={t("ticket.update")}
-      submitLabel={t("update")}
       successRoute={TicketRoutes.detail(ticket.id)}
       initialValues={ticket}
       validationSchema={NewTicketSchema}

@@ -25,7 +25,6 @@ export const TseCreate: React.FC = () => {
   return (
     <CreateLayout
       title={t("tse.create")}
-      submitLabel={t("add")}
       successRoute={TseRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTseSchema}

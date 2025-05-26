@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { EventSettings } from "../event-settings";
-import { NodeSettingsSchema, ObjectTypeSchema, type NodeSettingsSchemaType } from "../types";
+import { NodeSettingsSchema, ObjectTypes, type NodeSettingsSchemaType } from "../types";
 import { useOpenModal } from "@stustapay/modal-provider";
 
 export const NodeConfiguration: React.FC = () => {
@@ -61,7 +61,7 @@ export const NodeConfiguration: React.FC = () => {
               multiple={true}
               checkboxes={true}
               formatOption={(o: string) => o}
-              options={ObjectTypeSchema.options}
+              options={ObjectTypes}
             />
             <FormSelect
               label={t("settings.general.forbidden_objects_in_subtree")}
@@ -70,7 +70,7 @@ export const NodeConfiguration: React.FC = () => {
               multiple={true}
               checkboxes={true}
               formatOption={(o: string) => o}
-              options={ObjectTypeSchema.options}
+              options={ObjectTypes}
             />
             {formik.isSubmitting && <LinearProgress />}
             <Button

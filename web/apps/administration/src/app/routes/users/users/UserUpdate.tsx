@@ -28,7 +28,6 @@ export const UserUpdate: React.FC = withPrivilegeGuard("user_management", () => 
   return (
     <EditLayout
       title={t("updateUser")}
-      submitLabel={t("update")}
       successRoute={UserRoutes.detail(user.id)}
       initialValues={user}
       validationSchema={UserSchema}

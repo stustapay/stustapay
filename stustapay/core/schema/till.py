@@ -18,7 +18,7 @@ class TillButton(NewTillButton):
 
 class NewTillLayout(BaseModel):
     name: str
-    description: str
+    description: str | None = None
     button_ids: Optional[list[int]] = None
     ticket_ids: Optional[list[int]] = None
 

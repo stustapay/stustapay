@@ -13,6 +13,7 @@ export const translations = {
   tickets: "Tickets",
   actions: "Actions",
   add: "Add",
+  saveAndAddAnother: "Save and add another",
   email: "E-Mail",
   edit: "Edit",
   delete: "Delete",

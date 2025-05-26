@@ -31,7 +31,6 @@ export const TaxRateUpdate: React.FC = () => {
   return (
     <EditLayout
       title={t("updateTaxRate")}
-      submitLabel={t("update")}
       successRoute={TaxRateRoutes.list()}
       initialValues={taxRate as TaxRate}
       validationSchema={TaxRateSchema}

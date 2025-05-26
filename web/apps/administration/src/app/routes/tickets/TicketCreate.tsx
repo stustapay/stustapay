@@ -25,7 +25,6 @@ export const TicketCreate: React.FC = withPrivilegeGuard("node_administration", 
   return (
     <CreateLayout
       title={t("ticket.create")}
-      submitLabel={t("add")}
       successRoute={TicketRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTicketSchema}

@@ -60,6 +60,7 @@ export function Select<Option, Multiple extends boolean>({
   return (
     <Autocomplete
       multiple={multiple}
+      disableCloseOnSelect={multiple}
       value={value as any}
       onChange={handleChange as any}
       options={options}

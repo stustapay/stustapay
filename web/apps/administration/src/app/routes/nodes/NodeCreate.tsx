@@ -8,7 +8,7 @@ import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { NodeSettingsSchema, ObjectTypeSchema, type NodeSettingsSchemaType } from "./types";
+import { NodeSettingsSchema, ObjectTypes, type NodeSettingsSchemaType } from "./types";
 import { withPrivilegeGuard } from "@/app/layout";
 import { useNavigate } from "react-router-dom";
 
@@ -90,7 +90,7 @@ export const NodeCreate: React.FC = withPrivilegeGuard("node_administration", ()
                 multiple={true}
                 checkboxes={true}
                 formatOption={(o: string) => o}
-                options={ObjectTypeSchema.options}
+                options={ObjectTypes}
               />
               <FormSelect
                 label={t("settings.general.forbidden_objects_in_subtree")}
@@ -99,7 +99,7 @@ export const NodeCreate: React.FC = withPrivilegeGuard("node_administration", ()
                 multiple={true}
                 checkboxes={true}
                 formatOption={(o: string) => o}
-                options={ObjectTypeSchema.options}
+                options={ObjectTypes}
               />
               {formik.isSubmitting && <LinearProgress />}
               <Button

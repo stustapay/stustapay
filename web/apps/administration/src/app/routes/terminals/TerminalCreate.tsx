@@ -21,7 +21,6 @@ export const TerminalCreate: React.FC = withPrivilegeGuard("node_administration"
   return (
     <CreateLayout
       title={t("terminal.create")}
-      submitLabel={t("add")}
       successRoute={TerminalRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTerminalSchema}
