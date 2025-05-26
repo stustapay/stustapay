@@ -13,6 +13,8 @@ export const ObjectTypeSchema = z.enum([
   "terminal",
 ]);
 
+export const ObjectTypes = ObjectTypeSchema.options.sort();
+
 export const NodeSettingsSchema = z.object({
   name: z.string(),
   description: z
