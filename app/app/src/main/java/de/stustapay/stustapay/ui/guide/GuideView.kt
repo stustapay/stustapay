@@ -7,11 +7,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Button
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -32,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -55,94 +57,145 @@ fun GuideView(
 ) {
     val context = LocalContext.current;
     var player by remember { mutableStateOf<Player?>(null) }
-
-    BackHandler {
+    var state by remember { mutableStateOf<GuideViewState>(GuideViewState.Selection) }
+    val exit: () -> Unit = {
+        player?.apply { release() }
+        player = null
+        state = GuideViewState.Selection
         leaveView()
     }
 
-    LifecycleResumeEffect(Unit) {
-        player = ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri("https://ssp.stusta.de/apps/guide_en.mp4")) // TODO: get url from config
-            prepare()
-        }
-        onPauseOrDispose {
-            player?.apply { release() }
-            player = null
-        }
+    BackHandler {
+        exit()
+    }
+
+    LaunchedEffect(Unit) {
+        state = GuideViewState.Selection
     }
 
     NavScaffold(
-        title = { Text(stringResource(R.string.guid_title)) }, navigateBack = leaveView
+        title = { Text(stringResource(R.string.guid_title)) }, navigateBack = exit
     ) {
-        player?.let {
-            val player = player!!
-            val presentationState = rememberPresentationState(player)
-            val scaledModifier =
-                Modifier.resizeWithContentScale(ContentScale.Fit, presentationState.videoSizeDp)
-            var showControls by remember { mutableStateOf(true) }
-            val state = rememberPlayPauseButtonState(player)
-            val icon = if (state.showPlay) Icons.Default.PlayArrow else Icons.Default.Pause
+        Box(
+            Modifier
+                .padding(it)
+                .fillMaxSize()
+        ) {
+            when (state) {
+                is GuideViewState.Playing -> {
+                    LaunchedEffect(Unit) {
+                        player = ExoPlayer.Builder(context).build().apply {
+                            val uri = when ((state as GuideViewState.Playing).lang) {
+                                "de" -> "https://ssp.stusta.de/apps/guide_de.mp4"
+                                "en" -> "https://ssp.stusta.de/apps/guide_en.mp4"
+                                else -> "https://ssp.stusta.de/apps/guide_en.mp4"
+                            }
+                            setMediaItem(MediaItem.fromUri(uri)) // TODO: get url from config
+                            prepare()
+                        }
+                    }
 
-            LaunchedEffect(Unit) {
-                player.play()
-                delay(1000)
-                showControls = false
-            }
+                    player?.let {
+                        val player = player!!
+                        val presentationState = rememberPresentationState(player)
+                        val scaledModifier = Modifier.resizeWithContentScale(
+                            ContentScale.Fit, presentationState.videoSizeDp
+                        )
+                        var showControls by remember { mutableStateOf(true) }
+                        val state = rememberPlayPauseButtonState(player)
+                        val icon =
+                            if (state.showPlay) Icons.Default.PlayArrow else Icons.Default.Pause
 
-            Box(Modifier.fillMaxSize()) {
-                KeepScreenOn()
-                PlayerSurface(
-                    player = player,
-                    surfaceType = SURFACE_TYPE_SURFACE_VIEW,
-                    modifier = scaledModifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        showControls = !showControls
-                    },
-                )
+                        LaunchedEffect(Unit) {
+                            player.play()
+                            delay(1000)
+                            showControls = false
+                        }
 
-                if (presentationState.coverSurface) {
-                    Box(
-                        Modifier
-                            .matchParentSize()
-                            .background(Color.Black)
-                    )
-                }
+                        Box(Modifier.fillMaxSize()) {
+                            KeepScreenOn()
+                            PlayerSurface(
+                                player = player,
+                                surfaceType = SURFACE_TYPE_SURFACE_VIEW,
+                                modifier = scaledModifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    showControls = !showControls
+                                },
+                            )
 
-                LaunchedEffect(showControls, player.isPlaying) {
-                    if (showControls && player.isPlaying) {
-                        delay(1000)
-                        showControls = false
+                            if (presentationState.coverSurface) {
+                                Box(
+                                    Modifier
+                                        .matchParentSize()
+                                        .background(Color.Black)
+                                )
+                            }
+
+                            LaunchedEffect(showControls, player.isPlaying) {
+                                if (showControls && player.isPlaying) {
+                                    delay(1000)
+                                    showControls = false
+                                }
+                            }
+
+                            if (showControls) {
+                                Row(
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    IconButton(
+                                        onClick = state::onClick,
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .background(Color.Gray.copy(alpha = 0.2f), CircleShape),
+                                        enabled = state.isEnabled
+                                    ) {
+                                        Icon(
+                                            icon,
+                                            contentDescription = "",
+                                            modifier = Modifier
+                                                .size(80.dp)
+                                                .background(
+                                                    Color.Gray.copy(alpha = 0.2f), CircleShape
+                                                )
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
-                if (showControls) {
-                    Row(
+                GuideViewState.Selection -> {
+                    Column(
                         modifier = Modifier
-                            .align(Alignment.Center)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
+                            .fillMaxSize()
+                            .padding(10.dp)
                     ) {
-                        IconButton(
-                            onClick = state::onClick,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(Color.Gray.copy(alpha = 0.2f), CircleShape),
-                            enabled = state.isEnabled
-                        ) {
-                            Icon(
-                                icon,
-                                contentDescription = "",
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .background(Color.Gray.copy(alpha = 0.2f), CircleShape)
-                            )
+                        Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                            state = GuideViewState.Playing("de")
+                        }) {
+                            Text("Deutsch")
+                        }
+
+                        Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                            state = GuideViewState.Playing("en")
+                        }) {
+                            Text("English")
                         }
                     }
                 }
             }
         }
     }
+}
+
+sealed interface GuideViewState {
+    data object Selection : GuideViewState
+    data class Playing(val lang: String) : GuideViewState
 }
