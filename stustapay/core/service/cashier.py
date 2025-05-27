@@ -23,7 +23,7 @@ from stustapay.core.service.order.booking import (
 )
 
 from .common.error import NotFound, ServiceException
-from .till.common import fetch_virtual_till, get_cash_register_account_id
+from .till.common import fetch_virtual_till
 from .user import AuthService
 
 
@@ -246,8 +246,9 @@ class CashierService(Service[Config]):
         await conn.execute("update usr set cash_register_id = null where id = $1", cashier.id)
         await conn.execute("update till set z_nr = z_nr + 1 where id = $1", virtual_till.id)
         # correct the actual balance to rule out any floating point errors / representation errors
-        cash_register_account_id = await get_cash_register_account_id(
-            conn=conn, node=node, cash_register_id=cashier.cash_register_id
+        cash_register_account_id = await conn.fetchval(
+            "select account_id from cash_register where id = $1",
+            cashier.cash_register_id,
         )
         await conn.execute("update account set balance = 0 where id = $1", cash_register_account_id)
         close_out_result = CloseOutResult(cashier_id=cashier.id, imbalance=imbalance)
