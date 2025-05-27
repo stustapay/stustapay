@@ -58,7 +58,6 @@ import de.stustapay.stustapay.ui.common.KeepScreenOn
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.delay
 
-@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(UnstableApi::class)
 @Preview
 @Composable
