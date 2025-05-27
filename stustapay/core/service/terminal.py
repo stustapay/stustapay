@@ -551,7 +551,7 @@ class TerminalService(Service[Config]):
         if terminal is None:
             raise NotFound(element_id=terminal_id, element_type="terminal")
         if terminal.till_id is not None:
-            await conn.execute("update till set active_cash_register_id = null where till_id = $1", terminal.till_id)
+            await conn.execute("update till set active_cash_register_id = null where id = $1", terminal.till_id)
         await logout_user_from_terminal(conn=conn, node_id=node.id, terminal_id=terminal_id)
 
     @with_db_transaction(read_only=True)
