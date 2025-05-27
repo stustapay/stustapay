@@ -1,7 +1,14 @@
 package de.stustapay.stustapay.ui.guide
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,8 +16,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -49,6 +58,7 @@ import de.stustapay.stustapay.ui.common.KeepScreenOn
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(UnstableApi::class)
 @Preview
 @Composable
@@ -58,19 +68,42 @@ fun GuideView(
     val context = LocalContext.current;
     var player by remember { mutableStateOf<Player?>(null) }
     var state by remember { mutableStateOf<GuideViewState>(GuideViewState.Selection) }
-    val exit: () -> Unit = {
+
+    val stop: () -> Unit = {
         player?.apply { release() }
         player = null
         state = GuideViewState.Selection
+    }
+    val exit: () -> Unit = {
+        stop()
         leaveView()
     }
+
+    var haveWifi by remember { mutableStateOf<Boolean>(false) }
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val networkRequest =
+        NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build()
+    connectivityManager.requestNetwork(
+        networkRequest, object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                haveWifi = true
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                haveWifi = false
+            }
+        })
 
     BackHandler {
         exit()
     }
 
-    LaunchedEffect(Unit) {
-        state = GuideViewState.Selection
+    LaunchedEffect(haveWifi) {
+        stop()
     }
 
     NavScaffold(
@@ -177,16 +210,25 @@ fun GuideView(
                             .fillMaxSize()
                             .padding(10.dp)
                     ) {
-                        Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                            state = GuideViewState.Playing("de")
-                        }) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(), onClick = {
+                                state = GuideViewState.Playing("de")
+                            }, enabled = haveWifi
+                        ) {
                             Text("Deutsch")
                         }
 
-                        Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                            state = GuideViewState.Playing("en")
-                        }) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(), onClick = {
+                                state = GuideViewState.Playing("en")
+                            }, enabled = haveWifi
+                        ) {
                             Text("English")
+                        }
+
+                        if (!haveWifi) {
+                            Spacer(Modifier.height(5.dp))
+                            Text(color = Color.Red, text = "Connect to WiFi to view guides")
                         }
                     }
                 }
