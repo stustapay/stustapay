@@ -408,7 +408,7 @@ class TillRegisterService(Service[Config]):
         cash_register_account_id = row["cash_register_account_id"]
         cash_register_id = row["cash_register_id"]
 
-        if cash_register_balance + amount < 0:
+        if float(cash_register_balance) + amount < 0:
             raise InvalidArgument(
                 f"Insufficient balance on cashier account. Current balance is {cash_register_balance}."
             )
@@ -527,6 +527,9 @@ class TillRegisterService(Service[Config]):
         if target_cashier["cash_register_id"] is not None:
             raise InvalidArgument("The cashier to whom to transfer the cash register already has a cash register")
 
+        await conn.execute(
+            "update till set active_cash_register_id = null where active_cash_register_id = $1", cash_register_id
+        )
         await conn.execute("update usr set cash_register_id = null where id = $1", source_cashier_id)
         await book_cashier_shift_end_order(
             conn=conn, cashier_id=source_cashier_id, cash_register_id=cash_register_id, node=node
