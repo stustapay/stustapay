@@ -119,7 +119,7 @@ class CashierService(Service[Config]):
         shift_id: Optional[int] = None,
     ) -> CashierShiftStats:
         cashier_exists = await conn.fetchval(
-            "select exists(select from cashier where id = $1 and node_id = $2)", cashier_id, node.id
+            "select exists(select from cashier where id = $1 and node_id = any($2))", cashier_id, node.ids_to_event_node
         )
         if not cashier_exists:
             raise NotFound(element_type="cashier", element_id=cashier_id)
