@@ -1,4 +1,4 @@
-import { useGetTreeForCurrentUserQuery, useLogoutMutation } from "@/api";
+import { findNode, useGetTreeForCurrentUserQuery, useLogoutMutation, useTreeForCurrentUser } from "@/api";
 import { config } from "@/api/common";
 import { AppBar, DrawerHeader, Main } from "@/components";
 import { drawerWidth } from "@/components/layouts/constants";
@@ -12,12 +12,15 @@ import {
   Alert,
   AlertTitle,
   Box,
+  Breadcrumbs,
   Button,
+  Stack,
   CircularProgress,
   CssBaseline,
   Divider,
   Drawer,
   IconButton,
+  Link,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -27,6 +30,39 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { NavigationTree } from "./navigation-tree";
+import { useCurrentNode } from "@/hooks";
+
+const BreadcrumbHeader: React.FC = () => {
+  const { t } = useTranslation();
+  const tree = useTreeForCurrentUser();
+  const { currentNode } = useCurrentNode();
+
+  const nodes = React.useMemo(() => {
+    if (currentNode.parent == currentNode.id) {
+      return [currentNode];
+    }
+    return [...currentNode.parent_ids.map((nodeId) => findNode(nodeId, tree)), currentNode];
+  }, [currentNode]);
+
+  return (
+    <Stack sx={{ flexGrow: 1, alignItems: "center" }} direction="row" spacing={3}>
+      <Typography variant="h6" component="div">
+        <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
+          {t("StuStaPay")}
+        </RouterLink>
+      </Typography>
+      <Typography variant="h6" component="div">
+        <Breadcrumbs sx={{ color: "inherit" }}>
+          {nodes.map((node) => (
+            <Link key={node?.id} component={RouterLink} to={`/node/${node?.id}`} sx={{ color: "inherit" }}>
+              {node?.name}
+            </Link>
+          ))}
+        </Breadcrumbs>
+      </Typography>
+    </Stack>
+  );
+};
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -76,11 +112,15 @@ export const AuthenticatedRoot: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
-              {t("StuStaPay")}
-            </RouterLink>
-          </Typography>
+          {isTreeLoading ? (
+            <Loading />
+          ) : treeError ? (
+            <Alert severity="error">
+              <AlertTitle>Error loading tree data</AlertTitle>
+            </Alert>
+          ) : (
+            <BreadcrumbHeader />
+          )}
           <Button component={RouterLink} color="inherit" to="/profile">
             {t("auth.profile")}
           </Button>
