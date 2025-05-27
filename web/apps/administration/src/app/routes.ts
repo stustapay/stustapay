@@ -45,8 +45,8 @@ class RouteBuilder implements IRouteBuilder {
     return this.base(nodeId) + `/${id}`;
   };
 
-  public detailAction = (id: string | number | undefined | null, suffix: string) => {
-    return `${this.detail(id)}/${suffix}`;
+  public detailAction = (id: string | number | undefined | null, suffix: string, nodeId?: number | null) => {
+    return `${this.detail(id, nodeId)}/${suffix}`;
   };
 }
 

@@ -105,6 +105,8 @@ export const CashRegisterDetail: React.FC = () => {
     });
   };
 
+  const cashier = register.current_cashier_id != null ? selectCashierById(cashiers, register.current_cashier_id) : null;
+
   return (
     <Stack spacing={2} direction="column">
       <DetailLayout
@@ -136,18 +138,18 @@ export const CashRegisterDetail: React.FC = () => {
             type="currency"
             secondaryAction={
               register.balance !== 0 &&
-              register.current_cashier_id != null && (
-                <ButtonLink to={CashierRoutes.detailAction(register.current_cashier_id, "close-out")}>
+              cashier != null && (
+                <ButtonLink to={CashierRoutes.detailAction(cashier.id, "close-out", cashier.node_id)}>
                   {t("cashier.closeOut")}
                 </ButtonLink>
               )
             }
           />
-          {register.current_cashier_id != null && (
+          {cashier != null && (
             <DetailField
               label={t("register.currentCashier")}
-              linkTo={CashierRoutes.detail(register.current_cashier_id)}
-              value={getUserName(selectCashierById(cashiers, register.current_cashier_id))}
+              linkTo={CashierRoutes.detail(cashier.id)}
+              value={getUserName(cashier)}
             />
           )}
           {register.current_till_id != null && (
