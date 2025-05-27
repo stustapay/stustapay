@@ -212,14 +212,13 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
                 raise RuntimeError("requires_terminal needs self.auth_service to be a AuthService instance")
 
         if customer is None:
-            raise Unauthorized("invalid customer token")
+            raise Unauthorized("invalid login - please log in again")
 
         node_is_readonly = await conn.fetchval(
             "select read_only from node n join account a on a.node_id = n.id where a.id = $1", customer.id
         )
-        func_is_read_only = _is_func_read_only(kwargs, func)
-        if not func_is_read_only and node_is_readonly:
-            raise NodeIsReadOnly("Event is read only")
+        if node_is_readonly:
+            raise Unauthorized("The event is over - please log in again ")
 
         if "current_customer" in signature(func).parameters:
             kwargs["current_customer"] = customer
