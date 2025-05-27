@@ -11,7 +11,7 @@ object Access {
     // User permissions
 
     fun canCreateUser(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.user_management)
+        return user.privileges.contains(Privilege.user_management) || user.privileges.contains(Privilege.create_user)
     }
 
     fun canReadUserComment(user: CurrentUser): Boolean {
@@ -51,7 +51,7 @@ object Access {
     }
 
     fun canSwap(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.user_management)
+        return user.privileges.contains(Privilege.customer_management)
     }
 
     fun canViewStats(user: CurrentUser): Boolean {
