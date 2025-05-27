@@ -69,12 +69,18 @@ async def create_cash_register(*, conn: Connection, node: Node, new_register: Ne
     return register
 
 
-async def get_cash_register_account_id(*, conn: Connection, node: Node, cash_register_id: int) -> int:
-    acc_id = await conn.fetchval(
-        "select account_id from cash_register where id = $1 and node_id = any($2)",
-        cash_register_id,
-        node.ids_to_event_node,
-    )
+async def get_cash_register_account_id(*, conn: Connection, node: Node | None, cash_register_id: int) -> int:
+    if node is not None:
+        acc_id = await conn.fetchval(
+            "select account_id from cash_register where id = $1 and node_id = any($2)",
+            cash_register_id,
+            node.ids_to_event_node,
+        )
+    else:
+        acc_id = await conn.fetchval(
+            "select account_id from cash_register where id = $1",
+            cash_register_id,
+        )
     if acc_id is None:
         raise InvalidArgument("Cash Register not found")
     return acc_id

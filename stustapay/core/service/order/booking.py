@@ -159,7 +159,7 @@ async def book_imbalance_order(
     imbalance: float,
 ) -> OrderInfo:
     cash_register_account_id = await get_cash_register_account_id(
-        conn=conn, node=node, cash_register_id=cash_register_id
+        conn=conn, node=None, cash_register_id=cash_register_id
     )
     difference_product = await fetch_money_difference_product(conn=conn, node=node)
     line_items = [
@@ -260,7 +260,7 @@ async def book_money_transfer_cash_vault_order(
     amount: float,
 ) -> OrderInfo:
     cash_register_account_id = await get_cash_register_account_id(
-        conn=conn, node=node, cash_register_id=cash_register_id
+        conn=conn, node=None, cash_register_id=cash_register_id
     )
     cash_vault_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_vault)
     bookings: dict[BookingIdentifier, float] = {
