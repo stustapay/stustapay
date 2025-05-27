@@ -4,7 +4,7 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
-from sftkit.error import InvalidArgument
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -37,7 +37,7 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
 )
-from stustapay.core.service.common.error import AccessDenied, NotFound
+from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.till.till import (
     assign_cash_register_to_till_if_available,
     assign_till_to_terminal,
@@ -547,6 +547,11 @@ class TerminalService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def force_logout_user(self, *, conn: Connection, node: Node, terminal_id: int):
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_id=terminal_id, element_type="terminal")
+        if terminal.till_id is not None:
+            await conn.execute("update till set active_cash_register_id = null where till_id = $1", terminal.till_id)
         await logout_user_from_terminal(conn=conn, node_id=node.id, terminal_id=terminal_id)
 
     @with_db_transaction(read_only=True)

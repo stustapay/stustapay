@@ -43,7 +43,7 @@ async def remove_terminal_from_till(conn: Connection, node_id: int, till_id: int
     if result is None:
         raise InvalidArgument("till does not exist")
     await conn.fetchval(
-        "update till set terminal_id = null where id = $1 returning id",
+        "update till set terminal_id = null, active_cash_register_id = null where id = $1 returning id",
         till_id,
     )
     terminal_id = result["terminal_id"]
