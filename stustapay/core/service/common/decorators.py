@@ -233,8 +233,6 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
 
         return await func(self, **kwargs)
 
-    _add_arg_to_signature(func, wrapper, _READONLY_KWARG_NAME)
-
     return wrapper
 
 
