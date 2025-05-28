@@ -11,6 +11,7 @@ import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import java.lang.Integer.max
 import java.util.UUID
+import kotlin.math.roundToInt
 
 
 /**
@@ -112,7 +113,7 @@ data class SaleStatus(
             val amount: Pair<Int, SaleItemAmount>? = if (quantity != null) {
                 Pair(it.tillButtonId.intValue(), SaleItemAmount.FixedPrice(quantity.intValue()))
             } else if (price != null) {
-                Pair(it.tillButtonId.intValue(), SaleItemAmount.FreePrice((price * 100).toUInt()))
+                Pair(it.tillButtonId.intValue(), SaleItemAmount.FreePrice((price * 100).roundToInt().toUInt()))
             } else {
                 null
             }
@@ -268,7 +269,7 @@ data class SaleStatus(
                     is SaleItemAmount.FreePrice -> {
                         Button(
                             tillButtonId = it.key.toBigInteger(),
-                            price = amount.price.toDouble() / 100,
+                            price = amount.price.toDouble() / 100.0,
                         )
                     }
                 }
