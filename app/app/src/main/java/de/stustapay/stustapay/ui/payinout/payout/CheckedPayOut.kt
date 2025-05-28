@@ -3,6 +3,7 @@ package de.stustapay.stustapay.ui.payinout.payout
 import de.stustapay.api.models.NewPayOut
 import de.stustapay.libssp.model.NfcTag
 import java.util.UUID
+import kotlin.math.roundToInt
 
 data class CheckedPayOut(
     /** how much the user has on their account */
@@ -26,6 +27,6 @@ data class CheckedPayOut(
 
     /** max amount in cents */
     fun getMaxAmount(): UInt {
-        return (maxAmount * 100).toUInt()
+        return (maxAmount * 100).roundToInt().toUInt()
     }
 }
