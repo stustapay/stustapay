@@ -117,7 +117,7 @@ fun SaleConfirm(
         bottomBar = {
             ProductConfirmBottomBar(
                 abortText = stringResource(R.string.sale_abort),
-                abortSize = 22.sp,
+                abortSize = 18.sp,
                 submitSize = 24.sp,
                 submitText = stringResource(R.string.sale_order_book),
                 status = {
