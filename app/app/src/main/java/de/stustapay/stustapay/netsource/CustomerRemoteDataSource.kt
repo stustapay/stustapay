@@ -3,6 +3,7 @@ package de.stustapay.stustapay.netsource
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.Account
+import de.stustapay.api.models.DetailedOrder
 import de.stustapay.api.models.GrantVoucherPayload
 import de.stustapay.api.models.NewFreeTicketGrant
 import de.stustapay.api.models.Order
@@ -19,7 +20,7 @@ class CustomerRemoteDataSource @Inject constructor(
         return terminalApiAccessor.execute { it.customer()?.getCustomer(id) }
     }
 
-    suspend fun getCustomerOrders(id: BigInteger): Response<List<Order>> {
+    suspend fun getCustomerOrders(id: BigInteger): Response<List<DetailedOrder>> {
         return terminalApiAccessor.execute { it.customer()?.getCustomerOrders(id) }
     }
 

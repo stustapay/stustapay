@@ -33,6 +33,7 @@ src/main/kotlin/de/stustapay/api/models/CompletedTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/CompletedTopUp.kt
 src/main/kotlin/de/stustapay/api/models/CreateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/CurrentUser.kt
+src/main/kotlin/de/stustapay/api/models/DetailedOrder.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
 src/main/kotlin/de/stustapay/api/models/HTTPValidationError.kt
 src/main/kotlin/de/stustapay/api/models/LineItem.kt

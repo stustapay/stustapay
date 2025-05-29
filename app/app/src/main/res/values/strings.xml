@@ -150,4 +150,5 @@
     <string name="user_username">Username</string>
     <string name="guid_title">Guide</string>
     <string name="root_item_guide">Guide</string>
+    <string name="sale_history_till">Till: %s</string>
 </resources>

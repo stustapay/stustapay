@@ -18,8 +18,8 @@ package de.stustapay.api.apis
 import kotlinx.serialization.Contextual
 
 import de.stustapay.api.models.Account
+import de.stustapay.api.models.DetailedOrder
 
-import de.stustapay.api.models.Order
 import de.stustapay.api.models.SwitchTagPayload
 
 import de.stustapay.api.infrastructure.*
@@ -77,10 +77,10 @@ import io.ktor.http.ParametersBuilder
         * Obtain all orders of a customer by tag uid
         * 
          * @param customerTagUid  
-         * @return kotlin.collections.List<Order>
+         * @return kotlin.collections.List<DetailedOrder>
         */
             @Suppress("UNCHECKED_CAST")
-        open suspend fun getCustomerOrders(customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<kotlin.collections.List<Order>> {
+        open suspend fun getCustomerOrders(customerTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<kotlin.collections.List<DetailedOrder>> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 
