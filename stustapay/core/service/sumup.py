@@ -35,7 +35,7 @@ class SumUpService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
-    async def get_checkout(self, *, conn: Connection, node: Node, checkout_id: str) -> SumUpCheckout:
+    async def get_checkout(self, *, conn: Connection, node: Node, checkout_id: str) -> SumUpCheckout | None:
         settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         api = SumUpApi(api_key=settings.sumup_api_key, merchant_code=settings.sumup_merchant_code)
         return await api.get_checkout(checkout_id)

@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from sftkit.error import NotFound
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextSumUpService
@@ -25,4 +26,7 @@ async def list_sumup_transactions(token: CurrentAuthToken, sumup_service: Contex
 async def get_sumup_checkout(
     checkout_id: str, token: CurrentAuthToken, sumup_service: ContextSumUpService, node_id: int
 ):
-    return await sumup_service.get_checkout(token=token, checkout_id=checkout_id, node_id=node_id)
+    checkout = await sumup_service.get_checkout(token=token, checkout_id=checkout_id, node_id=node_id)
+    if checkout is None:
+        raise NotFound(element_id=checkout_id, element_type="sumup_checkout")
+    return checkout

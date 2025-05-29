@@ -116,7 +116,7 @@ async def make_ticket_sale_bookings(
         customer_account_id: int
         if scanned_ticket.account is None:
             customer_account_id = await conn.fetchval(
-                "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
+                "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') on conflict (user_tag_id) do update set user_tag_id = $2 returning id",
                 node.event_node_id,
                 user_tag_id,
             )

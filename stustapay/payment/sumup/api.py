@@ -28,9 +28,8 @@ class SumUpError(ServiceException):
 
 
 class _SumUpErrorFormat(BaseModel):
-    code: str
+    error_code: str
     message: str | None = None
-    error: str | None = None
 
 
 class _SumUpOAuthTokenResp(BaseModel):
@@ -122,7 +121,9 @@ async def fetch_refresh_token_from_auth_code(client_id: str, client_secret: str,
                     try:
                         resp = await response.json()
                         err = _SumUpErrorFormat.model_validate(resp)
-                        raise SumUpError(f'SumUp API returned an error: "{err.error}"')
+                        raise SumUpError(
+                            f'SumUp API returned an error - code: {err.error_code} - message: "{err.message}"'
+                        )
                     except Exception as e:
                         logging.error(f"SumUp API error {response.content}, {e}")
                         raise SumUpError("SumUp API returned an unknown error") from e
@@ -161,7 +162,9 @@ async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_toke
                     try:
                         resp = await response.json()
                         err = _SumUpErrorFormat.model_validate(resp)
-                        raise SumUpError(f'SumUp API returned an error: "{err.error}"')
+                        raise SumUpError(
+                            f'SumUp API returned an error - code: {err.error_code} - message: "{err.message}"'
+                        )
                     except Exception as e:
                         logging.error(f"SumUp API error {response.content}, {e}")
                         raise SumUpError("SumUp API returned an unknown error") from e
@@ -195,14 +198,18 @@ class SumUpApi:
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    async def _get(self, url: str, query: dict | None = None) -> dict:
+    async def _get(self, url: str, query: dict | None = None) -> dict | None:
         async with aiohttp.ClientSession(trust_env=True, headers=self._get_sumup_auth_headers()) as session:
             try:
                 async with session.get(url, params=query, timeout=10) as response:
                     if not response.ok:
                         resp = await response.json()
                         err = _SumUpErrorFormat.model_validate(resp)
-                        raise SumUpError(f"SumUp API returned an error: {err.code} - {err.message}")
+                        if err.error_code == "NOT_FOUND":
+                            return None
+                        raise SumUpError(
+                            f'SumUp API returned an error - code: {err.error_code} - message: "{err.message}"'
+                        )
                     # ignore content type as responses may be text/plain
                     return await response.json(content_type=None)
             except asyncio.TimeoutError as e:
@@ -223,7 +230,9 @@ class SumUpApi:
                         try:
                             resp = await response.json()
                             err = _SumUpErrorFormat.model_validate(resp)
-                            raise SumUpError(f'SumUp API returned an error: "{err.error}"')
+                            raise SumUpError(
+                                f'SumUp API returned an error - code: {err.error_code} - message: "{err.message}"'
+                            )
                         except Exception as e:
                             logging.error(f"SumUp API error {response.content}, {e}")
                             raise SumUpError("SumUp API returned an unknown error") from e
@@ -248,9 +257,11 @@ class SumUpApi:
         resp = await self._post(SUMUP_CHECKOUT_URL, checkout)
         return SumUpCheckout.model_validate(resp)
 
-    async def get_checkout(self, checkout_id: str) -> SumUpCheckout:
+    async def get_checkout(self, checkout_id: str) -> SumUpCheckout | None:
         url = f"{SUMUP_CHECKOUT_URL}/{checkout_id}"
         resp = await self._get(url)
+        if resp is None:
+            return None
         return SumUpCheckout.model_validate(resp)
 
     async def list_checkouts(self) -> list[SumUpCheckout]:
@@ -263,6 +274,8 @@ class SumUpApi:
 
     async def find_checkout(self, order_uuid: uuid.UUID) -> SumUpCheckout | None:
         resp = await self._get(SUMUP_CHECKOUT_URL, {"checkout_reference": str(order_uuid)})
+        if resp is None:
+            return None
 
         if not isinstance(resp, list):
             raise SumUpError("SumUp API returned an invalid response")
@@ -274,9 +287,11 @@ class SumUpApi:
 
         return SumUpCheckout.model_validate(resp[0])
 
-    async def find_transaction(self, order_uuid: uuid.UUID) -> SumUpTransactionDetail:
+    async def find_transaction(self, order_uuid: uuid.UUID) -> SumUpTransactionDetail | None:
         url = f"{SUMUP_API_BASE_URL}/v2.1/merchants/{self.merchant_code}/transactions"
         resp = await self._get(url, query={"foreign_transaction_id": str(order_uuid)})
+        if resp is None:
+            return None
         return SumUpTransactionDetail.model_validate(resp)
 
     async def list_transactions(self) -> list[SumUpTransaction]:
