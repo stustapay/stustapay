@@ -26,7 +26,7 @@ async def fetch_audit_log(
 ) -> AuditLogDetail:
     row = await conn.fetchrow(
         "select a.id, a.created_at, a.node_id, a.log_type, a.originating_user_id, a.originating_terminal_id, a.content "
-        "from audit_log as a join node as n on a.node_id = n.id where $1 = any(n.parent_ids) or n.id = $1 and a.id = $2",
+        "from audit_log as a join node as n on a.node_id = n.id where ($1 = any(n.parent_ids) or n.id = $1) and a.id = $2",
         node.id,
         audit_log_id,
     )
