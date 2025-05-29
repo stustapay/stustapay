@@ -180,7 +180,10 @@ ext.getSSPVersionCode = { ->
 }
 
 ext.getSSPVersionName = { ->
-    def versionDesc = "git -C ${rootDir} describe --tags --dirty --always".execute().text.trim()
+    // def versionDesc = "git -C ${rootDir} describe --tags --dirty --always".execute().text.trim()
+    def commitCount = "git -C ${rootDir} rev-list --count HEAD".execute().text.trim()
 
-    return versionDesc
+    // i'm so sorry. our mdm demanded it. has to be bigger than 8b...
+    def version = 90000000 + commitCount.toInteger()
+    return version.toString()
 }
