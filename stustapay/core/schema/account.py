@@ -7,6 +7,14 @@ from pydantic import BaseModel, computed_field
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.user import format_user_tag_uid
 
+# keep in sync with stustapay/core/schema/db_code/0004-functions.sql book_transaction
+EPSILON_TOLERANCE_ACCOUNT_ZERO_BALANCE = 0.001
+
+
+def is_balance_negative(balance: float):
+    is_zero = abs(balance) < EPSILON_TOLERANCE_ACCOUNT_ZERO_BALANCE
+    return not is_zero and balance < 0
+
 
 class AccountType(enum.Enum):
     private = "private"

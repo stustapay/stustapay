@@ -5,7 +5,7 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import AccountType
+from stustapay.core.schema.account import AccountType, is_balance_negative
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import (
@@ -408,7 +408,7 @@ class TillRegisterService(Service[Config]):
         cash_register_account_id = row["cash_register_account_id"]
         cash_register_id = row["cash_register_id"]
 
-        if float(cash_register_balance) + amount < 0:
+        if is_balance_negative(float(cash_register_balance) + amount):
             raise InvalidArgument(
                 f"Insufficient balance on cashier account. Current balance is {cash_register_balance}."
             )
@@ -417,7 +417,7 @@ class TillRegisterService(Service[Config]):
         transport_account = await get_account_by_id(conn=conn, node=node, account_id=current_user.transport_account_id)
         assert transport_account is not None
 
-        if transport_account.balance - amount < 0:
+        if is_balance_negative(transport_account.balance - amount):
             raise InvalidArgument(
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}"
             )
@@ -466,7 +466,7 @@ class TillRegisterService(Service[Config]):
         if transport_account is None:
             raise InvalidArgument("Transport account could not be found")
 
-        if transport_account.balance + amount < 0:
+        if is_balance_negative(transport_account.balance + amount):
             raise InvalidArgument(
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
             )

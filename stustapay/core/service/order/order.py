@@ -15,6 +15,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import (
     Account,
     AccountType,
+    is_balance_negative,
 )
 from stustapay.core.schema.order import (
     CompletedPayOut,
@@ -660,7 +661,7 @@ class OrderService(Service[Config]):
                     f"Max {max_limit:.02f}€ allowed on account! {order.new_balance:.02f}€ is {too_much:.02f}€ too much."
                 )
 
-            if order.new_balance < 0:
+            if is_balance_negative(order.new_balance):
                 raise InvalidArgument(
                     f"Account balance would be less than 0€. New balance would be {order.new_balance:.02f}€"
                 )
@@ -1125,7 +1126,7 @@ class OrderService(Service[Config]):
 
         new_balance = customer_account.balance + new_pay_out.amount
 
-        if new_balance < 0:
+        if is_balance_negative(new_balance):
             raise NotEnoughFundsException(needed_fund=abs(new_pay_out.amount), available_fund=customer_account.balance)
 
         return PendingPayOut(

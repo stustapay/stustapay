@@ -12,8 +12,14 @@ create or replace function book_transaction(
 $$
 <<locals>> declare
     transaction_id  bigint;
+    target_balance_after_booking numeric;
+    source_balance_after_booking numeric;
     temp_account_id bigint;
+    rounding_epsilon numeric;
 begin
+    -- keep in sync with stustapay/core/schema/account.py is_balance_negative
+    rounding_epsilon := 0.001;
+
     if vouchers_amount * amount < 0 then raise 'vouchers_amount and amount must have the same sign'; end if;
 
     if amount < 0 or vouchers_amount < 0 then
@@ -42,8 +48,16 @@ begin
     returning id into locals.transaction_id;
 
     -- update account values
-    update account set balance = balance - amount, vouchers = vouchers - vouchers_amount where id = source_account_id;
-    update account set balance = balance + amount, vouchers = vouchers + vouchers_amount where id = target_account_id;
+    update account set balance = balance - amount, vouchers = vouchers - vouchers_amount
+        where id = source_account_id returning balance into locals.source_balance_after_booking;
+    if abs(locals.source_balance_after_booking) < locals.rounding_epsilon then
+        update account set balance = 0 where id = source_account_id;
+    end if;
+    update account set balance = balance + amount, vouchers = vouchers + vouchers_amount
+        where id = target_account_id returning balance into locals.target_balance_after_booking;
+    if abs(locals.target_balance_after_booking) < locals.rounding_epsilon then
+        update account set balance = 0 where id = target_account_id;
+    end if;
 
     return locals.transaction_id;
 
