@@ -660,9 +660,9 @@ class OrderService(Service[Config]):
                     f"Max {max_limit:.02f}€ allowed on account! {order.new_balance:.02f}€ is {too_much:.02f}€ too much."
                 )
 
-            if order.new_balance < 0:
+            if round(order.new_balance, 2) < 0:
                 raise InvalidArgument(
-                    f"Account balance would be less than 0€. New balance would be {order.new_balance:.02f}€"
+                    f"Account balance would be negative. New balance would be {order.new_balance:.02f}€"
                 )
 
         return order
@@ -1125,7 +1125,7 @@ class OrderService(Service[Config]):
 
         new_balance = customer_account.balance + new_pay_out.amount
 
-        if new_balance < 0:
+        if round(new_balance, 2) < 0:
             raise NotEnoughFundsException(needed_fund=abs(new_pay_out.amount), available_fund=customer_account.balance)
 
         return PendingPayOut(

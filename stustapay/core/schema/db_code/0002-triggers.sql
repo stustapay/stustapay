@@ -223,7 +223,7 @@ begin
         raise 'Customers can have a maximum balance of at most %. New balance would be %.', locals.max_balance, locals.new_balance;
     end if;
 
-    if NEW.type = 'private' and locals.new_balance < 0 then
+    if NEW.type = 'private' and round(locals.new_balance, 2) < 0 then
         raise 'Customers cannot have a negative balance. New balance would be %.', locals.new_balance;
     end if;
 

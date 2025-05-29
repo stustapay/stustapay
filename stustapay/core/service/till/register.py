@@ -408,7 +408,7 @@ class TillRegisterService(Service[Config]):
         cash_register_account_id = row["cash_register_account_id"]
         cash_register_id = row["cash_register_id"]
 
-        if float(cash_register_balance) + amount < 0:
+        if round(float(cash_register_balance) + amount, 2) < 0:
             raise InvalidArgument(
                 f"Insufficient balance on cashier account. Current balance is {cash_register_balance}."
             )
@@ -417,7 +417,7 @@ class TillRegisterService(Service[Config]):
         transport_account = await get_account_by_id(conn=conn, node=node, account_id=current_user.transport_account_id)
         assert transport_account is not None
 
-        if transport_account.balance - amount < 0:
+        if round(transport_account.balance - amount, 2) < 0:
             raise InvalidArgument(
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}"
             )
@@ -466,7 +466,7 @@ class TillRegisterService(Service[Config]):
         if transport_account is None:
             raise InvalidArgument("Transport account could not be found")
 
-        if transport_account.balance + amount < 0:
+        if round(transport_account.balance + amount, 2) < 0:
             raise InvalidArgument(
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
             )
