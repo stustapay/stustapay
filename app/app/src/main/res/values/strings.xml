@@ -109,6 +109,7 @@
     <string name="sale_paid_to_user_q">Paid to user?</string>
     <string name="sale_pay_card">💳\nCard</string>
     <string name="sale_pay_cash">🪙\nCash</string>
+    <string name="sale_pay_free">🪙\nFree</string>
     <string name="sale_pay_n_vouchers">with %s vouchers</string>
     <string name="sale_pay_stustapay">🛜\nSSP</string>
     <string name="sale_payout">Payout</string>

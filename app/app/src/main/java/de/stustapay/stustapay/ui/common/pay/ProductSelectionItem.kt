@@ -46,7 +46,7 @@ fun PreviewSelectionItem() {
         ProductSelectionItem(
             itemPrice = "13,37€",
             itemAmount = "12",
-            leftButtonText = "Robbenfutter",
+            leftButtonText = "Robbenfutterkonservierungsmittelinformationsdokument",
             rightButtonText = "-",
         )
         ProductSelectionItem(
@@ -139,7 +139,7 @@ fun ProductSelectionItem(
                     Text(
                         text = leftButtonText,
                         style = leftButtonStyle,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
