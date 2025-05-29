@@ -1527,7 +1527,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Order"
+                    "$ref": "#/components/schemas/DetailedOrder"
                   },
                   "title": "Response Get Customer Orders Customer  Customer Tag Uid  Orders Get"
                 }
@@ -2634,6 +2634,164 @@
         ],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
+      },
+      "DetailedOrder": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Uuid"
+          },
+          "total_price": {
+            "type": "number",
+            "title": "Total Price"
+          },
+          "total_tax": {
+            "type": "number",
+            "title": "Total Tax"
+          },
+          "total_no_tax": {
+            "type": "number",
+            "title": "Total No Tax"
+          },
+          "cancels_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancels Order"
+          },
+          "booked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Booked At"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "order_type": {
+            "$ref": "#/components/schemas/OrderType"
+          },
+          "cashier_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cashier Id"
+          },
+          "till_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Till Id"
+          },
+          "cash_register_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Register Id"
+          },
+          "customer_account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Account Id"
+          },
+          "customer_tag_uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Tag Uid"
+          },
+          "customer_tag_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Tag Id"
+          },
+          "line_items": {
+            "items": {
+              "$ref": "#/components/schemas/LineItem"
+            },
+            "type": "array",
+            "title": "Line Items"
+          },
+          "till_name": {
+            "type": "string",
+            "title": "Till Name"
+          },
+          "customer_tag_uid_hex": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Tag Uid Hex",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "uuid",
+          "total_price",
+          "total_tax",
+          "total_no_tax",
+          "cancels_order",
+          "booked_at",
+          "payment_method",
+          "order_type",
+          "cashier_id",
+          "till_id",
+          "cash_register_id",
+          "customer_account_id",
+          "customer_tag_uid",
+          "customer_tag_id",
+          "line_items",
+          "till_name",
+          "customer_tag_uid_hex"
+        ],
+        "title": "DetailedOrder"
       },
       "GrantVoucherPayload": {
         "properties": {

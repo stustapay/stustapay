@@ -7,7 +7,7 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account
 from stustapay.core.schema.audit_logs import AuditType
-from stustapay.core.schema.order import Order
+from stustapay.core.schema.order import DetailedOrder
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import NewTill, Till
 from stustapay.core.schema.tree import Node, ObjectType
@@ -209,8 +209,8 @@ class TillService(Service[Config]):
         return customer
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.customer_management], requires_till=False)
-    async def get_customer_orders(self, *, conn: Connection, node: Node, customer_tag_uid: int) -> list[Order]:
+    @requires_terminal(requires_till=False)
+    async def get_customer_orders(self, *, conn: Connection, node: Node, customer_tag_uid: int) -> list[DetailedOrder]:
         customer_id = await conn.fetchval(
             "select id from account_with_history a where a.user_tag_uid = $1 and node_id = any($2)",
             customer_tag_uid,
@@ -220,8 +220,8 @@ class TillService(Service[Config]):
             raise InvalidArgument(f"Customer with tag uid {format_user_tag_uid(customer_tag_uid)} does not exist")
 
         orders = await conn.fetch_many(
-            Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1), $2)",
+            DetailedOrder,
+            "select o.*, t.name as till_name from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1), $2) as o join till t on o.till_id = t.id",
             customer_id,
             node.event_node_id,
         )
