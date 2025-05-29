@@ -163,9 +163,6 @@ class SumupService(Service[Config]):
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
         sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
         sumup_status = await self._check_sumup_status(sumup_api, pending_order)
-        if sumup_status == PaymentStatus.not_found:
-            self.logger.debug(f"Order {pending_order.uuid} not found in sumup")
-            return None
 
         if sumup_status == PaymentStatus.failed:
             self.logger.debug(f"Found a FAILED sumup order with uuid = {pending_order.uuid}")
@@ -195,6 +192,8 @@ class SumupService(Service[Config]):
                 case _:
                     self.logger.error(f"unknown pending order type: {pending_order.order_type}")
                     return None
+        elif sumup_status == PaymentStatus.not_found:
+            self.logger.debug(f"Order {pending_order.uuid} not found in sumup")
 
         if datetime.now(tz=timezone.utc) > pending_order.created_at + self.config.core.sumup_payment_timeout:
             self.logger.info(
