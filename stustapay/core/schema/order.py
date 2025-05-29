@@ -337,6 +337,10 @@ class Order(BaseModel):
     line_items: list[LineItem]
 
 
+class DetailedOrder(Order):
+    till_name: str
+
+
 class Transaction(BaseModel):
     id: int
     conducting_user_id: int | None
