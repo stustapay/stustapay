@@ -7,6 +7,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.PaymentMethod
+import de.stustapay.api.models.PendingTicketSale
+import de.stustapay.api.models.UserTagScan
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.ResourcesProvider
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.util.UUID
 import javax.inject.Inject
 
 
@@ -63,6 +66,10 @@ class TicketViewModel @Inject constructor(
     // ticket purchase selection
     private val _ticketDraft = MutableStateFlow(TicketDraft())
     val ticketDraft = _ticketDraft.asStateFlow()
+
+    // checked ticket purchase. this is submitted to complete a sale.
+    private val _pendingTicketSale = MutableStateFlow<PendingTicketSale?>(null)
+    val pendingTicketSale = _pendingTicketSale.asStateFlow()
 
     // when we finished a ticket sale
     private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
@@ -220,6 +227,7 @@ class TicketViewModel @Inject constructor(
         _status.update { "cleared" }
         _tagScanStatus.update { TagScanStatus.Scan }
         _ticketDraft.update { TicketDraft() }
+        _pendingTicketSale.update { null }
     }
 
     fun dismissSuccess() {
@@ -261,16 +269,17 @@ class TicketViewModel @Inject constructor(
 
         when (response) {
             is Response.OK -> {
-                _ticketDraft.update { draft ->
-                    draft.copy(response.data)
+                _ticketDraft.update { oldDraft ->
+                    oldDraft.copy(response.data)
                 }
+                _pendingTicketSale.update { response.data }
+
                 _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
 
                 if (response.data.totalPrice == 0.0) {
                     // when response has item and totalprice zero, skip to process sale directly!
                     processSale(paymentMethod = PaymentMethod.cash)
-                }
-                else {
+                } else {
                     _navState.update { TicketPage.Confirm }
                 }
             }
@@ -288,20 +297,31 @@ class TicketViewModel @Inject constructor(
 
     /** let's start the payment process. context needed for sumup. */
     suspend fun processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
-        // checks
-        if (_ticketDraft.value.scans.isEmpty()) {
-            _status.update { "No tags were scanned!" }
-            return
-        }
+        val checked = _pendingTicketSale.value
 
-        val pendingSale = _ticketDraft.value.pendingSale
-        if (pendingSale == null) {
+        if (checked == null) {
             _status.update { "Ticket sales were not checked yet" }
             return
         }
 
-        // generates a new order UUID every time.
-        val newSale = _ticketDraft.value.getNewTicketSale(paymentMethod)
+        if (checked.scannedTickets.isEmpty()) {
+            _status.update { "No tags were scanned!" }
+            return
+        }
+
+        val newSale = NewTicketSale(
+            // since we may submit multiple sumup attempts for a standing checked sale, create a new id every time
+            uuid = UUID.randomUUID(),
+            customerTags = checked.scannedTickets.map {
+                UserTagScan(
+                    tagUid = it.customerTagUid,
+                    tagPin = it.customerTagPin,
+                    topUpAmount = it.topUpAmount,
+                    voucherToken = it.ticketVoucher?.token
+                )
+            },
+            paymentMethod = paymentMethod,
+        )
 
         // if we do cash payment, the confirmation was already presented by CashECPay
         if (paymentMethod == PaymentMethod.cash) {
@@ -314,11 +334,11 @@ class TicketViewModel @Inject constructor(
         }
 
         // otherwise, perform ec payment
-        val firstTag = _ticketDraft.value.scans.keys.first()
+        val firstTag = checked.scannedTickets[0]
         val payment = ECPayment(
             id = newSale.uuid.toString(),
-            amount = BigDecimal(pendingSale.totalPrice),
-            tag = firstTag,
+            amount = BigDecimal(checked.totalPrice),
+            tag = NfcTag(firstTag.customerTagUid, firstTag.customerTagPin),
         )
 
         // register the sale so the backend can ask sumup for completion

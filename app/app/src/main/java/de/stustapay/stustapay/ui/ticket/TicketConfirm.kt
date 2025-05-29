@@ -33,13 +33,13 @@ fun TicketConfirm(
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
-    val ticketDraft by viewModel.ticketDraft.collectAsStateWithLifecycle()
+    val pendingTicketSale by viewModel.pendingTicketSale.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val context = LocalActivity.current!!
 
-    val checkedSale = ticketDraft.pendingSale
-    if (checkedSale == null) {
+    val checked = pendingTicketSale
+    if (checked == null) {
         Column {
             Text(status)
             Text("no sale check present!")
@@ -95,13 +95,13 @@ fun TicketConfirm(
                     item {
                         ProductConfirmItem(
                             name = stringResource(R.string.common_price),
-                            price = checkedSale.totalPrice,
+                            price = checked.totalPrice,
                             bigStyle = true,
                         )
                         Divider(thickness = 2.dp)
                     }
 
-                    for (lineItem in checkedSale.lineItems) {
+                    for (lineItem in checked.lineItems) {
                         item {
                             ProductConfirmLineItem(lineItem = lineItem)
                         }
