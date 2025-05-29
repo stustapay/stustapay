@@ -36,6 +36,7 @@ fun SaleConfirm(
     val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val bookingActive by viewModel.bookingActive.collectAsStateWithLifecycle()
     val config = saleConfig
 
     val checkedSale = saleDraft.checkedSale
@@ -116,6 +117,7 @@ fun SaleConfirm(
         bottomBar = {
             ProductConfirmBottomBar(
                 abortText = stringResource(R.string.sale_abort),
+                abortSize = 18.sp,
                 submitSize = 24.sp,
                 submitText = stringResource(R.string.sale_order_book),
                 status = {
@@ -128,7 +130,7 @@ fun SaleConfirm(
                         )
                     }
                 },
-                ready = config is SaleConfig.Ready,
+                ready = config is SaleConfig.Ready && !bookingActive,
                 onAbort = onEdit,
                 onSubmit = onConfirm,
             )

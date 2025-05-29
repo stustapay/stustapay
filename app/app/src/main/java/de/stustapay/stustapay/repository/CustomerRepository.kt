@@ -2,7 +2,7 @@ package de.stustapay.stustapay.repository
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import de.stustapay.api.models.Account
-import de.stustapay.api.models.Order
+import de.stustapay.api.models.DetailedOrder
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.CustomerRemoteDataSource
@@ -17,7 +17,7 @@ class CustomerRepository @Inject constructor(
         return customerRemoteDataSource.getCustomer(id)
     }
 
-    suspend fun getCustomerOrders(id: BigInteger): Response<List<Order>> {
+    suspend fun getCustomerOrders(id: BigInteger): Response<List<DetailedOrder>> {
         return customerRemoteDataSource.getCustomerOrders(id)
     }
 

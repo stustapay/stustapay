@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustapay.api.models.Order
+import de.stustapay.api.models.DetailedOrder
 import de.stustapay.api.models.OrderType
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
@@ -51,14 +51,19 @@ fun AccountDetails(
     navigateTo: (NavDest) -> Unit, viewModel: AccountViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var detailOrder by remember { mutableStateOf<Order?>(null) }
-
-    if (detailOrder != null) {
-        val sale = detailOrder!!
-        Dialog(onDismissRequest = { detailOrder = null }) {
+    var detailOrder by remember { mutableStateOf<DetailedOrder?>(null) }
+    val detailOrder_ = detailOrder
+    if (detailOrder_ != null) {
+        Dialog(
+            onDismissRequest = {
+                detailOrder = null
+            }
+        ) {
             Card(
                 shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.width(350.dp),
+                modifier = Modifier
+                    .width(350.dp)
+                    .padding(top = 10.dp, end = 10.dp),
                 elevation = 8.dp,
             ) {
                 Column {
@@ -69,21 +74,25 @@ fun AccountDetails(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            sale.bookedAt.toZonedDateTime()
+                            detailOrder_.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), fontSize = 24.sp
                         )
 
                         Text(
-                            sale.bookedAt.toZonedDateTime()
+                            detailOrder_.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 .format(DateTimeFormatter.ofPattern("HH:mm:ss")), fontSize = 24.sp
                         )
                     }
+                    Text(
+                        stringResource(R.string.sale_history_till).format(detailOrder_.tillName),
+                        modifier = Modifier.padding(start = 10.dp, bottom = 5.dp)
+                    )
 
                     Divider()
 
-                    for (item in sale.lineItems) {
+                    for (item in detailOrder_.lineItems) {
                         ProductConfirmItem(
                             name = item.product.name,
                             price = item.productPrice,
@@ -95,7 +104,7 @@ fun AccountDetails(
 
                     ProductConfirmItem(
                         name = stringResource(R.string.sale_history_sum),
-                        price = sale.totalPrice,
+                        price = detailOrder_.totalPrice,
                     )
                 }
             }
@@ -171,7 +180,7 @@ fun AccountDetails(
 }
 
 @Composable
-fun OrderListEntry(order: Order, onClick: () -> Unit) {
+fun OrderListEntry(order: DetailedOrder, onClick: () -> Unit) {
     var icon = Icons.Filled.Warning
     var label = R.string.common_error
     var amount = 0.0;
@@ -181,26 +190,31 @@ fun OrderListEntry(order: Order, onClick: () -> Unit) {
             label = R.string.root_item_sale
             amount = -order.totalPrice
         }
+
         OrderType.cancel_sale -> {
             icon = Icons.Filled.Clear
             label = R.string.common_action_cancel
             amount = -order.totalPrice
         }
+
         OrderType.top_up -> {
             icon = Icons.Filled.KeyboardArrowUp
             label = R.string.common_topup
             amount = order.totalPrice
         }
+
         OrderType.pay_out -> {
             icon = Icons.Filled.KeyboardArrowDown
             label = R.string.sale_payout
             amount = order.totalPrice
         }
+
         OrderType.ticket -> {
             icon = Icons.Filled.Face
             label = R.string.root_item_ticket
             amount = -order.totalPrice
         }
+
         OrderType.money_transfer -> {}
         OrderType.money_transfer_imbalance -> {}
         OrderType.cashier_shift_start -> {}

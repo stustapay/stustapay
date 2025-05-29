@@ -59,7 +59,9 @@ object Access {
     }
 
     fun canViewCustomerOrders(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.customer_management)
+        return true
+        // TODO: introduce new privilege
+        // return user.privileges.contains(Privilege.customer_management)
     }
 
     // Till features

@@ -92,7 +92,7 @@
     <string name="root_item_stats">Statistics</string>
     <string name="root_item_ticket">Ticket Sale</string>
     <string name="root_item_topup">Cash In and Out</string>
-    <string name="sale_abort">↢ Abort</string>
+    <string name="sale_abort">Abort</string>
     <string name="sale_check_your_order">Check your order</string>
     <string name="sale_credit">Credit: %.2f€</string>
     <string name="sale_deposit_handout">Deposit handout</string>
@@ -150,4 +150,5 @@
     <string name="user_username">Username</string>
     <string name="guid_title">Guide</string>
     <string name="root_item_guide">Guide</string>
+    <string name="sale_history_till">Till: %s</string>
 </resources>

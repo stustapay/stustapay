@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -76,6 +78,11 @@ class SaleViewModel @Inject constructor(
     val saleConfig: StateFlow<SaleConfig> = mapSaleConfig(
         terminalConfigRepository.terminalConfigState
     )
+
+    // so only one order can be submitted
+    private val _bookingActive = MutableStateFlow(false)
+    val bookingActive = _bookingActive.asStateFlow()
+    private val bookingActiveLock = Mutex()
 
     fun incrementVouchers() {
         _saleStatus.update { sale ->
@@ -304,6 +311,20 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun bookSale(context: Activity) {
+        bookingActiveLock.withLock {
+            if (_bookingActive.value == true) {
+                return
+            }
+            _bookingActive.update { true }
+        }
+        try {
+            _bookSale(context)
+        } finally {
+            _bookingActive.update { false }
+        }
+    }
+
+    private suspend fun _bookSale(context: Activity) {
         val tag = _saleStatus.value.tag
         val sale = _saleStatus.value.checkedSale
         if (sale == null) {

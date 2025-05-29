@@ -65,10 +65,13 @@ fun ProductConfirmBottomBar(
                 .padding(vertical = 10.dp)
         ) {
             Button(
-                enabled = ready, colors = errorButtonColors(), onClick = {
+                enabled = ready,
+                colors = errorButtonColors(),
+                onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onAbort()
-                }, modifier = Modifier
+                },
+                modifier = Modifier
                     .height(55.dp)
                     .fillMaxWidth(0.5f)
                     .padding(end = 5.dp)

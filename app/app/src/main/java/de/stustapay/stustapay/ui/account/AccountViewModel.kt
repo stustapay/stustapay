@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.Account
-import de.stustapay.api.models.Order
+import de.stustapay.api.models.DetailedOrder
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.mapState
@@ -33,7 +33,7 @@ sealed interface CustomerStatusRequestState {
     object Idle : CustomerStatusRequestState
     object Fetching : CustomerStatusRequestState
     data class Done(val account: Account) : CustomerStatusRequestState
-    data class DoneDetails(val account: Account, val orders: List<Order>) :
+    data class DoneDetails(val account: Account, val orders: List<DetailedOrder>) :
         CustomerStatusRequestState
 
     data class Failed(val msg: String) : CustomerStatusRequestState
