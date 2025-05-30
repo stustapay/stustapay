@@ -107,6 +107,7 @@ export const OrderDetail: React.FC = () => {
         <DetailField label={t("order.id")} value={order.id} />
         <DetailField label={t("order.paymentMethod")} value={order.payment_method} />
         <DetailField label={t("order.type")} value={order.order_type} />
+        <DetailField label={t("order.uuid")} value={order.uuid} />
         <DetailField label={t("order.bookedAt")} value={order.booked_at} />
         {cashier ? (
           <DetailField

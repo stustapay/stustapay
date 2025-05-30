@@ -131,7 +131,7 @@ export const CashierDetail: React.FC = () => {
             />
           ))
         ) : (
-          <DetailField label={t("cashier.till")} value={t("cashier.notLoggedInAtTill")} />
+          <DetailField label={t("cashier.terminal")} value={t("cashier.notLoggedInAtTill")} />
         )}
         <DetailNumberField
           label={t("cashier.cashDrawerBalance")}

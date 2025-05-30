@@ -74,7 +74,6 @@ export const OrderTable: React.FC<OrderListProps> = ({
     {
       field: "order_type",
       headerName: t("order.type"),
-      width: 140,
       renderCell: ({ row }) => {
         const icon = orderTypeToIcon[row.order_type];
         if (icon) {
@@ -82,6 +81,11 @@ export const OrderTable: React.FC<OrderListProps> = ({
         }
         return row.order_type;
       },
+    },
+    {
+      field: "uuid",
+      headerName: t("order.uuid"),
+      minWidth: 280,
     },
     {
       field: "payment_method",

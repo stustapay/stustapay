@@ -209,6 +209,7 @@ export const translations = {
     itemCount: "number of items",
     lineItems: "Line items",
     status: "Status",
+    uuid: "UUID",
     paymentMethod: "Payment Method",
     customerAccountId: "Customer Account ID",
     customerTagUid: "Customer Tag Uid",

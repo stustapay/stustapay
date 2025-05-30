@@ -56,7 +56,7 @@ export const TillList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} to={TillProfileRoutes.detail(profile.id)}>
+      <Link component={RouterLink} to={TillProfileRoutes.detail(profile.id, profile.node_id)}>
         {profile.name}
       </Link>
     );
@@ -72,7 +72,7 @@ export const TillList: React.FC = () => {
     }
 
     return (
-      <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id)}>
+      <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id, terminal.node_id)}>
         {terminal.name}
       </Link>
     );
