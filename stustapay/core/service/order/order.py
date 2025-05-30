@@ -73,14 +73,13 @@ from stustapay.core.service.common.error import InvalidArgument, ServiceExceptio
 from stustapay.core.service.order.pending_order import (
     fetch_maybe_pending_order,
     fetch_pending_order,
-    load_pending_ticket_sale,
     load_pending_topup,
     make_ticket_sale_bookings,
     make_topup_bookings,
     save_pending_ticket_sale,
     save_pending_topup,
 )
-from stustapay.core.service.order.sumup import SumupService
+from stustapay.core.service.order.sumup import PaymentStatus, SumupService
 from stustapay.core.service.product import (
     fetch_discount_product,
     fetch_pay_out_product,
@@ -467,14 +466,14 @@ class OrderService(Service[Config]):
         pending: bool = False,
     ) -> CompletedTopUp:
         if not pending and new_topup.payment_method == PaymentMethod.sumup:
-            already_completed_topup = await self.check_pending_topup(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
+            processed = await self.check_pending_order(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
                 conn=conn,
                 current_terminal=current_terminal,
                 current_till=current_till,
                 order_uuid=new_topup.uuid,
             )
-            if already_completed_topup:
-                return already_completed_topup
+            assert isinstance(processed, CompletedTopUp)
+            return processed
 
         pending_top_up: PendingTopUp = await self.check_topup(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
             conn=conn,
@@ -525,33 +524,33 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_pending_topup(
+    async def check_pending_order(
         self,
         *,
         conn: Connection,
         current_till: Till,
         order_uuid: UUID,
-    ) -> CompletedTopUp | None:
+    ) -> CompletedTopUp | CompletedTicketSale:
         pending_order = await fetch_maybe_pending_order(conn=conn, uuid=order_uuid)
         if not pending_order:
-            return None
+            raise InvalidArgument("Cannot book sumup payment without pending order")
         if pending_order.till_id != current_till.id:
             raise InvalidArgument("Cannot check an order for a different till")
-        if pending_order.order_type != PendingOrderType.topup:
+        if pending_order.uuid != order_uuid:
             raise InvalidArgument("Invalid order uuid")
         if pending_order.status == PendingOrderStatus.booked:
             return load_pending_topup(pending_order)
 
-        topup = await self.sumup.process_pending_order(conn=conn, pending_order=pending_order)
-        if topup is None:
-            return None
-        if isinstance(topup, CompletedTopUp):
-            return topup
+        processed = await self.sumup.process_pending_order(conn=conn, pending_order=pending_order)
+        if processed.successful_order is None and processed.status == PaymentStatus.pending:
+            raise InvalidArgument("Sumup payment is still pending - please recheck after a short while")
+        if processed.successful_order is None and processed.status == PaymentStatus.failed:
+            raise InvalidArgument("Sumup payment failed")
 
-        logger.warning(
-            f"Weird order state for uuid = {order_uuid}. Sumup order was accepted but we have the wrong order type"
-        )
-        return None
+        if processed.successful_order is None:
+            raise InvalidArgument("Sumup payment failed - invalid state detected")
+
+        return processed.successful_order
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
@@ -1437,14 +1436,14 @@ class OrderService(Service[Config]):
             raise InvalidArgument("No payment method provided")
 
         if not pending and new_ticket_sale.payment_method == PaymentMethod.sumup:
-            already_completed_ticket_sale = await self.check_pending_ticket_sale(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
+            processed = await self.check_pending_order(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
                 conn=conn,
                 current_terminal=current_terminal,
                 current_till=current_till,
                 order_uuid=new_ticket_sale.uuid,
             )
-            if already_completed_ticket_sale:
-                return already_completed_ticket_sale
+            assert isinstance(processed, CompletedTicketSale)
+            return processed
 
         pending_ticket_sale: PendingTicketSale = await self.check_ticket_sale(  # pylint: disable=missing-kwoa
             conn=conn,
@@ -1489,38 +1488,6 @@ class OrderService(Service[Config]):
             )
 
         return completed_ticket_sale
-
-    @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def check_pending_ticket_sale(
-        self,
-        *,
-        conn: Connection,
-        current_till: Till,
-        order_uuid: UUID,
-    ) -> CompletedTicketSale | None:
-        pending_order = await fetch_maybe_pending_order(conn=conn, uuid=order_uuid)
-        if not pending_order:
-            return None
-        if pending_order.till_id != current_till.id:
-            raise InvalidArgument("Cannot check an order for a different till")
-        if pending_order.order_type != PendingOrderType.ticket:
-            raise InvalidArgument("Invalid order uuid")
-        if pending_order.status == PendingOrderStatus.booked:
-            return load_pending_ticket_sale(pending_order)
-        if pending_order.status == PendingOrderStatus.cancelled:
-            return None
-
-        ticket_sale = await self.sumup.process_pending_order(conn=conn, pending_order=pending_order)
-        if ticket_sale is None:
-            return None
-        if isinstance(ticket_sale, CompletedTicketSale):
-            return ticket_sale
-
-        logger.warning(
-            f"Weird order state for uuid = {order_uuid}. Sumup order was accepted but we have the wrong order type"
-        )
-        return None
 
     @with_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
