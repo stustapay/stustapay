@@ -25,6 +25,7 @@ fun PayOutView(
     val payOutState by viewModel.payOutState.collectAsStateWithLifecycle()
     val showPayOutConfirm by viewModel.showPayOutConfirm.collectAsStateWithLifecycle()
     val completedPayOut by viewModel.completedPayOut.collectAsStateWithLifecycle()
+    val bookingActive by viewModel.bookingActive.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
 
@@ -81,7 +82,7 @@ fun PayOutView(
             amountConfig = AmountConfig.Money(
                 limit = payOutState.getMaxAmount(),
             ),
-            ready = config.hasConfig(),
+            ready = config.hasConfig() && !bookingActive,
             onPayout = { scope.launch { viewModel.requestPayOut() } },
         )
     }
