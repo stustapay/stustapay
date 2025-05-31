@@ -1,4 +1,6 @@
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from mako.lookup import TemplateLookup
 from weasyprint import CSS, HTML
@@ -8,6 +10,7 @@ from stustapay.core.schema.media import Blob
 asset_dir = Path(__file__).parent / "assets"
 
 template_lookup = TemplateLookup(directories=[str(asset_dir)])
+local_timezone = ZoneInfo("Europe/Berlin")
 
 
 def create_format_money(currency_symbol: str):
@@ -17,8 +20,8 @@ def create_format_money(currency_symbol: str):
     return format_money
 
 
-def format_datetime(value):
-    return value.strftime("%Y-%m-%d %H:%M:%S")
+def format_datetime(value: datetime):
+    return value.astimezone(local_timezone).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def format_percent(value):
