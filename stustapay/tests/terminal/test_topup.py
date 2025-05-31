@@ -58,6 +58,8 @@ async def test_topup_sumup_order_flow(
     login_supervised_user: LoginSupervisedUser,
     cashier: Cashier,
 ):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     new_topup = NewTopUp(
         uuid=uuid.uuid4(),
@@ -72,6 +74,8 @@ async def test_topup_sumup_order_flow(
     assert pending_topup.old_balance == START_BALANCE
     assert pending_topup.amount == 20
     assert pending_topup.new_balance == START_BALANCE + pending_topup.amount
+    await order_service.book_topup(token=terminal_token, new_topup=new_topup, pending=True)
+    MockSumUpApi.mock_amount(pending_topup.amount)
     completed_topup = await order_service.book_topup(token=terminal_token, new_topup=new_topup)
     assert completed_topup is not None
     assert completed_topup.uuid == new_topup.uuid

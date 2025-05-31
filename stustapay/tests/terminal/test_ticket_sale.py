@@ -260,6 +260,8 @@ async def test_ticket_flow_with_initial_topup_sumup(
     cashier: Cashier,
     create_random_user_tag: CreateRandomUserTag,
 ):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
     sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
@@ -277,6 +279,8 @@ async def test_ticket_flow_with_initial_topup_sumup(
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert 2 == pending_ticket.item_count
     assert sale_tickets.ticket.total_price == pending_ticket.total_price
+    MockSumUpApi.mock_amount(pending_ticket.total_price)
+    await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket, pending=True)
     completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert completed_ticket is not None
 
@@ -301,6 +305,8 @@ async def test_ticket_flow_with_user_defined_topup_sumup(
     cashier: Cashier,
     create_random_user_tag: CreateRandomUserTag,
 ):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
     sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
@@ -320,6 +326,8 @@ async def test_ticket_flow_with_user_defined_topup_sumup(
     pending_ticket = await order_service.check_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert 2 == pending_ticket.item_count
     assert sale_tickets.ticket.total_price + topup_amount == pending_ticket.total_price
+    MockSumUpApi.mock_amount(pending_ticket.total_price)
+    await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket, pending=True)
     completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert completed_ticket is not None
 
@@ -345,6 +353,8 @@ async def test_ticket_flow_with_ticket_voucher_and_topup(
     create_random_user_tag: CreateRandomUserTag,
     create_random_ticket_voucher: CreateRandomTicketVoucher,
 ):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
     sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
@@ -375,6 +385,8 @@ async def test_ticket_flow_with_ticket_voucher_and_topup(
     assert sale_tickets.ticket.total_price != 0.0  # ticket has a >0 price
     assert pending_ticket.total_price == topup_amount  # ticket is now free
 
+    MockSumUpApi.mock_amount(pending_ticket.total_price)
+    await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket, pending=True)
     completed_ticket = await order_service.book_ticket_sale(token=terminal_token, new_ticket_sale=new_ticket)
     assert completed_ticket is not None
 
