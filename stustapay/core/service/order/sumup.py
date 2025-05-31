@@ -56,18 +56,6 @@ class CreateCheckout(BaseModel):
     amount: float
 
 
-class PaymentStatus(enum.Enum):
-    not_found = "not_found"
-    pending = "pending"
-    failed = "failed"
-    successful = "successful"
-
-
-class ProcessedPendingOrder(BaseModel):
-    successful_order: CompletedTicketSale | CompletedTopUp | None = None
-    status: PaymentStatus
-
-
 def requires_sumup_online_topup_enabled(func):
     @wraps(func)
     async def wrapper(self, **kwargs):
@@ -85,6 +73,13 @@ def requires_sumup_online_topup_enabled(func):
         return await func(self, **kwargs)
 
     return wrapper
+
+
+class PaymentStatus(enum.Enum):
+    not_found = "not_found"
+    pending = "pending"
+    failed = "failed"
+    successful = "successful"
 
 
 class SumupService(Service[Config]):
@@ -162,7 +157,9 @@ class SumupService(Service[Config]):
         self.logger.error(f"Invalid payment type received: {pending_order.payment_type}")
         return PaymentStatus.not_found
 
-    async def process_pending_order(self, conn: Connection, pending_order: PendingOrder) -> ProcessedPendingOrder:
+    async def process_pending_order(
+        self, conn: Connection, pending_order: PendingOrder
+    ) -> CompletedTicketSale | CompletedTopUp | None:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
         sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
         sumup_status = await self._check_sumup_status(sumup_api, pending_order)
@@ -172,7 +169,7 @@ class SumupService(Service[Config]):
             await conn.execute(
                 "update pending_sumup_order set status = 'cancelled' where uuid = $1", pending_order.uuid
             )
-            return ProcessedPendingOrder(status=PaymentStatus.failed)
+            return None
         elif sumup_status == PaymentStatus.successful:
             self.logger.debug(f"Found a PAID sumup order with uuid = {pending_order.uuid}, starting order booking")
             node = await fetch_node(conn=conn, node_id=pending_order.node_id)
@@ -185,16 +182,16 @@ class SumupService(Service[Config]):
                 case PendingOrderType.topup:
                     topup = load_pending_topup(pending_order)
                     await self._process_topup(conn=conn, pending_order=pending_order, topup=topup, node=node, till=till)
-                    return ProcessedPendingOrder(successful_order=topup, status=PaymentStatus.successful)
+                    return topup
                 case PendingOrderType.ticket:
                     ticket_sale = load_pending_ticket_sale(pending_order)
                     await self._process_ticket_sale(
                         conn=conn, pending_order=pending_order, ticket_sale=ticket_sale, node=node, till=till
                     )
-                    return ProcessedPendingOrder(successful_order=ticket_sale, status=PaymentStatus.successful)
+                    return ticket_sale
                 case _:
                     self.logger.error(f"unknown pending order type: {pending_order.order_type}")
-                    return ProcessedPendingOrder(status=PaymentStatus.failed)
+                    return None
         elif sumup_status == PaymentStatus.not_found:
             self.logger.debug(f"Order {pending_order.uuid} not found in sumup")
 
@@ -206,7 +203,7 @@ class SumupService(Service[Config]):
                 "update pending_sumup_order set status = 'cancelled' where uuid = $1",
                 pending_order.uuid,
             )
-            return ProcessedPendingOrder(status=PaymentStatus.failed)
+            return None
 
         check_interval = min(
             self.config.core.sumup_max_check_interval,
@@ -218,7 +215,7 @@ class SumupService(Service[Config]):
             pending_order.uuid,
         )
 
-        return ProcessedPendingOrder(status=PaymentStatus.pending)
+        return None
 
     @with_db_transaction
     @requires_customer
