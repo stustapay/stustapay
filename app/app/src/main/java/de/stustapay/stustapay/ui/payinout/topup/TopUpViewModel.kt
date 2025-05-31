@@ -148,6 +148,9 @@ class TopUpViewModel @Inject constructor(
 
     /** called from the card payment button */
     suspend fun topUpWithCard(context: Activity, tag: NfcTag) {
+        // this can't be called twice since multiple button presses just open the tag scan popup
+        // the tag scan popup then only issues one success call
+
         _status.update { "Card TopUp in progress..." }
         // wake the soon-needed reader :)
         // TODO: move this even before the chip scan

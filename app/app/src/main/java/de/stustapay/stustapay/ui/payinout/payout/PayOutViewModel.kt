@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 
@@ -39,6 +41,11 @@ class PayOutViewModel @Inject constructor(
 
     private val _showPayOutConfirm = MutableStateFlow(false)
     val showPayOutConfirm = _showPayOutConfirm.asStateFlow()
+
+    // so only one booking can be submitted
+    private val _bookingActive = MutableStateFlow(false)
+    val bookingActive = _bookingActive.asStateFlow()
+    private val bookingActiveLock = Mutex()
 
     // configuration infos from backend
     val terminalLoginState = combine(
@@ -85,7 +92,17 @@ class PayOutViewModel @Inject constructor(
     suspend fun requestPayOut() {
         var showConfirm = true
         if (_payOutState.value.wasChanged()) {
-            showConfirm = checkPayOut()
+            bookingActiveLock.withLock {
+                if (_bookingActive.value == true) {
+                    return
+                }
+                _bookingActive.update { true }
+            }
+            try {
+                showConfirm = checkPayOut()
+            } finally {
+                _bookingActive.update { false }
+            }
         }
 
         if (showConfirm) {
@@ -98,7 +115,17 @@ class PayOutViewModel @Inject constructor(
         _showPayOutConfirm.update { false }
         _status.update { "processing payout..." }
 
-        bookPayOut()
+        bookingActiveLock.withLock {
+            if (_bookingActive.value == true) {
+                return
+            }
+            _bookingActive.update { true }
+        }
+        try {
+            bookPayOut()
+        } finally {
+            _bookingActive.update { false }
+        }
     }
 
     /** when the confirmation dialog is dismissed */

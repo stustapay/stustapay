@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import java.util.UUID
 import javax.inject.Inject
@@ -74,6 +76,11 @@ class TicketViewModel @Inject constructor(
     // when we finished a ticket sale
     private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
     val saleCompleted = _saleCompleted.asStateFlow()
+
+    // so only one order can be submitted
+    private val _bookingActive = MutableStateFlow(false)
+    val bookingActive = _bookingActive.asStateFlow()
+    private val bookingActiveLock = Mutex()
 
     // configuration infos from backend
     val terminalLoginState = terminalConfigRepository.terminalConfigState.mapState(
@@ -295,8 +302,22 @@ class TicketViewModel @Inject constructor(
         }
     }
 
-    /** let's start the payment process. context needed for sumup. */
     suspend fun processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
+        bookingActiveLock.withLock {
+            if (_bookingActive.value == true) {
+                return
+            }
+            _bookingActive.update { true }
+        }
+        try {
+            _processSale(paymentMethod, context)
+        } finally {
+            _bookingActive.update { false }
+        }
+    }
+
+    /** let's start the payment process. context needed for sumup. */
+    suspend fun _processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
         val checked = _pendingTicketSale.value
 
         if (checked == null) {
