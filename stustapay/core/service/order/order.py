@@ -650,7 +650,7 @@ class OrderService(Service[Config]):
             order.new_voucher_balance = customer_account.vouchers - voucher_usage.used_vouchers
             order.line_items.extend(voucher_usage.additional_line_items)
 
-            if customer_account.balance < order.total_price:
+            if is_balance_negative(customer_account.balance - order.total_price):
                 raise NotEnoughFundsException(needed_fund=order.total_price, available_fund=customer_account.balance)
             order.new_balance = customer_account.balance - order.total_price
 
