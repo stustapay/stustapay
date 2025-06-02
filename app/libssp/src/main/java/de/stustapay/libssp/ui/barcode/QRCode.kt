@@ -13,7 +13,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 
 @Composable
 fun QRCode(data: String = "https://www.youtube.com/watch?v=XfELJU1mRMg") {
-    val hints = hashMapOf<EncodeHintType, Int>().also { it[EncodeHintType.MARGIN] = 1 }
+    val hints = hashMapOf<EncodeHintType, Int>().also { it[EncodeHintType.MARGIN] = 4 }
     val qrCodeRaw = QRCodeWriter().encode(
         data, BarcodeFormat.QR_CODE, 512, 512, hints
     )
