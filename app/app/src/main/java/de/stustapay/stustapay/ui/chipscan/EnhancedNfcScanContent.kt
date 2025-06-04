@@ -25,8 +25,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.runtime.Composable
@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -152,7 +153,7 @@ fun EnhancedNfcScanContent(
                         // Multiple arrows pointing left
                         repeat(3) { index ->
                             Icon(
-                                imageVector = Icons.Filled.ArrowForward,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Arrow",
                                 modifier = Modifier
                                     .size(arrowIconSize)

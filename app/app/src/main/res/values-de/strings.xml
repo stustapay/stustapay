@@ -101,6 +101,16 @@
     <string name="error">Fehler</string>
     <string name="pay_cash">🪙\nBar</string>
     <string name="pay_card">💳\nKarte</string>
+    <string name="pay_card_topup">💳\nScannen &amp; Bezahlen</string>
+    <string name="topup_scan_instruction">Chip auf das Lesegerät legen</string>
+    <string name="topup_payment_instruction">Zahlung wird über Kartenterminal abgewickelt</string>
+    <string name="topup_step_amount">Schritt 1: Betrag eingeben</string>
+    <string name="topup_step_scan">Schritt 2: Chip scannen</string>
+    <string name="topup_step_payment">Schritt 3: Kartenzahlung</string>
+    <string name="topup_ready_to_scan">Bereit zum Scannen Ihres Chips</string>
+    <string name="topup_please_wait">Bitte warten, Zahlung wird verarbeitet...</string>
+    <string name="topup_enter_amount">Bitte gib den gewünschten Aufladebetrag ein</string>
+    <string name="topup_press_scan_pay">Nun Scannen und bezahlen drücken</string>
     <string name="arrow_back">← Zurück</string>
     <string name="check_ok">✓ OK</string>
     <string name="scan_ticket">🎫 Ticket scannen</string>
@@ -158,4 +168,7 @@
     <string name="book_order">Buchen ✓</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="pay_no_payment_method_configured">No payment method configured</string>
+    <string name="nfc_scan_description">Halte Dein Bändchen / Cash-Karte an das Lesegerät.\nNicht die EC-Karte!</string>
+    <string name="nfc_clarification_step1">Bändchen vorhalten</string>
+    <string name="nfc_clarification_step2">Dann am EC-Terminal bezahlen</string>
 </resources>

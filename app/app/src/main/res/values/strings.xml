@@ -102,6 +102,16 @@
     <string name="error">Error</string>
     <string name="pay_cash">🪙\nCash</string>
     <string name="pay_card">💳\nCard</string>
+    <string name="pay_card_topup">💳\nScan &amp; Pay</string>
+    <string name="topup_scan_instruction">Place your chip on the reader</string>
+    <string name="topup_payment_instruction">Payment will be processed via card terminal</string>
+    <string name="topup_step_amount">Step 1: Enter Amount</string>
+    <string name="topup_step_scan">Step 2: Scan Chip</string>
+    <string name="topup_step_payment">Step 3: Card Payment</string>
+    <string name="topup_ready_to_scan">Ready to scan your chip</string>
+    <string name="topup_please_wait">Please wait while payment is processing...</string>
+    <string name="topup_enter_amount">Enter the desired top-up amount</string>
+    <string name="topup_press_scan_pay">Now press Scan &amp; Pay</string>
     <string name="arrow_back">← Back</string>
     <string name="check_ok">✓ OK</string>
     <string name="scan_ticket">🎫 Scan Ticket</string>
@@ -160,4 +170,7 @@
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="pay_no_payment_method_configured">No payment method configured</string>
     <string name="user_role_none">No user active</string>
+    <string name="nfc_scan_description">Hold your NFC wristband or NFC card to the reader.\nNot your credit card!</string>
+    <string name="nfc_clarification_step1">Hold your wristband</string>
+    <string name="nfc_clarification_step2">Then pay at EC terminal</string>
 </resources>

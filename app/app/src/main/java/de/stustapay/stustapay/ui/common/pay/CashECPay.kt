@@ -134,6 +134,7 @@ fun CashECSelection(
                     val scanState = rememberNfcScanDialogState()
                     NfcScanDialog(
                         state = scanState,
+                        showClarification = config.hasOnlyTopUpPrivilege(),
                         onDismiss = {
                             // Reset customer display when scan dialog is dismissed
                             viewModel.resetCustomerDisplay()
@@ -183,9 +184,13 @@ fun CashECSelection(
                         },
                         enabled = ready,
                     ) {
-                        // unicode "Credit Card"
+                        // Use different text for self-service top-up users
                         Text(
-                            stringResource(R.string.pay_card),
+                            if (config.hasOnlyTopUpPrivilege()) {
+                                stringResource(R.string.pay_card_topup)
+                            } else {
+                                stringResource(R.string.pay_card)
+                            },
                             textAlign = TextAlign.Center,
                             style = LargeButtonStyle,
                         )
