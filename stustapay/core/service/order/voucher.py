@@ -54,7 +54,7 @@ class VoucherService(Service[Config]):
             if current_line_item.tax_name not in additional_line_items_by_tax:
                 additional_line_items_by_tax[current_line_item.tax_name] = PendingLineItem(
                     product=discount_product,
-                    tax_rate_id=discount_product.tax_rate_id,
+                    tax_rate_id=current_line_item.tax_rate_id,
                     tax_rate=current_line_item.tax_rate,
                     tax_name=current_line_item.tax_name,
                     product_price=-price_deduction,

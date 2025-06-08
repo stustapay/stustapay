@@ -116,7 +116,15 @@ class ProductService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user()
-    async def list_products(self, *, conn: Connection, node: Node) -> list[Product]:
+    async def list_products(
+        self, *, conn: Connection, node: Node, include_tickets_and_special_products=False
+    ) -> list[Product]:
+        if include_tickets_and_special_products:
+            return await conn.fetch_many(
+                Product,
+                "select * from product_with_tax_and_restrictions where node_id = any($1) order by name",
+                node.ids_to_event_node,
+            )
         return await conn.fetch_many(
             Product,
             "select * from product_with_tax_and_restrictions where node_id = any($1) and type = 'user_defined' "

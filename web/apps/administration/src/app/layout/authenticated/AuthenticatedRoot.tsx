@@ -38,10 +38,12 @@ const BreadcrumbHeader: React.FC = () => {
   const { currentNode } = useCurrentNode();
 
   const nodes = React.useMemo(() => {
-    if (currentNode.parent == currentNode.id) {
+    const idxOfUserRoot = currentNode.parent_ids.indexOf(tree.id);
+    if (currentNode.parent == currentNode.id || idxOfUserRoot < 0) {
       return [currentNode];
     }
-    return [...currentNode.parent_ids.map((nodeId) => findNode(nodeId, tree)), currentNode];
+    const idsToUserRoot = currentNode.parent_ids.slice(idxOfUserRoot);
+    return [...idsToUserRoot.map((nodeId) => findNode(nodeId, tree)), currentNode];
   }, [currentNode]);
 
   return (

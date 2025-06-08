@@ -13,8 +13,10 @@ router = APIRouter(
 
 
 @router.get("", response_model=NormalizedList[Product, int])
-async def list_products(token: CurrentAuthToken, product_service: ContextProductService, node_id: int):
-    return normalize_list(await product_service.list_products(token=token, node_id=node_id))
+async def list_products(token: CurrentAuthToken, product_service: ContextProductService, node_id: int, show_all=False):
+    return normalize_list(
+        await product_service.list_products(token=token, node_id=node_id, include_tickets_and_special_products=show_all)
+    )
 
 
 @router.post("", response_model=Product)
