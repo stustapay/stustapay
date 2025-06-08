@@ -179,7 +179,7 @@ class CustomerService(Service[Config]):
 
         # check iban
         try:
-            iban = IBAN(customer_bank.iban, validate_bban=True)
+            iban = IBAN(customer_bank.iban.strip(), validate_bban=True)
         except ValueError as exc:
             raise InvalidArgument("Provided IBAN is not valid") from exc
 
