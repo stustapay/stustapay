@@ -50,7 +50,7 @@ export const PayoutInfo: React.FC = () => {
           message: t("payout.ibanNotValid"),
         });
       }
-      if (!config.allowed_country_codes?.includes(val.substring(0, 2))) {
+      if (!config.allowed_country_codes?.includes(val.trim().substring(0, 2))) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: t("payout.countryCodeNotSupported"),
