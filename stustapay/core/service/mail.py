@@ -16,7 +16,7 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.mail import Mail
+from stustapay.core.schema.mail import Mail, MailID
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
 
@@ -76,13 +76,12 @@ class MailService(Service[Config]):
         self.logger.debug(f"Added mail to database buffer for {to_addr}")
 
     @with_db_transaction(read_only=True)
-    async def _fetch_mail(self, *, conn: Connection) -> list[Mail]:
-        # fetch all unsent mails from nodes with email enabled
-
+    async def _fetch_due_mail_ids(self, *, conn: Connection) -> list[MailID]:
+        # fetch all unsent mail ids from nodes with email enabled
         return await conn.fetch_many(
-            Mail,
+            MailID,
             """
-            select *
+            select id
             from mail_with_attachments
             where scheduled_send_date <= $1 and send_date is null
             """,
@@ -94,9 +93,9 @@ class MailService(Service[Config]):
         while True:
             try:
                 await asyncio.sleep(self.MAIL_SEND_CHECK_INTERVAL.seconds)
-                mails = await self._fetch_mail()
-                for mail in mails:
-                    await self._send_mail(mail=mail)
+                mail_ids = await self._fetch_due_mail_ids()
+                for mail_id in mail_ids:
+                    await self._send_mail(mail_id=mail_id)
                     await asyncio.sleep(self.MAIL_SEND_INTERVAL.seconds)
             except Exception as e:
                 self.logger.exception(f"Failed to send mail with error {e}")
@@ -106,8 +105,21 @@ class MailService(Service[Config]):
         self,
         *,
         conn: Connection,
-        mail: Mail,
+        mail_id: MailID,
     ) -> None:
+        mail = await conn.fetch_one(
+            Mail,
+            """
+            select *
+            from mail_with_attachments
+            where id = $1 and send_date is null
+            """,
+            mail_id.id,
+        )
+        if mail is None:
+            self.logger.info(f"Mail with id {mail_id.id} not found or already sent.")
+            return
+
         self.logger.debug(f"Sending mail to {mail.to_addr}")
         res_config = await fetch_restricted_event_settings_for_node(conn, mail.node_id)
         smtp_config = res_config.smtp_config

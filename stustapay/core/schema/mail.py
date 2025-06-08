@@ -21,3 +21,7 @@ class Mail(BaseModel):
     send_date: datetime | None
     scheduled_send_date: datetime
     attachments: list[MailAttachment]
+
+
+class MailID(BaseModel):
+    id: int
