@@ -63,7 +63,7 @@ export const translations = {
     infoPayoutInitiated:
       "You have already provided your bank information and your remaining balance will be payed out in the next manual triggered payout batch (usually within a month). However, you can still edit your bank information or donation choice. Thank you for your patience.",
     infoPayoutScheduled:
-      "You are scheduled for our next manual triggered payout, thus you cannot change your bank information anymore. Hold on tide, we will notify you once we have initiated the bank transfer from our side.",
+      "You are scheduled for our next manual triggered payout, thus you cannot change your bank information anymore. Hold on tight, we will notify you once we have initiated the bank transfer from our side.",
     infoPayoutCompleted:
       "Thank you for our patience, we have initiated the bank transfer from our side on {{payout_date}}. You might have already received the funds, otherwise they should arrive within the next few days. You can see the transfer details in the transaction list on the main page.",
     ibanNotValid: "IBAN is not valid",

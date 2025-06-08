@@ -83,7 +83,9 @@ class MailService(Service[Config]):
             """
             select id
             from mail_with_attachments
-            where scheduled_send_date <= $1 and send_date is null
+                node n join event e on e.id = n.event_id
+            where scheduled_send_date <= $1 and send_date is null and n.id = $2 and e.email_enabled
+            order by scheduled_send_date asc
             """,
             datetime.now(),
         )
