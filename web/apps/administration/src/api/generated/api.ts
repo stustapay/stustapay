@@ -39,6 +39,7 @@ const injectedRtkApi = api
           url: `/products`,
           params: {
             node_id: queryArg.nodeId,
+            show_all: queryArg.showAll,
           },
         }),
         providesTags: ["products"],
@@ -1417,6 +1418,7 @@ export { injectedRtkApi as api };
 export type ListProductsApiResponse = /** status 200 Successful Response */ NormalizedListProductInt;
 export type ListProductsApiArg = {
   nodeId: number;
+  showAll?: any;
 };
 export type CreateProductApiResponse = /** status 200 Successful Response */ Product;
 export type CreateProductApiArg = {

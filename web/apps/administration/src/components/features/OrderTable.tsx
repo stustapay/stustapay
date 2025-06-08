@@ -64,11 +64,17 @@ export const OrderTable: React.FC<OrderListProps> = ({
     {
       field: "id",
       headerName: t("order.id"),
-      renderCell: (params) => (
-        <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
-          {params.row.id}
-        </Link>
-      ),
+      renderCell: ({ row }) => {
+        let nodeId = null;
+        if (row.till_id != null) {
+          nodeId = selectTillById(tills, row.till_id)?.node_id;
+        }
+        return (
+          <Link component={RouterLink} to={OrderRoutes.detail(row.id, nodeId)}>
+            {row.id}
+          </Link>
+        );
+      },
       width: 100,
     },
     {

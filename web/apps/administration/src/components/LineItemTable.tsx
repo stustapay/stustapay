@@ -16,7 +16,10 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: products, isLoading: isProductsLoading } = useListProductsQuery({ nodeId: currentNode.id });
+  const { data: products, isLoading: isProductsLoading } = useListProductsQuery({
+    nodeId: currentNode.id,
+    showAll: true,
+  });
   const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
 
   if (isProductsLoading || isTaxRatesLoading) {
@@ -32,7 +35,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       return "";
     }
 
-    return <RouterLink to={ProductRoutes.detail(product.id)}>{product.name}</RouterLink>;
+    return <RouterLink to={ProductRoutes.detail(product.id, product.node_id)}>{product.name}</RouterLink>;
   };
 
   const renderTaxRate = (id: number, rate: number) => {
