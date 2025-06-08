@@ -28,9 +28,9 @@ import { Link as RouterLink } from "react-router-dom";
 
 const normalizeOrderPrice = (order: OrderWithBon) => {
   if (order.order_type !== "top_up") {
-    return -order.total_price;
+    return -(order.total_price).toFixed(2);
   }
-  return order.total_price;
+  return +(order.total_price).toFixed(2);
 };
 
 export const OrderList: React.FC = () => {
@@ -72,7 +72,7 @@ export const OrderList: React.FC = () => {
           textAlign: "right",
           flexGrow: 1,
           marginRight: "0.5em",
-          color: price >= 0 ? "green" : "inherit",
+          color: price > 0 ? "green" : "inherit",
         }}
       >
         {formatCurrency(price)}
