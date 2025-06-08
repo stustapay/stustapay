@@ -207,8 +207,8 @@ class CustomerService(Service[Config]):
             "where customer_account_id = $1",
             current_customer.id,
             iban.compact,
-            customer_bank.account_name,
-            customer_bank.email,
+            customer_bank.account_name.strip(),
+            customer_bank.email.strip(),
             round(customer_bank.donation, 2),
         )
         # get updated customer
