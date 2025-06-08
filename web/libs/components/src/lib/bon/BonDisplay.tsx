@@ -278,14 +278,13 @@ const SignatureDetails: React.FC<{ bon: IBon }> = ({ bon: { order } }) => {
 
       <Box display="flex" justifyContent="center" alignItems="center" marginTop={3}>
         <Box maxWidth="400px">
-          <div className={styles.qrCodeContainer}>
-            <QRCode
-              size={256}
-              style={{ height: "auto", width: "100%" }}
-              value={order.tse_qr_code_text}
-              viewBox={`0 0 256 256`}
-            />
-          </div>
+          <QRCode
+            size={256}
+            style={{ height: "auto", width: "100%" }}
+            className={styles.qrCode}
+            value={order.tse_qr_code_text}
+            viewBox={`0 0 256 256`}
+          />
         </Box>
       </Box>
     </Paper>
