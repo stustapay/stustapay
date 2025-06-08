@@ -130,6 +130,16 @@ class MailService(Service[Config]):
                 f"The mail was not send because event with node id {mail.node_id} has mail sending deactivated"
             )
             return
+        # set mail send to avoid race conditions
+        await conn.execute(
+            """
+            update mails
+            set send_date = $1
+            where id = $2
+            """,
+            datetime.now(),
+            mail.id,
+        )
 
         message = MIMEMultipart()
         message["Subject"] = mail.subject
@@ -165,14 +175,12 @@ class MailService(Service[Config]):
             self.logger.debug(f"Mail sent to {mail.to_addr}")
         except Exception as e:
             self.logger.exception(f"Failed to send mail to {mail.to_addr} with error {e}")
-            return
-
-        await conn.execute(
-            """
-            update mails
-            set send_date = $1
-            where id = $2
-            """,
-            datetime.now(),
-            mail.id,
-        )
+            # undo mail send state
+            await conn.execute(
+                """
+                update mails
+                set send_date = null
+                where id = $1
+                """,
+                mail.id,
+            )
