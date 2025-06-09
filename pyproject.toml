@@ -37,7 +37,7 @@ dependencies = [
 stustapay = "stustapay.cli.main:main"
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-asyncio", "pytest-cov"]
+test = ["pytest==8.4.0", "pytest-asyncio==1.0.0", "pytest-cov==6.1.1"]
 dev = [
     "pre-commit",
     "ruff==0.9.9",
@@ -106,6 +106,8 @@ source = ["stustapay"]
 asyncio_mode = "auto"
 minversion = "6.0"
 testpaths = ["stustapay.tests"]
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 
 [tool.bumpversion]
 current_version = "0.1.0"
