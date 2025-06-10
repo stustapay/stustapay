@@ -3,6 +3,7 @@
 # pylint: disable=missing-kwoa
 import asyncio
 import logging
+import math
 from datetime import datetime, timedelta
 from email import encoders
 from email.mime.base import MIMEBase
@@ -23,6 +24,8 @@ from stustapay.core.service.tree.common import fetch_restricted_event_settings_f
 class MailService(Service[Config]):
     MAIL_SEND_CHECK_INTERVAL = timedelta(seconds=1)
     MAIL_SEND_INTERVAL = timedelta(seconds=0.05)
+    MAIL_MAX_RETRIES = 10
+    MAIL_BACKOFF_FACTOR = math.e / 2.0 - 0.1  # empirically proven to be good by Liew et al. 2008
 
     def __init__(self, db_pool: asyncpg.Pool, config: Config):
         super().__init__(db_pool, config)
@@ -81,13 +84,14 @@ class MailService(Service[Config]):
         return await conn.fetch_many(
             MailID,
             """
-            select id
-            from mail_with_attachments
-                node n join event e on e.id = n.event_id
-            where scheduled_send_date <= $1 and send_date is null and n.id = $2 and e.email_enabled
-            order by scheduled_send_date asc
+            select m.id
+            from mail_with_attachments m
+                join node n on n.id = m.node_id join event e on e.id = n.event_id
+            where m.scheduled_send_date <= $1 and m.send_date is null and e.email_enabled and m.num_retries < $2
+            order by m.scheduled_send_date asc
             """,
             datetime.now(),
+            self.MAIL_MAX_RETRIES,
         )
 
     async def run_mail_service(self):
@@ -179,8 +183,9 @@ class MailService(Service[Config]):
             await conn.execute(
                 """
                 update mails
-                set send_date = null
+                set send_date = null, num_retries = num_retries + 1, scheduled_send_date = $2
                 where id = $1
                 """,
                 mail.id,
+                datetime.now() + timedelta(hours=math.pow(self.MAIL_BACKOFF_FACTOR, mail.num_retries) - 1),
             )

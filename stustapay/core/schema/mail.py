@@ -21,6 +21,7 @@ class Mail(BaseModel):
     send_date: datetime | None
     scheduled_send_date: datetime
     attachments: list[MailAttachment]
+    num_retries: int
 
 
 class MailID(BaseModel):
