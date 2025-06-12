@@ -321,6 +321,8 @@ class PayoutService(Service[Config]):
         for payout in payouts:
             if payout.email is None:
                 continue
+            payout.amount = round(payout.amount, 2)
+            payout.donation = round(payout.donation, 2)
             assert res_config.payout_done_message is not None
             await mail_service.send_mail(
                 subject=res_config.payout_done_subject,
