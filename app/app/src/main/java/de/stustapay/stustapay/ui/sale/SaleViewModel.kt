@@ -160,7 +160,7 @@ class SaleViewModel @Inject constructor(
 
         when (scanTarget.value) {
             ScanTarget.CheckSale -> {
-                checkSale()
+                checkSale(paymentMethod = PaymentMethod.tag)
             }
 
             ScanTarget.None -> {
@@ -190,7 +190,7 @@ class SaleViewModel @Inject constructor(
         _navState.update { SalePage.ProductSelect }
     }
 
-    suspend fun checkSale() {
+    suspend fun checkSale(paymentMethod: PaymentMethod) {
         // important to check for the list entries
         // and not fold them and check if sum == 0
         // because one can have negative returnable items!
@@ -200,7 +200,9 @@ class SaleViewModel @Inject constructor(
         }
 
         val tag = _saleStatus.value.tag
-        if (tag == null) {
+        if (paymentMethod == PaymentMethod.tag && tag == null) {
+            // open tag scanner, this updates the sale status with a tag.
+
             _status.update { "Scanning tag..." }
             scanTarget.update { ScanTarget.CheckSale }
             _enableScan.update { true }
@@ -211,79 +213,7 @@ class SaleViewModel @Inject constructor(
 
         // check if the sale is nice and well
         val response = saleRepository.checkSale(
-            _saleStatus.value.getNewSale(tag)
-        )
-
-        when (response) {
-            is Response.OK -> {
-                _saleStatus.update { sale ->
-                    val newSale = sale.copy()
-                    newSale.updateWithPendingSale(response.data)
-                    newSale
-                }
-                _status.update { "Order validated!" }
-                _navState.update { SalePage.Confirm }
-            }
-
-            is Response.Error.Service -> {
-                // maybe only clear tag for some errors.
-                clearScannedTag()
-                _error.update { response.msg() }
-                _status.update { response.msg() }
-            }
-
-            is Response.Error -> {
-                _status.update { response.msg() }
-            }
-        }
-    }
-
-    suspend fun checkSaleCash() {
-        if (_saleStatus.value.buttonSelection.isEmpty()) {
-            _status.update { "Nothing ordered!" }
-            return
-        }
-
-        _status.update { "Checking order..." }
-
-        val response = saleRepository.checkSale(
-            _saleStatus.value.getNewSale(method = PaymentMethod.cash)
-        )
-
-        when (response) {
-            is Response.OK -> {
-                _saleStatus.update { sale ->
-                    val newSale = sale.copy()
-                    newSale.updateWithPendingSale(response.data)
-                    newSale
-                }
-                _status.update { "Order validated!" }
-                _navState.update { SalePage.Confirm }
-            }
-
-            is Response.Error.Service -> {
-                // maybe only clear tag for some errors.
-                clearScannedTag()
-                _error.update { response.msg() }
-                _status.update { response.msg() }
-            }
-
-            is Response.Error -> {
-                _status.update { response.msg() }
-            }
-        }
-    }
-
-    suspend fun checkSaleCard() {
-        if (_saleStatus.value.buttonSelection.isEmpty()) {
-            _status.update { "Nothing ordered!" }
-            return
-        }
-
-        _status.update { "Checking order..." }
-
-        val response = saleRepository.checkSale(
-            _saleStatus.value.getNewSale(method = PaymentMethod.sumup)
+            _saleStatus.value.getNewSale(tag = tag, method = paymentMethod)
         )
 
         when (response) {

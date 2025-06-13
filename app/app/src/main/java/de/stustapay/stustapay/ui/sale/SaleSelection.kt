@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.sale
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -8,10 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.api.models.PaymentMethod
+import de.stustapay.stustapay.ui.common.StatusText
+import de.stustapay.stustapay.ui.common.pay.PaymentAction
+import de.stustapay.stustapay.ui.common.pay.PaymentVariant
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
@@ -100,42 +101,61 @@ fun SaleSelection(
                 }
             }
 
+            // TODO: directly get a list from TerminalTillConfig (#513)
+            var paymentActions = mutableListOf<PaymentAction>()
+            if (config is SaleConfig.Ready) {
+                if (config.till.enableSspPayment) {
+                    paymentActions.add(PaymentAction(method = PaymentVariant.ssp, action = {
+                        scope.launch {
+                            viewModel.checkSale(PaymentMethod.tag)
+                        }
+                    }, enabled = true))
+                }
+                if (config.till.enableCashPayment) {
+                    val onlyFree = totalPrice == 0.0 && saleStatus.buttonSelection.isNotEmpty()
+                    paymentActions.add(
+                        PaymentAction(
+                            method = if (onlyFree)
+                                PaymentVariant.free else
+                                PaymentVariant.cash,
+                            action = {
+                                scope.launch {
+                                    // TODO: use payment method "none" here when onlyFree
+                                    viewModel.checkSale(PaymentMethod.cash)
+                                }
+                            },
+                            // has cash register
+                            enabled = config.till.cashRegisterId != null || onlyFree
+                        )
+                    )
+                }
+                if (config.till.enableCardPayment) {
+                    paymentActions.add(
+                        PaymentAction(
+                            method = PaymentVariant.card,
+                            action = {
+                                scope.launch {
+                                    viewModel.checkSale(PaymentMethod.sumup)
+                                }
+                            },
+                            enabled = totalPrice > 0.0
+                        )
+                    )
+                }
+            }
+
             ProductSelectionBottomBar(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
                     .padding(bottom = 5.dp),
                 status = {
-                    Text(
-                        text = status,
-                        modifier = Modifier.fillMaxWidth(),
-                        fontSize = 18.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
+                    StatusText(status = status)
                 },
                 ready = config is SaleConfig.Ready,
-                cashierHasRegister = config is SaleConfig.Ready && config.till.cashRegisterId != null,
-                amountIsPositive = totalPrice > 0.0f,
-                sspEnabled = config is SaleConfig.Ready && config.till.enableSspPayment,
-                cashEnabled = config is SaleConfig.Ready && config.till.enableCashPayment,
-                cardEnabled = config is SaleConfig.Ready && config.till.enableCardPayment,
+                paymentActions = paymentActions,
                 onAbort = {
                     scope.launch {
                         viewModel.clearSale()
-                    }
-                },
-                onSubmitSsp = {
-                    scope.launch {
-                        viewModel.checkSale()
-                    }
-                },
-                onSubmitCash = {
-                    scope.launch {
-                        viewModel.checkSaleCash()
-                    }
-                },
-                onSubmitCard = {
-                    scope.launch {
-                        viewModel.checkSaleCard()
                     }
                 },
                 price = totalPrice

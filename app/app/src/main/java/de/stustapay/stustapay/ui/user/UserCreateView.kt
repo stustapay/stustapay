@@ -144,8 +144,10 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     } else {
         nfcScanState.close()
 
+        val scrollState = rememberScrollState()
+
         Scaffold(content = { padding ->
-            Box(modifier = Modifier.padding(padding)) {
+            Box(modifier = Modifier.padding(padding).verticalScroll(state=scrollState)) {
                 val scroll = rememberScrollState()
                 Column(
                     modifier = Modifier

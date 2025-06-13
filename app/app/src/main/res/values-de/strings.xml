@@ -108,6 +108,7 @@
     <string name="sale_paid_to_user_q">Geld an Kunde gegeben?</string>
     <string name="sale_pay_card">💳\nKarte</string>
     <string name="sale_pay_cash">🪙\nBar</string>
+    <string name="sale_pay_free">🪙\nBuchen</string>
     <string name="sale_pay_n_vouchers">mit %s Gutscheinen</string>
     <string name="sale_pay_stustapay">🛜\nSSP</string>
     <string name="sale_payout">Auszahlung</string>
