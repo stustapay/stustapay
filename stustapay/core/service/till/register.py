@@ -393,7 +393,7 @@ class TillRegisterService(Service[Config]):
             "select u.cash_register_id, t.id as till_id, cr.account_id as cash_register_account_id, cr.balance as cash_register_balance "
             "from user_with_tag u "
             "join terminal tm on tm.active_user_id = u.id "
-            "join till t on tm.id = t.terminal_id "
+            "join till t on tm.id = t.terminal_id and t.active_cash_register_id = u.cash_register_id "
             "join cash_register_with_balance cr on u.cash_register_id = cr.id "
             "where u.user_tag_uid = $1 and u.node_id = any($2)",
             cashier_tag_uid,
