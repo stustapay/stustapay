@@ -1173,7 +1173,7 @@ class OrderService(Service[Config]):
                 )
 
             # Calculate the new balance after payout
-            new_balance = customer_account.balance - payout_amount
+            new_balance = customer_account.balance - abs(payout_amount)
 
             # Get the appropriate balance limit based on VIP status
             max_positive_balance = node.event.vip_max_account_balance if customer_account.is_vip else node.event.max_account_balance
