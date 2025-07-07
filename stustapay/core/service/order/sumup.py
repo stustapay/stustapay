@@ -298,13 +298,14 @@ class SumupService(Service[Config]):
         if amount <= 0:
             raise InvalidArgument("Must top up more than 0€")
 
-        max_account_balance = event_settings.max_account_balance
+        # Get the appropriate balance limit based on VIP status
+        max_limit = event_settings.vip_max_account_balance if current_customer.is_vip else event_settings.max_account_balance
         old_balance = current_customer.balance
         new_balance = current_customer.balance + amount
         if amount != int(amount):
             raise InvalidArgument("Cent amounts are not allowed")
-        if new_balance > max_account_balance:
-            raise InvalidArgument(f"Resulting balance would be more than {max_account_balance}€")
+        if new_balance > max_limit:
+            raise InvalidArgument(f"Resulting balance would be more than {max_limit}€")
 
         order_uuid = uuid.uuid4()
 
