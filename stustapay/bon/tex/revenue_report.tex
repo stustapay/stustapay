@@ -80,33 +80,28 @@
         \fancyhead{} % clear all header fields
         \renewcommand{\headrulewidth}{0pt}
     }
-    \fancyfoot[C]{\includegraphics[width=3cm]{logo} \\\textcolor{textcolor}Seite \thepage/\pageref*{LastPage}}
+    \fancyfoot[C]{\textcolor{textcolor}Seite \thepage/\pageref*{LastPage}}
 
 
-    \noindent
-    \makebox[17cm]{
-    \vspace{-35mm}
-    \includegraphics[width=21cm,trim={15.5cm 0 10.15cm 0},clip]{stustaculum24_wristband.pdf}
-    }
-    \vspace{1em}
+
 
     \begin{center}
         \LARGE\textsf{TeamFestlichPay} \\
         \Huge{Umsatzbericht} \\
-        \LARGE\textsf{StuStaCulum 2024}
+        \LARGE\textsf{\VAR[config.title|latex]}
     \end{center}
     \vspace{2em}
 
     % Addresse und Steuer ID
-    \begin{flushright}
-        \VAR[config.issuer|latex] \\
-        \VAR[config.address.strip()|latex] \\
-        USt-IdNr. \VAR[config.ust_id|latex] \\
-    \end{flushright}
+    %\begin{flushright}
+    %    \VAR[config.issuer|latex] \\
+    %    \VAR[config.address.strip()|latex] \\
+    %    USt-IdNr. \VAR[config.ust_id|latex] \\
+    %\end{flushright}
 
     \noindent
     \VAR[node.name|latex] \\
-    \VAR[node.description|latex] \\
+    %\VAR[node.description|latex] \\
 
     \vspace{2em}
 
@@ -121,8 +116,8 @@
         Beginn                             & \VAR[from_time|datetime] \\
         Letzter berücksichtigter Zeitpunkt & \VAR[to_time|datetime] \\
         Gesamtumsatz                       & \VAR[total_revenue|money] \\
-        Gebühren                           & \VAR[fees|money] (\VAR[fees_percent|percent]) \\
-        Auszahlung nach Gebühren           & \VAR[revenue_minus_fees|money] \\
+        %Gebühren                           & \VAR[fees|money] (\VAR[fees_percent|percent]) \\
+        %Auszahlung nach Gebühren           & \VAR[revenue_minus_fees|money] \\
     \end{tabular*}
     }
 
@@ -137,10 +132,12 @@
     \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
     \rowcolors{2}{}{bgcolor!80}
     \begin{tabularx}{\textwidth}{ R R R R R }
-        \textbf{Datum} & \textbf{Gesamtumsatz} & \textbf{Gebühren} & \textbf{Auszahlung} \\
+        %\textbf{Datum} & \textbf{Gesamtumsatz} & \textbf{Gebühren} & \textbf{Auszahlung} \\
+        \textbf{Datum} & \textbf{Gesamtumsatz} \\
         \hline
         \BLOCK[ for daily in daily_revenue_stats ]
-        \VAR[daily.day] & \VAR[daily.revenue|money] & \VAR[daily.fees|money] & \VAR[daily.revenue_minus_fees|money] \\
+        %\VAR[daily.day] & \VAR[daily.revenue|money] & \VAR[daily.fees|money] & \VAR[daily.revenue_minus_fees|money] \\
+        \VAR[daily.day] & \VAR[daily.revenue|money] \\
         \BLOCK[endfor]
     \end{tabularx}
 
@@ -162,13 +159,13 @@
 
     \begin{center}
     \begin{longtable}{lllll}
-    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline 
+    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} %& \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline 
     \endfirsthead
     
     \hline
     \multicolumn{5}{l}
     {{... Fortsetzung der vorherigen Seite}} \\
-    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} & \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
+    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} %& \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
     \endhead
     
     \hline \multicolumn{5}{r}{{Fortsetzung auf der nächsten Seite ...}} \\ \hline
@@ -177,7 +174,8 @@
     \hline \hline
     \endlastfoot
         \BLOCK[ for order in orders ]
-        \VAR[order.booked_at|datetime] & \VAR["{:010}".format(order.id)] & \VAR[order.total_price|money] & \VAR[order.fees|money] & \VAR[order.total_price_minus_fees|money] \\
+        %\VAR[order.booked_at|datetime] & \VAR["{:010}".format(order.id)] & \VAR[order.total_price|money] & \VAR[order.fees|money] & \VAR[order.total_price_minus_fees|money] \\
+        \VAR[order.booked_at|datetime] & \VAR["{:010}".format(order.id)] & \VAR[order.total_price|money] \\
         \BLOCK[endfor]
     \end{longtable}
     \end{center}

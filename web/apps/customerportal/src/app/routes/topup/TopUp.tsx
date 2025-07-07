@@ -227,6 +227,11 @@ export const TopUp: React.FC = () => {
         // Start the payment status check process
         checkPaymentStatus();
       }
+
+      // Handle 3D Secure authentication - just wait for completion
+      if (type === "auth-screen") {
+        return;
+      }
     };
 
     handleSumupCardLoad.current = () => {

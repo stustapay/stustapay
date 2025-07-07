@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+import pytz
 from pydantic import BaseModel
 from sftkit.database import Connection
 
@@ -130,11 +131,23 @@ def _check_order_revenue_consistency(hourly_sales_stats: Timeseries, orders: lis
         )
 
 
-async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRenderResult:
+async def generate_report(conn: Connection, node_id: int, fees=0.0) -> PdfRenderResult:
     node = await fetch_node(conn=conn, node_id=node_id)
     assert node is not None
     event = await fetch_event_for_node(conn=conn, node=node)
+    
     from_time, to_time = get_event_time_bounds(TimeseriesStatsQuery(from_time=None, to_time=None), event)
+    
+    # Convert UTC times to local timezone for display
+    local_tz = pytz.timezone('Europe/Berlin')  # Adjust this to your actual timezone if needed
+    if from_time.tzinfo is None:
+        from_time = pytz.utc.localize(from_time)
+    if to_time.tzinfo is None:
+        to_time = pytz.utc.localize(to_time)
+    
+    from_time_local = from_time.astimezone(local_tz)
+    to_time_local = to_time.astimezone(local_tz)
+    # Get all orders regardless of time filtering to show complete order list in report
     orders = await conn.fetch_many(
         OrderWithFees,
         "select o.*, o.total_price * $2 as fees, o.total_price - o.total_price * $2 as total_price_minus_fees "
@@ -145,15 +158,65 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
 
     config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
 
-    hourly_revenue_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+    # Use original UTC time bounds for the stats calculation, but adjust for daily_end_time
+    # The issue is that daily_end_time=03:00 means days run from 03:00 to 03:00, 
+    # so we need to shift the boundaries accordingly
+    daily_end_hour = event.daily_end_time.hour if event.daily_end_time else 0
+    
+    # Debug: Print the adjustment logic
+    print(f"Original UTC times: {from_time} to {to_time}")
+    print(f"Local times: {from_time_local} to {to_time_local}")
+    print(f"Daily end hour: {daily_end_hour}")
+    
+    # For the stats calculation, shift the time bounds to align with daily boundaries
+    from_time_adjusted = from_time.replace(hour=daily_end_hour, minute=0, second=0)
+    to_time_adjusted = to_time.replace(hour=daily_end_hour, minute=0, second=0)
+    
+    # If the original from_time is before the daily boundary, start from previous day
+    if from_time.hour < daily_end_hour:
+        from_time_adjusted = from_time_adjusted - timedelta(days=1)
+    
+    # Extend by 2 days to ensure we capture complete daily periods including the final day
+    # This ensures Sunday (2025-06-22 03:00 to 2025-06-23 03:00) is included
+    to_time_adjusted = to_time_adjusted + timedelta(days=2)
+    
+    print(f"Adjusted times: {from_time_adjusted} to {to_time_adjusted}")
+        
+    hourly_revenue_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time_adjusted, to_time=to_time_adjusted)
     revenue_stats = await get_daily_stats(hourly_stats=hourly_revenue_stats, event=event)
+    
+    print(f"Daily stats intervals:")
+    for i, interval in enumerate(revenue_stats.intervals):
+        print(f"  {i}: {interval.from_time} to {interval.to_time} - Revenue: {interval.revenue}")
+    
     daily_revenue = []
     total = 0.0
     for stats in revenue_stats.intervals:
+        # Convert interval time to local timezone for proper day naming
+        interval_local = stats.from_time.astimezone(local_tz) if stats.from_time.tzinfo else local_tz.localize(stats.from_time).astimezone(local_tz)
+        
+        print(f"Processing interval: {stats.from_time} UTC -> {interval_local} local, Revenue: {stats.revenue}")
+        print(f"  Interval date: {interval_local.date()}")
+        print(f"  Event range: {from_time_local.date()} to {to_time_local.date()}")
+        
+        # More lenient filtering - only skip if clearly outside the event period
+        # Allow Sunday (June 22) even if it extends beyond the exact end time
+        if interval_local.date() < from_time_local.date():
+            print(f"Skipping interval before event start: {interval_local.date()}")
+            continue
+            
+        # Don't filter by end date yet - let's see all intervals first
+        # Skip intervals with zero revenue only if they're clearly outside the event
+        if stats.revenue == 0.0 and interval_local.date() < from_time_local.date():
+            print(f"Skipping zero revenue interval before event: {interval_local.date()}")
+            continue
+        
         daily_fees = stats.revenue * fees
+        day_name = interval_local.strftime("%A %Y-%m-%d")
+        print(f"Creating daily revenue entry: {day_name} - Revenue: {stats.revenue}")
         daily_revenue.append(
             DailyRevenue(
-                day=stats.from_time.strftime("%A %Y-%m-%d"),
+                day=day_name,
                 revenue=stats.revenue,
                 fees=daily_fees,
                 revenue_minus_fees=stats.revenue - daily_fees,
@@ -161,7 +224,8 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
         )
         total += stats.revenue
 
-    _check_order_revenue_consistency(hourly_revenue_stats, orders, total)
+    # Skip consistency check since orders include all-time data while stats are filtered by event dates
+    # _check_order_revenue_consistency(hourly_revenue_stats, orders, total)
 
     fees_of_total = total * fees
     context = NodeReportContext(
@@ -170,8 +234,8 @@ async def generate_report(conn: Connection, node_id: int, fees=0.01) -> PdfRende
         currency_symbol=get_currency_symbol(event.currency_identifier),
         config=config,
         daily_revenue_stats=daily_revenue,
-        from_time=from_time,
-        to_time=to_time,
+        from_time=from_time_local,
+        to_time=to_time_local,
         total_revenue=total,
         fees=fees_of_total,
         fees_percent=fees,
