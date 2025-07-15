@@ -131,7 +131,9 @@ async def prep_all_data(
     ].reset_index()
 
     all_relevant_transactions["sale_type"] = "Sonstige"
-    all_relevant_transactions.loc[all_relevant_transactions["product_type"] == "ticket", "sale_type"] = "Eintrittsticket"
+    all_relevant_transactions.loc[all_relevant_transactions["product_type"] == "ticket", "sale_type"] = (
+        "Eintrittsticket"
+    )
     all_relevant_transactions.loc[all_relevant_transactions["product_type"] == "topup", "sale_type"] = (
         "Aufladung Guthaben"
     )
