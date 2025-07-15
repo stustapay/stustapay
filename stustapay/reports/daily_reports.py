@@ -75,6 +75,7 @@ class OrderDaily(BaseModel):
     product_price: Optional[float]
     node_name: str
     product_name: Optional[str]
+    product_type: Optional[str]
     is_cancelled: bool
 
 
@@ -85,7 +86,7 @@ async def prep_all_data(
         OrderDaily,
         "select o.id as order_id, o.booked_at, o.payment_method, o.order_type, o.cancels_order, o.quantity, "
         "o.total_price, o.tax_rate, o.tax_rate_id, o.total_tax, p.price_in_vouchers, o.product_price, "
-        "n.name as node_name, p.name as product_name, (oo.id is not null) as is_cancelled "
+        "n.name as node_name, p.name as product_name, p.type as product_type, (oo.id is not null) as is_cancelled "
         "from order_items o "
         "left join till t on o.till_id = t.id "
         "left join product p on o.product_id = p.id "
@@ -111,6 +112,7 @@ async def prep_all_data(
             "product_price": [line.product_price for line in orders],
             "node_name": [line.node_name for line in orders],
             "product_name": [line.product_name for line in orders],
+            "product_type": [line.product_type for line in orders],
             "is_cancelled": [line.is_cancelled for line in orders],
         }
     )
@@ -129,11 +131,11 @@ async def prep_all_data(
     ].reset_index()
 
     all_relevant_transactions["sale_type"] = "Sonstige"
-    all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "ticket", "sale_type"] = "Eintrittsticket"
-    all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "top_up", "sale_type"] = (
+    all_relevant_transactions.loc[all_relevant_transactions["product_type"] == "ticket", "sale_type"] = "Eintrittsticket"
+    all_relevant_transactions.loc[all_relevant_transactions["product_type"] == "topup", "sale_type"] = (
         "Aufladung Guthaben"
     )
-    all_relevant_transactions.loc[all_relevant_transactions["order_type"] == "pay_out", "sale_type"] = (
+    all_relevant_transactions.loc[all_relevant_transactions["product_type"] == "payout", "sale_type"] = (
         "Auszahlung Guthaben"
     )
     all_relevant_transactions.loc[
