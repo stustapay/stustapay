@@ -1,9 +1,10 @@
+import json
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from mako.lookup import TemplateLookup
-from weasyprint import CSS, HTML
+from weasyprint import CSS, HTML, Attachment
 
 from stustapay.core.schema.media import Blob
 
@@ -49,5 +50,13 @@ async def render_report(template: str, template_context: dict, files: dict[str, 
     report_template = template_lookup.get_template(f"{template}.html.mako")
     rendered_template = report_template.render(**template_context, **functions)
     html = HTML(string=rendered_template, url_fetcher=url_fetcher)
+    attachments = [
+        Attachment(
+            string=json.dumps(template_context, default=str),
+            relationship="Source",
+            name="data.json",
+            description="raw source data for report",
+        )
+    ]
     stylesheet = CSS(asset_dir / f"{template}.css")
-    return html.write_pdf(stylesheets=[stylesheet])
+    return html.write_pdf(stylesheets=[stylesheet], attachments=attachments)
