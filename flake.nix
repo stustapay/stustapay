@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -15,15 +15,15 @@
         inherit system;
         overlays = [];
       };
-      python = pkgs-unstable.python3.override {
+      python = pkgs.python3.override {
         self = python;
         packageOverrides = final: prev: {
           sftkit = final.buildPythonPackage rec {
             pname = "sftkit";
-            version = "0.2.0";
+            version = "0.3.3";
             src = prev.fetchPypi {
               inherit pname version;
-              hash = "sha256-7Mx634ZiQyiC6bJ/Yiks671XiDS+++4YYqjz9QigdY4=";
+              hash = "sha256-tODMDsHmcT1Nqbj0U7cypO2exVOUt2PNodi2yp0Qyss=";
             };
             pyproject = true;
             doCheck = false;
@@ -48,7 +48,7 @@
         pname = "stustapay-admin-ui";
         version = "0.1.0";
         src = ./web;
-        npmDepsHash = "sha256-63i0RQYYwghVzGmrc8+9UAyrYII5eWlUCA3gsH92ZMo=";
+        npmDepsHash = "sha256-HHkH55vobtnAButsyD2kqG4fJaBjtN8LyZTY0cpoi8Q=";
         npmInstallFlags = "--verbose";
         dontNpmBuild = true;
         buildPhase = ''
@@ -67,7 +67,7 @@
         pname = "stustapay-customer-ui";
         version = "0.1.0";
         src = ./web;
-        npmDepsHash = "sha256-63i0RQYYwghVzGmrc8+9UAyrYII5eWlUCA3gsH92ZMo=";
+        npmDepsHash = "sha256-HHkH55vobtnAButsyD2kqG4fJaBjtN8LyZTY0cpoi8Q=";
         npmInstallFlags = "--verbose";
         dontNpmBuild = true;
         buildPhase = ''
@@ -112,7 +112,10 @@
           pyyaml
           email-validator
           python-multipart
-          pkgs.texlive.combined.scheme-full
+          weasyprint
+          mako
+          pandas
+          websockets
         ];
         pythonRelaxDeps = [
           "jinja2"
@@ -127,6 +130,11 @@
           "uvicorn"
           "pydantic"
           "python-multipart"
+          "python-jose"
+          "sepaxml"
+          "passlib"
+          "weasyprint"
+          "mako"
         ];
       };
 
