@@ -76,8 +76,11 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
 
             readBuffer = cmdRead(0x10u, sessionKey!!, sessionCounter!!, nfcaTag)
 
-            for (i in 0uL until 12uL) {
-                pin += readBuffer.gbe(i).toInt().toChar()
+            for (i in 0uL until 16uL) {
+                val c = readBuffer.gbe(i).toInt().toChar()
+                if (c != 0.toChar()) {
+                    pin += c
+                }
             }
         }
 
