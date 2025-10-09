@@ -100,7 +100,6 @@ export const CashierDetail: React.FC = () => {
       actions={[
         {
           label: t("cashier.closeOut"),
-          hidden: cashier.cash_drawer_balance === 0,
           onClick: () => navigate(CashierRoutes.detailAction(cashier.id, "close-out")),
           icon: <PointOfSaleIcon />,
         },
