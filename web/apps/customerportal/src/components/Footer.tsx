@@ -37,6 +37,12 @@ export const Footer = () => {
       <Link sx={{ ml: 4 }} component={RouterLink} to="/agb">
         {t("nav.agb")}
       </Link>
+      <Link sx={{ ml: 4 }} component={RouterLink} to="/datenschutz">
+        {t("nav.privacyPolicy")}
+      </Link>
+      <Link sx={{ ml: 4 }} component={RouterLink} to="/impressum">
+        {t("nav.impressum")}
+      </Link>
       <Link sx={{ ml: 4 }} href="https://github.com/TomTel85/stustapay" target="_blank">
         Github
       </Link>

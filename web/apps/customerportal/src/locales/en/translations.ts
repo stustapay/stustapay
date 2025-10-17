@@ -10,6 +10,8 @@ export const translations = {
     topup: "Top Up",
     agb: "AGB",
     faq: "FAQ",
+    impressum: "Impressum",
+    privacyPolicy: "Privacy Policy",
   },
   loginFailed: "Login failed: {{reason}}.",
   errorLoadingCustomer: "Error loading customer",

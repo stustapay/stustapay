@@ -379,6 +379,16 @@ export const translations = {
       preview: "Show Preview",
       content: "FAQ (in markdown formatting)",
     },
+    impressum: {
+      tabLabel: "Impressum",
+      preview: "Show Preview",
+      content: "Impressum (in markdown formatting)",
+    },
+    privacyPolicy: {
+      tabLabel: "Privacy Policy",
+      preview: "Show Preview",
+      content: "Privacy Policy (in markdown formatting)",
+    },
     bon: {
       tabLabel: "Bon",
       issuer: "Bon issuer",

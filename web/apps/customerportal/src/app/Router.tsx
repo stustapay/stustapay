@@ -11,6 +11,7 @@ import { TopUp } from "./routes/topup";
 import { Faq } from "./routes/Faq";
 import { Agb } from "./routes/Agb";
 import { PrivacyPolicy } from "./routes/PrivacyPolicy";
+import { Impressum } from "./routes/Impressum";
 import { Bon } from "./routes/Bon";
 
 const router = createBrowserRouter([
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
       {
         path: "datenschutz",
         element: <PrivacyPolicy />,
+      },
+      {
+        path: "/impressum",
+        element: <Impressum />,
       },
     ],
   },

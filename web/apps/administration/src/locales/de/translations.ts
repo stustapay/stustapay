@@ -359,6 +359,16 @@ export const translations: NestedPartialAsStrings<Translations> = {
       preview: "Vorschau anzeigen",
       content: "FAQ (im Markdown-Format)",
     },
+    impressum: {
+      tabLabel: "Impressum",
+      preview: "Vorschau anzeigen",
+      content: "Impressum (im Markdown-Format)",
+    },
+    privacyPolicy: {
+      tabLabel: "Datenschutzerklärung",
+      preview: "Vorschau anzeigen",
+      content: "Datenschutzerklärung (im Markdown-Format)",
+    },
     bon: {
       tabLabel: "Bon",
       issuer: "Bon-Aussteller",

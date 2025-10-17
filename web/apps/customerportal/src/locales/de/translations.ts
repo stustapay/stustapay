@@ -40,6 +40,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     topup: "Aufladung",
     agb: "AGB",
     faq: "FAQ",
+    impressum: "Impressum",
+    privacyPolicy: "Datenschutzerklärung",
   },
   balance: "Guthaben",
   tagUid: "Guthabenkarte-Chip ID",
