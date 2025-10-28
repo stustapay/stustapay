@@ -15,7 +15,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
   errorLoadingCustomer: "Fehler beim Laden der Kundendaten",
   payoutInfo:
     "Um dein Restguthaben nach der Veranstaltung zu erhalten, <1>trage bitte deine Bankdaten hier ein</1>. Die erste Auszahlung findet voraussichtlich 3 Wochen nach Veranstaltungsende statt.",
-  about: "Impressum",
+  about: "Über uns",
   contact: "Kontakt",
   wristbandTagExample: "Beispiel einer Guthabenkarte",
   wristbandTagExampleTitle: "Guthabenkarte-Chip Beispiel mit PIN und ID",

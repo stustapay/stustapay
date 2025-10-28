@@ -14,6 +14,8 @@ import { TabGeneral } from "./TabGeneral";
 import { TabMail } from "./TabMail";
 import { TabPayout } from "./TabPayout";
 import { TabSumUp } from "./TabSumUp";
+import { TabImpressum } from "./TabImpressum";
+import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
 import { Link as RouterLink } from "react-router-dom";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { toast } from "react-toastify";
@@ -78,6 +80,8 @@ export const EventSettings: React.FC = () => {
               <Tab label={t("settings.pretix.tabLabel")} value="pretix" />
               <Tab label={t("settings.agb.tabLabel")} value="agb" />
               <Tab label={t("settings.faq.tabLabel")} value="faq" />
+              <Tab label={t("settings.impressum.tabLabel")} value="impressum" />
+              <Tab label={t("settings.privacyPolicy.tabLabel")} value="privacyPolicy" />
               <Tab label={t("settings.sumup.tabLabel")} value="sumup" />
               <Tab label={t("settings.payout.tabLabel")} value="payout" />
               <Tab label={t("settings.bon.tabLabel")} value="bon" />
@@ -101,6 +105,12 @@ export const EventSettings: React.FC = () => {
           </TabPanel>
           <TabPanel value="faq">
             <TabFaq nodeId={currentNode.id} eventSettings={eventSettings} />
+          </TabPanel>
+          <TabPanel value="impressum">
+            <TabImpressum nodeId={currentNode.id} eventSettings={eventSettings} />
+          </TabPanel>
+          <TabPanel value="privacyPolicy">
+            <TabPrivacyPolicy nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
           <TabPanel value="sumup">
             <TabSumUp nodeId={currentNode.id} eventSettings={eventSettings} />
