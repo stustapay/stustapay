@@ -47,7 +47,7 @@ export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, on
         await loginUser({
           nodeId: currentNode.id,
           terminalId,
-          loginPayload: {
+          terminalUserLoginPayload: {
             user_id: values.userId,
             role_id: values.roleId,
           },

@@ -5,6 +5,7 @@ from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTreeService
 from stustapay.core.schema.tree import (
+    CopyEventRequest,
     NewEvent,
     NewNode,
     Node,
@@ -49,6 +50,13 @@ async def create_event(
     token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: NewEvent
 ) -> Node:
     return await tree_service.create_event(token=token, node_id=node_id, event=payload)
+
+
+@router.post("/events/{node_id}/copy-event")
+async def copy_event(
+    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: CopyEventRequest
+) -> Node:
+    return await tree_service.copy_event(token=token, node_id=node_id, request=payload)
 
 
 @router.post("/events/{node_id}/event-settings")

@@ -611,6 +611,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-registers"],
       }),
+      assignRegister: build.mutation<AssignRegisterApiResponse, AssignRegisterApiArg>({
+        query: (queryArg) => ({
+          url: `/till-registers/assign-register`,
+          method: "POST",
+          body: queryArg.assignRegisterPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["till-registers"],
+      }),
       modifyRegisterBalance: build.mutation<ModifyRegisterBalanceApiResponse, ModifyRegisterBalanceApiArg>({
         query: (queryArg) => ({
           url: `/till-registers/modify-balance`,
@@ -813,7 +824,7 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
-            fromTimestamp: queryArg.fromTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
           },
         }),
         providesTags: ["stats"],
@@ -824,7 +835,7 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
-            fromTimestamp: queryArg.fromTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
           },
         }),
         providesTags: ["stats"],
@@ -835,7 +846,7 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
-            fromTimestamp: queryArg.fromTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
           },
         }),
         providesTags: ["stats"],
@@ -846,7 +857,7 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
-            fromTimestamp: queryArg.fromTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
           },
         }),
         providesTags: ["stats"],
@@ -857,7 +868,7 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
-            fromTimestamp: queryArg.fromTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
           },
         }),
         providesTags: ["stats"],
@@ -979,8 +990,11 @@ const injectedRtkApi = api
           url: `/user-tags/${queryArg.userTagId}/update-vip-status`,
           method: "POST",
           body: queryArg.updateVipStatusPayload,
-          params: { node_id: queryArg.nodeId },
+          params: {
+            node_id: queryArg.nodeId,
+          },
         }),
+        invalidatesTags: ["user_tags"],
       }),
       listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
         query: (queryArg) => ({
@@ -1131,6 +1145,14 @@ const injectedRtkApi = api
           url: `/tree/nodes/${queryArg.nodeId}/create-event`,
           method: "POST",
           body: queryArg.newEvent,
+        }),
+        invalidatesTags: ["tree"],
+      }),
+      copyEvent: build.mutation<CopyEventApiResponse, CopyEventApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/copy-event`,
+          method: "POST",
+          body: queryArg.copyEventRequest,
         }),
         invalidatesTags: ["tree"],
       }),
@@ -1322,7 +1344,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/terminal/${queryArg.terminalId}/login-user`,
           method: "POST",
-          body: queryArg.loginPayload,
+          body: queryArg.terminalUserLoginPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1636,6 +1658,11 @@ export type TransferRegisterApiArg = {
   nodeId: number;
   transferRegisterPayload: TransferRegisterPayload;
 };
+export type AssignRegisterApiResponse = /** status 200 Successful Response */ any;
+export type AssignRegisterApiArg = {
+  nodeId: number;
+  assignRegisterPayload: AssignRegisterPayload;
+};
 export type ModifyRegisterBalanceApiResponse = /** status 200 Successful Response */ any;
 export type ModifyRegisterBalanceApiArg = {
   nodeId: number;
@@ -1816,16 +1843,22 @@ export type FindUserTagsApiArg = {
   nodeId: number;
   findUserTagPayload: FindUserTagPayload;
 };
-export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
+export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type GetUserTagDetailApiArg = {
   userTagId: number;
   nodeId: number;
 };
-export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
+export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type UpdateUserTagCommentApiArg = {
   userTagId: number;
   nodeId: number;
   updateCommentPayload: UpdateCommentPayload;
+};
+export type UpdateUserTagVipStatusApiResponse = /** status 200 Successful Response */ UserTagDetail;
+export type UpdateUserTagVipStatusApiArg = {
+  userTagId: number;
+  nodeId: number;
+  updateVipStatusPayload: UpdateVipStatusPayload;
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = {
@@ -1906,6 +1939,11 @@ export type CreateEventApiResponse = /** status 200 Successful Response */ Node;
 export type CreateEventApiArg = {
   nodeId: number;
   newEvent: NewEvent;
+};
+export type CopyEventApiResponse = /** status 200 Successful Response */ Node;
+export type CopyEventApiArg = {
+  nodeId: number;
+  copyEventRequest: CopyEventRequest;
 };
 export type UpdateEventApiResponse = /** status 200 Successful Response */ Node;
 export type UpdateEventApiArg = {
@@ -2011,19 +2049,16 @@ export type ForceLogoutUserApiArg = {
   terminalId: number;
   nodeId: number;
 };
-export type GetTransactionApiResponse = /** status 200 Successful Response */ TransactionRead;
-export type GetTransactionApiArg = {
-  transactionId: number;
-  nodeId: number;
-};
 export type LoginUserApiResponse = /** status 200 Successful Response */ any;
 export type LoginUserApiArg = {
   terminalId: number;
   nodeId: number;
-  loginPayload: {
-    user_id: number;
-    role_id: number;
-  };
+  terminalUserLoginPayload: TerminalUserLoginPayload;
+};
+export type GetTransactionApiResponse = /** status 200 Successful Response */ TransactionRead;
+export type GetTransactionApiArg = {
+  transactionId: number;
+  nodeId: number;
 };
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
@@ -2500,6 +2535,10 @@ export type TransferRegisterPayload = {
   source_cashier_id: number;
   target_cashier_id: number;
 };
+export type AssignRegisterPayload = {
+  cashier_id: number;
+  cash_register_id: number;
+};
 export type ModifyRegisterBalancePayload = {
   cashier_id: number;
   amount: number;
@@ -2564,6 +2603,8 @@ export type Account = {
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
+  is_vip?: boolean;
+  vip_max_balance?: number | null;
   tag_history: UserTagHistoryEntry[];
 };
 export type AccountRead = {
@@ -2578,13 +2619,15 @@ export type AccountRead = {
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
+  is_vip?: boolean;
+  vip_max_balance?: number | null;
   tag_history: UserTagHistoryEntryRead[];
   user_tag_uid_hex: string | null;
 };
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: AccountRead;
+    [key: number]: Account;
   };
 };
 export type FindAccountPayload = {
@@ -2782,7 +2825,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: string]: CashierRead;
+    [key: number]: Cashier;
   };
 };
 export type CashierProductStats = {
@@ -2886,6 +2929,9 @@ export type NewUserTag = {
   pin: string;
   restriction?: ProductRestriction | null;
   secret_id: number;
+  uid?: number | null;
+  is_vip?: boolean;
+  comment?: string | null;
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -2899,24 +2945,13 @@ export type UserTagDetail = {
   comment?: string | null;
   account_id?: number | null;
   user_id?: number | null;
+  is_vip?: boolean;
   account_history: UserTagAccountAssociation[];
-};
-export type UserTagDetailRead = {
-  id: number;
-  pin: string;
-  uid: string;
-  uid_hex: string;
-  node_id: number;
-  comment?: string;
-  account_id?: number;
-  user_id?: number;
-  account_history: UserTagAccountAssociation[];
-  is_vip: boolean;
 };
 export type NormalizedListUserTagDetailInt = {
   ids: number[];
   entities: {
-    [key: string]: UserTagDetailRead;
+    [key: string]: UserTagDetail;
   };
 };
 export type FindUserTagPayload = {
@@ -3027,9 +3062,11 @@ export type Language = "en-US" | "de-DE";
 export type PublicEventSettings = {
   currency_identifier: string;
   max_account_balance: number;
+  vip_max_account_balance?: number;
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
@@ -3061,7 +3098,7 @@ export type PublicEventSettings = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
-  donation_enabled: boolean;
+  donation_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3132,9 +3169,11 @@ export type NewEvent = {
   email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
+  vip_max_account_balance?: number;
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
@@ -3166,7 +3205,7 @@ export type NewEvent = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
-  donation_enabled: boolean;
+  donation_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3176,6 +3215,21 @@ export type NewEvent = {
   description: string;
   forbidden_objects_at_node?: ObjectType[];
   forbidden_objects_in_subtree?: ObjectType[];
+};
+export type CopyEventOptions = {
+  copy_event_settings?: boolean;
+  copy_user_tags?: boolean;
+  copy_account_balances?: boolean;
+  copy_tills?: boolean;
+  copy_terminals?: boolean;
+  copy_users?: boolean;
+  copy_products?: boolean;
+  copy_tse_devices?: boolean;
+};
+export type CopyEventRequest = {
+  name: string;
+  description: string;
+  options: CopyEventOptions;
 };
 export type UpdateEvent = {
   sumup_api_key?: string;
@@ -3187,9 +3241,11 @@ export type UpdateEvent = {
   email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
+  vip_max_account_balance?: number;
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
@@ -3221,7 +3277,7 @@ export type UpdateEvent = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
-  donation_enabled: boolean;
+  donation_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3238,10 +3294,11 @@ export type RestrictedEventSettings = {
   email_smtp_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
+  vip_max_account_balance?: number;
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
-  post_payment_allowed: boolean;
+  post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
@@ -3273,7 +3330,7 @@ export type RestrictedEventSettings = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
-  donation_enabled: boolean;
+  donation_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3325,6 +3382,8 @@ export type Customer = {
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
+  is_vip?: boolean;
+  vip_max_balance?: number | null;
   tag_history: UserTagHistoryEntry[];
   iban: string | null;
   account_name: string | null;
@@ -3348,6 +3407,8 @@ export type CustomerRead = {
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
+  is_vip?: boolean;
+  vip_max_balance?: number | null;
   tag_history: UserTagHistoryEntryRead[];
   iban: string | null;
   account_name: string | null;
@@ -3387,11 +3448,9 @@ export type NewTerminal = {
 export type SwitchTillPayload = {
   new_till_id: number;
 };
-export type UpdateUserTagVipStatusApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
-export type UpdateUserTagVipStatusApiArg = {
-  userTagId: number;
-  nodeId: number;
-  updateVipStatusPayload: UpdateVipStatusPayload;
+export type TerminalUserLoginPayload = {
+  user_id: number;
+  role_id: number;
 };
 export const {
   useListProductsQuery,
@@ -3474,6 +3533,7 @@ export const {
   useListTransactionsQuery,
   useLazyListTransactionsQuery,
   useTransferRegisterMutation,
+  useAssignRegisterMutation,
   useModifyRegisterBalanceMutation,
   useGetPublicConfigQuery,
   useLazyGetPublicConfigQuery,
@@ -3533,6 +3593,7 @@ export const {
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,
+  useUpdateUserTagVipStatusMutation,
   useListTsesQuery,
   useLazyListTsesQuery,
   useCreateTseMutation,
@@ -3555,6 +3616,7 @@ export const {
   useUpdateNodeMutation,
   useArchiveNodeMutation,
   useCreateEventMutation,
+  useCopyEventMutation,
   useUpdateEventMutation,
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
@@ -3584,8 +3646,7 @@ export const {
   useLogoutTerminalMutation,
   useSwitchTillMutation,
   useForceLogoutUserMutation,
+  useLoginUserMutation,
   useGetTransactionQuery,
   useLazyGetTransactionQuery,
-  useUpdateUserTagVipStatusMutation,
-  useLoginUserMutation,
 } = injectedRtkApi;

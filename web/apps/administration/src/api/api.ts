@@ -17,7 +17,7 @@ import {
   Tse,
   User,
   UserRole,
-  UserTagDetailRead,
+  UserTagDetail,
   api as generatedApi,
   GenerateTestBonApiArg,
   GenerateTestReportApiArg,
@@ -27,6 +27,7 @@ import {
   UpdateUserTagVipStatusApiArg,
   Transaction,
 } from "./generated/api";
+import { Account, Cashier } from "@stustapay/models";
 import { convertEntityAdaptorSelectors, generateCacheKeys } from "./utils";
 
 export * from "./generated/api";
@@ -35,11 +36,11 @@ const userAdapter = createEntityAdapter<User>({
   sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
 });
 
-const accountAdapter = createEntityAdapter<AccountRead>({
+const accountAdapter = createEntityAdapter<Account>({
   sortComparer: (a, b) => (a.name?.toLowerCase() ?? "").localeCompare(b.name?.toLowerCase() ?? ""),
 });
 
-const userTagAdapter = createEntityAdapter<UserTagDetailRead>({
+const userTagAdapter = createEntityAdapter<UserTagDetail>({
   sortComparer: (a, b) => a.pin.toLowerCase().localeCompare(b.pin.toLowerCase()),
 });
 
@@ -51,7 +52,7 @@ const productAdapter = createEntityAdapter<Product>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
-const cashierAdapter = createEntityAdapter<CashierRead>({
+const cashierAdapter = createEntityAdapter<Cashier>({
   sortComparer: (a, b) => a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase()),
 });
 

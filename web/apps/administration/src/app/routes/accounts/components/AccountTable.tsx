@@ -1,4 +1,4 @@
-import { AccountRead } from "@/api";
+import { Account } from "@stustapay/models";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
@@ -9,14 +9,14 @@ import { formatUserTagUid } from "@stustapay/models";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 
 export interface AccountTableProps {
-  accounts: AccountRead[];
+  accounts: Account[];
 }
 
 export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   const { t } = useTranslation();
   const { dataGridNodeColumn } = useRenderNode();
 
-  const columns: GridColDef<AccountRead>[] = [
+  const columns: GridColDef<Account>[] = [
     {
       field: "name",
       headerName: t("account.name"),
@@ -38,7 +38,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
       align: "right",
       renderCell: (params) => (
         <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
+          {formatUserTagUid(params.row.user_tag_uid?.toString(16).toUpperCase())}
         </Link>
       ),
       width: 100,

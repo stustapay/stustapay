@@ -3,7 +3,7 @@ import pytest
 from asyncpg import RaiseError
 from sftkit.database import Connection
 
-from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node, ObjectType
+from stustapay.core.schema.tree import ROOT_NODE_ID, CopyEventRequest, CopyEventOptions, NewEvent, NewNode, Node, ObjectType
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.tests.common import list_equals
@@ -264,3 +264,107 @@ async def test_object_rules(tree_service: TreeService, global_admin_token: str):
         ],
         sub_node.computed_forbidden_objects_in_subtree,
     )
+
+
+async def test_copy_event(tree_service: TreeService, global_admin_token: str):
+    """Test copying an event with selective component copying."""
+    # First create an original event
+    original_event: Node = await tree_service.create_event(
+        token=global_admin_token,
+        node_id=ROOT_NODE_ID,
+        event=NewEvent(
+            name="Original Event",
+            description="Event to be copied",
+            currency_identifier="EUR",
+            sumup_topup_enabled=False,
+            sumup_payment_enabled=False,
+            max_account_balance=100,
+            customer_portal_url="https://pay.stustapay.de",
+            customer_portal_about_page_url="https://pay.stustapay.de/about",
+            customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
+            customer_portal_contact_email="test@test.com",
+            ust_id="UST ID",
+            bon_issuer="Issuer",
+            bon_address="Address",
+            bon_title="Title",
+            sepa_enabled=False,
+            sepa_description="",
+            sepa_sender_iban="",
+            sepa_allowed_country_codes=[],
+            sepa_sender_name="",
+            email_enabled=False,
+            email_default_sender=None,
+            email_smtp_host=None,
+            email_smtp_port=None,
+            email_smtp_username=None,
+            email_smtp_password=None,
+            payout_done_subject="[StuStaPay] Payout Completed",
+            payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
+            payout_registered_subject="[StuStaPay] Registered for Payout",
+            payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
+            payout_sender=None,
+            pretix_presale_enabled=False,
+            pretix_api_key=None,
+            pretix_event=None,
+            pretix_organizer=None,
+            pretix_shop_url=None,
+            pretix_ticket_ids=None,
+        ),
+    )
+
+    # Now copy the event with all options enabled
+    copied_event: Node = await tree_service.copy_event(
+        token=global_admin_token,
+        node_id=original_event.id,
+        request=CopyEventRequest(
+            name="Copied Event",
+            description="A copy of the original event",
+            options=CopyEventOptions(
+                copy_event_settings=True,
+                copy_user_tags=True,
+                copy_account_balances=True,
+                copy_tills=True,
+                copy_terminals=True,
+                copy_users=True,
+                copy_products=True,
+                copy_tse_devices=True,
+            ),
+        ),
+    )
+
+    # Verify the copied event was created successfully
+    assert copied_event.name == "Copied Event"
+    assert copied_event.description == "A copy of the original event"
+    assert copied_event.event is not None
+    assert copied_event.event_node_id == copied_event.id
+    assert copied_event.parent == ROOT_NODE_ID
+
+    # Verify event settings were copied
+    assert copied_event.event.currency_identifier == original_event.event.currency_identifier
+    assert copied_event.event.max_account_balance == original_event.event.max_account_balance
+    assert copied_event.event.bon_title == "Copied Event"  # Should be overridden with new name
+
+    # Test copying with no options enabled
+    minimal_copy: Node = await tree_service.copy_event(
+        token=global_admin_token,
+        node_id=original_event.id,
+        request=CopyEventRequest(
+            name="Minimal Copy",
+            description="Copy with minimal components",
+            options=CopyEventOptions(
+                copy_event_settings=False,
+                copy_user_tags=False,
+                copy_account_balances=False,
+                copy_tills=False,
+                copy_terminals=False,
+                copy_users=False,
+                copy_products=False,
+                copy_tse_devices=False,
+            ),
+        ),
+    )
+
+    # Verify minimal copy has default settings
+    assert minimal_copy.name == "Minimal Copy"
+    assert minimal_copy.event is not None
+    assert minimal_copy.event.currency_identifier == "EUR"  # Default when not copying settings

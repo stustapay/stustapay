@@ -56,7 +56,7 @@ export const FindAccounts: React.FC = () => {
           )}
         </Formik>
       </Paper>
-      {searchResult.data && <AccountTable accounts={selectAccountAll(searchResult.data)} />}
+      {searchResult.data && <AccountTable accounts={selectAccountAll(searchResult.data) as any} />}
     </DetailLayout>
   );
 };

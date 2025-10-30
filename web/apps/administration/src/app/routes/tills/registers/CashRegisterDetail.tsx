@@ -147,7 +147,7 @@ export const CashRegisterDetail: React.FC = () => {
             <DetailField
               label={t("register.currentCashier")}
               linkTo={CashierRoutes.detail(register.current_cashier_id)}
-              value={getUserName(selectCashierById(cashiers, register.current_cashier_id))}
+              value={getUserName(selectCashierById(cashiers as any, register.current_cashier_id))}
             />
           )}
           {register.current_till_id != null && (

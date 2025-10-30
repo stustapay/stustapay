@@ -2,15 +2,18 @@ import { z } from "zod";
 import { ProductSchema } from "./product";
 
 export const CashierSchema = z.object({
+  node_id: z.number(),
   id: z.number().int(),
   login: z.string().min(1),
   display_name: z.string().min(1),
-  description: z.string().optional(),
-  cash_drawer_balance: z.number(),
+  description: z.string().optional().nullable(),
+  user_tag_id: z.number().nullable(),
+  user_tag_uid: z.number().nullable(),
+  transport_account_id: z.number().nullable(),
   cash_register_id: z.number().int().optional().nullable(),
-  // user_tag_uid: z.bigint(),
-  user_tag_uid_hex: z.string(),
-  till_ids: z.array(z.number().int()),
+  cash_drawer_balance: z.number().nullable(),
+  terminal_ids: z.array(z.number()),
+  user_tag_uid_hex: z.string().nullable(),
 });
 
 export type Cashier = z.infer<typeof CashierSchema>;

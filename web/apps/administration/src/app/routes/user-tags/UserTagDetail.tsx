@@ -89,7 +89,7 @@ export const UserTagDetail: React.FC = () => {
             <ListItemText primary={t("userTag.pin")} secondary={data.pin} />
           </ListItem>
           <ListItem>
-            <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.uid_hex)} />
+            <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.uid?.toString(16).toUpperCase())} />
           </ListItem>
           <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
           <ListItem>
