@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "StuStaPay Administration API",
+    "title": "TeamFestlichPay Administration API",
     "license": {
       "name": "AGPL-3.0"
     },
@@ -3396,6 +3396,122 @@
         }
       }
     },
+    "/till-registers/assign-register": {
+      "post": {
+        "tags": [
+          "till-registers"
+        ],
+        "summary": "Assign Register",
+        "operationId": "assign_register",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRegisterPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/till-registers/modify-balance": {
+      "post": {
+        "tags": [
+          "till-registers"
+        ],
+        "summary": "Modify Register Balance",
+        "operationId": "modify_register_balance",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifyRegisterBalancePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/public-config": {
       "get": {
         "tags": [
@@ -5654,6 +5770,75 @@
         }
       }
     },
+    "/user-tags/{user_tag_id}/update-vip-status": {
+      "post": {
+        "tags": [
+          "user_tags"
+        ],
+        "summary": "Update User Tag Vip Status",
+        "operationId": "update_user_tag_vip_status",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Tag Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVipStatusPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTagDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tses/": {
       "get": {
         "tags": [
@@ -6582,6 +6767,66 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/NewEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/copy-event": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Copy Event",
+        "operationId": "copy_event",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyEventRequest"
               }
             }
           }
@@ -7853,6 +8098,74 @@
         }
       }
     },
+    "/terminal/{terminal_id}/login-user": {
+      "post": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "Login User",
+        "description": "Login a user to a terminal",
+        "operationId": "login_user",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terminal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Terminal Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TerminalUserLoginPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/transactions/{transaction_id}": {
       "get": {
         "tags": [
@@ -8001,6 +8314,22 @@
               }
             ]
           },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "vip_max_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vip Max Balance"
+          },
           "tag_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagHistoryEntry"
@@ -8057,6 +8386,24 @@
           "cash_register"
         ],
         "title": "AccountType"
+      },
+      "AssignRegisterPayload": {
+        "properties": {
+          "cashier_id": {
+            "type": "integer",
+            "title": "Cashier Id"
+          },
+          "cash_register_id": {
+            "type": "integer",
+            "title": "Cash Register Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cashier_id",
+          "cash_register_id"
+        ],
+        "title": "AssignRegisterPayload"
       },
       "BonConfig": {
         "properties": {
@@ -8764,6 +9111,81 @@
         ],
         "title": "ConfigEntry"
       },
+      "CopyEventOptions": {
+        "properties": {
+          "copy_event_settings": {
+            "type": "boolean",
+            "title": "Copy Event Settings",
+            "default": true
+          },
+          "copy_user_tags": {
+            "type": "boolean",
+            "title": "Copy User Tags",
+            "default": true
+          },
+          "copy_account_balances": {
+            "type": "boolean",
+            "title": "Copy Account Balances",
+            "default": false
+          },
+          "copy_tills": {
+            "type": "boolean",
+            "title": "Copy Tills",
+            "default": true
+          },
+          "copy_terminals": {
+            "type": "boolean",
+            "title": "Copy Terminals",
+            "default": true
+          },
+          "copy_users": {
+            "type": "boolean",
+            "title": "Copy Users",
+            "default": true
+          },
+          "copy_products": {
+            "type": "boolean",
+            "title": "Copy Products",
+            "default": true
+          },
+          "copy_tse_devices": {
+            "type": "boolean",
+            "title": "Copy Tse Devices",
+            "default": true
+          },
+          "copy_sub_nodes": {
+            "type": "boolean",
+            "title": "Copy Sub Nodes",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "CopyEventOptions",
+        "description": "Options for copying an event with selective components."
+      },
+      "CopyEventRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "options": {
+            "$ref": "#/components/schemas/CopyEventOptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "options"
+        ],
+        "title": "CopyEventRequest",
+        "description": "Request to copy an event with specified options."
+      },
       "CreateSepaXMLPayload": {
         "properties": {
           "execution_date": {
@@ -9039,6 +9461,22 @@
                 "type": "null"
               }
             ]
+          },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "vip_max_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vip Max Balance"
           },
           "tag_history": {
             "items": {
@@ -9345,6 +9783,24 @@
         ],
         "title": "LoginPayload"
       },
+      "ModifyRegisterBalancePayload": {
+        "properties": {
+          "cashier_id": {
+            "type": "integer",
+            "title": "Cashier Id"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cashier_id",
+          "amount"
+        ],
+        "title": "ModifyRegisterBalancePayload"
+      },
       "NewCashRegister": {
         "properties": {
           "name": {
@@ -9503,6 +9959,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -9538,6 +9999,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -9767,6 +10233,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
           },
           "translation_texts": {
             "additionalProperties": {
@@ -10324,6 +10795,33 @@
           "secret_id": {
             "type": "integer",
             "title": "Secret Id"
+          },
+          "uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uid"
+          },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
           }
         },
         "type": "object",
@@ -11903,6 +12401,7 @@
           "terminal_login",
           "supervised_terminal_login",
           "can_book_orders",
+          "can_topup",
           "grant_free_tickets",
           "grant_vouchers"
         ],
@@ -12171,6 +12670,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -12206,6 +12710,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -12428,6 +12937,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
           },
           "translation_texts": {
             "additionalProperties": {
@@ -12543,6 +13057,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -12578,6 +13097,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -12800,6 +13324,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
           },
           "translation_texts": {
             "additionalProperties": {
@@ -12917,6 +13446,10 @@
             "type": "string",
             "title": "Description"
           },
+          "redirect_url": {
+            "type": "string",
+            "title": "Redirect Url"
+          },
           "id": {
             "type": "string",
             "title": "Id"
@@ -12979,6 +13512,7 @@
           "currency",
           "merchant_code",
           "description",
+          "redirect_url",
           "id",
           "status",
           "date"
@@ -13275,6 +13809,24 @@
           "registration_uuid"
         ],
         "title": "Terminal"
+      },
+      "TerminalUserLoginPayload": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "role_id": {
+            "type": "integer",
+            "title": "Role Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role_id"
+        ],
+        "title": "TerminalUserLoginPayload"
       },
       "Ticket": {
         "properties": {
@@ -13988,6 +14540,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -14023,6 +14580,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -14253,6 +14815,11 @@
             ],
             "title": "Payout Sender"
           },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
+          },
           "translation_texts": {
             "additionalProperties": {
               "additionalProperties": {
@@ -14396,6 +14963,19 @@
           "privileges"
         ],
         "title": "UpdateUserRolePrivilegesPayload"
+      },
+      "UpdateVipStatusPayload": {
+        "properties": {
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_vip"
+        ],
+        "title": "UpdateVipStatusPayload"
       },
       "UpdateVoucherAmountPayload": {
         "properties": {
@@ -14670,24 +15250,17 @@
             ],
             "title": "User Id"
           },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
           "account_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagAccountAssociation"
             },
             "type": "array",
             "title": "Account History"
-          },
-          "uid_hex": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Uid Hex",
-            "readOnly": true
           }
         },
         "type": "object",
@@ -14696,8 +15269,7 @@
           "pin",
           "uid",
           "node_id",
-          "account_history",
-          "uid_hex"
+          "account_history"
         ],
         "title": "UserTagDetail"
       },

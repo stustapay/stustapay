@@ -54,6 +54,7 @@ class SumUpCreateCheckout(BaseModel):
     currency: str
     merchant_code: str
     description: str
+    redirect_url: str
 
 
 class SumUpTransaction(BaseModel):

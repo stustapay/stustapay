@@ -5,6 +5,5 @@ import { createCurrencyFormatter, CurrencyFormatter } from "./createCurrencyForm
 export const useCurrencyFormatter = (): CurrencyFormatter => {
   const currency = useCurrencyIdentifier();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return React.useCallback(createCurrencyFormatter(currency), [currency]);
+  return React.useMemo(() => createCurrencyFormatter(currency), [currency]);
 };

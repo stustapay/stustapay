@@ -30,7 +30,9 @@ export const Index: React.FC = () => {
   }
 
   if (customerError || !customer || payoutInfoError || !payoutInfo) {
-    toast.error(t("errorLoadingCustomer"));
+    React.useEffect(() => {
+      toast.error(t("errorLoadingCustomer"));
+    }, []);
     return null;
   }
 

@@ -1,13 +1,74 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "StuStaPay Customer Portal API",
+    "title": "TeamFestlichPay Customer Portal API",
     "license": {
       "name": "AGPL-3.0"
     },
     "version": "0.1.0"
   },
   "paths": {
+    "/auth/login/qr": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "customer login via QR code",
+        "operationId": "login_with_qr",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Username"
+            }
+          },
+          {
+            "name": "pin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pin"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -734,6 +795,22 @@
               }
             ]
           },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "vip_max_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vip Max Balance"
+          },
           "tag_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagHistoryEntry"
@@ -919,6 +996,10 @@
             "type": "boolean",
             "title": "Payout Enabled"
           },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled"
+          },
           "currency_identifier": {
             "type": "string",
             "title": "Currency Identifier"
@@ -953,6 +1034,14 @@
             },
             "type": "object",
             "title": "Translation Texts"
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
           }
         },
         "type": "object",
@@ -963,10 +1052,13 @@
           "contact_email",
           "about_page_url",
           "payout_enabled",
+          "donation_enabled",
           "currency_identifier",
           "sumup_topup_enabled",
           "allowed_country_codes",
-          "translation_texts"
+          "translation_texts",
+          "event_name",
+          "node_id"
         ],
         "title": "CustomerPortalApiConfig"
       },
@@ -1046,14 +1138,24 @@
       },
       "LoginPayload": {
         "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
           "pin": {
             "type": "string",
             "title": "Pin"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
           }
         },
         "type": "object",
         "required": [
-          "pin"
+          "username",
+          "pin",
+          "node_id"
         ],
         "title": "LoginPayload"
       },

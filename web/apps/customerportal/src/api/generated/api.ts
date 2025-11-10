@@ -6,6 +6,17 @@ const injectedRtkApi = api
   })
   .injectEndpoints({
     endpoints: (build) => ({
+      loginWithQr: build.query<LoginWithQrApiResponse, LoginWithQrApiArg>({
+        query: (queryArg) => ({
+          url: `/auth/login/qr`,
+          params: {
+            username: queryArg.username,
+            pin: queryArg.pin,
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["auth"],
+      }),
       login: build.mutation<LoginApiResponse, LoginApiArg>({
         query: (queryArg) => ({ url: `/auth/login`, method: "POST", body: queryArg.loginPayload }),
         invalidatesTags: ["auth"],
@@ -66,6 +77,12 @@ const injectedRtkApi = api
     overrideExisting: false,
   });
 export { injectedRtkApi as api };
+export type LoginWithQrApiResponse = /** status 200 Successful Response */ any;
+export type LoginWithQrApiArg = {
+  username: string;
+  pin: string;
+  nodeId: number;
+};
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseRead;
 export type LoginApiArg = {
   loginPayload: LoginPayload;
@@ -101,6 +118,14 @@ export type CreateCheckoutApiArg = {
 export type CheckCheckoutApiResponse = /** status 200 Successful Response */ CheckCheckoutResponse;
 export type CheckCheckoutApiArg = {
   checkCheckoutPayload: CheckCheckoutPayload;
+};
+export type ValidationError = {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+};
+export type HttpValidationError = {
+  detail?: ValidationError[];
 };
 export type AccountType =
   | "private"
@@ -172,6 +197,8 @@ export type Customer = {
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
+  is_vip?: boolean;
+  vip_max_balance?: number | null;
   tag_history: UserTagHistoryEntry[];
   iban: string | null;
   account_name: string | null;
@@ -195,6 +222,8 @@ export type CustomerRead = {
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
   restriction: ProductRestriction | null;
+  is_vip?: boolean;
+  vip_max_balance?: number | null;
   tag_history: UserTagHistoryEntryRead[];
   iban: string | null;
   account_name: string | null;
@@ -217,16 +246,8 @@ export type LoginResponseRead = {
   access_token: string;
   grant_type?: string;
 };
-export type ValidationError = {
-  loc: (string | number)[];
-  msg: string;
-  type: string;
-};
-export type HttpValidationError = {
-  detail?: ValidationError[];
-};
 export type LoginPayload = {
-  username: string; 
+  username: string;
   pin: string;
   node_id: number;
 };
@@ -238,7 +259,9 @@ export type OrderType =
   | "pay_out"
   | "ticket"
   | "money_transfer"
-  | "money_transfer_imbalance";
+  | "money_transfer_imbalance"
+  | "cashier_shift_start"
+  | "cashier_shift_end";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
@@ -290,6 +313,7 @@ export type OrderWithBon = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -308,6 +332,7 @@ export type OrderWithBonRead = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -363,6 +388,7 @@ export type OrderWithTse = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -392,6 +418,7 @@ export type OrderWithTseRead = {
   order_type: OrderType;
   cashier_id: number | null;
   till_id: number | null;
+  cash_register_id: number | null;
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
@@ -451,6 +478,8 @@ export type CheckCheckoutPayload = {
   order_uuid: string;
 };
 export const {
+  useLoginWithQrQuery,
+  useLazyLoginWithQrQuery,
   useLoginMutation,
   useLogoutMutation,
   useGetCustomerQuery,

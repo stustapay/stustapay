@@ -1,4 +1,4 @@
-import { useLogoutMutation } from "@/api";
+import { useCheckCheckoutMutation, useGetCustomerQuery, useLogoutMutation } from "@/api";
 import { config } from "@/api/common";
 import { LanguageSelect, Layout } from "@/components";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
@@ -28,9 +28,12 @@ export const AuthenticatedRoot: React.FC = () => {
   const publicConfig = usePublicConfig();
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
+  const [checkCheckout] = useCheckCheckoutMutation();
+  const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
+  const processedAPMRedirect = React.useRef<string | null>(null);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -45,13 +48,56 @@ export const AuthenticatedRoot: React.FC = () => {
     return <Navigate to={`/login${next}`} />;
   }
 
+  // Handle APM redirect back from payment provider
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const orderUuid = urlParams.get('order_uuid');
+
+    if (orderUuid && customer && !customerError && !isCustomerLoading && processedAPMRedirect.current !== orderUuid) {
+      processedAPMRedirect.current = orderUuid;
+
+      // For APMs, we need to poll the payment status until it's confirmed
+      const checkAPMPaymentStatus = () => {
+        checkCheckout({ checkCheckoutPayload: { order_uuid: orderUuid } })
+          .unwrap()
+          .then((resp) => {
+            if (resp.status === "PAID") {
+              // Clear the URL parameters so user doesn't see order_uuid after success
+              window.history.replaceState({}, document.title, window.location.pathname);
+              // Navigate to topup page with success state
+              navigate("/topup", { state: { apmSuccess: true } });
+            } else if (resp.status === "FAILED") {
+              // Clear the URL parameters on failure too
+              window.history.replaceState({}, document.title, window.location.pathname);
+              // Navigate to topup page with error state
+              navigate("/topup", { state: { apmError: true } });
+            } else {
+              // Payment is still pending, keep checking
+              setTimeout(checkAPMPaymentStatus, 2000);
+            }
+          })
+          .catch((error) => {
+            // Clear the URL parameters on error
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Reset the processed redirect so user can try again
+            processedAPMRedirect.current = null;
+            // Navigate to topup page with error state
+            navigate("/topup", { state: { apmError: true } });
+          });
+      };
+
+      // Start checking payment status
+      checkAPMPaymentStatus();
+    }
+  }, [location.search, customer, customerError, isCustomerLoading, checkCheckout, navigate]);
+
   const handleLogout = () => {
     logout()
       .unwrap()
       .then(() => {
         navigate("/login");
       })
-      .catch((err) => console.error("error during logout", err));
+      .catch((err: any) => console.error("error during logout", err));
   };
 
   const navbarLinks = [];
