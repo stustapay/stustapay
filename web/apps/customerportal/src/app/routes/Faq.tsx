@@ -19,12 +19,35 @@ export const Faq: React.FC = () => {
           variant="h2"
           sx={{
             fontWeight: "bold",
+            mb: 3,
           }}
           gutterBottom
         >
           FAQs
         </Typography>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{faqContent}</ReactMarkdown>
+        <Box
+          sx={{
+            width: "100%",
+            "& p": {
+              marginBottom: 2,
+              textAlign: "left",
+            },
+            "& h1, & h2, & h3, & h4, & h5, & h6": {
+              marginTop: 3,
+              marginBottom: 1.5,
+              textAlign: "left",
+            },
+            "& ul, & ol": {
+              marginBottom: 2,
+              paddingLeft: 3,
+            },
+            "& strong": {
+              fontWeight: 600,
+            },
+          }}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{faqContent}</ReactMarkdown>
+        </Box>
       </Box>
     </Container>
   );

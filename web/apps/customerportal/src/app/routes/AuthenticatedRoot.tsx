@@ -122,19 +122,14 @@ export const AuthenticatedRoot: React.FC = () => {
     <Layout>
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <AppBar position="fixed">
+        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Container maxWidth="xl">
-            <Toolbar disableGutters>
-              <Typography variant="h6" component="div" sx={{ mr: 2, display: { xs: "none", md: "flex" } }}>
-                <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
-                  {t(config.apiConfig.event_name)}
-                </RouterLink>
-              </Typography>
-
-              <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
+            <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
+              {/* Mobile menu icon */}
+              <Box sx={{ display: { xs: "flex", md: "none" }, mr: 1 }}>
                 <IconButton
-                  size="large"
-                  aria-label="account of current user"
+                  size="small"
+                  aria-label="menu"
                   aria-controls="menu-appbar"
                   aria-haspopup="true"
                   onClick={handleOpenNavMenu}
@@ -167,20 +162,67 @@ export const AuthenticatedRoot: React.FC = () => {
                   ))}
                 </Menu>
               </Box>
+
+              {/* Event name - desktop */}
               <Typography
                 variant="h6"
                 component="div"
+                noWrap
                 sx={{
-                  display: { xs: "flex", md: "none" },
-                  flexGrow: 1,
+                  mr: 4,
+                  display: { xs: "none", md: "flex" },
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  maxWidth: { md: "300px", lg: "400px" },
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
-                <RouterLink to="/" style={{ textDecoration: "none", color: "inherit" }}>
-                  {t("TeamFestlichPay")}
+                <RouterLink
+                  to="/"
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {t(config.apiConfig.event_name)}
                 </RouterLink>
               </Typography>
 
-              <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+              {/* Event name - mobile */}
+              <Typography
+                variant="body1"
+                component="div"
+                noWrap
+                sx={{
+                  display: { xs: "flex", md: "none" },
+                  flexGrow: 1,
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  mr: 1,
+                }}
+              >
+                <RouterLink
+                  to="/"
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {t(config.apiConfig.event_name)}
+                </RouterLink>
+              </Typography>
+
+              {/* Desktop navigation links */}
+              <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" }, gap: 1 }}>
                 {navbarLinks.map((link) => (
                   <Button
                     key={link.link}
@@ -188,15 +230,38 @@ export const AuthenticatedRoot: React.FC = () => {
                     component={RouterLink}
                     color="inherit"
                     to={link.link}
+                    size="small"
                   >
                     {link.label}
                   </Button>
                 ))}
               </Box>
 
-              <Box sx={{ flexGrow: 0 }}>
-                <LanguageSelect sx={{ color: "inherit" }} variant="outlined" />
-                <Button color="inherit" onClick={handleLogout}>
+              {/* Language select and logout */}
+              <Box sx={{ display: "flex", gap: { xs: 0.5, sm: 1 }, alignItems: "center" }}>
+                <LanguageSelect
+                  sx={{
+                    color: "inherit",
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "rgba(255, 255, 255, 0.5)",
+                    },
+                    "& .MuiSelect-select": {
+                      padding: { xs: "4px 8px", sm: "8px 12px" },
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    },
+                  }}
+                  variant="outlined"
+                />
+                <Button
+                  color="inherit"
+                  onClick={handleLogout}
+                  size="small"
+                  sx={{
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
+                    padding: { xs: "4px 8px", sm: "6px 16px" },
+                    minWidth: { xs: "auto", sm: "64px" },
+                  }}
+                >
                   {t("logout")}
                 </Button>
               </Box>
@@ -208,10 +273,18 @@ export const AuthenticatedRoot: React.FC = () => {
           component="main"
           sx={{
             flexGrow: 1,
+            width: "100%",
           }}
         >
-          <Toolbar />
-          <Container maxWidth="lg" sx={{ padding: { xs: 0, md: 1, lg: 3 } }}>
+          {/* Spacer to prevent content from being hidden under fixed AppBar */}
+          <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }} />
+          <Container
+            maxWidth="lg"
+            sx={{
+              padding: { xs: 2, sm: 2, md: 3, lg: 3 },
+              paddingTop: { xs: 2, sm: 2 },
+            }}
+          >
             <TestModeDisclaimer
               testMode={config.apiConfig.test_mode}
               testModeMessage={config.apiConfig.test_mode_message}
