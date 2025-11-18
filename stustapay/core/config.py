@@ -39,12 +39,23 @@ class CustomerPortalApiConfig(HTTPServerConfig):
     port: int = 8082
 
 
+class HeadwindConfig(BaseModel):
+    enabled: bool = False
+    base_url: str
+    api_key: str
+    request_timeout_seconds: float = 10.0
+    device_search_path: str = "/rest/private/devices/search"
+    device_search_method: str = "POST"
+    push_app_settings_path: str = "/rest/private/push/app-settings"
+
+
 class Config(BaseModel):
     database: DatabaseConfig
     core: CoreConfig
     administration: AdministrationApiConfig
     terminalserver: TerminalApiConfig
     customerportal: CustomerPortalApiConfig
+    headwind: HeadwindConfig
 
 
 def read_config(config_path: os.PathLike) -> Config:

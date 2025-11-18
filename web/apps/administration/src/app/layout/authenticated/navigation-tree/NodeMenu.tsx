@@ -1,6 +1,7 @@
 import { Node, NodeSeenByUser, ObjectType, Privilege } from "@/api";
 import {
   AccountBalance as AccountBalanceIcon,
+  Android as AndroidIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
@@ -15,6 +16,7 @@ import { NavigationTreeItem } from "./NavigationTreeItem";
 import {
   CashierRoutes,
   CustomerRoutes,
+  MdmRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
   TerminalRoutes,
@@ -73,6 +75,14 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     label: i18n.t("terminal.terminals"),
     icon: SmartphoneIcon,
     requiresOneOfObjectType: ["terminal"],
+  },
+  {
+    route: (node) => MdmRoutes.list(node.id),
+    label: i18n.t("mdm.headwindDevices"),
+    icon: AndroidIcon,
+    requiresOneOfObjectType: ["terminal"],
+    requiresEvent: true,
+    requiredPrivileges: ["node_administration"],
   },
   {
     route: (node) => TillRoutes.list(node.id),

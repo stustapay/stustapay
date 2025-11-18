@@ -22,3 +22,8 @@ terminalserver:
   base_url: "http://localhost:8083/api" # TODO: change to production url
   host: "localhost"
   port: 8083
+
+headwind:
+  enabled: false
+  base_url: "https://headwind.example.com"
+  api_key: "<set headwind api key>"

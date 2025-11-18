@@ -32,6 +32,7 @@ from .routers import (
     auth,
     cashier,
     customer,
+    mdm,
     order,
     payout,
     product,
@@ -88,6 +89,7 @@ def get_server(config: Config):
     server.add_router(customer.router)
     server.add_router(terminal.router)
     server.add_router(transaction.router)
+    server.add_router(mdm.router)
     return server
 
 

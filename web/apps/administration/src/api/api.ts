@@ -109,7 +109,7 @@ const terminalAdapter = createEntityAdapter<Terminal>({
 });
 
 export const api = generatedApi.enhanceEndpoints({
-  addTagTypes: ["config", "tag"],
+  addTagTypes: ["config", "tag", "headwind-devices", "headwind-mappings"],
   endpoints: {
     listUsers: {
       providesTags: (result) => generateCacheKeys("users", result),

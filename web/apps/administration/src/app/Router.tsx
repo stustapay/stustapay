@@ -69,6 +69,7 @@ import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } 
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
+import { HeadwindDevicesPage } from "./routes/mdm";
 
 const router = createBrowserRouter([
   {
@@ -366,6 +367,14 @@ const router = createBrowserRouter([
                 element: <TerminalDetail />,
               },
             ],
+          },
+          {
+            path: "mdm/devices",
+            element: (
+              <PrivilegeGuard privilege="node_administration">
+                <HeadwindDevicesPage />
+              </PrivilegeGuard>
+            ),
           },
           {
             path: "accounts",

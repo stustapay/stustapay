@@ -25,3 +25,8 @@ terminalserver:
   base_url: "http://localhost:8083"
   host: "localhost"
   port: 8083
+
+headwind:
+  enabled: false
+  base_url: "http://localhost:8080/headwind"
+  api_key: "replace-with-headwind-api-key"

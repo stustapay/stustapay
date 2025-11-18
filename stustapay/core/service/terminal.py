@@ -10,6 +10,8 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.terminal import (
     CurrentTerminal,
+    HeadwindDeviceMapping,
+    HeadwindDeviceMappingWithTerminal,
     NewTerminal,
     Terminal,
     TerminalButton,
@@ -843,3 +845,196 @@ class TerminalService(Service[Config]):
                 conn=conn, till_id=till["id"], cash_register_id=cash_register_id
             )
         
+
+    # region Headwind device mapping helpers
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def list_headwind_mappings(
+        self, *, conn: Connection, node: Node
+    ) -> list[HeadwindDeviceMappingWithTerminal]:
+        return await conn.fetch_many(
+            HeadwindDeviceMappingWithTerminal,
+            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
+            "from terminal_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "where tdm.node_id = any($1) "
+            "order by t.name asc",
+            node.ids_to_root,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def get_headwind_mapping_for_terminal(
+        self, *, conn: Connection, node: Node, terminal_id: int
+    ) -> HeadwindDeviceMapping | None:
+        return await conn.fetch_maybe_one(
+            HeadwindDeviceMapping,
+            "select * from terminal_device_mapping where terminal_id = $1 and node_id = any($2)",
+            terminal_id,
+            node.ids_to_root,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def get_headwind_mapping_with_terminal(
+        self, *, conn: Connection, node: Node, terminal_id: int
+    ) -> HeadwindDeviceMappingWithTerminal | None:
+        return await conn.fetch_maybe_one(
+            HeadwindDeviceMappingWithTerminal,
+            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
+            "from terminal_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "where tdm.terminal_id = $1 and tdm.node_id = any($2)",
+            terminal_id,
+            node.ids_to_root,
+        )
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def upsert_headwind_mapping(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        terminal_id: int,
+        headwind_device_id: str,
+        headwind_device_number: str | None,
+        headwind_device_name: str | None,
+        headwind_device_serial: str | None,
+        headwind_device_model: str | None,
+    ) -> HeadwindDeviceMappingWithTerminal:
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        normalized_device_id = str(headwind_device_id)
+
+        existing_for_device = await conn.fetch_maybe_one(
+            HeadwindDeviceMapping,
+            "select * from terminal_device_mapping where headwind_device_id = $1",
+            normalized_device_id,
+        )
+        if existing_for_device and existing_for_device.terminal_id != terminal_id:
+            raise InvalidArgument("Headwind device is already mapped to a different terminal")
+
+        existing_for_terminal = await conn.fetch_maybe_one(
+            HeadwindDeviceMapping,
+            "select * from terminal_device_mapping where terminal_id = $1",
+            terminal_id,
+        )
+
+        if existing_for_terminal is None:
+            mapping_row = await conn.fetchrow(
+                "insert into terminal_device_mapping (terminal_id, node_id, headwind_device_id, "
+                "headwind_device_number, headwind_device_name, headwind_device_serial, headwind_device_model) "
+                "values ($1, $2, $3, $4, $5, $6, $7) "
+                "returning *",
+                terminal_id,
+                terminal.node_id,
+                normalized_device_id,
+                headwind_device_number,
+                headwind_device_name,
+                headwind_device_serial,
+                headwind_device_model,
+            )
+        else:
+            mapping_row = await conn.fetchrow(
+                "update terminal_device_mapping "
+                "set headwind_device_id = $1, "
+                "    headwind_device_number = $2, "
+                "    headwind_device_name = $3, "
+                "    headwind_device_serial = $4, "
+                "    headwind_device_model = $5, "
+                "    last_token_pushed_at = null, "
+                "    last_push_status = null, "
+                "    last_push_error = null, "
+                "    updated_at = now() "
+                "where id = $6 "
+                "returning *",
+                normalized_device_id,
+                headwind_device_number,
+                headwind_device_name,
+                headwind_device_serial,
+                headwind_device_model,
+                existing_for_terminal.id,
+            )
+
+        return await conn.fetch_one(
+            HeadwindDeviceMappingWithTerminal,
+            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
+            "from terminal_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "where tdm.id = $1",
+            mapping_row["id"],
+        )
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def delete_headwind_mapping(
+        self, *, conn: Connection, node: Node, terminal_id: int
+    ) -> bool:
+        deleted = await conn.fetchrow(
+            "delete from terminal_device_mapping where terminal_id = $1 and node_id = any($2) returning id",
+            terminal_id,
+            node.ids_to_root,
+        )
+        return deleted is not None
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def issue_headwind_terminal_token(
+        self, *, conn: Connection, node: Node, terminal_id: int
+    ) -> tuple[str, Terminal]:
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        session_uuid = await conn.fetchval(
+            "update terminal set session_uuid = gen_random_uuid(), registration_uuid = null "
+            "where id = $1 returning session_uuid",
+            terminal_id,
+        )
+        if session_uuid is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        token = self.auth_service.create_terminal_access_token(
+            TerminalTokenMetadata(terminal_id=terminal_id, session_uuid=session_uuid)
+        )
+        return token, terminal
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def record_headwind_push_result(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        mapping_id: int,
+        success: bool,
+        error_message: str | None,
+    ) -> HeadwindDeviceMapping:
+        status = "success" if success else "error"
+        return await conn.fetch_one(
+            HeadwindDeviceMapping,
+            "update terminal_device_mapping "
+            "set last_token_pushed_at = now(), "
+            "    last_push_status = $2, "
+            "    last_push_error = $3, "
+            "    updated_at = now() "
+            "where id = $1 and node_id = any($4) "
+            "returning *",
+            mapping_id,
+            status,
+            error_message,
+            node.ids_to_root,
+        )
+
+    # endregion
