@@ -217,15 +217,21 @@ export const HeadwindDevicesPage: React.FC = () => {
         headerName: t("actions"),
         width: 160,
         getActions: (params) => {
-          const actions = [
-            <GridActionsCellItem
-              key="map"
-              icon={<LinkIcon />}
-              label={params.row.mapping ? t("mdm.remap") : t("mdm.map")}
-              onClick={() => handleOpenDialog(params.row)}
-            />,
-          ];
+          const actions = [];
 
+          // Only show "Map" button if device is NOT mapped
+          if (!params.row.mapping) {
+            actions.push(
+              <GridActionsCellItem
+                key="map"
+                icon={<LinkIcon />}
+                label={t("mdm.map")}
+                onClick={() => handleOpenDialog(params.row)}
+              />
+            );
+          }
+
+          // Show Refresh and Unmap buttons only if device IS mapped
           if (params.row.mapping) {
             actions.push(
               <GridActionsCellItem
@@ -259,7 +265,7 @@ export const HeadwindDevicesPage: React.FC = () => {
   const headwindDisabled = (error as { status?: number } | undefined)?.status === 400;
 
   return (
-    <ListLayout title={t("mdm.headwindDevices")} routes={MdmRoutes}>
+    <ListLayout title={t("mdm.headwindDevices")}>
       <Stack spacing={2}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="center">
           <TextField
@@ -297,7 +303,7 @@ export const HeadwindDevicesPage: React.FC = () => {
       </Stack>
 
       <Dialog open={dialogDevice != null} onClose={closeDialog} fullWidth maxWidth="sm">
-        <DialogTitle>{dialogDevice?.mapping ? t("mdm.remapDevice") : t("mdm.mapDevice")}</DialogTitle>
+        <DialogTitle>{t("mdm.mapDevice")}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
             <Box>
@@ -316,11 +322,19 @@ export const HeadwindDevicesPage: React.FC = () => {
               onChange={(event) => setDialogTerminalId(Number(event.target.value))}
               fullWidth
             >
-              {terminals.map((terminal) => (
-                <MenuItem key={terminal.id} value={terminal.id}>
-                  {terminal.name}
-                </MenuItem>
-              ))}
+              {terminals
+                .filter((terminal) => {
+                  // Filter out terminals that are already mapped to other devices
+                  const existingMapping = devices?.find(
+                    (d) => d.mapping?.terminal_id === terminal.id && d.device.id !== dialogDevice?.device.id
+                  );
+                  return !existingMapping;
+                })
+                .map((terminal) => (
+                  <MenuItem key={terminal.id} value={terminal.id}>
+                    {terminal.name}
+                  </MenuItem>
+                ))}
             </TextField>
           </Stack>
         </DialogContent>
@@ -332,7 +346,7 @@ export const HeadwindDevicesPage: React.FC = () => {
             loading={upsertState.isLoading}
             disabled={dialogTerminalId === "" || terminals.length === 0}
           >
-            {dialogDevice?.mapping ? t("mdm.remap") : t("mdm.map")}
+            {t("mdm.map")}
           </LoadingButton>
         </DialogActions>
       </Dialog>

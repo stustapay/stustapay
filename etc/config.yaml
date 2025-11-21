@@ -26,4 +26,5 @@ terminalserver:
 headwind:
   enabled: false
   base_url: "https://headwind.example.com"
-  api_key: "<set headwind api key>"
+  login: "admin"
+  password_md5: "<MD5 hash of the password>"

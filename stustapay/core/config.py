@@ -42,11 +42,12 @@ class CustomerPortalApiConfig(HTTPServerConfig):
 class HeadwindConfig(BaseModel):
     enabled: bool = False
     base_url: str
-    api_key: str
+    # Credentials for JWT login (/rest/public/jwt/login)
+    login: str
+    password_md5: str
     request_timeout_seconds: float = 10.0
     device_search_path: str = "/rest/private/devices/search"
     device_search_method: str = "POST"
-    push_app_settings_path: str = "/rest/private/push/app-settings"
 
 
 class Config(BaseModel):

@@ -29,4 +29,5 @@ terminalserver:
 headwind:
   enabled: false
   base_url: "http://localhost:8080/headwind"
-  api_key: "replace-with-headwind-api-key"
+  login: "admin"
+  password_md5: "replace-with-md5-hash"

@@ -126,7 +126,6 @@ async def create_or_update_mapping(
     try:
         await client.update_device_custom_attributes(
             device_id=mapping.headwind_device_id,
-            device_number=mapping.headwind_device_number,
             custom1=token_value,  # MDM_TERMINAL_TOKEN
             custom2=context.config.terminalserver.base_url,  # TERMINAL_BASE_URL
             custom3=terminal.name,  # TERMINAL_NAME (optional)
@@ -199,7 +198,6 @@ async def refresh_mapping_token(
     try:
         await client.update_device_custom_attributes(
             device_id=mapping.headwind_device_id,
-            device_number=mapping.headwind_device_number,
             custom1=token_value,  # MDM_TERMINAL_TOKEN
             custom2=context.config.terminalserver.base_url,  # TERMINAL_BASE_URL
             custom3=terminal.name,  # TERMINAL_NAME (optional)
