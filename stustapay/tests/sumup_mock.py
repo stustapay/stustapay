@@ -21,6 +21,7 @@ class MockSumUpApi:
             merchant_code=self.merchant_code,
             status=SumUpCheckoutStatus.PAID,
             date=datetime.now(),
+            redirect_url="http://localhost:4300/test",
         )
 
     @classmethod

@@ -87,7 +87,7 @@ class SumupService(Service[Config]):
 
     async def _process_topup(
         self, conn: Connection, node: Node, till: Till, pending_order: PendingOrder, topup: CompletedTopUp
-    ):
+    ) -> CompletedTopUp:
         await make_topup_bookings(
             conn=conn,
             current_till=till,
@@ -97,10 +97,11 @@ class SumupService(Service[Config]):
             booked_at=pending_order.created_at,
         )
         await conn.execute("update pending_sumup_order set status = 'booked' where uuid = $1", pending_order.uuid)
+        return topup
 
     async def _process_ticket_sale(
         self, conn: Connection, node: Node, till: Till, pending_order: PendingOrder, ticket_sale: CompletedTicketSale
-    ):
+    ) -> CompletedTicketSale:
         await make_ticket_sale_bookings(
             conn=conn,
             current_till=till,
@@ -110,6 +111,7 @@ class SumupService(Service[Config]):
             booked_at=pending_order.created_at,
         )
         await conn.execute("update pending_sumup_order set status = 'booked' where uuid = $1", pending_order.uuid)
+        return ticket_sale
 
     async def pending_order_exists_at_sumup(self, conn: Connection, pending_order: PendingOrder) -> bool:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)

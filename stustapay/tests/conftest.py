@@ -16,6 +16,7 @@ from stustapay.core.config import (
     Config,
     CoreConfig,
     CustomerPortalApiConfig,
+    HeadwindConfig,
     TerminalApiConfig,
 )
 from stustapay.core.database import get_database
@@ -69,10 +70,10 @@ from stustapay.core.service.user_tag import UserTagService
 
 def get_test_db_config() -> DatabaseConfig:
     return DatabaseConfig(
-        user=os.environ.get("TEST_DB_USER", None),
-        password=os.environ.get("TEST_DB_PASSWORD", None),
-        host=os.environ.get("TEST_DB_HOST", None),
-        port=int(os.environ.get("TEST_DB_PORT", 0)) or None,
+        user=os.environ.get("TEST_DB_USER", "stustapay_test"),
+        password=os.environ.get("TEST_DB_PASSWORD", "stustapay_test"),
+        host=os.environ.get("TEST_DB_HOST", "localhost"),
+        port=int(os.environ.get("TEST_DB_PORT", 0)) or 5434,
         dbname=os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
     )
 
@@ -93,28 +94,57 @@ TEST_CONFIG = Config(
     customerportal=CustomerPortalApiConfig(
         base_url="http://localhost:8082",
     ),
+    headwind=HeadwindConfig(
+        base_url="http://localhost:8080",
+        login="admin",
+        password_md5="dummy",
+        enabled=False,
+    ),
     database=get_test_db_config(),
 )
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    return asyncio.get_event_loop()
-
-
 @pytest.fixture(scope="session")
 def config() -> Config:
     return TEST_CONFIG
 
 
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create a session-scoped event loop for async fixtures."""
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    yield loop
+    # Clean up any remaining tasks
+    pending = asyncio.all_tasks(loop)
+    for task in pending:
+        task.cancel()
+    # Wait for tasks to finish cancelling
+    if pending:
+        loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+    loop.close()
+
+
 @pytest.fixture(scope="session", autouse=True)
-async def setup_test_db_pool(config: Config) -> asyncpg.Pool:
+async def setup_test_db_pool(config: Config, event_loop) -> asyncpg.Pool:
     db = get_database(config.database)
-    pool = await db.create_pool(n_connections=10)
+    try:
+        # Add a timeout to fail fast if database is not available
+        pool = await asyncio.wait_for(db.create_pool(n_connections=10), timeout=5.0)
+    except asyncio.TimeoutError:
+        raise RuntimeError(
+            "Database connection timeout. Please ensure a test database is running and configured via "
+            "TEST_DB_USER, TEST_DB_HOST, TEST_DB_PORT, TEST_DB_DATABASE, and TEST_DB_PASSWORD environment variables."
+        ) from None
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to connect to test database: {e}. Please ensure a test database is running and configured via "
+            "TEST_DB_USER, TEST_DB_HOST, TEST_DB_PORT, TEST_DB_DATABASE, and TEST_DB_PASSWORD environment variables."
+        ) from e
 
     await database.reset_schema(pool)
     await db.apply_migrations()
-    return pool
+    yield pool
+    # Clean up: close the pool at the end of the session
+    await pool.close()
 
 
 @pytest.fixture
@@ -145,11 +175,11 @@ async def event_node(db_connection: Connection) -> Node:
             bon_issuer="",
             bon_address="",
             max_account_balance=150,
-            sumup_topup_enabled=False,
-            sumup_payment_enabled=False,
-            sumup_affiliate_key="",
-            sumup_api_key="",
-            sumup_merchant_code="",
+            sumup_topup_enabled=True,
+            sumup_payment_enabled=True,
+            sumup_affiliate_key="test_affiliate",
+            sumup_api_key="test_api_key",
+            sumup_merchant_code="TEST_MERCHANT",
             ust_id="",
             email_enabled=False,
             email_default_sender=None,
@@ -209,13 +239,17 @@ async def create_random_user_tag(
             pin = secrets.token_hex(16)
             try:
                 user_tag_id = await db_connection.fetchval(
-                    "insert into user_tag (node_id, secret_id, restriction, pin) values ($1, $2, $3, $4) returning id",
+                    "insert into user_tag (uid, node_id, secret_id, restriction, pin) values ($1, $2, $3, $4, $5) returning id",
+                    uid,
                     event_node.id,
                     user_tag_secret,
                     restriction.name if restriction is not None else None,
                     pin,
                 )
                 return UserTag(id=user_tag_id, uid=uid, pin=pin)
+            except asyncpg.UniqueViolationError:
+                # uid already exists, try again
+                pass
             except asyncpg.DataError:
                 pass
 

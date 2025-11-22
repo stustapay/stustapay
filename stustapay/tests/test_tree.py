@@ -342,7 +342,8 @@ async def test_copy_event(tree_service: TreeService, global_admin_token: str):
     # Verify event settings were copied
     assert copied_event.event.currency_identifier == original_event.event.currency_identifier
     assert copied_event.event.max_account_balance == original_event.event.max_account_balance
-    assert copied_event.event.bon_title == "Copied Event"  # Should be overridden with new name
+    # When copy_event_settings=True, bon_title is copied from source event
+    assert copied_event.event.bon_title == "Title"  # Copied from original event
 
     # Test copying with no options enabled
     minimal_copy: Node = await tree_service.copy_event(

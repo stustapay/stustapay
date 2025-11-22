@@ -1166,10 +1166,11 @@ class OrderService(Service[Config]):
                 )
 
             # Customer cannot payout more than they have
-            if payout_amount > customer_account.balance:
+            # Use abs() to handle both positive and negative input amounts
+            if abs(payout_amount) > customer_account.balance:
                 raise InvalidArgument(
                     f"Cannot payout more than the customer has. "
-                    f"Payout amount ({payout_amount:.02f}€) is more than balance ({customer_account.balance:.02f}€)"
+                    f"Payout amount ({abs(payout_amount):.02f}€) is more than balance ({customer_account.balance:.02f}€)"
                 )
 
             # Calculate the new balance after payout
@@ -1186,9 +1187,12 @@ class OrderService(Service[Config]):
                     f"would still exceed the maximum allowed balance ({max_positive_balance:.02f}€) by {too_much:.02f}€"
                 )
 
+        # Store the absolute payout amount
+        # For normal payouts: payout_amount is positive (e.g., 100 when paying out 100€)
+        # For post-payment: payout_amount can be negative (customer paying into debt)
         return PendingPayOut(
             uuid=new_pay_out.uuid,
-            amount=-payout_amount,
+            amount=abs(payout_amount) if not node.event.post_payment_allowed else payout_amount,
             customer_tag_uid=new_pay_out.customer_tag_uid,
             customer_account_id=customer_account.id,
             old_balance=customer_account.balance,
@@ -1235,13 +1239,18 @@ class OrderService(Service[Config]):
         cash_register_account_id = await get_cash_register_account_id(
             conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
         )
+        
+        # For payouts, positive amounts mean money leaving the customer account
+        # The bookings use positive amounts to transfer from customer -> cash_topup (money leaves customer)
+        # and from cash_register -> cash_exit (cash leaves register)
+        payout_amount_abs = abs(pending_pay_out.amount)
         prepared_bookings: Dict[BookingIdentifier, float] = {
             BookingIdentifier(
                 source_account_id=pending_pay_out.customer_account_id, target_account_id=cash_topup_acc.id
-            ): pending_pay_out.amount,
+            ): payout_amount_abs,
             BookingIdentifier(
                 source_account_id=cash_register_account_id, target_account_id=cash_exit_acc.id
-            ): pending_pay_out.amount,
+            ): payout_amount_abs,
         }
 
         order_info = await book_order(
