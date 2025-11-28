@@ -76,13 +76,9 @@ fun CashInOutView(
 
     // Disable back button functionality for users with only can_topup privilege
     val loginState by viewModel.terminalLoginState.collectAsStateWithLifecycle()
-    if (!loginState.hasOnlyTopUpPrivilege()) {
-        BackHandler {
-            leaveView()
-        }
-    } else {
-        // For users with only can_topup privilege, prevent back button functionality
-        BackHandler {}
+    val isSelfServiceMode = loginState.hasOnlyTopUpPrivilege()
+    BackHandler {
+        leaveView()
     }
 
     val activeTab by viewModel.activeCashInOutTab.collectAsStateWithLifecycle()
@@ -103,11 +99,9 @@ fun CashInOutView(
             TopAppBar(
                 title = { Text(loginState.title().title) },
                 // Only show back button if user does not have only the can_topup privilege
-                icon = if (!loginState.hasOnlyTopUpPrivilege()) {
-                    TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
-                        leaveView()
-                    }
-                } else null,
+                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
+                    leaveView()
+                },
             )
         }
     ) { paddingValues ->
@@ -138,7 +132,11 @@ fun CashInOutView(
                     startDestination = startRoute,
                 ) {
                     composable(CashInOutTab.TopUp.route) {
-                        TopUpView()
+                        TopUpView(
+                            onFinished = if (isSelfServiceMode) {
+                                leaveView
+                            } else null
+                        )
                     }
                     composable(CashInOutTab.PayOut.route) {
                         PayOutView()

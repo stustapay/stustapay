@@ -34,7 +34,9 @@ fun TerminalConfig(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(fetchConfig) {
-        viewModel.fetchAccessData()
+        if (fetchConfig) {
+            viewModel.fetchAccessData()
+        }
     }
 
     Box(

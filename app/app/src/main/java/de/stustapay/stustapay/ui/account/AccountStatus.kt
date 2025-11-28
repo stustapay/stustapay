@@ -27,16 +27,29 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AccountStatus(
-    navigateTo: (NavDest) -> Unit, viewModel: AccountViewModel
+    navigateTo: (NavDest) -> Unit,
+    viewModel: AccountViewModel,
+    isSelfService: Boolean = false,
+    onFinished: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val commentVisible by viewModel.commentVisible.collectAsStateWithLifecycle()
 
-    // LaunchedEffect to keep this view active for 10 seconds
-    LaunchedEffect(key1 = Unit) {
-        delay(5000)
-        navigateTo(CustomerStatusNavDests.scan)  
+    // Auto-return after showing a result
+    LaunchedEffect(uiState.customer, isSelfService) {
+        when (uiState.customer) {
+            is CustomerStatusRequestState.Done,
+            is CustomerStatusRequestState.DoneDetails -> {
+                delay(5000)
+                if (isSelfService) {
+                    onFinished()
+                } else {
+                    navigateTo(CustomerStatusNavDests.scan)
+                }
+            }
+            else -> Unit
+        }
     }
     
     Scaffold(content = {
@@ -46,7 +59,11 @@ fun AccountStatus(
                 .padding(10.dp),
             onClose = {
                 viewModel.idleState()
-                navigateTo(CustomerStatusNavDests.scan)
+                if (isSelfService) {
+                    onFinished()
+                } else {
+                    navigateTo(CustomerStatusNavDests.scan)
+                }
             },
         ) {
             Column(

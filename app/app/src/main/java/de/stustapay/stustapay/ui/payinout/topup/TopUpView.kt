@@ -13,6 +13,7 @@ import de.stustapay.stustapay.ui.nav.navigateTo
 
 @Composable
 fun TopUpView(
+    onFinished: (() -> Unit)? = null,
     viewModel: TopUpViewModel = hiltViewModel()
 ) {
     val navTarget by viewModel.navState.collectAsStateWithLifecycle()
@@ -26,7 +27,10 @@ fun TopUpView(
 
         TopUpPage.Done -> {
             TopUpSuccess(
-                onDismiss = { viewModel.dismissSuccess() },
+                onDismiss = {
+                    viewModel.dismissSuccess()
+                    onFinished?.invoke()
+                },
                 viewModel = viewModel,
             )
         }

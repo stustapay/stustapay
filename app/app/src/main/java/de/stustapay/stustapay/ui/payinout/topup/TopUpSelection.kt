@@ -2,7 +2,6 @@ package de.stustapay.stustapay.ui.payinout.topup
 
 import android.app.Activity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,9 +27,6 @@ import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -55,7 +51,6 @@ import de.stustapay.stustapay.ui.common.pay.CashECCallback
 import de.stustapay.stustapay.ui.common.pay.CashECPay
 import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -170,20 +165,6 @@ fun TopUpSelection(
         else -> 1 // Amount entered but not yet scanning
     }
     
-    // Secret logout gesture detection
-    var tapCount by remember { mutableIntStateOf(0) }
-    var lastTapTime by remember { mutableLongStateOf(0L) }
-    var timeoutJob by remember { mutableStateOf<Job?>(null) }
-    val SECRET_TAP_COUNT = 5
-    val TAP_TIMEOUT_MS = 1500 // Reset tap count after 1.5 seconds of inactivity
-    
-    // Function to reset tap count
-    val resetTapCount = {
-        tapCount = 0
-        timeoutJob?.cancel()
-        timeoutJob = null
-    }
-
     if (errorMessage != null) {
         ErrorDialog(onDismiss = { scope.launch { viewModel.dismissError() } }) {
             Text(errorMessage, style = MaterialTheme.typography.h4)
@@ -196,51 +177,8 @@ fun TopUpSelection(
         checkAmount = {
             viewModel.checkAmountLocal(topUpState.currentAmount.toDouble() / 100.0)
         },
-        status = { 
-            StatusText(
-                status = status,
-                modifier = Modifier.pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            val currentTime = System.currentTimeMillis()
-                            
-                            // Cancel existing timeout job
-                            timeoutJob?.cancel()
-                            
-                            // Increment tap count
-                            tapCount++
-                            
-                            // Start new timeout
-                            timeoutJob = scope.launch {
-                                delay(TAP_TIMEOUT_MS.toLong())
-                                tapCount = 0
-                            }
-                            
-                            // Trigger logout if secret tap count reached
-                            if (tapCount >= SECRET_TAP_COUNT) {
-                                resetTapCount()
-                                scope.launch {
-                                    try {
-                                        // Show logout message as visual feedback
-                                        viewModel.showLogoutMessage()
-                                        
-                                        // Give time for the message to be seen
-                                        delay(500)
-                                        
-                                        // Perform the logout
-                                        viewModel.secretLogout()
-                                        
-                                        // The parent view will handle navigation
-                                    } catch (e: Exception) {
-                                        // If anything goes wrong, just reset the tap count
-                                        resetTapCount()
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-            ) 
+        status = {
+            StatusText(status = status)
         },
         onPaymentRequested = CashECCallback.Tag(
             onEC = {

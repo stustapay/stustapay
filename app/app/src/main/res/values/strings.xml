@@ -30,6 +30,15 @@
     <string name="common_action_create">Create</string>
     <string name="common_action_update">Update</string>
 
+    <string name="selfservice_title">Self-service terminal</string>
+    <string name="selfservice_description">Choose an option to continue.</string>
+    <string name="selfservice_check_balance">Check balance</string>
+    <string name="selfservice_check_balance_hint">Show the current wristband balance.</string>
+    <string name="selfservice_topup">Top up balance</string>
+    <string name="selfservice_topup_hint">Add credit and pay at the card terminal.</string>
+    <string name="selfservice_hint_scan">Hold your wristband on the reader when prompted.</string>
+    <string name="selfservice_hint_payment">Use the card terminal to confirm top-ups.</string>
+
     <string name="root_item_ticket">Ticket Sale</string>
     <string name="root_item_sale">Product Sale</string>
     <string name="root_item_topup">Cash In and Out</string>

@@ -29,6 +29,15 @@
     <string name="common_action_create">Erstellen</string>
     <string name="common_action_update">Änderungen übernehmen</string>
 
+    <string name="selfservice_title">Self-Service Terminal</string>
+    <string name="selfservice_description">Bitte Option auswählen.</string>
+    <string name="selfservice_check_balance">Guthaben prüfen</string>
+    <string name="selfservice_check_balance_hint">Aktuellen Bändchen-Stand anzeigen.</string>
+    <string name="selfservice_topup">Guthaben aufladen</string>
+    <string name="selfservice_topup_hint">Guthaben hinzufügen und am Kartenterminal zahlen.</string>
+    <string name="selfservice_hint_scan">Bändchen bei Aufforderung auf den Leser halten.</string>
+    <string name="selfservice_hint_payment">Am Kartenterminal bestätigen und bezahlen.</string>
+
     <string name="root_item_ticket">Eintritt</string>
     <string name="root_item_sale">Verkauf</string>
     <string name="root_item_topup">Einzahlen / Auszahlen</string>
