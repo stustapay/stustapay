@@ -1,36 +1,36 @@
 .PHONY: test
 test:
-	python3 -m pytest stustapay --doctest-modules --cov=stustapay
+	uv run pytest stustapay --doctest-modules --cov=stustapay
 
 .PHONY: check-format
 check-format:
-	python3 -m ruff format --check
+	uv run ruff format --check
 
 .PHONY: format
 format:
-	python3 -m ruff format
+	uv run ruff format
 
 .PHONY: lint
 lint: ruff pylint mypy
 
 .PHONY: pylint
 pylint:
-	pylint stustapay
+	uv run pylint stustapay
 
 .PHONY: mypy
 mypy:
-	python3 -m mypy stustapay
+	uv run mypy stustapay
 
 .PHONY: ruff
 ruff:
-	python3 -m ruff check
+	uv run ruff check
 
 .PHONY: ruff-fix
 ruff-fix:
-	python3 -m ruff check --fix
+	uv run ruff check --fix
 
 .PHONY: generate-openapi
 generate-openapi:
-	python3 -m stustapay -c ./etc/config.yaml customerportal-api --show-openapi > api/customer_portal.json
-	python3 -m stustapay -c ./etc/config.yaml administration-api --show-openapi > api/administration.json
-	python3 -m stustapay -c ./etc/config.yaml terminalserver-api --show-openapi > api/terminalserver.json
+	uv run stustapay -c ./etc/config.yaml customerportal-api --show-openapi > api/customer_portal.json
+	uv run stustapay -c ./etc/config.yaml administration-api --show-openapi > api/administration.json
+	uv run stustapay -c ./etc/config.yaml terminalserver-api --show-openapi > api/terminalserver.json

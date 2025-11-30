@@ -36,8 +36,7 @@ dependencies = [
 [project.scripts]
 stustapay = "stustapay.cli.main:main"
 
-[project.optional-dependencies]
-test = ["pytest==8.4.0", "pytest-asyncio==1.0.0", "pytest-cov==6.1.1"]
+[dependency-groups]
 dev = [
     "pre-commit",
     "ruff==0.9.9",
@@ -50,7 +49,9 @@ dev = [
     "types-pytz",
     "bump-my-version~=0.15",
     "websockets~=15.0.1",
+    { include-group = "test" }
 ]
+test = ["pytest==8.4.0", "pytest-asyncio==1.0.0", "pytest-cov==6.1.1"]
 
 [project.urls]
 Website = "https://stustapay.de"

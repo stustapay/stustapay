@@ -15,26 +15,20 @@ git clone https://github.com/stustapay/stustapay.git
 Install system requirements:
 
 - `python >= 3.11`
-- `nodejs >= 20`
+- `nodejs >= 22`
 - `docker` (optional, recommended for running postgresql in a docker container)
 
 ### Setup Backend for Development
 
-Create a python virtualenv
+Make sure to have [uv](https://docs.astral.sh/uv/) installed.
+
+Install all dependencies with uv
 
 ```shell
-python3 -m virtualenv -p python3 .venv
-source .venv/bin/activate
+uv sync
 ```
 
-Install backend python module as a local editable python module.
-This will install all python requirements needed for development and testing as well.
-
-```shell
-pip install -e '.[dev,test]'
-```
-
-You should now have the `stustapay` command available.
+You should now have the `stustapay` command available in the virtualenv `.venv`.
 
 #### Setup the database
 
@@ -61,7 +55,7 @@ You'll probably want to copy `etc/config.devel.yaml` and adapt the database conn
 Apply the database schema
 
 ```shell
-stustapay -c etc/config.devel.yaml db migrate
+uv run stustapay -c etc/config.devel.yaml db migrate
 ```
 
 Now you're mostly set up and ready to start developing and using the backend.

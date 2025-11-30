@@ -12,13 +12,13 @@ for setting up the general development environment.
 Set up the simulation environment (customize parameters if needed)
 
 ```shell
-python3 -m stustapay -c etc/config.devel.yaml simulate setup
+uv run stustapay -c etc/config.devel.yaml simulate setup
 ```
 
 ## Simulate
 
-- Start API in one terminal: `python3 -m stustapay -c etc/config.devel.yaml simulate api --no-tse --no-bon`
-- Simulate in second terminal: `python3 -m stustapay -c etc/config.devel.yaml -vvv simulate start`
+- Start API in one terminal: `uv run stustapay -c etc/config.devel.yaml simulate api --no-tse --no-bon`
+- Simulate in second terminal: `uv run stustapay -c etc/config.devel.yaml -vvv simulate start`
 
 ## View Data
 

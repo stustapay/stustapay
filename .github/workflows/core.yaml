@@ -11,39 +11,51 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.11
-      - name: Install dependencies
-        run: python -m pip install -e '.[dev,test]'
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - name: Analysing the code with pylint
         run: make pylint
 
   mypy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.11
-      - name: Install dependencies
-        run: python -m pip install -e '.[dev,test]'
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - name: Analysing the code with mypy
         run: make mypy
 
   ruff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.11
-      - name: Install dependencies
-        run: python -m pip install -e '.[dev,test]'
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - name: Analysing the code with ruff
         run: make ruff
 
@@ -51,9 +63,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ 3.11 ]
+        python-version: [ 3.13 ]
         os: [ ubuntu-latest ]
-        postgres-version: [ 15 ]
+        postgres-version: [ 17 ]
     services:
       postgres:
         image: postgres:${{ matrix.postgres-version }}
@@ -75,27 +87,33 @@ jobs:
       TEST_DB_DATABASE: "stustapay-test"
       TEST_DB_PASSWORD: "password"
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e '.[dev,test]'
+          python-version: "${{ matrix.python-version }}"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - name: Run all tests
-        run: pytest stustapay/tests --doctest-modules --junitxml=junit/test-results.xml --cov=stustapay --cov-report=xml --cov-report=html
+        run: uv run pytest stustapay/tests --doctest-modules --junitxml=junit/test-results.xml --cov=stustapay --cov-report=xml --cov-report=html
 
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.11
-      - name: Install dependencies
-        run: python -m pip install -e '.[dev]'
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - name: Check formatting
         run: make check-format
