@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stustapay"
-version = "0.2.0"
+version = "0.2.1"
 license = { file = "LICENSE" }
 maintainers = [{ name = "Michael Loipführer", email = "milo@sft.lol" }]
 readme = "README.md"
@@ -111,7 +111,7 @@ asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 
 [tool.bumpversion]
-current_version = "0.2.0"
+current_version = "0.2.1"
 commit = false
 files = [
     { filename = "pyproject.toml" },
