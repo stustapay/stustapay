@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-[Compare the full difference.](https://github.com/stustapay/stustapay/compare/v0.2.1...HEAD)
+[Compare the full difference.](https://github.com/stustapay/stustapay/compare/v0.2.2...HEAD)
+
+## 0.2.2 (2025-11-30)
+
+[Compare the full difference.](https://github.com/stustapay/stustapay/compare/v0.2.1...v0.2.2)
 
 ## 0.2.1 (2025-11-30)
 
