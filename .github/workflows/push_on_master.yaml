@@ -44,7 +44,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
               dists=$(uv run sftkit list-debian-distros)
           fi
-          echo "distros=$dists" >> $GITHUB_STATE
+          echo "distros=$dists" >> $GITHUB_OUTPUT
     # map the step outputs to job outputs
     outputs:
       distros: ${{ steps.set-distros.outputs.distros }}
