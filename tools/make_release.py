@@ -85,6 +85,17 @@ def _update_changelog(config: Config, dry_run: bool):
         )
 
 
+def _make_git_commit(config: Config, dry_run: bool):
+    commit_message = f"chore: release version {config.new_version}"
+    tag_name = f"v{config.new_version}"
+    print(f'Creating git commit: "{commit_message}"')
+    print(f'Creating git tag: "{tag_name}"')
+    if not dry_run:
+        subprocess.run(["git", "add", "-u"], check=True)
+        subprocess.run(["git", "commit", "-m", commit_message], check=True)
+        subprocess.run(["git", "tag", tag_name], check=True)
+
+
 def main(part: str, dry_run: bool):
     if dry_run:
         print("Performing a dry run ...")
@@ -101,6 +112,7 @@ def main(part: str, dry_run: bool):
 
     _update_debian_changelog(pyproject, config, dry_run)
     _update_changelog(config, dry_run)
+    _make_git_commit(config, dry_run)
 
 
 if __name__ == "__main__":
