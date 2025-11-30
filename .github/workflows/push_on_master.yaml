@@ -36,7 +36,7 @@ jobs:
       - id: set-distros
         run: |
           # if we're running from a tag, get the full list of distros; otherwise just use debian:sid
-          dists='["debian:bookworm"]'
+          dists='["debian:trixie"]'
           if [[ $GITHUB_REF == refs/tags/* ]]; then
               dists=$(sftkit list-debian-distros)
           fi
