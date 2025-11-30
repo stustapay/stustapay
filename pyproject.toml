@@ -47,9 +47,9 @@ dev = [
     "types-PyYAML",
     "types-python-dateutil",
     "types-pytz",
-    "bump-my-version~=0.15",
+    "bump-my-version>=1.2.4",
     "websockets~=15.0.1",
-    { include-group = "test" }
+    { include-group = "test" },
 ]
 test = ["pytest==8.4.0", "pytest-asyncio==1.0.0", "pytest-cov==6.1.1"]
 
