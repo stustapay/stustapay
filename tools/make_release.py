@@ -112,6 +112,10 @@ def main(part: str, dry_run: bool):
 
     _update_debian_changelog(pyproject, config, dry_run)
     _update_changelog(config, dry_run)
+
+    if not dry_run:
+        # update uv lockfile due to our version bump
+        subprocess.run(["uv", "sync"], check=True)
     _make_git_commit(config, dry_run)
 
 
