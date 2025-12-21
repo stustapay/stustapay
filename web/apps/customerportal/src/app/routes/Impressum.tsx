@@ -19,12 +19,28 @@ export const Impressum: React.FC = () => {
           variant="h2"
           sx={{
             fontWeight: "bold",
+            mb: 3,
           }}
           gutterBottom
         >
           Impressum
         </Typography>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{impressumContent}</ReactMarkdown>
+        <Box
+          sx={{
+            width: "100%",
+            "& p": {
+              marginBottom: 2,
+              textAlign: "left",
+            },
+            "& strong": {
+              display: "block",
+              marginBottom: 0.5,
+              fontSize: "1.1rem",
+            },
+          }}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{impressumContent}</ReactMarkdown>
+        </Box>
       </Box>
     </Container>
   );

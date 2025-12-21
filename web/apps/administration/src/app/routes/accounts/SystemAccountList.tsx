@@ -17,7 +17,7 @@ export const SystemAccountList: React.FC = withPrivilegeGuard(Privilege.node_adm
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        products: data ? selectAccountAll(data) : undefined,
+        products: data ? selectAccountAll(data) as any : undefined,
       }),
     }
   );
@@ -28,7 +28,7 @@ export const SystemAccountList: React.FC = withPrivilegeGuard(Privilege.node_adm
 
   return (
     <ListLayout title={t("systemAccounts")}>
-      <AccountTable accounts={accounts ?? []} />
+      <AccountTable accounts={(accounts ?? []) as any} />
     </ListLayout>
   );
 });

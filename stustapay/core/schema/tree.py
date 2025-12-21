@@ -182,6 +182,17 @@ class Node(BaseModel):
         return self.parents_until_event_node + [self.id]
 
 
+class EventSummary(BaseModel):
+    node_id: int
+    node_name: str
+    path: str
+    description: str
+    event_id: int
+    event_name: str
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+
+
 class NewEvent(NewNode, UpdateEvent):
     pass
 
@@ -189,3 +200,42 @@ class NewEvent(NewNode, UpdateEvent):
 class NodeSeenByUser(Node):
     privileges_at_node: set[Privilege]
     children: list["NodeSeenByUser"]  # type: ignore
+
+
+class CopyEventOptions(BaseModel):
+    """Options for copying an event with selective components."""
+
+    # Copy event settings/configuration
+    copy_event_settings: bool = True
+
+    # Copy user tags (with their secrets and restrictions)
+    copy_user_tags: bool = True
+
+    # Copy account balances (current balances for accounts)
+    copy_account_balances: bool = False
+
+    # Copy tills (layouts, profiles, buttons, registers)
+    copy_tills: bool = True
+
+    # Copy terminals
+    copy_terminals: bool = True
+
+    # Copy users and roles
+    copy_users: bool = True
+
+    # Copy products and tax rates
+    copy_products: bool = True
+
+    # Copy TSE devices
+    copy_tse_devices: bool = True
+
+    # Copy sub-nodes
+    copy_sub_nodes: bool = True
+
+
+class CopyEventRequest(BaseModel):
+    """Request to copy an event with specified options."""
+
+    name: str
+    description: str
+    options: CopyEventOptions

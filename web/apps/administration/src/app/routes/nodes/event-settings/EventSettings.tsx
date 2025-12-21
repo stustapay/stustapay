@@ -21,6 +21,7 @@ import { useOpenModal } from "@stustapay/modal-provider";
 import { toast } from "react-toastify";
 import { NodeConfiguration } from "../node-settings";
 import { TabPretix } from "./TabPretix";
+import { CopyEventDialog } from "./CopyEventDialog";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export const EventSettings: React.FC = () => {
   const { data: eventSettings, isLoading, error } = useGetRestrictedEventSettingsQuery({ nodeId: currentNode.id });
   const [archiveNode] = useArchiveNodeMutation();
   const openModal = useOpenModal();
+  const [copyEventDialogOpen, setCopyEventDialogOpen] = React.useState(false);
 
   if (isLoading || (!eventSettings && !error)) {
     return <Loading />;
@@ -65,6 +67,9 @@ export const EventSettings: React.FC = () => {
       <Stack direction="row" spacing={2} justifyContent="center">
         <Button variant="outlined" component={RouterLink} to={`/node/${currentNode.id}/create-node`}>
           {t("settings.createNode.link")}
+        </Button>
+        <Button variant="outlined" onClick={() => setCopyEventDialogOpen(true)}>
+          {t("settings.copyEvent.button")}
         </Button>
         <Button variant="outlined" color="error" onClick={handleArchiveNode}>
           {t("settings.archiveNode.button")}
@@ -126,6 +131,13 @@ export const EventSettings: React.FC = () => {
           </TabPanel>
         </Box>
       </TabContext>
+
+      <CopyEventDialog
+        open={copyEventDialogOpen}
+        onClose={() => setCopyEventDialogOpen(false)}
+        sourceNodeId={currentNode.id}
+        sourceNodeName={currentNode.name}
+      />
     </Stack>
   );
 };

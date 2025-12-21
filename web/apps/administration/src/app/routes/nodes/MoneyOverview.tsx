@@ -1,4 +1,5 @@
-import { Account, AccountRead, AccountType, selectAccountAll, useListSystemAccountsQuery } from "@/api";
+import { AccountRead, AccountType, selectAccountAll, useListSystemAccountsQuery } from "@/api";
+import { Account } from "@stustapay/models";
 import { AccountRoutes } from "@/app/routes";
 import { ButtonLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
@@ -55,7 +56,7 @@ export const MoneyOverview: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        accounts: data ? selectAccountAll(data) : undefined,
+        accounts: data ? selectAccountAll(data) as any : undefined,
       }),
     }
   );
@@ -64,8 +65,8 @@ export const MoneyOverview: React.FC = () => {
     return <Loading />;
   }
 
-  const selectAccountByType = (type: AccountType): AccountRead | undefined => {
-    return accounts.find((a) => a.type === type);
+  const selectAccountByType = (type: AccountType): Account | undefined => {
+    return (accounts as any).find((a: any) => a.type === type);
   };
 
   return (

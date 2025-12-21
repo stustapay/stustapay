@@ -87,7 +87,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     customer_portal_contact_email: eventSettings.customer_portal_contact_email,
     customer_portal_about_page_url: eventSettings.customer_portal_about_page_url,
     customer_portal_data_privacy_url: eventSettings.customer_portal_data_privacy_url,
-    donation_enabled: eventSettings.donation_enabled
+    donation_enabled: eventSettings.donation_enabled ?? true
   };
   
   return (

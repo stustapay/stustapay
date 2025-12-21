@@ -25,3 +25,9 @@ terminalserver:
   base_url: "http://localhost:8083"
   host: "localhost"
   port: 8083
+
+headwind:
+  enabled: false
+  base_url: "http://localhost:8080/headwind"
+  login: "admin"
+  password_md5: "replace-with-md5-hash"

@@ -116,3 +116,25 @@ class CurrentTerminal(BaseModel):
     active_user_id: int | None
     active_user_role_id: int | None
     till: Till | None
+
+
+class HeadwindDeviceMapping(BaseModel):
+    id: int
+    node_id: int
+    terminal_id: int
+    headwind_device_id: str
+    headwind_device_number: str | None = None
+    headwind_device_name: str | None = None
+    headwind_device_serial: str | None = None
+    headwind_device_model: str | None = None
+    last_synced_at: datetime | None = None
+    last_token_pushed_at: datetime | None = None
+    last_push_status: str | None = None
+    last_push_error: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class HeadwindDeviceMappingWithTerminal(HeadwindDeviceMapping):
+    terminal_name: str
+    terminal_description: str | None = None

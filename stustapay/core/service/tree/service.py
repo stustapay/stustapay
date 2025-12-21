@@ -6,6 +6,9 @@ from stustapay.bon.bon import BonJson, generate_dummy_bon_json
 from stustapay.bon.revenue_report import generate_dummy_report, generate_report
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import (
+    CopyEventOptions,
+    CopyEventRequest,
+    EventSummary,
     NewEvent,
     NewNode,
     Node,
@@ -388,6 +391,25 @@ class TreeService(Service[Config]):
         return await get_tree_for_current_user(conn=conn, current_user=current_user)
 
     @with_db_transaction(read_only=True)
+    @requires_user(node_required=False)
+    async def search_events(
+        self, *, conn: Connection, current_user: CurrentUser, name_query: str | None = None
+    ) -> list[EventSummary]:
+        params = [current_user.id]
+        query = (
+            "select n.id as node_id, n.name as node_name, n.path, n.description, "
+            "n.event_id as event_id, n.name as event_name, e.start_date, e.end_date "
+            "from node n "
+            "join event e on e.id = n.event_id "
+            "join user_privileges_at_node($1) u on n.id = u.node_id "
+        )
+        if name_query:
+            query += "where n.name ilike $2 "
+            params.append(f"%{name_query}%")
+        query += "order by e.start_date desc nulls last, n.name"
+        return await conn.fetch_many(EventSummary, query, *params)
+
+    @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
@@ -456,3 +478,594 @@ class TreeService(Service[Config]):
         await conn.execute(
             "update event set sumup_oauth_refresh_token = $1 where id = $2", token.refresh_token, node.event.id
         )
+
+    async def _copy_user_tags(self, conn: Connection, source_node_id: int, target_node_id: int):
+        """Copy user tags from source node to target node."""
+        # Get all user tags from source node
+        user_tags = await conn.fetch(
+            "SELECT id, uid, pin, restriction, comment, secret_id FROM user_tag WHERE node_id = $1",
+            source_node_id
+        )
+
+        # Create a mapping from old user tag IDs to new user tag IDs
+        user_tag_mapping = {}
+
+        for tag in user_tags:
+            # Insert user tag
+            new_tag_id = await conn.fetchval(
+                "INSERT INTO user_tag (uid, pin, restriction, comment, secret_id, node_id) "
+                "VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+                tag['uid'], tag['pin'], tag['restriction'], tag['comment'], tag['secret_id'], target_node_id
+            )
+            user_tag_mapping[tag['id']] = new_tag_id
+
+        return user_tag_mapping
+
+    async def _copy_account_balances(self, conn: Connection, source_node_id: int, target_node_id: int, user_tag_mapping: dict[int, int] | None = None):
+        """Copy account balances from source node to target node."""
+        # Get all accounts from source node
+        accounts = await conn.fetch(
+            "SELECT id, user_tag_id, type, name, comment, balance, vouchers FROM account "
+            "WHERE node_id = $1",
+            source_node_id
+        )
+
+        # Create a mapping from old account IDs to new account IDs
+        account_id_mapping = {}
+
+        for account in accounts:
+            # Map the user_tag_id to the new one if we have a mapping
+            new_user_tag_id = None
+            if account['user_tag_id'] is not None and user_tag_mapping:
+                new_user_tag_id = user_tag_mapping.get(account['user_tag_id'])
+
+            # Insert account with zero balance (as requested - no transactions)
+            new_account_id = await conn.fetchval(
+                "INSERT INTO account (user_tag_id, type, name, comment, balance, vouchers, node_id) "
+                "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+                new_user_tag_id, account['type'], account['name'], account['comment'],
+                account['balance'] if account['balance'] > 0 else 0,  # Only copy positive balances
+                account['vouchers'] if account['vouchers'] > 0 else 0,  # Only copy positive vouchers
+                target_node_id
+            )
+            account_id_mapping[account['id']] = new_account_id
+
+        return account_id_mapping
+
+    async def _generate_unique_name(self, conn: Connection, table_name: str, name_column: str, original_name: str, scope_id: int, exclude_names: set[str] | None = None) -> str:
+        """Generate a unique name for the given table and scope by appending a suffix if needed."""
+        exclude_names = exclude_names or set()
+
+        # For the node table, scope is by parent, not node_id
+        if table_name == "node":
+            scope_column = "parent"
+        elif table_name == "tax_rate":
+            # Tax rates appear to have global uniqueness despite per-node architecture
+            scope_column = None  # Check globally
+        elif table_name == "product":
+            # Products should be unique per-node - skip if already used to prevent duplicates
+            if original_name in (exclude_names or set()):
+                # Skip this duplicate
+                return None
+            return original_name
+        elif table_name == "terminal":
+            # Terminals should be unique per-node
+            scope_column = "node_id"
+        elif table_name == "tse":
+            # TSE devices appear to have global uniqueness
+            scope_column = None  # Check globally
+        else:
+            scope_column = "node_id"
+
+        # Check if the original name already exists or is in the exclude list
+        if scope_column is None:
+            # Global check for tax_rate
+            exists = await conn.fetchval(
+                f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {name_column} = $1)",
+                original_name
+            )
+        else:
+            # Scoped check
+            exists = await conn.fetchval(
+                f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {name_column} = $1 AND {scope_column} = $2)",
+                original_name, scope_id
+            )
+
+        if not exists and original_name not in exclude_names:
+            return original_name
+
+        # If it exists, try adding " (Copy)" suffix
+        copy_name = f"{original_name} (Copy)"
+        if scope_column is None:
+            exists = await conn.fetchval(
+                f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {name_column} = $1)",
+                copy_name
+            )
+        else:
+            exists = await conn.fetchval(
+                f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {name_column} = $1 AND {scope_column} = $2)",
+                copy_name, scope_id
+            )
+
+        if not exists and copy_name not in exclude_names:
+            return copy_name
+
+        # If that also exists, add a number suffix
+        counter = 2
+        while True:
+            numbered_name = f"{original_name} (Copy {counter})"
+            if scope_column is None:
+                exists = await conn.fetchval(
+                    f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {name_column} = $1)",
+                    numbered_name
+                )
+            else:
+                exists = await conn.fetchval(
+                    f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE {name_column} = $1 AND {scope_column} = $2)",
+                    numbered_name, scope_id
+                )
+            if not exists and numbered_name not in exclude_names:
+                return numbered_name
+            counter += 1
+
+    async def _copy_tills(self, conn: Connection, source_node_id: int, target_node_id: int):
+        """Copy till layouts, profiles, buttons, and registers from source node to target node."""
+        # First, get all profiles referenced by tills in the source node
+        referenced_profile_ids = await conn.fetch(
+            "SELECT DISTINCT active_profile_id FROM till WHERE node_id = $1 AND active_profile_id IS NOT NULL", source_node_id
+        )
+        referenced_profile_ids_set = set(row['active_profile_id'] for row in referenced_profile_ids)
+
+        # Get all layouts referenced by the referenced profiles
+        if referenced_profile_ids_set:
+            referenced_layout_ids = await conn.fetch(
+                "SELECT DISTINCT layout_id FROM till_profile WHERE id = ANY($1) AND layout_id IS NOT NULL", list(referenced_profile_ids_set)
+            )
+            referenced_layout_ids_set = set(row['layout_id'] for row in referenced_layout_ids)
+        else:
+            referenced_layout_ids_set = set()
+
+        # Copy referenced layouts (if they don't already exist in target)
+        layout_mapping = {}
+        used_layout_names = set()
+        for layout_id in referenced_layout_ids_set:
+            # Get the layout details
+            layout = await conn.fetchrow(
+                "SELECT id, name, description, node_id FROM till_layout WHERE id = $1", layout_id
+            )
+            if layout:
+                # Check if this layout already exists in target node
+                existing = await conn.fetchval(
+                    "SELECT id FROM till_layout WHERE node_id = $1 AND name = $2", target_node_id, layout['name']
+                )
+                if existing:
+                    layout_mapping[layout['id']] = existing
+                else:
+                    unique_name = await self._generate_unique_name(conn, "till_layout", "name", layout['name'], target_node_id, used_layout_names)
+                    used_layout_names.add(unique_name)
+                    new_layout_id = await conn.fetchval(
+                        "INSERT INTO till_layout (name, description, node_id) VALUES ($1, $2, $3) RETURNING id",
+                        unique_name, layout['description'], target_node_id
+                    )
+                    layout_mapping[layout['id']] = new_layout_id
+
+        # Copy referenced profiles (if they don't already exist in target)
+        profile_mapping = {}
+        used_profile_names = set()
+        for profile_id in referenced_profile_ids_set:
+            # Get the profile details
+            profile = await conn.fetchrow(
+                "SELECT id, name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id, node_id FROM till_profile WHERE id = $1", profile_id
+            )
+            if profile:
+                new_layout_id = layout_mapping.get(profile['layout_id'])
+                if new_layout_id is not None:
+                    # Check if this profile already exists in target node
+                    existing = await conn.fetchval(
+                        "SELECT id FROM till_profile WHERE node_id = $1 AND name = $2", target_node_id, profile['name']
+                    )
+                    if existing:
+                        profile_mapping[profile['id']] = existing
+                    else:
+                        unique_name = await self._generate_unique_name(conn, "till_profile", "name", profile['name'], target_node_id, used_profile_names)
+                        used_profile_names.add(unique_name)
+                        new_profile_id = await conn.fetchval(
+                            "INSERT INTO till_profile (name, description, allow_top_up, allow_cash_out, allow_ticket_sale, layout_id, node_id) "
+                            "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+                            unique_name, profile['description'], profile['allow_top_up'], profile['allow_cash_out'],
+                            profile['allow_ticket_sale'], new_layout_id, target_node_id
+                        )
+                        profile_mapping[profile['id']] = new_profile_id
+
+        # Copy till buttons from the source node
+        buttons = await conn.fetch("SELECT id, name FROM till_button WHERE node_id = $1", source_node_id)
+        button_mapping = {}
+        used_button_names = set()
+        for button in buttons:
+            unique_name = await self._generate_unique_name(conn, "till_button", "name", button['name'], target_node_id, used_button_names)
+            used_button_names.add(unique_name)
+            new_button_id = await conn.fetchval(
+                "INSERT INTO till_button (name, node_id) VALUES ($1, $2) RETURNING id",
+                unique_name, target_node_id
+            )
+            button_mapping[button['id']] = new_button_id
+
+        # Copy till button to product associations
+        for old_button_id, new_button_id in button_mapping.items():
+            products = await conn.fetch(
+                "SELECT product_id FROM till_button_product WHERE button_id = $1", old_button_id
+            )
+            for product in products:
+                await conn.execute(
+                    "INSERT INTO till_button_product (button_id, product_id) VALUES ($1, $2)",
+                    new_button_id, product['product_id']
+                )
+
+        # Copy till layout to button associations for copied layouts
+        for old_layout_id, new_layout_id in layout_mapping.items():
+            buttons_in_layout = await conn.fetch(
+                "SELECT button_id, sequence_number FROM till_layout_to_button WHERE layout_id = $1", old_layout_id
+            )
+            for button_assoc in buttons_in_layout:
+                if button_assoc['button_id'] in button_mapping:
+                    await conn.execute(
+                        "INSERT INTO till_layout_to_button (layout_id, button_id, sequence_number) "
+                        "VALUES ($1, $2, $3)",
+                        new_layout_id, button_mapping[button_assoc['button_id']], button_assoc['sequence_number']
+                    )
+
+        # Copy actual till entities (excluding virtual tills)
+        tills = await conn.fetch(
+            "SELECT id, name, description, active_profile_id, terminal_id, is_virtual FROM till WHERE node_id = $1 AND is_virtual = false", source_node_id
+        )
+        for till in tills:
+            new_profile_id = profile_mapping.get(till['active_profile_id'])
+            if new_profile_id is not None:
+                unique_till_name = await self._generate_unique_name(conn, "till", "name", till['name'], target_node_id)
+                await conn.execute(
+                    "INSERT INTO till (name, description, active_profile_id, node_id, is_virtual) "
+                    "VALUES ($1, $2, $3, $4, false)",
+                    unique_till_name, till['description'], new_profile_id, target_node_id
+                )
+
+        return profile_mapping
+
+    async def _copy_sub_nodes(self, conn: Connection, source_node_id: int, target_node_id: int, copy_options: CopyEventOptions) -> None:
+        """Recursively copy sub-nodes and their contents."""
+        # Get all direct children of the source node
+        child_nodes = await conn.fetch(
+            "SELECT id, name, description FROM node WHERE parent = $1 AND event_id IS NULL",
+            source_node_id
+        )
+
+        for child_node in child_nodes:
+            # Create the child node in the target
+            unique_name = await self._generate_unique_name(conn, "node", "name", child_node['name'], target_node_id)
+            new_node = await create_node(conn=conn, parent_id=target_node_id, new_node=NewNode(name=unique_name, description=child_node['description']), event_id=None)
+
+            # Recursively copy this node's contents and children
+            await self._copy_node_contents(conn, child_node['id'], new_node.id, copy_options)
+            await self._copy_sub_nodes(conn, child_node['id'], new_node.id, copy_options)
+
+    async def _copy_node_contents(self, conn: Connection, source_node_id: int, target_node_id: int, copy_options: CopyEventOptions) -> None:
+        """Copy the contents of a node (excluding sub-nodes)."""
+        # Copy components based on options
+        if copy_options.copy_user_tags:
+            await self._copy_user_tags(conn, source_node_id, target_node_id)
+
+        if copy_options.copy_account_balances:
+            await self._copy_account_balances(conn, source_node_id, target_node_id)
+
+        if copy_options.copy_tills:
+            await self._copy_tills(conn, source_node_id, target_node_id)
+
+        if copy_options.copy_terminals:
+            await self._copy_terminals(conn, source_node_id, target_node_id)
+
+        if copy_options.copy_users:
+            await self._copy_users_and_roles(conn, source_node_id, target_node_id)
+
+        if copy_options.copy_products:
+            await self._copy_products_and_tax_rates(conn, source_node_id, target_node_id)
+
+        if copy_options.copy_tse_devices:
+            await self._copy_tse_devices(conn, source_node_id, target_node_id)
+
+    async def _copy_terminals(self, conn: Connection, source_node_id: int, target_node_id: int):
+        """Copy terminals from source node to target node."""
+        terminals = await conn.fetch(
+            "SELECT id, name, description FROM terminal WHERE node_id = $1", source_node_id
+        )
+        used_terminal_names = set()
+        for terminal in terminals:
+            unique_name = await self._generate_unique_name(conn, "terminal", "name", terminal['name'], target_node_id, used_terminal_names)
+            used_terminal_names.add(unique_name)
+            await conn.execute(
+                "INSERT INTO terminal (name, description, node_id) VALUES ($1, $2, $3)",
+                unique_name, terminal['description'], target_node_id
+            )
+
+    async def _copy_users_and_roles(self, conn: Connection, source_node_id: int, target_node_id: int, user_tag_mapping: dict[int, int] | None = None, account_id_mapping: dict[int, int] | None = None):
+        """Copy user roles and users from source node to target node."""
+        # Copy all user roles from the source node
+        roles = await conn.fetch(
+            "SELECT id, name, is_privileged FROM user_role WHERE node_id = $1", source_node_id
+        )
+        role_mapping = {}
+        used_role_names = set()
+        for role in roles:
+            unique_name = await self._generate_unique_name(conn, "user_role", "name", role['name'], target_node_id, used_role_names)
+            used_role_names.add(unique_name)
+            new_role_id = await conn.fetchval(
+                "INSERT INTO user_role (name, is_privileged, node_id) VALUES ($1, $2, $3) RETURNING id",
+                unique_name, role['is_privileged'], target_node_id
+            )
+            role_mapping[role['id']] = new_role_id
+
+            # Copy role privileges
+            privileges = await conn.fetch(
+                "SELECT privilege FROM user_role_to_privilege WHERE role_id = $1", role['id']
+            )
+            for privilege in privileges:
+                await conn.execute(
+                    "INSERT INTO user_role_to_privilege (role_id, privilege) VALUES ($1, $2)",
+                    new_role_id, privilege['privilege']
+                )
+
+        # Copy users (excluding system users if any)
+        users = await conn.fetch(
+            "SELECT id, login, password, display_name, description, user_tag_id, transport_account_id, cashier_account_id, customer_account_id, cash_register_id, created_by "
+            "FROM usr WHERE node_id = $1", source_node_id
+        )
+        user_mapping = {}
+        for user in users:
+            # Map the user_tag_id to the new one if we have a mapping
+            new_user_tag_id = None
+            if user['user_tag_id'] is not None and user_tag_mapping:
+                new_user_tag_id = user_tag_mapping.get(user['user_tag_id'])
+
+            # Map the account IDs to the new ones if we have mappings
+            new_transport_account_id = None
+            if user['transport_account_id'] is not None and account_id_mapping:
+                new_transport_account_id = account_id_mapping.get(user['transport_account_id'])
+
+            new_cashier_account_id = None
+            if user['cashier_account_id'] is not None and account_id_mapping:
+                new_cashier_account_id = account_id_mapping.get(user['cashier_account_id'])
+
+            # Create a new customer account for this user
+            # Customer accounts don't have user_tag_id since they're not tied to RFID tags
+            new_customer_account_id = await conn.fetchval(
+                "INSERT INTO account (type, name, node_id) "
+                "VALUES ($1, $2, $3) RETURNING id",
+                'private', f"Customer account for {user['login']}", target_node_id
+            )
+
+            new_user_id = await conn.fetchval(
+                "INSERT INTO usr (login, password, display_name, description, user_tag_id, transport_account_id, cashier_account_id, customer_account_id, cash_register_id, node_id, created_by) "
+                "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id",
+                user['login'], user['password'], user['display_name'], user['description'], new_user_tag_id,
+                new_transport_account_id, new_cashier_account_id, new_customer_account_id, user['cash_register_id'],
+                target_node_id, user['created_by']
+            )
+            user_mapping[user['id']] = new_user_id
+
+            # Copy user to role associations
+            user_roles = await conn.fetch(
+                "SELECT role_id, terminal_only FROM user_to_role WHERE user_id = $1 AND node_id = $2", user['id'], source_node_id
+            )
+            for user_role in user_roles:
+                if user_role['role_id'] in role_mapping:
+                    await conn.execute(
+                        "INSERT INTO user_to_role (user_id, role_id, node_id, terminal_only) VALUES ($1, $2, $3, $4)",
+                        new_user_id, role_mapping[user_role['role_id']], target_node_id, user_role['terminal_only']
+                    )
+
+        return user_mapping
+
+    async def _copy_products_and_tax_rates(self, conn: Connection, source_node_id: int, target_node_id: int):
+        """Copy tax rates and products from source node to target node."""
+        # First, get all tax rates referenced by products in the source node
+        referenced_tax_rate_ids = await conn.fetch(
+            "SELECT DISTINCT tax_rate_id FROM product WHERE node_id = $1 AND tax_rate_id IS NOT NULL", source_node_id
+        )
+        referenced_tax_ids = [row['tax_rate_id'] for row in referenced_tax_rate_ids]
+
+        # Copy referenced tax rates (if they don't already exist in target)
+        tax_mapping = {}
+        used_tax_names = set()
+        for tax_id in referenced_tax_ids:
+            # Get the tax rate details
+            tax = await conn.fetchrow(
+                "SELECT id, name, rate, description, node_id FROM tax_rate WHERE id = $1", tax_id
+            )
+            if tax:
+                # Check if this tax rate already exists in target node
+                existing = await conn.fetchval(
+                    "SELECT id FROM tax_rate WHERE node_id = $1 AND name = $2", target_node_id, tax['name']
+                )
+                if existing:
+                    tax_mapping[tax['id']] = existing
+                else:
+                    unique_name = await self._generate_unique_name(conn, "tax_rate", "name", tax['name'], target_node_id, used_tax_names)
+                    used_tax_names.add(unique_name)
+                    new_tax_id = await conn.fetchval(
+                        "INSERT INTO tax_rate (name, rate, description, node_id) VALUES ($1, $2, $3, $4) RETURNING id",
+                        unique_name, tax['rate'], tax['description'], target_node_id
+                    )
+                    tax_mapping[tax['id']] = new_tax_id
+
+        # Copy all products from the source node
+        products = await conn.fetch(
+            "SELECT id, name, type, price, fixed_price, price_in_vouchers, is_locked, is_returnable, target_account_id, tax_rate_id "
+            "FROM product WHERE node_id = $1", source_node_id
+        )
+        product_mapping = {}
+        used_product_names = set()
+        for product in products:
+            new_tax_id = tax_mapping.get(product['tax_rate_id'])
+            if new_tax_id is not None:
+                unique_name = await self._generate_unique_name(conn, "product", "name", product['name'], target_node_id, used_product_names)
+                if unique_name is not None:  # Skip if duplicate
+                    # Check if the product already exists in the target node
+                    existing = await conn.fetchval(
+                        "SELECT id FROM product WHERE node_id = $1 AND name = $2", target_node_id, unique_name
+                    )
+                    if not existing:
+                        used_product_names.add(unique_name)
+                        new_product_id = await conn.fetchval(
+                            "INSERT INTO product (name, type, price, fixed_price, price_in_vouchers, is_locked, is_returnable, target_account_id, tax_rate_id, node_id) "
+                            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
+                            unique_name, product['type'], product['price'], product['fixed_price'], product['price_in_vouchers'],
+                            product['is_locked'], product['is_returnable'], product['target_account_id'], new_tax_id, target_node_id
+                        )
+                        product_mapping[product['id']] = new_product_id
+
+                        # Copy product restrictions
+                        restrictions = await conn.fetch(
+                            "SELECT restriction FROM product_restriction WHERE id = $1", product['id']
+                        )
+                        for restriction in restrictions:
+                            await conn.execute(
+                                "INSERT INTO product_restriction (id, restriction) VALUES ($1, $2)",
+                                new_product_id, restriction['restriction']
+                            )
+
+        # Copy ticket metadata for ticket products
+        ticket_metadata = await conn.fetch(
+            "SELECT id, initial_top_up_amount FROM product_ticket_metadata WHERE id IN (SELECT ticket_metadata_id FROM product WHERE ticket_metadata_id IS NOT NULL AND node_id = $1)", source_node_id
+        )
+        ticket_metadata_mapping = {}
+        for metadata in ticket_metadata:
+            new_metadata_id = await conn.fetchval(
+                "INSERT INTO product_ticket_metadata (initial_top_up_amount) VALUES ($1) RETURNING id",
+                metadata['initial_top_up_amount']
+            )
+            ticket_metadata_mapping[metadata['id']] = new_metadata_id
+
+        # Update ticket products to reference the new metadata
+        for old_metadata_id, new_metadata_id in ticket_metadata_mapping.items():
+            # Find products that reference this metadata and update them
+            await conn.execute(
+                "UPDATE product SET ticket_metadata_id = $1 WHERE ticket_metadata_id = $2 AND node_id = $3",
+                new_metadata_id, old_metadata_id, target_node_id
+            )
+
+        return product_mapping
+
+    async def _copy_tse_devices(self, conn: Connection, source_node_id: int, target_node_id: int):
+        """Copy TSE devices from source node to target node."""
+        tse_devices = await conn.fetch(
+            "SELECT name, status, serial, hashalgo, time_format, public_key, certificate, process_data_encoding "
+            "FROM tse WHERE node_id = $1", source_node_id
+        )
+        for tse in tse_devices:
+            unique_name = await self._generate_unique_name(conn, "tse", "name", tse['name'], target_node_id)
+            await conn.execute(
+                "INSERT INTO tse (name, status, serial, hashalgo, time_format, public_key, certificate, process_data_encoding, node_id) "
+                "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+                unique_name, tse['status'], tse['serial'], tse['hashalgo'], tse['time_format'],
+                tse['public_key'], tse['certificate'], tse['process_data_encoding'], target_node_id
+            )
+
+    @with_db_transaction
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def copy_event(self, conn: Connection, node: Node, request: CopyEventRequest) -> Node:
+        """Copy an event with selective components based on the provided options."""
+        if node.event_node_id is None:
+            raise InvalidArgument("Cannot copy a node that is not an event")
+
+        # Get the source event settings
+        source_event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+
+        # Create a new event with the same settings (or modified settings if not copying)
+        new_event_data = NewEvent(
+            name=request.name,
+            description=request.description,
+            currency_identifier=source_event.currency_identifier if request.options.copy_event_settings else "EUR",
+            max_account_balance=source_event.max_account_balance if request.options.copy_event_settings else 150.0,
+            vip_max_account_balance=source_event.vip_max_account_balance if request.options.copy_event_settings else 300.0,
+            start_date=source_event.start_date if request.options.copy_event_settings else None,
+            end_date=source_event.end_date if request.options.copy_event_settings else None,
+            daily_end_time=source_event.daily_end_time if request.options.copy_event_settings else None,
+            post_payment_allowed=source_event.post_payment_allowed if request.options.copy_event_settings else False,
+            sumup_topup_enabled=source_event.sumup_topup_enabled if request.options.copy_event_settings else False,
+            sumup_payment_enabled=source_event.sumup_payment_enabled if request.options.copy_event_settings else False,
+            customer_portal_url=source_event.customer_portal_url if request.options.copy_event_settings else "",
+            customer_portal_about_page_url=source_event.customer_portal_about_page_url if request.options.copy_event_settings else "",
+            customer_portal_data_privacy_url=source_event.customer_portal_data_privacy_url if request.options.copy_event_settings else "",
+            customer_portal_contact_email=source_event.customer_portal_contact_email if request.options.copy_event_settings else "contact@example.com",
+            pretix_presale_enabled=source_event.pretix_presale_enabled if request.options.copy_event_settings else False,
+            pretix_shop_url=source_event.pretix_shop_url if request.options.copy_event_settings else None,
+            pretix_organizer=source_event.pretix_organizer if request.options.copy_event_settings else None,
+            pretix_event=source_event.pretix_event if request.options.copy_event_settings else None,
+            pretix_ticket_ids=source_event.pretix_ticket_ids if request.options.copy_event_settings else None,
+            ust_id=source_event.ust_id if request.options.copy_event_settings else "DE123456789",
+            bon_issuer=source_event.bon_issuer if request.options.copy_event_settings else "Event Organizer",
+            bon_address=source_event.bon_address if request.options.copy_event_settings else "Event Address",
+            bon_title=source_event.bon_title if request.options.copy_event_settings else request.name,
+            sepa_enabled=source_event.sepa_enabled if request.options.copy_event_settings else False,
+            sepa_sender_name=source_event.sepa_sender_name if request.options.copy_event_settings else "",
+            sepa_sender_iban=source_event.sepa_sender_iban if request.options.copy_event_settings else "",
+            sepa_description=source_event.sepa_description if request.options.copy_event_settings else "",
+            sepa_max_num_payouts_in_run=source_event.sepa_max_num_payouts_in_run if request.options.copy_event_settings else 100,
+            sepa_allowed_country_codes=source_event.sepa_allowed_country_codes if request.options.copy_event_settings else ["DE"],
+            email_enabled=source_event.email_enabled if request.options.copy_event_settings else False,
+            email_default_sender=source_event.email_default_sender if request.options.copy_event_settings else None,
+            email_smtp_host=source_event.email_smtp_host if request.options.copy_event_settings else None,
+            email_smtp_port=source_event.email_smtp_port if request.options.copy_event_settings else None,
+            email_smtp_username=source_event.email_smtp_username if request.options.copy_event_settings else None,
+            payout_sender=source_event.payout_sender if request.options.copy_event_settings else None,
+            donation_enabled=source_event.donation_enabled if request.options.copy_event_settings else True,
+            sumup_api_key="" if request.options.copy_event_settings else "",
+            sumup_affiliate_key="" if request.options.copy_event_settings else "",
+            sumup_merchant_code="" if request.options.copy_event_settings else "",
+            sumup_oauth_client_id="" if request.options.copy_event_settings else "",
+            sumup_oauth_client_secret="" if request.options.copy_event_settings else "",
+            pretix_api_key=source_event.pretix_api_key if request.options.copy_event_settings else None,
+        )
+
+        # Create the new event node
+        new_event_node = await create_event(conn=conn, parent_id=node.parent, event=new_event_data)
+
+        # Copy selected components
+        user_tag_mapping = {}
+        if request.options.copy_user_tags:
+            user_tag_mapping = await self._copy_user_tags(conn, node.id, new_event_node.id)
+
+        account_id_mapping = {}
+        if request.options.copy_account_balances:
+            account_id_mapping = await self._copy_account_balances(conn, node.id, new_event_node.id, user_tag_mapping if request.options.copy_user_tags else None)
+
+        profile_mapping = {}
+        if request.options.copy_tills:
+            profile_mapping = await self._copy_tills(conn, node.id, new_event_node.id)
+
+        if request.options.copy_terminals:
+            await self._copy_terminals(conn, node.id, new_event_node.id)
+
+        if request.options.copy_users:
+            await self._copy_users_and_roles(conn, node.id, new_event_node.id, user_tag_mapping if request.options.copy_user_tags else None, account_id_mapping if request.options.copy_account_balances else None)
+
+        if request.options.copy_products:
+            await self._copy_products_and_tax_rates(conn, node.id, new_event_node.id)
+
+        if request.options.copy_tse_devices:
+            await self._copy_tse_devices(conn, node.id, new_event_node.id)
+
+        if request.options.copy_sub_nodes:
+            await self._copy_sub_nodes(conn, node.id, new_event_node.id, request.options)
+
+        # Create tills for the new event using copied profiles if available
+        if profile_mapping:
+            # Create virtual till using first available profile
+            first_profile_id = next(iter(profile_mapping.values()))
+            unique_till_name = await self._generate_unique_name(conn, "till", "name", "Virtual Till", new_event_node.id)
+            await conn.execute(
+                "INSERT INTO till (name, description, active_profile_id, node_id, is_virtual) "
+                "VALUES ($1, '', $2, $3, true)",
+                unique_till_name, first_profile_id, new_event_node.id
+            )
+
+        return new_event_node

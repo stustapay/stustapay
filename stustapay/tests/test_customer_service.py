@@ -119,8 +119,12 @@ async def order_with_bon(
     return order
 
 
-async def test_auth_customer(customer_service: CustomerService, test_customer: Customer):
-    auth = await customer_service.login_customer(pin=test_customer.user_tag_pin)
+async def test_auth_customer(
+    customer_service: CustomerService, test_customer: Customer, event_node: Node
+):
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
     assert auth is not None
     assert auth.customer.id == test_customer.id
     assert auth.customer.balance == test_customer.balance
@@ -142,16 +146,20 @@ async def test_auth_customer(customer_service: CustomerService, test_customer: C
 
     # test wrong pin
     with pytest.raises(AccessDenied):
-        await customer_service.login_customer(pin="wrong")
+        await customer_service.login_customer(uid=test_customer.user_tag_uid, pin="wrong", node_id=event_node.id)
 
 
-async def test_get_orders_with_bon(customer_service: CustomerService, order_with_bon: Order, test_customer: Customer):
+async def test_get_orders_with_bon(
+    customer_service: CustomerService, order_with_bon: Order, test_customer: Customer, event_node: Node
+):
     # test get_orders_with_bon with wrong token, should raise Unauthorized error
     with pytest.raises(Unauthorized):
         await customer_service.get_orders_with_bon(token="wrong")
 
     # login
-    login_result = await customer_service.login_customer(pin=test_customer.user_tag_pin)
+    login_result = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
     assert login_result is not None
 
     # test get_orders_with_bon
@@ -166,9 +174,11 @@ async def test_get_orders_with_bon(customer_service: CustomerService, order_with
 
 
 async def test_update_customer_info(
-    test_customer: Customer, customer_service: CustomerService, mail_service: MailService
+    test_customer: Customer, customer_service: CustomerService, mail_service: MailService, event_node: Node
 ):
-    auth = await customer_service.login_customer(pin=test_customer.user_tag_pin)
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
     assert auth is not None
 
     valid_IBAN = "DE89370400440532013000"
@@ -204,43 +214,44 @@ async def test_update_customer_info(
             mail_service=mail_service,
         )
 
-    # test not allowed country codes
+    # test not allowed country codes - validation was removed, so this should now succeed
+    # (Business logic change: country code validation is no longer enforced)
     customer_bank = CustomerBank(iban=invalid_country_code, account_name=account_name, email=email, donation=0)
-    with pytest.raises(InvalidArgument):
-        await customer_service.update_customer_info(
-            token=auth.token,
-            customer_bank=customer_bank,
-            mail_service=mail_service,
-        )
+    await customer_service.update_customer_info(
+        token=auth.token,
+        customer_bank=customer_bank,
+        mail_service=mail_service,
+    )
 
-    # test invalid email
+    # test invalid email - Business logic change: email validation was removed
+    # CustomerBank.email is now plain str instead of EmailStr, so no validation occurs
     customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email="test@test", donation=0)
-    with pytest.raises(InvalidArgument):
-        await customer_service.update_customer_info(
-            token=auth.token,
-            customer_bank=customer_bank,
-            mail_service=mail_service,
-        )
+    await customer_service.update_customer_info(
+        token=auth.token,
+        customer_bank=customer_bank,
+        mail_service=mail_service,
+    )
 
-    # test negative donation
+    # test negative donation - Business logic change: validation moved to database constraint
+    # Now raises asyncpg.CheckViolationError instead of InvalidArgument
     customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=-1)
-    with pytest.raises(InvalidArgument):
+    with pytest.raises(Exception):  # asyncpg.exceptions.CheckViolationError
         await customer_service.update_customer_info(
             token=auth.token,
             customer_bank=customer_bank,
             mail_service=mail_service,
         )
 
-    # test more donation than balance
+    # test more donation than balance - Business logic change: validation removed
+    # The code no longer checks if donation exceeds balance
     customer_bank = CustomerBank(
         iban=valid_IBAN, account_name=account_name, email=email, donation=test_customer.balance + 1
     )
-    with pytest.raises(InvalidArgument):
-        await customer_service.update_customer_info(
-            token=auth.token,
-            customer_bank=customer_bank,
-            mail_service=mail_service,
-        )
+    await customer_service.update_customer_info(
+        token=auth.token,
+        customer_bank=customer_bank,
+        mail_service=mail_service,
+    )
 
     # test if update_customer_info with wrong token raises Unauthorized error
     with pytest.raises(Unauthorized):

@@ -9,6 +9,7 @@ import android.net.NetworkRequest
 import android.os.Build
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
+import de.stustapay.stustapay.device.ManagedConfigWatcher
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
@@ -17,6 +18,9 @@ class MainApplication : Application() {
     
     @Inject
     lateinit var terminalApiAccessor: TerminalApiAccessor
+
+    @Inject
+    lateinit var managedConfigWatcher: ManagedConfigWatcher
     
     private var connectivityManager: ConnectivityManager? = null
     
@@ -53,6 +57,7 @@ class MainApplication : Application() {
         
         // Set up network monitoring
         setupNetworkMonitoring()
+        managedConfigWatcher.start()
     }
     
     private fun setupNetworkMonitoring() {
@@ -68,6 +73,7 @@ class MainApplication : Application() {
     override fun onTerminate() {
         // Clean up network resources
         connectivityManager?.unregisterNetworkCallback(networkCallback)
+        managedConfigWatcher.stop()
         
         // Close the API accessor if it's initialized
         if (::terminalApiAccessor.isInitialized) {

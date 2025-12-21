@@ -80,7 +80,7 @@ export const CashRegisterList: React.FC = () => {
     if (id == null || !cashiers) {
       return "";
     }
-    const cashier = selectCashierById(cashiers, id);
+    const cashier = selectCashierById(cashiers as any, id);
     if (!cashier) {
       return "";
     }

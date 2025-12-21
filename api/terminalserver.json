@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "StuStaPay Terminal API",
+    "title": "TeamFestlichPay Terminal API",
     "license": {
       "name": "AGPL-3.0"
     },
@@ -1404,7 +1404,7 @@
         "tags": [
           "customer"
         ],
-        "summary": "Switch Tag",
+        "summary": "Switch a customer's tag to a new one",
         "operationId": "switch_tag",
         "requestBody": {
           "content": {
@@ -1845,6 +1845,22 @@
                 "type": "null"
               }
             ]
+          },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "vip_max_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vip Max Balance"
           },
           "tag_history": {
             "items": {
@@ -3362,6 +3378,7 @@
           "terminal_login",
           "supervised_terminal_login",
           "can_book_orders",
+          "can_topup",
           "grant_free_tickets",
           "grant_vouchers"
         ],
@@ -3589,17 +3606,13 @@
       },
       "SwitchTagPayload": {
         "properties": {
-          "old_user_tag_pin": {
-            "type": "string",
-            "title": "Old User Tag Pin"
+          "old_user_tag_uid": {
+            "type": "integer",
+            "title": "Old User Tag Uid"
           },
           "new_user_tag_uid": {
             "type": "integer",
             "title": "New User Tag Uid"
-          },
-          "new_user_tag_pin": {
-            "type": "string",
-            "title": "New User Tag Pin"
           },
           "comment": {
             "type": "string",
@@ -3608,9 +3621,8 @@
         },
         "type": "object",
         "required": [
-          "old_user_tag_pin",
+          "old_user_tag_uid",
           "new_user_tag_uid",
-          "new_user_tag_pin",
           "comment"
         ],
         "title": "SwitchTagPayload"
@@ -3842,7 +3854,7 @@
           "secrets": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/TerminalUserTagSecrets"
+                "$ref": "#/components/schemas/TerminalSecrets"
               },
               {
                 "type": "null"
@@ -3914,6 +3926,44 @@
         ],
         "title": "TerminalRegistrationSuccess"
       },
+      "TerminalSecrets": {
+        "properties": {
+          "sumup_affiliate_key": {
+            "type": "string",
+            "title": "Sumup Affiliate Key",
+            "default": ""
+          },
+          "sumup_api_key": {
+            "type": "string",
+            "title": "Sumup Api Key",
+            "default": ""
+          },
+          "sumup_api_key_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sumup Api Key Expires At"
+          },
+          "user_tag_secret": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserTagSecret"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "TerminalSecrets"
+      },
       "TerminalSumupSecrets": {
         "properties": {
           "sumup_affiliate_key": {
@@ -3965,6 +4015,10 @@
               }
             ],
             "title": "Description"
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
           },
           "profile_name": {
             "type": "string",
@@ -4043,6 +4097,56 @@
                 "type": "null"
               }
             ]
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed"
+          },
+          "sumup_payment_enabled": {
+            "type": "boolean",
+            "title": "Sumup Payment Enabled"
+          },
+          "user_privileges": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Privilege"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Privileges"
+          },
+          "secrets": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TerminalSecrets"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active User Id"
+          },
+          "available_roles": {
+            "items": {
+              "$ref": "#/components/schemas/UserRole"
+            },
+            "type": "array",
+            "title": "Available Roles"
           }
         },
         "type": "object",
@@ -4050,6 +4154,7 @@
           "id",
           "name",
           "description",
+          "event_name",
           "profile_name",
           "cash_register_id",
           "cash_register_name",
@@ -4061,21 +4166,15 @@
           "enable_cash_payment",
           "enable_card_payment",
           "buttons",
-          "sumup_secrets"
+          "sumup_secrets",
+          "post_payment_allowed",
+          "sumup_payment_enabled",
+          "user_privileges",
+          "secrets",
+          "active_user_id",
+          "available_roles"
         ],
         "title": "TerminalTillConfig"
-      },
-      "TerminalUserTagSecrets": {
-        "properties": {
-          "user_tag_secret": {
-            "$ref": "#/components/schemas/UserTagSecret"
-          }
-        },
-        "type": "object",
-        "required": [
-          "user_tag_secret"
-        ],
-        "title": "TerminalUserTagSecrets"
       },
       "Ticket": {
         "properties": {

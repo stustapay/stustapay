@@ -30,7 +30,9 @@ export const Index: React.FC = () => {
   }
 
   if (customerError || !customer || payoutInfoError || !payoutInfo) {
-    toast.error(t("errorLoadingCustomer"));
+    React.useEffect(() => {
+      toast.error(t("errorLoadingCustomer"));
+    }, []);
     return null;
   }
 
@@ -56,7 +58,7 @@ export const Index: React.FC = () => {
   }
 
   return (
-    <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
+    <Grid container justifyItems="center" justifyContent="center" spacing={2}>
       {config.sumup_topup_enabled && (
         <Grid item xs={12} sm={8}>
           <Alert severity="info" onClick={() => navigate("/topup")} sx={{ cursor: "pointer" }}>
@@ -69,8 +71,8 @@ export const Index: React.FC = () => {
         <Grid container justifyContent="center">
           <Paper
             sx={{
-              paddingX: 8,
-              paddingY: 3,
+              paddingX: { xs: 2, sm: 4, md: 8 },
+              paddingY: { xs: 2, sm: 3 },
               justifyContent: "center",
               textAlign: "center",
               width: "100%",

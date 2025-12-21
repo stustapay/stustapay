@@ -5,6 +5,11 @@
     > <!-- android:versionName is a special gift for SumUp's SDK,
     which wants to desperately read it and crashes otherwise. -->
 
+    <!-- Allow querying the Headwind launcher package so we can use its mobile API -->
+    <queries>
+        <package android:name="com.hmdm.launcher" />
+    </queries>
+
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />

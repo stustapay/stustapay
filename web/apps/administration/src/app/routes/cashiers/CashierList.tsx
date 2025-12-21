@@ -1,4 +1,5 @@
-import { CashierRead, selectCashierAll, selectTerminalById, useListCashiersQuery, useListTerminalsQuery } from "@/api";
+import { selectCashierAll, selectTerminalById, useListCashiersQuery, useListTerminalsQuery } from "@/api";
+import { Cashier } from "@stustapay/models";
 import { CashierRoutes, TerminalRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useRenderNode } from "@/hooks";
@@ -29,10 +30,10 @@ export const CashierList: React.FC = () => {
   const { cashiers, isLoading: isCashiersLoading } = useListCashiersQuery(
     { nodeId: currentNode.id },
     {
-      selectFromResult: ({ data, ...rest }) => ({
+      selectFromResult: ({ data, ...rest }: any) => ({
         ...rest,
-        cashiers: data
-          ? selectCashierAll(data).filter((cashier) => {
+          cashiers: data
+            ? (selectCashierAll(data) as any).filter((cashier: any) => {
               if (!filterOptions.showWithoutTerminal && cashier.terminal_ids.length === 0) {
                 return false;
               }
@@ -41,10 +42,10 @@ export const CashierList: React.FC = () => {
               }
               return true;
             })
-          : undefined,
+            : undefined,
       }),
     }
-  );
+  ) as any;
   const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -69,7 +70,7 @@ export const CashierList: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<CashierRead>[] = [
+  const columns: GridColDef<Cashier>[] = [
     {
       field: "login",
       headerName: t("cashier.login"),

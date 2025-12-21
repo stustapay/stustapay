@@ -62,6 +62,16 @@ class AccountViewModel @Inject constructor(
             initialValue = CustomerStatusUiState()
         )
 
+    val isSelfServiceMode: StateFlow<Boolean> = userRepository.userState
+        .map { userState ->
+            userState is UserState.LoggedIn && Access.hasOnlyTopUpPrivilege(userState.user)
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = false
+        )
+
     val commentVisible = userRepository.userState.mapState(false, viewModelScope) {
         when (it) {
             is UserState.LoggedIn -> {

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,13 +46,24 @@ import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavDest
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
+import kotlinx.coroutines.delay
 
 @Composable
 fun AccountDetails(
-    navigateTo: (NavDest) -> Unit, viewModel: AccountViewModel
+    navigateTo: (NavDest) -> Unit,
+    viewModel: AccountViewModel,
+    isSelfService: Boolean = false,
+    onFinished: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var detailOrder by remember { mutableStateOf<Order?>(null) }
+
+    LaunchedEffect(isSelfService, uiState.customer) {
+        if (isSelfService && uiState.customer is CustomerStatusRequestState.DoneDetails) {
+            delay(5000)
+            onFinished()
+        }
+    }
 
     if (detailOrder != null) {
         val sale = detailOrder!!
@@ -109,7 +121,11 @@ fun AccountDetails(
                 .fillMaxSize()
                 .padding(10.dp),
             onClose = {
-                navigateTo(CustomerStatusNavDests.status)
+                if (isSelfService) {
+                    onFinished()
+                } else {
+                    navigateTo(CustomerStatusNavDests.status)
+                }
             },
         ) {
             Column {

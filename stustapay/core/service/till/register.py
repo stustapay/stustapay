@@ -391,11 +391,9 @@ class TillRegisterService(Service[Config]):
         if transport_account is None:
             raise InvalidArgument("Transport account could not be found")
 
-        # Convert amount to Decimal to match transport_account.balance type
-        from decimal import Decimal
-        amount_decimal = Decimal(str(amount))
-
-        if transport_account.balance + amount_decimal < 0:
+        # Check if transport account has sufficient balance
+        # Note: transport_account.balance is float (from Account model), amount is also float
+        if transport_account.balance + amount < 0:
             raise InvalidArgument(
                 f"Insufficient balance on transport account. Current balance is {transport_account.balance}."
             )

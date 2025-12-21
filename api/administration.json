@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "StuStaPay Administration API",
+    "title": "TeamFestlichPay Administration API",
     "license": {
       "name": "AGPL-3.0"
     },
@@ -3396,6 +3396,122 @@
         }
       }
     },
+    "/till-registers/assign-register": {
+      "post": {
+        "tags": [
+          "till-registers"
+        ],
+        "summary": "Assign Register",
+        "operationId": "assign_register",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRegisterPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/till-registers/modify-balance": {
+      "post": {
+        "tags": [
+          "till-registers"
+        ],
+        "summary": "Modify Register Balance",
+        "operationId": "modify_register_balance",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifyRegisterBalancePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/public-config": {
       "get": {
         "tags": [
@@ -5654,6 +5770,75 @@
         }
       }
     },
+    "/user-tags/{user_tag_id}/update-vip-status": {
+      "post": {
+        "tags": [
+          "user_tags"
+        ],
+        "summary": "Update User Tag Vip Status",
+        "operationId": "update_user_tag_vip_status",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Tag Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVipStatusPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTagDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tses/": {
       "get": {
         "tags": [
@@ -6582,6 +6767,66 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/NewEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/copy-event": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Copy Event",
+        "operationId": "copy_event",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyEventRequest"
               }
             }
           }
@@ -7853,6 +8098,74 @@
         }
       }
     },
+    "/terminal/{terminal_id}/login-user": {
+      "post": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "Login User",
+        "description": "Login a user to a terminal",
+        "operationId": "login_user",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terminal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Terminal Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TerminalUserLoginPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/transactions/{transaction_id}": {
       "get": {
         "tags": [
@@ -7892,6 +8205,917 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mdm/mappings": {
+      "get": {
+        "tags": [
+          "mdm"
+        ],
+        "summary": "List Mappings",
+        "operationId": "list_mappings",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeadwindDeviceMappingWithTerminal"
+                  },
+                  "title": "Response List Mappings Mdm Mappings Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "mdm"
+        ],
+        "summary": "Create Or Update Mapping",
+        "operationId": "create_or_update_mapping",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHeadwindMappingPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeadwindDeviceMappingWithTerminal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mdm/devices": {
+      "get": {
+        "tags": [
+          "mdm"
+        ],
+        "summary": "List Headwind Devices",
+        "operationId": "list_headwind_devices",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeadwindDeviceWithMapping"
+                  },
+                  "title": "Response List Headwind Devices Mdm Devices Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mdm/mappings/{terminal_id}": {
+      "delete": {
+        "tags": [
+          "mdm"
+        ],
+        "summary": "Delete Mapping",
+        "operationId": "delete_mapping",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terminal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Terminal Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mdm/mappings/{terminal_id}/refresh-token": {
+      "post": {
+        "tags": [
+          "mdm"
+        ],
+        "summary": "Refresh Mapping Token",
+        "operationId": "refresh_mapping_token",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "terminal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Terminal Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeadwindDeviceMappingWithTerminal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/tools": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Llm Tools",
+        "operationId": "list_llm_tools",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ToolDescription"
+                  },
+                  "type": "array",
+                  "title": "Response List Llm Tools Llm Tools Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/llm/products": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Product Llm",
+        "operationId": "create_product_llm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/llm/cash-registers": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Cash Register Llm",
+        "operationId": "create_cash_register_llm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCashRegisterPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashRegister"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/llm/tills": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Till Llm",
+        "operationId": "create_till_llm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTillPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Till"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/llm/till-buttons": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Till Button Llm",
+        "operationId": "create_till_button_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTillButtonPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TillButton"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Till Buttons Llm",
+        "operationId": "list_till_buttons_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TillButton"
+                  },
+                  "title": "Response List Till Buttons Llm Llm Till Buttons Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/till-layouts": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Till Layout Llm",
+        "operationId": "create_till_layout_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTillLayoutPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TillLayout"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Till Layouts Llm",
+        "operationId": "list_till_layouts_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TillLayout"
+                  },
+                  "title": "Response List Till Layouts Llm Llm Till Layouts Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/terminals": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Terminal Llm",
+        "operationId": "create_terminal_llm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTerminalPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Terminal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/llm/tax-rates": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Tax Rates Llm",
+        "operationId": "list_tax_rates_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxRate"
+                  },
+                  "title": "Response List Tax Rates Llm Llm Tax Rates Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/events": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Events Llm",
+        "operationId": "list_events_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name_query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventSummary"
+                  },
+                  "title": "Response List Events Llm Llm Events Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/till-profiles": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Till Profiles Llm",
+        "operationId": "list_till_profiles_llm",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TillProfile"
+                  },
+                  "title": "Response List Till Profiles Llm Llm Till Profiles Get"
                 }
               }
             }
@@ -8001,6 +9225,22 @@
               }
             ]
           },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "vip_max_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vip Max Balance"
+          },
           "tag_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagHistoryEntry"
@@ -8057,6 +9297,24 @@
           "cash_register"
         ],
         "title": "AccountType"
+      },
+      "AssignRegisterPayload": {
+        "properties": {
+          "cashier_id": {
+            "type": "integer",
+            "title": "Cashier Id"
+          },
+          "cash_register_id": {
+            "type": "integer",
+            "title": "Cash Register Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cashier_id",
+          "cash_register_id"
+        ],
+        "title": "AssignRegisterPayload"
       },
       "BonConfig": {
         "properties": {
@@ -8764,6 +10022,179 @@
         ],
         "title": "ConfigEntry"
       },
+      "CopyEventOptions": {
+        "properties": {
+          "copy_event_settings": {
+            "type": "boolean",
+            "title": "Copy Event Settings",
+            "default": true
+          },
+          "copy_user_tags": {
+            "type": "boolean",
+            "title": "Copy User Tags",
+            "default": true
+          },
+          "copy_account_balances": {
+            "type": "boolean",
+            "title": "Copy Account Balances",
+            "default": false
+          },
+          "copy_tills": {
+            "type": "boolean",
+            "title": "Copy Tills",
+            "default": true
+          },
+          "copy_terminals": {
+            "type": "boolean",
+            "title": "Copy Terminals",
+            "default": true
+          },
+          "copy_users": {
+            "type": "boolean",
+            "title": "Copy Users",
+            "default": true
+          },
+          "copy_products": {
+            "type": "boolean",
+            "title": "Copy Products",
+            "default": true
+          },
+          "copy_tse_devices": {
+            "type": "boolean",
+            "title": "Copy Tse Devices",
+            "default": true
+          },
+          "copy_sub_nodes": {
+            "type": "boolean",
+            "title": "Copy Sub Nodes",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "CopyEventOptions",
+        "description": "Options for copying an event with selective components."
+      },
+      "CopyEventRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "options": {
+            "$ref": "#/components/schemas/CopyEventOptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "options"
+        ],
+        "title": "CopyEventRequest",
+        "description": "Request to copy an event with specified options."
+      },
+      "CreateCashRegisterPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id",
+            "description": "ID of the node/event the cash register belongs to."
+          },
+          "cash_register": {
+            "$ref": "#/components/schemas/NewCashRegister"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "cash_register"
+        ],
+        "title": "CreateCashRegisterPayload"
+      },
+      "CreateHeadwindMappingPayload": {
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "title": "Terminal Id"
+          },
+          "headwind_device_id": {
+            "type": "string",
+            "title": "Headwind Device Id"
+          },
+          "headwind_device_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Number"
+          },
+          "headwind_device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Name"
+          },
+          "headwind_device_serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Serial"
+          },
+          "headwind_device_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terminal_id",
+          "headwind_device_id"
+        ],
+        "title": "CreateHeadwindMappingPayload"
+      },
+      "CreateProductPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id",
+            "description": "ID of the node/event the product belongs to."
+          },
+          "product": {
+            "$ref": "#/components/schemas/NewProduct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "product"
+        ],
+        "title": "CreateProductPayload"
+      },
       "CreateSepaXMLPayload": {
         "properties": {
           "execution_date": {
@@ -8777,6 +10208,78 @@
           "execution_date"
         ],
         "title": "CreateSepaXMLPayload"
+      },
+      "CreateTerminalPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id",
+            "description": "ID of the node/event the terminal belongs to."
+          },
+          "terminal": {
+            "$ref": "#/components/schemas/NewTerminal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "terminal"
+        ],
+        "title": "CreateTerminalPayload"
+      },
+      "CreateTillButtonPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id",
+            "description": "ID of the node/event the button belongs to."
+          },
+          "button": {
+            "$ref": "#/components/schemas/NewTillButton"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "button"
+        ],
+        "title": "CreateTillButtonPayload"
+      },
+      "CreateTillLayoutPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id",
+            "description": "ID of the node/event the layout belongs to."
+          },
+          "layout": {
+            "$ref": "#/components/schemas/NewTillLayout"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "layout"
+        ],
+        "title": "CreateTillLayoutPayload"
+      },
+      "CreateTillPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id",
+            "description": "ID of the node/event the till belongs to."
+          },
+          "till": {
+            "$ref": "#/components/schemas/NewTill"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "till"
+        ],
+        "title": "CreateTillPayload"
       },
       "CreateUserPayload": {
         "properties": {
@@ -9040,6 +10543,22 @@
               }
             ]
           },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "vip_max_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vip Max Balance"
+          },
           "tag_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagHistoryEntry"
@@ -9203,6 +10722,68 @@
         ],
         "title": "EditSaleProducts"
       },
+      "EventSummary": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "event_id": {
+            "type": "integer",
+            "title": "Event Id"
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "node_name",
+          "path",
+          "description",
+          "event_id",
+          "event_name"
+        ],
+        "title": "EventSummary"
+      },
       "FindAccountPayload": {
         "properties": {
           "search_term": {
@@ -9254,6 +10835,298 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HeadwindDevice": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Id"
+          },
+          "deviceNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Devicenumber"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "imei": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imei"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "configurationName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Configurationname"
+          },
+          "lastUpdate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastupdate"
+          },
+          "lastIp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastip"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "HeadwindDevice",
+        "description": "Subset of the Headwind MDM device attributes needed by the admin UI."
+      },
+      "HeadwindDeviceMappingWithTerminal": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "terminal_id": {
+            "type": "integer",
+            "title": "Terminal Id"
+          },
+          "headwind_device_id": {
+            "type": "string",
+            "title": "Headwind Device Id"
+          },
+          "headwind_device_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Number"
+          },
+          "headwind_device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Name"
+          },
+          "headwind_device_serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Serial"
+          },
+          "headwind_device_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Device Model"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          },
+          "last_token_pushed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Token Pushed At"
+          },
+          "last_push_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Push Status"
+          },
+          "last_push_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Push Error"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "terminal_name": {
+            "type": "string",
+            "title": "Terminal Name"
+          },
+          "terminal_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terminal Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "node_id",
+          "terminal_id",
+          "headwind_device_id",
+          "created_at",
+          "updated_at",
+          "terminal_name"
+        ],
+        "title": "HeadwindDeviceMappingWithTerminal"
+      },
+      "HeadwindDeviceWithMapping": {
+        "properties": {
+          "device": {
+            "$ref": "#/components/schemas/HeadwindDevice"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HeadwindDeviceMappingWithTerminal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "device"
+        ],
+        "title": "HeadwindDeviceWithMapping"
       },
       "Language": {
         "type": "string",
@@ -9344,6 +11217,24 @@
           "password"
         ],
         "title": "LoginPayload"
+      },
+      "ModifyRegisterBalancePayload": {
+        "properties": {
+          "cashier_id": {
+            "type": "integer",
+            "title": "Cashier Id"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cashier_id",
+          "amount"
+        ],
+        "title": "ModifyRegisterBalancePayload"
       },
       "NewCashRegister": {
         "properties": {
@@ -9503,6 +11394,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -9538,6 +11434,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -9767,6 +11668,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
           },
           "translation_texts": {
             "additionalProperties": {
@@ -10324,6 +12230,33 @@
           "secret_id": {
             "type": "integer",
             "title": "Secret Id"
+          },
+          "uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uid"
+          },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
           }
         },
         "type": "object",
@@ -11903,6 +13836,7 @@
           "terminal_login",
           "supervised_terminal_login",
           "can_book_orders",
+          "can_topup",
           "grant_free_tickets",
           "grant_vouchers"
         ],
@@ -12171,6 +14105,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -12206,6 +14145,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -12428,6 +14372,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
           },
           "translation_texts": {
             "additionalProperties": {
@@ -12543,6 +14492,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -12578,6 +14532,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -12800,6 +14759,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
           },
           "translation_texts": {
             "additionalProperties": {
@@ -12917,6 +14881,10 @@
             "type": "string",
             "title": "Description"
           },
+          "redirect_url": {
+            "type": "string",
+            "title": "Redirect Url"
+          },
           "id": {
             "type": "string",
             "title": "Id"
@@ -12979,6 +14947,7 @@
           "currency",
           "merchant_code",
           "description",
+          "redirect_url",
           "id",
           "status",
           "date"
@@ -13275,6 +15244,24 @@
           "registration_uuid"
         ],
         "title": "Terminal"
+      },
+      "TerminalUserLoginPayload": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "role_id": {
+            "type": "integer",
+            "title": "Role Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role_id"
+        ],
+        "title": "TerminalUserLoginPayload"
       },
       "Ticket": {
         "properties": {
@@ -13665,6 +15652,50 @@
         ],
         "title": "TimeseriesStats"
       },
+      "ToolDescription": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "title": "Method"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "input_schema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Schema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "method",
+          "path"
+        ],
+        "title": "ToolDescription"
+      },
       "Transaction": {
         "properties": {
           "id": {
@@ -13988,6 +16019,11 @@
             "type": "number",
             "title": "Max Account Balance"
           },
+          "vip_max_account_balance": {
+            "type": "number",
+            "title": "Vip Max Account Balance",
+            "default": 300.0
+          },
           "start_date": {
             "anyOf": [
               {
@@ -14023,6 +16059,11 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "post_payment_allowed": {
+            "type": "boolean",
+            "title": "Post Payment Allowed",
+            "default": false
           },
           "sumup_topup_enabled": {
             "type": "boolean",
@@ -14253,6 +16294,11 @@
             ],
             "title": "Payout Sender"
           },
+          "donation_enabled": {
+            "type": "boolean",
+            "title": "Donation Enabled",
+            "default": true
+          },
           "translation_texts": {
             "additionalProperties": {
               "additionalProperties": {
@@ -14396,6 +16442,19 @@
           "privileges"
         ],
         "title": "UpdateUserRolePrivilegesPayload"
+      },
+      "UpdateVipStatusPayload": {
+        "properties": {
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_vip"
+        ],
+        "title": "UpdateVipStatusPayload"
       },
       "UpdateVoucherAmountPayload": {
         "properties": {
@@ -14670,24 +16729,17 @@
             ],
             "title": "User Id"
           },
+          "is_vip": {
+            "type": "boolean",
+            "title": "Is Vip",
+            "default": false
+          },
           "account_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagAccountAssociation"
             },
             "type": "array",
             "title": "Account History"
-          },
-          "uid_hex": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Uid Hex",
-            "readOnly": true
           }
         },
         "type": "object",
@@ -14696,8 +16748,7 @@
           "pin",
           "uid",
           "node_id",
-          "account_history",
-          "uid_hex"
+          "account_history"
         ],
         "title": "UserTagDetail"
       },

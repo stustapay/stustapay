@@ -20,7 +20,7 @@ import { z } from "zod";
 import { useOpenModal } from "@stustapay/modal-provider";
 
 export const PayoutInfo: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const config = usePublicConfig();
   const openModal = useOpenModal();
@@ -31,6 +31,7 @@ export const PayoutInfo: React.FC = () => {
   const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
   const formatCurrency = useCurrencyFormatter();
+  const hasPrivacyPolicy = !!config.translation_texts[i18n.language]?.["privacy_policy"];
 
   if (isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError)) {
     return <Loading />;
@@ -65,9 +66,11 @@ export const PayoutInfo: React.FC = () => {
       }
     }),
     email: z.string().email(),
-    privacy_policy: z.boolean().refine((val) => val, {
-      message: t("payout.mustAcceptPrivacyPolicy"),
-    }),
+    privacy_policy: hasPrivacyPolicy
+      ? z.boolean().refine((val) => val, {
+          message: t("payout.mustAcceptPrivacyPolicy"),
+        })
+      : z.boolean().optional(),
     donation: z.number().superRefine((val, ctx) => {
       if (val < 0) {
         ctx.addIssue({
@@ -144,7 +147,7 @@ export const PayoutInfo: React.FC = () => {
   }
 
   return (
-    <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
+    <Grid container justifyItems="center" justifyContent="center">
       <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         <Stack spacing={2}>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
@@ -180,30 +183,32 @@ export const PayoutInfo: React.FC = () => {
                     formik={formik}
                     disabled={payoutInfo.in_payout_run}
                   />
-                  <FormControl error={Boolean(formik.errors.privacy_policy)}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="privacy_policy"
-                          checked={formik.values.privacy_policy}
-                          onChange={formik.handleChange}
-                          color="primary"
-                          disabled={payoutInfo.in_payout_run}
-                        />
-                      }
-                      label={
-                        <Trans i18nKey="payout.privacyPolicyCheck">
-                          please accept the
-                          <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
-                            privacy policy
-                          </Link>
-                        </Trans>
-                      }
-                    />
-                    {formik.touched.privacy_policy && (
-                      <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
-                    )}
-                  </FormControl>
+                  {hasPrivacyPolicy && (
+                    <FormControl error={Boolean(formik.errors.privacy_policy)}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            name="privacy_policy"
+                            checked={formik.values.privacy_policy}
+                            onChange={formik.handleChange}
+                            color="primary"
+                            disabled={payoutInfo.in_payout_run}
+                          />
+                        }
+                        label={
+                          <Trans i18nKey="payout.privacyPolicyCheck">
+                            please accept the
+                            <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
+                              privacy policy
+                            </Link>
+                          </Trans>
+                        }
+                      />
+                      {formik.touched.privacy_policy && (
+                        <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
+                      )}
+                    </FormControl>
+                  )}
                   
                   {config.donation_enabled && (
                     <>

@@ -9,7 +9,7 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Navigate, Link as RouterLink } from "react-router-dom";
+import { Navigate, Link as RouterLink, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import type { SumUpCard, SumUpCardInstance, SumUpResponseType } from "./SumUpCard";
@@ -55,12 +55,14 @@ const reducer = (state: TopUpState, action: TopUpStateAction): TopUpState => {
         orderUUID: action.orderUUID,
       };
     case "sumup-success":
-      if (state.stage !== "sumup") {
+      // Allow success transition from both "sumup" stage (normal flow) and "initial" stage (APM redirect)
+      if (state.stage !== "sumup" && state.stage !== "initial") {
         return state;
       }
       return { stage: "success" };
     case "sumup-error":
-      if (state.stage !== "sumup") {
+      // Allow error transition from both "sumup" stage (normal flow) and "initial" stage (APM redirect)
+      if (state.stage !== "sumup" && state.stage !== "initial") {
         return state;
       }
       return { stage: "error", message: action.message };
@@ -76,7 +78,7 @@ const reducer = (state: TopUpState, action: TopUpStateAction): TopUpState => {
 
 const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <Grid container justifyItems="center" justifyContent="center" sx={{ paddingX: 0.5 }}>
+    <Grid container justifyItems="center" justifyContent="center">
       <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
         {children}
       </Grid>
@@ -89,6 +91,7 @@ type SumUpCardLoadHandler = () => void;
 
 export const TopUp: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { search, state: locationState } = useLocation();
 
   const config = usePublicConfig();
 
@@ -101,6 +104,15 @@ export const TopUp: React.FC = () => {
   const handleSumupCardLoad = React.useRef<SumUpCardLoadHandler | undefined>(undefined);
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
+
+  // Handle APM redirect navigation state
+  React.useEffect(() => {
+    if (locationState?.apmSuccess) {
+      dispatch({ type: "sumup-success" });
+    } else if (locationState?.apmError) {
+      dispatch({ type: "sumup-error", message: t("topup.error.message") });
+    }
+  }, [locationState, t]);
 
   const reset = () => {
     dispatch({ type: "reset" });
@@ -235,7 +247,7 @@ export const TopUp: React.FC = () => {
     };
 
     handleSumupCardLoad.current = () => {
-      console.log("sumup card loaded");
+      // SumUp widget loaded successfully
     };
   }, [checkCheckout, dispatch, state, t]);
 
@@ -249,6 +261,8 @@ export const TopUp: React.FC = () => {
       onLoad: handleSumupCardLoad.current,
       onResponse: handleSumupCardResp.current,
       locale: i18n.language,
+      // Enable alternative payment methods if available for the merchant
+      country: "DE",
     };
     if (sumupCard.current) {
       sumupCard.current.update(config);
@@ -257,7 +271,7 @@ export const TopUp: React.FC = () => {
         sumupCard.current = SumUpCard.mount(config);
         // sumupCard.current = SumUpCardMock.mount(config);
       } catch (e) {
-        console.error("Mounting sumup card threw an error", e);
+        // Handle widget mounting error silently
       }
     }
   }, [config, state, i18n, checkCheckout, dispatch]);
@@ -287,6 +301,7 @@ export const TopUp: React.FC = () => {
       clearTimeout(timeoutId);
     };
   }, [state, checkCheckout, t]);
+
 
   if (!config.sumup_topup_enabled) {
     toast.error(t("topup.sumupTopupDisabled"));
