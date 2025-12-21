@@ -52,6 +52,7 @@ from .routers import (
     tse,
     user,
     user_tag,
+    llm,
 )
 from .routers import config as config_router
 
@@ -90,6 +91,7 @@ def get_server(config: Config):
     server.add_router(terminal.router)
     server.add_router(transaction.router)
     server.add_router(mdm.router)
+    server.add_router(llm.router)
     return server
 
 

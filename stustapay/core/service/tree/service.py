@@ -8,6 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.tree import (
     CopyEventOptions,
     CopyEventRequest,
+    EventSummary,
     NewEvent,
     NewNode,
     Node,
@@ -388,6 +389,25 @@ class TreeService(Service[Config]):
     @requires_user(node_required=False)
     async def get_tree_for_current_user(self, *, conn: Connection, current_user: CurrentUser) -> NodeSeenByUser:
         return await get_tree_for_current_user(conn=conn, current_user=current_user)
+
+    @with_db_transaction(read_only=True)
+    @requires_user(node_required=False)
+    async def search_events(
+        self, *, conn: Connection, current_user: CurrentUser, name_query: str | None = None
+    ) -> list[EventSummary]:
+        params = [current_user.id]
+        query = (
+            "select n.id as node_id, n.name as node_name, n.path, n.description, "
+            "n.event_id as event_id, n.name as event_name, e.start_date, e.end_date "
+            "from node n "
+            "join event e on e.id = n.event_id "
+            "join user_privileges_at_node($1) u on n.id = u.node_id "
+        )
+        if name_query:
+            query += "where n.name ilike $2 "
+            params.append(f"%{name_query}%")
+        query += "order by e.start_date desc nulls last, n.name"
+        return await conn.fetch_many(EventSummary, query, *params)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)

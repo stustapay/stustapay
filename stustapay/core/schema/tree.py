@@ -182,6 +182,17 @@ class Node(BaseModel):
         return self.parents_until_event_node + [self.id]
 
 
+class EventSummary(BaseModel):
+    node_id: int
+    node_name: str
+    path: str
+    description: str
+    event_id: int
+    event_name: str
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+
+
 class NewEvent(NewNode, UpdateEvent):
     pass
 
