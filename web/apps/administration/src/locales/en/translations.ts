@@ -49,6 +49,7 @@ export const translations = {
     configLoadFailed: "Something went wrong while loading the page configuration: {{what}}",
     overview: "Overview",
     search: "Search",
+    loadMore: "Load more",
     email: "E-Mail",
     name: "Name",
     description: "Description",

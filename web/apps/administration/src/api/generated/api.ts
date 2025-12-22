@@ -1206,6 +1206,9 @@ const injectedRtkApi = api
           url: `/sumup/transactions`,
           params: {
             node_id: queryArg.nodeId,
+            limit: queryArg.limit,
+            transaction_code: queryArg.transactionCode,
+            newest_time: queryArg.newestTime,
           },
         }),
         providesTags: ["sumup"],
@@ -1982,6 +1985,9 @@ export type ListSumupCheckoutsApiArg = {
 export type ListSumupTransactionsApiResponse = /** status 200 Successful Response */ SumUpTransaction[];
 export type ListSumupTransactionsApiArg = {
   nodeId: number;
+  limit?: number;
+  transactionCode?: string;
+  newestTime?: string;
 };
 export type GetSumupCheckoutApiResponse = /** status 200 Successful Response */ SumUpCheckout;
 export type GetSumupCheckoutApiArg = {

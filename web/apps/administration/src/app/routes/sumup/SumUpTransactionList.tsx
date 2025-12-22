@@ -3,7 +3,7 @@ import { withPrivilegeGuard } from "@/app/layout";
 import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Link } from "@mui/material";
+import { Button, Link, Stack } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Privilege } from "@stustapay/models";
 import * as React from "react";
@@ -14,7 +14,46 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: checkouts } = useListSumupTransactionsQuery({ nodeId: currentNode.id });
+  const pageSize = 200;
+  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+  const [rows, setRows] = React.useState<SumUpTransaction[]>([]);
+  const [hasMore, setHasMore] = React.useState(true);
+
+  const { data: transactions, isFetching } = useListSumupTransactionsQuery({
+    nodeId: currentNode.id,
+    limit: pageSize,
+    newestTime: cursor,
+  });
+
+  React.useEffect(() => {
+    setCursor(undefined);
+    setRows([]);
+    setHasMore(true);
+  }, [currentNode.id]);
+
+  React.useEffect(() => {
+    if (!transactions) {
+      return;
+    }
+
+    setRows((previous) => {
+      if (!cursor) {
+        return transactions;
+      }
+      const existing = new Set(previous.map((row) => row.id));
+      const unique = transactions.filter((row) => !existing.has(row.id));
+      return [...previous, ...unique];
+    });
+    setHasMore(transactions.length === pageSize);
+  }, [cursor, pageSize, transactions]);
+
+  const handleLoadMore = () => {
+    const lastRow = rows[rows.length - 1];
+    if (!lastRow) {
+      return;
+    }
+    setCursor(lastRow.timestamp);
+  };
 
   const columns: GridColDef<SumUpTransaction>[] = [
     {
@@ -22,7 +61,7 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
       headerName: t("common.id"),
       width: 300,
       renderCell: (params) => (
-        <Link component={RouterLink} to={SumUpTransactionRoutes.detail(params.row.id)}>
+        <Link component={RouterLink} to={SumUpTransactionRoutes.detail(params.row.transaction_code)}>
           {params.row.id}
         </Link>
       ),
@@ -41,18 +80,24 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
 
   return (
     <ListLayout title={t("sumup.transactions")} routes={ProductRoutes}>
-      <DataGrid
-        autoHeight
-        rows={checkouts ?? []}
-        columns={columns}
-        disableRowSelectionOnClick
-        initialState={{
-          sorting: {
-            sortModel: [{ field: "timestamp", sort: "desc" }],
-          },
-        }}
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
+      <Stack spacing={2}>
+        <DataGrid
+          autoHeight
+          rows={rows}
+          columns={columns}
+          disableRowSelectionOnClick
+          loading={isFetching}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: "timestamp", sort: "desc" }],
+            },
+          }}
+          sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        />
+        <Button variant="outlined" onClick={handleLoadMore} disabled={!hasMore || isFetching || rows.length === 0}>
+          {t("common.loadMore")}
+        </Button>
+      </Stack>
     </ListLayout>
   );
 });
