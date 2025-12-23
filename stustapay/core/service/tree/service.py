@@ -479,6 +479,47 @@ class TreeService(Service[Config]):
             "update event set sumup_oauth_refresh_token = $1 where id = $2", token.refresh_token, node.event.id
         )
 
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def upload_event_banner(self, *, conn: Connection, node: Node, image_data: bytes, mime_type: str):
+        """Upload a banner image for an event."""
+        assert node.event is not None
+        await conn.execute(
+            "update event set banner_image = $1, banner_image_mime_type = $2 where id = $3",
+            image_data,
+            mime_type,
+            node.event.id,
+        )
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def delete_event_banner(self, *, conn: Connection, node: Node):
+        """Delete the banner image for an event."""
+        assert node.event is not None
+        await conn.execute(
+            "update event set banner_image = null, banner_image_mime_type = null where id = $1",
+            node.event.id,
+        )
+
+    @with_db_transaction(read_only=True)
+    async def get_event_banner(self, *, conn: Connection, node_id: int) -> dict | None:
+        """Retrieve banner image data for an event node."""
+        result = await conn.fetchrow(
+            "select e.banner_image, e.banner_image_mime_type "
+            "from event e join node n on n.event_id = e.id "
+            "where n.id = $1 and e.banner_image is not null",
+            node_id
+        )
+        if result is None:
+            return None
+        return {
+            "image": result["banner_image"],
+            "mime_type": result["banner_image_mime_type"] or "image/png"
+        }
+
+
     async def _copy_user_tags(self, conn: Connection, source_node_id: int, target_node_id: int):
         """Copy user tags from source node to target node."""
         # Get all user tags from source node

@@ -122,7 +122,14 @@ export const AuthenticatedRoot: React.FC = () => {
     <Layout>
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <AppBar
+          position="fixed"
+          sx={{
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            background: "linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+          }}
+        >
           <Container maxWidth="xl">
             <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
               {/* Mobile menu icon */}
@@ -278,6 +285,22 @@ export const AuthenticatedRoot: React.FC = () => {
         >
           {/* Spacer to prevent content from being hidden under fixed AppBar */}
           <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }} />
+
+          {/* Event Banner */}
+          {publicConfig.banner_image_url && (
+            <Box
+              sx={{
+                width: "100%",
+                height: { xs: 120, sm: 180, md: 220 },
+                backgroundImage: `url(${publicConfig.banner_image_url})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                mb: 2,
+              }}
+            />
+          )}
+
           <Container
             maxWidth="lg"
             sx={{

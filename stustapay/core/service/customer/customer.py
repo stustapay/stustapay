@@ -50,6 +50,7 @@ class CustomerPortalApiConfig(BaseModel):
     translation_texts: dict[Language, dict[str, str]]
     event_name: str
     node_id: int
+    banner_image_url: Optional[str] = None
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -331,6 +332,14 @@ class CustomerService(Service[Config]):
         node = await fetch_event_node_for_node(conn=conn, node_id=node_id)
         assert node is not None
         assert node.event is not None
+        
+        # Check if banner image exists
+        has_banner = await conn.fetchval(
+            "select exists(select 1 from event e join node n on n.event_id = e.id where n.id = $1 and e.banner_image is not null)",
+            node_id
+        )
+        banner_image_url = f"/api/banner/{node_id}" if has_banner else None
+        
         return CustomerPortalApiConfig(
             test_mode=self.config.core.test_mode,
             test_mode_message=self.config.core.test_mode_message,
@@ -345,4 +354,22 @@ class CustomerService(Service[Config]):
             currency_identifier=node.event.currency_identifier,
             event_name=node.name,
             node_id=node_id,
+            banner_image_url=banner_image_url,
         )
+
+    @with_db_transaction(read_only=True)
+    async def get_event_banner(self, *, conn: Connection, node_id: int) -> Optional[dict]:
+        """Retrieve banner image data for an event node."""
+        result = await conn.fetchrow(
+            "select e.banner_image, e.banner_image_mime_type "
+            "from event e join node n on n.event_id = e.id "
+            "where n.id = $1 and e.banner_image is not null",
+            node_id
+        )
+        if result is None:
+            return None
+        return {
+            "image": result["banner_image"],
+            "mime_type": result["banner_image_mime_type"] or "image/png"
+        }
+

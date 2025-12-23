@@ -68,6 +68,9 @@ class _BaseEvent(BaseModel):
 
     donation_enabled: bool = True
 
+    # customer portal banner image URL (computed from stored image)
+    customer_portal_banner_image_url: str | None = None
+
     # map of lang_code -> [text type -> text content]
     translation_texts: dict[Language, dict[str, str]] = {}
 
