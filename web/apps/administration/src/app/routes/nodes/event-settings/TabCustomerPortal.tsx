@@ -9,6 +9,8 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { useSelector } from "react-redux";
+import { selectAuthToken } from "@/store";
 
 export const CustomerPortalSettingsSchema = z.object({
   customer_portal_url: z.string().url(),
@@ -16,47 +18,12 @@ export const CustomerPortalSettingsSchema = z.object({
   customer_portal_about_page_url: z.string().url(),
   customer_portal_data_privacy_url: z.string().url(),
   donation_enabled: z.boolean(),
+  customer_portal_primary_color: z.string().optional().nullable(),
+  customer_portal_secondary_color: z.string().optional().nullable(),
 });
 
 export type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
 
-export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSettings>> = (formik) => {
-  const { t } = useTranslation();
-  return (
-    <>
-      <FormTextField label={t("settings.customerPortal.baseUrl")} name="customer_portal_url" formik={formik} />
-      <FormTextField
-        label={t("settings.customerPortal.contact_email")}
-        name="customer_portal_contact_email"
-        formik={formik}
-      />
-      <FormTextField
-        label={t("settings.customerPortal.about_page_url")}
-        name="customer_portal_about_page_url"
-        formik={formik}
-      />
-      <FormTextField
-        label={t("settings.customerPortal.data_privacy_url")}
-        name="customer_portal_data_privacy_url"
-        formik={formik}
-      />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={formik.values.donation_enabled}
-            onChange={(event) => {
-              formik.setFieldValue("donation_enabled", event.target.checked);
-              formik.setFieldTouched("donation_enabled", true);
-            }}
-            name="donation_enabled"
-            color="primary"
-          />
-        }
-        label={t("settings.customerPortal.donation_enabled")}
-      />
-    </>
-  );
-};
 
 interface BannerUploadProps {
   nodeId: number;
@@ -67,14 +34,24 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
   const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const token = useSelector(selectAuthToken);
 
   // Load current banner on mount
   React.useEffect(() => {
     const checkBanner = async () => {
       try {
-        const response = await fetch(`/api/tree/events/${nodeId}/banner`);
+        const headers: HeadersInit = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`/api/tree/events/${nodeId}/banner`, {
+          headers,
+        });
         if (response.ok) {
-          setBannerUrl(`/api/tree/events/${nodeId}/banner?t=${Date.now()}`);
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          setBannerUrl(objectUrl);
         } else {
           setBannerUrl(null);
         }
@@ -83,7 +60,15 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
       }
     };
     checkBanner();
-  }, [nodeId]);
+
+    // Cleanup object URL
+    return () => {
+      if (bannerUrl && bannerUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(bannerUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, token]); // Add token dependency
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,14 +91,26 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
       const formData = new FormData();
       formData.append("file", file);
 
+      const headers: HeadersInit = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/tree/events/${nodeId}/banner`, {
         method: "POST",
         body: formData,
-        credentials: "include",
+        headers,
       });
 
       if (response.ok) {
-        setBannerUrl(`/api/tree/events/${nodeId}/banner?t=${Date.now()}`);
+        // Refresh banner
+        const checkResponse = await fetch(`/api/tree/events/${nodeId}/banner`, { headers });
+        if (checkResponse.ok) {
+          const blob = await checkResponse.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          setBannerUrl(objectUrl);
+        }
+
         toast.success(t("settings.customerPortal.bannerUploaded") || "Banner uploaded successfully");
       } else {
         throw new Error("Upload failed");
@@ -131,12 +128,20 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
 
   const handleDelete = async () => {
     try {
+      const headers: HeadersInit = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/tree/events/${nodeId}/banner`, {
         method: "DELETE",
-        credentials: "include",
+        headers,
       });
 
       if (response.ok) {
+        if (bannerUrl && bannerUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(bannerUrl);
+        }
         setBannerUrl(null);
         toast.success(t("settings.customerPortal.bannerDeleted") || "Banner deleted");
       } else {
@@ -149,8 +154,8 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+    <Box>
+      <Typography variant="subtitle2" gutterBottom>
         {t("settings.customerPortal.bannerImage") || "Banner Image"}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -201,12 +206,80 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
           variant="outlined"
           startIcon={<CloudUploadIcon />}
           disabled={isUploading}
+          size="small"
         >
           {isUploading ? (t("settings.customerPortal.uploading") || "Uploading...") : (t("settings.customerPortal.uploadBanner") || "Upload Banner")}
         </Button>
       </label>
       {isUploading && <LinearProgress sx={{ mt: 1 }} />}
-    </Paper>
+    </Box>
+  );
+};
+
+export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSettings> & { nodeId?: number }> = ({ nodeId, ...formik }) => {
+  const { t } = useTranslation();
+  return (
+    <Stack spacing={3}>
+      <FormTextField label={t("settings.customerPortal.baseUrl")} name="customer_portal_url" formik={formik} />
+      <FormTextField
+        label={t("settings.customerPortal.contact_email")}
+        name="customer_portal_contact_email"
+        formik={formik}
+      />
+      <FormTextField
+        label={t("settings.customerPortal.about_page_url")}
+        name="customer_portal_about_page_url"
+        formik={formik}
+      />
+      <FormTextField
+        label={t("settings.customerPortal.data_privacy_url")}
+        name="customer_portal_data_privacy_url"
+        formik={formik}
+      />
+
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+          {t("settings.customerPortal.appearance") || "Appearance"}
+        </Typography>
+        <Stack spacing={3}>
+          {nodeId && <BannerUpload nodeId={nodeId} />}
+
+          <Stack direction="row" spacing={4}>
+            <FormTextField
+              label={t("settings.customerPortal.primaryColor")}
+              name="customer_portal_primary_color"
+              formik={formik}
+              type="color"
+              sx={{ width: 150 }}
+              InputLabelProps={{ shrink: true }}
+            />
+            <FormTextField
+              label={t("settings.customerPortal.secondaryColor")}
+              name="customer_portal_secondary_color"
+              formik={formik}
+              type="color"
+              sx={{ width: 150 }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Stack>
+        </Stack>
+      </Paper>
+
+      <FormControlLabel
+        control={
+          <Switch
+            checked={formik.values.donation_enabled}
+            onChange={(event) => {
+              formik.setFieldValue("donation_enabled", event.target.checked);
+              formik.setFieldTouched("donation_enabled", true);
+            }}
+            name="donation_enabled"
+            color="primary"
+          />
+        }
+        label={t("settings.customerPortal.donation_enabled")}
+      />
+    </Stack>
   );
 };
 
@@ -219,9 +292,6 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
 
   const handleSubmit = (values: CustomerPortalSettings, { setSubmitting }: FormikHelpers<CustomerPortalSettings>) => {
     setSubmitting(true);
-    console.log("Submitting values:", values);
-    console.log("donation_enabled value:", values.donation_enabled);
-    console.log("Update payload:", { ...eventSettings, ...values });
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
       .then(() => {
@@ -241,13 +311,13 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     customer_portal_contact_email: eventSettings.customer_portal_contact_email,
     customer_portal_about_page_url: eventSettings.customer_portal_about_page_url,
     customer_portal_data_privacy_url: eventSettings.customer_portal_data_privacy_url,
-    donation_enabled: eventSettings.donation_enabled ?? true
+    donation_enabled: eventSettings.donation_enabled ?? true,
+    customer_portal_primary_color: eventSettings.customer_portal_primary_color || "#3A0CA3",
+    customer_portal_secondary_color: eventSettings.customer_portal_secondary_color || "#4CC9F0",
   };
 
   return (
     <Stack spacing={3}>
-      <BannerUpload nodeId={nodeId} />
-
       <Formik
         initialValues={initialValues}
         onSubmit={handleSubmit}
@@ -257,7 +327,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
         {(formik) => (
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
-              <CustomerPortalSettingsForm {...formik} />
+              <CustomerPortalSettingsForm nodeId={nodeId} {...formik} />
               {formik.isSubmitting && <LinearProgress />}
               <Button
                 type="submit"
@@ -274,4 +344,5 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     </Stack>
   );
 };
+
 

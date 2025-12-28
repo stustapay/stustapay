@@ -7222,6 +7222,154 @@
         }
       }
     },
+    "/tree/events/{node_id}/banner": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Upload Event Banner",
+        "description": "Upload a banner image for an event.",
+        "operationId": "upload_event_banner",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_event_banner_tree_events__node_id__banner_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Delete Event Banner",
+        "description": "Delete the banner image for an event.",
+        "operationId": "delete_event_banner",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Get Event Banner",
+        "description": "Retrieve the banner image for an event.",
+        "operationId": "get_event_banner",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sumup/checkouts": {
       "get": {
         "tags": [
@@ -9315,6 +9463,20 @@
           "cash_register_id"
         ],
         "title": "AssignRegisterPayload"
+      },
+      "Body_upload_event_banner_tree_events__node_id__banner_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_event_banner_tree_events__node_id__banner_post"
       },
       "BonConfig": {
         "properties": {
@@ -11673,6 +11835,39 @@
             "type": "boolean",
             "title": "Donation Enabled",
             "default": true
+          },
+          "customer_portal_banner_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Banner Image Url"
+          },
+          "customer_portal_primary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Primary Color"
+          },
+          "customer_portal_secondary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Secondary Color"
           },
           "translation_texts": {
             "additionalProperties": {
@@ -14378,6 +14573,39 @@
             "title": "Donation Enabled",
             "default": true
           },
+          "customer_portal_banner_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Banner Image Url"
+          },
+          "customer_portal_primary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Primary Color"
+          },
+          "customer_portal_secondary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Secondary Color"
+          },
           "translation_texts": {
             "additionalProperties": {
               "additionalProperties": {
@@ -14764,6 +14992,39 @@
             "type": "boolean",
             "title": "Donation Enabled",
             "default": true
+          },
+          "customer_portal_banner_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Banner Image Url"
+          },
+          "customer_portal_primary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Primary Color"
+          },
+          "customer_portal_secondary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Secondary Color"
           },
           "translation_texts": {
             "additionalProperties": {
@@ -16298,6 +16559,39 @@
             "type": "boolean",
             "title": "Donation Enabled",
             "default": true
+          },
+          "customer_portal_banner_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Banner Image Url"
+          },
+          "customer_portal_primary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Primary Color"
+          },
+          "customer_portal_secondary_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Secondary Color"
           },
           "translation_texts": {
             "additionalProperties": {

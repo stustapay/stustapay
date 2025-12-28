@@ -77,7 +77,7 @@ export const Index: React.FC = () => {
               justifyContent: "center",
               textAlign: "center",
               width: "100%",
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%)",
+              background: "var(--primary-gradient, linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%))",
               color: "white",
               borderRadius: 4,
               position: "relative",

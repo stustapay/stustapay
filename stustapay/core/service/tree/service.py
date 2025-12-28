@@ -334,7 +334,8 @@ class TreeService(Service[Config]):
             "   email_smtp_host = $28, email_smtp_port = $29, email_smtp_username = $30, email_smtp_password = $31, "
             "   payout_sender = $32, sumup_oauth_client_id = $33, sumup_oauth_client_secret = $34, "
             "   pretix_presale_enabled = $35, pretix_shop_url = $36, pretix_api_key = $37, pretix_organizer = $38, "
-            "   pretix_event = $39, pretix_ticket_ids = $40, post_payment_allowed = $41, donation_enabled = $42 "
+            "   pretix_event = $39, pretix_ticket_ids = $40, post_payment_allowed = $41, donation_enabled = $42, "
+            "   customer_portal_primary_color = $43, customer_portal_secondary_color = $44 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -378,6 +379,8 @@ class TreeService(Service[Config]):
             event.pretix_ticket_ids,
             event.post_payment_allowed,
             event.donation_enabled,
+            event.customer_portal_primary_color,
+            event.customer_portal_secondary_color,
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
         await _sync_optional_event_metadata(conn, event_id, event)

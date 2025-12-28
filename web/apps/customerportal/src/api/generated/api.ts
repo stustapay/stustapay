@@ -65,6 +65,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/bon/${queryArg.orderUuid}` }),
         providesTags: ["base"],
       }),
+      getBanner: build.query<GetBannerApiResponse, GetBannerApiArg>({
+        query: (queryArg) => ({ url: `/banner/${queryArg.nodeId}` }),
+        providesTags: ["base"],
+      }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
         query: (queryArg) => ({ url: `/sumup/create-checkout`, method: "POST", body: queryArg.createCheckoutPayload }),
         invalidatesTags: ["sumup"],
@@ -110,6 +114,10 @@ export type GetCustomerConfigApiArg = {
 export type GetBonApiResponse = /** status 200 Successful Response */ BonJsonRead;
 export type GetBonApiArg = {
   orderUuid: string;
+};
+export type GetBannerApiResponse = /** status 200 Successful Response */ any;
+export type GetBannerApiArg = {
+  nodeId: number;
 };
 export type CreateCheckoutApiResponse = /** status 200 Successful Response */ CreateCheckoutResponse;
 export type CreateCheckoutApiArg = {
@@ -375,6 +383,9 @@ export type CustomerPortalApiConfig = {
   };
   event_name: string;
   node_id: number;
+  banner_image_url?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
 };
 export type OrderWithTse = {
   id: number;
@@ -496,6 +507,8 @@ export const {
   useLazyGetCustomerConfigQuery,
   useGetBonQuery,
   useLazyGetBonQuery,
+  useGetBannerQuery,
+  useLazyGetBannerQuery,
   useCreateCheckoutMutation,
   useCheckCheckoutMutation,
 } = injectedRtkApi;

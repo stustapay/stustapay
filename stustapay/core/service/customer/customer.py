@@ -51,6 +51,9 @@ class CustomerPortalApiConfig(BaseModel):
     event_name: str
     node_id: int
     banner_image_url: Optional[str] = None
+    primary_color: Optional[str] = None
+    secondary_color: Optional[str] = None
+
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -355,6 +358,8 @@ class CustomerService(Service[Config]):
             event_name=node.name,
             node_id=node_id,
             banner_image_url=banner_image_url,
+            primary_color=node.event.customer_portal_primary_color,
+            secondary_color=node.event.customer_portal_secondary_color,
         )
 
     @with_db_transaction(read_only=True)

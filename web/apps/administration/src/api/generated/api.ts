@@ -25,6 +25,8 @@ export const addTagTypes = [
   "tree",
   "sumup",
   "transactions",
+  "mdm",
+  "llm",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -1192,6 +1194,22 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
+      uploadEventBanner: build.mutation<UploadEventBannerApiResponse, UploadEventBannerApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/banner`,
+          method: "POST",
+          body: queryArg.bodyUploadEventBannerTreeEventsNodeIdBannerPost,
+        }),
+        invalidatesTags: ["tree"],
+      }),
+      deleteEventBanner: build.mutation<DeleteEventBannerApiResponse, DeleteEventBannerApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/banner`, method: "DELETE" }),
+        invalidatesTags: ["tree"],
+      }),
+      getEventBanner: build.query<GetEventBannerApiResponse, GetEventBannerApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/banner` }),
+        providesTags: ["tree"],
+      }),
       listSumupCheckouts: build.query<ListSumupCheckoutsApiResponse, ListSumupCheckoutsApiArg>({
         query: (queryArg) => ({
           url: `/sumup/checkouts`,
@@ -1359,6 +1377,131 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ["transactions"],
+      }),
+      listMappings: build.query<ListMappingsApiResponse, ListMappingsApiArg>({
+        query: (queryArg) => ({
+          url: `/mdm/mappings`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["mdm"],
+      }),
+      createOrUpdateMapping: build.mutation<CreateOrUpdateMappingApiResponse, CreateOrUpdateMappingApiArg>({
+        query: (queryArg) => ({
+          url: `/mdm/mappings`,
+          method: "POST",
+          body: queryArg.createHeadwindMappingPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["mdm"],
+      }),
+      listHeadwindDevices: build.query<ListHeadwindDevicesApiResponse, ListHeadwindDevicesApiArg>({
+        query: (queryArg) => ({
+          url: `/mdm/devices`,
+          params: {
+            node_id: queryArg.nodeId,
+            page: queryArg.page,
+            page_size: queryArg.pageSize,
+            search: queryArg.search,
+          },
+        }),
+        providesTags: ["mdm"],
+      }),
+      deleteMapping: build.mutation<DeleteMappingApiResponse, DeleteMappingApiArg>({
+        query: (queryArg) => ({
+          url: `/mdm/mappings/${queryArg.terminalId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["mdm"],
+      }),
+      refreshMappingToken: build.mutation<RefreshMappingTokenApiResponse, RefreshMappingTokenApiArg>({
+        query: (queryArg) => ({
+          url: `/mdm/mappings/${queryArg.terminalId}/refresh-token`,
+          method: "POST",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["mdm"],
+      }),
+      listLlmTools: build.query<ListLlmToolsApiResponse, ListLlmToolsApiArg>({
+        query: () => ({ url: `/llm/tools` }),
+        providesTags: ["llm"],
+      }),
+      createProductLlm: build.mutation<CreateProductLlmApiResponse, CreateProductLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/products`, method: "POST", body: queryArg.createProductPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      createCashRegisterLlm: build.mutation<CreateCashRegisterLlmApiResponse, CreateCashRegisterLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/cash-registers`, method: "POST", body: queryArg.createCashRegisterPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      createTillLlm: build.mutation<CreateTillLlmApiResponse, CreateTillLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/tills`, method: "POST", body: queryArg.createTillPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      createTillButtonLlm: build.mutation<CreateTillButtonLlmApiResponse, CreateTillButtonLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/till-buttons`, method: "POST", body: queryArg.createTillButtonPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      listTillButtonsLlm: build.query<ListTillButtonsLlmApiResponse, ListTillButtonsLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/till-buttons`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
+      createTillLayoutLlm: build.mutation<CreateTillLayoutLlmApiResponse, CreateTillLayoutLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/till-layouts`, method: "POST", body: queryArg.createTillLayoutPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      listTillLayoutsLlm: build.query<ListTillLayoutsLlmApiResponse, ListTillLayoutsLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/till-layouts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
+      createTerminalLlm: build.mutation<CreateTerminalLlmApiResponse, CreateTerminalLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/terminals`, method: "POST", body: queryArg.createTerminalPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      listTaxRatesLlm: build.query<ListTaxRatesLlmApiResponse, ListTaxRatesLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/tax-rates`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
+      listEventsLlm: build.query<ListEventsLlmApiResponse, ListEventsLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/events`,
+          params: {
+            name_query: queryArg.nameQuery,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
+      listTillProfilesLlm: build.query<ListTillProfilesLlmApiResponse, ListTillProfilesLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/till-profiles`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
       }),
     }),
     overrideExisting: false,
@@ -1975,6 +2118,19 @@ export type ConfigureSumupTokenApiArg = {
   nodeId: number;
   sumUpTokenPayload: SumUpTokenPayload;
 };
+export type UploadEventBannerApiResponse = /** status 200 Successful Response */ any;
+export type UploadEventBannerApiArg = {
+  nodeId: number;
+  bodyUploadEventBannerTreeEventsNodeIdBannerPost: BodyUploadEventBannerTreeEventsNodeIdBannerPost;
+};
+export type DeleteEventBannerApiResponse = /** status 200 Successful Response */ any;
+export type DeleteEventBannerApiArg = {
+  nodeId: number;
+};
+export type GetEventBannerApiResponse = /** status 200 Successful Response */ any;
+export type GetEventBannerApiArg = {
+  nodeId: number;
+};
 export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response */ SumUpCheckout[];
 export type ListSumupCheckoutsApiArg = {
   nodeId: number;
@@ -2058,6 +2214,78 @@ export type LoginUserApiArg = {
 export type GetTransactionApiResponse = /** status 200 Successful Response */ TransactionRead;
 export type GetTransactionApiArg = {
   transactionId: number;
+  nodeId: number;
+};
+export type ListMappingsApiResponse = /** status 200 Successful Response */ HeadwindDeviceMappingWithTerminal[];
+export type ListMappingsApiArg = {
+  nodeId: number;
+};
+export type CreateOrUpdateMappingApiResponse = /** status 201 Successful Response */ HeadwindDeviceMappingWithTerminal;
+export type CreateOrUpdateMappingApiArg = {
+  nodeId: number;
+  createHeadwindMappingPayload: CreateHeadwindMappingPayload;
+};
+export type ListHeadwindDevicesApiResponse = /** status 200 Successful Response */ HeadwindDeviceWithMapping[];
+export type ListHeadwindDevicesApiArg = {
+  nodeId: number;
+  page?: number;
+  pageSize?: number;
+  search?: string | null;
+};
+export type DeleteMappingApiResponse = unknown;
+export type DeleteMappingApiArg = {
+  terminalId: number;
+  nodeId: number;
+};
+export type RefreshMappingTokenApiResponse = /** status 200 Successful Response */ HeadwindDeviceMappingWithTerminal;
+export type RefreshMappingTokenApiArg = {
+  terminalId: number;
+  nodeId: number;
+};
+export type ListLlmToolsApiResponse = /** status 200 Successful Response */ ToolDescription[];
+export type ListLlmToolsApiArg = void;
+export type CreateProductLlmApiResponse = /** status 200 Successful Response */ Product;
+export type CreateProductLlmApiArg = {
+  createProductPayload: CreateProductPayload;
+};
+export type CreateCashRegisterLlmApiResponse = /** status 200 Successful Response */ CashRegister;
+export type CreateCashRegisterLlmApiArg = {
+  createCashRegisterPayload: CreateCashRegisterPayload;
+};
+export type CreateTillLlmApiResponse = /** status 200 Successful Response */ Till;
+export type CreateTillLlmApiArg = {
+  createTillPayload: CreateTillPayload;
+};
+export type CreateTillButtonLlmApiResponse = /** status 200 Successful Response */ TillButton;
+export type CreateTillButtonLlmApiArg = {
+  createTillButtonPayload: CreateTillButtonPayload;
+};
+export type ListTillButtonsLlmApiResponse = /** status 200 Successful Response */ TillButton[];
+export type ListTillButtonsLlmApiArg = {
+  nodeId: number;
+};
+export type CreateTillLayoutLlmApiResponse = /** status 200 Successful Response */ TillLayout;
+export type CreateTillLayoutLlmApiArg = {
+  createTillLayoutPayload: CreateTillLayoutPayload;
+};
+export type ListTillLayoutsLlmApiResponse = /** status 200 Successful Response */ TillLayout[];
+export type ListTillLayoutsLlmApiArg = {
+  nodeId: number;
+};
+export type CreateTerminalLlmApiResponse = /** status 200 Successful Response */ Terminal;
+export type CreateTerminalLlmApiArg = {
+  createTerminalPayload: CreateTerminalPayload;
+};
+export type ListTaxRatesLlmApiResponse = /** status 200 Successful Response */ TaxRate[];
+export type ListTaxRatesLlmApiArg = {
+  nodeId: number;
+};
+export type ListEventsLlmApiResponse = /** status 200 Successful Response */ EventSummary[];
+export type ListEventsLlmApiArg = {
+  nameQuery?: string | null;
+};
+export type ListTillProfilesLlmApiResponse = /** status 200 Successful Response */ TillProfile[];
+export type ListTillProfilesLlmApiArg = {
   nodeId: number;
 };
 export type ProductRestriction = "under_16" | "under_18";
@@ -2627,7 +2855,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: number]: Account;
+    [key: string]: AccountRead;
   };
 };
 export type FindAccountPayload = {
@@ -2825,7 +3053,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: number]: Cashier;
+    [key: string]: CashierRead;
   };
 };
 export type CashierProductStats = {
@@ -3099,6 +3327,9 @@ export type PublicEventSettings = {
   payout_registered_message?: string | null;
   payout_sender?: string | null;
   donation_enabled?: boolean;
+  customer_portal_banner_image_url?: string | null;
+  customer_portal_primary_color?: string | null;
+  customer_portal_secondary_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3206,6 +3437,9 @@ export type NewEvent = {
   payout_registered_message?: string | null;
   payout_sender?: string | null;
   donation_enabled?: boolean;
+  customer_portal_banner_image_url?: string | null;
+  customer_portal_primary_color?: string | null;
+  customer_portal_secondary_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3225,6 +3459,7 @@ export type CopyEventOptions = {
   copy_users?: boolean;
   copy_products?: boolean;
   copy_tse_devices?: boolean;
+  copy_sub_nodes?: boolean;
 };
 export type CopyEventRequest = {
   name: string;
@@ -3278,6 +3513,9 @@ export type UpdateEvent = {
   payout_registered_message?: string | null;
   payout_sender?: string | null;
   donation_enabled?: boolean;
+  customer_portal_banner_image_url?: string | null;
+  customer_portal_primary_color?: string | null;
+  customer_portal_secondary_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3331,6 +3569,9 @@ export type RestrictedEventSettings = {
   payout_registered_message?: string | null;
   payout_sender?: string | null;
   donation_enabled?: boolean;
+  customer_portal_banner_image_url?: string | null;
+  customer_portal_primary_color?: string | null;
+  customer_portal_secondary_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3342,6 +3583,9 @@ export type RestrictedEventSettings = {
 };
 export type SumUpTokenPayload = {
   authorization_code: string;
+};
+export type BodyUploadEventBannerTreeEventsNodeIdBannerPost = {
+  file: Blob;
 };
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type SumUpTransaction = {
@@ -3362,6 +3606,7 @@ export type SumUpCheckout = {
   currency: string;
   merchant_code: string;
   description: string;
+  redirect_url: string;
   id: string;
   status: SumUpCheckoutStatus;
   valid_until?: string | null;
@@ -3451,6 +3696,98 @@ export type SwitchTillPayload = {
 export type TerminalUserLoginPayload = {
   user_id: number;
   role_id: number;
+};
+export type HeadwindDeviceMappingWithTerminal = {
+  id: number;
+  node_id: number;
+  terminal_id: number;
+  headwind_device_id: string;
+  headwind_device_number?: string | null;
+  headwind_device_name?: string | null;
+  headwind_device_serial?: string | null;
+  headwind_device_model?: string | null;
+  last_synced_at?: string | null;
+  last_token_pushed_at?: string | null;
+  last_push_status?: string | null;
+  last_push_error?: string | null;
+  created_at: string;
+  updated_at: string;
+  terminal_name: string;
+  terminal_description?: string | null;
+};
+export type CreateHeadwindMappingPayload = {
+  terminal_id: number;
+  headwind_device_id: string;
+  headwind_device_number?: string | null;
+  headwind_device_name?: string | null;
+  headwind_device_serial?: string | null;
+  headwind_device_model?: string | null;
+};
+export type HeadwindDevice = {
+  id: number | string;
+  deviceNumber?: string | null;
+  serial?: string | null;
+  imei?: string | null;
+  description?: string | null;
+  configurationName?: string | null;
+  lastUpdate?: number | string | null;
+  lastIp?: string | null;
+  model?: string | null;
+  manufacturer?: string | null;
+  [key: string]: any;
+};
+export type HeadwindDeviceWithMapping = {
+  device: HeadwindDevice;
+  mapping?: HeadwindDeviceMappingWithTerminal | null;
+};
+export type ToolDescription = {
+  name: string;
+  description: string;
+  method: "GET" | "POST";
+  path: string;
+  input_schema?: {
+    [key: string]: any;
+  } | null;
+};
+export type CreateProductPayload = {
+  /** ID of the node/event the product belongs to. */
+  node_id: number;
+  product: NewProduct;
+};
+export type CreateCashRegisterPayload = {
+  /** ID of the node/event the cash register belongs to. */
+  node_id: number;
+  cash_register: NewCashRegister;
+};
+export type CreateTillPayload = {
+  /** ID of the node/event the till belongs to. */
+  node_id: number;
+  till: NewTill;
+};
+export type CreateTillButtonPayload = {
+  /** ID of the node/event the button belongs to. */
+  node_id: number;
+  button: NewTillButton;
+};
+export type CreateTillLayoutPayload = {
+  /** ID of the node/event the layout belongs to. */
+  node_id: number;
+  layout: NewTillLayout;
+};
+export type CreateTerminalPayload = {
+  /** ID of the node/event the terminal belongs to. */
+  node_id: number;
+  terminal: NewTerminal;
+};
+export type EventSummary = {
+  node_id: number;
+  node_name: string;
+  path: string;
+  description: string;
+  event_id: number;
+  event_name: string;
+  start_date?: string | null;
+  end_date?: string | null;
 };
 export const {
   useListProductsQuery,
@@ -3625,6 +3962,10 @@ export const {
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,
   useConfigureSumupTokenMutation,
+  useUploadEventBannerMutation,
+  useDeleteEventBannerMutation,
+  useGetEventBannerQuery,
+  useLazyGetEventBannerQuery,
   useListSumupCheckoutsQuery,
   useLazyListSumupCheckoutsQuery,
   useListSumupTransactionsQuery,
@@ -3649,4 +3990,29 @@ export const {
   useLoginUserMutation,
   useGetTransactionQuery,
   useLazyGetTransactionQuery,
+  useListMappingsQuery,
+  useLazyListMappingsQuery,
+  useCreateOrUpdateMappingMutation,
+  useListHeadwindDevicesQuery,
+  useLazyListHeadwindDevicesQuery,
+  useDeleteMappingMutation,
+  useRefreshMappingTokenMutation,
+  useListLlmToolsQuery,
+  useLazyListLlmToolsQuery,
+  useCreateProductLlmMutation,
+  useCreateCashRegisterLlmMutation,
+  useCreateTillLlmMutation,
+  useCreateTillButtonLlmMutation,
+  useListTillButtonsLlmQuery,
+  useLazyListTillButtonsLlmQuery,
+  useCreateTillLayoutLlmMutation,
+  useListTillLayoutsLlmQuery,
+  useLazyListTillLayoutsLlmQuery,
+  useCreateTerminalLlmMutation,
+  useListTaxRatesLlmQuery,
+  useLazyListTaxRatesLlmQuery,
+  useListEventsLlmQuery,
+  useLazyListEventsLlmQuery,
+  useListTillProfilesLlmQuery,
+  useLazyListTillProfilesLlmQuery,
 } = injectedRtkApi;

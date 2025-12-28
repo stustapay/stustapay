@@ -140,3 +140,44 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
 }
+
+/* Global MUI Overrides to use Dynamic Theme Colors */
+
+/* Primary Contained Buttons */
+button.MuiButton-containedPrimary {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+button.MuiButton-containedPrimary:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    filter: brightness(1.1);
+}
+
+/* Secondary Contained Buttons */
+button.MuiButton-containedSecondary {
+    background: var(--accent-gradient) !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+button.MuiButton-containedSecondary:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    filter: brightness(1.1);
+}
+
+/* Floating Action Buttons */
+.MuiFab-primary {
+    background: var(--primary-gradient) !important;
+}
+
+.MuiFab-secondary {
+    background: var(--accent-gradient) !important;
+}
+
+/* Links */
+a {
+    color: inherit;
+    text-decoration: none;
+}

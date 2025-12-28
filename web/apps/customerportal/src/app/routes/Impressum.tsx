@@ -1,5 +1,5 @@
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Container, Typography } from "@mui/material";
+import { PageContainer } from "@/components";
 import { Box } from "@mui/system";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -13,35 +13,35 @@ export const Impressum: React.FC = () => {
   const impressumContent = config.translation_texts[i18n.language]?.["impressum"] ?? "";
 
   return (
-    <Container component="main" maxWidth="md">
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Typography
-          variant="h2"
-          sx={{
-            fontWeight: "bold",
-            mb: 3,
-          }}
-          gutterBottom
-        >
-          Impressum
-        </Typography>
-        <Box
-          sx={{
-            width: "100%",
-            "& p": {
-              marginBottom: 2,
-              textAlign: "left",
-            },
-            "& strong": {
-              display: "block",
-              marginBottom: 0.5,
-              fontSize: "1.1rem",
-            },
-          }}
-        >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{impressumContent}</ReactMarkdown>
-        </Box>
+    <PageContainer title="Impressum">
+      <Box
+        sx={{
+          width: "100%",
+          "& p": {
+            marginBottom: 2,
+            textAlign: "left",
+            lineHeight: 1.6,
+          },
+          "& h1, & h2, & h3, & h4, & h5, & h6": {
+            marginTop: 3,
+            marginBottom: 1.5,
+            textAlign: "left",
+            fontWeight: 600,
+          },
+          "& strong": {
+            display: "block",
+            marginBottom: 0.5,
+            fontSize: "1.1rem",
+            fontWeight: 600,
+          },
+          "& a": {
+            color: "primary.main",
+            textDecoration: "underline",
+          },
+        }}
+      >
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{impressumContent}</ReactMarkdown>
       </Box>
-    </Container>
+    </PageContainer>
   );
 }; 
