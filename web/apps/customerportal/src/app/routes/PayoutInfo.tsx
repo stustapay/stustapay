@@ -228,11 +228,9 @@ export const PayoutInfo: React.FC = () => {
                   justifyContent="space-between"
                   alignItems="center"
                   sx={{
-                    backgroundColor: "background.paper",
-                    padding: 2,
-                    borderRadius: 1,
-                    marginTop: 1,
-                    border: 1,
+                    marginTop: 2,
+                    paddingTop: 2,
+                    borderTop: 1,
                     borderColor: "divider"
                   }}
                 >
