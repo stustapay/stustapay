@@ -334,7 +334,9 @@ class TreeService(Service[Config]):
             "   email_smtp_host = $28, email_smtp_port = $29, email_smtp_username = $30, email_smtp_password = $31, "
             "   payout_sender = $32, sumup_oauth_client_id = $33, sumup_oauth_client_secret = $34, "
             "   pretix_presale_enabled = $35, pretix_shop_url = $36, pretix_api_key = $37, pretix_organizer = $38, "
-            "   pretix_event = $39, pretix_ticket_ids = $40, post_payment_allowed = $41, donation_enabled = $42 "
+            "   pretix_event = $39, pretix_ticket_ids = $40, post_payment_allowed = $41, donation_enabled = $42, "
+            "   customer_portal_primary_color = $43, customer_portal_secondary_color = $44, "
+            "   customer_portal_background_color = $45 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -378,6 +380,9 @@ class TreeService(Service[Config]):
             event.pretix_ticket_ids,
             event.post_payment_allowed,
             event.donation_enabled,
+            event.customer_portal_primary_color,
+            event.customer_portal_secondary_color,
+            event.customer_portal_background_color,
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
         await _sync_optional_event_metadata(conn, event_id, event)
@@ -478,6 +483,47 @@ class TreeService(Service[Config]):
         await conn.execute(
             "update event set sumup_oauth_refresh_token = $1 where id = $2", token.refresh_token, node.event.id
         )
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def upload_event_banner(self, *, conn: Connection, node: Node, image_data: bytes, mime_type: str):
+        """Upload a banner image for an event."""
+        assert node.event is not None
+        await conn.execute(
+            "update event set banner_image = $1, banner_image_mime_type = $2 where id = $3",
+            image_data,
+            mime_type,
+            node.event.id,
+        )
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def delete_event_banner(self, *, conn: Connection, node: Node):
+        """Delete the banner image for an event."""
+        assert node.event is not None
+        await conn.execute(
+            "update event set banner_image = null, banner_image_mime_type = null where id = $1",
+            node.event.id,
+        )
+
+    @with_db_transaction(read_only=True)
+    async def get_event_banner(self, *, conn: Connection, node_id: int) -> dict | None:
+        """Retrieve banner image data for an event node."""
+        result = await conn.fetchrow(
+            "select e.banner_image, e.banner_image_mime_type "
+            "from event e join node n on n.event_id = e.id "
+            "where n.id = $1 and e.banner_image is not null",
+            node_id
+        )
+        if result is None:
+            return None
+        return {
+            "image": result["banner_image"],
+            "mime_type": result["banner_image_mime_type"] or "image/png"
+        }
+
 
     async def _copy_user_tags(self, conn: Connection, source_node_id: int, target_node_id: int):
         """Copy user tags from source node to target node."""

@@ -4,7 +4,7 @@ from asyncpg import RaiseError
 from sftkit.database import Connection
 
 from stustapay.core.schema.tree import ROOT_NODE_ID, CopyEventRequest, CopyEventOptions, NewEvent, NewNode, Node, ObjectType
-from stustapay.core.service.tree.common import fetch_node
+from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.tests.common import list_equals
 
@@ -141,6 +141,31 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
                 pretix_ticket_ids=None,
             ),
         )
+
+
+async def test_update_event_theme_colors(
+    tree_service: TreeService, global_admin_token: str, event_node: Node, db_connection: Connection
+):
+    event_settings = await fetch_restricted_event_settings_for_node(conn=db_connection, node_id=event_node.id)
+    updated_event = NewEvent(
+        name=event_node.name,
+        description=event_node.description,
+        **event_settings.model_dump(exclude={"id", "languages", "sumup_oauth_refresh_token"}),
+    )
+    updated_event.customer_portal_primary_color = "#112233"
+    updated_event.customer_portal_secondary_color = "#445566"
+    updated_event.customer_portal_background_color = "#778899"
+
+    updated_node = await tree_service.update_event(
+        token=global_admin_token,
+        node_id=event_node.id,
+        event=updated_event,
+    )
+
+    assert updated_node.event is not None
+    assert updated_node.event.customer_portal_primary_color == "#112233"
+    assert updated_node.event.customer_portal_secondary_color == "#445566"
+    assert updated_node.event.customer_portal_background_color == "#778899"
 
 
 async def test_object_rules(tree_service: TreeService, global_admin_token: str):

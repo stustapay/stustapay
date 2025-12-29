@@ -107,3 +107,20 @@ async def get_bon(order_service: ContextOrderService, order_uuid: str):
     return await order_service.get_bon_by_uuid(
         order_uuid=order_uuid,
     )
+
+
+@router.get("/banner/{node_id}", summary="Retrieve event banner image")
+async def get_banner(customer_service: ContextCustomerService, node_id: int):
+    from fastapi import HTTPException
+    from fastapi.responses import Response
+    
+    banner_data = await customer_service.get_event_banner(node_id=node_id)
+    if banner_data is None:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    
+    return Response(
+        content=banner_data["image"],
+        media_type=banner_data["mime_type"],
+        headers={"Cache-Control": "public, max-age=3600"}
+    )
+

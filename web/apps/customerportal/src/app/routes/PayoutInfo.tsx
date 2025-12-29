@@ -1,8 +1,9 @@
 import * as React from "react";
+import { PageContainer } from "@/components";
 import {
   useGetCustomerQuery,
   usePayoutInfoQuery,
- 
+
   useUpdateCustomerInfoMutation,
 } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
@@ -68,8 +69,8 @@ export const PayoutInfo: React.FC = () => {
     email: z.string().email(),
     privacy_policy: hasPrivacyPolicy
       ? z.boolean().refine((val) => val, {
-          message: t("payout.mustAcceptPrivacyPolicy"),
-        })
+        message: t("payout.mustAcceptPrivacyPolicy"),
+      })
       : z.boolean().optional(),
     donation: z.number().superRefine((val, ctx) => {
       if (val < 0) {
@@ -147,118 +148,113 @@ export const PayoutInfo: React.FC = () => {
   }
 
   return (
-    <Grid container justifyItems="center" justifyContent="center">
-      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
-        <Stack spacing={2}>
-          <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-            {info_text}
-          </Alert>
-          <Typography variant="h5">{t("payout.payoutTitle")}</Typography>
-          <Formik
-            initialValues={initialValues}
-            validationSchema={toFormikValidationSchema(FormSchema)}
-            onSubmit={onSubmit}
-          >
-            {(formik) => (
-              <form onSubmit={formik.handleSubmit}>
-                <Stack spacing={2}>
-                  <FormTextField
-                    name="iban"
-                    label={t("payout.iban")}
-                    variant="outlined"
-                    formik={formik}
-                    disabled={payoutInfo.in_payout_run}
-                  />
-                  <FormTextField
-                    name="account_name"
-                    label={t("payout.bankAccountHolder")}
-                    variant="outlined"
-                    formik={formik}
-                    disabled={payoutInfo.in_payout_run}
-                  />
-                  <FormTextField
-                    name="email"
-                    label={t("payout.email")}
-                    variant="outlined"
-                    formik={formik}
-                    disabled={payoutInfo.in_payout_run}
-                  />
-                  {hasPrivacyPolicy && (
-                    <FormControl error={Boolean(formik.errors.privacy_policy)}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            name="privacy_policy"
-                            checked={formik.values.privacy_policy}
-                            onChange={formik.handleChange}
-                            color="primary"
-                            disabled={payoutInfo.in_payout_run}
-                          />
-                        }
-                        label={
-                          <Trans i18nKey="payout.privacyPolicyCheck">
-                            please accept the
-                            <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
-                              privacy policy
-                            </Link>
-                          </Trans>
-                        }
-                      />
-                      {formik.touched.privacy_policy && (
-                        <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
-                      )}
-                    </FormControl>
-                  )}
-                  
-                  {config.donation_enabled && (
-                    <>
-                      <Typography>{t("payout.donationDescription")}</Typography>
-                      <FormCurrencyInput
-                        name="donation"
-                        label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
-                        variant="outlined"
-                        formik={formik}
-                        disabled={payoutInfo.in_payout_run}
-                      />
-                    </>
-                  )}
-                  
-                  {/* Display payout amount - the balance minus donation */}
-                  <Stack 
-                    direction="row" 
-                    justifyContent="space-between" 
-                    alignItems="center" 
-                    sx={{ 
-                      backgroundColor: "background.paper", 
-                      padding: 2, 
-                      borderRadius: 1,
-                      marginTop: 1,
-                      border: 1,
-                      borderColor: "divider"
-                    }}
-                  >
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {t("payout.payoutAmount")}
-                    </Typography>
-                    <Typography variant="h6" fontWeight="bold" color="primary">
-                      {formatCurrency(customer.balance - (formik.values.donation || 0))}
-                    </Typography>
-                  </Stack>
-                  
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    disabled={formik.isSubmitting || payoutInfo.in_payout_run}
-                  >
-                    {formik.isSubmitting ? "Submitting" : submit_text}
-                  </Button>
+    <PageContainer title={t("payout.payoutTitle")}>
+      <Stack spacing={2}>
+        <Alert severity="info" variant="outlined" className="glass-alert" sx={{ mb: 2 }}>
+          {info_text}
+        </Alert>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={toFormikValidationSchema(FormSchema)}
+          onSubmit={onSubmit}
+        >
+          {(formik) => (
+            <form onSubmit={formik.handleSubmit}>
+              <Stack spacing={2}>
+                <FormTextField
+                  name="iban"
+                  label={t("payout.iban")}
+                  variant="outlined"
+                  formik={formik}
+                  disabled={payoutInfo.in_payout_run}
+                />
+                <FormTextField
+                  name="account_name"
+                  label={t("payout.bankAccountHolder")}
+                  variant="outlined"
+                  formik={formik}
+                  disabled={payoutInfo.in_payout_run}
+                />
+                <FormTextField
+                  name="email"
+                  label={t("payout.email")}
+                  variant="outlined"
+                  formik={formik}
+                  disabled={payoutInfo.in_payout_run}
+                />
+                {hasPrivacyPolicy && (
+                  <FormControl error={Boolean(formik.errors.privacy_policy)}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          name="privacy_policy"
+                          checked={formik.values.privacy_policy}
+                          onChange={formik.handleChange}
+                          color="primary"
+                          disabled={payoutInfo.in_payout_run}
+                        />
+                      }
+                      label={
+                        <Trans i18nKey="payout.privacyPolicyCheck">
+                          please accept the
+                          <Link component={RouterLink} to={"/datenschutz"} target="_blank" rel="noopener">
+                            privacy policy
+                          </Link>
+                        </Trans>
+                      }
+                    />
+                    {formik.touched.privacy_policy && (
+                      <FormHelperText sx={{ ml: 0 }}>{formik.errors.privacy_policy}</FormHelperText>
+                    )}
+                  </FormControl>
+                )}
+
+                {config.donation_enabled && (
+                  <>
+                    <Typography>{t("payout.donationDescription")}</Typography>
+                    <FormCurrencyInput
+                      name="donation"
+                      label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
+                      variant="outlined"
+                      formik={formik}
+                      disabled={payoutInfo.in_payout_run}
+                    />
+                  </>
+                )}
+
+                {/* Display payout amount - the balance minus donation */}
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{
+                    marginTop: 2,
+                    paddingTop: 2,
+                    borderTop: 1,
+                    borderColor: "divider"
+                  }}
+                >
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {t("payout.payoutAmount")}
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold" color="primary">
+                    {formatCurrency(customer.balance - (formik.values.donation || 0))}
+                  </Typography>
                 </Stack>
-              </form>
-            )}
-          </Formik>
-        </Stack>
-      </Grid>
-    </Grid>
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={formik.isSubmitting || payoutInfo.in_payout_run}
+                >
+                  {formik.isSubmitting ? "Submitting" : submit_text}
+                </Button>
+              </Stack>
+            </form>
+          )}
+        </Formik>
+      </Stack>
+    </PageContainer>
   );
 };

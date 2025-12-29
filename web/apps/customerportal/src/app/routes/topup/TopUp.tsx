@@ -1,8 +1,9 @@
 import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
+import { PageContainer } from "@/components";
 import { usePublicConfig } from "@/hooks";
 import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
-import { Alert, AlertTitle, Box, Button, Grid, LinearProgress, Link, Stack } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Grid, LinearProgress, Link, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { FormCurrencyInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -76,15 +77,9 @@ const reducer = (state: TopUpState, action: TopUpStateAction): TopUpState => {
   }
 };
 
-const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <Grid container justifyItems="center" justifyContent="center">
-      <Grid item xs={12} sm={8} sx={{ mt: 2 }}>
-        {children}
-      </Grid>
-    </Grid>
-  );
-};
+
+// Remove local Container definition
+
 
 type SumUpCardRespHandler = (type: SumUpResponseType, body: object) => void;
 type SumUpCardLoadHandler = () => void;
@@ -133,10 +128,10 @@ export const TopUp: React.FC = () => {
         const maxRetries = type === "success" ? 5 : 1;
         let retryCount = 0;
         let sumupReportedSuccess = type === "success";
-        
+
         const checkPaymentStatus = () => {
           console.log(`Checking payment status for order ${state.orderUUID}, attempt ${retryCount + 1}/${maxRetries}`);
-          
+
           checkCheckout({ checkCheckoutPayload: { order_uuid: state.orderUUID } })
             .unwrap()
             .then((resp) => {
@@ -151,7 +146,7 @@ export const TopUp: React.FC = () => {
                 dispatch({ type: "sumup-success" });
                 return;
               }
-              
+
               // If SumUp reported success but our backend still shows PENDING or FAILED,
               // we need to handle this carefully
               if (sumupReportedSuccess) {
@@ -161,17 +156,17 @@ export const TopUp: React.FC = () => {
                   dispatch({ type: "sumup-error", message: t("topup.error.message") });
                   return;
                 }
-                
+
                 if (retryCount < maxRetries) {
                   // Exponential backoff for retries: 1s, 2s, 4s, 8s, 16s
                   retryCount++;
                   const delay = 1000 * Math.pow(2, retryCount - 1);
-                  console.log(`SumUp reports success but backend shows ${resp.status}. Retrying in ${delay/1000}s (attempt ${retryCount}/${maxRetries})`);
+                  console.log(`SumUp reports success but backend shows ${resp.status}. Retrying in ${delay / 1000}s (attempt ${retryCount}/${maxRetries})`);
                   setTimeout(checkPaymentStatus, delay);
                 } else {
                   // After maximum retries, decide based on current status
                   console.log(`Reached maximum retries. Status from backend: ${resp.status}`);
-                  
+
                   // Use simple if/else with string comparisons
                   if (status === "PAID") {
                     console.log(`Payment confirmed as PAID after retries`);
@@ -207,14 +202,14 @@ export const TopUp: React.FC = () => {
             })
             .catch((error) => {
               console.log(`Error checking payment status for order ${state.orderUUID}:`, error);
-              
+
               // If SumUp reported success, we'll retry or eventually trust SumUp
               if (sumupReportedSuccess) {
                 if (retryCount < maxRetries) {
                   retryCount++;
                   // Exponential backoff
                   const delay = 1000 * Math.pow(2, retryCount - 1);
-                  console.log(`SumUp reports success but API check failed. Retrying in ${delay/1000}s (attempt ${retryCount}/${maxRetries})`);
+                  console.log(`SumUp reports success but API check failed. Retrying in ${delay / 1000}s (attempt ${retryCount}/${maxRetries})`);
                   setTimeout(checkPaymentStatus, delay);
                 } else {
                   // After maximum retries, if backend API request failed but SumUp reported success
@@ -235,7 +230,7 @@ export const TopUp: React.FC = () => {
               }
             });
         };
-        
+
         // Start the payment status check process
         checkPaymentStatus();
       }
@@ -339,7 +334,7 @@ export const TopUp: React.FC = () => {
   switch (state.stage) {
     case "initial":
       return (
-        <Container>
+        <PageContainer title={t("topup.onlineTopUp")}>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
             {t("topup.description")}
           </Alert>
@@ -360,17 +355,17 @@ export const TopUp: React.FC = () => {
               </Form>
             )}
           </Formik>
-        </Container>
+        </PageContainer>
       );
     case "sumup":
       return (
-        <Container>
+        <PageContainer title={t("topup.onlineTopUp")}>
           <div id="sumup-card"></div>
-        </Container>
+        </PageContainer>
       );
     case "success":
       return (
-        <Container>
+        <PageContainer title={t("topup.onlineTopUp")}>
           <Alert severity="success">
             <AlertTitle>{t("topup.success.title")}</AlertTitle>
             <Trans i18nKey={"topup.success.message"}>
@@ -386,19 +381,19 @@ export const TopUp: React.FC = () => {
               justifyContent: "center",
               alignItems: "center",
               width: "100%",
+              mt: 4
             }}
           >
-            <CheckCircleIcon color="success" sx={{ fontSize: "15em" }} />
+            <CheckCircleIcon color="success" sx={{ fontSize: "10em" }} />
           </Box>
-        </Container>
+        </PageContainer>
       );
     case "error":
       return (
-        <Container>
-          <Alert severity="error" action={<Button onClick={reset}>{t("topup.tryAgain")}</Button>}>
+        <PageContainer title={t("topup.onlineTopUp")}>
+          <Alert severity="error" action={<Button onClick={reset} color="inherit" size="small">{t("topup.tryAgain")}</Button>}>
             <AlertTitle>{t("topup.error.title")}</AlertTitle>
             {t("topup.error.message")}
-            {/* <Trans i18nKey={"topup.error.message"}>An error occurred: {{ message: state.message }}, please</Trans> */}
           </Alert>
           <Box
             sx={{
@@ -406,15 +401,16 @@ export const TopUp: React.FC = () => {
               justifyContent: "center",
               alignItems: "center",
               width: "100%",
+              mt: 4
             }}
           >
-            <CancelIcon color="error" sx={{ fontSize: "15em" }} />
+            <CancelIcon color="error" sx={{ fontSize: "10em" }} />
           </Box>
-        </Container>
+        </PageContainer>
       );
     case "cancelled":
       return (
-        <Container>
+        <PageContainer title={t("topup.onlineTopUp")}>
           <Alert severity="warning">
             <AlertTitle>{t("topup.cancelled.title")}</AlertTitle>
             {state.message || t("topup.cancelled.defaultMessage")}
@@ -424,20 +420,20 @@ export const TopUp: React.FC = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              mt: 2,
+              mt: 4,
+              flexDirection: "column"
             }}
           >
+            <CancelIcon color="warning" sx={{ fontSize: "10em", mb: 2 }} />
             <Button
-              startIcon={<CancelIcon />}
               onClick={reset}
               variant="contained"
               color="primary"
-              sx={{ mt: 2 }}
             >
               {t("topup.tryAgain")}
             </Button>
           </Box>
-        </Container>
+        </PageContainer>
       );
   }
 };

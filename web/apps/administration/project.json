@@ -9,16 +9,17 @@
       "options": {
         "commands": [
           "npx @rtk-query/codegen-openapi apps/administration/openapi-config.js",
-          "sed -i 's/\\[key: string\\]: Account;/\\[key: string\\]: AccountRead;/' apps/administration/src/api/generated/api.ts",
-          "sed -i 's/\\[key: string\\]: UserTagDetail;/\\[key: string\\]: UserTagDetailRead;/' apps/administration/src/api/generated/api.ts",
-          "sed -i 's/\\[key: string\\]: Cashier;/\\[key: string\\]: CashierRead;/' apps/administration/src/api/generated/api.ts"
+          "sed -i '' 's/\\[key: string\\]: Account;/\\[key: string\\]: AccountRead;/' apps/administration/src/api/generated/api.ts",
+          "sed -i '' 's/\\[key: string\\]: Cashier;/\\[key: string\\]: CashierRead;/' apps/administration/src/api/generated/api.ts"
         ],
         "parallel": false
       }
     },
     "build": {
       "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "compiler": "babel",
@@ -28,8 +29,13 @@
         "main": "apps/administration/src/main.tsx",
         "polyfills": "apps/administration/src/polyfills.ts",
         "tsConfig": "apps/administration/tsconfig.app.json",
-        "assets": ["apps/administration/src/favicon.svg", "apps/administration/src/assets"],
-        "styles": ["apps/administration/src/styles.css"],
+        "assets": [
+          "apps/administration/src/favicon.svg",
+          "apps/administration/src/assets"
+        ],
+        "styles": [
+          "apps/administration/src/styles.css"
+        ],
         "scripts": [],
         "webpackConfig": "@nx/react/plugins/webpack"
       },
@@ -76,11 +82,15 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "apps/administration/jest.config.ts"
       }
@@ -88,7 +98,9 @@
     "translate": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["npx i18next 'src/**/*.{ts,tsx,html}' -o 'src/assets/locales/$LOCALE/$NAMESPACE.json'"],
+        "commands": [
+          "npx i18next 'src/**/*.{ts,tsx,html}' -o 'src/assets/locales/$LOCALE/$NAMESPACE.json'"
+        ],
         "parallel": false,
         "cwd": "apps/administration"
       }
