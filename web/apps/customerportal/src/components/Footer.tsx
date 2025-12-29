@@ -23,40 +23,42 @@ export const Footer = () => {
       sx={{
         py: 3,
         px: { xs: 2, sm: 4 },
-        mt: "auto", // Push footer to bottom
+        mt: "auto",
         background: "var(--glass-bg)",
         backdropFilter: "blur(10px)",
         borderTop: "var(--border-glass)",
         display: "flex",
-        flexDirection: { xs: "column", sm: "row" },
+        flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "center",
         alignItems: "center",
         color: "text.primary",
-        gap: { xs: 1, sm: 2 },
+        columnGap: { xs: 2, sm: 4 },
+        rowGap: 1,
+        fontSize: "0.875rem",
       }}
     >
       <Link href={config.about_page_url} target="_blank" color="inherit" underline="hover">
         {t("about")}
       </Link>
       {authenticated ? <LoggedInFooter /> : <LoggedOutFooter />}
-      <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/faq" color="inherit" underline="hover">
+      <Link component={RouterLink} to="/faq" color="inherit" underline="hover">
         {t("nav.faq")}
       </Link>
-      <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/agb" color="inherit" underline="hover">
+      <Link component={RouterLink} to="/agb" color="inherit" underline="hover">
         {t("nav.agb")}
       </Link>
       {hasPrivacyPolicy && (
-        <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/datenschutz" color="inherit" underline="hover">
+        <Link component={RouterLink} to="/datenschutz" color="inherit" underline="hover">
           {t("nav.privacyPolicy")}
         </Link>
       )}
       {hasImpressum && (
-        <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/impressum" color="inherit" underline="hover">
+        <Link component={RouterLink} to="/impressum" color="inherit" underline="hover">
           {t("nav.impressum")}
         </Link>
       )}
-      <Link sx={{ ml: { xs: 0, sm: 4 } }} href="https://github.com/TomTel85/stustapay" target="_blank" color="inherit" underline="hover">
+      <Link href="https://github.com/TomTel85/stustapay" target="_blank" color="inherit" underline="hover">
         Github
       </Link>
     </Box>

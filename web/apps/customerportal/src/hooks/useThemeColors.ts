@@ -8,6 +8,7 @@ export const useThemeColors = () => {
         if (publicConfig.primary_color) {
             const color = publicConfig.primary_color;
             document.documentElement.style.setProperty("--primary-gradient", `linear-gradient(135deg, ${color}, ${color})`);
+            document.documentElement.style.setProperty("--primary-main", color);
         }
         if (publicConfig.secondary_color) {
             const color = publicConfig.secondary_color;

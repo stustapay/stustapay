@@ -184,19 +184,37 @@ a {
 
 /* Glass Alert for improved readability on colored backgrounds */
 .glass-alert {
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: var(--glass-bg) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    color: #1a1a2e !important;
+    color: inherit !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .glass-alert .MuiAlert-icon {
-    color: #1976d2 !important;
+    color: var(--primary-main) !important;
 }
 
 .glass-alert b,
 .glass-alert strong {
     color: #0d47a1 !important;
+}
+
+/* Override browser autofill blue background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: inherit !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* MUI Input focus color override */
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: var(--primary-color, #1976d2) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+    color: var(--primary-color, #1976d2) !important;
 }
