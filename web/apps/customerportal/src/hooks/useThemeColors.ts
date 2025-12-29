@@ -13,5 +13,11 @@ export const useThemeColors = () => {
             const color = publicConfig.secondary_color;
             document.documentElement.style.setProperty("--accent-gradient", `linear-gradient(135deg, ${color}, ${color})`);
         }
-    }, [publicConfig.primary_color, publicConfig.secondary_color]);
+        if (publicConfig.background_color) {
+            const color = publicConfig.background_color;
+            // We can use a subtle gradient derivative or just solid.
+            // Let's try to make a very subtle gradient from it to keep the "premium" feel.
+            document.body.style.background = `linear-gradient(135deg, ${color} 0%, ${color} 100%)`;
+        }
+    }, [publicConfig.primary_color, publicConfig.secondary_color, publicConfig.background_color]);
 };

@@ -386,6 +386,7 @@ export type CustomerPortalApiConfig = {
   banner_image_url?: string | null;
   primary_color?: string | null;
   secondary_color?: string | null;
+  background_color?: string | null;
 };
 export type OrderWithTse = {
   id: number;

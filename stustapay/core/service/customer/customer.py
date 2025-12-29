@@ -53,6 +53,7 @@ class CustomerPortalApiConfig(BaseModel):
     banner_image_url: Optional[str] = None
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
+    background_color: Optional[str] = None
 
 
 
@@ -360,6 +361,7 @@ class CustomerService(Service[Config]):
             banner_image_url=banner_image_url,
             primary_color=node.event.customer_portal_primary_color,
             secondary_color=node.event.customer_portal_secondary_color,
+            background_color=node.event.customer_portal_background_color,
         )
 
     @with_db_transaction(read_only=True)

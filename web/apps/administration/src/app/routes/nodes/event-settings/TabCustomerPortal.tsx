@@ -20,6 +20,7 @@ export const CustomerPortalSettingsSchema = z.object({
   donation_enabled: z.boolean(),
   customer_portal_primary_color: z.string().optional().nullable(),
   customer_portal_secondary_color: z.string().optional().nullable(),
+  customer_portal_background_color: z.string().optional().nullable(),
 });
 
 export type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
@@ -261,6 +262,14 @@ export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSett
               sx={{ width: 150 }}
               InputLabelProps={{ shrink: true }}
             />
+            <FormTextField
+              label={t("settings.customerPortal.backgroundColor")}
+              name="customer_portal_background_color"
+              formik={formik}
+              type="color"
+              sx={{ width: 150 }}
+              InputLabelProps={{ shrink: true }}
+            />
           </Stack>
         </Stack>
       </Paper>
@@ -314,6 +323,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     donation_enabled: eventSettings.donation_enabled ?? true,
     customer_portal_primary_color: eventSettings.customer_portal_primary_color || "#3A0CA3",
     customer_portal_secondary_color: eventSettings.customer_portal_secondary_color || "#4CC9F0",
+    customer_portal_background_color: eventSettings.customer_portal_background_color || "#f5f7fa",
   };
 
   return (
