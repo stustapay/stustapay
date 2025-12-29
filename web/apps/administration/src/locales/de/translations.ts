@@ -54,6 +54,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     configLoadFailed: "Beim Laden der Seitenkonfiguration ist ein Fehler aufgetreten: {{what}}",
     overview: "Übersicht",
     search: "Suche",
+    loadMore: "Mehr laden",
     email: "E-Mail",
     name: "Name",
     description: "Beschreibung",

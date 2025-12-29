@@ -12,15 +12,12 @@ export const SumUpTransactionDetail: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { transactionId } = useParams();
-  const { transaction } = useListSumupTransactionsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        transaction: data?.find((transaction) => transaction.id === transactionId),
-      }),
-    }
+  const transactionCode = transactionId ?? undefined;
+  const { data: transactions } = useListSumupTransactionsQuery(
+    { nodeId: currentNode.id, transactionCode, limit: 1 },
+    { skip: !transactionCode }
   );
+  const transaction = transactions?.[0];
 
   if (transaction === undefined) {
     return <Loading />;

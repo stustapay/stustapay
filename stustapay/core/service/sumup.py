@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import asyncpg
 from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
@@ -27,10 +29,22 @@ class SumUpService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
-    async def list_transactions(self, *, conn: Connection, node: Node) -> list[SumUpTransaction]:
+    async def list_transactions(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        limit: int = 200,
+        transaction_code: str | None = None,
+        newest_time: datetime | None = None,
+    ) -> list[SumUpTransaction]:
         settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         api = SumUpApi(api_key=settings.sumup_api_key, merchant_code=settings.sumup_merchant_code)
-        return await api.list_transactions()
+        return await api.list_transactions(
+            limit=limit,
+            transaction_code=transaction_code,
+            newest_time=newest_time,
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)

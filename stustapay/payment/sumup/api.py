@@ -307,7 +307,19 @@ class SumUpApi:
         )
         return SumUpTransactionDetail.model_validate(resp)
 
-    async def list_transactions(self) -> list[SumUpTransaction]:
-        resp = await self._get(f"{SUMUP_API_URL}/me/transactions/history", query={"limit": 10000})
+    async def list_transactions(
+        self,
+        *,
+        limit: int = 200,
+        transaction_code: str | None = None,
+        newest_time: datetime | None = None,
+        order: str = "descending",
+    ) -> list[SumUpTransaction]:
+        query: dict[str, str | int] = {"limit": limit, "order": order}
+        if transaction_code:
+            query["transaction_code"] = transaction_code
+        if newest_time:
+            query["newest_time"] = newest_time.isoformat()
+        resp = await self._get(f"{SUMUP_API_URL}/me/transactions/history", query=query)
         parsed_resp = SumUpTransactionResp.model_validate(resp)
         return parsed_resp.items
