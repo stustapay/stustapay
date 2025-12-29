@@ -61,7 +61,7 @@ export const Index: React.FC = () => {
     <Grid container justifyItems="center" justifyContent="center" spacing={2}>
       {config.sumup_topup_enabled && (
         <Grid item xs={12} sm={8}>
-          <Alert severity="info" onClick={() => navigate("/topup")} sx={{ cursor: "pointer" }}>
+          <Alert severity="info" onClick={() => navigate("/topup")} className="glass-alert" sx={{ cursor: "pointer" }}>
             <AlertTitle>{t("topup.onlineTopUp")}</AlertTitle>
             {t("topup.description")}
           </Alert>
@@ -147,7 +147,7 @@ export const Index: React.FC = () => {
 
       {config.payout_enabled && (
         <Grid item xs={12} sm={8}>
-          <Alert severity="info" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
+          <Alert severity="info" variant="outlined" className="glass-alert" style={{ marginBottom: "1em", width: "100%" }}>
             {payout_info}
           </Alert>
         </Grid>
@@ -155,7 +155,7 @@ export const Index: React.FC = () => {
 
       {!config.payout_enabled && (
         <Grid item xs={12} sm={8}>
-          <Alert severity="warning" variant="outlined" style={{ marginBottom: "1em", width: "100%" }}>
+          <Alert severity="warning" variant="outlined" className="glass-alert" style={{ marginBottom: "1em", width: "100%" }}>
             <b>{t("payout.onlyDuringEvent")}</b>
           </Alert>
         </Grid>

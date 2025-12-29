@@ -150,7 +150,7 @@ export const PayoutInfo: React.FC = () => {
   return (
     <PageContainer title={t("payout.payoutTitle")}>
       <Stack spacing={2}>
-        <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+        <Alert severity="info" variant="outlined" className="glass-alert" sx={{ mb: 2 }}>
           {info_text}
         </Alert>
         <Formik
