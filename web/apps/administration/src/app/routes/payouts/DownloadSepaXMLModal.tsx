@@ -17,9 +17,11 @@ export interface DownloadSepaXMLModalProps {
   onClose: () => void;
 }
 
-const FormSchema = z.object({});
+const FormSchema = z.object({
+  execution_date: z.any(),
+});
 
-type FormValues = z.infer<typeof FormSchema> & { execution_date: DateTime };
+type FormValues = { execution_date: DateTime };
 
 const initialValues: FormValues = {
   execution_date: DateTime.now(),
@@ -77,7 +79,7 @@ export const DownloadSepaXMLModal: React.FC<DownloadSepaXMLModalProps> = ({ payo
               </Stack>
             </DialogContent>
             <DialogActions>
-              <Button onClick={onClose} color="error">
+              <Button onClick={onClose} color="primary">
                 {t("cancel")}
               </Button>
               <Button type="submit" color="primary" startIcon={<DownloadIcon />}>

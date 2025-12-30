@@ -130,7 +130,7 @@ export const NodeSettings: React.FC = () => {
           <Button variant="outlined" component={RouterLink} to={`/node/${currentNode.id}/create-node`}>
             {t("settings.createNode.link")}
           </Button>
-          <Button variant="outlined" color="error" onClick={openConfirmDeleteNodeDialog}>
+          <Button variant="outlined" color="primary" onClick={openConfirmDeleteNodeDialog}>
             {t("settings.deleteNode.button")}
           </Button>
         </Stack>

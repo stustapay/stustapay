@@ -1,5 +1,5 @@
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Container, Typography } from "@mui/material";
+import { PageContainer } from "@/components";
 import { Box } from "@mui/system";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -13,42 +13,39 @@ export const Faq: React.FC = () => {
   const faqContent = config.translation_texts[i18n.language]?.["faq"] ?? "";
 
   return (
-    <Container component="main" maxWidth="md">
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Typography
-          variant="h2"
-          sx={{
-            fontWeight: "bold",
-            mb: 3,
-          }}
-          gutterBottom
-        >
-          FAQs
-        </Typography>
-        <Box
-          sx={{
-            width: "100%",
-            "& p": {
-              marginBottom: 2,
-              textAlign: "left",
-            },
-            "& h1, & h2, & h3, & h4, & h5, & h6": {
-              marginTop: 3,
-              marginBottom: 1.5,
-              textAlign: "left",
-            },
-            "& ul, & ol": {
-              marginBottom: 2,
-              paddingLeft: 3,
-            },
-            "& strong": {
-              fontWeight: 600,
-            },
-          }}
-        >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{faqContent}</ReactMarkdown>
-        </Box>
+    <PageContainer title="FAQs">
+      <Box
+        sx={{
+          width: "100%",
+          "& p": {
+            marginBottom: 2,
+            textAlign: "left",
+            lineHeight: 1.6,
+          },
+          "& h1, & h2, & h3, & h4, & h5, & h6": {
+            marginTop: 3,
+            marginBottom: 1.5,
+            textAlign: "left",
+            fontWeight: 600,
+            color: "text.primary",
+          },
+          "& ul, & ol": {
+            marginBottom: 2,
+            paddingLeft: 3,
+            lineHeight: 1.6,
+          },
+          "& a": {
+            color: "primary.main",
+            textDecoration: "underline",
+          },
+          "& strong": {
+            fontWeight: 700,
+            color: "text.primary",
+          },
+        }}
+      >
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{faqContent}</ReactMarkdown>
       </Box>
-    </Container>
+    </PageContainer>
   );
 };

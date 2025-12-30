@@ -1,5 +1,7 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,disable=protected-access,redefined-outer-name
 
+import secrets
+
 import pytest
 from dateutil.parser import parse
 from sftkit.database import Connection
@@ -147,6 +149,27 @@ async def test_auth_customer(
     # test wrong pin
     with pytest.raises(AccessDenied):
         await customer_service.login_customer(uid=test_customer.user_tag_uid, pin="wrong", node_id=event_node.id)
+
+
+async def test_get_api_config_includes_theme_colors(
+    customer_service: CustomerService, db_connection: Connection, event_node: Node
+):
+    assert event_node.event is not None
+    base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
+    await db_connection.execute(
+        "update event set customer_portal_url = $1, customer_portal_primary_color = $2, "
+        "customer_portal_secondary_color = $3, customer_portal_background_color = $4 where id = $5",
+        base_url,
+        "#112233",
+        "#445566",
+        "#778899",
+        event_node.event.id,
+    )
+
+    config = await customer_service.get_api_config(base_url=base_url)
+    assert config.primary_color == "#112233"
+    assert config.secondary_color == "#445566"
+    assert config.background_color == "#778899"
 
 
 async def test_get_orders_with_bon(

@@ -1,26 +1,13 @@
 import { useCheckCheckoutMutation, useGetCustomerQuery, useLogoutMutation } from "@/api";
 import { config } from "@/api/common";
-import { LanguageSelect, Layout } from "@/components";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { AppHeader, Layout } from "@/components";
+import { usePublicConfig, useThemeColors } from "@/hooks";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
-import { Menu as MenuIcon } from "@mui/icons-material";
-import {
-  AppBar,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  CssBaseline,
-  IconButton,
-  Menu,
-  MenuItem,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { Box, CircularProgress, Container, CssBaseline, Toolbar } from "@mui/material";
 import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
@@ -31,17 +18,10 @@ export const AuthenticatedRoot: React.FC = () => {
   const [checkCheckout] = useCheckCheckoutMutation();
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
 
+  useThemeColors();
+
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const processedAPMRedirect = React.useRef<string | null>(null);
-
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElNav(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
 
   if (!isAuthenticated) {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
@@ -120,154 +100,13 @@ export const AuthenticatedRoot: React.FC = () => {
 
   return (
     <Layout>
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", flexDirection: "column" }}>
         <CssBaseline />
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-          <Container maxWidth="xl">
-            <Toolbar disableGutters sx={{ minHeight: { xs: 56, sm: 64 } }}>
-              {/* Mobile menu icon */}
-              <Box sx={{ display: { xs: "flex", md: "none" }, mr: 1 }}>
-                <IconButton
-                  size="small"
-                  aria-label="menu"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleOpenNavMenu}
-                  color="inherit"
-                >
-                  <MenuIcon />
-                </IconButton>
-                <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorElNav}
-                  anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "left",
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                  }}
-                  open={Boolean(anchorElNav)}
-                  onClose={handleCloseNavMenu}
-                  sx={{
-                    display: { xs: "block", md: "none" },
-                  }}
-                >
-                  {navbarLinks.map((link) => (
-                    <MenuItem key={link.link} component={RouterLink} to={link.link} onClick={handleCloseNavMenu}>
-                      {link.label}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </Box>
-
-              {/* Event name - desktop */}
-              <Typography
-                variant="h6"
-                component="div"
-                noWrap
-                sx={{
-                  mr: 4,
-                  display: { xs: "none", md: "flex" },
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  maxWidth: { md: "300px", lg: "400px" },
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                <RouterLink
-                  to="/"
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {t(config.apiConfig.event_name)}
-                </RouterLink>
-              </Typography>
-
-              {/* Event name - mobile */}
-              <Typography
-                variant="body1"
-                component="div"
-                noWrap
-                sx={{
-                  display: { xs: "flex", md: "none" },
-                  flexGrow: 1,
-                  fontWeight: 600,
-                  fontSize: "1rem",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  mr: 1,
-                }}
-              >
-                <RouterLink
-                  to="/"
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {t(config.apiConfig.event_name)}
-                </RouterLink>
-              </Typography>
-
-              {/* Desktop navigation links */}
-              <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" }, gap: 1 }}>
-                {navbarLinks.map((link) => (
-                  <Button
-                    key={link.link}
-                    onClick={handleCloseNavMenu}
-                    component={RouterLink}
-                    color="inherit"
-                    to={link.link}
-                    size="small"
-                  >
-                    {link.label}
-                  </Button>
-                ))}
-              </Box>
-
-              {/* Language select and logout */}
-              <Box sx={{ display: "flex", gap: { xs: 0.5, sm: 1 }, alignItems: "center" }}>
-                <LanguageSelect
-                  sx={{
-                    color: "inherit",
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "rgba(255, 255, 255, 0.5)",
-                    },
-                    "& .MuiSelect-select": {
-                      padding: { xs: "4px 8px", sm: "8px 12px" },
-                      fontSize: { xs: "0.875rem", sm: "1rem" },
-                    },
-                  }}
-                  variant="outlined"
-                />
-                <Button
-                  color="inherit"
-                  onClick={handleLogout}
-                  size="small"
-                  sx={{
-                    fontSize: { xs: "0.875rem", sm: "1rem" },
-                    padding: { xs: "4px 8px", sm: "6px 16px" },
-                    minWidth: { xs: "auto", sm: "64px" },
-                  }}
-                >
-                  {t("logout")}
-                </Button>
-              </Box>
-            </Toolbar>
-          </Container>
-        </AppBar>
+        <AppHeader
+          authenticated={true}
+          onLogout={handleLogout}
+          navbarLinks={navbarLinks}
+        />
 
         <Box
           component="main"
@@ -276,8 +115,9 @@ export const AuthenticatedRoot: React.FC = () => {
             width: "100%",
           }}
         >
-          {/* Spacer to prevent content from being hidden under fixed AppBar */}
-          <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }} />
+          {/* Spacer to prevent content from being hidden under fixed AppBar handled inside AppHeader now? No, kept separately for structure flexibility or updated in AppHeader? Updated in AppHeader */}
+          {/* AppHeader includes the spacer and banner, wait, I put spacer and banner INSIDE AppHeader. So I don't need them here. */}
+
           <Container
             maxWidth="lg"
             sx={{

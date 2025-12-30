@@ -4,7 +4,7 @@ import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
 import { Login } from "./routes/auth/Login";
 import { QRCodeLogin } from "./routes/auth/QRCodeLogin";
-import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
+import { PublicRoot } from "./routes/PublicRoot";
 import { Index } from "./routes/Index";
 import { PayoutInfo } from "./routes/PayoutInfo";
 import { TopUp } from "./routes/topup";
@@ -40,7 +40,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <UnauthenticatedRoot />,
+    element: <PublicRoot />,
     errorElement: <ErrorPage />,
     children: [
       {

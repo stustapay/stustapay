@@ -54,7 +54,7 @@ export const TerminalSwitchTill: React.FC<TerminalSwitchTillProps> = ({ terminal
         />
       </DialogContent>
       <DialogActions>
-        <Button color="error" onClick={onClose}>
+        <Button color="primary" onClick={onClose}>
           {t("cancel")}
         </Button>
         <Button onClick={handleConfirm} disabled={selectedTill == null}>

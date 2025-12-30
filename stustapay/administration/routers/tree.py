@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
 from stustapay.bon.bon import BonJson
@@ -124,3 +124,35 @@ async def configure_sumup_token(
     return await tree_service.sumup_auth_code_flow(
         token=token, node_id=node_id, authorization_code=payload.authorization_code
     )
+
+
+@router.post("/events/{node_id}/banner")
+async def upload_event_banner(
+    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, file: UploadFile = File(...)
+):
+    """Upload a banner image for an event."""
+    contents = await file.read()
+    mime_type = file.content_type or "image/png"
+    await tree_service.upload_event_banner(token=token, node_id=node_id, image_data=contents, mime_type=mime_type)
+    return {"status": "ok"}
+
+
+@router.delete("/events/{node_id}/banner")
+async def delete_event_banner(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    """Delete the banner image for an event."""
+    await tree_service.delete_event_banner(token=token, node_id=node_id)
+    return {"status": "ok"}
+
+
+@router.get("/events/{node_id}/banner")
+async def get_event_banner(tree_service: ContextTreeService, node_id: int):
+    """Retrieve the banner image for an event."""
+    banner_data = await tree_service.get_event_banner(node_id=node_id)
+    if banner_data is None:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    return Response(
+        content=banner_data["image"],
+        media_type=banner_data["mime_type"],
+        headers={"Cache-Control": "public, max-age=3600"}
+    )
+

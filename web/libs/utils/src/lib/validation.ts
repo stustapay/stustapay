@@ -12,7 +12,7 @@ export class ValidationError extends Error {
 
 function createValidationError(e: z.ZodError) {
   const error = new ValidationError(e.message);
-  error.inner = e.errors.map((err) => ({
+  error.inner = e.issues.map((err) => ({
     message: err.message,
     path: err.path.join("."),
   }));
@@ -21,7 +21,7 @@ function createValidationError(e: z.ZodError) {
 }
 
 function createValidationErrorMap(e: z.ZodError) {
-  return e.errors.map((err) => err.message);
+  return e.issues.map((err) => err.message);
 }
 
 /**
@@ -31,7 +31,7 @@ function createValidationErrorMap(e: z.ZodError) {
  */
 export function toFormikValidationSchema<T>(
   schema: z.ZodSchema<T>,
-  params?: Partial<z.ParseParams>
+  params?: any
 ): { validate: (obj: T) => Promise<void> } {
   return {
     async validate(obj: T) {

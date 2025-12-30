@@ -1,7 +1,10 @@
-{
-    "/api": {
+[
+    {
+        "context": ["/api"],
         "target": "http://127.0.0.1:8082",
         "secure": false,
-        "pathRewrite": {"^/api": ""}
+        "pathRewrite": {
+            "^/api": ""
+        }
     }
-}
+]

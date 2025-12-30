@@ -5,7 +5,7 @@
 - Tests sit under `stustapay/tests/`; shared fixtures are in `stustapay/tests/conftest.py`.
 - Config templates and defaults: `etc/config.yaml`, `server_local.yaml`; API specs generated into `api/`.
 - Assets/logos in `assets/`; build/deploy tooling in `tools/`, Debian packaging in `debian/`.
-- Frontends: `app/` holds the Android POS terminal; `web/` contains the customer portal and administration portal; `website/` is the public marketing site.
+- Frontends: `app/` holds the Android POS terminal; `web/` contains the customer portal and administration portal.
 - Docs live in `docs/`; top-level `Makefile` drives common tasks.
 
 ## Build, Test, and Development Commands
@@ -30,7 +30,7 @@
 ## Commit & Pull Request Guidelines
 - Follow Conventional Commit prefixes seen in history (e.g., `feat:`, `fix:`, `chore:`); write imperative summaries: `feat: add terminalserver health endpoint`.
 - Scope commits narrowly; keep config and code changes separate when possible.
-- PRs should include a short summary, linked issue/ticket, and test results (`make test` / `make lint`). Add screenshots for UI-facing changes (web/app/website) and mention config impacts (e.g., changes under `etc/`).
+- PRs should include a short summary, linked issue/ticket, and test results (`make test` / `make lint`). Add screenshots for UI-facing changes (web/app) and mention config impacts (e.g., changes under `etc/`).
 
 ## Security & Configuration Tips
 - Do not commit secrets; keep credentials and keys out of `etc/*.yaml` and API spec outputs.

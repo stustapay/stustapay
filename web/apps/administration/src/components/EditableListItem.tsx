@@ -65,7 +65,7 @@ export const EditableListItem: React.FC<EditableListItemProps> = ({ label, value
                 <IconButton color="primary" onClick={saveEdit}>
                   <CheckIcon />
                 </IconButton>
-                <IconButton color="error" onClick={cancelEdit}>
+                <IconButton color="primary" onClick={cancelEdit}>
                   <CloseIcon />
                 </IconButton>
               </InputAdornment>

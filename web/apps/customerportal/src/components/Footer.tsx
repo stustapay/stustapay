@@ -19,41 +19,46 @@ export const Footer = () => {
   return (
     <Box
       component="footer"
+      className="glass-card"
       sx={{
-        py: 2,
+        py: 3,
         px: { xs: 2, sm: 4 },
-        backgroundColor: theme.palette.background.default,
-        borderTop: `1px solid ${theme.palette.divider}`,
+        mt: "auto",
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(10px)",
+        borderTop: "var(--border-glass)",
         display: "flex",
-        flexDirection: { xs: "column", sm: "row" },
+        flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "center",
         alignItems: "center",
-        color: theme.palette.common.white,
-        gap: { xs: 1, sm: 0 },
+        color: "text.primary",
+        columnGap: { xs: 2, sm: 4 },
+        rowGap: 1,
+        fontSize: "0.875rem",
       }}
     >
-      <Link href={config.about_page_url} target="_blank">
+      <Link href={config.about_page_url} target="_blank" color="inherit" underline="hover">
         {t("about")}
       </Link>
       {authenticated ? <LoggedInFooter /> : <LoggedOutFooter />}
-      <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/faq">
+      <Link component={RouterLink} to="/faq" color="inherit" underline="hover">
         {t("nav.faq")}
       </Link>
-      <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/agb">
+      <Link component={RouterLink} to="/agb" color="inherit" underline="hover">
         {t("nav.agb")}
       </Link>
       {hasPrivacyPolicy && (
-        <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/datenschutz">
+        <Link component={RouterLink} to="/datenschutz" color="inherit" underline="hover">
           {t("nav.privacyPolicy")}
         </Link>
       )}
       {hasImpressum && (
-        <Link sx={{ ml: { xs: 0, sm: 4 } }} component={RouterLink} to="/impressum">
+        <Link component={RouterLink} to="/impressum" color="inherit" underline="hover">
           {t("nav.impressum")}
         </Link>
       )}
-      <Link sx={{ ml: { xs: 0, sm: 4 } }} href="https://github.com/TomTel85/stustapay" target="_blank">
+      <Link href="https://github.com/TomTel85/stustapay" target="_blank" color="inherit" underline="hover">
         Github
       </Link>
     </Box>

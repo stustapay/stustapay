@@ -1,5 +1,4 @@
 tar-ignore = "web/node_modules"
-tar-ignore = "website/node_modules"
 tar-ignore = "app/app/build"
 tar-ignore = ".git"
 tar-ignore = ".pybuild"
