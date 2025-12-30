@@ -68,7 +68,7 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="error">
+        <Button onClick={handleClose} color="primary">
           Cancel
         </Button>
         <Button onClick={handleConfirm} color="primary">

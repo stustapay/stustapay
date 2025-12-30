@@ -35,7 +35,7 @@ export const CommonActionLayout: React.FC<CommonActionLayoutProps> = ({ title, c
   return (
     <Stack spacing={2}>
       <Grid container spacing={1} justifyContent="space-between">
-        <Grid item display="flex" alignItems="center">
+        <Grid display="flex" alignItems="center">
           <IconButton onClick={() => navigate(-1)}>
             <ChevronLeft />
           </IconButton>
@@ -43,7 +43,7 @@ export const CommonActionLayout: React.FC<CommonActionLayoutProps> = ({ title, c
             {title}
           </Typography>
         </Grid>
-        <Grid item>
+        <Grid>
           <Stack direction="row" spacing={1}>
             {renderedActions}
           </Stack>

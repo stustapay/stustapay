@@ -32,17 +32,17 @@ export const CashierList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }: any) => ({
         ...rest,
-          cashiers: data
-            ? (selectCashierAll(data) as any).filter((cashier: any) => {
-              if (!filterOptions.showWithoutTerminal && cashier.terminal_ids.length === 0) {
-                return false;
-              }
-              if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
-                return false;
-              }
-              return true;
-            })
-            : undefined,
+        cashiers: data
+          ? (selectCashierAll(data) as any).filter((cashier: any) => {
+            if (!filterOptions.showWithoutTerminal && cashier.terminal_ids.length === 0) {
+              return false;
+            }
+            if (!filterOptions.showZeroBalance && cashier.cash_drawer_balance === 0) {
+              return false;
+            }
+            return true;
+          })
+          : undefined,
       }),
     }
   ) as any;
@@ -126,7 +126,7 @@ export const CashierList: React.FC = () => {
           control={
             <Checkbox
               checked={filterOptions.showZeroBalance}
-              onChange={(evt) => setFilterOptions({ ...filterOptions, showZeroBalance: evt.target.checked })}
+              onChange={(evt) => setFilterOptions({ ...filterOptions, showZeroBalance: evt.target.checked } as any)}
             />
           }
           label={t("cashier.showZeroBalance")}
@@ -135,7 +135,7 @@ export const CashierList: React.FC = () => {
           control={
             <Checkbox
               checked={filterOptions.showWithoutTerminal}
-              onChange={(evt) => setFilterOptions({ ...filterOptions, showWithoutTerminal: evt.target.checked })}
+              onChange={(evt) => setFilterOptions({ ...filterOptions, showWithoutTerminal: evt.target.checked } as any)}
             />
           }
           label={t("cashier.showWithoutTill")}

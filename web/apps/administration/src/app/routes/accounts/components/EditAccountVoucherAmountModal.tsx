@@ -59,7 +59,7 @@ export const EditAccountVoucherAmountModal: React.FC<EditAccountVoucherAmountMod
         <NumericInput value={voucherAmount} fullWidth onChange={handleChange} label={t("account.newVoucherAmount")} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="error">
+        <Button onClick={handleClose} color="primary">
           Cancel
         </Button>
         <Button onClick={handleConfirm} color="primary">

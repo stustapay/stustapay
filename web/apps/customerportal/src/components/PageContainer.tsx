@@ -10,7 +10,9 @@ interface PageContainerProps {
 export const PageContainer: React.FC<PageContainerProps> = ({ title, children, maxWidth = "md" }) => {
     return (
         <Grid container justifyContent="center" sx={{ mt: 4, mb: 4 }}>
-            <Grid item xs={12} sm={10} md={8} lg={maxWidth === "lg" ? 10 : 8} xl={maxWidth === "xl" ? 10 : 8}>
+            <Grid
+                size={{ xs: 12, sm: 10, md: 8, lg: maxWidth === "lg" ? 10 : 8, xl: maxWidth === "xl" ? 10 : 8 }}
+            >
                 <Paper
                     className="glass-card"
                     sx={{

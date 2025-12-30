@@ -44,7 +44,7 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
         <ListItem key={product.id}>
           <ListItemText primary={product.name} />
           <ListItemSecondaryAction>
-            <IconButton color="error" onClick={() => removeProduct(product.id)}>
+            <IconButton color="primary" onClick={() => removeProduct(product.id)}>
               <DeleteIcon />
             </IconButton>
           </ListItemSecondaryAction>

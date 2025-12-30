@@ -71,7 +71,7 @@ export const EventSettings: React.FC = () => {
         <Button variant="outlined" onClick={() => setCopyEventDialogOpen(true)}>
           {t("settings.copyEvent.button")}
         </Button>
-        <Button variant="outlined" color="error" onClick={handleArchiveNode}>
+        <Button variant="outlined" color="primary" onClick={handleArchiveNode}>
           {t("settings.archiveNode.button")}
         </Button>
       </Stack>

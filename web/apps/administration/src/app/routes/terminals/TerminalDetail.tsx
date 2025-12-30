@@ -188,7 +188,7 @@ export const TerminalDetail: React.FC = () => {
               value={renderUser(terminal.active_user_id)}
             />
             <ListItem>
-              <Button color="error" variant="contained" onClick={openConfirmLogoutDialog} startIcon={<LogoutIcon />}>
+              <Button color="primary" variant="contained" onClick={openConfirmLogoutDialog} startIcon={<LogoutIcon />}>
                 {t("till.forceLogoutUser")}
               </Button>
             </ListItem>

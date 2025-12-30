@@ -23,7 +23,12 @@ export const DragArea: React.FC<EmptyDragProps> = ({ moveButton, children }) => 
   });
 
   return (
-    <div ref={drop} style={{ minHeight: "200px" }}>
+    <div
+      ref={(node) => {
+        drop(node);
+      }}
+      style={{ minHeight: "200px" }}
+    >
       {children ?? "drag button here"}
     </div>
   );

@@ -18,7 +18,7 @@ import {
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { DailyStatsTable, HourlyGraph, NodeSelect } from "@/components";
 import { useGetProductStatsQuery, ProductTimeseries, ProductOverallStats } from "@/api";
-import { DatumValue, ResponsiveLine } from "@nivo/line";
+import { ResponsiveLine } from "@nivo/line";
 
 const IndividualProductStats: React.FC<{
   nodeId: number;
@@ -40,7 +40,7 @@ const IndividualProductStats: React.FC<{
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={9} height={300}>
+      <Grid size={9} height={300}>
         <ResponsiveLine
           animate={false}
           data={hourlyData}
@@ -64,7 +64,7 @@ const IndividualProductStats: React.FC<{
               }
             },
           }}
-          xFormat={(value: DatumValue) => DateTime.fromJSDate(value as Date).toISO() ?? ""}
+          xFormat={(value: any) => DateTime.fromJSDate(value as Date).toISO() ?? ""}
           enableSlices="x"
           enableTouchCrosshair
           curve="monotoneX"
@@ -98,7 +98,7 @@ const IndividualProductStats: React.FC<{
           ]}
         />
       </Grid>
-      <Grid item xs={3}>
+      <Grid size={3}>
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -149,7 +149,7 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
 
   if (isStatsLoading) {
     return (
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Skeleton variant="rounded" height={300} />
       </Grid>
     );
@@ -164,7 +164,7 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
   }
 
   return (
-    <Grid item xs={12}>
+    <Grid size={12}>
       <Card>
         <CardContent>
           <NodeSelect label="Node" value={node} onChange={(val) => val && setNode(val)} />
@@ -172,10 +172,10 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
             Total revenue through sales
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={9} height={300}>
+            <Grid size={{ xs: 12, md: 9 }} height={300}>
               <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={true} data={productStats} />
             </Grid>
-            <Grid item xs={12} md={3} height={300}>
+            <Grid size={{ xs: 12, md: 3 }} height={300}>
               <DailyStatsTable data={productStats} useRevenue={true} />
             </Grid>
           </Grid>

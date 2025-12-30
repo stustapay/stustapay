@@ -56,7 +56,7 @@ export const TillSwitchTerminal: React.FC<TillSwitchTerminalProps> = ({ tillId, 
         />
       </DialogContent>
       <DialogActions>
-        <Button color="error" onClick={onClose}>
+        <Button color="primary" onClick={onClose}>
           {t("cancel")}
         </Button>
         <Button onClick={handleConfirm} disabled={selectedTerminal == null}>

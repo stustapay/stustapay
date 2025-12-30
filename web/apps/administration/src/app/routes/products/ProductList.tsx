@@ -172,7 +172,7 @@ export const ProductList: React.FC = () => {
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon />}
-                color="error"
+                color="primary"
                 disabled={params.row.is_locked}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}

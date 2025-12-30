@@ -82,7 +82,7 @@ export const TillLayoutList: React.FC = () => {
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
-          color="error"
+          color="primary"
           label={t("delete")}
           onClick={() => openConfirmDeleteDialog(params.row.id)}
         />,

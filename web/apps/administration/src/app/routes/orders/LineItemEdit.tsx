@@ -199,7 +199,7 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
                 <TableCell>
                   {p.product.fixed_price && (
                     <>
-                      <IconButton color="error" onClick={() => handleSubstractProduct(p.product)}>
+                      <IconButton color="primary" onClick={() => handleSubstractProduct(p.product)}>
                         <RemoveIcon />
                       </IconButton>
                       <IconButton color="primary" onClick={() => handleAddProduct(p.product)}>
@@ -207,7 +207,7 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
                       </IconButton>
                     </>
                   )}
-                  <IconButton color="error" onClick={() => handleDeleteProduct(p.product.id)}>
+                  <IconButton color="primary" onClick={() => handleDeleteProduct(p.product.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
