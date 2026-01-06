@@ -47,3 +47,4 @@ class NewUserTag(BaseModel):
     uid: Optional[int] = None
     is_vip: bool = False
     comment: Optional[str] = None
+    group_tag: Optional[str] = None

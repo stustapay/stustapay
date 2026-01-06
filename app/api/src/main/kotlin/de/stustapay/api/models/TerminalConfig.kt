@@ -15,9 +15,11 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.EntryAreaConfig
 import de.stustapay.api.models.Privilege
+import de.stustapay.api.models.TerminalMode
+import de.stustapay.api.models.TerminalSecrets
 import de.stustapay.api.models.TerminalTillConfig
-import de.stustapay.api.models.TerminalUserTagSecrets
 import de.stustapay.api.models.UserRole
 
 import kotlinx.serialization.Serializable
@@ -30,6 +32,8 @@ import kotlinx.serialization.Contextual
  * @param id 
  * @param name 
  * @param description 
+ * @param mode 
+ * @param entryArea 
  * @param eventName 
  * @param activeUserId 
  * @param availableRoles 
@@ -52,6 +56,12 @@ data class TerminalConfig (
     @SerialName(value = "description")
     val description: kotlin.String?,
 
+    @Contextual @SerialName(value = "mode")
+    val mode: TerminalMode,
+
+    @SerialName(value = "entry_area")
+    val entryArea: EntryAreaConfig?,
+
     @SerialName(value = "event_name")
     val eventName: kotlin.String,
 
@@ -65,7 +75,7 @@ data class TerminalConfig (
     val userPrivileges: kotlin.collections.List<@Contextual Privilege>?,
 
     @SerialName(value = "secrets")
-    val secrets: TerminalUserTagSecrets?,
+    val secrets: TerminalSecrets?,
 
     @SerialName(value = "till")
     val till: TerminalTillConfig?,

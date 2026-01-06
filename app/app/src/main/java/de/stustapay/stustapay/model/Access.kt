@@ -69,7 +69,7 @@ object Access {
 
     fun canTopUp(terminal: TerminalConfig, user: CurrentUser): Boolean {
         return terminal.till?.postPaymentAllowed == false && terminal.till?.allowTopUp == true && 
-               (user.privileges.contains(Privilege.can_book_orders) || user.privileges.contains(Privilege.canTopup))
+               (user.privileges.contains(Privilege.can_book_orders) || user.privileges.contains(Privilege.can_topup))
     }
 
     fun canPayOut(terminal: TerminalConfig, user: CurrentUser): Boolean {
@@ -85,7 +85,7 @@ object Access {
      * Users with this privilege profile should have restricted UI access
      */
     fun hasOnlyTopUpPrivilege(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.canTopup) && 
+        return user.privileges.contains(Privilege.can_topup) && 
                !user.privileges.contains(Privilege.can_book_orders)
     }
 }

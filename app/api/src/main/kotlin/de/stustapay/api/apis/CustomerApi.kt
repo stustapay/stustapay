@@ -108,7 +108,7 @@ import io.ktor.http.ParametersBuilder
 
         /**
         * POST /customer/switch_tag
-        * Switch Tag
+        * Switch a customer&#39;s tag to a new one
         * 
          * @param switchTagPayload  
          * @return kotlin.Unit

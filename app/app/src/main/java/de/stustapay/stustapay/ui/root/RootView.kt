@@ -8,6 +8,7 @@ import de.stustapay.libssp.util.SysUiController
 import de.stustapay.stustapay.ui.account.AccountView
 import de.stustapay.stustapay.ui.cashier.CashierView
 import de.stustapay.stustapay.ui.debug.DebugView
+import de.stustapay.stustapay.ui.entry.EntryView
 import de.stustapay.stustapay.ui.history.SaleHistoryView
 import de.stustapay.stustapay.ui.nav.NavChangeHandler
 import de.stustapay.stustapay.ui.nav.navigateDestination
@@ -39,10 +40,22 @@ fun RootView(uictrl: SysUiController? = null) {
     ) {
         composable(RootNavDests.startpage.route) {
             StartpageView(navigateTo = { navTo ->
-                navController.navigateDestination(
-                    navTo
-                )
+                if (navTo == RootNavDests.entry) {
+                    navController.navigate(navTo.route) {
+                        popUpTo(RootNavDests.startpage.route) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                } else {
+                    navController.navigateDestination(
+                        navTo
+                    )
+                }
             })
+        }
+        composable(RootNavDests.entry.route) {
+            EntryView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.ticket.route) {
             TicketView(leaveView = { navController.navigateUp() })

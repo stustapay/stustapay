@@ -11,4 +11,5 @@ export * from "./till";
 export * from "./tse";
 export * from "./user";
 export * from "./currency";
+export * from "./entry";
 export * from "./terminal";

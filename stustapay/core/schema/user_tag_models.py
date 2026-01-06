@@ -19,5 +19,6 @@ class UserTagDetail(BaseModel):
     account_id: Optional[int] = None
     user_id: Optional[int] = None
     is_vip: bool = False
+    group_tag: Optional[str] = None
 
-    account_history: list[UserTagAccountAssociation] 
+    account_history: list[UserTagAccountAssociation]

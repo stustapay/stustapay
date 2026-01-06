@@ -15,7 +15,9 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.Account
 import de.stustapay.api.models.Ticket
+import de.stustapay.api.models.TicketVoucher
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -27,6 +29,10 @@ import kotlinx.serialization.Contextual
  * @param customerTagUid 
  * @param customerTagPin 
  * @param ticket 
+ * @param totalPrice 
+ * @param topUpAmount 
+ * @param ticketVoucher 
+ * @param account 
  */
 @Serializable
 
@@ -39,7 +45,19 @@ data class TicketScanResultEntry (
     val customerTagPin: kotlin.String,
 
     @SerialName(value = "ticket")
-    val ticket: Ticket
+    val ticket: Ticket,
+
+    @Contextual @SerialName(value = "total_price")
+    val totalPrice: kotlin.Double,
+
+    @Contextual @SerialName(value = "top_up_amount")
+    val topUpAmount: kotlin.Double? = 0.0,
+
+    @SerialName(value = "ticket_voucher")
+    val ticketVoucher: TicketVoucher? = null,
+
+    @SerialName(value = "account")
+    val account: Account? = null
 
 ) {
 

@@ -14,6 +14,7 @@ class Privilege(enum.Enum):
     node_administration = "node_administration"
     customer_management = "customer_management"
     payout_management = "payout_management"
+    entry_management = "entry_management"
 
     create_user = "create_user"
     allow_privileged_role_assignment = "allow_privileged_role_assignment"

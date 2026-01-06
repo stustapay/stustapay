@@ -74,3 +74,6 @@ export const SumUpCheckoutRoutes = new RouteBuilder("sumup/checkouts", "node_adm
 export const CustomerRoutes = new RouteBuilder("customers", "node_administration", "account");
 export const TerminalRoutes = new RouteBuilder("terminals", "node_administration", "terminal");
 export const MdmRoutes = new RouteBuilder("mdm/devices", "node_administration", "terminal");
+export const EntryAreaRoutes = new RouteBuilder("entry/areas", "entry_management", "entry_area");
+export const EntryGroupRoutes = new RouteBuilder("entry/groups", "entry_management", "entry_group");
+export const EntryLogRoutes = new RouteBuilder("entry/logs", "entry_management");

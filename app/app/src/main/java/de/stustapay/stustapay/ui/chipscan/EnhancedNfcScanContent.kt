@@ -54,7 +54,8 @@ import de.stustapay.stustapay.R
 fun EnhancedNfcScanContent(
     isIminFalcons2: Boolean,
     isSmallScreen: Boolean = false,
-    scanStatus: String
+    scanStatus: String,
+    headerText: String? = null
 ) {
     // Pulsing animation for the NFC icon
     val infiniteTransition = rememberInfiniteTransition()
@@ -104,7 +105,7 @@ fun EnhancedNfcScanContent(
         ) {
             // Header text - different for Falcon 2 and uses smaller text for small screens
             Text(
-                text = if (isIminFalcons2) "Chip hier vorhalten" else "Scan a Chip",
+                text = headerText ?: if (isIminFalcons2) "Chip hier vorhalten" else "Scan a Chip",
                 fontWeight = FontWeight.Bold,
                 fontSize = headerFontSize,
                 textAlign = TextAlign.Center,

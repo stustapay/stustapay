@@ -147,6 +147,8 @@ class ObjectType(enum.Enum):
     tse = "tse"
     account = "account"
     terminal = "terminal"
+    entry_area = "entry_area"
+    entry_group = "entry_group"
 
 
 ALL_OBJECT_TYPES = [e for e in ObjectType]
