@@ -118,7 +118,7 @@ export const translations = {
     createButton: "Create new tags",
     uploadPinCsv: "Upload CSV with tag pins",
     uploadPinCsvDescription:
-      'CSV with columns "pin" (required), "uid" (optional), "is_vip" (optional), and "comment" (optional) for all tags to be created. Note: Some fields may not be supported by your backend version.',
+      'CSV with columns "pin" (required), "uid" (optional), "is_vip" (optional), "comment" (optional), and "group_tag" (optional) for all tags to be created. Note: Some fields may not be supported by your backend version.',
     willCreate: "Will create {{nTags}} new user tags",
     firstNTags: "The following are the first {{actualNum}} tags which will be created",
     vipStatus: "VIP Status",
@@ -126,6 +126,8 @@ export const translations = {
     vipStatusDisabled: "VIP status disabled",
     vipStatusUpdateFailed: "Failed to update VIP status",
     groupTag: "Group tag",
+    groupTagDefault: "Default group tag",
+    groupTagDefaultHelper: "Applied when a row in the CSV has no group_tag",
   },
   userTagSecret: {
     create: "Upload a new user tag secret for this event",

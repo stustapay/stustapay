@@ -9,10 +9,12 @@ import { z } from "zod";
 import { RestrictionSelect } from "@/components/features";
 import { FormikProps } from "formik";
 import { Select } from "@stustapay/components";
+import { FormTextField } from "@stustapay/form-components";
 import {
   Alert,
   Box,
   Button,
+  FormHelperText,
   Table,
   TableBody,
   TableCell,
@@ -51,6 +53,7 @@ const CsvTagsSchema = z.array(
 const NewUserTagsSchema = z.object({
   secret_id: z.number().int(),
   restriction: ProductRestrictionSchema.nullable(),
+  default_group_tag: z.string().optional(),
   tags: CsvTagsSchema,
 });
 
@@ -60,6 +63,7 @@ const initialValues: NewUserTags = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   secret_id: null as any,
   restriction: null,
+  default_group_tag: "",
   tags: [],
 };
 
@@ -146,6 +150,13 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         onChange={(val) => setFieldValue("restriction", val)}
         multiple={false}
       />
+      <FormTextField
+        name="default_group_tag"
+        label={t("userTag.groupTagDefault")}
+        variant="outlined"
+        formik={props}
+      />
+      <FormHelperText>{t("userTag.groupTagDefaultHelper")}</FormHelperText>
       <Select
         label={t("userTag.secret")}
         multiple={false}
@@ -217,15 +228,18 @@ export const UserTagsCreate: React.FC = () => {
       onSubmit={(userTags) =>
         createUserTags({
           nodeId: currentNode.id,
-          newUserTags: userTags.tags.map((t) => ({
-            pin: t.pin,
-            secret_id: userTags.secret_id,
-            restriction: userTags.restriction,
-            uid: t.uid,
-            is_vip: t.is_vip,
-            comment: t.comment,
-            group_tag: t.group_tag,
-          })),
+          newUserTags: userTags.tags.map((t) => {
+            const defaultGroupTag = userTags.default_group_tag?.trim() || undefined;
+            return {
+              pin: t.pin,
+              secret_id: userTags.secret_id,
+              restriction: userTags.restriction,
+              uid: t.uid,
+              is_vip: t.is_vip,
+              comment: t.comment,
+              group_tag: t.group_tag ?? defaultGroupTag,
+            };
+          }),
         })
       }
       form={TagsForm}

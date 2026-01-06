@@ -122,7 +122,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     create: "Benutzer-Tag erstellen",
     createButton: "Benutzer-Tag erstellen",
     uploadPinCsv: "CSV mit Tag-PINs hochladen",
-    uploadPinCsvDescription: 'CSV mit Spalten "pin" (erforderlich), "uid" (optional), "is_vip" (optional) und "comment" (optional) für alle zu erstellenden Tags. Hinweis: Einige Felder werden möglicherweise nicht von Ihrer Backend-Version unterstützt.',
+    uploadPinCsvDescription:
+      'CSV mit Spalten "pin" (erforderlich), "uid" (optional), "is_vip" (optional), "comment" (optional) und "group_tag" (optional) für alle zu erstellenden Tags. Hinweis: Einige Felder werden möglicherweise nicht von Ihrer Backend-Version unterstützt.',
     willCreate: "Es werden {{nTags}} neue Benutzer-Tags erstellt",
     firstNTags: "Die folgenden sind die ersten {{actualNum}} Tags, die erstellt werden",
     vipStatus: "VIP-Status",
@@ -130,6 +131,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     vipStatusDisabled: "VIP-Status deaktiviert",
     vipStatusUpdateFailed: "Fehler beim Aktualisieren des VIP-Status",
     groupTag: "Gruppen-Tag",
+    groupTagDefault: "Standard-Gruppen-Tag",
+    groupTagDefaultHelper: "Wird verwendet, wenn in der CSV kein group_tag steht",
   },
   userTagSecret: {
     create: "Neues Benutzer-Tag Secret für dieses Ereignis hochladen",
