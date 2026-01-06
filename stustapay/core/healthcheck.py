@@ -2,6 +2,7 @@ import asyncio
 import getpass
 import logging
 import os
+import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -19,17 +20,37 @@ class Healtcheck(BaseModel):
 
 
 def get_healthcheck_dir() -> Path:
-    
-    if os.name=='nt':
-        prod_path = Path("./run/stustapay") 
-        if not prod_path.is_dir():
-                prod_path = Path("./run/stustapay") 
-                prod_path.mkdir(exist_ok=True, parents=True)
-    else:
-        prod_path = Path("/run/stustapay") / str(getpass.getuser())
-        if not prod_path.is_dir():
-                prod_path = Path("/run/user") / str(os.getuid()) / "stustapay"
-                prod_path.mkdir(exist_ok=True, parents=True)
+    override = os.environ.get("STUSTAPAY_HEALTHCHECK_DIR")
+    if override:
+        prod_path = Path(override)
+        try:
+            prod_path.mkdir(exist_ok=True, parents=True)
+            return prod_path
+        except OSError:
+            pass
+
+    if os.name == "nt":
+        prod_path = Path("./run/stustapay")
+        prod_path.mkdir(exist_ok=True, parents=True)
+        return prod_path
+
+    candidates: list[Path] = []
+    xdg_runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+    if xdg_runtime_dir:
+        candidates.append(Path(xdg_runtime_dir) / "stustapay")
+    candidates.append(Path("/run/stustapay") / str(getpass.getuser()))
+    candidates.append(Path("/run/user") / str(os.getuid()) / "stustapay")
+    candidates.append(Path(tempfile.gettempdir()) / "stustapay" / str(getpass.getuser()))
+
+    for prod_path in candidates:
+        try:
+            prod_path.mkdir(exist_ok=True, parents=True)
+            return prod_path
+        except OSError:
+            continue
+
+    prod_path = Path("./run/stustapay")
+    prod_path.mkdir(exist_ok=True, parents=True)
     return prod_path
 
 
