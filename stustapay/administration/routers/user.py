@@ -4,14 +4,16 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextUserService
+from stustapay.core.http.context import ContextMailService, ContextUserService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
+    AcceptInvitationPayload,
     NewUser,
     NewUserRole,
     NewUserToRoles,
     Privilege,
     User,
+    UserInvitation,
     UserRole,
     UserToRoles,
 )
@@ -44,6 +46,7 @@ class UpdateUserPayload(BaseModel):
     description: Optional[str] = None
     user_tag_pin: Optional[str] = None
     user_tag_uid_hex: Optional[str] = None
+    email: Optional[str] = None
 
 
 class CreateUserPayload(UpdateUserPayload):
@@ -70,6 +73,7 @@ async def create_user(
             description=new_user.description,
             user_tag_pin=new_user.user_tag_pin,
             user_tag_uid=user_tag_uid,
+            email=new_user.email,
         ),
         password=new_user.password,
         node_id=node_id,
@@ -105,6 +109,7 @@ async def update_user(
             description=user.description,
             user_tag_pin=user.user_tag_pin,
             user_tag_uid=user_tag_uid,
+            email=user.email,
         ),
         node_id=node_id,
     )
@@ -139,6 +144,27 @@ async def delete_user(user_id: int, token: CurrentAuthToken, user_service: Conte
     deleted = await user_service.delete_user(token=token, user_id=user_id, node_id=node_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@user_router.post("/{user_id}/invite", response_model=UserInvitation)
+async def invite_user(
+    user_id: int,
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+    mail_service: ContextMailService,
+    node_id: int,
+):
+    return await user_service.invite_user(
+        token=token, user_id=user_id, node_id=node_id, mail_service=mail_service
+    )
+
+
+@user_router.post("/accept-invitation", response_model=dict[str, str])
+async def accept_invitation(
+    payload: AcceptInvitationPayload,
+    user_service: ContextUserService,
+):
+    return await user_service.accept_invitation(payload=payload)
 
 
 @user_role_router.get("", response_model=NormalizedList[UserRole, int])

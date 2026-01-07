@@ -12,6 +12,7 @@ const initialValues: NewUser = {
   login: "",
   display_name: "",
   description: "",
+  email: undefined,
   password: "",
   user_tag_uid_hex: undefined,
   user_tag_pin: undefined,
