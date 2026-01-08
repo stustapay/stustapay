@@ -9,10 +9,12 @@ import { z } from "zod";
 import { RestrictionSelect } from "@/components/features";
 import { FormikProps } from "formik";
 import { Select } from "@stustapay/components";
+import { FormTextField } from "@stustapay/form-components";
 import {
   Alert,
   Box,
   Button,
+  FormHelperText,
   Table,
   TableBody,
   TableCell,
@@ -44,12 +46,14 @@ const CsvTagsSchema = z.array(
     uid: z.number().optional(),
     is_vip: z.boolean().optional(),
     comment: z.string().optional(),
+    group_tag: z.string().optional(),
   })
 );
 
 const NewUserTagsSchema = z.object({
   secret_id: z.number().int(),
   restriction: ProductRestrictionSchema.nullable(),
+  default_group_tag: z.string().optional(),
   tags: CsvTagsSchema,
 });
 
@@ -59,15 +63,21 @@ const initialValues: NewUserTags = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   secret_id: null as any,
   restriction: null,
+  default_group_tag: "",
   tags: [],
 };
 
-const parseCsv = (csvContent: string): Array<{ pin: string; uid?: number; is_vip?: boolean; comment?: string }> | null => {
-  const parsed = Papa.parse<{ pin: string; uid?: string; is_vip?: string; comment?: string }>(csvContent, {
-    delimiter: ",",
-    header: true,
-    skipEmptyLines: true,
-  });
+const parseCsv = (
+  csvContent: string
+): Array<{ pin: string; uid?: number; is_vip?: boolean; comment?: string; group_tag?: string }> | null => {
+  const parsed = Papa.parse<{ pin: string; uid?: string; is_vip?: string; comment?: string; group_tag?: string }>(
+    csvContent,
+    {
+      delimiter: ",",
+      header: true,
+      skipEmptyLines: true,
+    }
+  );
   
   if (parsed.errors.length > 0) {
     toast.error(`There was an error in the csv file: ${parsed.errors.join(", ")}`);
@@ -79,7 +89,8 @@ const parseCsv = (csvContent: string): Array<{ pin: string; uid?: number; is_vip
     pin: item.pin,
     uid: item.uid ? Number(item.uid) : undefined,
     is_vip: item.is_vip ? (item.is_vip.toLowerCase() === 'true' || item.is_vip === '1') : undefined,
-    comment: item.comment || undefined
+    comment: item.comment || undefined,
+    group_tag: item.group_tag || undefined
   }));
   
   console.log(processedData);
@@ -139,6 +150,13 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         onChange={(val) => setFieldValue("restriction", val)}
         multiple={false}
       />
+      <FormTextField
+        name="default_group_tag"
+        label={t("userTag.groupTagDefault")}
+        variant="outlined"
+        formik={props}
+      />
+      <FormHelperText>{t("userTag.groupTagDefaultHelper")}</FormHelperText>
       <Select
         label={t("userTag.secret")}
         multiple={false}
@@ -173,6 +191,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                   <TableCell>{t("userTag.uid")}</TableCell>
                   <TableCell>{t("userTag.vipStatus")}</TableCell>
                   <TableCell>{t("userTag.comment")}</TableCell>
+                  <TableCell>{t("userTag.groupTag")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -182,6 +201,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                     <TableCell>{tag.uid}</TableCell>
                     <TableCell>{tag.is_vip ? t("common.yes") : t("common.no")}</TableCell>
                     <TableCell>{tag.comment}</TableCell>
+                    <TableCell>{tag.group_tag}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -208,14 +228,18 @@ export const UserTagsCreate: React.FC = () => {
       onSubmit={(userTags) =>
         createUserTags({
           nodeId: currentNode.id,
-          newUserTags: userTags.tags.map((t) => ({
-            pin: t.pin,
-            secret_id: userTags.secret_id,
-            restriction: userTags.restriction,
-            uid: t.uid,
-            is_vip: t.is_vip,
-            comment: t.comment,
-          })),
+          newUserTags: userTags.tags.map((t) => {
+            const defaultGroupTag = userTags.default_group_tag?.trim() || undefined;
+            return {
+              pin: t.pin,
+              secret_id: userTags.secret_id,
+              restriction: userTags.restriction,
+              uid: t.uid,
+              is_vip: t.is_vip,
+              comment: t.comment,
+              group_tag: t.group_tag ?? defaultGroupTag,
+            };
+          }),
         })
       }
       form={TagsForm}

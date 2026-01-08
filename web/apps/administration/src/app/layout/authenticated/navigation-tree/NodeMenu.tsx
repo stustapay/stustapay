@@ -3,6 +3,7 @@ import {
   AccountBalance as AccountBalanceIcon,
   Android as AndroidIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
+  MeetingRoom as MeetingRoomIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
   PointOfSale as PointOfSaleIcon,
@@ -16,6 +17,7 @@ import { NavigationTreeItem } from "./NavigationTreeItem";
 import {
   CashierRoutes,
   CustomerRoutes,
+  EntryAreaRoutes,
   MdmRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
@@ -69,6 +71,14 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     label: i18n.t("tickets"),
     icon: ConfirmationNumberIcon,
     requiresOneOfObjectType: ["ticket"],
+  },
+  {
+    route: (node) => EntryAreaRoutes.list(node.id),
+    label: i18n.t("entry.entry"),
+    icon: MeetingRoomIcon,
+    requiresEvent: true,
+    requiredPrivileges: ["entry_management"],
+    requiresOneOfObjectType: ["entry_area", "entry_group"],
   },
   {
     route: (node) => TerminalRoutes.list(node.id),

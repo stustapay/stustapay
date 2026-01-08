@@ -52,7 +52,8 @@ async def create_user_tags(conn: Connection, node_id: int, tags: list[NewUserTag
 
     for tag in tags:
         await conn.execute(
-            "insert into user_tag (node_id, pin, restriction, secret_id, uid, is_vip, comment) values ($1, $2, $3, $4, $5, $6, $7)",
+            "insert into user_tag (node_id, pin, restriction, secret_id, uid, is_vip, comment, group_tag) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8)",
             node_id,
             tag.pin,
             tag.restriction.value if tag.restriction is not None else None,
@@ -60,6 +61,7 @@ async def create_user_tags(conn: Connection, node_id: int, tags: list[NewUserTag
             tag.uid,
             tag.is_vip,
             tag.comment,
+            tag.group_tag,
         )
 
 
@@ -163,9 +165,30 @@ class UserTagService(Service[Config]):
         assert detail is not None
         return detail
 
-    @with_db_transaction(read_only=True)
+    @with_db_transaction
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
+    async def update_user_tag_group_tag(
+        self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_id: int, group_tag: Optional[str]
+    ) -> UserTagDetail:
+        ret = await conn.fetchval(
+            "update user_tag set group_tag = $1 where id = $2 and node_id = $3 returning id",
+            group_tag,
+            user_tag_id,
+            node.id,
+        )
+        if ret is None:
+            raise InvalidArgument(f"User tag {user_tag_id} does not exist")
+
+        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
+            conn=conn, node_id=node.id, current_user=current_user, user_tag_id=user_tag_id
+        )
+        assert detail is not None
+        return detail
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.entry_management])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         return await conn.fetch_many(
             UserTagDetail,

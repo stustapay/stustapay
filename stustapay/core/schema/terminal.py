@@ -1,16 +1,26 @@
+import enum
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 
+from stustapay.core.schema.entry import EntryAreaConfig
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import Privilege, UserRole
+
+
+class TerminalMode(enum.Enum):
+    till = "till"
+    entry = "entry"
+    exit = "exit"
 
 
 class NewTerminal(BaseModel):
     name: str
     description: str | None = None
+    mode: TerminalMode = TerminalMode.till
+    entry_area_id: int | None = None
 
 
 class Terminal(NewTerminal):
@@ -90,6 +100,8 @@ class TerminalConfig(BaseModel):
     id: int
     name: str
     description: str | None
+    mode: TerminalMode
+    entry_area: EntryAreaConfig | None
 
     event_name: str
     active_user_id: Optional[int]
@@ -113,6 +125,8 @@ class CurrentTerminal(BaseModel):
     node_id: int
     name: str
     description: str | None
+    mode: TerminalMode
+    entry_area_id: int | None
     active_user_id: int | None
     active_user_role_id: int | None
     till: Till | None

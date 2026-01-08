@@ -4,6 +4,7 @@ export const PrivilegeSchema = z.enum([
   "node_administration",
   "customer_management",
   "payout_management",
+  "entry_management",
 
   "create_user",
   "user_management",

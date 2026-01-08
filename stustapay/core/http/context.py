@@ -12,6 +12,7 @@ from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.entry import EntryService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
@@ -50,6 +51,7 @@ class Context:
     sumup_service: Optional[SumUpService] = None
     terminal_service: Optional[TerminalService] = None
     mail_service: Optional[MailService] = None
+    entry_service: Optional[EntryService] = None
 
 
 def get_context(request: Request):
@@ -120,6 +122,10 @@ def get_mail_service(request: Request) -> MailService:
     return request.state.context.mail_service
 
 
+def get_entry_service(request: Request) -> EntryService:
+    return request.state.context.entry_service
+
+
 ContextOrderService = Annotated[OrderService, Depends(get_order_service)]
 ContextProductService = Annotated[ProductService, Depends(get_product_service)]
 ContextTaxRateService = Annotated[TaxRateService, Depends(get_tax_rate_service)]
@@ -136,3 +142,4 @@ ContextTreeService = Annotated[TreeService, Depends(get_tree_service)]
 ContextSumUpService = Annotated[SumUpService, Depends(get_sumup_service)]
 ContextTerminalService = Annotated[TerminalService, Depends(get_terminal_service)]
 ContextMailService = Annotated[MailService, Depends(get_mail_service)]
+ContextEntryService = Annotated[EntryService, Depends(get_entry_service)]

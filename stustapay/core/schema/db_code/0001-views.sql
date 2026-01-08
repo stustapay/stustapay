@@ -1,4 +1,4 @@
-create view cash_register_with_balance as
+create or replace view cash_register_with_balance as
     select
         c.*,
         a.balance as balance
@@ -6,7 +6,7 @@ create view cash_register_with_balance as
         cash_register c
         join account a on c.account_id = a.id;
 
-create view till_with_cash_register as
+create or replace view till_with_cash_register as
     select
         t.*,
         tse.serial,
@@ -17,7 +17,7 @@ create view till_with_cash_register as
         left join cash_register_with_balance cr on t.active_cash_register_id = cr.id
         left join tse on tse.id = t.tse_id;
 
-create view cash_register_with_cashier as
+create or replace view cash_register_with_cashier as
     select
         c.*,
         t.id                   as current_till_id,
@@ -27,7 +27,7 @@ create view cash_register_with_cashier as
         left join usr u on u.cash_register_id = c.id
         left join till t on t.active_cash_register_id = c.id;
 
-create view user_role_with_privileges as
+create or replace view user_role_with_privileges as
     select
         r.*,
         coalesce(privs.privileges, '{}'::text array) as privileges
@@ -37,7 +37,7 @@ create view user_role_with_privileges as
             select ur.role_id, array_agg(ur.privilege) as privileges from user_role_to_privilege ur group by ur.role_id
         ) privs on r.id = privs.role_id;
 
-create view user_with_tag as
+create or replace view user_with_tag as
     select
         usr.*,
         ut.pin as user_tag_pin,
@@ -46,7 +46,7 @@ create view user_with_tag as
         usr
         left join user_tag ut on usr.user_tag_id = ut.id;
 
-create view user_to_roles_aggregated as
+create or replace view user_to_roles_aggregated as
     select
         utr.user_id,
         utr.node_id,
@@ -85,7 +85,7 @@ CREATE VIEW account_with_history AS
             GROUP BY atah.account_id
                   ) hist ON a.id = hist.account_id; 
 
-create view payout_view as
+create or replace view payout_view as
     select
         p.id,
         a.node_id,
@@ -103,7 +103,7 @@ create view payout_view as
     join user_tag ut on a.user_tag_id = ut.id;
 
 -- aggregates account and customer_info to customer
-create view customer as
+create or replace view customer as
     select
         a.*,
         customer_info.*,
@@ -114,14 +114,14 @@ create view customer as
     where
         a.type = 'private';
 
-create view customers_without_payout_run as
+create or replace view customers_without_payout_run as
     select
         c.*
     from customer c
     left join payout p on c.id = p.customer_account_id
     where p.id is null and c.has_entered_info and c.payout_export != false and round(c.balance, 2) > 0;
 
-create view payout_run_with_stats as
+create or replace view payout_run_with_stats as
     select
         p.*,
         coalesce(s.total_donation_amount, 0) as total_donation_amount,
@@ -140,13 +140,14 @@ create view payout_run_with_stats as
             group by p.payout_run_id
         ) s on p.id = s.id;
 
-create view user_tag_with_history as
+create or replace view user_tag_with_history as
     select
         ut.id,
         ut.node_id,
         ut.uid,
         ut.pin,
         ut.comment,
+        ut.group_tag,
         a.id                                       as account_id,
         u.id                                       as user_id,
         coalesce(hist.account_history, '[]'::json) as account_history,
@@ -166,7 +167,7 @@ create view user_tag_with_history as
             group by atah.user_tag_id
         ) hist on ut.id = hist.user_tag_id;
 
-create view cashier as
+create or replace view cashier as
     select
         u.node_id,
         u.id,
@@ -193,7 +194,7 @@ create view cashier as
             group by t.active_user_id
         ) terminals on terminals.user_id = u.id;
 
-create view product_with_tax_and_restrictions as
+create or replace view product_with_tax_and_restrictions as
     select
         p.*,
         -- price_in_vouchers is never 0 due to constraint product_price_in_vouchers_not_zero
@@ -208,7 +209,7 @@ create view product_with_tax_and_restrictions as
             select r.id, array_agg(r.restriction) as restrictions from product_restriction r group by r.id
         ) pr on pr.id = p.id;
 
-create view ticket as
+create or replace view ticket as
     select
         p.*,
         ptm.initial_top_up_amount,
@@ -217,7 +218,7 @@ create view ticket as
         product_with_tax_and_restrictions p
         join product_ticket_metadata ptm on p.ticket_metadata_id = ptm.id;
 
-create view till_button_with_products as
+create or replace view till_button_with_products as
     select
         t.id,
         t.name,
@@ -251,7 +252,7 @@ create view till_button_with_products as
             window button_window as (partition by tlb.button_id)
                   ) j_view on t.id = j_view.button_id;
 
-create view till_layout_with_buttons_and_tickets as
+create or replace view till_layout_with_buttons_and_tickets as
     select
         t.*,
         coalesce(j_view.button_ids, '{}'::bigint array) as button_ids,
@@ -275,7 +276,7 @@ create view till_layout_with_buttons_and_tickets as
             group by tltt.layout_id
                   ) t_view on t.id = t_view.layout_id;
 
-create view line_item_aggregated_json as
+create or replace view line_item_aggregated_json as
     with line_item_json as (
         select
             l.*,
@@ -295,7 +296,7 @@ create view line_item_aggregated_json as
     group by
         order_id;
 
-create view order_value as
+create or replace view order_value as
     select
         ordr.*,
         ut.uid                                      as customer_tag_uid,
@@ -310,7 +311,7 @@ create view order_value as
         left join account a on ordr.customer_account_id = a.id
         left join user_tag ut on a.user_tag_id = ut.id;
 
-create view transaction_with_order as
+create or replace view transaction_with_order as
     select
         t.*,
         row_to_json(o) as order
@@ -320,7 +321,7 @@ create view transaction_with_order as
     order by t.id asc;
 
 -- show all line items
-create view order_items as
+create or replace view order_items as
     select
         ordr.*,
         line_item.*
@@ -329,7 +330,7 @@ create view order_items as
         left join line_item on (ordr.id = line_item.order_id);
 
 -- aggregated tax rate of items
-create view order_tax_rates as
+create or replace view order_tax_rates as
     select
         ordr.*,
         tax_name,
@@ -343,7 +344,7 @@ create view order_tax_rates as
     group by
         ordr.id, tax_rate, tax_name;
 
-create view event_with_translations as
+create or replace view event_with_translations as
     select
         e.*,
         '{}'::json as translations_texts,
@@ -353,7 +354,7 @@ create view event_with_translations as
         ) as languages
     from event e;
 
-create view _forbidden_at_node as
+create or replace view _forbidden_at_node as
     with forbidden_at_node_as_list as (
         select node_id, array_agg(object_name)::varchar(255) array as object_names
         from forbidden_objects_at_node
@@ -371,7 +372,7 @@ create view _forbidden_at_node as
     left join forbidden_at_node_as_list obj_at on n.id = obj_at.node_id
     left join forbidden_in_tree_as_list obj_tree on n.id = obj_tree.node_id;
 
-create view _forbidden_at_node_computed as
+create or replace view _forbidden_at_node_computed as
     with recursive graph (
         node_id, depth, path, cycle, computed_forbidden_at_node, computed_forbidden_in_subtree, forbidden_at_node,
         forbidden_in_subtree
@@ -413,7 +414,7 @@ create view _forbidden_at_node_computed as
         g.forbidden_at_node
     from graph g;
 
-create view node_with_allowed_objects as
+create or replace view node_with_allowed_objects as
     with event_as_json as (
         select id, row_to_json(event_with_translations) as json_row
         from event_with_translations
@@ -445,7 +446,7 @@ create view node_with_allowed_objects as
     join _forbidden_at_node_computed fan on n.id = fan.node_id
     left join event_as_json ev on n.event_id = ev.id;
 
-create view mail_with_attachments as
+create or replace view mail_with_attachments as
     select
         m.*,
         coalesce(a.mail, json_build_array()) as attachments

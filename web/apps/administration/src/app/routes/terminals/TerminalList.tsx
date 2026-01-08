@@ -1,7 +1,9 @@
 import {
   Terminal,
+  selectEntryAreaById,
   selectTerminalAll,
   selectTillById,
+  useListEntryAreasQuery,
   useDeleteTerminalMutation,
   useListTerminalsQuery,
   useListTillsQuery,
@@ -36,10 +38,11 @@ export const TerminalList: React.FC = () => {
     }
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: entryAreas, isLoading: isEntryAreasLoading } = useListEntryAreasQuery({ nodeId: currentNode.id });
   const [deleteTerminal] = useDeleteTerminalMutation();
   const { dataGridNodeColumn } = useRenderNode();
 
-  if (isTerminalsLoading || isTillsLoading) {
+  if (isTerminalsLoading || isTillsLoading || isEntryAreasLoading) {
     return <Loading />;
   }
 
@@ -57,6 +60,17 @@ export const TerminalList: React.FC = () => {
         {till.name}
       </Link>
     );
+  };
+
+  const renderEntryArea = (id: number | null) => {
+    if (id == null || !entryAreas) {
+      return "";
+    }
+    const entryArea = selectEntryAreaById(entryAreas, id);
+    if (!entryArea) {
+      return "";
+    }
+    return entryArea.name;
   };
 
   const openConfirmDeleteDialog = (terminalId: number) => {
@@ -91,6 +105,18 @@ export const TerminalList: React.FC = () => {
       headerName: t("terminal.till"),
       flex: 0.5,
       renderCell: (params) => renderTill(params.row.till_id),
+    },
+    {
+      field: "mode",
+      headerName: t("terminal.mode.label"),
+      flex: 0.5,
+      renderCell: (params) => t(`terminal.mode.${params.row.mode}`),
+    },
+    {
+      field: "entry_area_id",
+      headerName: t("entry.area"),
+      flex: 0.5,
+      renderCell: (params) => renderEntryArea(params.row.entry_area_id ?? null),
     },
     {
       field: "session_uuid",

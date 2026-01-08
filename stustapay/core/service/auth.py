@@ -138,6 +138,8 @@ class AuthService(Service[Config]):
             node_id=terminal.node_id,
             name=terminal.name,
             description=terminal.description,
+            mode=terminal.mode,
+            entry_area_id=terminal.entry_area_id,
             active_user_id=terminal.active_user_id,
             active_user_role_id=terminal.active_user_role_id,
             till=till,

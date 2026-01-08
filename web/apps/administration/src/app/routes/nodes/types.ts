@@ -11,6 +11,8 @@ export const ObjectTypeSchema = z.enum([
   "tse",
   "account",
   "terminal",
+  "entry_area",
+  "entry_group",
 ]);
 
 export const NodeSettingsSchema = z.object({

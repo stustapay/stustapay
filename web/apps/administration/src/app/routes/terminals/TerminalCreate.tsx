@@ -11,6 +11,8 @@ import { withPrivilegeGuard } from "@/app/layout";
 const initialValues: NewTerminal = {
   name: "",
   description: "",
+  mode: "till",
+  entry_area_id: null,
 };
 
 export const TerminalCreate: React.FC = withPrivilegeGuard("node_administration", () => {

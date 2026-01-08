@@ -1,4 +1,9 @@
-import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation, useUpdateUserTagVipStatusMutation } from "@/api";
+import {
+  useGetUserTagDetailQuery,
+  useUpdateUserTagCommentMutation,
+  useUpdateUserTagGroupTagMutation,
+  useUpdateUserTagVipStatusMutation,
+} from "@/api";
 import { CustomerRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
 import { ListItemLink } from "@/components/ListItemLink";
@@ -23,6 +28,7 @@ export const UserTagDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const [updateComment] = useUpdateUserTagCommentMutation();
+  const [updateGroupTag] = useUpdateUserTagGroupTagMutation();
   const [updateVipStatus] = useUpdateUserTagVipStatusMutation();
   const { data, error, isLoading } = useGetUserTagDetailQuery({
     nodeId: currentNode.id,
@@ -65,6 +71,14 @@ export const UserTagDetail: React.FC = () => {
     });
   };
 
+  const handleUpdateGroupTag = (newGroupTag: string) => {
+    updateGroupTag({
+      nodeId: currentNode.id,
+      userTagId: Number(userTagId),
+      updateGroupTagPayload: { group_tag: newGroupTag || null },
+    });
+  };
+
   const handleUpdateVipStatus = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVipStatus = e.target.checked;
     updateVipStatus({
@@ -92,6 +106,7 @@ export const UserTagDetail: React.FC = () => {
             <ListItemText primary={t("userTag.uid")} secondary={formatUserTagUid(data.uid?.toString(16).toUpperCase())} />
           </ListItem>
           <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
+          <EditableListItem label={t("userTag.groupTag")} value={data.group_tag ?? ""} onChange={handleUpdateGroupTag} />
           <ListItem>
             <FormControlLabel
               control={<Switch checked={Boolean(data.is_vip)} onChange={handleUpdateVipStatus} />}

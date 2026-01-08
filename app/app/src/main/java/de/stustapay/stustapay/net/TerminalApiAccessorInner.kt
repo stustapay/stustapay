@@ -6,6 +6,7 @@ import de.stustapay.api.apis.AuthApi
 import de.stustapay.api.apis.BaseApi
 import de.stustapay.api.apis.CashierApi
 import de.stustapay.api.apis.CustomerApi
+import de.stustapay.api.apis.EntryApi
 import de.stustapay.api.apis.MgmtApi
 import de.stustapay.api.apis.OrderApi
 import de.stustapay.api.apis.UserApi
@@ -54,6 +55,7 @@ data class APIs(
     val baseApi: BaseApi,
     val cashierApi: CashierApi,
     val customerApi: CustomerApi,
+    val entryApi: EntryApi,
     val orderApi: OrderApi,
     val userApi: UserApi,
     val mgmtApi: MgmtApi
@@ -171,6 +173,16 @@ class TerminalApiAccessorInner(
                 configureApi(conf) 
             }
         )
+
+        val entryApi = EntryApi(
+            baseUrl = apiUrl,
+            httpClientEngine = CIO.create {
+                this.https { }
+            },
+            httpClientConfig = { conf: HttpClientConfig<*> ->
+                configureApi(conf)
+            }
+        )
         
         val orderApi = OrderApi(
             baseUrl = apiUrl,
@@ -208,6 +220,7 @@ class TerminalApiAccessorInner(
             baseApi.setAccessToken(token)
             cashierApi.setAccessToken(token)
             customerApi.setAccessToken(token)
+            entryApi.setAccessToken(token)
             orderApi.setAccessToken(token)
             userApi.setAccessToken(token)
             mgmtApi.setAccessToken(token)
@@ -218,6 +231,7 @@ class TerminalApiAccessorInner(
             baseApi = baseApi,
             cashierApi = cashierApi,
             customerApi = customerApi,
+            entryApi = entryApi,
             orderApi = orderApi,
             userApi = userApi,
             mgmtApi = mgmtApi
@@ -413,6 +427,10 @@ class TerminalApiAccessorInner(
 
     fun customer(): CustomerApi? {
         return apis.value?.customerApi
+    }
+
+    fun entry(): EntryApi? {
+        return apis.value?.entryApi
     }
 
     fun order(): OrderApi? {

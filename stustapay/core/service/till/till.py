@@ -54,6 +54,13 @@ async def assign_till_to_terminal(conn: Connection, node: Node, till_id: int, te
     assert till is not None
     if till.terminal_id is not None:
         raise InvalidArgument(f"Till {till.name} already has a terminal assigned")
+    terminal_mode = await conn.fetchval(
+        "select mode from terminal where id = $1 and node_id = any($2)", terminal_id, node.ids_to_root
+    )
+    if terminal_mode is None:
+        raise NotFound(element_type="terminal", element_id=terminal_id)
+    if terminal_mode != "till":
+        raise InvalidArgument("Only till terminals can be assigned to tills")
     await conn.execute("update till set terminal_id = $1 where id = $2", terminal_id, till_id)
 
 

@@ -7,6 +7,7 @@ import de.stustapay.stustapay.ui.nav.NavDestinations
 /** root views (opened by navigation drawer) */
 object RootNavDests : NavDestinations() {
     val startpage = NavDest("startpage")
+    val entry = NavDest("entry", showSystemUI = false)
     val ticket = NavDest("ticket", showSystemUI = false)
     val sale = NavDest("sale", showSystemUI = false)
     val topup = NavDest("topup", showSystemUI = false)

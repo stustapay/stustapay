@@ -105,3 +105,20 @@ async def update_user_tag_vip_status(
     return await user_tag_service.update_user_tag_vip_status(
         token=token, user_tag_id=user_tag_id, is_vip=payload.is_vip, node_id=node_id
     )
+
+
+class UpdateGroupTagPayload(BaseModel):
+    group_tag: str | None
+
+
+@router.post("/user-tags/{user_tag_id}/update-group-tag", response_model=UserTagDetail)
+async def update_user_tag_group_tag(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    user_tag_id: int,
+    payload: UpdateGroupTagPayload,
+    node_id: int,
+):
+    return await user_tag_service.update_user_tag_group_tag(
+        token=token, user_tag_id=user_tag_id, group_tag=payload.group_tag, node_id=node_id
+    )

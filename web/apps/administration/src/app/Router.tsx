@@ -70,6 +70,18 @@ import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
 import { HeadwindDevicesPage } from "./routes/mdm";
+import {
+  EntryAreaCreate,
+  EntryAreaDetail,
+  EntryAreaList,
+  EntryAreaUpdate,
+  EntryGroupCreate,
+  EntryGroupDetail,
+  EntryGroupList,
+  EntryGroupUpdate,
+  EntryLogs,
+  EntryPageLayout,
+} from "./routes/entry";
 
 const router = createBrowserRouter([
   {
@@ -365,6 +377,62 @@ const router = createBrowserRouter([
               {
                 path: ":terminalId",
                 element: <TerminalDetail />,
+              },
+            ],
+          },
+          {
+            path: "entry",
+            element: (
+              <PrivilegeGuard privilege="entry_management">
+                <EntryPageLayout />
+              </PrivilegeGuard>
+            ),
+            children: [
+              {
+                path: "areas",
+                children: [
+                  {
+                    index: true,
+                    element: <EntryAreaList />,
+                  },
+                  {
+                    path: "new",
+                    element: <EntryAreaCreate />,
+                  },
+                  {
+                    path: ":entryAreaId/edit",
+                    element: <EntryAreaUpdate />,
+                  },
+                  {
+                    path: ":entryAreaId",
+                    element: <EntryAreaDetail />,
+                  },
+                ],
+              },
+              {
+                path: "groups",
+                children: [
+                  {
+                    index: true,
+                    element: <EntryGroupList />,
+                  },
+                  {
+                    path: "new",
+                    element: <EntryGroupCreate />,
+                  },
+                  {
+                    path: ":entryGroupId/edit",
+                    element: <EntryGroupUpdate />,
+                  },
+                  {
+                    path: ":entryGroupId",
+                    element: <EntryGroupDetail />,
+                  },
+                ],
+              },
+              {
+                path: "logs",
+                element: <EntryLogs />,
               },
             ],
           },

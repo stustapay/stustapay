@@ -21,10 +21,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
+ * a scanned tag before ticket sale
  *
  * @param tagUid 
  * @param tagPin 
+ * @param topUpAmount 
+ * @param voucherToken 
  */
 @Serializable
 
@@ -34,7 +36,13 @@ data class UserTagScan (
     val tagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "tag_pin")
-    val tagPin: kotlin.String
+    val tagPin: kotlin.String,
+
+    @Contextual @SerialName(value = "top_up_amount")
+    val topUpAmount: kotlin.Double? = 0.0,
+
+    @SerialName(value = "voucher_token")
+    val voucherToken: kotlin.String? = null
 
 ) {
 

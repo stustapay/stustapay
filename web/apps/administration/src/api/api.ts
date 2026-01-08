@@ -18,6 +18,8 @@ import {
   User,
   UserRole,
   UserTagDetail,
+  EntryArea,
+  EntryGroup,
   api as generatedApi,
   GenerateTestBonApiArg,
   GenerateTestReportApiArg,
@@ -108,8 +110,16 @@ const terminalAdapter = createEntityAdapter<Terminal>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
+const entryAreaAdapter = createEntityAdapter<EntryArea>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
+const entryGroupAdapter = createEntityAdapter<EntryGroup>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
 export const api = generatedApi.enhanceEndpoints({
-  addTagTypes: ["config", "tag", "headwind-devices", "headwind-mappings"],
+  addTagTypes: ["config", "tag", "headwind-devices", "headwind-mappings", "entry-areas", "entry-groups"],
   endpoints: {
     listUsers: {
       providesTags: (result) => generateCacheKeys("users", result),
@@ -173,6 +183,12 @@ export const api = generatedApi.enhanceEndpoints({
     },
     getTerminal: {
       providesTags: (result, error, arg) => [{ type: "terminals", id: arg.terminalId }],
+    },
+    listEntryAreas: {
+      providesTags: (result) => generateCacheKeys("entry-areas", result),
+    },
+    listEntryGroups: {
+      providesTags: (result) => generateCacheKeys("entry-groups", result),
     },
     listTses: {
       providesTags: (result) => generateCacheKeys("tses", result),
@@ -323,6 +339,22 @@ export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, sel
 
 export const { selectTerminalAll, selectTerminalById, selectTerminalEntities, selectTerminalIds, selectTerminalTotal } =
   convertEntityAdaptorSelectors("Terminal", terminalAdapter.getSelectors());
+
+export const {
+  selectEntryAreaAll,
+  selectEntryAreaById,
+  selectEntryAreaEntities,
+  selectEntryAreaIds,
+  selectEntryAreaTotal,
+} = convertEntityAdaptorSelectors("EntryArea", entryAreaAdapter.getSelectors());
+
+export const {
+  selectEntryGroupAll,
+  selectEntryGroupById,
+  selectEntryGroupEntities,
+  selectEntryGroupIds,
+  selectEntryGroupTotal,
+} = convertEntityAdaptorSelectors("EntryGroup", entryGroupAdapter.getSelectors());
 
 export const {
   selectPayoutRunAll,
