@@ -3,16 +3,18 @@ import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
-export type UserUpdateFormProps<T extends UpdateUserPayload> = FormikProps<T>;
+type UserUpdateFormValues = UpdateUserPayload & { email?: string | null };
 
-export function UserUpdateForm<T extends UpdateUserPayload>(props: UserUpdateFormProps<T>) {
+export type UserUpdateFormProps<T extends UserUpdateFormValues> = FormikProps<T>;
+
+export function UserUpdateForm<T extends UserUpdateFormValues>(props: UserUpdateFormProps<T>) {
   const { t } = useTranslation();
   return (
     <>
       <FormTextField autoFocus name="login" label={t("userLogin")} formik={props} />
       <FormTextField name="display_name" label={t("userDisplayName")} formik={props} />
       <FormTextField name="description" label={t("userDescription")} formik={props} />
-      <FormTextField type="email" name="email" label={t("userEmail")} formik={props} />
+      <FormTextField type="email" name="email" label={t("userEmail")} formik={props as any} />
       <FormTextField name="user_tag_uid_hex" label={t("userTag.uid")} formik={props} />
       <FormTextField name="user_tag_pin" label={t("userTag.pin")} formik={props} />
     </>

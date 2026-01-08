@@ -1,4 +1,4 @@
-import { useDeleteUserMutation, useGetUserQuery } from "@/api";
+import { useDeleteUserMutation, useGetUserQuery, UserRead } from "@/api";
 import { UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
@@ -71,7 +71,7 @@ export const UserDetail: React.FC = () => {
           onClick: handleInvite,
           color: "primary",
           icon: <MailIcon />,
-          disabled: !user?.email,
+          disabled: !(user as UserRead & { email?: string | null }).email,
         },
         {
           label: t("user.changePassword.title"),
@@ -86,7 +86,7 @@ export const UserDetail: React.FC = () => {
       <DetailView>
         <DetailField label={t("userLogin")} value={user.login} />
         <DetailField label={t("userDisplayName")} value={user.display_name} />
-        <DetailField label={t("userEmail")} value={user.email || t("user.noEmail")} />
+        <DetailField label={t("userEmail")} value={(user as UserRead & { email?: string | null }).email || t("user.noEmail")} />
         <DetailField label={t("userDescription")} value={user.description} />
         {user.user_tag_id ? (
           <DetailField

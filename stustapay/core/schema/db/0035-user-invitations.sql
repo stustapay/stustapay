@@ -1,5 +1,5 @@
--- migration: 0000034
--- requires: 0000033
+-- migration: 0000035
+-- requires: 0000034
 
 -- Add email field to usr table
 alter table usr add column email text;

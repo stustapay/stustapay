@@ -584,6 +584,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
   userDisplayName: "Anzeigename",
   userPassword: "Passwort",
   userDescription: "Beschreibung",
+  userEmail: "E-Mail",
   userPrivileges: "Privilegien",
   userCreateError: "Fehler beim Erstellen des Benutzers: {{what}}",
   userUpdateError: "Fehler beim Aktualisieren des Benutzers: {{what}}",
@@ -598,6 +599,10 @@ export const translations: NestedPartialAsStrings<Translations> = {
     description: "Beschreibung",
     tagId: "Benutzer-Tag UID",
     noTagAssigned: "Kein Tag zugewiesen",
+    noEmail: "Keine E-Mail",
+    invite: "Einladen",
+    invitationSent: "Einladung erfolgreich gesendet",
+    invitationFailed: "Einladung konnte nicht gesendet werden",
     changePassword: {
       title: "Passwort ändern",
       new_password: "Neues Passwort",

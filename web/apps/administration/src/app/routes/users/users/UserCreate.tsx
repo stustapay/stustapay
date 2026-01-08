@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { UserCreateForm } from "./UserCreateForm";
 import { withPrivilegeGuard } from "@/app/layout";
 
-const initialValues: NewUser = {
+const initialValues: NewUser & { email?: string | null } = {
   login: "",
   display_name: "",
   description: "",
