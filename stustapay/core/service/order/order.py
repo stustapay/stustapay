@@ -1613,6 +1613,46 @@ class OrderService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
+    async def list_orders_filtered(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        from_timestamp: Optional[datetime] = None,
+        to_timestamp: Optional[datetime] = None,
+        till_id: Optional[int] = None,
+    ) -> list[Order]:
+        param_count = 1
+        conditions: list[str] = []
+        params: list = [node.id]
+
+        conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
+
+        if from_timestamp is not None:
+            param_count += 1
+            conditions.append(f"o.booked_at >= ${param_count}")
+            params.append(from_timestamp)
+
+        if to_timestamp is not None:
+            param_count += 1
+            conditions.append(f"o.booked_at <= ${param_count}")
+            params.append(to_timestamp)
+
+        if till_id is not None:
+            param_count += 1
+            conditions.append(f"o.till_id = ${param_count}")
+            params.append(till_id)
+
+        where_clause = " AND ".join(conditions)
+        param_count += 1
+        query = f"select * from order_value_prefiltered((select array_agg(o.id) from ordr o where {where_clause}), ${param_count})"
+        params.append(node.event_node_id)
+
+        return await conn.fetch_many(Order, query, *params)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
     async def list_transactions_by_cash_register(
         self, *, conn: Connection, node: Node, cash_register_id: int
     ) -> list[Transaction]:

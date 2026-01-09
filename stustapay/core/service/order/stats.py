@@ -90,6 +90,39 @@ class RevenueStats(BaseModel):
     hourly_intervals: list[StatInterval]
 
 
+class DashboardOverview(BaseModel):
+    total_guest_credit: float
+    total_revenue: float
+    guests_with_orders: int
+    guests_with_credit: int
+    guests_paid_out: int
+    online_donation: float
+    online_for_payout: float
+
+
+class CounterRevenue(BaseModel):
+    till_id: int
+    till_name: str
+    revenue: float
+    order_count: int
+
+
+class RevenueByCounter(BaseModel):
+    counters: list[CounterRevenue]
+    total_revenue: float
+
+
+class PaymentMethodStats(BaseModel):
+    payment_method: str
+    revenue: float
+    order_count: int
+
+
+class PaymentMethodBreakdown(BaseModel):
+    methods: list[PaymentMethodStats]
+    total_revenue: float
+
+
 def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSettings) -> tuple[datetime, datetime]:
     if query.from_time is not None and query.to_time is not None and query.from_time > query.to_time:
         raise InvalidArgument("Stats start time must be before end time")
@@ -432,3 +465,164 @@ class OrderStatsService(Service[Config]):
             hourly_intervals=hourly_stats.intervals,
             daily_intervals=daily_stats.intervals,
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_dashboard_overview(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> DashboardOverview:
+        if node.event is None:
+            raise InvalidArgument("Dashboard overview can only be computed for event nodes")
+
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        if node.ids_to_event_node is None:
+            raise InvalidArgument("Dashboard overview can only be computed for nodes within an event")
+
+        # Total guest credit (sum of all customer account balances)
+        total_guest_credit = await conn.fetchval(
+            "SELECT COALESCE(SUM(balance), 0) FROM account WHERE type = 'private' AND node_id = ANY($1)",
+            node.ids_to_event_node,
+        )
+
+        # Total revenue from sales in date range
+        total_revenue = await conn.fetchval(
+            "SELECT COALESCE(SUM(li.total_price), 0) "
+            "FROM orders_at_node_and_children($3) o "
+            "JOIN line_item li ON o.id = li.order_id "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.payment_method = 'tag'",
+            from_time,
+            to_time,
+            node.id,
+        )
+
+        # Number of guests with orders
+        guests_with_orders = await conn.fetchval(
+            "SELECT COUNT(DISTINCT o.customer_account_id) "
+            "FROM orders_at_node_and_children($3) o "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.customer_account_id IS NOT NULL",
+            from_time,
+            to_time,
+            node.id,
+        )
+
+        # Guests with credit (balance > 0)
+        guests_with_credit = await conn.fetchval(
+            "SELECT COUNT(*) FROM account WHERE type = 'private' AND node_id = ANY($1) AND balance > 0",
+            node.ids_to_event_node,
+        )
+
+        # Guests paid out (count of customers with payout transactions)
+        guests_paid_out = await conn.fetchval(
+            "SELECT COUNT(DISTINCT t.source_account) "
+            "FROM transaction t "
+            "JOIN account a ON t.source_account = a.id "
+            "WHERE t.booked_at >= $1 AND t.booked_at <= $2 "
+            "AND a.type = 'private' AND a.node_id = ANY($3) "
+            "AND t.target_account IN (SELECT id FROM account WHERE type IN ('cash_exit', 'sepa_exit', 'donation_exit'))",
+            from_time,
+            to_time,
+            node.ids_to_event_node,
+        )
+
+        # Online donation (sum of donations from payouts)
+        online_donation = await conn.fetchval(
+            "SELECT COALESCE(SUM(p.donation), 0) "
+            "FROM payout p "
+            "JOIN account a ON p.customer_account_id = a.id "
+            "WHERE a.node_id = ANY($1) AND p.payout_run_id IS NOT NULL",
+            node.ids_to_event_node,
+        )
+
+        # Online for payout (sum of pending payout amounts - customers without payout run)
+        online_for_payout = await conn.fetchval(
+            "SELECT COALESCE(SUM(c.balance), 0) "
+            "FROM customers_without_payout_run c "
+            "WHERE c.node_id = ANY($1) AND c.payout_export = true",
+            node.ids_to_event_node,
+        )
+
+        return DashboardOverview(
+            total_guest_credit=float(total_guest_credit or 0),
+            total_revenue=float(total_revenue or 0),
+            guests_with_orders=int(guests_with_orders or 0),
+            guests_with_credit=int(guests_with_credit or 0),
+            guests_paid_out=int(guests_paid_out or 0),
+            online_donation=float(online_donation or 0),
+            online_for_payout=float(online_for_payout or 0),
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_revenue_by_counter(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> RevenueByCounter:
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        result = await conn.fetch(
+            "SELECT t.id as till_id, t.name as till_name, "
+            "COALESCE(SUM(li.total_price), 0) as revenue, "
+            "COUNT(DISTINCT o.id) as order_count "
+            "FROM orders_at_node_and_children($3) o "
+            "JOIN till t ON o.till_id = t.id "
+            "JOIN line_item li ON o.id = li.order_id "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "GROUP BY t.id, t.name "
+            "ORDER BY revenue DESC",
+            from_time,
+            to_time,
+            node.id,
+        )
+
+        counters = [
+            CounterRevenue(
+                till_id=row["till_id"],
+                till_name=row["till_name"],
+                revenue=float(row["revenue"]),
+                order_count=int(row["order_count"]),
+            )
+            for row in result
+        ]
+
+        total_revenue = sum(counter.revenue for counter in counters)
+
+        return RevenueByCounter(counters=counters, total_revenue=total_revenue)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_payment_method_stats(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> PaymentMethodBreakdown:
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        result = await conn.fetch(
+            "SELECT o.payment_method, "
+            "COALESCE(SUM(o.total_price), 0) as revenue, "
+            "COUNT(*) as order_count "
+            "FROM orders_at_node_and_children($3) o "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "GROUP BY o.payment_method "
+            "ORDER BY revenue DESC",
+            from_time,
+            to_time,
+            node.id,
+        )
+
+        methods = [
+            PaymentMethodStats(
+                payment_method=row["payment_method"],
+                revenue=float(row["revenue"]),
+                order_count=int(row["order_count"]),
+            )
+            for row in result
+        ]
+
+        total_revenue = sum(method.revenue for method in methods)
+
+        return PaymentMethodBreakdown(methods=methods, total_revenue=total_revenue)
