@@ -1,7 +1,12 @@
-import { selectUserTagAll, useFindUserTagsMutation } from "@/api";
+import {
+  selectUserTagAll,
+  useFindUserTagsMutation,
+  useCountTagsWithoutAccountsQuery,
+  useCreateAccountsForUserTagsMutation,
+} from "@/api";
 import { DetailLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Button, LinearProgress, Paper } from "@mui/material";
+import { Button, LinearProgress, Paper, Alert, Box } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -25,6 +30,13 @@ export const FindUserTags: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [findUserTags, searchResult] = useFindUserTagsMutation();
+  const { data: tagsWithoutAccountsCount, refetch: refetchCount } = useCountTagsWithoutAccountsQuery({
+    nodeId: currentNode.id,
+  });
+  const [createAccounts, { isLoading: isCreatingAccounts }] = useCreateAccountsForUserTagsMutation();
+  const [accountCreationResult, setAccountCreationResult] = React.useState<{ created: number; skipped: number } | null>(
+    null
+  );
 
   const handleSubmit = (values: SearchForm, { setSubmitting }: FormikHelpers<SearchForm>) => {
     setSubmitting(true);
@@ -39,8 +51,53 @@ export const FindUserTags: React.FC = () => {
       });
   };
 
+  const handleCreateAccounts = async () => {
+    try {
+      const result = await createAccounts({
+        nodeId: currentNode.id,
+        createAccountsPayload: { user_tag_ids: null },
+      }).unwrap();
+      setAccountCreationResult(result);
+      toast.success(
+        t("userTag.accountCreation.success", {
+          created: result.created,
+          skipped: result.skipped,
+        })
+      );
+      // Refetch count to update the UI
+      refetchCount();
+    } catch (error) {
+      toast.error(t("userTag.accountCreation.error"));
+      console.error("Error creating accounts:", error);
+    }
+  };
+
   return (
     <DetailLayout title={t("userTag.find")}>
+      {tagsWithoutAccountsCount !== undefined && tagsWithoutAccountsCount > 0 && (
+        <Paper sx={{ p: 3, mb: 2 }}>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {t("userTag.accountCreation.tagsWithoutAccounts", { count: tagsWithoutAccountsCount })}
+          </Alert>
+          {accountCreationResult && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {t("userTag.accountCreation.result", {
+                created: accountCreationResult.created,
+                skipped: accountCreationResult.skipped,
+              })}
+            </Alert>
+          )}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleCreateAccounts}
+              disabled={isCreatingAccounts || accountCreationResult !== null}
+            >
+              {t("userTag.accountCreation.createButton")}
+            </Button>
+          </Box>
+        </Paper>
+      )}
       <Paper sx={{ p: 3 }}>
         <Formik
           initialValues={initialValues}

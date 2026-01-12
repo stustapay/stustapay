@@ -5,7 +5,13 @@ from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserTagService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.account import UserTagDetail
-from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
+from stustapay.core.schema.user_tag import (
+    CreateAccountsPayload,
+    CreateAccountsResponse,
+    NewUserTag,
+    NewUserTagSecret,
+    UserTagSecret,
+)
 
 router = APIRouter(
     prefix="",
@@ -57,6 +63,27 @@ async def find_user_tags(
     return normalize_list(
         await user_tag_service.find_user_tags(token=token, search_term=payload.search_term, node_id=node_id),
         primary_key="id",
+    )
+
+
+@router.get("/user-tags/count-without-accounts", response_model=int)
+async def count_tags_without_accounts(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    node_id: int,
+):
+    return await user_tag_service.count_tags_without_accounts(token=token, node_id=node_id)
+
+
+@router.post("/user-tags/create-accounts", response_model=CreateAccountsResponse)
+async def create_accounts_for_user_tags(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    payload: CreateAccountsPayload,
+    node_id: int,
+):
+    return await user_tag_service.create_accounts_for_tags(
+        token=token, node_id=node_id, user_tag_ids=payload.user_tag_ids
     )
 
 
@@ -122,3 +149,5 @@ async def update_user_tag_group_tag(
     return await user_tag_service.update_user_tag_group_tag(
         token=token, user_tag_id=user_tag_id, group_tag=payload.group_tag, node_id=node_id
     )
+
+

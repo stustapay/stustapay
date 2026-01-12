@@ -86,6 +86,77 @@ async def get_or_assign_user_tag(conn: Connection, node: Node, pin: Optional[str
     return user_tag_id
 
 
+async def create_accounts_for_tags(
+    conn: Connection, node_id: int, user_tag_ids: list[int] | None = None
+) -> dict[str, int]:
+    """
+    Create customer accounts for user tags that don't have accounts yet.
+    If user_tag_ids is None, creates accounts for all tags without accounts in the node.
+    Returns dict with 'created' and 'skipped' counts.
+    """
+    if user_tag_ids is not None and len(user_tag_ids) == 0:
+        return {"created": 0, "skipped": 0}
+
+    # Find tags without accounts
+    if user_tag_ids is None:
+        # Get all tags in the node that don't have accounts
+        tags_without_accounts = await conn.fetch(
+            """
+            select ut.id
+            from user_tag ut
+            left join account a on a.user_tag_id = ut.id
+            where ut.node_id = $1 and a.id is null
+            """,
+            node_id,
+        )
+    else:
+        # Get specified tags that don't have accounts
+        tags_without_accounts = await conn.fetch(
+            """
+            select ut.id
+            from user_tag ut
+            left join account a on a.user_tag_id = ut.id
+            where ut.id = any($1) and ut.node_id = $2 and a.id is null
+            """,
+            user_tag_ids,
+            node_id,
+        )
+
+    created_count = 0
+    skipped_count = 0
+
+    # Get event node ID (accounts should be created at event node level)
+    event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
+    if event_node_id is None:
+        raise InvalidArgument("Could not find event node for account creation")
+
+    for tag_row in tags_without_accounts:
+        tag_id = tag_row["id"]
+        # Create account for this tag
+        await conn.execute(
+            "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private')",
+            event_node_id,
+            tag_id,
+        )
+        created_count += 1
+
+    # Count skipped (tags that already have accounts)
+    if user_tag_ids is not None:
+        tags_with_accounts = await conn.fetchval(
+            """
+            select count(*)
+            from user_tag ut
+            join account a on a.user_tag_id = ut.id
+            where ut.id = any($1) and ut.node_id = $2
+            """,
+            user_tag_ids,
+            node_id,
+        )
+        skipped_count = tags_with_accounts or 0
+
+    return {"created": created_count, "skipped": skipped_count}
+
+
 class UserTagService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -190,10 +261,60 @@ class UserTagService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user([Privilege.entry_management])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
-        return await conn.fetch_many(
-            UserTagDetail,
-            "select * from user_tag_with_history utwh "
-            "where ((uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1) and node_id = any($2)",
-            f"%{search_term.lower()}%",
-            node.ids_to_event_node,
+        # Try to parse search term as integer for UID search
+        search_uid: int | None = None
+        try:
+            # Try decimal first
+            search_uid = int(search_term.strip())
+        except ValueError:
+            try:
+                # Try hex (with or without 0x prefix)
+                search_term_clean = search_term.strip().replace("0x", "").replace("0X", "")
+                search_uid = int(search_term_clean, 16)
+            except ValueError:
+                pass
+
+        if search_uid is not None:
+            # Search by UID (integer), hex representation, and PIN
+            return await conn.fetch_many(
+                UserTagDetail,
+                "select * from user_tag_with_history utwh "
+                "where (uid = $1 or (uid is not null and to_hex(uid::bigint) like $2) or lower(pin) like $2) "
+                "and node_id = any($3)",
+                search_uid,
+                f"%{search_term.lower()}%",
+                node.ids_to_event_node,
+            )
+        else:
+            # Search by hex representation and PIN only
+            return await conn.fetch_many(
+                UserTagDetail,
+                "select * from user_tag_with_history utwh "
+                "where ((uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1) and node_id = any($2)",
+                f"%{search_term.lower()}%",
+                node.ids_to_event_node,
+            )
+
+    @with_db_transaction
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
+    @requires_user([Privilege.node_administration])
+    async def create_accounts_for_tags(
+        self, *, conn: Connection, node: Node, user_tag_ids: list[int] | None = None
+    ) -> dict[str, int]:
+        return await create_accounts_for_tags(conn=conn, node_id=node.id, user_tag_ids=user_tag_ids)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
+    @requires_user([Privilege.node_administration])
+    async def count_tags_without_accounts(self, *, conn: Connection, node: Node) -> int:
+        """Count how many tags in the node don't have accounts yet."""
+        count = await conn.fetchval(
+            """
+            select count(*)
+            from user_tag ut
+            left join account a on a.user_tag_id = ut.id
+            where ut.node_id = $1 and a.id is null
+            """,
+            node.id,
         )
+        return count or 0

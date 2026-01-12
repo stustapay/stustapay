@@ -248,6 +248,31 @@ export const api = generatedApi.enhanceEndpoints({
   },
 });
 
+// Inject new endpoints manually (until API is regenerated)
+export const userTagApi = api.injectEndpoints({
+  endpoints: (build) => ({
+    countTagsWithoutAccounts: build.query<number, { nodeId: number }>({
+      query: ({ nodeId }) => ({
+        url: `/user-tags/count-without-accounts`,
+        params: { node_id: nodeId },
+      }),
+      providesTags: ["user_tags"],
+    }),
+    createAccountsForUserTags: build.mutation<
+      { created: number; skipped: number },
+      { nodeId: number; createAccountsPayload: { user_tag_ids?: number[] | null } }
+    >({
+      query: ({ nodeId, createAccountsPayload }) => ({
+        url: `/user-tags/create-accounts`,
+        method: "POST",
+        body: createAccountsPayload,
+        params: { node_id: nodeId },
+      }),
+      invalidatesTags: [{ type: "user_tags", id: "LIST" }],
+    }),
+  }),
+});
+
 export const { selectUserAll, selectUserById, selectUserEntities, selectUserIds, selectUserTotal } =
   convertEntityAdaptorSelectors("User", userAdapter.getSelectors());
 
@@ -363,3 +388,6 @@ export const {
   selectPayoutRunIds,
   selectPayoutRunTotal,
 } = convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());
+
+// Export hooks for manually injected endpoints
+export const { useCountTagsWithoutAccountsQuery, useCreateAccountsForUserTagsMutation } = userTagApi;

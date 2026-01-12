@@ -48,3 +48,12 @@ class NewUserTag(BaseModel):
     is_vip: bool = False
     comment: Optional[str] = None
     group_tag: Optional[str] = None
+
+
+class CreateAccountsPayload(BaseModel):
+    user_tag_ids: list[int] | None = None  # None = all tags without accounts
+
+
+class CreateAccountsResponse(BaseModel):
+    created: int
+    skipped: int
