@@ -125,6 +125,20 @@ async def create_accounts_for_tags(
     created_count = 0
     skipped_count = 0
 
+    # Count skipped (tags that already have accounts) BEFORE creating new accounts
+    if user_tag_ids is not None:
+        tags_with_accounts = await conn.fetchval(
+            """
+            select count(*)
+            from user_tag ut
+            join account a on a.user_tag_id = ut.id
+            where ut.id = any($1) and ut.node_id = $2
+            """,
+            user_tag_ids,
+            node_id,
+        )
+        skipped_count = tags_with_accounts or 0
+
     # Get event node ID (accounts should be created at event node level)
     event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
     if event_node_id is None:
@@ -139,20 +153,6 @@ async def create_accounts_for_tags(
             tag_id,
         )
         created_count += 1
-
-    # Count skipped (tags that already have accounts)
-    if user_tag_ids is not None:
-        tags_with_accounts = await conn.fetchval(
-            """
-            select count(*)
-            from user_tag ut
-            join account a on a.user_tag_id = ut.id
-            where ut.id = any($1) and ut.node_id = $2
-            """,
-            user_tag_ids,
-            node_id,
-        )
-        skipped_count = tags_with_accounts or 0
 
     return {"created": created_count, "skipped": skipped_count}
 

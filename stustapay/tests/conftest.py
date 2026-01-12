@@ -400,6 +400,7 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
             Privilege.grant_vouchers,
             Privilege.grant_free_tickets,
             Privilege.create_user,
+            Privilege.entry_management,
         ],
     )
     return admin_token
