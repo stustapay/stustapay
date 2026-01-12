@@ -1,4 +1,6 @@
 # pylint: disable=unexpected-keyword-arg
+import secrets
+from datetime import datetime, timedelta
 from typing import Optional
 
 import asyncpg
@@ -10,6 +12,7 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import (
+    AcceptInvitationPayload,
     CurrentUser,
     NewUser,
     NewUserRole,
@@ -17,6 +20,7 @@ from stustapay.core.schema.user import (
     Privilege,
     RoleToNode,
     User,
+    UserInvitation,
     UserRole,
     UserToRoles,
     UserWithoutId,
@@ -28,6 +32,7 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
 )
+from stustapay.core.service.mail import MailService
 from sftkit.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.user_tag import get_or_assign_user_tag
@@ -74,13 +79,14 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
 
     row = await conn.fetchrow(
         "update usr "
-        "set login = $2, description = $3, display_name = $4, user_tag_id = $5 "
-        "where id = $1 and node_id = $6 returning id",
+        "set login = $2, description = $3, display_name = $4, user_tag_id = $5, email = $6 "
+        "where id = $1 and node_id = $7 returning id",
         user_id,
         user.login,
         user.description,
         user.display_name,
         user_tag_id,
+        user.email,
         node.id,
     )
     if row is None:
@@ -285,8 +291,8 @@ class UserService(Service[Config]):
 
         user_id = await conn.fetchval(
             "insert into usr (node_id, login, description, password, display_name, user_tag_id, "
-            "   created_by, customer_account_id) "
-            "values ($1, $2, $3, $4, $5, $6, $7, $8) returning id",
+            "   created_by, customer_account_id, email) "
+            "values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
             node.id,
             new_user.login,
             new_user.description,
@@ -295,6 +301,7 @@ class UserService(Service[Config]):
             user_tag_id,
             creating_user_id,
             customer_account_id,
+            new_user.email,
         )
         for role in roles or []:
             role_node = await fetch_node(conn=conn, node_id=role.node_id)
@@ -597,3 +604,139 @@ class UserService(Service[Config]):
             "delete from usr_session where usr = $1 and id = $2", current_user.id, token_payload.session_id
         )
         return result != "DELETE 0"
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.user])
+    @requires_user([Privilege.user_management])
+    async def invite_user(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        current_user: CurrentUser,
+        user_id: int,
+        mail_service: MailService,
+    ) -> UserInvitation:
+        # Fetch user to check email and password
+        user = await fetch_user(conn=conn, node=node, user_id=user_id)
+        if user.email is None or user.email == "":
+            raise InvalidArgument("User must have an email address to be invited")
+
+        # Check if user already has a password
+        user_password = await conn.fetchval("select password from usr where id = $1", user_id)
+        if user_password is not None and user_password != "":
+            # User already has password, but we can still send invitation as a reminder
+            pass
+
+        # Generate secure token
+        token = secrets.token_urlsafe(32)
+
+        # Check for existing active invitation
+        existing_invitation = await conn.fetchrow(
+            "select * from user_invitation where user_id = $1 and accepted_at is null",
+            user_id,
+        )
+
+        expires_at = datetime.now() + timedelta(days=7)
+
+        if existing_invitation:
+            # Update existing invitation
+            invitation_id = existing_invitation["id"]
+            await conn.execute(
+                "update user_invitation set token = $1, expires_at = $2, created_by = $3 where id = $4",
+                token,
+                expires_at,
+                current_user.id,
+                invitation_id,
+            )
+        else:
+            # Create new invitation
+            invitation_id = await conn.fetchval(
+                "insert into user_invitation (user_id, token, node_id, expires_at, created_by) "
+                "values ($1, $2, $3, $4, $5) returning id",
+                user_id,
+                token,
+                node.id,
+                expires_at,
+                current_user.id,
+            )
+
+        # Fetch node info for email
+        node_info = await conn.fetchrow("select name, description from node where id = $1", node.id)
+        node_name = node_info["name"] if node_info else "Node"
+
+        # Construct invitation URL - use administration base_url from config
+        base_url = self.config.administration.base_url.replace("/api", "")
+        invitation_url = f"{base_url}/accept-invitation?token={token}"
+
+        # Create email message
+        subject = f"Invitation to manage {node_name}"
+        message = f"""Hello {user.display_name},
+
+You have been invited to manage {node_name} in the StuStaPay administration portal.
+
+To activate your account, please click the following link and set your password:
+{invitation_url}
+
+This invitation will expire on {expires_at.strftime('%Y-%m-%d %H:%M')}.
+
+If you did not expect this invitation, please ignore this email.
+
+Best regards,
+The StuStaPay Team
+"""
+
+        # Send email
+        await mail_service.send_mail(
+            conn=conn,
+            node_id=node.id,
+            subject=subject,
+            message=message,
+            to_addr=user.email,
+        )
+
+        # Fetch and return invitation
+        invitation = await conn.fetch_one(
+            UserInvitation,
+            "select id, user_id, token, node_id, created_at, expires_at, "
+            "accepted_at, created_by from user_invitation where id = $1",
+            invitation_id,
+        )
+
+        return invitation
+
+    @with_db_transaction
+    async def accept_invitation(
+        self, *, conn: Connection, payload: AcceptInvitationPayload
+    ) -> dict[str, str]:
+        # Find invitation by token
+        invitation = await conn.fetchrow(
+            "select * from user_invitation where token = $1", payload.token
+        )
+
+        if invitation is None:
+            raise AccessDenied("Invalid invitation token")
+
+        # Check if already accepted
+        if invitation["accepted_at"] is not None:
+            raise InvalidArgument("This invitation has already been accepted")
+
+        # Check if expired
+        expires_at = invitation["expires_at"]
+        if expires_at < datetime.now():
+            raise InvalidArgument("This invitation has expired")
+
+        user_id = invitation["user_id"]
+
+        # Set user password
+        hashed_password = self._hash_password(payload.password)
+        await conn.execute("update usr set password = $1 where id = $2", hashed_password, user_id)
+
+        # Mark invitation as accepted
+        await conn.execute(
+            "update user_invitation set accepted_at = $1 where id = $2",
+            datetime.now(),
+            invitation["id"],
+        )
+
+        return {"status": "success", "message": "Password set successfully. You can now log in."}

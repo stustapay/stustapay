@@ -8,10 +8,11 @@ import { useTranslation } from "react-i18next";
 import { UserCreateForm } from "./UserCreateForm";
 import { withPrivilegeGuard } from "@/app/layout";
 
-const initialValues: NewUser = {
+const initialValues: NewUser & { email?: string | null } = {
   login: "",
   display_name: "",
   description: "",
+  email: undefined,
   password: "",
   user_tag_uid_hex: undefined,
   user_tag_pin: undefined,

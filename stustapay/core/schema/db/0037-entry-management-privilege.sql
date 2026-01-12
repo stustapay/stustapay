@@ -1,5 +1,5 @@
--- migration: 0000036
--- requires: 0000035
+-- migration: 0000037
+-- requires: 0000036
 
 insert into privilege (name)
 values ('entry_management')

@@ -1,5 +1,5 @@
--- migration: 0000035
--- requires: 0000034
+-- migration: 0000036
+-- requires: 0000035
 
 alter table user_tag add column if not exists group_tag text;
 

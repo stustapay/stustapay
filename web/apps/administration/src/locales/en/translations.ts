@@ -616,6 +616,7 @@ export const translations = {
   userDisplayName: "Display Name",
   userPassword: "Password",
   userDescription: "Description",
+  userEmail: "Email",
   userPrivileges: "Privileges",
   userCreateError: "Error while creating user: {{what}}",
   userUpdateError: "Error while updating user: {{what}}",
@@ -630,6 +631,10 @@ export const translations = {
     description: "Description",
     tagId: "User Tag ID",
     noTagAssigned: "No Tag assigned",
+    noEmail: "No email",
+    invite: "Invite",
+    invitationSent: "Invitation sent successfully",
+    invitationFailed: "Failed to send invitation",
     changePassword: {
       title: "Change password",
       new_password: "New Password",

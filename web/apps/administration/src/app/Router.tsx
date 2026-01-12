@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
-import { Login, Profile } from "./routes/auth";
+import { AcceptInvitation, Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
 import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, NodeCreate } from "./routes/nodes";
 import { NodeStats } from "./routes/nodes/stats";
@@ -607,6 +607,10 @@ const router = createBrowserRouter([
       {
         path: "/login",
         element: <Login />,
+      },
+      {
+        path: "/accept-invitation",
+        element: <AcceptInvitation />,
       },
     ],
   },
