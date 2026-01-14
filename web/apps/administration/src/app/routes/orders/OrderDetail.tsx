@@ -119,6 +119,11 @@ export const OrderDetail: React.FC = () => {
         )}
         {till ? (
           <DetailField label={t("common.till")} value={till.name} linkTo={TillRoutes.detail(till.id, till.node_id)} />
+        ) : order.till_id != null ? (
+          <DetailField
+            label={t("common.till")}
+            value={`${t("order.noTill")} (ID: ${order.till_id})`}
+          />
         ) : (
           <DetailField label={t("common.till")} value={t("order.noTill")} />
         )}

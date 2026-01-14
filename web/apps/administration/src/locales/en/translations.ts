@@ -250,8 +250,8 @@ export const translations = {
     cancelError: "Error cancelling order: {{what}}",
     editOrderInfo:
       "Editing an order can only be done as long as it has not been cancelled. After editing, the original order will be cancelled and a new one will be created.",
-    noCashier: "No cashier assocated with this order",
-    noTill: "No till associated with this order, this is weird!!!",
+    noCashier: "No cashier associated with this order",
+    noTill: "No till associated with this order",
   },
   item: {
     product: "Product",

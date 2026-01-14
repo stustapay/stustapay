@@ -243,7 +243,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     editOrderInfo:
       "Das Bearbeiten einer Bestellung ist nur möglich, solange sie nicht storniert wurde. Nach der Bearbeitung wird die ursprüngliche Bestellung storniert und eine neue erstellt.",
     noCashier: "Kein Kassierer mit dieser Bestellung verknüpft",
-    noTill: "Keine Kasse mit dieser Bestellung verknüpft, das ist seltsam!!!",
+    noTill: "Keine Kasse mit dieser Bestellung verknüpft",
   },
   item: {
     product: "Produkt",
