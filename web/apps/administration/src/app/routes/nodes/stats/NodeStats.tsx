@@ -4,13 +4,13 @@ import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertTitle, Card, Divider, FormControlLabel, Grid, Stack, Switch } from "@mui/material";
+import { Alert, AlertTitle, Card, Divider, Grid, Stack, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import { EventStats } from "./EventStats";
-import { NodeSpecificStats } from "./NodeSpecificStats";
+import { useGetAvailableDatesQuery, useListTillsQuery } from "@/api";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { RevenueByCounterChart } from "./RevenueByCounterChart";
+import { RevenueByProductChart } from "./RevenueByProductChart";
 import { RevenueByCounterTable } from "./RevenueByCounterTable";
 import { OrdersTable } from "./OrdersTable";
 
@@ -18,10 +18,42 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   const { t } = useTranslation();
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();
-  const [fromTimestamp, setFromTimestamp] = React.useState<DateTime | undefined>(undefined);
-  const [toTimestamp, setToTimestamp] = React.useState<DateTime | undefined>(undefined);
-  const [groupByDay, setGroupByDay] = React.useState(true);
-  const [showRevenue, setShowRevenue] = React.useState(false);
+  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+  const [selectedTillId, setSelectedTillId] = React.useState<number | undefined>(undefined);
+  const [selectedProductId, setSelectedProductId] = React.useState<number | undefined>(undefined);
+
+  const { data: availableDates } = useGetAvailableDatesQuery({ nodeId: currentNode.id });
+  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
+
+  // Determine timestamp bounds based on selected date and event settings
+  // If daily_end_time is set (e.g. 05:00), the "business day" runs from 05:00 on the selected date
+  // to 04:59:59 on the next day. This matches how the backend calculates daily stats.
+  const fromTimestamp = React.useMemo(() => {
+    if (!selectedDate) return undefined;
+    const dt = DateTime.fromISO(selectedDate);
+    
+    if (eventSettings.daily_end_time) {
+      // Parse the daily_end_time (format: "HH:mm:ss" or "HH:mm")
+      const timeParts = eventSettings.daily_end_time.split(":");
+      const hour = parseInt(timeParts[0], 10) || 0;
+      const minute = parseInt(timeParts[1], 10) || 0;
+      const second = parseInt(timeParts[2], 10) || 0;
+      
+      // Business day starts at daily_end_time on the selected date
+      return dt.set({ hour, minute, second, millisecond: 0 });
+    }
+    return dt.startOf("day");
+  }, [selectedDate, eventSettings.daily_end_time]);
+
+  const toTimestamp = React.useMemo(() => {
+    if (!fromTimestamp) return undefined;
+    
+    if (eventSettings.daily_end_time) {
+      // Business day ends at daily_end_time on the next day (minus 1 millisecond)
+      return fromTimestamp.plus({ days: 1 }).minus({ milliseconds: 1 });
+    }
+    return fromTimestamp.endOf("day");
+  }, [fromTimestamp, eventSettings.daily_end_time]);
 
   if (eventSettings.start_date == null || eventSettings.end_date == null || eventSettings.daily_end_time == null) {
     return (
@@ -32,7 +64,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   }
 
   return (
-    <Grid container spacing={1.5}>
+    <Grid container spacing={{ xs: 0.75, sm: 1, md: 1.5 }}>
       <Grid size={12}>
         <Card
           sx={{
@@ -40,70 +72,100 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
               theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
             border: (theme: Theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
             boxShadow: "none",
-            mb: 1.5,
+            mb: { xs: 1, sm: 1.5 },
           }}
         >
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 2 }}>
-            <DateTimePicker
-              label={t("overview.fromTimestamp")}
-              value={fromTimestamp}
-              onChange={(val) => setFromTimestamp(val ?? undefined)}
-              slotProps={{ textField: { size: "small" } }}
-            />
-            <DateTimePicker
-              label={t("overview.toTimestamp")}
-              value={toTimestamp}
-              onChange={(val) => setToTimestamp(val ?? undefined)}
-              slotProps={{ textField: { size: "small" } }}
-            />
-            <FormControlLabel
-              control={<Switch checked={groupByDay} onChange={(evt) => setGroupByDay(evt.target.checked)} size="small" />}
-              label={t("overview.groupByDay")}
-              sx={{ ml: 1 }}
-            />
-            <FormControlLabel
-              control={<Switch checked={showRevenue} onChange={(evt) => setShowRevenue(evt.target.checked)} size="small" />}
-              label={t("overview.showRevenue")}
-            />
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={{ xs: 1, sm: 1.5, md: 2 }}
+            alignItems={{ xs: "stretch", sm: "center" }}
+            sx={{ p: { xs: 1, sm: 1.5, md: 2 } }}
+          >
+            <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
+              <InputLabel id="date-select-label" shrink>{t("overview.filterDate")}</InputLabel>
+              <Select
+                labelId="date-select-label"
+                id="date-select"
+                value={selectedDate ?? ""}
+                label={t("overview.filterDate")}
+                onChange={(e) => {
+                  const val = e.target.value as string;
+                  setSelectedDate(val === "" ? null : val);
+                }}
+                displayEmpty
+                notched
+              >
+                <MenuItem value="">
+                  <em>{t("overview.allDates")}</em>
+                </MenuItem>
+                {availableDates && availableDates.length > 0 ? (
+                  availableDates.map((date) => (
+                    <MenuItem key={date} value={date}>
+                      {DateTime.fromISO(date).toLocaleString(DateTime.DATE_MED)}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>{t("overview.noDatesAvailable")}</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
+              <InputLabel id="till-select-label" shrink>{t("overview.filterTill")}</InputLabel>
+              <Select
+                labelId="till-select-label"
+                id="till-select"
+                value={selectedTillId ?? ""}
+                label={t("overview.filterTill")}
+                onChange={(e) => {
+                  const val = e.target.value as string | number;
+                  setSelectedTillId(val === "" ? undefined : (val as number));
+                }}
+                displayEmpty
+                notched
+              >
+                <MenuItem value="">
+                  <em>{t("overview.allTills")}</em>
+                </MenuItem>
+                {tills &&
+                  tills.ids.map((id) => (
+                    <MenuItem key={id} value={id}>
+                      {tills.entities[id]?.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </Stack>
         </Card>
       </Grid>
-      {currentNode.event != null && (
-        <>
-          <Grid size={12}>
-            <DashboardKPIs fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} />
-          </Grid>
-          <Grid size={12}>
-            <RevenueByCounterChart fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} />
-          </Grid>
-          <Grid size={12}>
-            <RevenueByCounterTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} />
-          </Grid>
-          <Grid size={12}>
-            <OrdersTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} />
-          </Grid>
-          <Grid size={12}>
-            <Divider sx={{ my: 1.5 }} />
-          </Grid>
-          <EventStats
-            dailyEndTime={eventSettings.daily_end_time}
-            fromTimestamp={fromTimestamp}
-            toTimestamp={toTimestamp}
-            groupByDay={groupByDay}
-            useRevenue={showRevenue}
-          />
-          <Grid size={12}>
-            <Divider sx={{ my: 1.5 }} />
-          </Grid>
-        </>
-      )}
-      <NodeSpecificStats
-        dailyEndTime={eventSettings.daily_end_time}
-        fromTimestamp={fromTimestamp}
-        toTimestamp={toTimestamp}
-        groupByDay={groupByDay}
-        useRevenue={showRevenue}
-      />
+      <Grid size={12}>
+        <DashboardKPIs fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+      </Grid>
+      <Grid size={12}>
+        <RevenueByCounterChart
+          fromTimestamp={fromTimestamp}
+          toTimestamp={toTimestamp}
+          tillId={selectedTillId}
+          onBarClick={(tillId) => setSelectedTillId(tillId)}
+          onClearFilter={() => setSelectedTillId(undefined)}
+        />
+      </Grid>
+      <Grid size={12}>
+        <RevenueByProductChart
+          fromTimestamp={fromTimestamp}
+          toTimestamp={toTimestamp}
+          tillId={selectedTillId}
+          productId={selectedProductId}
+          onProductClick={(productId) => setSelectedProductId(productId)}
+          onClearFilter={() => setSelectedProductId(undefined)}
+        />
+      </Grid>
+      <Grid size={12}>
+        <RevenueByCounterTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+      </Grid>
+      <Grid size={12}>
+        <OrdersTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+      </Grid>
     </Grid>
   );
 });

@@ -1,39 +1,112 @@
 import * as React from "react";
 import { DateTime } from "luxon";
-import { Card, CardContent, Typography, Skeleton } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Skeleton,
+  Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import { BarChart, BarChartData } from "@/components";
+import { FilterBadge } from "@/components/common/FilterBadge";
 import { useCurrentNode } from "@/hooks";
-
-// Temporary types - will be replaced when OpenAPI is regenerated
-type CounterRevenue = {
-  till_id: number;
-  till_name: string;
-  revenue: number;
-  order_count: number;
-};
-
-type RevenueByCounter = {
-  counters: CounterRevenue[];
-  total_revenue: number;
-};
+import { useGetRevenueByCounterQuery } from "@/api";
+import { useTranslation } from "react-i18next";
 
 export type RevenueByCounterChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  tillId?: number;
+  onBarClick?: (tillId: number) => void;
+  onClearFilter?: () => void;
 };
 
-export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({ fromTimestamp, toTimestamp }) => {
+type SortOption = "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
+
+export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
+  fromTimestamp,
+  toTimestamp,
+  tillId,
+  onBarClick,
+  onClearFilter,
+}) => {
   const { currentNode } = useCurrentNode();
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [sortOption, setSortOption] = React.useState<SortOption>("revenue-desc");
 
-  // TODO: Replace with actual hooks after OpenAPI regeneration
-  // const { data, isLoading } = useGetRevenueByCounterQuery({
-  //   nodeId: currentNode.id,
-  //   fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-  //   toTimestamp: toTimestamp?.toISO() ?? undefined,
-  // });
+  const { data, isLoading } = useGetRevenueByCounterQuery({
+    nodeId: currentNode.id,
+    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+    toTimestamp: toTimestamp?.toISO() ?? undefined,
+    tillId: tillId,
+  });
 
-  const data: RevenueByCounter | undefined = undefined as RevenueByCounter | undefined; // Placeholder
-  const isLoading = false;
+  // Create a map of till_name to till_id for bar click handling
+  // Must be called before any early returns (Rules of Hooks)
+  const tillNameToIdMap = React.useMemo(() => {
+    if (!data || !data.counters) return new Map<string, number>();
+    const map = new Map<string, number>();
+    data.counters.forEach((counter) => {
+      const name = counter.till_name || String(counter.till_id);
+      map.set(name, counter.till_id);
+    });
+    return map;
+  }, [data?.counters]);
+
+  // Filter and sort the data
+  // Must be called before any early returns (Rules of Hooks)
+  const chartData: BarChartData[] = React.useMemo(() => {
+    if (!data || !data.counters) return [];
+    
+    const filtered = data.counters.filter(
+      (counter) => counter.revenue != null && !isNaN(counter.revenue)
+    );
+
+    // Map to chart data format
+    const mapped = filtered.map((counter) => ({
+      id: counter.till_name || String(counter.till_id),
+      value: Number(counter.revenue),
+    }));
+
+    // Apply sorting
+    switch (sortOption) {
+      case "revenue-desc":
+        mapped.sort((a, b) => b.value - a.value);
+        break;
+      case "revenue-asc":
+        mapped.sort((a, b) => a.value - b.value);
+        break;
+      case "name-asc":
+        mapped.sort((a, b) => a.id.localeCompare(b.id));
+        break;
+      case "name-desc":
+        mapped.sort((a, b) => b.id.localeCompare(a.id));
+        break;
+    }
+
+    return mapped;
+  }, [data?.counters, sortOption]);
+
+  const handleBarClick = React.useCallback(
+    (barData: BarChartData) => {
+      if (onBarClick) {
+        const clickedTillId = tillNameToIdMap.get(barData.id);
+        if (clickedTillId !== undefined) {
+          onBarClick(clickedTillId);
+        }
+      }
+    },
+    [onBarClick, tillNameToIdMap]
+  );
 
   if (isLoading) {
     return (
@@ -57,7 +130,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({ fr
               color: "text.secondary",
             }}
           >
-            Umsatz pro Theke
+            {t("overview.revenuePerCounter")}
           </Typography>
           <Skeleton variant="rounded" height={250} />
         </CardContent>
@@ -87,10 +160,10 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({ fr
               color: "text.secondary",
             }}
           >
-            Umsatz pro Theke
+            {t("overview.revenuePerCounter")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-            Data will be available after OpenAPI spec regeneration. Please run `make generate-openapi`.
+            {t("overview.noDataAvailable")}
           </Typography>
         </CardContent>
       </Card>
@@ -119,20 +192,15 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({ fr
               color: "text.secondary",
             }}
           >
-            Umsatz pro Theke
+            {t("overview.revenuePerCounter")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-            No data available for the selected time range
+            {t("overview.noDataAvailable")}
           </Typography>
         </CardContent>
       </Card>
     );
   }
-
-  const chartData: BarChartData[] = data.counters.map((counter: CounterRevenue) => ({
-    id: counter.till_name,
-    value: counter.revenue,
-  }));
 
   return (
     <Card
@@ -143,21 +211,77 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({ fr
         boxShadow: "none",
       }}
     >
-      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            mb: 2,
-            color: "text.secondary",
-          }}
-        >
-          Umsatz pro Theke
-        </Typography>
-        <BarChart data={chartData} height={250} useCurrency horizontal />
+      <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+        <Stack spacing={{ xs: 1, sm: 1.5, md: 2 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={{ xs: 0.75, sm: 1, md: 2 }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            justifyContent="space-between"
+            flexWrap="wrap"
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
+                color: "text.secondary",
+              }}
+            >
+              {t("overview.revenuePerCounter")}
+            </Typography>
+            {tillId !== undefined && onClearFilter && (
+              <FilterBadge
+                label={t("overview.filteredBy")}
+                value={
+                  data.counters.find((c) => c.till_id === tillId)?.till_name || String(tillId)
+                }
+                onClear={onClearFilter}
+                visible={true}
+              />
+            )}
+          </Stack>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: { xs: "100%", sm: 180 },
+                transition: "all 0.2s ease-in-out",
+              }}
+            >
+              <InputLabel id="sort-select-label">{t("overview.sortBy")}</InputLabel>
+              <Select
+                labelId="sort-select-label"
+                id="sort-select"
+                value={sortOption}
+                label={t("overview.sortBy")}
+                onChange={(e) => setSortOption(e.target.value as SortOption)}
+                sx={{
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    borderColor: "#73BF69",
+                  },
+                }}
+              >
+                <MenuItem value="revenue-desc">{t("overview.revenueDescending")}</MenuItem>
+                <MenuItem value="revenue-asc">{t("overview.revenueAscending")}</MenuItem>
+                <MenuItem value="name-asc">{t("overview.nameAscending")}</MenuItem>
+                <MenuItem value="name-desc">{t("overview.nameDescending")}</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+
+          <BarChart
+            data={chartData}
+            height={isSmallMobile ? 180 : isMobile ? 200 : 250}
+            useCurrency
+            horizontal
+            onBarClick={onBarClick ? handleBarClick : undefined}
+          />
+        </Stack>
       </CardContent>
     </Card>
   );

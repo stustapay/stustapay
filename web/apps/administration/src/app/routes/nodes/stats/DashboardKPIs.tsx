@@ -1,57 +1,61 @@
 import * as React from "react";
 import { DateTime } from "luxon";
-import { Card, CardContent, Grid, Skeleton, Typography } from "@mui/material";
+import { Card, CardContent, Grid, Skeleton, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { PieChart, PieChartData } from "@/components";
-
-// Temporary types - will be replaced when OpenAPI is regenerated
-type DashboardOverview = {
-  total_guest_credit: number;
-  total_revenue: number;
-  guests_with_orders: number;
-  guests_with_credit: number;
-  guests_paid_out: number;
-  online_donation: number;
-  online_for_payout: number;
-};
-
-type PaymentMethodBreakdown = {
-  methods: Array<{ payment_method: string; revenue: number; order_count: number }>;
-  total_revenue: number;
-};
+import { useGetDashboardOverviewQuery, useGetPaymentMethodStatsQuery } from "@/api";
+import { useTranslation } from "react-i18next";
 
 export type DashboardKPIsProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  tillId?: number;
 };
 
-export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toTimestamp }) => {
+export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toTimestamp, tillId }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // TODO: Replace with actual hooks after OpenAPI regeneration
-  // const { data: overview, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery({
-  //   nodeId: currentNode.id,
-  //   fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-  //   toTimestamp: toTimestamp?.toISO() ?? undefined,
-  // });
-  // const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery({
-  //   nodeId: currentNode.id,
-  //   fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-  //   toTimestamp: toTimestamp?.toISO() ?? undefined,
-  // });
+  const { data: overviewResponse, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { skip: currentNode.event == null }
+  );
+  const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery({
+    nodeId: currentNode.id,
+    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+    toTimestamp: toTimestamp?.toISO() ?? undefined,
+    tillId: tillId,
+  });
 
-  const overview: DashboardOverview | undefined = undefined as DashboardOverview | undefined; // Placeholder
-  const paymentMethods: PaymentMethodBreakdown | undefined = undefined as PaymentMethodBreakdown | undefined; // Placeholder
-  const isOverviewLoading = false;
-  const isPaymentMethodsLoading = false;
+  let overview = overviewResponse;
+  if (currentNode.event == null && paymentMethods) {
+    // For sub-nodes, we derive available stats from payment methods since dashboard overview is not available
+    overview = {
+      total_revenue: paymentMethods.total_revenue,
+      guests_with_orders: paymentMethods.methods.reduce((sum, m) => sum + m.order_count, 0),
+      total_guest_credit: 0,
+      guests_with_credit: 0,
+      guests_paid_out: 0,
+      online_donation: 0,
+      online_for_payout: 0,
+    };
+  }
 
   if (isOverviewLoading || isPaymentMethodsLoading) {
     return (
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1, sm: 1.5 }}>
         {[...Array(8)].map((_, i) => (
           <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
-            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height={isSmallMobile ? 90 : isMobile ? 100 : 120} />
           </Grid>
         ))}
       </Grid>
@@ -60,12 +64,12 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
 
   if (!overview || !paymentMethods) {
     return (
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1, sm: 1.5 }}>
         <Grid size={12}>
           <Card>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary">
-                Dashboard data will be available after OpenAPI spec regeneration. Please run `make generate-openapi`.
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+                {t("overview.noDataAvailable")}
               </Typography>
             </CardContent>
           </Card>
@@ -74,55 +78,57 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
     );
   }
 
-  // Type assertions after null check
-  const overviewData = overview as DashboardOverview;
-  const paymentMethodsData = paymentMethods as PaymentMethodBreakdown;
-
-  const paymentMethodData: PieChartData[] = paymentMethodsData.methods.map((method: { payment_method: string; revenue: number; order_count: number }) => ({
+  const paymentMethodData: PieChartData[] = paymentMethods.methods.map((method) => ({
     id: method.payment_method,
     value: method.revenue,
   }));
 
-  const kpiCards = [
+  let kpiCards = [
     {
-      title: "Guthaben Gäste gesamt",
-      value: formatCurrency(overviewData.total_guest_credit),
+      title: t("overview.totalGuestCredit"),
+      value: formatCurrency(overview.total_guest_credit),
       color: "success.main",
     },
     {
-      title: "Umsatz gesamt",
-      value: formatCurrency(overviewData.total_revenue),
+      title: t("overview.totalRevenue"),
+      value: formatCurrency(overview.total_revenue),
       color: "success.main",
     },
     {
-      title: "Anzahl Gäste mit Bestellungen",
-      value: overviewData.guests_with_orders.toString(),
+      title: t("overview.guestsWithOrders"),
+      value: overview.guests_with_orders.toString(),
       color: "info.main",
     },
     {
-      title: "Gäste mit Guthaben",
-      value: overviewData.guests_with_credit.toString(),
+      title: t("overview.guestsWithCredit"),
+      value: overview.guests_with_credit.toString(),
       color: "info.main",
     },
     {
-      title: "Ausgezahlte Gäste",
-      value: overviewData.guests_paid_out.toString(),
+      title: t("overview.guestsPaidOut"),
+      value: overview.guests_paid_out.toString(),
       color: "info.main",
     },
     {
-      title: "Online Spende",
-      value: formatCurrency(overviewData.online_donation),
+      title: t("overview.onlineDonation"),
+      value: formatCurrency(overview.online_donation),
       color: "warning.main",
     },
     {
-      title: "Online zur Auszahlung",
-      value: formatCurrency(overviewData.online_for_payout),
+      title: t("overview.onlineForPayout"),
+      value: formatCurrency(overview.online_for_payout),
       color: "warning.main",
     },
   ];
 
+  if (currentNode.event == null) {
+    // Filter out cards that are not relevant for sub-nodes
+    const cardsToRemove = [t("overview.totalGuestCredit"), t("overview.guestsWithCredit"), t("overview.onlineDonation"), t("overview.onlineForPayout"), t("overview.guestsPaidOut")];
+    kpiCards = kpiCards.filter((card) => !cardsToRemove.includes(card.title));
+  }
+
   return (
-    <Grid container spacing={1.5}>
+    <Grid container spacing={{ xs: 0.75, sm: 1, md: 1.5 }}>
       {kpiCards.map((card, index) => (
         <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
@@ -133,15 +139,15 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
               boxShadow: "none",
             }}
           >
-            <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+            <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
               <Typography
                 variant="caption"
                 sx={{
                   color: "text.secondary",
-                  fontSize: "0.75rem",
+                  fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
                   textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  mb: 0.5,
+                  letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
+                  mb: { xs: 0.5, sm: 0.5 },
                   display: "block",
                 }}
               >
@@ -153,7 +159,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
                 sx={{
                   color: "#73BF69",
                   fontWeight: 600,
-                  fontSize: "1.75rem",
+                  fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
                   lineHeight: 1.2,
                 }}
               >
@@ -172,25 +178,25 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
             boxShadow: "none",
           }}
         >
-          <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
             <Typography
               variant="caption"
               sx={{
                 color: "text.secondary",
-                fontSize: "0.75rem",
+                fontSize: { xs: "0.7rem", sm: "0.75rem" },
                 textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                mb: 1,
+                letterSpacing: { xs: "0.3px", sm: "0.5px" },
+                mb: { xs: 0.75, sm: 1 },
                 display: "block",
               }}
             >
-              Zahlungsarten
+              {t("overview.paymentMethods")}
             </Typography>
             {paymentMethodData.length > 0 ? (
-              <PieChart data={paymentMethodData} height={120} useCurrency />
+              <PieChart data={paymentMethodData} height={isSmallMobile ? 90 : isMobile ? 100 : 120} useCurrency />
             ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-                No data
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+                {t("overview.noDataAvailable")}
               </Typography>
             )}
           </CardContent>

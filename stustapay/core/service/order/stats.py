@@ -57,6 +57,7 @@ class TimeseriesStats(BaseModel):
 class TimeseriesStatsQuery(BaseModel):
     from_time: Optional[datetime]
     to_time: Optional[datetime]
+    till_id: Optional[int] = None
 
 
 class ProductTimeseries(BaseModel):
@@ -132,7 +133,9 @@ def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSetting
     return from_t, to_t
 
 
-async def get_hourly_entry_stats(*, conn: Connection, node: Node, from_time: datetime, to_time: datetime) -> Timeseries:
+async def get_hourly_entry_stats(
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+) -> Timeseries:
     stats = await conn.fetch_many(
         StatInterval,
         "select "
@@ -144,18 +147,20 @@ async def get_hourly_entry_stats(*, conn: Connection, node: Node, from_time: dat
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where p.ticket_metadata_id is not null and o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($4::int IS NULL OR o.till_id = $4) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
 async def get_hourly_top_up_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
 ) -> Timeseries:
     top_up_product = await fetch_top_up_product(conn=conn, node=node)
 
@@ -170,19 +175,21 @@ async def get_hourly_top_up_stats(
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
         top_up_product.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
 async def get_hourly_pay_out_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
 ) -> Timeseries:
     pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
 
@@ -197,18 +204,22 @@ async def get_hourly_pay_out_stats(
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
         pay_out_product.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
-async def get_hourly_sales_stats(*, conn: Connection, node: Node, from_time: datetime, to_time: datetime) -> Timeseries:
+async def get_hourly_sales_stats(
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+) -> Timeseries:
     """
     We are interested in general sales revenue excluding all topups, payouts and ticket sales.
 
@@ -227,18 +238,20 @@ async def get_hourly_sales_stats(*, conn: Connection, node: Node, from_time: dat
         "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
+        "   and ($4::int IS NULL OR o.till_id = $4) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
 async def get_hourly_product_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime, returnable=False
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
         "select s.*, prod.name as product_name "
@@ -257,6 +270,7 @@ async def get_hourly_product_stats(
         "   and p.type = 'user_defined' "
         "   and ($3 = any(n.parent_ids) or n.id = $3) "
         "   and p.is_returnable = $4 "
+        "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by p.id, from_time, to_time "
         "order by from_time) s "
         "join product prod on s.product_id = prod.id "
@@ -265,6 +279,7 @@ async def get_hourly_product_stats(
         to_time,
         node.id,
         returnable,
+        query.till_id,
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
     product_names: dict[int, str] = {}
@@ -319,7 +334,17 @@ class OrderStatsService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
-
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_available_dates(self, *, conn: Connection, node: Node) -> list[str]:
+        dates = await conn.fetch(
+            "SELECT DISTINCT date(o.booked_at)::text as date "
+            "FROM orders_at_node_and_children($1) o "
+            "ORDER BY date DESC",
+            node.id,
+        )
+        return [row["date"] for row in dates]
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
@@ -330,7 +355,9 @@ class OrderStatsService(Service[Config]):
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        hourly_stats = await get_hourly_entry_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_entry_stats(
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
             from_time=hourly_stats.from_time,
@@ -349,7 +376,9 @@ class OrderStatsService(Service[Config]):
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        hourly_stats = await get_hourly_top_up_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_top_up_stats(
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
             from_time=hourly_stats.from_time,
@@ -368,7 +397,9 @@ class OrderStatsService(Service[Config]):
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        hourly_stats = await get_hourly_pay_out_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_pay_out_stats(
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
             from_time=hourly_stats.from_time,
@@ -396,10 +427,12 @@ class OrderStatsService(Service[Config]):
             "join account sa on t.source_account = sa.id "
             "join account ta on t.target_account = ta.id "
             "where t.booked_at >= $1 and t.booked_at <= $2"
-            "   and sa.node_id = $3",
+            "   and sa.node_id = $3"
+            "   and ($4::int IS NULL OR t.till_id = $4)",
             from_time,
             to_time,
             node.event_node_id,
+            query.till_id,
         )
 
         return stats
@@ -410,14 +443,16 @@ class OrderStatsService(Service[Config]):
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
-        hourly_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_sales_stats(
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         hourly_product_stats = await get_hourly_product_stats(
-            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=False
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time, returnable=False
         )
         hourly_deposit_stats = await get_hourly_product_stats(
-            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=True
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time, returnable=True
         )
 
         product_overall_stats = []
@@ -456,7 +491,9 @@ class OrderStatsService(Service[Config]):
     async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
-        hourly_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_sales_stats(
+            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         return RevenueStats(
@@ -492,20 +529,24 @@ class OrderStatsService(Service[Config]):
             "SELECT COALESCE(SUM(li.total_price), 0) "
             "FROM orders_at_node_and_children($3) o "
             "JOIN line_item li ON o.id = li.order_id "
-            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.payment_method = 'tag'",
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.payment_method = 'tag' "
+            "AND ($4::int IS NULL OR o.till_id = $4)",
             from_time,
             to_time,
             node.id,
+            query.till_id,
         )
 
         # Number of guests with orders
         guests_with_orders = await conn.fetchval(
             "SELECT COUNT(DISTINCT o.customer_account_id) "
             "FROM orders_at_node_and_children($3) o "
-            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.customer_account_id IS NOT NULL",
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.customer_account_id IS NOT NULL "
+            "AND ($4::int IS NULL OR o.till_id = $4)",
             from_time,
             to_time,
             node.id,
+            query.till_id,
         )
 
         # Guests with credit (balance > 0)
@@ -563,20 +604,46 @@ class OrderStatsService(Service[Config]):
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        result = await conn.fetch(
-            "SELECT t.id as till_id, t.name as till_name, "
-            "COALESCE(SUM(li.total_price), 0) as revenue, "
-            "COUNT(DISTINCT o.id) as order_count "
-            "FROM orders_at_node_and_children($3) o "
-            "JOIN till t ON o.till_id = t.id "
-            "JOIN line_item li ON o.id = li.order_id "
-            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-            "GROUP BY t.id, t.name "
-            "ORDER BY revenue DESC",
-            from_time,
-            to_time,
-            node.id,
-        )
+        # When filtering by a specific till, we want to show only that till
+        # Otherwise, show all tills with orders in the time period
+        if query.till_id is not None:
+            result = await conn.fetch(
+                "SELECT t.id as till_id, t.name as till_name, "
+                "COALESCE(SUM(li.total_price), 0) as revenue, "
+                "COUNT(DISTINCT o.id) as order_count "
+                "FROM orders_at_node_and_children($3) o "
+                "JOIN till t ON o.till_id = t.id "
+                "JOIN line_item li ON o.id = li.order_id "
+                "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+                "AND o.till_id = $4 "
+                "AND o.order_type = 'sale' "
+                "AND t.is_virtual IS NOT TRUE "
+                "AND t.name <> 'CheckTerminal' "
+                "GROUP BY t.id, t.name "
+                "ORDER BY revenue DESC",
+                from_time,
+                to_time,
+                node.id,
+                query.till_id,
+            )
+        else:
+            result = await conn.fetch(
+                "SELECT t.id as till_id, t.name as till_name, "
+                "COALESCE(SUM(li.total_price), 0) as revenue, "
+                "COUNT(DISTINCT o.id) as order_count "
+                "FROM orders_at_node_and_children($3) o "
+                "JOIN till t ON o.till_id = t.id "
+                "JOIN line_item li ON o.id = li.order_id "
+                "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+                "AND o.order_type = 'sale' "
+                "AND t.is_virtual IS NOT TRUE "
+                "AND t.name <> 'CheckTerminal' "
+                "GROUP BY t.id, t.name "
+                "ORDER BY revenue DESC",
+                from_time,
+                to_time,
+                node.id,
+            )
 
         counters = [
             CounterRevenue(
@@ -607,11 +674,13 @@ class OrderStatsService(Service[Config]):
             "COUNT(*) as order_count "
             "FROM orders_at_node_and_children($3) o "
             "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "AND ($4::int IS NULL OR o.till_id = $4) "
             "GROUP BY o.payment_method "
             "ORDER BY revenue DESC",
             from_time,
             to_time,
             node.id,
+            query.till_id,
         )
 
         methods = [

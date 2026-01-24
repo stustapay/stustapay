@@ -1621,6 +1621,7 @@ class OrderService(Service[Config]):
         from_timestamp: Optional[datetime] = None,
         to_timestamp: Optional[datetime] = None,
         till_id: Optional[int] = None,
+        limit: Optional[int] = None,
     ) -> list[Order]:
         param_count = 1
         conditions: list[str] = []
@@ -1645,8 +1646,45 @@ class OrderService(Service[Config]):
 
         where_clause = " AND ".join(conditions)
         param_count += 1
-        query = f"select * from order_value_prefiltered((select array_agg(o.id) from ordr o where {where_clause}), ${param_count})"
+        
+        limit_clause = ""
+        if limit is not None:
+            param_count += 1
+            limit_clause = f" ORDER BY o.booked_at DESC LIMIT ${param_count}"
+            # Note: We need to order by booked_at to get the *latest* orders when limiting
+            # But the inner query selects IDs. 
+            
+            # More efficient strategy:
+            # We want the *IDs* of the latest orders matching criteria.
+            # So the inner query should do the limiting.
+            
+            # Let's adjust the query construction slightly.
+            # original: select * from order_value_prefiltered((select array_agg(o.id) from ordr o where {where_clause}), node_id)
+            
+            # The order_value_prefiltered takes an array of IDs.
+            # We should limit the IDs we pass to it.
+            
+            # Wait, `array_agg` doesn't preserve order or limit easily inside aggregation without subquery.
+            
+            # Better approach:
+            # select array_agg(id) from (select o.id from ordr o where ... w.booked_at ... order by booked_at desc limit N) as sub
+       
+        # Let's rewrite the inner query part
+        inner_query = f"SELECT o.id FROM ordr o WHERE {where_clause}"
+        
+        if limit is not None:
+             # param_count is already incremented for node_id (which will be added next), so limit uses param_count + 1
+             limit_param_idx = param_count + 1
+             inner_query += f" ORDER BY o.booked_at DESC LIMIT ${limit_param_idx}"
+             
+        # Wrap in array_agg
+        array_agg_query = f"SELECT array_agg(sub.id) FROM ({inner_query}) as sub"
+        
+        query = f"select * from order_value_prefiltered(({array_agg_query}), ${param_count})"
         params.append(node.event_node_id)
+        
+        if limit is not None:
+            params.append(limit)
 
         return await conn.fetch_many(Order, query, *params)
 

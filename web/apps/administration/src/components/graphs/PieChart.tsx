@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ResponsivePie } from "@nivo/pie";
 import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 import { useCurrencyFormatter } from "@/hooks";
 
 export type PieChartData = {
@@ -25,14 +26,19 @@ export const PieChart: React.FC<PieChartProps> = ({
   const formatCurrency = useCurrencyFormatter();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const defaultMargin = {
-    top: 20,
-    right: 80,
-    bottom: 20,
-    left: 80,
-    ...margin,
-  };
+  const defaultMargin = React.useMemo(
+    () => ({
+      top: 10,
+      right: isSmallMobile ? 30 : isMobile ? 40 : 80,
+      bottom: 10,
+      left: isSmallMobile ? 30 : isMobile ? 40 : 80,
+      ...margin,
+    }),
+    [isMobile, isSmallMobile, margin]
+  );
 
   return (
     <div style={{ height }}>
@@ -66,23 +72,27 @@ export const PieChart: React.FC<PieChartProps> = ({
             <strong>{datum.id}</strong>: {useCurrency ? formatCurrency(datum.value) : datum.value}
           </div>
         )}
-        legends={[
-          {
-            anchor: "right",
-            direction: "column",
-            justify: false,
-            translateX: 20,
-            translateY: 0,
-            itemsSpacing: 4,
-            itemWidth: 80,
-            itemHeight: 16,
-            itemTextColor: isDark ? "#a1a5b9" : "#6b7280",
-            itemDirection: "left-to-right",
-            itemOpacity: 1,
-            symbolSize: 10,
-            symbolShape: "circle",
-          },
-        ]}
+        legends={
+          isMobile
+            ? []
+            : [
+                {
+                  anchor: "right",
+                  direction: "column",
+                  justify: false,
+                  translateX: 20,
+                  translateY: 0,
+                  itemsSpacing: 4,
+                  itemWidth: 80,
+                  itemHeight: 16,
+                  itemTextColor: isDark ? "#a1a5b9" : "#6b7280",
+                  itemDirection: "left-to-right",
+                  itemOpacity: 1,
+                  symbolSize: 10,
+                  symbolShape: "circle",
+                },
+              ]
+        }
       />
     </div>
   );

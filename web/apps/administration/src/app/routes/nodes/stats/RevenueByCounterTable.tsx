@@ -11,42 +11,54 @@ import {
   TableRow,
   Typography,
   Skeleton,
+  Stack,
+  Box,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-
-// Temporary types - will be replaced when OpenAPI is regenerated
-type CounterRevenue = {
-  till_id: number;
-  till_name: string;
-  revenue: number;
-  order_count: number;
-};
-
-type RevenueByCounter = {
-  counters: CounterRevenue[];
-  total_revenue: number;
-};
+import { useGetRevenueByCounterQuery } from "@/api";
+import { useTranslation } from "react-i18next";
+import { TableFilterBar } from "@/components/tables/TableFilterBar";
+import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
+import { useFilterableTable } from "@/hooks/useFilterableTable";
 
 export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  tillId?: number;
 };
 
-export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fromTimestamp, toTimestamp }) => {
+export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fromTimestamp, toTimestamp, tillId }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // TODO: Replace with actual hooks after OpenAPI regeneration
-  // const { data, isLoading } = useGetRevenueByCounterQuery({
-  //   nodeId: currentNode.id,
-  //   fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-  //   toTimestamp: toTimestamp?.toISO() ?? undefined,
-  // });
-
-  const data: RevenueByCounter | undefined = undefined as RevenueByCounter | undefined; // Placeholder
-  const isLoading = false;
+  const { data, isLoading } = useGetRevenueByCounterQuery({
+    nodeId: currentNode.id,
+    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+    toTimestamp: toTimestamp?.toISO() ?? undefined,
+    tillId: tillId,
+  });
 
   const dateStr = fromTimestamp?.toISODate() ?? toTimestamp?.toISODate() ?? "Total";
+
+  // Use filterable table hook
+  const {
+    filteredData,
+    searchQuery,
+    setSearchQuery,
+    sortField,
+    sortDirection,
+    setSort,
+  } = useFilterableTable({
+    data: data?.counters || [],
+    searchFields: ["till_name"],
+    defaultSort: { field: "revenue", direction: "desc" },
+  });
 
   if (isLoading) {
     return (
@@ -58,21 +70,21 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fr
           boxShadow: "none",
         }}
       >
-        <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
           <Typography
             variant="h6"
             sx={{
-              fontSize: "0.875rem",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
               fontWeight: 500,
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              mb: 2,
+              letterSpacing: { xs: "0.3px", sm: "0.5px" },
+              mb: { xs: 1.5, sm: 2 },
               color: "text.secondary",
             }}
           >
-            Umsatz pro Theke
+            {t("overview.revenuePerCounter")}
           </Typography>
-          <Skeleton variant="rounded" height={200} />
+          <Skeleton variant="rounded" height={isMobile ? 150 : 200} />
         </CardContent>
       </Card>
     );
@@ -88,22 +100,22 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fr
           boxShadow: "none",
         }}
       >
-        <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
           <Typography
             variant="h6"
             sx={{
-              fontSize: "0.875rem",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
               fontWeight: 500,
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              mb: 2,
+              letterSpacing: { xs: "0.3px", sm: "0.5px" },
+              mb: { xs: 1.5, sm: 2 },
               color: "text.secondary",
             }}
           >
-            Umsatz pro Theke
+            {t("overview.revenuePerCounter")}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-            Data will be available after OpenAPI spec regeneration. Please run `make generate-openapi`.
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+            {t("overview.noDataAvailable")}
           </Typography>
         </CardContent>
       </Card>
@@ -120,22 +132,22 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fr
           boxShadow: "none",
         }}
       >
-        <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
           <Typography
             variant="h6"
             sx={{
-              fontSize: "0.875rem",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
               fontWeight: 500,
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              mb: 2,
+              letterSpacing: { xs: "0.3px", sm: "0.5px" },
+              mb: { xs: 1.5, sm: 2 },
               color: "text.secondary",
             }}
           >
-            Umsatz pro Theke
+            {t("overview.revenuePerCounter")}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
-            No data available for the selected time range
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+            {t("overview.noDataAvailable")}
           </Typography>
         </CardContent>
       </Card>
@@ -151,52 +163,143 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fr
         boxShadow: "none",
       }}
     >
-      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            mb: 2,
-            color: "text.secondary",
-          }}
-        >
-          Umsatz pro Theke
-        </Typography>
-        <TableContainer>
-          <Table size="small" sx={{ "& .MuiTableCell-root": { borderColor: "rgba(255, 255, 255, 0.1)" } }}>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", color: "text.secondary", py: 1 }}>
-                  Bereich\datum
-                </TableCell>
-                <TableCell align="right" sx={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", color: "text.secondary", py: 1 }}>
-                  {dateStr}
-                </TableCell>
-                <TableCell align="right" sx={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", color: "text.secondary", py: 1 }}>
-                  Total
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.counters.map((counter: CounterRevenue) => (
-                <TableRow key={counter.till_id} sx={{ "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.05)" } }}>
-                  <TableCell component="th" scope="row" sx={{ fontSize: "0.875rem", py: 1 }}>
-                    {counter.till_name}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontSize: "0.875rem", color: "#73BF69", fontWeight: 500, py: 1 }}>
-                    {formatCurrency(counter.revenue)}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontSize: "0.875rem", color: "#73BF69", fontWeight: 500, py: 1 }}>
-                    {formatCurrency(counter.revenue)}
-                  </TableCell>
+      <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+        <Stack spacing={{ xs: 1, sm: 1.5, md: 2 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
+              color: "text.secondary",
+            }}
+          >
+            {t("overview.revenuePerCounter")}
+          </Typography>
+
+          <TableFilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder={t("overview.searchCounters")}
+          />
+
+          <Box
+            sx={{
+              width: "100%",
+              overflowX: "auto",
+              "&::-webkit-scrollbar": {
+                height: "8px",
+              },
+              "&::-webkit-scrollbar-track": {
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "#73BF69",
+                borderRadius: "4px",
+                "&:hover": {
+                  backgroundColor: "#5a9a4f",
+                },
+              },
+            }}
+          >
+            <TableContainer>
+              <Table
+                size="small"
+                sx={{
+                  minWidth: 400,
+                  "& .MuiTableCell-root": {
+                    borderColor: "rgba(255, 255, 255, 0.1)",
+                    fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
+                    py: { xs: 0.5, sm: 0.75, md: 1 },
+                    px: { xs: 0.75, sm: 1, md: 1.5 },
+                  },
+                  "& .MuiTableRow-root": {
+                    transition: "background-color 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    },
+                  },
+                }}
+              >
+              <TableHead>
+                <TableRow>
+                  <SortableTableHeader
+                    field="till_name"
+                    label={`${t("entry.area")} / ${t("overview.date")}`}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={(field) => setSort(field)}
+                  />
+                  <SortableTableHeader
+                    field="revenue"
+                    label={dateStr}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={(field) => setSort(field)}
+                    align="right"
+                  />
+                  <SortableTableHeader
+                    field="revenue"
+                    label={t("overview.total")}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={(field) => setSort(field)}
+                    align="right"
+                  />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filteredData.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      align="center"
+                      sx={{
+                        py: { xs: 2, sm: 3 },
+                        color: "text.secondary",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      }}
+                    >
+                      {t("overview.noCountersMatchFilter")}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredData.map((counter) => (
+                    <TableRow key={counter.till_id}>
+                      <TableCell component="th" scope="row">
+                        {counter.till_name}
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          color: "#73BF69",
+                          fontWeight: 500,
+                          transition: "color 0.2s ease-in-out",
+                        }}
+                      >
+                        {formatCurrency(counter.revenue)}
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          color: "#73BF69",
+                          fontWeight: 500,
+                          transition: "color 0.2s ease-in-out",
+                        }}
+                      >
+                        {formatCurrency(counter.revenue)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+        </Stack>
       </CardContent>
     </Card>
   );
