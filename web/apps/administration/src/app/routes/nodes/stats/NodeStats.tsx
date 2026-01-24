@@ -7,11 +7,12 @@ import { useTranslation } from "react-i18next";
 import { Alert, AlertTitle, Card, Divider, Grid, Stack, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import { useGetAvailableDatesQuery, useListTillsQuery } from "@/api";
+import { useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery } from "@/api";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { RevenueByCounterChart } from "./RevenueByCounterChart";
 import { RevenueByProductChart } from "./RevenueByProductChart";
 import { RevenueByCounterTable } from "./RevenueByCounterTable";
+import { QuantitiesByProductTable } from "./QuantitiesByProductTable";
 import { OrdersTable } from "./OrdersTable";
 
 export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
@@ -24,6 +25,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
 
   const { data: availableDates } = useGetAvailableDatesQuery({ nodeId: currentNode.id });
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
 
   // Determine timestamp bounds based on selected date and event settings
   // If daily_end_time is set (e.g. 05:00), the "business day" runs from 05:00 on the selected date
@@ -135,21 +137,50 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
                   ))}
               </Select>
             </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
+              <InputLabel id="product-select-label" shrink>{t("overview.filterProduct")}</InputLabel>
+              <Select
+                labelId="product-select-label"
+                id="product-select"
+                value={selectedProductId ?? ""}
+                label={t("overview.filterProduct")}
+                onChange={(e) => {
+                  const val = e.target.value as string | number;
+                  setSelectedProductId(val === "" ? undefined : (val as number));
+                }}
+                displayEmpty
+                notched
+              >
+                <MenuItem value="">
+                  <em>{t("overview.allProducts")}</em>
+                </MenuItem>
+                {products &&
+                  products.ids.map((id) => (
+                    <MenuItem key={id} value={id}>
+                      {products.entities[id]?.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </Stack>
         </Card>
       </Grid>
       <Grid size={12}>
-        <DashboardKPIs fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+        <DashboardKPIs fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} productId={selectedProductId} />
       </Grid>
-      <Grid size={12}>
-        <RevenueByCounterChart
-          fromTimestamp={fromTimestamp}
-          toTimestamp={toTimestamp}
-          tillId={selectedTillId}
-          onBarClick={(tillId) => setSelectedTillId(tillId)}
-          onClearFilter={() => setSelectedTillId(undefined)}
-        />
-      </Grid>
+      {/* Only show revenue by counter when no product is selected (not filterable by product) */}
+      {selectedProductId === undefined && (
+        <Grid size={12}>
+          <RevenueByCounterChart
+            fromTimestamp={fromTimestamp}
+            toTimestamp={toTimestamp}
+            tillId={selectedTillId}
+            onBarClick={(tillId) => setSelectedTillId(tillId)}
+            onClearFilter={() => setSelectedTillId(undefined)}
+          />
+        </Grid>
+      )}
       <Grid size={12}>
         <RevenueByProductChart
           fromTimestamp={fromTimestamp}
@@ -161,10 +192,16 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
         />
       </Grid>
       <Grid size={12}>
-        <RevenueByCounterTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+        <QuantitiesByProductTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} productId={selectedProductId} />
       </Grid>
+      {/* Only show revenue by counter table when no product is selected (not filterable by product) */}
+      {selectedProductId === undefined && (
+        <Grid size={12}>
+          <RevenueByCounterTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+        </Grid>
+      )}
       <Grid size={12}>
-        <OrdersTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+        <OrdersTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} productId={selectedProductId} />
       </Grid>
     </Grid>
   );

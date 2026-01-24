@@ -30,6 +30,7 @@ export type OrdersTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  productId?: number;
 };
 
 type TableRowData = {
@@ -45,7 +46,7 @@ type TableRowData = {
 
 const INITIAL_DISPLAY_LIMIT = 50;
 
-export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimestamp, tillId }) => {
+export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimestamp, tillId, productId }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
@@ -74,6 +75,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
     orders.forEach((order: Order) => {
       if (order.line_items && order.line_items.length > 0) {
         order.line_items.forEach((lineItem: LineItem) => {
+          // Filter by productId if specified
+          if (productId !== undefined && lineItem.product.id !== productId) {
+            return;
+          }
           const totalPrice = lineItem.product_price * lineItem.quantity;
           rows.push({
             order,
@@ -91,7 +96,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
             total: totalPrice,
           });
         });
-      } else {
+      } else if (productId === undefined) {
+        // Only show orders without line items when no product filter is applied
         rows.push({
           order,
           lineItem: {
@@ -123,9 +129,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
       }
     });
     return rows;
-  }, [orders, tills]);
+  }, [orders, tills, productId]);
 
-  // Get unique order types and till names for filters
+  // Get unique order types for filters
   const orderTypes = React.useMemo(() => {
     const types = new Set<string>();
     tableRowsData.forEach((row) => {

@@ -3,16 +3,17 @@ import { DateTime } from "luxon";
 import { Card, CardContent, Grid, Skeleton, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { PieChart, PieChartData } from "@/components";
-import { useGetDashboardOverviewQuery, useGetPaymentMethodStatsQuery } from "@/api";
+import { useGetDashboardOverviewQuery, useGetPaymentMethodStatsQuery, useGetProductStatsQuery } from "@/api";
 import { useTranslation } from "react-i18next";
 
 export type DashboardKPIsProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  productId?: number;
 };
 
-export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toTimestamp, tillId }) => {
+export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toTimestamp, tillId, productId }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
@@ -35,6 +36,19 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
     toTimestamp: toTimestamp?.toISO() ?? undefined,
     tillId: tillId,
   });
+  const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery({
+    nodeId: currentNode.id,
+    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+    toTimestamp: toTimestamp?.toISO() ?? undefined,
+    tillId: tillId,
+  });
+
+  // Get selected product stats if productId is specified
+  const selectedProductStats = React.useMemo(() => {
+    if (productId === undefined || !productStats) return null;
+    const allProducts = [...(productStats.product_overall_stats || []), ...(productStats.deposit_overall_stats || [])];
+    return allProducts.find((p) => p.product_id === productId) || null;
+  }, [productId, productStats]);
 
   let overview = overviewResponse;
   if (currentNode.event == null && paymentMethods) {
@@ -50,7 +64,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
     };
   }
 
-  if (isOverviewLoading || isPaymentMethodsLoading) {
+  if (isOverviewLoading || isPaymentMethodsLoading || isProductStatsLoading) {
     return (
       <Grid container spacing={{ xs: 1, sm: 1.5 }}>
         {[...Array(8)].map((_, i) => (
@@ -83,45 +97,59 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
     value: method.revenue,
   }));
 
-  let kpiCards = [
-    {
-      title: t("overview.totalGuestCredit"),
-      value: formatCurrency(overview.total_guest_credit),
-      color: "success.main",
-    },
-    {
-      title: t("overview.totalRevenue"),
-      value: formatCurrency(overview.total_revenue),
-      color: "success.main",
-    },
-    {
-      title: t("overview.guestsWithOrders"),
-      value: overview.guests_with_orders.toString(),
-      color: "info.main",
-    },
-    {
-      title: t("overview.guestsWithCredit"),
-      value: overview.guests_with_credit.toString(),
-      color: "info.main",
-    },
-    {
-      title: t("overview.guestsPaidOut"),
-      value: overview.guests_paid_out.toString(),
-      color: "info.main",
-    },
-    {
-      title: t("overview.onlineDonation"),
-      value: formatCurrency(overview.online_donation),
-      color: "warning.main",
-    },
-    {
-      title: t("overview.onlineForPayout"),
-      value: formatCurrency(overview.online_for_payout),
-      color: "warning.main",
-    },
-  ];
+  // When a product is selected, show product-specific KPIs
+  let kpiCards = selectedProductStats
+    ? [
+        {
+          title: t("overview.productRevenue"),
+          value: formatCurrency(selectedProductStats.revenue),
+          color: "success.main",
+        },
+        {
+          title: t("overview.productQuantitySold"),
+          value: selectedProductStats.count.toString(),
+          color: "info.main",
+        },
+      ]
+    : [
+        {
+          title: t("overview.totalGuestCredit"),
+          value: formatCurrency(overview.total_guest_credit),
+          color: "success.main",
+        },
+        {
+          title: t("overview.totalRevenue"),
+          value: formatCurrency(overview.total_revenue),
+          color: "success.main",
+        },
+        {
+          title: t("overview.guestsWithOrders"),
+          value: overview.guests_with_orders.toString(),
+          color: "info.main",
+        },
+        {
+          title: t("overview.guestsWithCredit"),
+          value: overview.guests_with_credit.toString(),
+          color: "info.main",
+        },
+        {
+          title: t("overview.guestsPaidOut"),
+          value: overview.guests_paid_out.toString(),
+          color: "info.main",
+        },
+        {
+          title: t("overview.onlineDonation"),
+          value: formatCurrency(overview.online_donation),
+          color: "warning.main",
+        },
+        {
+          title: t("overview.onlineForPayout"),
+          value: formatCurrency(overview.online_for_payout),
+          color: "warning.main",
+        },
+      ];
 
-  if (currentNode.event == null) {
+  if (currentNode.event == null && !selectedProductStats) {
     // Filter out cards that are not relevant for sub-nodes
     const cardsToRemove = [t("overview.totalGuestCredit"), t("overview.guestsWithCredit"), t("overview.onlineDonation"), t("overview.onlineForPayout"), t("overview.guestsPaidOut")];
     kpiCards = kpiCards.filter((card) => !cardsToRemove.includes(card.title));
@@ -169,39 +197,42 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ fromTimestamp, toT
           </Card>
         </Grid>
       ))}
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <Card
-          sx={{
-            backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-            border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
-            boxShadow: "none",
-          }}
-        >
-          <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                textTransform: "uppercase",
-                letterSpacing: { xs: "0.3px", sm: "0.5px" },
-                mb: { xs: 0.75, sm: 1 },
-                display: "block",
-              }}
-            >
-              {t("overview.paymentMethods")}
-            </Typography>
-            {paymentMethodData.length > 0 ? (
-              <PieChart data={paymentMethodData} height={isSmallMobile ? 90 : isMobile ? 100 : 120} useCurrency />
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-                {t("overview.noDataAvailable")}
+      {/* Only show payment methods chart when no product is selected */}
+      {!selectedProductStats && (
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card
+            sx={{
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+              border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+              boxShadow: "none",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                  textTransform: "uppercase",
+                  letterSpacing: { xs: "0.3px", sm: "0.5px" },
+                  mb: { xs: 0.75, sm: 1 },
+                  display: "block",
+                }}
+              >
+                {t("overview.paymentMethods")}
               </Typography>
-            )}
-          </CardContent>
-        </Card>
-      </Grid>
+              {paymentMethodData.length > 0 ? (
+                <PieChart data={paymentMethodData} height={isSmallMobile ? 90 : isMobile ? 100 : 120} useCurrency />
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+                  {t("overview.noDataAvailable")}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
     </Grid>
   );
 };
