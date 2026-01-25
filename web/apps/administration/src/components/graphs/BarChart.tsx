@@ -152,6 +152,18 @@ export const BarChart: React.FC<BarChartProps> = ({
         borderWidth={0}
         animate={true}
         motionConfig="gentle"
+        defs={[
+          {
+            id: "barGradient",
+            type: "linearGradient",
+            colors: [
+              { offset: 0, color: "#73BF69", opacity: 1 },
+              { offset: 100, color: "#4CAF50", opacity: 0.8 },
+            ],
+            gradientTransform: horizontal ? "rotate(0)" : "rotate(90 0.5 0.5)",
+          },
+        ]}
+        fill={[{ match: "*", id: "barGradient" }]}
         axisTop={null}
         axisRight={null}
         axisBottom={{

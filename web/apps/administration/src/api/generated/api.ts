@@ -939,6 +939,16 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
+      getRevenuePrediction: build.query<GetRevenuePredictionApiResponse, GetRevenuePredictionApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/revenue-prediction`,
+          params: {
+            node_id: queryArg.nodeId,
+            till_id: queryArg.tillId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
         query: (queryArg) => ({
           url: `/tickets`,
@@ -2320,6 +2330,11 @@ export type GetAvailableDatesApiResponse = /** status 200 Successful Response */
 export type GetAvailableDatesApiArg = {
   nodeId: number;
 };
+export type GetRevenuePredictionApiResponse = /** status 200 Successful Response */ RevenuePrediction;
+export type GetRevenuePredictionApiArg = {
+  nodeId: number;
+  tillId?: number | null;
+};
 export type ListTicketsApiResponse = /** status 200 Successful Response */ NormalizedListTicketInt;
 export type ListTicketsApiArg = {
   nodeId: number;
@@ -3389,7 +3404,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: AccountRead;
+    [key: string]: Account;
   };
 };
 export type FindAccountPayload = {
@@ -3587,7 +3602,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: string]: CashierRead;
+    [key: string]: Cashier;
   };
 };
 export type CashierProductStats = {
@@ -3675,6 +3690,29 @@ export type PaymentMethodStats = {
 export type PaymentMethodBreakdown = {
   methods: PaymentMethodStats[];
   total_revenue: number;
+};
+export type HourlyPredictionPoint = {
+  hour: number;
+  actual_revenue: number | null;
+  predicted_revenue: number;
+  cumulative_actual: number | null;
+  cumulative_predicted: number;
+};
+export type RevenuePrediction = {
+  current_revenue: number;
+  predicted_end_of_day: number;
+  predicted_event_total: number;
+  confidence_level: string;
+  hours_of_data: number;
+  days_of_data: number;
+  events_used: number;
+  data_source: string;
+  hourly_timeseries: HourlyPredictionPoint[];
+  average_daily_revenue: number;
+  expected_visitors_per_day: number | null;
+  actual_visitors_today: number;
+  historical_revenue_per_visitor: number | null;
+  visitor_based_prediction: number | null;
 };
 export type Ticket = {
   name: string;
@@ -3861,6 +3899,7 @@ export type PublicEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -3974,6 +4013,7 @@ export type NewEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -4051,6 +4091,7 @@ export type UpdateEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -4108,6 +4149,7 @@ export type RestrictedEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -4591,6 +4633,8 @@ export const {
   useLazyGetPaymentMethodStatsQuery,
   useGetAvailableDatesQuery,
   useLazyGetAvailableDatesQuery,
+  useGetRevenuePredictionQuery,
+  useLazyGetRevenuePredictionQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

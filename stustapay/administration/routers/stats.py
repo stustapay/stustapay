@@ -10,6 +10,7 @@ from stustapay.core.service.order.stats import (
     PaymentMethodBreakdown,
     ProductStats,
     RevenueByCounter,
+    RevenuePrediction,
     TimeseriesStats,
     TimeseriesStatsQuery,
     VoucherStats,
@@ -157,3 +158,17 @@ async def get_available_dates(
     node_id: int,
 ):
     return await order_service.stats.get_available_dates(token=token, node_id=node_id)
+
+
+@router.get("/revenue-prediction", response_model=RevenuePrediction)
+async def get_revenue_prediction(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    node_id: int,
+    till_id: Optional[int] = None,
+):
+    return await order_service.stats.get_revenue_prediction(
+        token=token,
+        query=TimeseriesStatsQuery(from_time=None, to_time=None, till_id=till_id),
+        node_id=node_id,
+    )

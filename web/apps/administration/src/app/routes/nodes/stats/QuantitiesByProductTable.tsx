@@ -13,16 +13,14 @@ import {
   Skeleton,
   Stack,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { useGetProductStatsQuery } from "@/api";
 import { useTranslation } from "react-i18next";
+import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
+import { useFilterableTable } from "@/hooks/useFilterableTable";
 
 export type QuantitiesByProductTableProps = {
   fromTimestamp?: DateTime;
@@ -30,8 +28,6 @@ export type QuantitiesByProductTableProps = {
   tillId?: number;
   productId?: number;
 };
-
-type SortOption = "quantity-desc" | "quantity-asc" | "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
 
 type ProductRow = {
   productId: number;
@@ -52,7 +48,6 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [sortOption, setSortOption] = React.useState<SortOption>("quantity-desc");
 
   const { data, isLoading } = useGetProductStatsQuery({
     nodeId: currentNode.id,
@@ -61,7 +56,7 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
     tillId: tillId,
   });
 
-  // Combine and sort product data
+  // Combine product data
   const tableData: ProductRow[] = React.useMemo(() => {
     if (!data) return [];
 
@@ -73,48 +68,35 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
       allProducts = allProducts.filter((product) => product.product_id === productId);
     }
 
-    const rows: ProductRow[] = allProducts.map((product) => ({
+    return allProducts.map((product) => ({
       productId: product.product_id,
       productName: product.product_name,
       quantity: product.count,
       revenue: product.revenue,
     }));
+  }, [data, productId]);
 
-    // Apply sorting
-    switch (sortOption) {
-      case "quantity-desc":
-        rows.sort((a, b) => Math.abs(b.quantity) - Math.abs(a.quantity));
-        break;
-      case "quantity-asc":
-        rows.sort((a, b) => Math.abs(a.quantity) - Math.abs(b.quantity));
-        break;
-      case "revenue-desc":
-        rows.sort((a, b) => Math.abs(b.revenue) - Math.abs(a.revenue));
-        break;
-      case "revenue-asc":
-        rows.sort((a, b) => Math.abs(a.revenue) - Math.abs(b.revenue));
-        break;
-      case "name-asc":
-        rows.sort((a, b) => a.productName.localeCompare(b.productName));
-        break;
-      case "name-desc":
-        rows.sort((a, b) => b.productName.localeCompare(a.productName));
-        break;
-    }
-
-    return rows;
-  }, [data, sortOption, productId]);
+  const {
+    filteredData,
+    sortField,
+    sortDirection,
+    setSort,
+  } = useFilterableTable({
+    data: tableData,
+    searchFields: ["productName"],
+    defaultSort: { field: "quantity", direction: "desc" },
+  });
 
   // Calculate totals
   const totals = React.useMemo(() => {
-    return tableData.reduce(
+    return filteredData.reduce(
       (acc, row) => ({
         quantity: acc.quantity + row.quantity,
         revenue: acc.revenue + row.revenue,
       }),
       { quantity: 0, revenue: 0 }
     );
-  }, [tableData]);
+  }, [filteredData]);
 
   if (isLoading) {
     return (
@@ -192,48 +174,18 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
     >
       <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
         <Stack spacing={{ xs: 1, sm: 1.5, md: 2 }}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={{ xs: 0.75, sm: 1, md: 2 }}
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            justifyContent="space-between"
+          <Typography
+            variant="h6"
+            sx={{
+              fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
+              color: "text.secondary",
+            }}
           >
-            <Typography
-              variant="h6"
-              sx={{
-                fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                color: "text.secondary",
-              }}
-            >
-              {t("overview.quantitiesPerProduct")}
-            </Typography>
-
-            <FormControl
-              size="small"
-              sx={{
-                minWidth: { xs: "100%", sm: 180 },
-              }}
-            >
-              <InputLabel id="quantity-sort-select-label">{t("overview.sortBy")}</InputLabel>
-              <Select
-                labelId="quantity-sort-select-label"
-                id="quantity-sort-select"
-                value={sortOption}
-                label={t("overview.sortBy")}
-                onChange={(e) => setSortOption(e.target.value as SortOption)}
-              >
-                <MenuItem value="quantity-desc">{t("overview.quantityDescending")}</MenuItem>
-                <MenuItem value="quantity-asc">{t("overview.quantityAscending")}</MenuItem>
-                <MenuItem value="revenue-desc">{t("overview.revenueDescending")}</MenuItem>
-                <MenuItem value="revenue-asc">{t("overview.revenueAscending")}</MenuItem>
-                <MenuItem value="name-asc">{t("overview.nameAscending")}</MenuItem>
-                <MenuItem value="name-desc">{t("overview.nameDescending")}</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
+            {t("overview.quantitiesPerProduct")}
+          </Typography>
 
           <Box
             sx={{
@@ -277,39 +229,33 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell
-                      sx={{
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {t("item.product")}
-                    </TableCell>
-                    <TableCell
+                    <SortableTableHeader
+                      field="productName"
+                      label={t("item.product")}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      onSort={(field) => setSort(field)}
+                    />
+                    <SortableTableHeader
+                      field="quantity"
+                      label={t("item.quantity")}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      onSort={(field) => setSort(field)}
                       align="right"
-                      sx={{
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {t("item.quantity")}
-                    </TableCell>
-                    <TableCell
+                    />
+                    <SortableTableHeader
+                      field="revenue"
+                      label={t("overview.revenue")}
+                      sortField={sortField}
+                      sortDirection={sortDirection}
+                      onSort={(field) => setSort(field)}
                       align="right"
-                      sx={{
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {t("overview.revenue")}
-                    </TableCell>
+                    />
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {tableData.map((row) => (
+                  {filteredData.map((row) => (
                     <TableRow key={row.productId}>
                       <TableCell>{row.productName}</TableCell>
                       <TableCell

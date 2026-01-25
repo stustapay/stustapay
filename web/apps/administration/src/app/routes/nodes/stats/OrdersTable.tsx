@@ -41,6 +41,8 @@ type TableRowData = {
   orderType: string;
   tillName: string;
   productName: string;
+  quantity: number;
+  productPrice: number;
   total: number;
 };
 
@@ -93,6 +95,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
             orderType: order.order_type,
             tillName: (tills && order.till_id ? selectTillById(tills, order.till_id)?.name : "") ?? "-",
             productName: lineItem.product.name,
+            quantity: lineItem.quantity,
+            productPrice: lineItem.product_price,
             total: totalPrice,
           });
         });
@@ -124,6 +128,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
           orderType: order.order_type,
           tillName: (tills && order.till_id ? selectTillById(tills, order.till_id)?.name : "") ?? "-",
           productName: "-",
+          quantity: 0,
+          productPrice: 0,
           total: order.total_price,
         });
       }
@@ -381,38 +387,29 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
                     sortDirection={sortDirection}
                     onSort={(field) => setSort(field)}
                   />
-                  <TableCell
-                    sx={{
-                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      color: "text.secondary",
-                    }}
-                  >
-                    {t("item.product")}
-                  </TableCell>
-                  <TableCell
+                  <SortableTableHeader
+                    field="productName"
+                    label={t("item.product")}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={(field) => setSort(field)}
+                  />
+                  <SortableTableHeader
+                    field="quantity"
+                    label={t("item.quantity")}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={(field) => setSort(field)}
                     align="right"
-                    sx={{
-                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      color: "text.secondary",
-                    }}
-                  >
-                    {t("item.quantity")}
-                  </TableCell>
-                  <TableCell
+                  />
+                  <SortableTableHeader
+                    field="productPrice"
+                    label={t("item.productPrice")}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={(field) => setSort(field)}
                     align="right"
-                    sx={{
-                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      color: "text.secondary",
-                    }}
-                  >
-                    {t("item.productPrice")}
-                  </TableCell>
+                  />
                   <SortableTableHeader
                     field="total"
                     label={t("overview.total")}

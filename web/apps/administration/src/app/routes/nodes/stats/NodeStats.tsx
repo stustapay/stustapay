@@ -7,13 +7,14 @@ import { useTranslation } from "react-i18next";
 import { Alert, AlertTitle, Card, Divider, Grid, Stack, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import { useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery } from "@/api";
+import { useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery } from "@/api";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { RevenueByCounterChart } from "./RevenueByCounterChart";
 import { RevenueByProductChart } from "./RevenueByProductChart";
 import { RevenueByCounterTable } from "./RevenueByCounterTable";
 import { QuantitiesByProductTable } from "./QuantitiesByProductTable";
 import { OrdersTable } from "./OrdersTable";
+import { RevenuePredictionChart } from "./RevenuePredictionChart";
 
 export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();
@@ -26,6 +27,10 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   const { data: availableDates } = useGetAvailableDatesQuery({ nodeId: currentNode.id });
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
   const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
+  const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery({
+    nodeId: currentNode.id,
+    tillId: selectedTillId,
+  });
 
   // Determine timestamp bounds based on selected date and event settings
   // If daily_end_time is set (e.g. 05:00), the "business day" runs from 05:00 on the selected date
@@ -167,8 +172,21 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
         </Card>
       </Grid>
       <Grid size={12}>
-        <DashboardKPIs fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} productId={selectedProductId} />
+        <DashboardKPIs
+          fromTimestamp={fromTimestamp}
+          toTimestamp={toTimestamp}
+          tillId={selectedTillId}
+          productId={selectedProductId}
+          prediction={prediction}
+          isPredictionLoading={isPredictionLoading}
+        />
       </Grid>
+      {/* Revenue prediction chart - only show when no product filter is active */}
+      {selectedProductId === undefined && prediction && (
+        <Grid size={12}>
+          <RevenuePredictionChart prediction={prediction} isLoading={isPredictionLoading} />
+        </Grid>
+      )}
       {/* Only show revenue by counter when no product is selected (not filterable by product) */}
       {selectedProductId === undefined && (
         <Grid size={12}>

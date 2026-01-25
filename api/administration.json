@@ -5669,6 +5669,72 @@
         }
       }
     },
+    "/stats/revenue-prediction": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Revenue Prediction",
+        "operationId": "get_revenue_prediction",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenuePrediction"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tickets": {
       "get": {
         "tags": [
@@ -14123,6 +14189,53 @@
         ],
         "title": "HeadwindDeviceWithMapping"
       },
+      "HourlyPredictionPoint": {
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "title": "Hour"
+          },
+          "actual_revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Revenue"
+          },
+          "predicted_revenue": {
+            "type": "number",
+            "title": "Predicted Revenue"
+          },
+          "cumulative_actual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cumulative Actual"
+          },
+          "cumulative_predicted": {
+            "type": "number",
+            "title": "Cumulative Predicted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hour",
+          "actual_revenue",
+          "predicted_revenue",
+          "cumulative_actual",
+          "cumulative_predicted"
+        ],
+        "title": "HourlyPredictionPoint"
+      },
       "Language": {
         "type": "string",
         "enum": [
@@ -14497,6 +14610,17 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
           },
           "post_payment_allowed": {
             "type": "boolean",
@@ -17374,6 +17498,17 @@
             ],
             "title": "Daily End Time"
           },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
+          },
           "post_payment_allowed": {
             "type": "boolean",
             "title": "Post Payment Allowed",
@@ -17805,6 +17940,17 @@
             ],
             "title": "Daily End Time"
           },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
+          },
           "post_payment_allowed": {
             "type": "boolean",
             "title": "Post Payment Allowed",
@@ -18164,6 +18310,108 @@
           "total_revenue"
         ],
         "title": "RevenueByCounter"
+      },
+      "RevenuePrediction": {
+        "properties": {
+          "current_revenue": {
+            "type": "number",
+            "title": "Current Revenue"
+          },
+          "predicted_end_of_day": {
+            "type": "number",
+            "title": "Predicted End Of Day"
+          },
+          "predicted_event_total": {
+            "type": "number",
+            "title": "Predicted Event Total"
+          },
+          "confidence_level": {
+            "type": "string",
+            "title": "Confidence Level"
+          },
+          "hours_of_data": {
+            "type": "integer",
+            "title": "Hours Of Data"
+          },
+          "days_of_data": {
+            "type": "integer",
+            "title": "Days Of Data"
+          },
+          "events_used": {
+            "type": "integer",
+            "title": "Events Used"
+          },
+          "data_source": {
+            "type": "string",
+            "title": "Data Source"
+          },
+          "hourly_timeseries": {
+            "items": {
+              "$ref": "#/components/schemas/HourlyPredictionPoint"
+            },
+            "type": "array",
+            "title": "Hourly Timeseries"
+          },
+          "average_daily_revenue": {
+            "type": "number",
+            "title": "Average Daily Revenue"
+          },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
+          },
+          "actual_visitors_today": {
+            "type": "integer",
+            "title": "Actual Visitors Today"
+          },
+          "historical_revenue_per_visitor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Revenue Per Visitor"
+          },
+          "visitor_based_prediction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visitor Based Prediction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_revenue",
+          "predicted_end_of_day",
+          "predicted_event_total",
+          "confidence_level",
+          "hours_of_data",
+          "days_of_data",
+          "events_used",
+          "data_source",
+          "hourly_timeseries",
+          "average_daily_revenue",
+          "expected_visitors_per_day",
+          "actual_visitors_today",
+          "historical_revenue_per_visitor",
+          "visitor_based_prediction"
+        ],
+        "title": "RevenuePrediction"
       },
       "StatInterval": {
         "properties": {
@@ -19420,6 +19668,17 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
           },
           "post_payment_allowed": {
             "type": "boolean",

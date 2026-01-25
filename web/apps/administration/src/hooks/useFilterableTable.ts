@@ -33,14 +33,21 @@ export type UseFilterableTableReturn<T> = {
   hasActiveFilters: boolean;
 };
 
+type SortState<T> = {
+  field: keyof T | string | undefined;
+  direction: "asc" | "desc";
+};
+
 export function useFilterableTable<T extends Record<string, any>>(
   options: UseFilterableTableOptions<T>
 ): UseFilterableTableReturn<T> {
   const { data, searchFields = [], defaultSort, defaultSearchQuery = "", defaultColumnFilters } = options;
 
   const [searchQuery, setSearchQuery] = React.useState<string>(defaultSearchQuery);
-  const [sortField, setSortField] = React.useState<keyof T | string | undefined>(defaultSort?.field);
-  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(defaultSort?.direction || "asc");
+  const [sortState, setSortState] = React.useState<SortState<T>>({
+    field: defaultSort?.field,
+    direction: defaultSort?.direction || "desc",
+  });
   const [columnFilters, setColumnFilters] = React.useState<Map<string, any>>(() => {
     const map = new Map<string, any>();
     if (defaultColumnFilters) {
@@ -51,21 +58,24 @@ export function useFilterableTable<T extends Record<string, any>>(
     return map;
   });
 
+  // Derived values for backwards compatibility
+  const sortField = sortState.field;
+  const sortDirection = sortState.direction;
+
   const setSort = React.useCallback((field: keyof T | string, direction?: "asc" | "desc") => {
-    setSortField(field);
-    if (direction) {
-      setSortDirection(direction);
-    } else {
-      // Toggle direction if same field
-      setSortField((prev) => {
-        if (prev === field) {
-          setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    setSortState((prev) => {
+      if (direction) {
+        // Explicit direction provided
+        return { field, direction };
+      } else {
+        // Toggle direction if same field, otherwise default to desc for new field
+        if (prev.field === field) {
+          return { field, direction: prev.direction === "asc" ? "desc" : "asc" };
         } else {
-          setSortDirection("asc");
+          return { field, direction: "desc" };
         }
-        return field;
-      });
-    }
+      }
+    });
   }, []);
 
   const setColumnFilter = React.useCallback((field: string, value: any) => {

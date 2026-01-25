@@ -303,6 +303,27 @@ export const translations: NestedPartialAsStrings<Translations> = {
     quantityDescending: "Menge (Absteigend)",
     quantityAscending: "Menge (Aufsteigend)",
     revenue: "Umsatz",
+    // Umsatzprognose
+    predictedEndOfDay: "Prognose Tagesende",
+    predictedEventTotal: "Prognose Event Gesamt",
+    actualRevenue: "Aktuell",
+    predictedRevenue: "Prognose",
+    revenuePredictionChart: "Umsatzprognose",
+    currentRevenue: "Aktuell",
+    hourOfDay: "Uhrzeit",
+    cumulativeRevenue: "Kumulierter Umsatz",
+    predictionBasedOn: "Basierend auf {{events}} Events, {{days}} Tagen ({{source}})",
+    dataSourceCustomer: "Ihre Events",
+    dataSourceSystem: "alle Events",
+    confidence: {
+      high: "Hoch",
+      medium: "Mittel",
+      low: "Niedrig",
+    },
+    // Besucherbasierte Metriken
+    visitorsToday: "Besucher heute",
+    revenuePerVisitor: "Ø Umsatz / Besucher",
+    visitorBasedPrediction: "Besucherbasierte Prognose",
   },
   ticket: {
     name: "Name",
@@ -417,7 +438,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
       start_date: "Startdatum",
       end_date: "Enddatum",
       daily_end_time: "Tägliche Endzeit",
+      expected_visitors_per_day: "Erwartete Besucher pro Tag",
       start_end_date_must_be_set_same: "Start- und Enddatum müssen beide gesetzt oder nicht gesetzt werden",
+      post_payment_allowed: "Nachzahlung erlaubt",
     },
     customerPortal: {
       tabLabel: "Kundenportal",

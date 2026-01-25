@@ -15,6 +15,8 @@ export type PieChartProps = {
   height?: number;
   useCurrency?: boolean;
   margin?: { top?: number; right?: number; bottom?: number; left?: number };
+  showLegend?: boolean;
+  legendPosition?: "right" | "bottom";
 };
 
 export const PieChart: React.FC<PieChartProps> = ({
@@ -22,6 +24,8 @@ export const PieChart: React.FC<PieChartProps> = ({
   height = 300,
   useCurrency = false,
   margin,
+  showLegend = true,
+  legendPosition = "bottom",
 }) => {
   const formatCurrency = useCurrencyFormatter();
   const theme = useTheme();
@@ -29,34 +33,133 @@ export const PieChart: React.FC<PieChartProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const defaultMargin = React.useMemo(
-    () => ({
+  // For small charts, use bottom legend which takes less horizontal space
+  const isSmallChart = height < 150;
+  const effectiveLegendPosition = isSmallChart ? "bottom" : legendPosition;
+
+  const defaultMargin = React.useMemo(() => {
+    if (effectiveLegendPosition === "bottom") {
+      return {
+        top: 5,
+        right: 10,
+        bottom: showLegend ? 50 : 10,
+        left: 10,
+        ...margin,
+      };
+    }
+    return {
       top: 10,
-      right: isSmallMobile ? 30 : isMobile ? 40 : 80,
+      right: showLegend ? (isSmallMobile ? 80 : isMobile ? 100 : 120) : 20,
       bottom: 10,
-      left: isSmallMobile ? 30 : isMobile ? 40 : 80,
+      left: 20,
       ...margin,
-    }),
-    [isMobile, isSmallMobile, margin]
-  );
+    };
+  }, [effectiveLegendPosition, showLegend, isMobile, isSmallMobile, margin]);
+
+  const legendConfig = React.useMemo(() => {
+    if (!showLegend) return [];
+    
+    if (effectiveLegendPosition === "bottom") {
+      return [
+        {
+          anchor: "bottom" as const,
+          direction: "row" as const,
+          justify: false,
+          translateX: 0,
+          translateY: 40,
+          itemsSpacing: 8,
+          itemWidth: 70,
+          itemHeight: 14,
+          itemTextColor: isDark ? "#a1a5b9" : "#6b7280",
+          itemDirection: "left-to-right" as const,
+          itemOpacity: 1,
+          symbolSize: 8,
+          symbolShape: "circle" as const,
+        },
+      ];
+    }
+    
+    return [
+      {
+        anchor: "right" as const,
+        direction: "column" as const,
+        justify: false,
+        translateX: isSmallMobile ? 70 : isMobile ? 90 : 100,
+        translateY: 0,
+        itemsSpacing: 4,
+        itemWidth: isSmallMobile ? 60 : 80,
+        itemHeight: 16,
+        itemTextColor: isDark ? "#a1a5b9" : "#6b7280",
+        itemDirection: "left-to-right" as const,
+        itemOpacity: 1,
+        symbolSize: 10,
+        symbolShape: "circle" as const,
+      },
+    ];
+  }, [showLegend, effectiveLegendPosition, isDark, isMobile, isSmallMobile]);
 
   return (
     <div style={{ height }}>
       <ResponsivePie
         data={data}
         margin={defaultMargin}
-        innerRadius={0.6}
+        innerRadius={0.5}
         padAngle={1}
-        cornerRadius={2}
+        cornerRadius={3}
         activeOuterRadiusOffset={6}
         colors={["#73BF69", "#F2495C", "#FFA726", "#42A5F5", "#AB47BC"]}
         borderWidth={0}
-        arcLinkLabelsSkipAngle={10}
-        arcLinkLabelsTextColor={isDark ? "#a1a5b9" : "#6b7280"}
-        arcLinkLabelsThickness={2}
-        arcLinkLabelsColor={{ from: "color", modifiers: [["opacity", 0.6]] }}
-        arcLabelsSkipAngle={10}
-        arcLabelsTextColor="#ffffff"
+        enableArcLinkLabels={false}
+        enableArcLabels={false}
+        defs={[
+          {
+            id: "gradient1",
+            type: "linearGradient",
+            colors: [
+              { offset: 0, color: "#73BF69", opacity: 1 },
+              { offset: 100, color: "#4CAF50", opacity: 0.85 },
+            ],
+          },
+          {
+            id: "gradient2",
+            type: "linearGradient",
+            colors: [
+              { offset: 0, color: "#F2495C", opacity: 1 },
+              { offset: 100, color: "#E91E63", opacity: 0.85 },
+            ],
+          },
+          {
+            id: "gradient3",
+            type: "linearGradient",
+            colors: [
+              { offset: 0, color: "#FFA726", opacity: 1 },
+              { offset: 100, color: "#FF9800", opacity: 0.85 },
+            ],
+          },
+          {
+            id: "gradient4",
+            type: "linearGradient",
+            colors: [
+              { offset: 0, color: "#42A5F5", opacity: 1 },
+              { offset: 100, color: "#2196F3", opacity: 0.85 },
+            ],
+          },
+          {
+            id: "gradient5",
+            type: "linearGradient",
+            colors: [
+              { offset: 0, color: "#AB47BC", opacity: 1 },
+              { offset: 100, color: "#9C27B0", opacity: 0.85 },
+            ],
+          },
+        ]}
+        fill={[
+          { match: { id: data[0]?.id }, id: "gradient1" },
+          { match: { id: data[1]?.id }, id: "gradient2" },
+          { match: { id: data[2]?.id }, id: "gradient3" },
+          { match: { id: data[3]?.id }, id: "gradient4" },
+          { match: { id: data[4]?.id }, id: "gradient5" },
+        ].filter((f) => f.match.id !== undefined)}
         tooltip={({ datum }) => (
           <div
             style={{
@@ -72,27 +175,7 @@ export const PieChart: React.FC<PieChartProps> = ({
             <strong>{datum.id}</strong>: {useCurrency ? formatCurrency(datum.value) : datum.value}
           </div>
         )}
-        legends={
-          isMobile
-            ? []
-            : [
-                {
-                  anchor: "right",
-                  direction: "column",
-                  justify: false,
-                  translateX: 20,
-                  translateY: 0,
-                  itemsSpacing: 4,
-                  itemWidth: 80,
-                  itemHeight: 16,
-                  itemTextColor: isDark ? "#a1a5b9" : "#6b7280",
-                  itemDirection: "left-to-right",
-                  itemOpacity: 1,
-                  symbolSize: 10,
-                  symbolShape: "circle",
-                },
-              ]
-        }
+        legends={legendConfig}
       />
     </div>
   );

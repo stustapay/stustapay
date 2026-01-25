@@ -6,13 +6,20 @@ import {
   Typography,
   Skeleton,
   Stack,
-  FormControl,
-  InputLabel,
-  Select,
+  IconButton,
+  Menu,
   MenuItem,
+  ListItemIcon,
+  ListItemText,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+import {
+  MoreVert as MoreVertIcon,
+  SortByAlpha as SortByAlphaIcon,
+  TrendingUp as TrendingUpIcon,
+  Check as CheckIcon,
+} from "@mui/icons-material";
 import { BarChart, BarChartData } from "@/components";
 import { FilterBadge } from "@/components/common/FilterBadge";
 import { useCurrentNode } from "@/hooks";
@@ -42,6 +49,21 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [sortOption, setSortOption] = React.useState<SortOption>("revenue-desc");
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(menuAnchorEl);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
+
+  const handleSortChange = (option: SortOption) => {
+    setSortOption(option);
+    handleMenuClose();
+  };
 
   const { data, isLoading } = useGetRevenueByCounterQuery({
     nodeId: currentNode.id,
@@ -214,64 +236,89 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
       <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
         <Stack spacing={{ xs: 1, sm: 1.5, md: 2 }}>
           <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={{ xs: 0.75, sm: 1, md: 2 }}
-            alignItems={{ xs: "flex-start", sm: "center" }}
+            direction="row"
+            spacing={1}
+            alignItems="center"
             justifyContent="space-between"
-            flexWrap="wrap"
+            width="100%"
           >
-            <Typography
-              variant="h6"
-              sx={{
-                fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                color: "text.secondary",
-              }}
-            >
-              {t("overview.revenuePerCounter")}
-            </Typography>
-            {tillId !== undefined && onClearFilter && (
-              <FilterBadge
-                label={t("overview.filteredBy")}
-                value={
-                  data.counters.find((c) => c.till_id === tillId)?.till_name || String(tillId)
-                }
-                onClear={onClearFilter}
-                visible={true}
-              />
-            )}
-          </Stack>
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <FormControl
-              size="small"
-              sx={{
-                minWidth: { xs: "100%", sm: 180 },
-                transition: "all 0.2s ease-in-out",
-              }}
-            >
-              <InputLabel id="sort-select-label">{t("overview.sortBy")}</InputLabel>
-              <Select
-                labelId="sort-select-label"
-                id="sort-select"
-                value={sortOption}
-                label={t("overview.sortBy")}
-                onChange={(e) => setSortOption(e.target.value as SortOption)}
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <Typography
+                variant="h6"
                 sx={{
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    borderColor: "#73BF69",
-                  },
+                  fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
+                  fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
+                  color: "text.secondary",
                 }}
               >
-                <MenuItem value="revenue-desc">{t("overview.revenueDescending")}</MenuItem>
-                <MenuItem value="revenue-asc">{t("overview.revenueAscending")}</MenuItem>
-                <MenuItem value="name-asc">{t("overview.nameAscending")}</MenuItem>
-                <MenuItem value="name-desc">{t("overview.nameDescending")}</MenuItem>
-              </Select>
-            </FormControl>
+                {t("overview.revenuePerCounter")}
+              </Typography>
+              {tillId !== undefined && onClearFilter && (
+                <FilterBadge
+                  label={t("overview.filteredBy")}
+                  value={
+                    data.counters.find((c) => c.till_id === tillId)?.till_name || String(tillId)
+                  }
+                  onClear={onClearFilter}
+                  visible={true}
+                />
+              )}
+            </Stack>
+            <IconButton
+              size="small"
+              onClick={handleMenuOpen}
+              sx={{
+                color: "text.secondary",
+                "&:hover": {
+                  color: "#73BF69",
+                },
+              }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={menuOpen}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem disabled sx={{ opacity: 0.7, fontSize: "0.75rem", textTransform: "uppercase" }}>
+                {t("overview.sortBy")}
+              </MenuItem>
+              <MenuItem onClick={() => handleSortChange("revenue-desc")}>
+                <ListItemIcon>
+                  {sortOption === "revenue-desc" ? <CheckIcon fontSize="small" sx={{ color: "#73BF69" }} /> : <TrendingUpIcon fontSize="small" />}
+                </ListItemIcon>
+                <ListItemText>{t("overview.revenueDescending")}</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleSortChange("revenue-asc")}>
+                <ListItemIcon>
+                  {sortOption === "revenue-asc" ? <CheckIcon fontSize="small" sx={{ color: "#73BF69" }} /> : <TrendingUpIcon fontSize="small" />}
+                </ListItemIcon>
+                <ListItemText>{t("overview.revenueAscending")}</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleSortChange("name-asc")}>
+                <ListItemIcon>
+                  {sortOption === "name-asc" ? <CheckIcon fontSize="small" sx={{ color: "#73BF69" }} /> : <SortByAlphaIcon fontSize="small" />}
+                </ListItemIcon>
+                <ListItemText>{t("overview.nameAscending")}</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleSortChange("name-desc")}>
+                <ListItemIcon>
+                  {sortOption === "name-desc" ? <CheckIcon fontSize="small" sx={{ color: "#73BF69" }} /> : <SortByAlphaIcon fontSize="small" />}
+                </ListItemIcon>
+                <ListItemText>{t("overview.nameDescending")}</ListItemText>
+              </MenuItem>
+            </Menu>
           </Stack>
 
           <BarChart
