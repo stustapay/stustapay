@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import asyncpg
@@ -737,15 +737,24 @@ class OrderStatsService(Service[Config]):
 
         event = await fetch_event_for_node(conn=conn, node=node)
 
-        # Get current day's time bounds
-        now = datetime.now(tz=event.start_date.tzinfo if event.start_date else None)
-        current_hour = now.hour
+        # Get current time and hour/minute from database using same timezone as order extraction
+        # Use EXTRACT with AT TIME ZONE to ensure consistency with order hour extraction
+        db_result = await conn.fetchrow(
+            """SELECT 
+                now() as db_now, 
+                EXTRACT(HOUR FROM now() AT TIME ZONE 'localtime') as current_hour,
+                EXTRACT(MINUTE FROM now() AT TIME ZONE 'localtime') as current_minute
+            """
+        )
+        now = db_result["db_now"] if db_result else datetime.now(tz=timezone.utc)
+        current_hour = int(db_result["current_hour"]) if db_result else now.hour
+        current_minute = int(db_result["current_minute"]) if db_result else now.minute
 
         # Calculate today's start time based on daily_end_time
         if event.daily_end_time:
             daily_end_hour = event.daily_end_time.hour
             daily_end_minute = event.daily_end_time.minute
-            if current_hour < daily_end_hour or (current_hour == daily_end_hour and now.minute < daily_end_minute):
+            if current_hour < daily_end_hour or (current_hour == daily_end_hour and current_minute < daily_end_minute):
                 # We're in the "late night" hours that belong to the previous day
                 today_start = (now - timedelta(days=1)).replace(
                     hour=daily_end_hour, minute=daily_end_minute, second=0, microsecond=0
@@ -773,12 +782,12 @@ class OrderStatsService(Service[Config]):
 
         if customer_node_id is not None:
             # Query all historical hourly revenue from events under the customer node
-            # Exclude the current day
+            # Exclude the current day (using local timezone for consistency)
             historical_data = await conn.fetch(
                 """
                 SELECT
-                    EXTRACT(HOUR FROM o.booked_at) as hour,
-                    DATE(o.booked_at) as day,
+                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
+                    DATE(o.booked_at AT TIME ZONE 'localtime') as day,
                     e.id as event_id,
                     COALESCE(SUM(li.total_price), 0) as revenue
                 FROM ordr o
@@ -804,8 +813,8 @@ class OrderStatsService(Service[Config]):
             historical_data = await conn.fetch(
                 """
                 SELECT
-                    EXTRACT(HOUR FROM o.booked_at) as hour,
-                    DATE(o.booked_at) as day,
+                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
+                    DATE(o.booked_at AT TIME ZONE 'localtime') as day,
                     n.event_node_id as event_id,
                     COALESCE(SUM(li.total_price), 0) as revenue
                 FROM ordr o
@@ -822,24 +831,23 @@ class OrderStatsService(Service[Config]):
             )
             events_used = len(set(row["event_id"] for row in historical_data if row["event_id"]))
 
-        # Get current day's revenue by hour
+        # Get current day's revenue by hour (using local timezone for hour extraction)
         current_day_stats = await conn.fetch(
             """
             SELECT
-                EXTRACT(HOUR FROM o.booked_at) as hour,
+                EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
                 COALESCE(SUM(li.total_price), 0) as revenue
             FROM orders_at_node_and_children($1) o
             JOIN line_item li ON o.id = li.order_id
             WHERE o.payment_method = 'tag'
                 AND o.booked_at >= $2
-                AND o.booked_at <= $3
-                AND ($4::int IS NULL OR o.till_id = $4)
+                AND o.booked_at <= now()
+                AND ($3::int IS NULL OR o.till_id = $3)
             GROUP BY hour
             ORDER BY hour
             """,
             node.id,
             today_start,
-            now,
             query.till_id,
         )
 
@@ -910,7 +918,10 @@ class OrderStatsService(Service[Config]):
         remaining_days = 0
         if event.end_date and event.start_date:
             total_event_days = (event.end_date - event.start_date).days + 1
-            elapsed_days = (now - event.start_date).days
+            # Convert both to naive datetime for comparison (remove timezone info)
+            start_date_naive = event.start_date.replace(tzinfo=None) if event.start_date.tzinfo else event.start_date
+            now_naive = now.replace(tzinfo=None) if now.tzinfo else now
+            elapsed_days = (now_naive - start_date_naive).days
             remaining_days = max(0, total_event_days - elapsed_days - 1)  # -1 because today is predicted separately
 
         predicted_event_total = predicted_end_of_day + (average_daily_revenue * remaining_days)
@@ -960,62 +971,32 @@ class OrderStatsService(Service[Config]):
         )
         actual_visitors_today = int(actual_visitors_result) if actual_visitors_result else 0
 
-        # Calculate historical revenue per visitor from historical data
+        # Calculate revenue per visitor: Total Revenue / Guests with Orders (current event)
         historical_revenue_per_visitor: Optional[float] = None
         visitor_based_prediction: Optional[float] = None
 
-        if historical_data and days_of_data > 0:
-            # Query historical visitor counts
-            if customer_node_id is not None:
-                historical_visitors = await conn.fetch(
-                    """
-                    SELECT
-                        DATE(o.booked_at) as day,
-                        COUNT(DISTINCT o.customer_account_id) as visitors,
-                        COALESCE(SUM(li.total_price), 0) as revenue
-                    FROM ordr o
-                    JOIN line_item li ON o.id = li.order_id
-                    JOIN till t ON o.till_id = t.id
-                    JOIN node n ON t.node_id = n.id
-                    WHERE o.payment_method = 'tag'
-                        AND o.booked_at < $2
-                        AND ($1 = ANY(n.parent_ids) OR n.id = $1)
-                        AND o.customer_account_id IS NOT NULL
-                    GROUP BY day
-                    """,
-                    customer_node_id,
-                    today_start,
-                )
-            else:
-                historical_visitors = await conn.fetch(
-                    """
-                    SELECT
-                        DATE(o.booked_at) as day,
-                        COUNT(DISTINCT o.customer_account_id) as visitors,
-                        COALESCE(SUM(li.total_price), 0) as revenue
-                    FROM ordr o
-                    JOIN line_item li ON o.id = li.order_id
-                    JOIN till t ON o.till_id = t.id
-                    JOIN node n ON t.node_id = n.id
-                    WHERE o.payment_method = 'tag'
-                        AND o.booked_at < $1
-                        AND n.event_node_id IS NOT NULL
-                        AND o.customer_account_id IS NOT NULL
-                    GROUP BY day
-                    """,
-                    today_start,
-                )
+        # Get total revenue and guest count for current event
+        event_stats = await conn.fetchrow(
+            """
+            SELECT
+                COALESCE(SUM(li.total_price), 0) as total_revenue,
+                COUNT(DISTINCT o.customer_account_id) as guests_with_orders
+            FROM orders_at_node_and_children($1) o
+            JOIN line_item li ON o.id = li.order_id
+            WHERE o.payment_method = 'tag'
+                AND o.customer_account_id IS NOT NULL
+            """,
+            node.id,
+        )
 
-            # Calculate average revenue per visitor across all historical days
-            total_historical_visitors = sum(int(row["visitors"]) for row in historical_visitors if row["visitors"])
-            total_historical_revenue = sum(float(row["revenue"]) for row in historical_visitors if row["revenue"])
+        if event_stats and event_stats["guests_with_orders"] > 0:
+            total_revenue = float(event_stats["total_revenue"])
+            guests_with_orders = int(event_stats["guests_with_orders"])
+            historical_revenue_per_visitor = round(total_revenue / guests_with_orders, 2)
 
-            if total_historical_visitors > 0:
-                historical_revenue_per_visitor = round(total_historical_revenue / total_historical_visitors, 2)
-
-                # If expected visitors is configured, calculate visitor-based prediction
-                if expected_visitors_per_day:
-                    visitor_based_prediction = round(expected_visitors_per_day * historical_revenue_per_visitor, 2)
+            # If expected visitors is configured, calculate visitor-based prediction
+            if expected_visitors_per_day:
+                visitor_based_prediction = round(expected_visitors_per_day * historical_revenue_per_visitor, 2)
 
         return RevenuePrediction(
             current_revenue=round(current_revenue, 2),

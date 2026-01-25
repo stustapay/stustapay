@@ -19,26 +19,26 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { eventSettings } = useCurrentEventSettings();
 
+  // Format hour to display in local timezone with proper formatting
+  const formatHour = (hour: number): string => {
+    return `${hour.toString().padStart(2, "0")}:00`;
+  };
+
   // Transform prediction data for the line chart
   const chartData = React.useMemo(() => {
     if (!prediction?.hourly_timeseries) return [];
-
-    // Calculate daily_end_hour offset for x-axis labeling
-    const dailyEndHour = eventSettings.daily_end_time
-      ? parseInt(eventSettings.daily_end_time.split(":")[0], 10)
-      : 0;
 
     // Build actual revenue line (only up to current hour)
     const actualData = prediction.hourly_timeseries
       .filter((point) => point.cumulative_actual !== null && point.cumulative_actual !== undefined)
       .map((point) => ({
-        x: `${point.hour}:00`,
+        x: formatHour(point.hour),
         y: point.cumulative_actual,
       }));
 
     // Build predicted revenue line (full day)
     const predictedData = prediction.hourly_timeseries.map((point) => ({
-      x: `${point.hour}:00`,
+      x: formatHour(point.hour),
       y: point.cumulative_predicted,
     }));
 
@@ -52,7 +52,7 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
         data: predictedData,
       },
     ];
-  }, [prediction, eventSettings.daily_end_time, t]);
+  }, [prediction, t]);
 
   if (isLoading) {
     return (
@@ -134,7 +134,7 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
               legend: t("overview.hourOfDay"),
               legendOffset: 40,
               legendPosition: "middle",
-              tickValues: isSmallMobile ? ["0:00", "6:00", "12:00", "18:00"] : undefined,
+              tickValues: isSmallMobile ? ["00:00", "06:00", "12:00", "18:00"] : undefined,
             }}
             axisLeft={{
               tickSize: 5,

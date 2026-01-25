@@ -190,9 +190,13 @@ export const BarChart: React.FC<BarChartProps> = ({
               ? (value) => formatCurrency(value)
               : undefined,
         }}
-        labelSkipWidth={12}
-        labelSkipHeight={12}
+        enableLabel={true}
+        label={(d) => useCurrency ? formatCurrency(d.value as number) : String(d.value)}
+        labelSkipWidth={40}
+        labelSkipHeight={16}
         labelTextColor="#ffffff"
+        labelPosition="end"
+        labelOffset={8}
         isInteractive={true}
         tooltip={({ value, indexValue }) => (
           <div
