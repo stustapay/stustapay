@@ -30,6 +30,7 @@ export type OrdersTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  subnodeId?: number;
   productId?: number;
   pollingIntervalMs?: number;
 };
@@ -53,6 +54,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   fromTimestamp,
   toTimestamp,
   tillId,
+  subnodeId,
   productId,
   pollingIntervalMs = 0,
 }) => {
@@ -63,7 +65,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [showAll, setShowAll] = React.useState(false);
-  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
+  const effectiveNodeId = subnodeId ?? currentNode.id;
+  const { data: tills } = useListTillsQuery({ nodeId: effectiveNodeId }, { pollingInterval: pollingIntervalMs });
 
   const { data: ordersData, isLoading } = useListOrdersFilteredQuery(
     {
@@ -71,6 +74,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );

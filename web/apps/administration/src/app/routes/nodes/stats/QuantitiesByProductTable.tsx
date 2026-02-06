@@ -26,6 +26,7 @@ export type QuantitiesByProductTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  subnodeId?: number;
   productId?: number;
   pollingIntervalMs?: number;
 };
@@ -41,6 +42,7 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
   fromTimestamp,
   toTimestamp,
   tillId,
+  subnodeId,
   productId,
   pollingIntervalMs = 0,
 }) => {
@@ -57,6 +59,7 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );

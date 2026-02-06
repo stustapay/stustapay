@@ -280,6 +280,8 @@ export const translations = {
       "Please configure the start / end times for this event as well as the daily end time in the event settings",
     generateRevenueReport: "Generate revenue report",
     filterDate: "Date",
+    filterSubnode: "Filter by Subnode",
+    allSubnodes: "All Subnodes",
     filterTill: "Filter by Till",
     allTills: "All Tills",
     filterProduct: "Filter by Product",

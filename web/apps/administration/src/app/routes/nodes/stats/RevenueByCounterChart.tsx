@@ -30,6 +30,7 @@ export type RevenueByCounterChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  subnodeId?: number;
   pollingIntervalMs?: number;
   onBarClick?: (tillId: number) => void;
   onClearFilter?: () => void;
@@ -41,6 +42,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
   fromTimestamp,
   toTimestamp,
   tillId,
+  subnodeId,
   pollingIntervalMs = 0,
   onBarClick,
   onClearFilter,
@@ -73,6 +75,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );

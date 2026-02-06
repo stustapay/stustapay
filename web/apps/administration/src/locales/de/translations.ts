@@ -272,6 +272,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
       "Bitte konfigurieren Sie die Start- / Endzeiten für dieses Ereignis sowie die tägliche Endzeit in den Ereigniseinstellungen",
     generateRevenueReport: "Umsatzbericht generieren",
     filterDate: "Datum",
+    filterSubnode: "Nach Unterknoten filtern",
+    allSubnodes: "Alle Unterknoten",
     filterTill: "Nach Kasse filtern",
     allTills: "Alle Kassen",
     filterProduct: "Nach Produkt filtern",

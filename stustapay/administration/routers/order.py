@@ -29,6 +29,7 @@ async def list_orders_filtered(
     from_timestamp: Optional[datetime] = None,
     to_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
     limit: Optional[int] = None,
 ):
     return normalize_list(
@@ -37,6 +38,7 @@ async def list_orders_filtered(
             from_timestamp=from_timestamp,
             to_timestamp=to_timestamp,
             till_id=till_id,
+            subnode_id=subnode_id,
             node_id=node_id,
             limit=limit,
         )

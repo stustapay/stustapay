@@ -18,7 +18,7 @@ from stustapay.core.service.common.decorators import (
 )
 from sftkit.error import InvalidArgument
 from stustapay.core.service.product import fetch_pay_out_product, fetch_top_up_product
-from stustapay.core.service.tree.common import fetch_event_for_node
+from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
 
 
 class ProductSoldStats(Product):
@@ -58,6 +58,7 @@ class TimeseriesStatsQuery(BaseModel):
     from_time: Optional[datetime]
     to_time: Optional[datetime]
     till_id: Optional[int] = None
+    subnode_id: Optional[int] = None
 
 
 class ProductTimeseries(BaseModel):
@@ -360,17 +361,33 @@ class OrderStatsService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+
+    async def _resolve_scope_node(self, *, conn: Connection, node: Node, subnode_id: Optional[int]) -> Node:
+        if subnode_id is None or subnode_id == node.id:
+            return node
+
+        scope_node = await fetch_node(conn=conn, node_id=subnode_id)
+        if scope_node is None:
+            raise InvalidArgument("Selected subnode does not exist")
+        if node.id not in scope_node.parent_ids:
+            raise InvalidArgument("Selected subnode is not in the current node subtree")
+
+        return scope_node
+
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
-    async def get_available_dates(self, *, conn: Connection, node: Node) -> list[str]:
+    async def get_available_dates(self, *, conn: Connection, node: Node, subnode_id: Optional[int] = None) -> list[str]:
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=subnode_id)
+
         dates = await conn.fetch(
             "SELECT DISTINCT date(o.booked_at)::text as date "
             "FROM orders_at_node_and_children($1) o "
             "ORDER BY date DESC",
-            node.id,
+            scope_node.id,
         )
         return [row["date"] for row in dates]
+
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
@@ -378,11 +395,12 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Entry stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         hourly_stats = await get_hourly_entry_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
@@ -399,11 +417,12 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         hourly_stats = await get_hourly_top_up_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
@@ -420,11 +439,12 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         hourly_stats = await get_hourly_pay_out_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
@@ -441,7 +461,8 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("voucher stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         stats = await conn.fetch_one(
@@ -457,7 +478,7 @@ class OrderStatsService(Service[Config]):
             "   and ($4::int IS NULL OR t.till_id = $4)",
             from_time,
             to_time,
-            node.event_node_id,
+            scope_node.event_node_id,
             query.till_id,
         )
 
@@ -467,18 +488,19 @@ class OrderStatsService(Service[Config]):
     @requires_node()
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
         hourly_stats = await get_hourly_sales_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         hourly_product_stats = await get_hourly_product_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time, returnable=False
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time, returnable=False
         )
         hourly_deposit_stats = await get_hourly_product_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time, returnable=True
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time, returnable=True
         )
 
         product_overall_stats = []
@@ -515,10 +537,11 @@ class OrderStatsService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.view_node_stats])
     async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
         hourly_stats = await get_hourly_sales_stats(
-            conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
@@ -538,16 +561,17 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Dashboard overview can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        if node.ids_to_event_node is None:
+        if scope_node.ids_to_event_node is None:
             raise InvalidArgument("Dashboard overview can only be computed for nodes within an event")
 
         # Total guest credit (sum of all customer account balances)
         total_guest_credit = await conn.fetchval(
             "SELECT COALESCE(SUM(balance), 0) FROM account WHERE type = 'private' AND node_id = ANY($1)",
-            node.ids_to_event_node,
+            scope_node.ids_to_event_node,
         )
 
         # Total revenue from sales in date range
@@ -559,7 +583,7 @@ class OrderStatsService(Service[Config]):
             "AND ($4::int IS NULL OR o.till_id = $4)",
             from_time,
             to_time,
-            node.id,
+            scope_node.id,
             query.till_id,
         )
 
@@ -571,14 +595,14 @@ class OrderStatsService(Service[Config]):
             "AND ($4::int IS NULL OR o.till_id = $4)",
             from_time,
             to_time,
-            node.id,
+            scope_node.id,
             query.till_id,
         )
 
         # Guests with credit (balance > 0)
         guests_with_credit = await conn.fetchval(
             "SELECT COUNT(*) FROM account WHERE type = 'private' AND node_id = ANY($1) AND balance > 0",
-            node.ids_to_event_node,
+            scope_node.ids_to_event_node,
         )
 
         # Guests paid out (count of customers with payout transactions)
@@ -591,7 +615,7 @@ class OrderStatsService(Service[Config]):
             "AND t.target_account IN (SELECT id FROM account WHERE type IN ('cash_exit', 'sepa_exit', 'donation_exit'))",
             from_time,
             to_time,
-            node.ids_to_event_node,
+            scope_node.ids_to_event_node,
         )
 
         # Online donation (sum of donations from payouts)
@@ -600,7 +624,7 @@ class OrderStatsService(Service[Config]):
             "FROM payout p "
             "JOIN account a ON p.customer_account_id = a.id "
             "WHERE a.node_id = ANY($1) AND p.payout_run_id IS NOT NULL",
-            node.ids_to_event_node,
+            scope_node.ids_to_event_node,
         )
 
         # Online for payout (sum of pending payout amounts - customers without payout run)
@@ -608,7 +632,7 @@ class OrderStatsService(Service[Config]):
             "SELECT COALESCE(SUM(c.balance), 0) "
             "FROM customers_without_payout_run c "
             "WHERE c.node_id = ANY($1) AND c.payout_export = true",
-            node.ids_to_event_node,
+            scope_node.ids_to_event_node,
         )
 
         return DashboardOverview(
@@ -627,7 +651,8 @@ class OrderStatsService(Service[Config]):
     async def get_revenue_by_counter(
         self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
     ) -> RevenueByCounter:
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         # When filtering by a specific till, we want to show only that till
@@ -649,7 +674,7 @@ class OrderStatsService(Service[Config]):
                 "ORDER BY revenue DESC",
                 from_time,
                 to_time,
-                node.id,
+                scope_node.id,
                 query.till_id,
             )
         else:
@@ -668,7 +693,7 @@ class OrderStatsService(Service[Config]):
                 "ORDER BY revenue DESC",
                 from_time,
                 to_time,
-                node.id,
+                scope_node.id,
             )
 
         counters = [
@@ -691,7 +716,8 @@ class OrderStatsService(Service[Config]):
     async def get_payment_method_stats(
         self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
     ) -> PaymentMethodBreakdown:
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         result = await conn.fetch(
@@ -705,7 +731,7 @@ class OrderStatsService(Service[Config]):
             "ORDER BY revenue DESC",
             from_time,
             to_time,
-            node.id,
+            scope_node.id,
             query.till_id,
         )
 
@@ -735,7 +761,8 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Revenue prediction can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
 
         # Get current time and hour/minute from database using same timezone as order extraction
         # Use EXTRACT with AT TIME ZONE to ensure consistency with order hour extraction
@@ -769,11 +796,11 @@ class OrderStatsService(Service[Config]):
         # Find customer node (first node after root)
         # parent_ids[0] is root (id=0), parent_ids[1] is customer node
         customer_node_id: Optional[int] = None
-        if len(node.parent_ids) >= 2:
-            customer_node_id = node.parent_ids[1]
-        elif len(node.parent_ids) == 1 and node.parent_ids[0] == 0:
+        if len(scope_node.parent_ids) >= 2:
+            customer_node_id = scope_node.parent_ids[1]
+        elif len(scope_node.parent_ids) == 1 and scope_node.parent_ids[0] == 0:
             # This node is directly under root - it IS the customer node
-            customer_node_id = node.id
+            customer_node_id = scope_node.id
 
         # Try to get historical data from customer's events first
         data_source = "customer"
@@ -846,7 +873,7 @@ class OrderStatsService(Service[Config]):
             GROUP BY hour
             ORDER BY hour
             """,
-            node.id,
+            scope_node.id,
             today_start,
             query.till_id,
         )
@@ -965,7 +992,7 @@ class OrderStatsService(Service[Config]):
                 AND o.booked_at <= $3
                 AND o.customer_account_id IS NOT NULL
             """,
-            node.id,
+            scope_node.id,
             today_start,
             now,
         )
@@ -986,7 +1013,7 @@ class OrderStatsService(Service[Config]):
             WHERE o.payment_method = 'tag'
                 AND o.customer_account_id IS NOT NULL
             """,
-            node.id,
+            scope_node.id,
         )
 
         if event_stats and event_stats["guests_with_orders"] > 0:

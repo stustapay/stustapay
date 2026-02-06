@@ -11,6 +11,7 @@ export type DashboardKPIsProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  subnodeId?: number;
   productId?: number;
   prediction?: RevenuePrediction;
   isPredictionLoading?: boolean;
@@ -21,6 +22,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   fromTimestamp,
   toTimestamp,
   tillId,
+  subnodeId,
   productId,
   prediction,
   isPredictionLoading,
@@ -39,6 +41,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { skip: currentNode.event == null, pollingInterval: pollingIntervalMs }
   );
@@ -48,6 +51,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );
@@ -57,6 +61,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );

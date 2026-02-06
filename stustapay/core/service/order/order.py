@@ -86,7 +86,7 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
+from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
 
 from ..till.common import get_cash_register_account_id
 from .booking import BookingIdentifier, NewLineItem, book_order
@@ -246,6 +246,19 @@ class OrderService(Service[Config]):
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.stats = OrderStatsService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.sumup = SumupService(db_pool=db_pool, config=config, auth_service=auth_service)
+
+    @staticmethod
+    async def _resolve_scope_node(*, conn: Connection, node: Node, subnode_id: Optional[int]) -> Node:
+        if subnode_id is None or subnode_id == node.id:
+            return node
+
+        scope_node = await fetch_node(conn=conn, node_id=subnode_id)
+        if scope_node is None:
+            raise InvalidArgument("Selected subnode does not exist")
+        if node.id not in scope_node.parent_ids:
+            raise InvalidArgument("Selected subnode is not in the current node subtree")
+
+        return scope_node
 
     @staticmethod
     async def _get_products_from_buttons(
@@ -1621,11 +1634,13 @@ class OrderService(Service[Config]):
         from_timestamp: Optional[datetime] = None,
         to_timestamp: Optional[datetime] = None,
         till_id: Optional[int] = None,
+        subnode_id: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> list[Order]:
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=subnode_id)
         param_count = 1
         conditions: list[str] = []
-        params: list = [node.id]
+        params: list = [scope_node.id]
 
         conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
 
@@ -1681,7 +1696,7 @@ class OrderService(Service[Config]):
         array_agg_query = f"SELECT array_agg(sub.id) FROM ({inner_query}) as sub"
         
         query = f"select * from order_value_prefiltered(({array_agg_query}), ${param_count})"
-        params.append(node.event_node_id)
+        params.append(scope_node.event_node_id)
         
         if limit is not None:
             params.append(limit)

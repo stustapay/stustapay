@@ -30,6 +30,7 @@ export type RevenueByProductChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  subnodeId?: number;
   productId?: number;
   pollingIntervalMs?: number;
   onProductClick?: (productId: number) => void;
@@ -42,6 +43,7 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
   fromTimestamp,
   toTimestamp,
   tillId,
+  subnodeId,
   productId,
   pollingIntervalMs = 0,
   onProductClick,
@@ -76,6 +78,7 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );

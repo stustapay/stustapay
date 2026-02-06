@@ -1,12 +1,12 @@
 import * as React from "react";
 import { withPrivilegeGuard } from "@/app/layout";
+import { NodeSeenByUser, useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery, api } from "@/api";
 import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
 import { useTranslation } from "react-i18next";
 import { Alert, AlertTitle, Grid, Stack, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import { useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery, api } from "@/api";
 import {
   useAppDispatch,
   useAppSelector,
@@ -40,18 +40,57 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   const { currentNode } = useCurrentNode();
   const dispatch = useAppDispatch();
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+  const [selectedSubnodeId, setSelectedSubnodeId] = React.useState<number | undefined>(undefined);
   const [selectedTillId, setSelectedTillId] = React.useState<number | undefined>(undefined);
   const [selectedProductId, setSelectedProductId] = React.useState<number | undefined>(undefined);
   const pollingIntervalMs = useAppSelector(selectStatsPollingInterval);
   const expandedSections = useAppSelector(selectStatsExpandedSections) as Record<SectionKey, boolean>;
 
-  const { data: availableDates } = useGetAvailableDatesQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
-  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
-  const { data: products } = useListProductsQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
+  const effectiveFilterNodeId = selectedSubnodeId ?? currentNode.id;
+
+  const subnodeOptions = React.useMemo(() => {
+    const options: Array<{ id: number; name: string; depth: number }> = [];
+    const queue: Array<{ node: NodeSeenByUser; depth: number }> = currentNode.children.map((child) => ({
+      node: child,
+      depth: 1,
+    }));
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current) break;
+      options.push({ id: current.node.id, name: current.node.name, depth: current.depth });
+      for (const child of current.node.children) {
+        queue.push({ node: child, depth: current.depth + 1 });
+      }
+    }
+
+    return options;
+  }, [currentNode]);
+
+  React.useEffect(() => {
+    if (selectedSubnodeId === undefined) {
+      return;
+    }
+
+    const isValidSelection = subnodeOptions.some((option) => option.id === selectedSubnodeId);
+    if (!isValidSelection) {
+      setSelectedSubnodeId(undefined);
+      setSelectedTillId(undefined);
+      setSelectedProductId(undefined);
+    }
+  }, [selectedSubnodeId, subnodeOptions]);
+
+  const { data: availableDates } = useGetAvailableDatesQuery(
+    { nodeId: currentNode.id, subnodeId: selectedSubnodeId },
+    { pollingInterval: pollingIntervalMs }
+  );
+  const { data: tills } = useListTillsQuery({ nodeId: effectiveFilterNodeId }, { pollingInterval: pollingIntervalMs });
+  const { data: products } = useListProductsQuery({ nodeId: effectiveFilterNodeId }, { pollingInterval: pollingIntervalMs });
   const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery(
     {
       nodeId: currentNode.id,
       tillId: selectedTillId,
+      subnodeId: selectedSubnodeId,
     },
     { pollingInterval: pollingIntervalMs, skip: currentNode.event == null }
   );
@@ -167,6 +206,33 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
               </Select>
             </FormControl>
 
+            <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 220 } }}>
+              <InputLabel id="subnode-select-label" shrink>{t("overview.filterSubnode")}</InputLabel>
+              <Select
+                labelId="subnode-select-label"
+                id="subnode-select"
+                value={selectedSubnodeId ?? ""}
+                label={t("overview.filterSubnode")}
+                onChange={(e) => {
+                  const val = e.target.value as string | number;
+                  setSelectedSubnodeId(val === "" ? undefined : (val as number));
+                  setSelectedTillId(undefined);
+                  setSelectedProductId(undefined);
+                }}
+                displayEmpty
+                notched
+              >
+                <MenuItem value="">
+                  <em>{t("overview.allSubnodes")}</em>
+                </MenuItem>
+                {subnodeOptions.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>
+                    {`${"  ".repeat(Math.max(0, option.depth - 1))}${option.name}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
             <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
               <InputLabel id="till-select-label" shrink>{t("overview.filterTill")}</InputLabel>
               <Select
@@ -262,6 +328,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
               tillId={selectedTillId}
+              subnodeId={selectedSubnodeId}
               productId={selectedProductId}
               prediction={prediction}
               isPredictionLoading={isPredictionLoading}
@@ -292,12 +359,13 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
             </AccordionSummary>
             <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
               <RevenueByCounterChart
-                fromTimestamp={fromTimestamp}
-                toTimestamp={toTimestamp}
-                tillId={selectedTillId}
-                pollingIntervalMs={pollingIntervalMs}
-                onBarClick={(tillId) => setSelectedTillId(tillId)}
-                onClearFilter={() => setSelectedTillId(undefined)}
+              fromTimestamp={fromTimestamp}
+              toTimestamp={toTimestamp}
+              tillId={selectedTillId}
+              subnodeId={selectedSubnodeId}
+              pollingIntervalMs={pollingIntervalMs}
+              onBarClick={(tillId) => setSelectedTillId(tillId)}
+              onClearFilter={() => setSelectedTillId(undefined)}
               />
             </AccordionDetails>
           </Accordion>
@@ -313,6 +381,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
               tillId={selectedTillId}
+              subnodeId={selectedSubnodeId}
               productId={selectedProductId}
               pollingIntervalMs={pollingIntervalMs}
               onProductClick={(productId) => setSelectedProductId(productId)}
@@ -331,6 +400,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
               tillId={selectedTillId}
+              subnodeId={selectedSubnodeId}
               productId={selectedProductId}
               pollingIntervalMs={pollingIntervalMs}
             />
@@ -349,6 +419,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
                 fromTimestamp={fromTimestamp}
                 toTimestamp={toTimestamp}
                 tillId={selectedTillId}
+                subnodeId={selectedSubnodeId}
                 pollingIntervalMs={pollingIntervalMs}
               />
             </AccordionDetails>
@@ -365,6 +436,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
               tillId={selectedTillId}
+              subnodeId={selectedSubnodeId}
               productId={selectedProductId}
               pollingIntervalMs={pollingIntervalMs}
             />

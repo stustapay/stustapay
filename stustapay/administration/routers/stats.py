@@ -31,10 +31,16 @@ async def get_product_stats(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_product_stats(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -47,10 +53,16 @@ async def get_voucher_stats(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_voucher_stats(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -63,10 +75,16 @@ async def get_entry_stats(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_entry_stats(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -79,10 +97,16 @@ async def get_top_up_stats(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_top_up_stats(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -95,10 +119,16 @@ async def get_pay_out_stats(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_pay_out_stats(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -111,10 +141,16 @@ async def get_dashboard_overview(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_dashboard_overview(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -127,10 +163,16 @@ async def get_revenue_by_counter(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_revenue_by_counter(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -143,10 +185,16 @@ async def get_payment_method_stats(
     to_timestamp: Optional[datetime] = None,
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_payment_method_stats(
         token=token,
-        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp, till_id=till_id),
+        query=TimeseriesStatsQuery(
+            to_time=to_timestamp,
+            from_time=from_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+        ),
         node_id=node_id,
     )
 
@@ -156,8 +204,9 @@ async def get_available_dates(
     token: CurrentAuthToken,
     order_service: ContextOrderService,
     node_id: int,
+    subnode_id: Optional[int] = None,
 ):
-    return await order_service.stats.get_available_dates(token=token, node_id=node_id)
+    return await order_service.stats.get_available_dates(token=token, node_id=node_id, subnode_id=subnode_id)
 
 
 @router.get("/revenue-prediction", response_model=RevenuePrediction)
@@ -166,9 +215,10 @@ async def get_revenue_prediction(
     order_service: ContextOrderService,
     node_id: int,
     till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
 ):
     return await order_service.stats.get_revenue_prediction(
         token=token,
-        query=TimeseriesStatsQuery(from_time=None, to_time=None, till_id=till_id),
+        query=TimeseriesStatsQuery(from_time=None, to_time=None, till_id=till_id, subnode_id=subnode_id),
         node_id=node_id,
     )

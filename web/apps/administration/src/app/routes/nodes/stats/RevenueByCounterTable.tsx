@@ -27,6 +27,7 @@ export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  subnodeId?: number;
   pollingIntervalMs?: number;
 };
 
@@ -34,6 +35,7 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
   fromTimestamp,
   toTimestamp,
   tillId,
+  subnodeId,
   pollingIntervalMs = 0,
 }) => {
   const { currentNode } = useCurrentNode();
@@ -49,6 +51,7 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
+      subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );
