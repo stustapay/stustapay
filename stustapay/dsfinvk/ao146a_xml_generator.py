@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 
 from sftkit.database import Connection
 
+from stustapay import __version__ as stustapay_version
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
 from stustapay.core.service.tree.common import (
@@ -14,19 +15,23 @@ from stustapay.core.service.tree.common import (
 
 LOGGER = logging.getLogger(__name__)
 
+BSI_TO_YEAR = {"0362": "2019", "0393": "2020", "0415": "2021"}
+
 
 class AO146Aexporter:
-    def __init__(self, config: Config, event_node_id: int, filename: str, xml: str, dtd: str, simulate: bool):
+    def __init__(self, config: Config, event_node_id: int, filename: str, shutdown_date: str):
         self.node_id = event_node_id
         self.config = config
         self.filename = filename
-        self.xml = xml  # path to index.xml file
-        self.dtd = dtd  # path to *.dtd file
-        self.simulate = simulate
         self.starttime = time.monotonic()
         self.PLZ = ""
         self.Street = ""
         self.City = ""
+        if shutdown_date == "None":
+            self.shutdown = False
+        else:
+            self.shutdown = True
+            self.shutdown_date = shutdown_date
 
     async def run(self):
         async with contextlib.AsyncExitStack() as es:
@@ -49,7 +54,11 @@ class AO146Aexporter:
                 self.PLZ = bon_addr.split(" ")[2]
                 self.City = bon_addr.split(" ")[3]
 
-            Aufzeichnung146a_1 = ET.Element("Aufzeichnung146a")
+            root_element = ET.Element(
+                "Aufzeichnung146a",
+                attrib={"xmlns": "http://finkonsens.de/elster/elsternachricht/aufzeichnung146a/v1", "version": "1"},
+            )
+            Aufzeichnung146a_1 = ET.SubElement(root_element, "Aufzeichnung146a")
 
             # iteriere über alle Kassen
             # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
@@ -109,34 +118,45 @@ class AO146Aexporter:
                     "select booked_at from ordr where till_id=$1 order by booked_at limit 1", row["till_id"]
                 )
 
+                kasse_brand, kasse_modell, kasse_sw_brand = await conn.fetchrow(
+                    "select dsfinvk_brand, dsfinvk_model, dsfinvk_software_brand from till where id = $1",
+                    row["till_id"],
+                )
+
                 AngabenAufzeichnungssystem = ET.Element("AngabenAufzeichnungssystem")
                 # gather all data for this till
                 Art = ET.SubElement(AngabenAufzeichnungssystem, "Art")
                 Art.text = "1"  # "Computergestützte/PC-Kassensysteme"
 
                 Software = ET.SubElement(AngabenAufzeichnungssystem, "Software")
-                Software.text = "StuStaPay Enterprise Payment Solutions Festival Edition Pro"  # KASSE_SW_BRAND
+                Software.text = str(kasse_sw_brand)  # KASSE_SW_BRAND
 
                 SoftwareVersion = ET.SubElement(AngabenAufzeichnungssystem, "SoftwareVersion")
-                SoftwareVersion.text = "v0"  # TODO version? KASSE_SW_VERSION
+                SoftwareVersion.text = stustapay_version  # KASSE_SW_VERSION
 
                 SeriennummerAS = ET.SubElement(AngabenAufzeichnungssystem, "SeriennummerAS")
                 SeriennummerAS.text = str(row["till_id"])  # KASSE_SERIENNR
 
                 Hersteller = ET.SubElement(AngabenAufzeichnungssystem, "Hersteller")
-                Hersteller.text = "StuStaPay"  # KASSE_BRAND
+                Hersteller.text = str(kasse_brand)  # KASSE_BRAND
 
                 Modell = ET.SubElement(AngabenAufzeichnungssystem, "Modell")
-                Modell.text = "v0"  # TODO version? KASSE_MODELL
+                Modell.text = str(kasse_modell)  # KASSE_MODELL
 
                 SeriennummerTSE = ET.SubElement(AngabenAufzeichnungssystem, "SeriennummerTSE")
                 SeriennummerTSE.text = str(tse_data["serial"])  # TSE
 
                 InbetriebnahmeTSE = ET.SubElement(AngabenAufzeichnungssystem, "InbetriebnahmeTSE")
-                InbetriebnahmeTSE.text = ""  # öhhh
+                InbetriebnahmeTSE.text = str(
+                    first_booking_date.strftime("%d.%m.%Y")
+                )  # wann die TSE an dieser Kasse inbetriebgenommen wurde
 
                 BSIID = ET.SubElement(AngabenAufzeichnungssystem, "BSIID")
-                BSIID.text = str(tse_data["tse_description"])[-4:] + "-" + str(tse_data["certificate_date"])[0:4]  #
+                BSIID.text = (
+                    str(tse_data["tse_description"])[-4:]
+                    + "-"
+                    + str(BSI_TO_YEAR[str(tse_data["tse_description"])[-4:]])
+                )  # man muss das jahr beim BSI nachschauen..
 
                 AnschaffungAS = ET.SubElement(AngabenAufzeichnungssystem, "AnschaffungAS")
                 AnschaffungAS.text = str(first_booking_date.strftime("%d.%m.%Y"))  # hmmm
@@ -146,8 +166,15 @@ class AO146Aexporter:
                     first_booking_date.strftime("%d.%m.%Y")
                 )  # we use the first order on this till
 
+                if self.shutdown:
+                    AusserbetriebnahmeAS = ET.SubElement(AngabenAufzeichnungssystem, "AusserbetriebnahmeAS")
+                    AusserbetriebnahmeAS.text = str(self.shutdown_date)  #
+                    GrundAusserbetriebnahme = ET.SubElement(AngabenAufzeichnungssystem, "GrundAusserbetriebnahme")
+                    GrundAusserbetriebnahme.text = str("Archivierung")  #
+
                 Aufzeichnung146a_1.append(AngabenAufzeichnungssystem)
 
-            LOGGER.info(ET.tostring(Aufzeichnung146a_1, encoding="utf-8"))
+            LOGGER.info(ET.tostring(root_element, encoding="utf-8"))
+            ET.ElementTree(root_element).write(self.filename, method="xml", xml_declaration=True, encoding="UTF-8")
             LOGGER.info(f"Duration: {time.monotonic() - self.starttime:.3f}s")
             return
