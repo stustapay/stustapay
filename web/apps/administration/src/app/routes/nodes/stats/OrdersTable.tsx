@@ -31,6 +31,7 @@ export type OrdersTableProps = {
   toTimestamp?: DateTime;
   tillId?: number;
   productId?: number;
+  pollingIntervalMs?: number;
 };
 
 type TableRowData = {
@@ -48,7 +49,13 @@ type TableRowData = {
 
 const INITIAL_DISPLAY_LIMIT = 50;
 
-export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimestamp, tillId, productId }) => {
+export const OrdersTable: React.FC<OrdersTableProps> = ({
+  fromTimestamp,
+  toTimestamp,
+  tillId,
+  productId,
+  pollingIntervalMs = 0,
+}) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
@@ -56,14 +63,17 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ fromTimestamp, toTimes
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [showAll, setShowAll] = React.useState(false);
-  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
 
-  const { data: ordersData, isLoading } = useListOrdersFilteredQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
+  const { data: ordersData, isLoading } = useListOrdersFilteredQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
 
   const orders = React.useMemo(() => {
     if (!ordersData) return undefined;

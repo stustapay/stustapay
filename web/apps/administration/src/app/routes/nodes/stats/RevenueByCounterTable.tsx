@@ -27,9 +27,15 @@ export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  pollingIntervalMs?: number;
 };
 
-export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fromTimestamp, toTimestamp, tillId }) => {
+export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
+  fromTimestamp,
+  toTimestamp,
+  tillId,
+  pollingIntervalMs = 0,
+}) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
@@ -37,12 +43,15 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({ fr
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { data, isLoading } = useGetRevenueByCounterQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
+  const { data, isLoading } = useGetRevenueByCounterQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
 
   const dateStr = fromTimestamp?.toISODate() ?? toTimestamp?.toISODate() ?? "Total";
 

@@ -31,6 +31,7 @@ export type RevenueByProductChartProps = {
   toTimestamp?: DateTime;
   tillId?: number;
   productId?: number;
+  pollingIntervalMs?: number;
   onProductClick?: (productId: number) => void;
   onClearFilter?: () => void;
 };
@@ -42,6 +43,7 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
   toTimestamp,
   tillId,
   productId,
+  pollingIntervalMs = 0,
   onProductClick,
   onClearFilter,
 }) => {
@@ -68,12 +70,15 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
     handleMenuClose();
   };
 
-  const { data, isLoading } = useGetProductStatsQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
+  const { data, isLoading } = useGetProductStatsQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
 
   // Create a map of product_name to product_id for bar click handling
   const productNameToIdMap = React.useMemo(() => {

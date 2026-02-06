@@ -30,6 +30,7 @@ export type RevenueByCounterChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   tillId?: number;
+  pollingIntervalMs?: number;
   onBarClick?: (tillId: number) => void;
   onClearFilter?: () => void;
 };
@@ -40,6 +41,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
   fromTimestamp,
   toTimestamp,
   tillId,
+  pollingIntervalMs = 0,
   onBarClick,
   onClearFilter,
 }) => {
@@ -65,12 +67,15 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
     handleMenuClose();
   };
 
-  const { data, isLoading } = useGetRevenueByCounterQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
+  const { data, isLoading } = useGetRevenueByCounterQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
 
   // Create a map of till_name to till_id for bar click handling
   // Must be called before any early returns (Rules of Hooks)

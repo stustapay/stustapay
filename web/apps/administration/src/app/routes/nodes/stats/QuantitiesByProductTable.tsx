@@ -27,6 +27,7 @@ export type QuantitiesByProductTableProps = {
   toTimestamp?: DateTime;
   tillId?: number;
   productId?: number;
+  pollingIntervalMs?: number;
 };
 
 type ProductRow = {
@@ -41,6 +42,7 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
   toTimestamp,
   tillId,
   productId,
+  pollingIntervalMs = 0,
 }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
@@ -49,12 +51,15 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const { data, isLoading } = useGetProductStatsQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
+  const { data, isLoading } = useGetProductStatsQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
 
   // Combine product data
   const tableData: ProductRow[] = React.useMemo(() => {

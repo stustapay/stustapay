@@ -14,6 +14,7 @@ export type DashboardKPIsProps = {
   productId?: number;
   prediction?: RevenuePrediction;
   isPredictionLoading?: boolean;
+  pollingIntervalMs?: number;
 };
 
 export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
@@ -23,6 +24,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   productId,
   prediction,
   isPredictionLoading,
+  pollingIntervalMs = 0,
 }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
@@ -38,20 +40,26 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       toTimestamp: toTimestamp?.toISO() ?? undefined,
       tillId: tillId,
     },
-    { skip: currentNode.event == null }
+    { skip: currentNode.event == null, pollingInterval: pollingIntervalMs }
   );
-  const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
-  const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery({
-    nodeId: currentNode.id,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-    tillId: tillId,
-  });
+  const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
+  const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery(
+    {
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      tillId: tillId,
+    },
+    { pollingInterval: pollingIntervalMs }
+  );
 
   // Get selected product stats if productId is specified
   const selectedProductStats = React.useMemo(() => {

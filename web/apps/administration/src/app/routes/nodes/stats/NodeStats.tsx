@@ -2,12 +2,20 @@ import * as React from "react";
 import { withPrivilegeGuard } from "@/app/layout";
 import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
-import { DateTimePicker } from "@mui/x-date-pickers";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertTitle, Card, Divider, Grid, Stack, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { Alert, AlertTitle, Grid, Stack, FormControl, InputLabel, Select, MenuItem, Button, Accordion, AccordionSummary, AccordionDetails, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import { useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery } from "@/api";
+import { useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery, api } from "@/api";
+import {
+  useAppDispatch,
+  useAppSelector,
+  selectStatsPollingInterval,
+  selectStatsExpandedSections,
+  setStatsPollingInterval,
+  setStatsSectionExpanded,
+} from "@/store";
+import { Refresh as RefreshIcon, ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { RevenueByCounterChart } from "./RevenueByCounterChart";
 import { RevenueByProductChart } from "./RevenueByProductChart";
@@ -16,21 +24,63 @@ import { QuantitiesByProductTable } from "./QuantitiesByProductTable";
 import { OrdersTable } from "./OrdersTable";
 import { RevenuePredictionChart } from "./RevenuePredictionChart";
 
+type SectionKey =
+  | "filters"
+  | "kpis"
+  | "prediction"
+  | "counterChart"
+  | "productChart"
+  | "quantityTable"
+  | "counterTable"
+  | "orders";
+
 export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();
+  const dispatch = useAppDispatch();
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [selectedTillId, setSelectedTillId] = React.useState<number | undefined>(undefined);
   const [selectedProductId, setSelectedProductId] = React.useState<number | undefined>(undefined);
+  const pollingIntervalMs = useAppSelector(selectStatsPollingInterval);
+  const expandedSections = useAppSelector(selectStatsExpandedSections) as Record<SectionKey, boolean>;
 
-  const { data: availableDates } = useGetAvailableDatesQuery({ nodeId: currentNode.id });
-  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
-  const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery({
-    nodeId: currentNode.id,
-    tillId: selectedTillId,
-  });
+  const { data: availableDates } = useGetAvailableDatesQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
+  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
+  const { data: products } = useListProductsQuery({ nodeId: currentNode.id }, { pollingInterval: pollingIntervalMs });
+  const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery(
+    {
+      nodeId: currentNode.id,
+      tillId: selectedTillId,
+    },
+    { pollingInterval: pollingIntervalMs, skip: currentNode.event == null }
+  );
+
+  const handleManualRefresh = React.useCallback(() => {
+    dispatch(api.util.invalidateTags(["stats", "orders", "tills", "products"]));
+  }, [dispatch]);
+
+  const sectionSx = {
+    backgroundColor: (theme: Theme) => (theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)"),
+    border: (theme: Theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+    boxShadow: "none",
+    "&::before": { display: "none" },
+  };
+
+  const summaryTextSx = {
+    fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
+    fontWeight: 500,
+    textTransform: "uppercase",
+    letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
+    color: "text.secondary",
+  };
+
+  const handleSectionToggle = React.useCallback(
+    (section: SectionKey) => (_event: React.SyntheticEvent, expanded: boolean) => {
+      dispatch(setStatsSectionExpanded({ section, expanded }));
+    },
+    [dispatch]
+  );
 
   // Determine timestamp bounds based on selected date and event settings
   // If daily_end_time is set (e.g. 05:00), the "business day" runs from 05:00 on the selected date
@@ -73,21 +123,21 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   return (
     <Grid container spacing={{ xs: 0.75, sm: 1, md: 1.5 }}>
       <Grid size={12}>
-        <Card
-          sx={{
-            backgroundColor: (theme: Theme) =>
-              theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-            border: (theme: Theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
-            boxShadow: "none",
-            mb: { xs: 1, sm: 1.5 },
-          }}
+        <Accordion
+          expanded={expandedSections.filters}
+          onChange={handleSectionToggle("filters")}
+          disableGutters
+          sx={sectionSx}
         >
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={{ xs: 1, sm: 1.5, md: 2 }}
-            alignItems={{ xs: "stretch", sm: "center" }}
-            sx={{ p: { xs: 1, sm: 1.5, md: 2 } }}
-          >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={summaryTextSx}>{t("overview.dashboardFilters")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: { xs: 1, sm: 1.5, md: 2 } }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 1, sm: 1.5, md: 2 }}
+              alignItems={{ xs: "stretch", sm: "center" }}
+            >
             <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
               <InputLabel id="date-select-label" shrink>{t("overview.filterDate")}</InputLabel>
               <Select
@@ -168,58 +218,158 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
                   ))}
               </Select>
             </FormControl>
-          </Stack>
-        </Card>
+
+            <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 180 } }}>
+              <InputLabel id="polling-select-label" shrink>{t("overview.pollingInterval")}</InputLabel>
+              <Select
+                labelId="polling-select-label"
+                id="polling-select"
+                value={pollingIntervalMs}
+                label={t("overview.pollingInterval")}
+                onChange={(e) => dispatch(setStatsPollingInterval(Number(e.target.value)))}
+                notched
+              >
+                <MenuItem value={0}>
+                  <em>{t("overview.pollingOff")}</em>
+                </MenuItem>
+                <MenuItem value={5000}>5s</MenuItem>
+                <MenuItem value={10000}>10s</MenuItem>
+                <MenuItem value={30000}>30s</MenuItem>
+                <MenuItem value={60000}>60s</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleManualRefresh}
+              sx={{ minWidth: { xs: "100%", sm: 120 }, height: 40 }}
+            >
+              {t("refresh")}
+            </Button>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
       </Grid>
       <Grid size={12}>
-        <DashboardKPIs
-          fromTimestamp={fromTimestamp}
-          toTimestamp={toTimestamp}
-          tillId={selectedTillId}
-          productId={selectedProductId}
-          prediction={prediction}
-          isPredictionLoading={isPredictionLoading}
-        />
+        <Accordion expanded={expandedSections.kpis} onChange={handleSectionToggle("kpis")} disableGutters sx={sectionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={summaryTextSx}>{t("overview.overviewMetrics")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+            <DashboardKPIs
+              fromTimestamp={fromTimestamp}
+              toTimestamp={toTimestamp}
+              tillId={selectedTillId}
+              productId={selectedProductId}
+              prediction={prediction}
+              isPredictionLoading={isPredictionLoading}
+              pollingIntervalMs={pollingIntervalMs}
+            />
+          </AccordionDetails>
+        </Accordion>
       </Grid>
       {/* Revenue prediction chart - only show when no product filter is active */}
       {selectedProductId === undefined && prediction && (
         <Grid size={12}>
-          <RevenuePredictionChart prediction={prediction} isLoading={isPredictionLoading} />
+          <Accordion expanded={expandedSections.prediction} onChange={handleSectionToggle("prediction")} disableGutters sx={sectionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={summaryTextSx}>{t("overview.revenuePredictionChart")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+              <RevenuePredictionChart prediction={prediction} isLoading={isPredictionLoading} />
+            </AccordionDetails>
+          </Accordion>
         </Grid>
       )}
       {/* Only show revenue by counter when no product is selected (not filterable by product) */}
       {selectedProductId === undefined && (
         <Grid size={12}>
-          <RevenueByCounterChart
-            fromTimestamp={fromTimestamp}
-            toTimestamp={toTimestamp}
-            tillId={selectedTillId}
-            onBarClick={(tillId) => setSelectedTillId(tillId)}
-            onClearFilter={() => setSelectedTillId(undefined)}
-          />
+          <Accordion expanded={expandedSections.counterChart} onChange={handleSectionToggle("counterChart")} disableGutters sx={sectionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={summaryTextSx}>{t("overview.revenuePerCounterChart")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+              <RevenueByCounterChart
+                fromTimestamp={fromTimestamp}
+                toTimestamp={toTimestamp}
+                tillId={selectedTillId}
+                pollingIntervalMs={pollingIntervalMs}
+                onBarClick={(tillId) => setSelectedTillId(tillId)}
+                onClearFilter={() => setSelectedTillId(undefined)}
+              />
+            </AccordionDetails>
+          </Accordion>
         </Grid>
       )}
       <Grid size={12}>
-        <RevenueByProductChart
-          fromTimestamp={fromTimestamp}
-          toTimestamp={toTimestamp}
-          tillId={selectedTillId}
-          productId={selectedProductId}
-          onProductClick={(productId) => setSelectedProductId(productId)}
-          onClearFilter={() => setSelectedProductId(undefined)}
-        />
+        <Accordion expanded={expandedSections.productChart} onChange={handleSectionToggle("productChart")} disableGutters sx={sectionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={summaryTextSx}>{t("overview.revenuePerProduct")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+            <RevenueByProductChart
+              fromTimestamp={fromTimestamp}
+              toTimestamp={toTimestamp}
+              tillId={selectedTillId}
+              productId={selectedProductId}
+              pollingIntervalMs={pollingIntervalMs}
+              onProductClick={(productId) => setSelectedProductId(productId)}
+              onClearFilter={() => setSelectedProductId(undefined)}
+            />
+          </AccordionDetails>
+        </Accordion>
       </Grid>
       <Grid size={12}>
-        <QuantitiesByProductTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} productId={selectedProductId} />
+        <Accordion expanded={expandedSections.quantityTable} onChange={handleSectionToggle("quantityTable")} disableGutters sx={sectionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={summaryTextSx}>{t("overview.quantitiesPerProduct")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+            <QuantitiesByProductTable
+              fromTimestamp={fromTimestamp}
+              toTimestamp={toTimestamp}
+              tillId={selectedTillId}
+              productId={selectedProductId}
+              pollingIntervalMs={pollingIntervalMs}
+            />
+          </AccordionDetails>
+        </Accordion>
       </Grid>
       {/* Only show revenue by counter table when no product is selected (not filterable by product) */}
       {selectedProductId === undefined && (
         <Grid size={12}>
-          <RevenueByCounterTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} />
+          <Accordion expanded={expandedSections.counterTable} onChange={handleSectionToggle("counterTable")} disableGutters sx={sectionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={summaryTextSx}>{t("overview.revenuePerCounterTable")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+              <RevenueByCounterTable
+                fromTimestamp={fromTimestamp}
+                toTimestamp={toTimestamp}
+                tillId={selectedTillId}
+                pollingIntervalMs={pollingIntervalMs}
+              />
+            </AccordionDetails>
+          </Accordion>
         </Grid>
       )}
       <Grid size={12}>
-        <OrdersTable fromTimestamp={fromTimestamp} toTimestamp={toTimestamp} tillId={selectedTillId} productId={selectedProductId} />
+        <Accordion expanded={expandedSections.orders} onChange={handleSectionToggle("orders")} disableGutters sx={sectionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={summaryTextSx}>{t("overview.orders")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+            <OrdersTable
+              fromTimestamp={fromTimestamp}
+              toTimestamp={toTimestamp}
+              tillId={selectedTillId}
+              productId={selectedProductId}
+              pollingIntervalMs={pollingIntervalMs}
+            />
+          </AccordionDetails>
+        </Accordion>
       </Grid>
     </Grid>
   );
