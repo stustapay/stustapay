@@ -127,10 +127,19 @@ class TillService(Service[Config]):
     @requires_node()
     @requires_user()
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
+        if node.ids_to_event_node is None:
+            # If no event node hierarchy, just filter by current node
+            return await conn.fetch_many(
+                Till,
+                "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
+                "where (t.node_id = $1 or $1 = any(n.parent_ids)) and not t.is_virtual "
+                "order by t.name",
+                node.id,
+            )
         return await conn.fetch_many(
             Till,
             "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
-            "where (t.node_id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual "
+            "where (n.id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual "
             "order by t.name",
             node.ids_to_event_node,
             node.id,

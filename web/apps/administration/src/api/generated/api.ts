@@ -147,24 +147,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
-      inviteUser: build.mutation<InviteUserApiResponse, InviteUserApiArg>({
-        query: (queryArg) => ({
-          url: `/users/${queryArg.userId}/invite`,
-          method: "POST",
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        invalidatesTags: ["users"],
-      }),
-      acceptInvitation: build.mutation<AcceptInvitationApiResponse, AcceptInvitationApiArg>({
-        query: (queryArg) => ({
-          url: `/users/accept-invitation`,
-          method: "POST",
-          body: queryArg.acceptInvitationPayload,
-        }),
-        invalidatesTags: ["users"],
-      }),
       listUserRoles: build.query<ListUserRolesApiResponse, ListUserRolesApiArg>({
         query: (queryArg) => ({
           url: `/user-roles`,
@@ -727,17 +709,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
-      transferBalance: build.mutation<TransferBalanceApiResponse, TransferBalanceApiArg>({
-        query: (queryArg) => ({
-          url: `/accounts/transfer-balance`,
-          method: "POST",
-          body: queryArg.transferBalancePayload,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        invalidatesTags: ["accounts"],
-      }),
       updateAccountComment: build.mutation<UpdateAccountCommentApiResponse, UpdateAccountCommentApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/update-comment`,
@@ -754,6 +725,20 @@ const injectedRtkApi = api
           url: `/orders/by-till/${queryArg.tillId}`,
           params: {
             node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["orders"],
+      }),
+      listOrdersFiltered: build.query<ListOrdersFilteredApiResponse, ListOrdersFilteredApiArg>({
+        query: (queryArg) => ({
+          url: `/orders/filtered`,
+          params: {
+            node_id: queryArg.nodeId,
+            from_timestamp: queryArg.fromTimestamp,
+            to_timestamp: queryArg.toTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+            limit: queryArg.limit,
           },
         }),
         providesTags: ["orders"],
@@ -857,6 +842,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -868,6 +855,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -879,6 +868,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -890,6 +881,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -901,6 +894,68 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getDashboardOverview: build.query<GetDashboardOverviewApiResponse, GetDashboardOverviewApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/dashboard-overview`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getRevenueByCounter: build.query<GetRevenueByCounterApiResponse, GetRevenueByCounterApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/revenue-by-counter`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getPaymentMethodStats: build.query<GetPaymentMethodStatsApiResponse, GetPaymentMethodStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/payment-methods`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getAvailableDates: build.query<GetAvailableDatesApiResponse, GetAvailableDatesApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/available-dates`,
+          params: {
+            node_id: queryArg.nodeId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getRevenuePrediction: build.query<GetRevenuePredictionApiResponse, GetRevenuePredictionApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/revenue-prediction`,
+          params: {
+            node_id: queryArg.nodeId,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -991,26 +1046,6 @@ const injectedRtkApi = api
           url: `/user-tags/find-user-tags`,
           method: "POST",
           body: queryArg.findUserTagPayload,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        invalidatesTags: ["user_tags"],
-      }),
-      countTagsWithoutAccounts: build.query<CountTagsWithoutAccountsApiResponse, CountTagsWithoutAccountsApiArg>({
-        query: (queryArg) => ({
-          url: `/user-tags/count-without-accounts`,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        providesTags: ["user_tags"],
-      }),
-      createAccountsForUserTags: build.mutation<CreateAccountsForUserTagsApiResponse, CreateAccountsForUserTagsApiArg>({
-        query: (queryArg) => ({
-          url: `/user-tags/create-accounts`,
-          method: "POST",
-          body: queryArg.createAccountsPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1890,17 +1925,6 @@ export type ChangeUserPasswordApiArg = {
   nodeId: number;
   changeUserPasswordPayload: ChangeUserPasswordPayload;
 };
-export type InviteUserApiResponse = /** status 200 Successful Response */ UserInvitation;
-export type InviteUserApiArg = {
-  userId: number;
-  nodeId: number;
-};
-export type AcceptInvitationApiResponse = /** status 200 Successful Response */ {
-  [key: string]: string;
-};
-export type AcceptInvitationApiArg = {
-  acceptInvitationPayload: AcceptInvitationPayload;
-};
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
 export type ListUserRolesApiArg = {
   nodeId: number;
@@ -2187,11 +2211,6 @@ export type UpdateVoucherAmountApiArg = {
   nodeId: number;
   updateVoucherAmountPayload: UpdateVoucherAmountPayload;
 };
-export type TransferBalanceApiResponse = /** status 200 Successful Response */ any;
-export type TransferBalanceApiArg = {
-  nodeId: number;
-  transferBalancePayload: TransferBalancePayload;
-};
 export type UpdateAccountCommentApiResponse = /** status 200 Successful Response */ AccountRead;
 export type UpdateAccountCommentApiArg = {
   accountId: number;
@@ -2202,6 +2221,15 @@ export type ListOrdersByTillApiResponse = /** status 200 Successful Response */ 
 export type ListOrdersByTillApiArg = {
   tillId: number;
   nodeId: number;
+};
+export type ListOrdersFilteredApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
+export type ListOrdersFilteredApiArg = {
+  nodeId: number;
+  fromTimestamp?: string | null;
+  toTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+  limit?: number | null;
 };
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
@@ -2259,30 +2287,75 @@ export type GetProductStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetVoucherStatsApiResponse = /** status 200 Successful Response */ VoucherStats;
 export type GetVoucherStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetEntryStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetEntryStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetTopUpStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetPayOutStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetDashboardOverviewApiResponse = /** status 200 Successful Response */ DashboardOverview;
+export type GetDashboardOverviewApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetRevenueByCounterApiResponse = /** status 200 Successful Response */ RevenueByCounter;
+export type GetRevenueByCounterApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodBreakdown;
+export type GetPaymentMethodStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetAvailableDatesApiResponse = /** status 200 Successful Response */ string[];
+export type GetAvailableDatesApiArg = {
+  nodeId: number;
+  subnodeId?: number | null;
+};
+export type GetRevenuePredictionApiResponse = /** status 200 Successful Response */ RevenuePrediction;
+export type GetRevenuePredictionApiArg = {
+  nodeId: number;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type ListTicketsApiResponse = /** status 200 Successful Response */ NormalizedListTicketInt;
 export type ListTicketsApiArg = {
@@ -2327,15 +2400,6 @@ export type FindUserTagsApiResponse = /** status 200 Successful Response */ Norm
 export type FindUserTagsApiArg = {
   nodeId: number;
   findUserTagPayload: FindUserTagPayload;
-};
-export type CountTagsWithoutAccountsApiResponse = /** status 200 Successful Response */ number;
-export type CountTagsWithoutAccountsApiArg = {
-  nodeId: number;
-};
-export type CreateAccountsForUserTagsApiResponse = /** status 200 Successful Response */ CreateAccountsResponse;
-export type CreateAccountsForUserTagsApiArg = {
-  nodeId: number;
-  createAccountsPayload: CreateAccountsPayload;
 };
 export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type GetUserTagDetailApiArg = {
@@ -2844,7 +2908,6 @@ export type User = {
   user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
-  email?: string | null;
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
@@ -2856,7 +2919,6 @@ export type UserRead = {
   user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
-  email?: string | null;
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
@@ -2891,7 +2953,6 @@ export type CreateUserPayload = {
   description?: string | null;
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
-  email?: string | null;
   password?: string | null;
 };
 export type UpdateUserPayload = {
@@ -2900,24 +2961,9 @@ export type UpdateUserPayload = {
   description?: string | null;
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
-  email?: string | null;
 };
 export type ChangeUserPasswordPayload = {
   new_password: string;
-};
-export type UserInvitation = {
-  id: number;
-  user_id: number;
-  token: string;
-  node_id: number;
-  created_at: string;
-  expires_at: string;
-  accepted_at?: string | null;
-  created_by?: number | null;
-};
-export type AcceptInvitationPayload = {
-  token: string;
-  password: string;
 };
 export type UserRole = {
   name: string;
@@ -2981,7 +3027,6 @@ export type CurrentUser = {
   description?: string | null;
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
-  email?: string | null;
   transport_account_id?: number | null;
   cash_register_id?: number | null;
 };
@@ -3381,7 +3426,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: AccountRead;
+    [key: string]: Account;
   };
 };
 export type FindAccountPayload = {
@@ -3392,11 +3437,6 @@ export type UpdateBalancePayload = {
 };
 export type UpdateVoucherAmountPayload = {
   new_voucher_amount: number;
-};
-export type TransferBalancePayload = {
-  source_account_id: number;
-  target_account_id: number;
-  amount: number;
 };
 export type UpdateAccountCommentPayload = {
   comment: string;
@@ -3584,7 +3624,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: string]: CashierRead;
+    [key: string]: Cashier;
   };
 };
 export type CashierProductStats = {
@@ -3644,6 +3684,57 @@ export type TimeseriesStats = {
   to_time: string;
   daily_intervals: StatInterval[];
   hourly_intervals: StatInterval[];
+};
+export type DashboardOverview = {
+  total_guest_credit: number;
+  total_revenue: number;
+  guests_with_orders: number;
+  guests_with_credit: number;
+  guests_paid_out: number;
+  online_donation: number;
+  online_for_payout: number;
+};
+export type CounterRevenue = {
+  till_id: number;
+  till_name: string;
+  revenue: number;
+  order_count: number;
+};
+export type RevenueByCounter = {
+  counters: CounterRevenue[];
+  total_revenue: number;
+};
+export type PaymentMethodStats = {
+  payment_method: string;
+  revenue: number;
+  order_count: number;
+};
+export type PaymentMethodBreakdown = {
+  methods: PaymentMethodStats[];
+  total_revenue: number;
+};
+export type HourlyPredictionPoint = {
+  hour: number;
+  actual_revenue: number | null;
+  predicted_revenue: number;
+  cumulative_actual: number | null;
+  cumulative_predicted: number;
+};
+export type RevenuePrediction = {
+  current_revenue: number;
+  predicted_end_of_day: number;
+  predicted_event_total: number;
+  confidence_level: string;
+  hours_of_data: number;
+  days_of_data: number;
+  events_used: number;
+  data_source: string;
+  hourly_timeseries: HourlyPredictionPoint[];
+  average_daily_revenue: number;
+  expected_visitors_per_day: number | null;
+  actual_visitors_today: number;
+  historical_revenue_per_visitor: number | null;
+  visitor_based_prediction: number | null;
 };
 export type Ticket = {
   name: string;
@@ -3717,13 +3808,6 @@ export type NormalizedListUserTagDetailInt = {
 };
 export type FindUserTagPayload = {
   search_term: string;
-};
-export type CreateAccountsResponse = {
-  created: number;
-  skipped: number;
-};
-export type CreateAccountsPayload = {
-  user_tag_ids?: number[] | null;
 };
 export type UpdateCommentPayload = {
   comment: string;
@@ -3837,6 +3921,7 @@ export type PublicEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -3950,6 +4035,7 @@ export type NewEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -4027,6 +4113,7 @@ export type UpdateEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -4084,6 +4171,7 @@ export type RestrictedEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -4447,8 +4535,6 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
-  useInviteUserMutation,
-  useAcceptInvitationMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,
   useCreateUserRoleMutation,
@@ -4529,10 +4615,11 @@ export const {
   useDisableAccountMutation,
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
-  useTransferBalanceMutation,
   useUpdateAccountCommentMutation,
   useListOrdersByTillQuery,
   useLazyListOrdersByTillQuery,
+  useListOrdersFilteredQuery,
+  useLazyListOrdersFilteredQuery,
   useListOrdersQuery,
   useLazyListOrdersQuery,
   useGetOrderQuery,
@@ -4560,6 +4647,16 @@ export const {
   useLazyGetTopUpStatsQuery,
   useGetPayOutStatsQuery,
   useLazyGetPayOutStatsQuery,
+  useGetDashboardOverviewQuery,
+  useLazyGetDashboardOverviewQuery,
+  useGetRevenueByCounterQuery,
+  useLazyGetRevenueByCounterQuery,
+  useGetPaymentMethodStatsQuery,
+  useLazyGetPaymentMethodStatsQuery,
+  useGetAvailableDatesQuery,
+  useLazyGetAvailableDatesQuery,
+  useGetRevenuePredictionQuery,
+  useLazyGetRevenuePredictionQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,
@@ -4572,9 +4669,6 @@ export const {
   useLazyListUserTagSecretsQuery,
   useCreateUserTagsMutation,
   useFindUserTagsMutation,
-  useCountTagsWithoutAccountsQuery,
-  useLazyCountTagsWithoutAccountsQuery,
-  useCreateAccountsForUserTagsMutation,
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,

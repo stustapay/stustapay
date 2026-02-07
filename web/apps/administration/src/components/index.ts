@@ -9,3 +9,5 @@ export * from "./MarkdownEditor";
 export * from "./graphs";
 export * from "./NodeSelect";
 export * from "./LanguageSelect";
+export * from "./tables";
+export * from "./common";

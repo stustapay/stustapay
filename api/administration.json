@@ -671,113 +671,6 @@
         }
       }
     },
-    "/users/{user_id}/invite": {
-      "post": {
-        "tags": [
-          "users"
-        ],
-        "summary": "Invite User",
-        "operationId": "invite_user",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          },
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInvitation"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/accept-invitation": {
-      "post": {
-        "tags": [
-          "users"
-        ],
-        "summary": "Accept Invitation",
-        "operationId": "accept_invitation",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AcceptInvitationPayload"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Accept Invitation Users Accept Invitation Post"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/user-roles": {
       "get": {
         "tags": [
@@ -4079,64 +3972,6 @@
         }
       }
     },
-    "/accounts/transfer-balance": {
-      "post": {
-        "tags": [
-          "accounts"
-        ],
-        "summary": "Transfer Balance",
-        "operationId": "transfer_balance",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TransferBalancePayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/accounts/{account_id}/update-comment": {
       "post": {
         "tags": [
@@ -4235,6 +4070,122 @@
             "schema": {
               "type": "integer",
               "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NormalizedList_Order__int_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/filtered": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "List Orders Filtered",
+        "operationId": "list_orders_filtered",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
             }
           }
         ],
@@ -4919,6 +4870,22 @@
               ],
               "title": "From Timestamp"
             }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
           }
         ],
         "responses": {
@@ -5002,6 +4969,22 @@
                 }
               ],
               "title": "From Timestamp"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
             }
           }
         ],
@@ -5087,6 +5070,22 @@
               ],
               "title": "From Timestamp"
             }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
           }
         ],
         "responses": {
@@ -5170,6 +5169,22 @@
                 }
               ],
               "title": "From Timestamp"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
             }
           }
         ],
@@ -5255,6 +5270,22 @@
               ],
               "title": "From Timestamp"
             }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
           }
         ],
         "responses": {
@@ -5264,6 +5295,426 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TimeseriesStats"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/dashboard-overview": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Dashboard Overview",
+        "operationId": "get_dashboard_overview",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOverview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/revenue-by-counter": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Revenue By Counter",
+        "operationId": "get_revenue_by_counter",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueByCounter"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/payment-methods": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Payment Method Stats",
+        "operationId": "get_payment_method_stats",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodBreakdown"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/available-dates": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Available Dates",
+        "operationId": "get_available_dates",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Available Dates Stats Available Dates Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/revenue-prediction": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Revenue Prediction",
+        "operationId": "get_revenue_prediction",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "till_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Till Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenuePrediction"
                 }
               }
             }
@@ -5787,117 +6238,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NormalizedList_UserTagDetail__int_"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/user-tags/count-without-accounts": {
-      "get": {
-        "tags": [
-          "user_tags"
-        ],
-        "summary": "Count Tags Without Accounts",
-        "operationId": "count_tags_without_accounts",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "integer",
-                  "title": "Response Count Tags Without Accounts User Tags Count Without Accounts Get"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/user-tags/create-accounts": {
-      "post": {
-        "tags": [
-          "user_tags"
-        ],
-        "summary": "Create Accounts For User Tags",
-        "operationId": "create_accounts_for_user_tags",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAccountsPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateAccountsResponse"
                 }
               }
             }
@@ -11408,24 +11748,6 @@
   },
   "components": {
     "schemas": {
-      "AcceptInvitationPayload": {
-        "properties": {
-          "token": {
-            "type": "string",
-            "title": "Token"
-          },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "token",
-          "password"
-        ],
-        "title": "AcceptInvitationPayload"
-      },
       "Account": {
         "properties": {
           "node_id": {
@@ -12398,43 +12720,33 @@
         "title": "CopyEventRequest",
         "description": "Request to copy an event with specified options."
       },
-      "CreateAccountsPayload": {
+      "CounterRevenue": {
         "properties": {
-          "user_tag_ids": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Tag Ids"
-          }
-        },
-        "type": "object",
-        "title": "CreateAccountsPayload"
-      },
-      "CreateAccountsResponse": {
-        "properties": {
-          "created": {
+          "till_id": {
             "type": "integer",
-            "title": "Created"
+            "title": "Till Id"
           },
-          "skipped": {
+          "till_name": {
+            "type": "string",
+            "title": "Till Name"
+          },
+          "revenue": {
+            "type": "number",
+            "title": "Revenue"
+          },
+          "order_count": {
             "type": "integer",
-            "title": "Skipped"
+            "title": "Order Count"
           }
         },
         "type": "object",
         "required": [
-          "created",
-          "skipped"
+          "till_id",
+          "till_name",
+          "revenue",
+          "order_count"
         ],
-        "title": "CreateAccountsResponse"
+        "title": "CounterRevenue"
       },
       "CreateCashRegisterPayload": {
         "properties": {
@@ -12663,17 +12975,6 @@
             ],
             "title": "User Tag Uid Hex"
           },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
           "password": {
             "anyOf": [
               {
@@ -12772,17 +13073,6 @@
               }
             ],
             "title": "User Tag Uid"
-          },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
           },
           "transport_account_id": {
             "anyOf": [
@@ -13049,6 +13339,49 @@
           "user_tag_uid_hex"
         ],
         "title": "Customer"
+      },
+      "DashboardOverview": {
+        "properties": {
+          "total_guest_credit": {
+            "type": "number",
+            "title": "Total Guest Credit"
+          },
+          "total_revenue": {
+            "type": "number",
+            "title": "Total Revenue"
+          },
+          "guests_with_orders": {
+            "type": "integer",
+            "title": "Guests With Orders"
+          },
+          "guests_with_credit": {
+            "type": "integer",
+            "title": "Guests With Credit"
+          },
+          "guests_paid_out": {
+            "type": "integer",
+            "title": "Guests Paid Out"
+          },
+          "online_donation": {
+            "type": "number",
+            "title": "Online Donation"
+          },
+          "online_for_payout": {
+            "type": "number",
+            "title": "Online For Payout"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_guest_credit",
+          "total_revenue",
+          "guests_with_orders",
+          "guests_with_credit",
+          "guests_paid_out",
+          "online_donation",
+          "online_for_payout"
+        ],
+        "title": "DashboardOverview"
       },
       "EditSaleProducts": {
         "properties": {
@@ -13856,6 +14189,53 @@
         ],
         "title": "HeadwindDeviceWithMapping"
       },
+      "HourlyPredictionPoint": {
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "title": "Hour"
+          },
+          "actual_revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Revenue"
+          },
+          "predicted_revenue": {
+            "type": "number",
+            "title": "Predicted Revenue"
+          },
+          "cumulative_actual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cumulative Actual"
+          },
+          "cumulative_predicted": {
+            "type": "number",
+            "title": "Cumulative Predicted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hour",
+          "actual_revenue",
+          "predicted_revenue",
+          "cumulative_actual",
+          "cumulative_predicted"
+        ],
+        "title": "HourlyPredictionPoint"
+      },
       "Language": {
         "type": "string",
         "enum": [
@@ -14230,6 +14610,17 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
           },
           "post_payment_allowed": {
             "type": "boolean",
@@ -16489,6 +16880,50 @@
         ],
         "title": "PaymentMethod"
       },
+      "PaymentMethodBreakdown": {
+        "properties": {
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethodStats"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "total_revenue": {
+            "type": "number",
+            "title": "Total Revenue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "methods",
+          "total_revenue"
+        ],
+        "title": "PaymentMethodBreakdown"
+      },
+      "PaymentMethodStats": {
+        "properties": {
+          "payment_method": {
+            "type": "string",
+            "title": "Payment Method"
+          },
+          "revenue": {
+            "type": "number",
+            "title": "Revenue"
+          },
+          "order_count": {
+            "type": "integer",
+            "title": "Order Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_method",
+          "revenue",
+          "order_count"
+        ],
+        "title": "PaymentMethodStats"
+      },
       "Payout": {
         "properties": {
           "id": {
@@ -17063,6 +17498,17 @@
             ],
             "title": "Daily End Time"
           },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
+          },
           "post_payment_allowed": {
             "type": "boolean",
             "title": "Post Payment Allowed",
@@ -17494,6 +17940,17 @@
             ],
             "title": "Daily End Time"
           },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
+          },
           "post_payment_allowed": {
             "type": "boolean",
             "title": "Post Payment Allowed",
@@ -17832,6 +18289,129 @@
           "sumup_oauth_refresh_token"
         ],
         "title": "RestrictedEventSettings"
+      },
+      "RevenueByCounter": {
+        "properties": {
+          "counters": {
+            "items": {
+              "$ref": "#/components/schemas/CounterRevenue"
+            },
+            "type": "array",
+            "title": "Counters"
+          },
+          "total_revenue": {
+            "type": "number",
+            "title": "Total Revenue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "counters",
+          "total_revenue"
+        ],
+        "title": "RevenueByCounter"
+      },
+      "RevenuePrediction": {
+        "properties": {
+          "current_revenue": {
+            "type": "number",
+            "title": "Current Revenue"
+          },
+          "predicted_end_of_day": {
+            "type": "number",
+            "title": "Predicted End Of Day"
+          },
+          "predicted_event_total": {
+            "type": "number",
+            "title": "Predicted Event Total"
+          },
+          "confidence_level": {
+            "type": "string",
+            "title": "Confidence Level"
+          },
+          "hours_of_data": {
+            "type": "integer",
+            "title": "Hours Of Data"
+          },
+          "days_of_data": {
+            "type": "integer",
+            "title": "Days Of Data"
+          },
+          "events_used": {
+            "type": "integer",
+            "title": "Events Used"
+          },
+          "data_source": {
+            "type": "string",
+            "title": "Data Source"
+          },
+          "hourly_timeseries": {
+            "items": {
+              "$ref": "#/components/schemas/HourlyPredictionPoint"
+            },
+            "type": "array",
+            "title": "Hourly Timeseries"
+          },
+          "average_daily_revenue": {
+            "type": "number",
+            "title": "Average Daily Revenue"
+          },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
+          },
+          "actual_visitors_today": {
+            "type": "integer",
+            "title": "Actual Visitors Today"
+          },
+          "historical_revenue_per_visitor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Revenue Per Visitor"
+          },
+          "visitor_based_prediction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visitor Based Prediction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_revenue",
+          "predicted_end_of_day",
+          "predicted_event_total",
+          "confidence_level",
+          "hours_of_data",
+          "days_of_data",
+          "events_used",
+          "data_source",
+          "hourly_timeseries",
+          "average_daily_revenue",
+          "expected_visitors_per_day",
+          "actual_visitors_today",
+          "historical_revenue_per_visitor",
+          "visitor_based_prediction"
+        ],
+        "title": "RevenuePrediction"
       },
       "StatInterval": {
         "properties": {
@@ -18799,29 +19379,6 @@
         ],
         "title": "Transaction"
       },
-      "TransferBalancePayload": {
-        "properties": {
-          "source_account_id": {
-            "type": "integer",
-            "title": "Source Account Id"
-          },
-          "target_account_id": {
-            "type": "integer",
-            "title": "Target Account Id"
-          },
-          "amount": {
-            "type": "number",
-            "title": "Amount"
-          }
-        },
-        "type": "object",
-        "required": [
-          "source_account_id",
-          "target_account_id",
-          "amount"
-        ],
-        "title": "TransferBalancePayload"
-      },
       "TransferRegisterPayload": {
         "properties": {
           "source_cashier_id": {
@@ -19111,6 +19668,17 @@
               }
             ],
             "title": "Daily End Time"
+          },
+          "expected_visitors_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Visitors Per Day"
           },
           "post_payment_allowed": {
             "type": "boolean",
@@ -19529,17 +20097,6 @@
               }
             ],
             "title": "User Tag Uid Hex"
-          },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
           }
         },
         "type": "object",
@@ -19639,17 +20196,6 @@
             ],
             "title": "Description"
           },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
           "node_id": {
             "type": "integer",
             "title": "Node Id"
@@ -19702,69 +20248,6 @@
           "user_tag_uid_hex"
         ],
         "title": "User"
-      },
-      "UserInvitation": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id"
-          },
-          "token": {
-            "type": "string",
-            "title": "Token"
-          },
-          "node_id": {
-            "type": "integer",
-            "title": "Node Id"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "expires_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Expires At"
-          },
-          "accepted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Accepted At"
-          },
-          "created_by": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created By"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "user_id",
-          "token",
-          "node_id",
-          "created_at",
-          "expires_at"
-        ],
-        "title": "UserInvitation"
       },
       "UserLoginResult": {
         "properties": {

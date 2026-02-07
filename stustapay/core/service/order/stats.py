@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import asyncpg
@@ -18,7 +18,7 @@ from stustapay.core.service.common.decorators import (
 )
 from sftkit.error import InvalidArgument
 from stustapay.core.service.product import fetch_pay_out_product, fetch_top_up_product
-from stustapay.core.service.tree.common import fetch_event_for_node
+from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
 
 
 class ProductSoldStats(Product):
@@ -57,6 +57,8 @@ class TimeseriesStats(BaseModel):
 class TimeseriesStatsQuery(BaseModel):
     from_time: Optional[datetime]
     to_time: Optional[datetime]
+    till_id: Optional[int] = None
+    subnode_id: Optional[int] = None
 
 
 class ProductTimeseries(BaseModel):
@@ -90,6 +92,65 @@ class RevenueStats(BaseModel):
     hourly_intervals: list[StatInterval]
 
 
+class DashboardOverview(BaseModel):
+    total_guest_credit: float
+    total_revenue: float
+    guests_with_orders: int
+    guests_with_credit: int
+    guests_paid_out: int
+    online_donation: float
+    online_for_payout: float
+
+
+class CounterRevenue(BaseModel):
+    till_id: int
+    till_name: str
+    revenue: float
+    order_count: int
+
+
+class RevenueByCounter(BaseModel):
+    counters: list[CounterRevenue]
+    total_revenue: float
+
+
+class PaymentMethodStats(BaseModel):
+    payment_method: str
+    revenue: float
+    order_count: int
+
+
+class PaymentMethodBreakdown(BaseModel):
+    methods: list[PaymentMethodStats]
+    total_revenue: float
+
+
+class HourlyPredictionPoint(BaseModel):
+    hour: int  # 0-23
+    actual_revenue: Optional[float]  # None for future hours
+    predicted_revenue: float
+    cumulative_actual: Optional[float]
+    cumulative_predicted: float
+
+
+class RevenuePrediction(BaseModel):
+    current_revenue: float
+    predicted_end_of_day: float
+    predicted_event_total: float
+    confidence_level: str  # "low" | "medium" | "high"
+    hours_of_data: int
+    days_of_data: int
+    events_used: int  # Number of historical events used
+    data_source: str  # "customer" | "system" - indicates which data source was used
+    hourly_timeseries: list[HourlyPredictionPoint]  # For line chart
+    average_daily_revenue: float  # Historical average
+    # Visitor-based metrics
+    expected_visitors_per_day: Optional[int]  # Configured expected visitors (from event settings)
+    actual_visitors_today: int  # Count of unique guests with orders today
+    historical_revenue_per_visitor: Optional[float]  # Average revenue per visitor from historical data
+    visitor_based_prediction: Optional[float]  # Alternative prediction: expected_visitors * historical_revenue_per_visitor
+
+
 def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSettings) -> tuple[datetime, datetime]:
     if query.from_time is not None and query.to_time is not None and query.from_time > query.to_time:
         raise InvalidArgument("Stats start time must be before end time")
@@ -99,7 +160,9 @@ def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSetting
     return from_t, to_t
 
 
-async def get_hourly_entry_stats(*, conn: Connection, node: Node, from_time: datetime, to_time: datetime) -> Timeseries:
+async def get_hourly_entry_stats(
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+) -> Timeseries:
     stats = await conn.fetch_many(
         StatInterval,
         "select "
@@ -111,18 +174,20 @@ async def get_hourly_entry_stats(*, conn: Connection, node: Node, from_time: dat
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where p.ticket_metadata_id is not null and o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($4::int IS NULL OR o.till_id = $4) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
 async def get_hourly_top_up_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
 ) -> Timeseries:
     top_up_product = await fetch_top_up_product(conn=conn, node=node)
 
@@ -137,19 +202,21 @@ async def get_hourly_top_up_stats(
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
         top_up_product.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
 async def get_hourly_pay_out_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
 ) -> Timeseries:
     pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
 
@@ -164,18 +231,22 @@ async def get_hourly_pay_out_stats(
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
         "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
         pay_out_product.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
-async def get_hourly_sales_stats(*, conn: Connection, node: Node, from_time: datetime, to_time: datetime) -> Timeseries:
+async def get_hourly_sales_stats(
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+) -> Timeseries:
     """
     We are interested in general sales revenue excluding all topups, payouts and ticket sales.
 
@@ -194,18 +265,20 @@ async def get_hourly_sales_stats(*, conn: Connection, node: Node, from_time: dat
         "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
+        "   and ($4::int IS NULL OR o.till_id = $4) "
         "group by from_time, to_time "
         "order by from_time",
         from_time,
         to_time,
         node.id,
+        query.till_id,
     )
 
     return Timeseries(from_time=from_time, to_time=to_time, intervals=stats)
 
 
 async def get_hourly_product_stats(
-    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime, returnable=False
+    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
         "select s.*, prod.name as product_name "
@@ -224,6 +297,7 @@ async def get_hourly_product_stats(
         "   and p.type = 'user_defined' "
         "   and ($3 = any(n.parent_ids) or n.id = $3) "
         "   and p.is_returnable = $4 "
+        "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by p.id, from_time, to_time "
         "order by from_time) s "
         "join product prod on s.product_id = prod.id "
@@ -232,6 +306,7 @@ async def get_hourly_product_stats(
         to_time,
         node.id,
         returnable,
+        query.till_id,
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
     product_names: dict[int, str] = {}
@@ -287,6 +362,32 @@ class OrderStatsService(Service[Config]):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
+    async def _resolve_scope_node(self, *, conn: Connection, node: Node, subnode_id: Optional[int]) -> Node:
+        if subnode_id is None or subnode_id == node.id:
+            return node
+
+        scope_node = await fetch_node(conn=conn, node_id=subnode_id)
+        if scope_node is None:
+            raise InvalidArgument("Selected subnode does not exist")
+        if node.id not in scope_node.parent_ids:
+            raise InvalidArgument("Selected subnode is not in the current node subtree")
+
+        return scope_node
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_available_dates(self, *, conn: Connection, node: Node, subnode_id: Optional[int] = None) -> list[str]:
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=subnode_id)
+
+        dates = await conn.fetch(
+            "SELECT DISTINCT date(o.booked_at)::text as date "
+            "FROM orders_at_node_and_children($1) o "
+            "ORDER BY date DESC",
+            scope_node.id,
+        )
+        return [row["date"] for row in dates]
+
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
@@ -294,10 +395,13 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Entry stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        hourly_stats = await get_hourly_entry_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_entry_stats(
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
             from_time=hourly_stats.from_time,
@@ -313,10 +417,13 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        hourly_stats = await get_hourly_top_up_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_top_up_stats(
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
             from_time=hourly_stats.from_time,
@@ -332,10 +439,13 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        hourly_stats = await get_hourly_pay_out_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_pay_out_stats(
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
             from_time=hourly_stats.from_time,
@@ -351,7 +461,8 @@ class OrderStatsService(Service[Config]):
         if node.event is None:
             raise InvalidArgument("voucher stats can only be computed for event nodes")
 
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
         stats = await conn.fetch_one(
@@ -363,10 +474,12 @@ class OrderStatsService(Service[Config]):
             "join account sa on t.source_account = sa.id "
             "join account ta on t.target_account = ta.id "
             "where t.booked_at >= $1 and t.booked_at <= $2"
-            "   and sa.node_id = $3",
+            "   and sa.node_id = $3"
+            "   and ($4::int IS NULL OR t.till_id = $4)",
             from_time,
             to_time,
-            node.event_node_id,
+            scope_node.event_node_id,
+            query.till_id,
         )
 
         return stats
@@ -375,16 +488,19 @@ class OrderStatsService(Service[Config]):
     @requires_node()
     @requires_user([Privilege.node_administration, Privilege.view_node_stats])
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
-        hourly_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_sales_stats(
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         hourly_product_stats = await get_hourly_product_stats(
-            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=False
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time, returnable=False
         )
         hourly_deposit_stats = await get_hourly_product_stats(
-            conn=conn, node=node, from_time=from_time, to_time=to_time, returnable=True
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time, returnable=True
         )
 
         product_overall_stats = []
@@ -421,9 +537,12 @@ class OrderStatsService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_terminal(user_privileges=[Privilege.view_node_stats])
     async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
-        event = await fetch_event_for_node(conn=conn, node=node)
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
-        hourly_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        hourly_stats = await get_hourly_sales_stats(
+            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+        )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         return RevenueStats(
@@ -431,4 +550,494 @@ class OrderStatsService(Service[Config]):
             to_time=hourly_stats.to_time,
             hourly_intervals=hourly_stats.intervals,
             daily_intervals=daily_stats.intervals,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_dashboard_overview(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> DashboardOverview:
+        if node.event is None:
+            raise InvalidArgument("Dashboard overview can only be computed for event nodes")
+
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        if scope_node.ids_to_event_node is None:
+            raise InvalidArgument("Dashboard overview can only be computed for nodes within an event")
+
+        # Total guest credit (sum of all customer account balances)
+        total_guest_credit = await conn.fetchval(
+            "SELECT COALESCE(SUM(balance), 0) FROM account WHERE type = 'private' AND node_id = ANY($1)",
+            scope_node.ids_to_event_node,
+        )
+
+        # Total revenue from sales in date range
+        total_revenue = await conn.fetchval(
+            "SELECT COALESCE(SUM(li.total_price), 0) "
+            "FROM orders_at_node_and_children($3) o "
+            "JOIN line_item li ON o.id = li.order_id "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.payment_method = 'tag' "
+            "AND ($4::int IS NULL OR o.till_id = $4)",
+            from_time,
+            to_time,
+            scope_node.id,
+            query.till_id,
+        )
+
+        # Number of guests with orders
+        guests_with_orders = await conn.fetchval(
+            "SELECT COUNT(DISTINCT o.customer_account_id) "
+            "FROM orders_at_node_and_children($3) o "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.customer_account_id IS NOT NULL "
+            "AND ($4::int IS NULL OR o.till_id = $4)",
+            from_time,
+            to_time,
+            scope_node.id,
+            query.till_id,
+        )
+
+        # Guests with credit (balance > 0)
+        guests_with_credit = await conn.fetchval(
+            "SELECT COUNT(*) FROM account WHERE type = 'private' AND node_id = ANY($1) AND balance > 0",
+            scope_node.ids_to_event_node,
+        )
+
+        # Guests paid out (count of customers with payout transactions)
+        guests_paid_out = await conn.fetchval(
+            "SELECT COUNT(DISTINCT t.source_account) "
+            "FROM transaction t "
+            "JOIN account a ON t.source_account = a.id "
+            "WHERE t.booked_at >= $1 AND t.booked_at <= $2 "
+            "AND a.type = 'private' AND a.node_id = ANY($3) "
+            "AND t.target_account IN (SELECT id FROM account WHERE type IN ('cash_exit', 'sepa_exit', 'donation_exit'))",
+            from_time,
+            to_time,
+            scope_node.ids_to_event_node,
+        )
+
+        # Online donation (sum of donations from payouts)
+        online_donation = await conn.fetchval(
+            "SELECT COALESCE(SUM(p.donation), 0) "
+            "FROM payout p "
+            "JOIN account a ON p.customer_account_id = a.id "
+            "WHERE a.node_id = ANY($1) AND p.payout_run_id IS NOT NULL",
+            scope_node.ids_to_event_node,
+        )
+
+        # Online for payout (sum of pending payout amounts - customers without payout run)
+        online_for_payout = await conn.fetchval(
+            "SELECT COALESCE(SUM(c.balance), 0) "
+            "FROM customers_without_payout_run c "
+            "WHERE c.node_id = ANY($1) AND c.payout_export = true",
+            scope_node.ids_to_event_node,
+        )
+
+        return DashboardOverview(
+            total_guest_credit=float(total_guest_credit or 0),
+            total_revenue=float(total_revenue or 0),
+            guests_with_orders=int(guests_with_orders or 0),
+            guests_with_credit=int(guests_with_credit or 0),
+            guests_paid_out=int(guests_paid_out or 0),
+            online_donation=float(online_donation or 0),
+            online_for_payout=float(online_for_payout or 0),
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_revenue_by_counter(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> RevenueByCounter:
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        # When filtering by a specific till, we want to show only that till
+        # Otherwise, show all tills with orders in the time period
+        if query.till_id is not None:
+            result = await conn.fetch(
+                "SELECT t.id as till_id, t.name as till_name, "
+                "COALESCE(SUM(li.total_price), 0) as revenue, "
+                "COUNT(DISTINCT o.id) as order_count "
+                "FROM orders_at_node_and_children($3) o "
+                "JOIN till t ON o.till_id = t.id "
+                "JOIN line_item li ON o.id = li.order_id "
+                "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+                "AND o.till_id = $4 "
+                "AND o.order_type = 'sale' "
+                "AND t.is_virtual IS NOT TRUE "
+                "AND t.name <> 'CheckTerminal' "
+                "GROUP BY t.id, t.name "
+                "ORDER BY revenue DESC",
+                from_time,
+                to_time,
+                scope_node.id,
+                query.till_id,
+            )
+        else:
+            result = await conn.fetch(
+                "SELECT t.id as till_id, t.name as till_name, "
+                "COALESCE(SUM(li.total_price), 0) as revenue, "
+                "COUNT(DISTINCT o.id) as order_count "
+                "FROM orders_at_node_and_children($3) o "
+                "JOIN till t ON o.till_id = t.id "
+                "JOIN line_item li ON o.id = li.order_id "
+                "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+                "AND o.order_type = 'sale' "
+                "AND t.is_virtual IS NOT TRUE "
+                "AND t.name <> 'CheckTerminal' "
+                "GROUP BY t.id, t.name "
+                "ORDER BY revenue DESC",
+                from_time,
+                to_time,
+                scope_node.id,
+            )
+
+        counters = [
+            CounterRevenue(
+                till_id=row["till_id"],
+                till_name=row["till_name"],
+                revenue=float(row["revenue"]),
+                order_count=int(row["order_count"]),
+            )
+            for row in result
+        ]
+
+        total_revenue = sum(counter.revenue for counter in counters)
+
+        return RevenueByCounter(counters=counters, total_revenue=total_revenue)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_payment_method_stats(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> PaymentMethodBreakdown:
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
+        from_time, to_time = get_event_time_bounds(query, event)
+
+        result = await conn.fetch(
+            "SELECT o.payment_method, "
+            "COALESCE(SUM(o.total_price), 0) as revenue, "
+            "COUNT(*) as order_count "
+            "FROM orders_at_node_and_children($3) o "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "AND ($4::int IS NULL OR o.till_id = $4) "
+            "GROUP BY o.payment_method "
+            "ORDER BY revenue DESC",
+            from_time,
+            to_time,
+            scope_node.id,
+            query.till_id,
+        )
+
+        methods = [
+            PaymentMethodStats(
+                payment_method=row["payment_method"],
+                revenue=float(row["revenue"]),
+                order_count=int(row["order_count"]),
+            )
+            for row in result
+        ]
+
+        total_revenue = sum(method.revenue for method in methods)
+
+        return PaymentMethodBreakdown(methods=methods, total_revenue=total_revenue)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    async def get_revenue_prediction(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> RevenuePrediction:
+        """
+        Calculate revenue prediction based on historical data from the same customer's events.
+        Falls back to system-wide data if no customer-specific data is available.
+        """
+        if node.event is None:
+            raise InvalidArgument("Revenue prediction can only be computed for event nodes")
+
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
+
+        # Get current time and hour/minute from database using same timezone as order extraction
+        # Use EXTRACT with AT TIME ZONE to ensure consistency with order hour extraction
+        db_result = await conn.fetchrow(
+            """SELECT 
+                now() as db_now, 
+                EXTRACT(HOUR FROM now() AT TIME ZONE 'localtime') as current_hour,
+                EXTRACT(MINUTE FROM now() AT TIME ZONE 'localtime') as current_minute
+            """
+        )
+        now = db_result["db_now"] if db_result else datetime.now(tz=timezone.utc)
+        current_hour = int(db_result["current_hour"]) if db_result else now.hour
+        current_minute = int(db_result["current_minute"]) if db_result else now.minute
+
+        # Calculate today's start time based on daily_end_time
+        if event.daily_end_time:
+            daily_end_hour = event.daily_end_time.hour
+            daily_end_minute = event.daily_end_time.minute
+            if current_hour < daily_end_hour or (current_hour == daily_end_hour and current_minute < daily_end_minute):
+                # We're in the "late night" hours that belong to the previous day
+                today_start = (now - timedelta(days=1)).replace(
+                    hour=daily_end_hour, minute=daily_end_minute, second=0, microsecond=0
+                )
+            else:
+                today_start = now.replace(hour=daily_end_hour, minute=daily_end_minute, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1) - timedelta(seconds=1)
+        else:
+            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1) - timedelta(seconds=1)
+
+        # Find customer node (first node after root)
+        # parent_ids[0] is root (id=0), parent_ids[1] is customer node
+        customer_node_id: Optional[int] = None
+        if len(scope_node.parent_ids) >= 2:
+            customer_node_id = scope_node.parent_ids[1]
+        elif len(scope_node.parent_ids) == 1 and scope_node.parent_ids[0] == 0:
+            # This node is directly under root - it IS the customer node
+            customer_node_id = scope_node.id
+
+        # Try to get historical data from customer's events first
+        data_source = "customer"
+        historical_data = []
+        events_used = 0
+
+        if customer_node_id is not None:
+            # Query all historical hourly revenue from events under the customer node
+            # Exclude the current day (using local timezone for consistency)
+            historical_data = await conn.fetch(
+                """
+                SELECT
+                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
+                    DATE(o.booked_at AT TIME ZONE 'localtime') as day,
+                    e.id as event_id,
+                    COALESCE(SUM(li.total_price), 0) as revenue
+                FROM ordr o
+                JOIN line_item li ON o.id = li.order_id
+                JOIN till t ON o.till_id = t.id
+                JOIN node n ON t.node_id = n.id
+                JOIN node event_node ON n.event_node_id = event_node.id
+                JOIN event e ON event_node.event_id = e.id
+                WHERE o.payment_method = 'tag'
+                    AND o.booked_at < $2
+                    AND ($1 = ANY(n.parent_ids) OR n.id = $1)
+                GROUP BY hour, day, e.id
+                ORDER BY day, hour
+                """,
+                customer_node_id,
+                today_start,
+            )
+            events_used = len(set(row["event_id"] for row in historical_data))
+
+        # Fallback to system-wide data if no customer data
+        if not historical_data:
+            data_source = "system"
+            historical_data = await conn.fetch(
+                """
+                SELECT
+                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
+                    DATE(o.booked_at AT TIME ZONE 'localtime') as day,
+                    n.event_node_id as event_id,
+                    COALESCE(SUM(li.total_price), 0) as revenue
+                FROM ordr o
+                JOIN line_item li ON o.id = li.order_id
+                JOIN till t ON o.till_id = t.id
+                JOIN node n ON t.node_id = n.id
+                WHERE o.payment_method = 'tag'
+                    AND o.booked_at < $1
+                    AND n.event_node_id IS NOT NULL
+                GROUP BY hour, day, n.event_node_id
+                ORDER BY day, hour
+                """,
+                today_start,
+            )
+            events_used = len(set(row["event_id"] for row in historical_data if row["event_id"]))
+
+        # Get current day's revenue by hour (using local timezone for hour extraction)
+        current_day_stats = await conn.fetch(
+            """
+            SELECT
+                EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
+                COALESCE(SUM(li.total_price), 0) as revenue
+            FROM orders_at_node_and_children($1) o
+            JOIN line_item li ON o.id = li.order_id
+            WHERE o.payment_method = 'tag'
+                AND o.booked_at >= $2
+                AND o.booked_at <= now()
+                AND ($3::int IS NULL OR o.till_id = $3)
+            GROUP BY hour
+            ORDER BY hour
+            """,
+            scope_node.id,
+            today_start,
+            query.till_id,
+        )
+
+        # Build hourly revenue map for today
+        today_hourly: dict[int, float] = {int(row["hour"]): float(row["revenue"]) for row in current_day_stats}
+        current_revenue = sum(today_hourly.values())
+
+        # Calculate current cumulative by hour
+        cumulative_actual: dict[int, float] = {}
+        running_total = 0.0
+        for h in range(24):
+            if h in today_hourly:
+                running_total += today_hourly[h]
+            cumulative_actual[h] = running_total if h <= current_hour else None  # type: ignore
+
+        # Build hourly profile from historical data
+        # Group by day to get daily totals, then calculate percentages
+        daily_totals: dict[str, float] = {}
+        daily_hourly: dict[str, dict[int, float]] = {}
+
+        for row in historical_data:
+            day_key = str(row["day"])
+            hour = int(row["hour"])
+            revenue = float(row["revenue"])
+
+            if day_key not in daily_totals:
+                daily_totals[day_key] = 0.0
+                daily_hourly[day_key] = {}
+
+            daily_totals[day_key] += revenue
+            daily_hourly[day_key][hour] = daily_hourly[day_key].get(hour, 0.0) + revenue
+
+        # Calculate average daily revenue
+        days_of_data = len(daily_totals)
+        average_daily_revenue = sum(daily_totals.values()) / days_of_data if days_of_data > 0 else 0.0
+
+        # Build cumulative hourly profile (average % of daily revenue by each hour)
+        hourly_profile: dict[int, float] = {}  # hour -> cumulative percentage
+        if days_of_data > 0:
+            for h in range(24):
+                cumulative_pcts = []
+                for day_key, day_total in daily_totals.items():
+                    if day_total > 0:
+                        cumulative = sum(daily_hourly[day_key].get(hr, 0.0) for hr in range(h + 1))
+                        cumulative_pcts.append(cumulative / day_total)
+                hourly_profile[h] = sum(cumulative_pcts) / len(cumulative_pcts) if cumulative_pcts else 0.0
+        else:
+            # Linear fallback if no historical data
+            for h in range(24):
+                hourly_profile[h] = (h + 1) / 24.0
+
+        # Calculate predicted end of day
+        current_hour_pct = hourly_profile.get(current_hour, 0.5)
+        if current_hour_pct > 0 and current_revenue > 0:
+            predicted_end_of_day = current_revenue / current_hour_pct
+        elif average_daily_revenue > 0:
+            predicted_end_of_day = average_daily_revenue
+        else:
+            # Simple linear extrapolation based on hours elapsed
+            hours_elapsed = current_hour + 1
+            if hours_elapsed > 0 and current_revenue > 0:
+                predicted_end_of_day = (current_revenue / hours_elapsed) * 24
+            else:
+                predicted_end_of_day = 0.0
+
+        # Calculate predicted event total
+        # Estimate remaining days based on event dates
+        remaining_days = 0
+        if event.end_date and event.start_date:
+            total_event_days = (event.end_date - event.start_date).days + 1
+            # Convert both to naive datetime for comparison (remove timezone info)
+            start_date_naive = event.start_date.replace(tzinfo=None) if event.start_date.tzinfo else event.start_date
+            now_naive = now.replace(tzinfo=None) if now.tzinfo else now
+            elapsed_days = (now_naive - start_date_naive).days
+            remaining_days = max(0, total_event_days - elapsed_days - 1)  # -1 because today is predicted separately
+
+        predicted_event_total = predicted_end_of_day + (average_daily_revenue * remaining_days)
+
+        # Determine confidence level
+        if days_of_data >= 3 and data_source == "customer":
+            confidence_level = "high"
+        elif days_of_data >= 1:
+            confidence_level = "medium"
+        else:
+            confidence_level = "low"
+
+        # Generate hourly timeseries for chart
+        hourly_timeseries: list[HourlyPredictionPoint] = []
+        for h in range(24):
+            predicted_cumulative = predicted_end_of_day * hourly_profile.get(h, (h + 1) / 24.0)
+            actual_cumulative = cumulative_actual.get(h)
+
+            hourly_timeseries.append(
+                HourlyPredictionPoint(
+                    hour=h,
+                    actual_revenue=today_hourly.get(h) if h <= current_hour else None,
+                    predicted_revenue=predicted_end_of_day * (hourly_profile.get(h, 0) - hourly_profile.get(h - 1, 0))
+                    if h > 0
+                    else predicted_end_of_day * hourly_profile.get(0, 0),
+                    cumulative_actual=actual_cumulative,
+                    cumulative_predicted=round(predicted_cumulative, 2),
+                )
+            )
+
+        # Visitor-based prediction calculations
+        expected_visitors_per_day = event.expected_visitors_per_day
+
+        # Count actual visitors today (unique customer accounts with orders)
+        actual_visitors_result = await conn.fetchval(
+            """
+            SELECT COUNT(DISTINCT o.customer_account_id)
+            FROM orders_at_node_and_children($1) o
+            WHERE o.payment_method = 'tag'
+                AND o.booked_at >= $2
+                AND o.booked_at <= $3
+                AND o.customer_account_id IS NOT NULL
+            """,
+            scope_node.id,
+            today_start,
+            now,
+        )
+        actual_visitors_today = int(actual_visitors_result) if actual_visitors_result else 0
+
+        # Calculate revenue per visitor: Total Revenue / Guests with Orders (current event)
+        historical_revenue_per_visitor: Optional[float] = None
+        visitor_based_prediction: Optional[float] = None
+
+        # Get total revenue and guest count for current event
+        event_stats = await conn.fetchrow(
+            """
+            SELECT
+                COALESCE(SUM(li.total_price), 0) as total_revenue,
+                COUNT(DISTINCT o.customer_account_id) as guests_with_orders
+            FROM orders_at_node_and_children($1) o
+            JOIN line_item li ON o.id = li.order_id
+            WHERE o.payment_method = 'tag'
+                AND o.customer_account_id IS NOT NULL
+            """,
+            scope_node.id,
+        )
+
+        if event_stats and event_stats["guests_with_orders"] > 0:
+            total_revenue = float(event_stats["total_revenue"])
+            guests_with_orders = int(event_stats["guests_with_orders"])
+            historical_revenue_per_visitor = round(total_revenue / guests_with_orders, 2)
+
+            # If expected visitors is configured, calculate visitor-based prediction
+            if expected_visitors_per_day:
+                visitor_based_prediction = round(expected_visitors_per_day * historical_revenue_per_visitor, 2)
+
+        return RevenuePrediction(
+            current_revenue=round(current_revenue, 2),
+            predicted_end_of_day=round(predicted_end_of_day, 2),
+            predicted_event_total=round(predicted_event_total, 2),
+            confidence_level=confidence_level,
+            hours_of_data=sum(len(dh) for dh in daily_hourly.values()),
+            days_of_data=days_of_data,
+            events_used=events_used,
+            data_source=data_source,
+            hourly_timeseries=hourly_timeseries,
+            average_daily_revenue=round(average_daily_revenue, 2),
+            expected_visitors_per_day=expected_visitors_per_day,
+            actual_visitors_today=actual_visitors_today,
+            historical_revenue_per_visitor=historical_revenue_per_visitor,
+            visitor_based_prediction=visitor_based_prediction,
         )
