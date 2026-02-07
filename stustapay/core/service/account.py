@@ -6,6 +6,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
+from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.tree import Node
@@ -186,6 +187,73 @@ class AccountService(Service[Config]):
             target_account_id=account.id,
             voucher_amount=imbalance,
             conducting_user_id=current_user.id,
+        )
+        return True
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def transfer_account_balance(
+        self,
+        *,
+        conn: Connection,
+        current_user: User,
+        node: Node,
+        source_account_id: int,
+        target_account_id: int,
+        amount: float,
+    ) -> bool:
+        if source_account_id == target_account_id:
+            raise InvalidArgument("Source and target account must differ")
+        if amount <= 0:
+            raise InvalidArgument("Transfer amount must be positive")
+
+        source_account = await get_account_by_id(conn=conn, node=node, account_id=source_account_id)
+        if source_account is None:
+            raise NotFound(element_type="account", element_id=str(source_account_id))
+
+        target_account = await get_account_by_id(conn=conn, node=node, account_id=target_account_id)
+        if target_account is None:
+            raise NotFound(element_type="account", element_id=str(target_account_id))
+
+        if source_account.balance < amount:
+            raise InvalidArgument(
+                f"Insufficient source account balance. Current balance is {source_account.balance:.2f}."
+            )
+
+        from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
+        from stustapay.core.service.product import fetch_money_transfer_product
+        from stustapay.core.service.till.common import fetch_virtual_till
+
+        transfer_product = await fetch_money_transfer_product(conn=conn, node=node)
+        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+
+        # Customer detail pages render orders by customer_account_id.
+        # Use the private account (source preferred) so the transfer is visible there.
+        customer_account_id: int | None = None
+        if source_account.type == AccountType.private:
+            customer_account_id = source_account.id
+        elif target_account.type == AccountType.private:
+            customer_account_id = target_account.id
+
+        await book_order(
+            conn=conn,
+            order_type=OrderType.money_transfer,
+            payment_method=PaymentMethod.tag,
+            cashier_id=current_user.id,
+            till_id=virtual_till.id,
+            customer_account_id=customer_account_id,
+            line_items=[
+                NewLineItem(
+                    quantity=1,
+                    product_id=transfer_product.id,
+                    product_price=amount,
+                    tax_rate_id=transfer_product.tax_rate_id,
+                )
+            ],
+            bookings={
+                BookingIdentifier(source_account_id=source_account_id, target_account_id=target_account_id): amount
+            },
         )
         return True
 

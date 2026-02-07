@@ -21,7 +21,7 @@ import {
 } from "@/components";
 import { OrderTable } from "@/components/features";
 import { useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
-import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
+import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -29,8 +29,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AccountTagHistoryTable } from "../accounts/components/AccountTagHistoryTable";
-import { EditAccountBalanceModal } from "../accounts/components/EditAccountBalanceModal";
 import { EditAccountVoucherAmountModal } from "../accounts/components/EditAccountVoucherAmountModal";
+import { TransferAccountBalanceModal } from "../accounts/components/TransferAccountBalanceModal";
 import { LayoutAction } from "@/components/layouts/types";
 
 const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
@@ -108,7 +108,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   const [allowPayout] = useAllowCustomerPayoutMutation();
   const [preventPayout] = usePreventCustomerPayoutMutation();
 
-  const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
+  const [transferModalOpen, setTransferModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
 
   const {
@@ -178,6 +178,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   };
 
   const actions: LayoutAction[] = [
+    { label: t("account.transferBalance"), onClick: () => setTransferModalOpen(true), icon: <SwapHorizIcon /> },
     { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
   ];
 
@@ -230,10 +231,10 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
         <PayoutDetails customer={customer} />
       </Grid>
       {customer.tag_history.length > 0 && <AccountTagHistoryTable history={customer.tag_history} />}
-      <EditAccountBalanceModal
-        account={customer}
-        open={balanceModalOpen}
-        handleClose={() => setBalanceModalOpen(false)}
+      <TransferAccountBalanceModal
+        sourceAccount={customer}
+        open={transferModalOpen}
+        handleClose={() => setTransferModalOpen(false)}
       />
       <EditAccountVoucherAmountModal
         account={customer}

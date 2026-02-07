@@ -80,6 +80,28 @@ async def update_voucher_amount(
     )
 
 
+class TransferBalancePayload(BaseModel):
+    source_account_id: int
+    target_account_id: int
+    amount: float
+
+
+@router.post("/accounts/transfer-balance")
+async def transfer_balance(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    payload: TransferBalancePayload,
+    node_id: int,
+):
+    await account_service.transfer_account_balance(
+        token=token,
+        source_account_id=payload.source_account_id,
+        target_account_id=payload.target_account_id,
+        amount=payload.amount,
+        node_id=node_id,
+    )
+
+
 class UpdateAccountCommentPayload(BaseModel):
     comment: str
 
