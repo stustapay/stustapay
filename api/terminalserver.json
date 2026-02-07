@@ -2560,6 +2560,17 @@
             ],
             "title": "Description"
           },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "role_ids": {
             "items": {
               "type": "integer"
@@ -2655,6 +2666,17 @@
               }
             ],
             "title": "User Tag Uid"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
           },
           "transport_account_id": {
             "anyOf": [
@@ -4613,6 +4635,17 @@
               }
             ],
             "title": "Till Id"
+          },
+          "subnode_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subnode Id"
           }
         },
         "type": "object",
@@ -4722,6 +4755,17 @@
             ],
             "title": "Description"
           },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "node_id": {
             "type": "integer",
             "title": "Node Id"
@@ -4810,6 +4854,17 @@
               }
             ],
             "title": "Description"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
           },
           "node_id": {
             "type": "integer",

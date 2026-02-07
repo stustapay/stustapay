@@ -147,6 +147,24 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      inviteUser: build.mutation<InviteUserApiResponse, InviteUserApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/invite`,
+          method: "POST",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["users"],
+      }),
+      acceptInvitation: build.mutation<AcceptInvitationApiResponse, AcceptInvitationApiArg>({
+        query: (queryArg) => ({
+          url: `/users/accept-invitation`,
+          method: "POST",
+          body: queryArg.acceptInvitationPayload,
+        }),
+        invalidatesTags: ["users"],
+      }),
       listUserRoles: build.query<ListUserRolesApiResponse, ListUserRolesApiArg>({
         query: (queryArg) => ({
           url: `/user-roles`,
@@ -709,6 +727,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
+      transferBalance: build.mutation<TransferBalanceApiResponse, TransferBalanceApiArg>({
+        query: (queryArg) => ({
+          url: `/accounts/transfer-balance`,
+          method: "POST",
+          body: queryArg.transferBalancePayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
       updateAccountComment: build.mutation<UpdateAccountCommentApiResponse, UpdateAccountCommentApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/update-comment`,
@@ -1046,6 +1075,26 @@ const injectedRtkApi = api
           url: `/user-tags/find-user-tags`,
           method: "POST",
           body: queryArg.findUserTagPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
+      countTagsWithoutAccounts: build.query<CountTagsWithoutAccountsApiResponse, CountTagsWithoutAccountsApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/count-without-accounts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["user_tags"],
+      }),
+      createAccountsForUserTags: build.mutation<CreateAccountsForUserTagsApiResponse, CreateAccountsForUserTagsApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/create-accounts`,
+          method: "POST",
+          body: queryArg.createAccountsPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1925,6 +1974,17 @@ export type ChangeUserPasswordApiArg = {
   nodeId: number;
   changeUserPasswordPayload: ChangeUserPasswordPayload;
 };
+export type InviteUserApiResponse = /** status 200 Successful Response */ UserInvitation;
+export type InviteUserApiArg = {
+  userId: number;
+  nodeId: number;
+};
+export type AcceptInvitationApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string;
+};
+export type AcceptInvitationApiArg = {
+  acceptInvitationPayload: AcceptInvitationPayload;
+};
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
 export type ListUserRolesApiArg = {
   nodeId: number;
@@ -2211,6 +2271,11 @@ export type UpdateVoucherAmountApiArg = {
   nodeId: number;
   updateVoucherAmountPayload: UpdateVoucherAmountPayload;
 };
+export type TransferBalanceApiResponse = /** status 200 Successful Response */ any;
+export type TransferBalanceApiArg = {
+  nodeId: number;
+  transferBalancePayload: TransferBalancePayload;
+};
 export type UpdateAccountCommentApiResponse = /** status 200 Successful Response */ AccountRead;
 export type UpdateAccountCommentApiArg = {
   accountId: number;
@@ -2400,6 +2465,15 @@ export type FindUserTagsApiResponse = /** status 200 Successful Response */ Norm
 export type FindUserTagsApiArg = {
   nodeId: number;
   findUserTagPayload: FindUserTagPayload;
+};
+export type CountTagsWithoutAccountsApiResponse = /** status 200 Successful Response */ number;
+export type CountTagsWithoutAccountsApiArg = {
+  nodeId: number;
+};
+export type CreateAccountsForUserTagsApiResponse = /** status 200 Successful Response */ CreateAccountsResponse;
+export type CreateAccountsForUserTagsApiArg = {
+  nodeId: number;
+  createAccountsPayload: CreateAccountsPayload;
 };
 export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type GetUserTagDetailApiArg = {
@@ -2908,6 +2982,7 @@ export type User = {
   user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
+  email?: string | null;
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
@@ -2919,6 +2994,7 @@ export type UserRead = {
   user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
+  email?: string | null;
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
@@ -2953,6 +3029,7 @@ export type CreateUserPayload = {
   description?: string | null;
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
+  email?: string | null;
   password?: string | null;
 };
 export type UpdateUserPayload = {
@@ -2961,9 +3038,24 @@ export type UpdateUserPayload = {
   description?: string | null;
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
+  email?: string | null;
 };
 export type ChangeUserPasswordPayload = {
   new_password: string;
+};
+export type UserInvitation = {
+  id: number;
+  user_id: number;
+  token: string;
+  node_id: number;
+  created_at: string;
+  expires_at: string;
+  accepted_at?: string | null;
+  created_by?: number | null;
+};
+export type AcceptInvitationPayload = {
+  token: string;
+  password: string;
 };
 export type UserRole = {
   name: string;
@@ -3027,6 +3119,7 @@ export type CurrentUser = {
   description?: string | null;
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
+  email?: string | null;
   transport_account_id?: number | null;
   cash_register_id?: number | null;
 };
@@ -3426,7 +3519,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: Account;
+    [key: string]: AccountRead;
   };
 };
 export type FindAccountPayload = {
@@ -3437,6 +3530,11 @@ export type UpdateBalancePayload = {
 };
 export type UpdateVoucherAmountPayload = {
   new_voucher_amount: number;
+};
+export type TransferBalancePayload = {
+  source_account_id: number;
+  target_account_id: number;
+  amount: number;
 };
 export type UpdateAccountCommentPayload = {
   comment: string;
@@ -3624,7 +3722,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: string]: Cashier;
+    [key: string]: CashierRead;
   };
 };
 export type CashierProductStats = {
@@ -3808,6 +3906,13 @@ export type NormalizedListUserTagDetailInt = {
 };
 export type FindUserTagPayload = {
   search_term: string;
+};
+export type CreateAccountsResponse = {
+  created: number;
+  skipped: number;
+};
+export type CreateAccountsPayload = {
+  user_tag_ids?: number[] | null;
 };
 export type UpdateCommentPayload = {
   comment: string;
@@ -4535,6 +4640,8 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
+  useInviteUserMutation,
+  useAcceptInvitationMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,
   useCreateUserRoleMutation,
@@ -4615,6 +4722,7 @@ export const {
   useDisableAccountMutation,
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
+  useTransferBalanceMutation,
   useUpdateAccountCommentMutation,
   useListOrdersByTillQuery,
   useLazyListOrdersByTillQuery,
@@ -4669,6 +4777,9 @@ export const {
   useLazyListUserTagSecretsQuery,
   useCreateUserTagsMutation,
   useFindUserTagsMutation,
+  useCountTagsWithoutAccountsQuery,
+  useLazyCountTagsWithoutAccountsQuery,
+  useCreateAccountsForUserTagsMutation,
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,
