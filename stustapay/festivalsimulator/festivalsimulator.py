@@ -207,16 +207,18 @@ class Simulator:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
             while True:
                 # TODO: future: test if the user has not already locked in
-                # get random user that has uid
+                # get random user that has uid and pin
                 rows = await self.db_pool.fetch(
-                    "select user_tag_pin from account_with_history where user_tag_uid is not null"
+                    "select user_tag_uid, user_tag_pin from account_with_history where user_tag_uid is not null and user_tag_pin is not null"
                 )
                 if len(rows) == 0:  # no tickets were sold yet
                     await asyncio.sleep(1)
                     continue
 
-                pin = random.choice([(row["user_tag_pin"]) for row in rows])
-                token = await self.login_customer(pin=pin)
+                row = random.choice(rows)
+                uid = row["user_tag_uid"]
+                pin = row["user_tag_pin"]
+                token = await self.login_customer(uid=uid, pin=pin)
 
                 donation = random.choice(["no_donation", "partial_donation", "full_donation"])
 
@@ -240,7 +242,10 @@ class Simulator:
                         if resp.status != 204:
                             self.logger.warning(f"Error while setting payout {resp.status = }")
                 else:  # partial donation
-                    balance = await self.db_pool.fetchval("select balance from customer where user_tag_pin = $1", pin)
+                    balance = await self.db_pool.fetchval(
+                        "select balance from customer c join user_tag ut on ut.id = c.user_tag_id where ut.uid = $1",
+                        uid,
+                    )
                     async with client.post(
                         "/customer_info",
                         json={
@@ -254,7 +259,7 @@ class Simulator:
                         if resp.status != 204:
                             self.logger.warning(f"Error while setting payout with donation {resp.status = }")
 
-                await self.logout_customer(pin=pin, token=token)
+                await self.logout_customer(uid=uid, pin=pin, token=token)
                 await asyncio.sleep(0.3)
 
     async def reporter(self):
@@ -555,27 +560,35 @@ class Simulator:
                 payload = await resp.json()
             return payload["success"]["token"]
 
-    async def login_customer(self, pin: str) -> str:
+    async def login_customer(self, uid: int, pin: str) -> str:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
-            async with client.post("/auth/login", json={"pin": pin}) as resp:
+            # Convert uid to hex string for username
+            # uid might be a Decimal from the database, so convert to int first
+            uid_int = int(uid)
+            username = hex(uid_int)[2:]  # Remove '0x' prefix
+            async with client.post(
+                "/auth/login",
+                json={"username": username, "pin": pin, "node_id": self.event_node_id},
+            ) as resp:
                 if resp.status == 503:
-                    self.logger.warning(f"Customer with pin {pin} problem logging in, {await resp.text()}")
+                    self.logger.warning(f"Customer with uid {uid} pin {pin} problem logging in, {await resp.text()}")
                     await self.sleep()
-                    return await self.login_customer(pin)
+                    return await self.login_customer(uid, pin)
                 elif resp.status != 200:
-                    raise RuntimeError(f"Error trying to log in customer with pin {pin}")
+                    error_text = await resp.text()
+                    raise RuntimeError(f"Error trying to log in customer with uid {uid} pin {pin}: {error_text}")
                 payload = await resp.json()
             return payload["access_token"]
 
-    async def logout_customer(self, pin: str, token: str):
+    async def logout_customer(self, uid: int, pin: str, token: str):
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
             async with client.post("/auth/logout", headers={"Authorization": f"Bearer {token}"}) as resp:
                 if resp.status == 503:
-                    self.logger.warning(f"Customer with pin {pin} problem logging out, {await resp.text()}")
+                    self.logger.warning(f"Customer with uid {uid} pin {pin} problem logging out, {await resp.text()}")
                     await self.sleep()
-                    return await self.logout_customer(pin, token)
+                    return await self.logout_customer(uid, pin, token)
                 elif resp.status != 204:
-                    raise RuntimeError(f"Error trying to log out customer with pin {pin}")
+                    raise RuntimeError(f"Error trying to log out customer with uid {uid} pin {pin}")
 
     async def _prepare_admin_terminals(self):
         rows = await self.db_pool.fetch("select id from till where name like '%Admin%'")

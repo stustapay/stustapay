@@ -1,7 +1,6 @@
 import { useNode } from "@/api";
 import {
   Dashboard as DashboardIcon,
-  Leaderboard as LeaderboardIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
@@ -12,9 +11,6 @@ import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router
 import { EventPageLayout } from "./EventPageLayout";
 
 const getActiveTab = (nodeId: number, location: string) => {
-  if (location.startsWith(`/node/${nodeId}/stats`)) {
-    return `/node/${nodeId}/stats`;
-  }
   if (location.startsWith(`/node/${nodeId}/settings`)) {
     return `/node/${nodeId}/settings`;
   }
@@ -56,16 +52,6 @@ export const NodePageLayout: React.FC = () => {
           iconPosition="start"
           to={nodeUrl}
         />
-        {node.event_node_id != null && (
-          <Tab
-            label={t("nodes.statistics")}
-            component={RouterLink}
-            value={`${nodeUrl}/stats`}
-            icon={<LeaderboardIcon />}
-            iconPosition="start"
-            to={`${nodeUrl}/stats`}
-          />
-        )}
         <Tab
           label={t("nodes.settings")}
           component={RouterLink}

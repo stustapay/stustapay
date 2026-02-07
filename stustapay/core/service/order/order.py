@@ -86,7 +86,7 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_till, fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
+from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
 
 from ..till.common import get_cash_register_account_id
 from .booking import BookingIdentifier, NewLineItem, book_order
@@ -246,6 +246,19 @@ class OrderService(Service[Config]):
         self.voucher_service = VoucherService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.stats = OrderStatsService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.sumup = SumupService(db_pool=db_pool, config=config, auth_service=auth_service)
+
+    @staticmethod
+    async def _resolve_scope_node(*, conn: Connection, node: Node, subnode_id: Optional[int]) -> Node:
+        if subnode_id is None or subnode_id == node.id:
+            return node
+
+        scope_node = await fetch_node(conn=conn, node_id=subnode_id)
+        if scope_node is None:
+            raise InvalidArgument("Selected subnode does not exist")
+        if node.id not in scope_node.parent_ids:
+            raise InvalidArgument("Selected subnode is not in the current node subtree")
+
+        return scope_node
 
     @staticmethod
     async def _get_products_from_buttons(
@@ -1649,6 +1662,86 @@ class OrderService(Service[Config]):
             till_id,
             node.event_node_id,
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def list_orders_filtered(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        from_timestamp: Optional[datetime] = None,
+        to_timestamp: Optional[datetime] = None,
+        till_id: Optional[int] = None,
+        subnode_id: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> list[Order]:
+        scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=subnode_id)
+        param_count = 1
+        conditions: list[str] = []
+        params: list = [scope_node.id]
+
+        conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
+
+        if from_timestamp is not None:
+            param_count += 1
+            conditions.append(f"o.booked_at >= ${param_count}")
+            params.append(from_timestamp)
+
+        if to_timestamp is not None:
+            param_count += 1
+            conditions.append(f"o.booked_at <= ${param_count}")
+            params.append(to_timestamp)
+
+        if till_id is not None:
+            param_count += 1
+            conditions.append(f"o.till_id = ${param_count}")
+            params.append(till_id)
+
+        where_clause = " AND ".join(conditions)
+        param_count += 1
+        
+        limit_clause = ""
+        if limit is not None:
+            param_count += 1
+            limit_clause = f" ORDER BY o.booked_at DESC LIMIT ${param_count}"
+            # Note: We need to order by booked_at to get the *latest* orders when limiting
+            # But the inner query selects IDs. 
+            
+            # More efficient strategy:
+            # We want the *IDs* of the latest orders matching criteria.
+            # So the inner query should do the limiting.
+            
+            # Let's adjust the query construction slightly.
+            # original: select * from order_value_prefiltered((select array_agg(o.id) from ordr o where {where_clause}), node_id)
+            
+            # The order_value_prefiltered takes an array of IDs.
+            # We should limit the IDs we pass to it.
+            
+            # Wait, `array_agg` doesn't preserve order or limit easily inside aggregation without subquery.
+            
+            # Better approach:
+            # select array_agg(id) from (select o.id from ordr o where ... w.booked_at ... order by booked_at desc limit N) as sub
+       
+        # Let's rewrite the inner query part
+        inner_query = f"SELECT o.id FROM ordr o WHERE {where_clause}"
+        
+        if limit is not None:
+             # param_count is already incremented for node_id (which will be added next), so limit uses param_count + 1
+             limit_param_idx = param_count + 1
+             inner_query += f" ORDER BY o.booked_at DESC LIMIT ${limit_param_idx}"
+             
+        # Wrap in array_agg
+        array_agg_query = f"SELECT array_agg(sub.id) FROM ({inner_query}) as sub"
+        
+        query = f"select * from order_value_prefiltered(({array_agg_query}), ${param_count})"
+        params.append(scope_node.event_node_id)
+        
+        if limit is not None:
+            params.append(limit)
+
+        return await conn.fetch_many(Order, query, *params)
 
     @with_db_transaction(read_only=True)
     @requires_node()
