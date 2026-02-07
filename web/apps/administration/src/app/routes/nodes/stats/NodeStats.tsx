@@ -1,5 +1,4 @@
 import * as React from "react";
-import { withPrivilegeGuard } from "@/app/layout";
 import { NodeSeenByUser, useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery, api } from "@/api";
 import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
@@ -21,7 +20,8 @@ import {
   Chip,
 } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
-import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
+import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+import { Navigate } from "react-router-dom";
 import {
   useAppDispatch,
   useAppSelector,
@@ -51,8 +51,10 @@ type SectionKey =
 
 type DatePreset = "all" | "today" | "yesterday" | "last7" | "custom";
 
-export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
+export const NodeStats: React.FC = () => {
   const { t } = useTranslation();
+  const canViewNodeStats = useCurrentUserHasPrivilege(Privilege.view_node_stats);
+  const canAdminNode = useCurrentUserHasPrivilege(Privilege.node_administration);
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();
   const dispatch = useAppDispatch();
@@ -243,6 +245,10 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
     selectedSubnodeId !== undefined ||
     selectedTillId !== undefined ||
     selectedProductId !== undefined;
+
+  if (!canViewNodeStats && !canAdminNode) {
+    return <Navigate to="/" />;
+  }
 
   if (eventSettings.start_date == null || eventSettings.end_date == null || eventSettings.daily_end_time == null) {
     return (
@@ -666,4 +672,4 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
       </Grid>
     </Grid>
   );
-});
+};

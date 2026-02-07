@@ -1,4 +1,4 @@
-import { Node, NodeSeenByUser, ObjectType, Privilege } from "@/api";
+import { NodeSeenByUser, ObjectType, Privilege } from "@/api";
 import {
   AccountBalance as AccountBalanceIcon,
   Android as AndroidIcon,
@@ -33,13 +33,13 @@ import {
 import { i18n } from "@/i18n";
 
 type NodeMenuItem = {
-  route: (node: Node) => string;
+  route: (node: NodeSeenByUser) => string;
   icon: React.FC;
   label: string;
   requiresEvent?: boolean;
   requiredPrivileges?: Privilege[];
   requiresOneOfObjectType?: ObjectType[];
-  additionalRequirements?: (node: Node) => boolean;
+  additionalRequirements?: (node: NodeSeenByUser) => boolean;
 };
 
 export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
@@ -47,8 +47,9 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => `/node/${node.id}/stats`,
     label: i18n.t("nodes.statistics"),
     icon: LeaderboardIcon,
-    requiredPrivileges: ["node_administration"],
-    additionalRequirements: (node) => node.event != null || node.event_node_id != null,
+    additionalRequirements: (node) =>
+      (node.event != null || node.event_node_id != null) &&
+      (node.privileges_at_node.includes("view_node_stats") || node.privileges_at_node.includes("node_administration")),
   },
   {
     route: (node) => UserRoutes.list(node.id),
