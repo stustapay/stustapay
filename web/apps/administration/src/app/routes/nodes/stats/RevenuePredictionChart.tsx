@@ -115,10 +115,10 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
             data={chartData}
             colors={["#73BF69", "#42A5F5"]}
             margin={{
-              top: 20,
-              right: isSmallMobile ? 20 : isMobile ? 80 : 120,
-              bottom: 50,
-              left: isSmallMobile ? 50 : isMobile ? 60 : 80,
+              top: isSmallMobile ? 14 : 20,
+              right: isSmallMobile ? 12 : isMobile ? 20 : 120,
+              bottom: isSmallMobile ? 42 : 50,
+              left: isSmallMobile ? 40 : isMobile ? 48 : 80,
             }}
             xScale={{ type: "point" }}
             yScale={{
@@ -132,7 +132,7 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
               tickPadding: 5,
               tickRotation: isSmallMobile ? -45 : 0,
               legend: t("overview.hourOfDay"),
-              legendOffset: 40,
+              legendOffset: isSmallMobile ? 34 : 40,
               legendPosition: "middle",
               tickValues: isSmallMobile ? ["00:00", "06:00", "12:00", "18:00"] : undefined,
             }}

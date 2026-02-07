@@ -102,7 +102,6 @@ const router = createBrowserRouter([
             element: <NodePageLayout />,
             children: [
               { index: true, element: <NodeOverview /> },
-              { path: "stats", element: <NodeStats /> },
               {
                 path: "settings/sumup-redirect",
                 element: <SumupOauthCallback />,
@@ -144,6 +143,10 @@ const router = createBrowserRouter([
                 element: <DsfinvkExport />,
               },
             ],
+          },
+          {
+            path: "stats",
+            element: <NodeStats />,
           },
           {
             path: "create-event",

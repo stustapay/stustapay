@@ -34,6 +34,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const mobileKpiGridSize = isSmallMobile ? 6 : 12;
 
   const { data: overviewResponse, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(
     {
@@ -91,7 +92,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
     return (
       <Grid container spacing={{ xs: 1, sm: 1.5 }}>
         {[...Array(8)].map((_, i) => (
-          <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid key={i} size={{ xs: mobileKpiGridSize, sm: 6, md: 3 }}>
             <Skeleton variant="rounded" height={isSmallMobile ? 120 : isMobile ? 140 : 160} />
           </Grid>
         ))}
@@ -181,7 +182,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   return (
     <Grid container spacing={{ xs: 0.75, sm: 1, md: 1.5 }}>
       {kpiCards.map((card, index) => (
-        <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid key={index} size={{ xs: mobileKpiGridSize, sm: 6, md: 3 }}>
           <Card
             sx={{
               backgroundColor: (theme) =>
@@ -190,16 +191,17 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
               boxShadow: "none",
             }}
           >
-            <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+            <CardContent sx={{ p: { xs: 0.75, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 0.75, sm: 1.5, md: 2 } } }}>
               <Typography
                 variant="caption"
                 sx={{
                   color: "text.secondary",
-                  fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
+                  fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.75rem" },
                   textTransform: "uppercase",
-                  letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                  mb: { xs: 0.5, sm: 0.5 },
+                  letterSpacing: { xs: "0.15px", sm: "0.3px", md: "0.5px" },
+                  mb: { xs: 0.35, sm: 0.5 },
                   display: "block",
+                  lineHeight: 1.1,
                 }}
               >
                 {card.title}
@@ -210,8 +212,11 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                 sx={{
                   color: card.color.startsWith("#") ? card.color : "#73BF69",
                   fontWeight: 600,
-                  fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-                  lineHeight: 1.2,
+                  fontSize: { xs: "1rem", sm: "1.5rem", md: "1.75rem" },
+                  lineHeight: 1.15,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {card.value}
@@ -223,7 +228,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       {/* Prediction KPI cards - only show when no product filter */}
       {!selectedProductStats && prediction && !isPredictionLoading && (
         <>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: mobileKpiGridSize, sm: 6, md: 3 }}>
             <Card
               sx={{
                 backgroundColor: (theme) =>
@@ -233,18 +238,19 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                 boxShadow: "none",
               }}
             >
-              <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+              <CardContent sx={{ p: { xs: 0.75, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 0.75, sm: 1.5, md: 2 } } }}>
                 <Typography
                   variant="caption"
                   sx={{
                     color: "text.secondary",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
+                    fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.75rem" },
                     textTransform: "uppercase",
-                    letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                    mb: { xs: 0.5, sm: 0.5 },
+                    letterSpacing: { xs: "0.15px", sm: "0.3px", md: "0.5px" },
+                    mb: { xs: 0.35, sm: 0.5 },
                     display: "flex",
                     alignItems: "center",
                     gap: 0.5,
+                    lineHeight: 1.1,
                   }}
                 >
                   <TrendingUpIcon sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }} />
@@ -256,8 +262,11 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                   sx={{
                     color: "#42A5F5",
                     fontWeight: 600,
-                    fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-                    lineHeight: 1.2,
+                    fontSize: { xs: "1rem", sm: "1.5rem", md: "1.75rem" },
+                    lineHeight: 1.15,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   {formatCurrency(prediction.predicted_end_of_day)}
@@ -267,7 +276,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
           </Grid>
           {/* Only show event total prediction at event level */}
           {currentNode.event != null && (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: mobileKpiGridSize, sm: 6, md: 3 }}>
               <Card
                 sx={{
                   backgroundColor: (theme) =>
@@ -277,18 +286,19 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                   boxShadow: "none",
                 }}
               >
-                <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+                <CardContent sx={{ p: { xs: 0.75, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 0.75, sm: 1.5, md: 2 } } }}>
                   <Typography
                     variant="caption"
                     sx={{
                       color: "text.secondary",
-                      fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
+                      fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.75rem" },
                       textTransform: "uppercase",
-                      letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                      mb: { xs: 0.5, sm: 0.5 },
+                      letterSpacing: { xs: "0.15px", sm: "0.3px", md: "0.5px" },
+                      mb: { xs: 0.35, sm: 0.5 },
                       display: "flex",
                       alignItems: "center",
                       gap: 0.5,
+                      lineHeight: 1.1,
                     }}
                   >
                     <TrendingUpIcon sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }} />
@@ -300,8 +310,11 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                     sx={{
                       color: "#42A5F5",
                       fontWeight: 600,
-                      fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-                      lineHeight: 1.2,
+                      fontSize: { xs: "1rem", sm: "1.5rem", md: "1.75rem" },
+                      lineHeight: 1.15,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {formatCurrency(prediction.predicted_event_total)}
@@ -312,7 +325,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
           )}
           {/* Revenue per visitor - only show if we have historical data */}
           {prediction.historical_revenue_per_visitor && (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: mobileKpiGridSize, sm: 6, md: 3 }}>
               <Card
                 sx={{
                   backgroundColor: (theme) =>
@@ -321,16 +334,17 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                   boxShadow: "none",
                 }}
               >
-                <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+                <CardContent sx={{ p: { xs: 0.75, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 0.75, sm: 1.5, md: 2 } } }}>
                   <Typography
                     variant="caption"
                     sx={{
                       color: "text.secondary",
-                      fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
+                      fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.75rem" },
                       textTransform: "uppercase",
-                      letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                      mb: { xs: 0.5, sm: 0.5 },
+                      letterSpacing: { xs: "0.15px", sm: "0.3px", md: "0.5px" },
+                      mb: { xs: 0.35, sm: 0.5 },
                       display: "block",
+                      lineHeight: 1.1,
                     }}
                   >
                     {t("overview.revenuePerVisitor")}
@@ -341,8 +355,11 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                     sx={{
                       color: "#FF7043",
                       fontWeight: 600,
-                      fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-                      lineHeight: 1.2,
+                      fontSize: { xs: "1rem", sm: "1.5rem", md: "1.75rem" },
+                      lineHeight: 1.15,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {formatCurrency(prediction.historical_revenue_per_visitor)}
@@ -353,7 +370,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
           )}
           {/* Visitor-based prediction - only show if expected visitors is configured */}
           {prediction.visitor_based_prediction && (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: mobileKpiGridSize, sm: 6, md: 3 }}>
               <Card
                 sx={{
                   backgroundColor: (theme) =>
@@ -363,18 +380,19 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                   boxShadow: "none",
                 }}
               >
-                <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
+                <CardContent sx={{ p: { xs: 0.75, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 0.75, sm: 1.5, md: 2 } } }}>
                   <Typography
                     variant="caption"
                     sx={{
                       color: "text.secondary",
-                      fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
+                      fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.75rem" },
                       textTransform: "uppercase",
-                      letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                      mb: { xs: 0.5, sm: 0.5 },
+                      letterSpacing: { xs: "0.15px", sm: "0.3px", md: "0.5px" },
+                      mb: { xs: 0.35, sm: 0.5 },
                       display: "flex",
                       alignItems: "center",
                       gap: 0.5,
+                      lineHeight: 1.1,
                     }}
                   >
                     <TrendingUpIcon sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }} />
@@ -386,8 +404,11 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
                     sx={{
                       color: "#AB47BC",
                       fontWeight: 600,
-                      fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-                      lineHeight: 1.2,
+                      fontSize: { xs: "1rem", sm: "1.5rem", md: "1.75rem" },
+                      lineHeight: 1.15,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {formatCurrency(prediction.visitor_based_prediction)}

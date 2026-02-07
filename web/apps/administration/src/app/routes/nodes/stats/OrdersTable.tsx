@@ -63,7 +63,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [showAll, setShowAll] = React.useState(false);
   const effectiveNodeId = subnodeId ?? currentNode.id;
   const { data: tills } = useListTillsQuery({ nodeId: effectiveNodeId }, { pollingInterval: pollingIntervalMs });
@@ -223,7 +223,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               color: "text.secondary",
             }}
           >
-            Bestellungen
+            {t("overview.orders")}
           </Typography>
           <Skeleton variant="rounded" height={isSmallMobile ? 250 : isMobile ? 300 : 400} />
         </CardContent>
@@ -285,10 +285,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               color: "text.secondary",
             }}
           >
-            Bestellungen
+            {t("overview.orders")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-            No orders found for the selected filters
+            {t("overview.noOrdersFound")}
           </Typography>
         </CardContent>
       </Card>
@@ -330,175 +330,216 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             onClearAll={clearAllFilters}
           />
 
-          <Box
-            sx={{
-              width: "100%",
-              overflowX: "auto",
-              "&::-webkit-scrollbar": {
-                height: "8px",
-              },
-              "&::-webkit-scrollbar-track": {
-                backgroundColor: (theme) =>
-                  theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
-                borderRadius: "4px",
-              },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "#73BF69",
-                borderRadius: "4px",
-                "&:hover": {
-                  backgroundColor: "#5a9a4f",
-                },
-              },
-            }}
-          >
-            <TableContainer>
-              <Table
-                size="small"
-                sx={{
-                  minWidth: 800,
-                  "& .MuiTableCell-root": {
-                    borderColor: "rgba(255, 255, 255, 0.1)",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.875rem" },
-                    py: { xs: 0.4, sm: 0.5, md: 1 },
-                    px: { xs: 0.5, sm: 0.75, md: 1.5 },
-                    whiteSpace: "nowrap",
-                  },
-                  "& .MuiTableRow-root": {
-                    transition: "background-color 0.2s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.05)",
-                    },
-                  },
-                }}
-              >
-              <TableHead>
-                <TableRow>
-                  <SortableTableHeader
-                    field="orderDate"
-                    label={t("overview.date")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                  />
-                  <SortableTableHeader
-                    field="orderId"
-                    label={t("overview.orderNumber")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                  />
-                  <SortableTableHeader
-                    field="orderType"
-                    label={t("overview.orderType")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                  />
-                  <SortableTableHeader
-                    field="tillName"
-                    label={t("common.till")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                  />
-                  <SortableTableHeader
-                    field="productName"
-                    label={t("item.product")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                  />
-                  <SortableTableHeader
-                    field="quantity"
-                    label={t("item.quantity")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                    align="right"
-                  />
-                  <SortableTableHeader
-                    field="productPrice"
-                    label={t("item.productPrice")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                    align="right"
-                  />
-                  <SortableTableHeader
-                    field="total"
-                    label={t("overview.total")}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={(field) => setSort(field)}
-                  />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {displayedData.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      align="center"
-                      sx={{
-                        py: { xs: 2, sm: 3 },
-                        color: "text.secondary",
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      }}
-                    >
-                      {t("overview.noOrdersMatchFilter")}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  displayedData.map((row, idx) => (
-                    <TableRow key={`${row.order.id}-${idx}`}>
-                      <TableCell>
-                        {isSmallMobile
-                          ? DateTime.fromISO(row.order.booked_at).toFormat("MM-dd HH:mm")
-                          : isMobile
-                            ? DateTime.fromISO(row.order.booked_at).toFormat("MM-dd HH:mm")
-                            : DateTime.fromISO(row.order.booked_at).toFormat("yyyy-MM-dd HH:mm:ss")}
-                      </TableCell>
-                      <TableCell>
+          {isSmallMobile ? (
+            <Stack spacing={1}>
+              {displayedData.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem", textAlign: "center", py: 2 }}>
+                  {t("overview.noOrdersMatchFilter")}
+                </Typography>
+              ) : (
+                displayedData.map((row, idx) => (
+                  <Box
+                    key={`${row.order.id}-${idx}`}
+                    sx={{
+                      border: (theme) =>
+                        `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+                      borderRadius: 1,
+                      p: 1.25,
+                    }}
+                  >
+                    <Stack spacing={0.4}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Link
                           to={`/node/${currentNode.id}/orders/${row.order.id}`}
-                          style={{
-                            color: "#73BF69",
-                            textDecoration: "none",
-                            transition: "color 0.2s ease-in-out",
-                            fontSize: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.textDecoration = "underline";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.textDecoration = "none";
+                          style={{ color: "#73BF69", textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}
+                        >
+                          #{row.order.id}
+                        </Link>
+                        <Typography sx={{ color: "#73BF69", fontWeight: 600, fontSize: "0.85rem" }}>
+                          {formatCurrency(row.lineItem.total_price)}
+                        </Typography>
+                      </Stack>
+                      <Typography sx={{ fontSize: "0.8rem", fontWeight: 500 }}>{row.lineItem.product.name}</Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
+                        {DateTime.fromISO(row.order.booked_at).toFormat("MM-dd HH:mm")} · {t("item.quantity")}: {row.lineItem.quantity}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
+                        {t("overview.orderType")}: {row.order.order_type} · {t("common.till")}: {row.tillName}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                ))
+              )}
+            </Stack>
+          ) : (
+            <Box
+              sx={{
+                width: "100%",
+                overflowX: "auto",
+                "&::-webkit-scrollbar": {
+                  height: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#73BF69",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    backgroundColor: "#5a9a4f",
+                  },
+                },
+              }}
+            >
+              <TableContainer>
+                <Table
+                  size="small"
+                  sx={{
+                    minWidth: 800,
+                    "& .MuiTableCell-root": {
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                      fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.875rem" },
+                      py: { xs: 0.4, sm: 0.5, md: 1 },
+                      px: { xs: 0.5, sm: 0.75, md: 1.5 },
+                      whiteSpace: "nowrap",
+                    },
+                    "& .MuiTableRow-root": {
+                      transition: "background-color 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      },
+                    },
+                  }}
+                >
+                  <TableHead>
+                    <TableRow>
+                      <SortableTableHeader
+                        field="orderDate"
+                        label={t("overview.date")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                      <SortableTableHeader
+                        field="orderId"
+                        label={t("overview.orderNumber")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                      <SortableTableHeader
+                        field="orderType"
+                        label={t("overview.orderType")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                      <SortableTableHeader
+                        field="tillName"
+                        label={t("common.till")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                      <SortableTableHeader
+                        field="productName"
+                        label={t("item.product")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                      <SortableTableHeader
+                        field="quantity"
+                        label={t("item.quantity")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                        align="right"
+                      />
+                      <SortableTableHeader
+                        field="productPrice"
+                        label={t("item.productPrice")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                        align="right"
+                      />
+                      <SortableTableHeader
+                        field="total"
+                        label={t("overview.total")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {displayedData.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={8}
+                          align="center"
+                          sx={{
+                            py: { xs: 2, sm: 3 },
+                            color: "text.secondary",
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
                           }}
                         >
-                          {row.order.id}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{row.order.order_type}</TableCell>
-                      <TableCell>{row.tillName}</TableCell>
-                      <TableCell>{row.lineItem.product.name}</TableCell>
-                      <TableCell align="right">{row.lineItem.quantity}</TableCell>
-                      <TableCell align="right">{formatCurrency(row.lineItem.product_price)}</TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{
-                          color: "#73BF69",
-                          fontWeight: 500,
-                          transition: "color 0.2s ease-in-out",
-                        }}
-                      >
-                        {formatCurrency(row.lineItem.total_price)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+                          {t("overview.noOrdersMatchFilter")}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      displayedData.map((row, idx) => (
+                        <TableRow key={`${row.order.id}-${idx}`}>
+                          <TableCell>
+                            {isMobile
+                              ? DateTime.fromISO(row.order.booked_at).toFormat("MM-dd HH:mm")
+                              : DateTime.fromISO(row.order.booked_at).toFormat("yyyy-MM-dd HH:mm:ss")}
+                          </TableCell>
+                          <TableCell>
+                            <Link
+                              to={`/node/${currentNode.id}/orders/${row.order.id}`}
+                              style={{
+                                color: "#73BF69",
+                                textDecoration: "none",
+                                transition: "color 0.2s ease-in-out",
+                                fontSize: "inherit",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.textDecoration = "underline";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.textDecoration = "none";
+                              }}
+                            >
+                              {row.order.id}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{row.order.order_type}</TableCell>
+                          <TableCell>{row.tillName}</TableCell>
+                          <TableCell>{row.lineItem.product.name}</TableCell>
+                          <TableCell align="right">{row.lineItem.quantity}</TableCell>
+                          <TableCell align="right">{formatCurrency(row.lineItem.product_price)}</TableCell>
+                          <TableCell
+                            align="right"
+                            sx={{
+                              color: "#73BF69",
+                              fontWeight: 500,
+                              transition: "color 0.2s ease-in-out",
+                            }}
+                          >
+                            {formatCurrency(row.lineItem.total_price)}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
 
           {hasMoreData && (
             <Box sx={{ display: "flex", justifyContent: "center", pt: 1 }}>

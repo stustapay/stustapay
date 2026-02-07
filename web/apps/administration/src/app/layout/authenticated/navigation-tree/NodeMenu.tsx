@@ -3,6 +3,7 @@ import {
   AccountBalance as AccountBalanceIcon,
   Android as AndroidIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
+  Leaderboard as LeaderboardIcon,
   MeetingRoom as MeetingRoomIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
@@ -42,6 +43,13 @@ type NodeMenuItem = {
 };
 
 export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
+  {
+    route: (node) => `/node/${node.id}/stats`,
+    label: i18n.t("nodes.statistics"),
+    icon: LeaderboardIcon,
+    requiredPrivileges: ["node_administration"],
+    additionalRequirements: (node) => node.event != null || node.event_node_id != null,
+  },
   {
     route: (node) => UserRoutes.list(node.id),
     label: i18n.t("users"),

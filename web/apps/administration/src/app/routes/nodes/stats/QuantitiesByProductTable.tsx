@@ -51,7 +51,7 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const { data, isLoading } = useGetProductStatsQuery(
     {
@@ -195,121 +195,167 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
             {t("overview.quantitiesPerProduct")}
           </Typography>
 
-          <Box
-            sx={{
-              width: "100%",
-              overflowX: "auto",
-              "&::-webkit-scrollbar": {
-                height: "8px",
-              },
-              "&::-webkit-scrollbar-track": {
-                backgroundColor: (theme) =>
-                  theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
-                borderRadius: "4px",
-              },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "#73BF69",
-                borderRadius: "4px",
-                "&:hover": {
-                  backgroundColor: "#5a9a4f",
-                },
-              },
-            }}
-          >
-            <TableContainer>
-              <Table
-                size="small"
-                sx={{
-                  minWidth: 400,
-                  "& .MuiTableCell-root": {
-                    borderColor: "rgba(255, 255, 255, 0.1)",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.875rem" },
-                    py: { xs: 0.5, sm: 0.75, md: 1 },
-                    px: { xs: 0.75, sm: 1, md: 1.5 },
-                  },
-                  "& .MuiTableRow-root": {
-                    transition: "background-color 0.2s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.05)",
-                    },
-                  },
-                }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <SortableTableHeader
-                      field="productName"
-                      label={t("item.product")}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      onSort={(field) => setSort(field)}
-                    />
-                    <SortableTableHeader
-                      field="quantity"
-                      label={t("item.quantity")}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      onSort={(field) => setSort(field)}
-                      align="right"
-                    />
-                    <SortableTableHeader
-                      field="revenue"
-                      label={t("overview.revenue")}
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      onSort={(field) => setSort(field)}
-                      align="right"
-                    />
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredData.map((row) => (
-                    <TableRow key={row.productId}>
-                      <TableCell>{row.productName}</TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{
-                          fontWeight: 500,
-                          color: row.quantity < 0 ? "error.main" : "inherit",
-                        }}
-                      >
-                        {row.quantity}
-                      </TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{
-                          color: row.revenue < 0 ? "error.main" : "#73BF69",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {formatCurrency(row.revenue)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {/* Totals row */}
-                  <TableRow
-                    sx={{
-                      "& .MuiTableCell-root": {
-                        borderTop: "2px solid rgba(255, 255, 255, 0.2)",
-                        fontWeight: 700,
-                      },
-                    }}
-                  >
-                    <TableCell sx={{ textTransform: "uppercase" }}>{t("overview.total")}</TableCell>
-                    <TableCell align="right">{totals.quantity}</TableCell>
-                    <TableCell
-                      align="right"
+          {isSmallMobile ? (
+            <Stack spacing={1}>
+              {filteredData.map((row) => (
+                <Box
+                  key={row.productId}
+                  sx={{
+                    border: (theme) =>
+                      `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+                    borderRadius: 1,
+                    p: 1.25,
+                  }}
+                >
+                  <Stack spacing={0.4}>
+                    <Typography sx={{ fontSize: "0.82rem", fontWeight: 600 }}>{row.productName}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
+                      {t("item.quantity")}: {row.quantity}
+                    </Typography>
+                    <Typography
                       sx={{
-                        color: totals.revenue < 0 ? "error.main" : "#73BF69",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        color: row.revenue < 0 ? "error.main" : "#73BF69",
                       }}
                     >
-                      {formatCurrency(totals.revenue)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+                      {formatCurrency(row.revenue)}
+                    </Typography>
+                  </Stack>
+                </Box>
+              ))}
+              <Box
+                sx={{
+                  borderTop: (theme) =>
+                    `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.18)" : "rgba(0, 0, 0, 0.18)"}`,
+                  pt: 1,
+                }}
+              >
+                <Typography sx={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                  {t("overview.total")}: {formatCurrency(totals.revenue)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
+                  {t("item.quantity")}: {totals.quantity}
+                </Typography>
+              </Box>
+            </Stack>
+          ) : (
+            <Box
+              sx={{
+                width: "100%",
+                overflowX: "auto",
+                "&::-webkit-scrollbar": {
+                  height: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#73BF69",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    backgroundColor: "#5a9a4f",
+                  },
+                },
+              }}
+            >
+              <TableContainer>
+                <Table
+                  size="small"
+                  sx={{
+                    minWidth: 400,
+                    "& .MuiTableCell-root": {
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                      fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.875rem" },
+                      py: { xs: 0.5, sm: 0.75, md: 1 },
+                      px: { xs: 0.75, sm: 1, md: 1.5 },
+                    },
+                    "& .MuiTableRow-root": {
+                      transition: "background-color 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      },
+                    },
+                  }}
+                >
+                  <TableHead>
+                    <TableRow>
+                      <SortableTableHeader
+                        field="productName"
+                        label={t("item.product")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                      />
+                      <SortableTableHeader
+                        field="quantity"
+                        label={t("item.quantity")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                        align="right"
+                      />
+                      <SortableTableHeader
+                        field="revenue"
+                        label={t("overview.revenue")}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={(field) => setSort(field)}
+                        align="right"
+                      />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredData.map((row) => (
+                      <TableRow key={row.productId}>
+                        <TableCell>{row.productName}</TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            fontWeight: 500,
+                            color: row.quantity < 0 ? "error.main" : "inherit",
+                          }}
+                        >
+                          {row.quantity}
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            color: row.revenue < 0 ? "error.main" : "#73BF69",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {formatCurrency(row.revenue)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {/* Totals row */}
+                    <TableRow
+                      sx={{
+                        "& .MuiTableCell-root": {
+                          borderTop: "2px solid rgba(255, 255, 255, 0.2)",
+                          fontWeight: 700,
+                        },
+                      }}
+                    >
+                      <TableCell sx={{ textTransform: "uppercase" }}>{t("overview.total")}</TableCell>
+                      <TableCell align="right">{totals.quantity}</TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          color: totals.revenue < 0 ? "error.main" : "#73BF69",
+                        }}
+                      >
+                        {formatCurrency(totals.revenue)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
         </Stack>
       </CardContent>
     </Card>

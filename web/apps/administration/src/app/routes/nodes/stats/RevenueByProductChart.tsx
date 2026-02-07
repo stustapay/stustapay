@@ -124,6 +124,16 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
     }));
   }, [data, sortOption, formatCurrency]);
 
+  const chartHeight = React.useMemo(() => {
+    if (isSmallMobile) {
+      return Math.min(Math.max(chartData.length * 24, 180), 380);
+    }
+    if (isMobile) {
+      return Math.min(Math.max(chartData.length * 26, 220), 440);
+    }
+    return 300;
+  }, [chartData.length, isMobile, isSmallMobile]);
+
   const handleBarClick = React.useCallback(
     (barData: BarChartData) => {
       if (onProductClick) {
@@ -335,8 +345,9 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
 
           <BarChart
             data={chartData}
-            height={isSmallMobile ? 220 : isMobile ? 250 : 300}
+            height={chartHeight}
             useCurrency
+            horizontal={isMobile}
             onBarClick={onProductClick ? handleBarClick : undefined}
           />
         </Stack>

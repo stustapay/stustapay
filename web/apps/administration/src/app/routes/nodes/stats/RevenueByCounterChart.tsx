@@ -126,6 +126,16 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
     return mapped;
   }, [data?.counters, sortOption]);
 
+  const chartHeight = React.useMemo(() => {
+    if (isSmallMobile) {
+      return Math.min(Math.max(chartData.length * 24, 170), 360);
+    }
+    if (isMobile) {
+      return Math.min(Math.max(chartData.length * 26, 200), 420);
+    }
+    return 250;
+  }, [chartData.length, isMobile, isSmallMobile]);
+
   const handleBarClick = React.useCallback(
     (barData: BarChartData) => {
       if (onBarClick) {
@@ -331,7 +341,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
 
           <BarChart
             data={chartData}
-            height={isSmallMobile ? 180 : isMobile ? 200 : 250}
+            height={chartHeight}
             useCurrency
             horizontal
             onBarClick={onBarClick ? handleBarClick : undefined}

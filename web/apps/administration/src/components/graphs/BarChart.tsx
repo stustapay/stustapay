@@ -35,14 +35,26 @@ export const BarChart: React.FC<BarChartProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("md", "lg"));
+  const maxCategoryLabelLength = isSmallMobile ? 10 : isMobile ? 14 : 24;
+
+  const truncateLabel = React.useCallback(
+    (value: string | number) => {
+      const label = String(value);
+      if (label.length <= maxCategoryLabelLength) {
+        return label;
+      }
+      return `${label.slice(0, maxCategoryLabelLength - 1)}…`;
+    },
+    [maxCategoryLabelLength]
+  );
 
   const defaultMargin = React.useMemo(() => {
     if (isSmallMobile) {
       return {
         top: 10,
         right: horizontal && useCurrency ? 50 : 8,
-        bottom: horizontal ? 35 : 40,
-        left: horizontal ? 70 : 40,
+        bottom: horizontal ? 30 : 40,
+        left: horizontal ? 62 : 36,
         ...margin,
       };
     }
@@ -50,8 +62,8 @@ export const BarChart: React.FC<BarChartProps> = ({
       return {
         top: 12,
         right: horizontal && useCurrency ? 55 : 10,
-        bottom: horizontal ? 38 : 45,
-        left: horizontal ? 75 : 45,
+        bottom: horizontal ? 34 : 45,
+        left: horizontal ? 70 : 42,
         ...margin,
       };
     }
@@ -169,11 +181,13 @@ export const BarChart: React.FC<BarChartProps> = ({
         axisBottom={{
           tickSize: 0,
           tickPadding: isSmallMobile ? 4 : isMobile ? 6 : 8,
-          tickRotation: horizontal ? 0 : isSmallMobile ? -90 : isMobile ? -90 : -45,
+          tickRotation: horizontal ? 0 : isSmallMobile ? -65 : isMobile ? -55 : -45,
           //legend: horizontal ? undefined : "Category",
           legendPosition: "middle",
           legendOffset: isSmallMobile ? 35 : isMobile ? 40 : 50,
-          format: horizontal && useCurrency ? (value) => formatCurrency(value) : undefined,
+          format: horizontal
+            ? (useCurrency ? (value) => formatCurrency(value) : undefined)
+            : (value) => truncateLabel(value),
         }}
         axisLeft={{
           tickSize: 0,
@@ -185,15 +199,15 @@ export const BarChart: React.FC<BarChartProps> = ({
             ? (isSmallMobile ? -45 : isMobile ? -50 : -60)
             : (isSmallMobile ? -35 : isMobile ? -40 : -50),
           format: horizontal
-            ? undefined // For horizontal charts, y-axis shows category names (id), not values
+            ? (value) => truncateLabel(value)
             : useCurrency
               ? (value) => formatCurrency(value)
               : undefined,
         }}
-        enableLabel={true}
+        enableLabel={!isSmallMobile}
         label={(d) => useCurrency ? formatCurrency(d.value as number) : String(d.value)}
-        labelSkipWidth={40}
-        labelSkipHeight={16}
+        labelSkipWidth={isSmallMobile ? 120 : 40}
+        labelSkipHeight={isSmallMobile ? 22 : 16}
         labelTextColor="#ffffff"
         labelPosition="end"
         labelOffset={8}
