@@ -125,6 +125,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               price: 0,
               fixed_price: true,
               is_locked: false,
+              has_bookings: false,
               is_returnable: false,
               tax_rate_id: 0,
               tax_name: "",

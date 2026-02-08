@@ -6,7 +6,6 @@ import {
   useDeleteProductMutation,
   useListProductsQuery,
   useListTaxRatesQuery,
-  useUpdateProductMutation,
 } from "@/api";
 import { ProductRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
@@ -14,7 +13,6 @@ import {
   ContentCopy as ContentCopyIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
-  Lock as LockIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
@@ -45,7 +43,6 @@ export const ProductList: React.FC = () => {
   const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
-  const [updateProduct] = useUpdateProductMutation();
   const { dataGridNodeColumn } = useRenderNode();
 
   if (isProductsLoading || isTaxRatesLoading) {
@@ -69,10 +66,6 @@ export const ProductList: React.FC = () => {
     );
   };
 
-  const handleLockProduct = (product: Product) => {
-    updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: { ...product, is_locked: true } });
-  };
-
   const openConfirmDeleteDialog = (productId: number) => {
     openModal({
       type: "confirm",
@@ -88,7 +81,19 @@ export const ProductList: React.FC = () => {
   };
 
   const copyProduct = (product: Product) => {
-    createProduct({ nodeId: currentNode.id, newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
+    createProduct({
+      nodeId: currentNode.id,
+      newProduct: {
+        name: `${product.name} - ${t("copy")}`,
+        price: product.price,
+        tax_rate_id: product.tax_rate_id,
+        fixed_price: product.fixed_price,
+        price_in_vouchers: product.price_in_vouchers,
+        restrictions: product.restrictions,
+        is_returnable: product.is_returnable,
+        target_account_id: product.target_account_id,
+      },
+    });
   };
 
   const columns: GridColDef<Product>[] = [
@@ -103,8 +108,8 @@ export const ProductList: React.FC = () => {
       ),
     },
     {
-      field: "is_locked",
-      headerName: t("product.isLocked"),
+      field: "has_bookings",
+      headerName: t("product.hasBookings"),
       type: "boolean",
     },
     {
@@ -164,16 +169,9 @@ export const ProductList: React.FC = () => {
                 onClick={() => copyProduct(params.row)}
               />,
               <GridActionsCellItem
-                icon={<LockIcon />}
-                color="primary"
-                disabled={params.row.is_locked}
-                label={t("product.lock")}
-                onClick={() => handleLockProduct(params.row)}
-              />,
-              <GridActionsCellItem
                 icon={<DeleteIcon />}
                 color="primary"
-                disabled={params.row.is_locked}
+                disabled={params.row.has_bookings}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}
               />,

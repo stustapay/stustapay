@@ -5,9 +5,11 @@ from sftkit.database import Connection
 
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.tax_rate import TaxRate
+from stustapay.core.schema.till import NewTillButton
 from stustapay.core.schema.tree import NewNode, Node
 from sftkit.error import AccessDenied
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.till.till import TillService
 
 from ..core.service.tree.service import create_node
 from .conftest import Cashier
@@ -107,3 +109,35 @@ async def test_product_name_is_unique_in_tree(
             node_id=sub_sub_node.id,
             product=product,
         )
+
+
+async def test_update_product_assigned_to_button(
+    product_service: ProductService,
+    till_service: TillService,
+    event_node: Node,
+    tax_rate_ust: TaxRate,
+    tax_rate_none: TaxRate,
+    event_admin_token: str,
+):
+    product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(name="Button Product", price=3, tax_rate_id=tax_rate_ust.id),
+    )
+
+    await till_service.layout.create_button(
+        token=event_admin_token,
+        node_id=event_node.id,
+        button=NewTillButton(name="Button Product", product_ids=[product.id]),
+    )
+
+    updated_product = await product_service.update_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product_id=product.id,
+        product=NewProduct(name="Button Product Updated", price=4, tax_rate_id=tax_rate_none.id),
+    )
+
+    assert updated_product.name == "Button Product Updated"
+    assert updated_product.price == 4
+    assert updated_product.tax_rate_id == tax_rate_none.id

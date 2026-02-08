@@ -2948,6 +2948,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
+  has_bookings: boolean;
   type: ProductType;
   price_per_voucher?: number | null;
 };

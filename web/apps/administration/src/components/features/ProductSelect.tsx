@@ -3,11 +3,9 @@ import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export type ProductSelectProps = {
-  onlyLocked?: boolean;
-} & Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
+export type ProductSelectProps = Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
 
-export const ProductSelect: React.FC<ProductSelectProps> = ({ onlyLocked = false, ...props }) => {
+export const ProductSelect: React.FC<ProductSelectProps> = ({ ...props }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { products } = useListProductsQuery(
@@ -15,10 +13,9 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({ onlyLocked = false
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        products: data 
+        products: data
           ? selectProductAll(data)
-              .filter(p => p.node_id === currentNode.id)  
-              .filter(p => p.is_locked || !onlyLocked) 
+              .filter((p) => p.node_id === currentNode.id)
           : [],
       }),
     }

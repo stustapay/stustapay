@@ -10,7 +10,7 @@ from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from sftkit.error import NotFound, ServiceException
+from sftkit.error import NotFound
 
 
 async def fetch_product(
@@ -57,11 +57,6 @@ async def fetch_money_difference_product(*, conn: Connection, node: Node) -> Pro
     return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.imbalance)
 
 
-class ProductIsLockedException(ServiceException):
-    id = "ProductNotEditable"
-    description = "The product has been marked as not editable, its core metadata is therefore fixed"
-
-
 class ProductService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -88,7 +83,7 @@ class ProductService(Service[Config]):
                 if product.price_in_vouchers is not None and product.price_in_vouchers > 0
                 else None
             ),
-            product.is_locked,
+            True,
             product.is_returnable,
         )
 
@@ -127,21 +122,6 @@ class ProductService(Service[Config]):
         if current_product is None:
             raise NotFound(element_type="product", element_id=product_id)
 
-        if current_product.is_locked:
-            if any(
-                [
-                    current_product.price != product.price,
-                    current_product.fixed_price != product.fixed_price,
-                    current_product.price_in_vouchers != product.price_in_vouchers,
-                    current_product.target_account_id != product.target_account_id,
-                    current_product.tax_rate_id != product.tax_rate_id,
-                    current_product.restrictions != product.restrictions,
-                    current_product.is_locked != product.is_locked,
-                    current_product.is_returnable != product.is_returnable,
-                ]
-            ):
-                raise ProductIsLockedException()
-
         row = await conn.fetchrow(
             "update product set name = $2, price = $3, tax_rate_id = $4, target_account_id = $5, fixed_price = $6, "
             "price_in_vouchers = $7, is_locked = $8, is_returnable = $9 "
@@ -158,7 +138,7 @@ class ProductService(Service[Config]):
                 if product.price_in_vouchers is not None and product.price_in_vouchers > 0
                 else None
             ),
-            product.is_locked,
+            True,
             product.is_returnable,
         )
         if row is None:

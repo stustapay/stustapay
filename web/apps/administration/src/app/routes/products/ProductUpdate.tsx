@@ -2,6 +2,7 @@ import { useGetProductQuery, useUpdateProductMutation } from "@/api";
 import { ProductRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
+import { Alert, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { ProductSchema } from "@stustapay/models";
 import * as React from "react";
@@ -30,14 +31,17 @@ export const ProductUpdate: React.FC = withPrivilegeGuard("node_administration",
   }
 
   return (
-    <EditLayout
-      title={t("product.update")}
-      submitLabel={t("update")}
-      successRoute={ProductRoutes.detail(product.id)}
-      initialValues={product}
-      validationSchema={ProductSchema}
-      onSubmit={(p) => updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: p })}
-      form={ProductForm}
-    />
+    <Stack spacing={2}>
+      {product.has_bookings && <Alert severity="warning">{t("product.updateWarningUsed")}</Alert>}
+      <EditLayout
+        title={t("product.update")}
+        submitLabel={t("update")}
+        successRoute={ProductRoutes.detail(product.id)}
+        initialValues={product}
+        validationSchema={ProductSchema}
+        onSubmit={(p) => updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: p })}
+        form={ProductForm}
+      />
+    </Stack>
   );
 });

@@ -197,6 +197,7 @@ create or replace view cashier as
 create or replace view product_with_tax_and_restrictions as
     select
         p.*,
+        exists(select 1 from line_item li where li.product_id = p.id) as has_bookings,
         -- price_in_vouchers is never 0 due to constraint product_price_in_vouchers_not_zero
         p.price / p.price_in_vouchers               as price_per_voucher,
         t.name                                      as tax_name,
