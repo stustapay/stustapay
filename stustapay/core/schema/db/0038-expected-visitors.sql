@@ -1,5 +1,5 @@
--- migration: 0000037
--- requires: 0000036
+-- migration: 0000038
+-- requires: 0000037
 
 -- Add expected visitors per day field to event for revenue prediction
 -- This simple field allows admins to configure average expected daily visitors
