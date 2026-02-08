@@ -94,24 +94,21 @@ def ao146a_export(
     node_id: Annotated[int, typer.Option("--node-id", help="id of node to run the export for")],
     filename: Annotated[
         Path,
-        typer.Option("--filename", "-f", help="output file path of resulting zip file"),
-    ] = Path("dsfinV_k.zip"),
-    index_xml: Annotated[Path, typer.Option("--xml", help="index.xml file to include")] = Path(
-        "./stustapay/dsfinvk/assets/index.xml"
-    ),
-    dtd_file: Annotated[Path, typer.Option(help="*.dtd file to include")] = Path(
-        "./stustapay/dsfinvk/assets/gdpdu-01-09-2004.dtd"
-    ),
-    dry_run: bool = False,
+        typer.Option("--filename", "-f", help="output file path of resulting xml file"),
+    ] = Path("ao146a.xml"),
+    shutdown_date: Annotated[
+        str,
+        typer.Option(
+            "--shutdown", help="Datum der Ausserbetriebname der ASe (TT.MM.JJJJ), ignorieren um keines zu setzen"
+        ),
+    ] = "None",
 ):
     """Exportiere ein XML um Kassen in ELSTER nach AO146a zu melden."""
     generator = AO146Aexporter(
         config=ctx.obj.config,
         filename=str(filename),
-        xml=str(index_xml),
-        dtd=str(dtd_file),
-        simulate=dry_run,
         event_node_id=node_id,
+        shutdown_date=shutdown_date,
     )
     asyncio.run(generator.run())
 
