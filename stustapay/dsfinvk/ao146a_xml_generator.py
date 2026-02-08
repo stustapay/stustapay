@@ -158,6 +158,9 @@ class AO146Aexporter:
                     + str(BSI_TO_YEAR[str(tse_data["tse_description"])[-4:]])
                 )  # man muss das jahr beim BSI nachschauen..
 
+                BauformTSE = ET.SubElement(AngabenAufzeichnungssystem, "ArtTSE")
+                BauformTSE.text = str("2")  # "2" = USB-Stick, "1" = SD Card, "3" = Cloud
+
                 AnschaffungAS = ET.SubElement(AngabenAufzeichnungssystem, "AnschaffungAS")
                 AnschaffungAS.text = str(first_booking_date.strftime("%d.%m.%Y"))  # hmmm
 
@@ -174,7 +177,20 @@ class AO146Aexporter:
 
                 Aufzeichnung146a_1.append(AngabenAufzeichnungssystem)
 
-            LOGGER.info(ET.tostring(root_element, encoding="utf-8"))
-            ET.ElementTree(root_element).write(self.filename, method="xml", xml_declaration=True, encoding="UTF-8")
+            xml_body = ET.tostring(Aufzeichnung146a_1, encoding="utf-8")
+            LOGGER.info(xml_body)
+            # need to prepend xml header to file manually, because ElementTree only uses single quotes, but elster wants double quotes
+            with open(self.filename, "wb") as output_file:
+                output_file.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'.encode("utf-8"))
+                output_file.write(
+                    '<Aufzeichnung146a xmlns="http://finkonsens.de/elster/elsternachricht/aufzeichnung146a/v1" version="1">\n'.encode(
+                        "utf-8"
+                    )
+                )
+                ET.ElementTree(Aufzeichnung146a_1).write(
+                    output_file, method="xml", xml_declaration=False, encoding="UTF-8"
+                )
+                output_file.write("</Aufzeichnung146a>\n".encode("utf-8"))
+                # output_file.write(xml_body)
             LOGGER.info(f"Duration: {time.monotonic() - self.starttime:.3f}s")
             return
