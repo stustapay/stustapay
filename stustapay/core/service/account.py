@@ -135,10 +135,10 @@ class AccountService(Service[Config]):
             Account,
             "select * from account_with_history a "
             "where a.node_id = any ($2) and "
-            "   (a.name like $1 "
+            "   ((a.name like $1 "
             "   or a.comment like $1 "
             "   or (a.user_tag_pin is not null and a.user_tag_pin like $1)) "
-            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $1) ",
+            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $1)) ",
             f"%{search_term.lower()}%",
             node.ids_to_root,
         )

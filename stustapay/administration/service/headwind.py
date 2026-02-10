@@ -22,6 +22,15 @@ logger = logging.getLogger(__name__)
 _JWT_TOKEN: str | None = None
 
 
+def _safe_json_keys(payload: Any) -> list[str]:
+    """
+    Return sorted top-level keys for logging without leaking values.
+    """
+    if isinstance(payload, dict):
+        return sorted(str(key) for key in payload.keys())
+    return []
+
+
 class HeadwindError(ServiceException):
     """Raised when the Headwind API returns an error."""
 
@@ -102,15 +111,13 @@ class HeadwindClient:
             async with aiohttp.ClientSession(trust_env=True, timeout=timeout) as session:
                 async with session.post(url, json=payload, headers={"Accept": "application/json"}) as response:
                     text = await response.text()
-                    # Always log the raw response body once for debugging (may be truncated in errors below)
-                    logger.debug("Headwind JWT login raw response body: %s", text)
 
                     if not response.ok:
                         logger.error(
-                            "Headwind JWT login error status=%s url=%s body=%s",
+                            "Headwind JWT login error status=%s url=%s response_len=%s",
                             response.status,
                             url,
-                            text,
+                            len(text),
                         )
                         raise HeadwindError(
                             f"Headwind JWT login returned HTTP {response.status}",
@@ -162,10 +169,13 @@ class HeadwindClient:
                             # If this naive extraction fails, we'll fall through and raise below.
                             pass
                     if not token:
-                        logger.error("Headwind JWT login response did not contain a token: %s", data)
-                        # Include a short dump of the original response for easier debugging
+                        logger.error(
+                            "Headwind JWT login response did not contain a token; response_type=%s keys=%s",
+                            type(data).__name__,
+                            _safe_json_keys(data),
+                        )
                         raise HeadwindError(
-                            f"Headwind JWT login response did not contain a token: {text[:200]}"
+                            "Headwind JWT login response did not contain a token"
                         )
                     globals()["_JWT_TOKEN"] = token
                     logger.info("Headwind JWT login succeeded")
@@ -432,4 +442,3 @@ def get_headwind_client(config: Config) -> HeadwindClient:
     """
 
     return HeadwindClient(config.headwind)
-

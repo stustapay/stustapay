@@ -1,4 +1,5 @@
 # pylint: disable=unexpected-keyword-arg
+import hashlib
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional
@@ -182,6 +183,8 @@ async def associate_user_to_role(
 
 
 class UserService(Service[Config]):
+    INVITATION_TOKEN_HASH_PREFIX = "sha256:"
+
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
@@ -193,6 +196,11 @@ class UserService(Service[Config]):
 
     def _check_password(self, password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(password, hashed_password)
+
+    @classmethod
+    def _hash_invitation_token(cls, token: str) -> str:
+        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        return f"{cls.INVITATION_TOKEN_HASH_PREFIX}{digest}"
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -630,6 +638,7 @@ class UserService(Service[Config]):
 
         # Generate secure token
         token = secrets.token_urlsafe(32)
+        token_hash = self._hash_invitation_token(token)
 
         # Check for existing active invitation
         existing_invitation = await conn.fetchrow(
@@ -644,7 +653,7 @@ class UserService(Service[Config]):
             invitation_id = existing_invitation["id"]
             await conn.execute(
                 "update user_invitation set token = $1, expires_at = $2, created_by = $3 where id = $4",
-                token,
+                token_hash,
                 expires_at,
                 current_user.id,
                 invitation_id,
@@ -655,7 +664,7 @@ class UserService(Service[Config]):
                 "insert into user_invitation (user_id, token, node_id, expires_at, created_by) "
                 "values ($1, $2, $3, $4, $5) returning id",
                 user_id,
-                token,
+                token_hash,
                 node.id,
                 expires_at,
                 current_user.id,
@@ -696,26 +705,43 @@ The StuStaPay Team
         )
 
         # Fetch and return invitation
-        invitation = await conn.fetch_one(
-            UserInvitation,
-            "select id, user_id, token, node_id, created_at, expires_at, "
-            "accepted_at, created_by from user_invitation where id = $1",
+        invitation = await conn.fetchrow(
+            "select id, user_id, node_id, created_at, expires_at, accepted_at, created_by "
+            "from user_invitation where id = $1",
             invitation_id,
         )
-
-        return invitation
+        assert invitation is not None
+        return UserInvitation(
+            id=invitation["id"],
+            user_id=invitation["user_id"],
+            token=token,
+            node_id=invitation["node_id"],
+            created_at=invitation["created_at"],
+            expires_at=invitation["expires_at"],
+            accepted_at=invitation["accepted_at"],
+            created_by=invitation["created_by"],
+        )
 
     @with_db_transaction
     async def accept_invitation(
         self, *, conn: Connection, payload: AcceptInvitationPayload
     ) -> dict[str, str]:
+        token_hash = self._hash_invitation_token(payload.token)
         # Find invitation by token
         invitation = await conn.fetchrow(
-            "select * from user_invitation where token = $1", payload.token
+            "select * from user_invitation "
+            "where token = $1 "
+            "   or (token = $2 and token not like $3)",
+            token_hash,
+            payload.token,
+            f"{self.INVITATION_TOKEN_HASH_PREFIX}%",
         )
 
         if invitation is None:
             raise AccessDenied("Invalid invitation token")
+
+        if not str(invitation["token"]).startswith(self.INVITATION_TOKEN_HASH_PREFIX):
+            await conn.execute("update user_invitation set token = $1 where id = $2", token_hash, invitation["id"])
 
         # Check if already accepted
         if invitation["accepted_at"] is not None:
