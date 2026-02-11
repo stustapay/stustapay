@@ -765,12 +765,13 @@ class OrderStatsService(Service[Config]):
         event = await fetch_event_for_node(conn=conn, node=scope_node)
 
         # Get current time and hour/minute from database using same timezone as order extraction
-        # Use EXTRACT with AT TIME ZONE to ensure consistency with order hour extraction
+        # Use EXTRACT with AT TIME ZONE to ensure consistency with order hour extraction.
+        # Use session timezone (current_setting('TIMEZONE')) - PostgreSQL does not support 'localtime'.
         db_result = await conn.fetchrow(
             """SELECT 
                 now() as db_now, 
-                EXTRACT(HOUR FROM now() AT TIME ZONE 'localtime') as current_hour,
-                EXTRACT(MINUTE FROM now() AT TIME ZONE 'localtime') as current_minute
+                EXTRACT(HOUR FROM now() AT TIME ZONE current_setting('TIMEZONE')) as current_hour,
+                EXTRACT(MINUTE FROM now() AT TIME ZONE current_setting('TIMEZONE')) as current_minute
             """
         )
         now = db_result["db_now"] if db_result else datetime.now(tz=timezone.utc)
@@ -809,12 +810,12 @@ class OrderStatsService(Service[Config]):
 
         if customer_node_id is not None:
             # Query all historical hourly revenue from events under the customer node
-            # Exclude the current day (using local timezone for consistency)
+            # Exclude the current day (using session timezone for consistency)
             historical_data = await conn.fetch(
                 """
                 SELECT
-                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
-                    DATE(o.booked_at AT TIME ZONE 'localtime') as day,
+                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
+                    DATE(o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as day,
                     e.id as event_id,
                     COALESCE(SUM(li.total_price), 0) as revenue
                 FROM ordr o
@@ -840,8 +841,8 @@ class OrderStatsService(Service[Config]):
             historical_data = await conn.fetch(
                 """
                 SELECT
-                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
-                    DATE(o.booked_at AT TIME ZONE 'localtime') as day,
+                    EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
+                    DATE(o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as day,
                     n.event_node_id as event_id,
                     COALESCE(SUM(li.total_price), 0) as revenue
                 FROM ordr o
@@ -858,11 +859,11 @@ class OrderStatsService(Service[Config]):
             )
             events_used = len(set(row["event_id"] for row in historical_data if row["event_id"]))
 
-        # Get current day's revenue by hour (using local timezone for hour extraction)
+        # Get current day's revenue by hour (using session timezone for hour extraction)
         current_day_stats = await conn.fetch(
             """
             SELECT
-                EXTRACT(HOUR FROM o.booked_at AT TIME ZONE 'localtime') as hour,
+                EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
                 COALESCE(SUM(li.total_price), 0) as revenue
             FROM orders_at_node_and_children($1) o
             JOIN line_item li ON o.id = li.order_id
