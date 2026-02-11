@@ -641,9 +641,6 @@ class OrderStatsService(Service[Config]):
     async def get_dashboard_overview(
         self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
     ) -> DashboardOverview:
-        if node.event is None:
-            raise InvalidArgument("Dashboard overview can only be computed for event nodes")
-
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
@@ -677,7 +674,7 @@ class OrderStatsService(Service[Config]):
                 "SELECT "
                 "   COALESCE((SELECT SUM(balance) FROM account WHERE balance > 0 AND type = 'private' AND node_id = ANY($5)), 0) "
                 "       AS total_guest_credit, "
-                "   COALESCE((SELECT SUM(total_price) FROM filtered_orders WHERE payment_method = 'tag'), 0) "
+                "   COALESCE((SELECT SUM(total_price) FROM filtered_orders), 0) "
                 "       AS total_revenue, "
                 "   COALESCE((SELECT COUNT(DISTINCT customer_account_id) "
                 "             FROM filtered_orders "

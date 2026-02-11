@@ -44,7 +44,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { skip: currentNode.event == null, pollingInterval: pollingIntervalMs }
+    { pollingInterval: pollingIntervalMs }
   );
   const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery(
     {
@@ -74,19 +74,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
     return allProducts.find((p) => p.product_id === productId) || null;
   }, [productId, productStats]);
 
-  let overview = overviewResponse;
-  if (currentNode.event == null && paymentMethods) {
-    // For sub-nodes, we derive available stats from payment methods since dashboard overview is not available
-    overview = {
-      total_revenue: paymentMethods.total_revenue,
-      guests_with_orders: paymentMethods.methods.reduce((sum, m) => sum + m.order_count, 0),
-      total_guest_credit: 0,
-      guests_with_credit: 0,
-      guests_paid_out: 0,
-      online_donation: 0,
-      online_for_payout: 0,
-    };
-  }
+  const overview = overviewResponse;
 
   if (isOverviewLoading || isPaymentMethodsLoading || isProductStatsLoading) {
     return (

@@ -366,6 +366,32 @@ export const NodeStats: React.FC = () => {
                 </Grid>
               </Grid>
 
+              <Grid container spacing={{ xs: 1, sm: 1.5 }} alignItems="center">
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel id="polling-select-label" shrink>
+                      {t("overview.pollingInterval")}
+                    </InputLabel>
+                    <Select
+                      labelId="polling-select-label"
+                      id="polling-select"
+                      value={pollingIntervalMs}
+                      label={t("overview.pollingInterval")}
+                      onChange={(e) => dispatch(setStatsPollingInterval(Number(e.target.value)))}
+                      notched
+                    >
+                      <MenuItem value={0}>
+                        <em>{t("overview.pollingOff")}</em>
+                      </MenuItem>
+                      <MenuItem value={30000}>30s</MenuItem>
+                      <MenuItem value={60000}>1min</MenuItem>
+                      <MenuItem value={300000}>5min</MenuItem>
+                      <MenuItem value={1800000}>30min</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
                 <Chip
                   label={t("overview.allDates")}
@@ -467,29 +493,6 @@ export const NodeStats: React.FC = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <FormControl size="small" fullWidth>
-                      <InputLabel id="polling-select-label" shrink>
-                        {t("overview.pollingInterval")}
-                      </InputLabel>
-                      <Select
-                        labelId="polling-select-label"
-                        id="polling-select"
-                        value={pollingIntervalMs}
-                        label={t("overview.pollingInterval")}
-                        onChange={(e) => dispatch(setStatsPollingInterval(Number(e.target.value)))}
-                        notched
-                      >
-                        <MenuItem value={0}>
-                          <em>{t("overview.pollingOff")}</em>
-                        </MenuItem>
-                        <MenuItem value={5000}>5s</MenuItem>
-                        <MenuItem value={10000}>10s</MenuItem>
-                        <MenuItem value={30000}>30s</MenuItem>
-                        <MenuItem value={60000}>60s</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
                 </Grid>
               )}
 
