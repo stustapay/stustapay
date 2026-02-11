@@ -280,8 +280,13 @@ class UserService(Service[Config]):
                 raise InvalidArgument(f"User with tag id {new_user.user_tag_pin} already exists")
 
         hashed_password = None
-        if password:
+        if password is not None:
             hashed_password = self._hash_password(password)
+        elif user_tag_id is None:
+            # Ensure database constraint (password_or_user_tag_id_set) is satisfied for users
+            # without a user tag by assigning an unusable random password.
+            temporary_password = secrets.token_urlsafe(32)
+            hashed_password = self._hash_password(temporary_password)
 
         customer_account_id = None
         if new_user.user_tag_uid is not None:
@@ -726,6 +731,10 @@ The StuStaPay Team
     async def accept_invitation(
         self, *, conn: Connection, payload: AcceptInvitationPayload
     ) -> dict[str, str]:
+        if payload.token.startswith(self.INVITATION_TOKEN_HASH_PREFIX):
+            # Do not allow using already-hashed tokens directly; the raw token must be provided.
+            raise AccessDenied("Invalid invitation token")
+
         token_hash = self._hash_invitation_token(payload.token)
         # Find invitation by token
         invitation = await conn.fetchrow(
