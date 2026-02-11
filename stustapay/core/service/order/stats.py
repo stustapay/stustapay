@@ -170,10 +170,13 @@ async def get_hourly_entry_stats(
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from orders_at_node_and_children($3) o "
+        "from ordr o "
+        "join till t on o.till_id = t.id "
+        "join node n on n.id = t.node_id "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "where p.ticket_metadata_id is not null and o.booked_at >= $1 and o.booked_at <= $2 "
+        "where ($3 = any(n.parent_ids) or n.id = $3) "
+        "   and p.ticket_metadata_id is not null and o.booked_at >= $1 and o.booked_at <= $2 "
         "   and ($4::int IS NULL OR o.till_id = $4) "
         "group by from_time, to_time "
         "order by from_time",
@@ -198,10 +201,13 @@ async def get_hourly_top_up_stats(
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from orders_at_node_and_children($3) o "
+        "from ordr o "
+        "join till t on o.till_id = t.id "
+        "join node n on n.id = t.node_id "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "where ($3 = any(n.parent_ids) or n.id = $3) "
+        "   and p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
         "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by from_time, to_time "
         "order by from_time",
@@ -227,10 +233,13 @@ async def get_hourly_pay_out_stats(
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from orders_at_node_and_children($3) o "
+        "from ordr o "
+        "join till t on o.till_id = t.id "
+        "join node n on n.id = t.node_id "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "where p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
+        "where ($3 = any(n.parent_ids) or n.id = $3) "
+        "   and p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
         "   and ($5::int IS NULL OR o.till_id = $5) "
         "group by from_time, to_time "
         "order by from_time",
@@ -262,9 +271,12 @@ async def get_hourly_sales_stats(
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
         "   sum(li.quantity) as count,"
         "   round(sum(li.total_price), 2) as revenue "
-        "from orders_at_node_and_children($3) o "
+        "from ordr o "
+        "join till t on o.till_id = t.id "
+        "join node n on n.id = t.node_id "
         "join line_item li on o.id = li.order_id "
-        "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
+        "where ($3 = any(n.parent_ids) or n.id = $3) "
+        "   and o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
         "   and ($4::int IS NULL OR o.till_id = $4) "
         "group by from_time, to_time "
         "order by from_time",
@@ -281,27 +293,25 @@ async def get_hourly_product_stats(
     *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
-        "select s.*, prod.name as product_name "
-        "from (select "
+        "select "
         "   p.id as product_id, "
+        "   p.name as product_name, "
         "   date_trunc('hour', o.booked_at) as from_time, "
         "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
-        "   sum(li.quantity) as count,"
+        "   sum(li.quantity) as count, "
         "   round(sum(li.total_price), 2) as revenue "
-        "from order_value o "
+        "from ordr o "
         "join till t on o.till_id = t.id "
+        "join node n on t.node_id = n.id "
         "join line_item li on o.id = li.order_id "
         "join product p on li.product_id = p.id "
-        "join node n on t.node_id = n.id "
         "where o.booked_at >= $1 and o.booked_at <= $2 "
         "   and p.type = 'user_defined' "
         "   and ($3 = any(n.parent_ids) or n.id = $3) "
         "   and p.is_returnable = $4 "
         "   and ($5::int IS NULL OR o.till_id = $5) "
-        "group by p.id, from_time, to_time "
-        "order by from_time) s "
-        "join product prod on s.product_id = prod.id "
-        "join node nod on prod.node_id = nod.id",
+        "group by p.id, p.name, from_time, to_time "
+        "order by from_time",
         from_time,
         to_time,
         node.id,
@@ -382,7 +392,10 @@ class OrderStatsService(Service[Config]):
 
         dates = await conn.fetch(
             "SELECT DISTINCT date(o.booked_at)::text as date "
-            "FROM orders_at_node_and_children($1) o "
+            "FROM ordr o "
+            "JOIN till t ON o.till_id = t.id "
+            "JOIN node n ON n.id = t.node_id "
+            "WHERE ($1 = ANY(n.parent_ids) OR n.id = $1) "
             "ORDER BY date DESC",
             scope_node.id,
         )
@@ -570,10 +583,15 @@ class OrderStatsService(Service[Config]):
 
         dashboard_stats = await conn.fetchrow(
             "WITH filtered_orders AS MATERIALIZED ("
-            "    SELECT o.total_price, o.customer_account_id, o.payment_method "
-            "    FROM orders_at_node_and_children($3) o "
+            "    SELECT o.id, o.customer_account_id, o.payment_method, COALESCE(SUM(li.total_price), 0) AS total_price "
+            "    FROM ordr o "
+            "    JOIN till t ON o.till_id = t.id "
+            "    JOIN node n ON n.id = t.node_id "
+            "    LEFT JOIN line_item li ON li.order_id = o.id "
             "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-            "      AND ($4::int IS NULL OR o.till_id = $4)"
+            "      AND ($3 = ANY(n.parent_ids) OR n.id = $3) "
+            "      AND ($4::int IS NULL OR o.till_id = $4) "
+            "    GROUP BY o.id, o.customer_account_id, o.payment_method"
             ") "
             "SELECT "
             "   COALESCE((SELECT SUM(balance) FROM account WHERE type = 'private' AND node_id = ANY($5)), 0) "
@@ -635,11 +653,14 @@ class OrderStatsService(Service[Config]):
 
         result = await conn.fetch(
             "SELECT t.id as till_id, t.name as till_name, "
-            "COALESCE(SUM(o.total_price), 0) as revenue, "
-            "COUNT(*) as order_count "
-            "FROM orders_at_node_and_children($3) o "
+            "COALESCE(SUM(li.total_price), 0) as revenue, "
+            "COUNT(DISTINCT o.id) as order_count "
+            "FROM ordr o "
             "JOIN till t ON o.till_id = t.id "
+            "JOIN node n ON n.id = t.node_id "
+            "LEFT JOIN line_item li ON li.order_id = o.id "
             "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "AND ($3 = ANY(n.parent_ids) OR n.id = $3) "
             "AND ($4::int IS NULL OR o.till_id = $4) "
             "AND o.order_type = 'sale' "
             "AND t.is_virtual IS NOT TRUE "
@@ -678,10 +699,14 @@ class OrderStatsService(Service[Config]):
 
         result = await conn.fetch(
             "SELECT o.payment_method, "
-            "COALESCE(SUM(o.total_price), 0) as revenue, "
-            "COUNT(*) as order_count "
-            "FROM orders_at_node_and_children($3) o "
+            "COALESCE(SUM(li.total_price), 0) as revenue, "
+            "COUNT(DISTINCT o.id) as order_count "
+            "FROM ordr o "
+            "JOIN till t ON o.till_id = t.id "
+            "JOIN node n ON n.id = t.node_id "
+            "LEFT JOIN line_item li ON li.order_id = o.id "
             "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "AND ($3 = ANY(n.parent_ids) OR n.id = $3) "
             "AND ($4::int IS NULL OR o.till_id = $4) "
             "GROUP BY o.payment_method "
             "ORDER BY revenue DESC",
@@ -820,11 +845,15 @@ class OrderStatsService(Service[Config]):
             """
             SELECT
                 EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
-                COALESCE(SUM(o.total_price), 0) as revenue
-            FROM orders_at_node_and_children($1) o
+                COALESCE(SUM(li.total_price), 0) as revenue
+            FROM ordr o
+            JOIN till t ON o.till_id = t.id
+            JOIN node n ON n.id = t.node_id
+            LEFT JOIN line_item li ON li.order_id = o.id
             WHERE o.payment_method = 'tag'
                 AND o.booked_at >= $2
                 AND o.booked_at <= now()
+                AND ($1 = ANY(n.parent_ids) OR n.id = $1)
                 AND ($3::int IS NULL OR o.till_id = $3)
             GROUP BY hour
             ORDER BY hour
@@ -942,10 +971,13 @@ class OrderStatsService(Service[Config]):
         actual_visitors_result = await conn.fetchval(
             """
             SELECT COUNT(DISTINCT o.customer_account_id)
-            FROM orders_at_node_and_children($1) o
+            FROM ordr o
+            JOIN till t ON o.till_id = t.id
+            JOIN node n ON n.id = t.node_id
             WHERE o.payment_method = 'tag'
                 AND o.booked_at >= $2
                 AND o.booked_at <= $3
+                AND ($1 = ANY(n.parent_ids) OR n.id = $1)
                 AND o.customer_account_id IS NOT NULL
             """,
             scope_node.id,
@@ -962,10 +994,14 @@ class OrderStatsService(Service[Config]):
         event_stats = await conn.fetchrow(
             """
             SELECT
-                COALESCE(SUM(o.total_price), 0) as total_revenue,
+                COALESCE(SUM(li.total_price), 0) as total_revenue,
                 COUNT(DISTINCT o.customer_account_id) as guests_with_orders
-            FROM orders_at_node_and_children($1) o
+            FROM ordr o
+            JOIN till t ON o.till_id = t.id
+            JOIN node n ON n.id = t.node_id
+            LEFT JOIN line_item li ON li.order_id = o.id
             WHERE o.payment_method = 'tag'
+                AND ($1 = ANY(n.parent_ids) OR n.id = $1)
                 AND o.customer_account_id IS NOT NULL
             """,
             scope_node.id,
