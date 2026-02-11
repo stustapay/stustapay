@@ -157,8 +157,16 @@ def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSetting
     if query.from_time is not None and query.to_time is not None and query.from_time > query.to_time:
         raise InvalidArgument("Stats start time must be before end time")
 
-    from_t = query.from_time or event.start_date or datetime(year=1970, month=1, day=1)
-    to_t = query.to_time or event.end_date or datetime(year=4000, month=1, day=1)
+    # "All dates" requests do not send explicit bounds and should include all available data,
+    # not only the configured event start/end window.
+    if query.from_time is None and query.to_time is None:
+        return (
+            datetime(year=1970, month=1, day=1, tzinfo=timezone.utc),
+            datetime(year=4000, month=1, day=1, tzinfo=timezone.utc),
+        )
+
+    from_t = query.from_time or event.start_date or datetime(year=1970, month=1, day=1, tzinfo=timezone.utc)
+    to_t = query.to_time or event.end_date or datetime(year=4000, month=1, day=1, tzinfo=timezone.utc)
     return from_t, to_t
 
 
