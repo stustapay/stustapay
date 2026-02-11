@@ -568,81 +568,59 @@ class OrderStatsService(Service[Config]):
         if scope_node.ids_to_event_node is None:
             raise InvalidArgument("Dashboard overview can only be computed for nodes within an event")
 
-        # Total guest credit (sum of all customer account balances)
-        total_guest_credit = await conn.fetchval(
-            "SELECT COALESCE(SUM(balance), 0) FROM account WHERE type = 'private' AND node_id = ANY($1)",
-            scope_node.ids_to_event_node,
-        )
-
-        # Total revenue from sales in date range
-        total_revenue = await conn.fetchval(
-            "SELECT COALESCE(SUM(li.total_price), 0) "
-            "FROM orders_at_node_and_children($3) o "
-            "JOIN line_item li ON o.id = li.order_id "
-            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.payment_method = 'tag' "
-            "AND ($4::int IS NULL OR o.till_id = $4)",
+        dashboard_stats = await conn.fetchrow(
+            "WITH filtered_orders AS MATERIALIZED ("
+            "    SELECT o.total_price, o.customer_account_id, o.payment_method "
+            "    FROM orders_at_node_and_children($3) o "
+            "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "      AND ($4::int IS NULL OR o.till_id = $4)"
+            ") "
+            "SELECT "
+            "   COALESCE((SELECT SUM(balance) FROM account WHERE type = 'private' AND node_id = ANY($5)), 0) "
+            "       AS total_guest_credit, "
+            "   COALESCE((SELECT SUM(total_price) FROM filtered_orders WHERE payment_method = 'tag'), 0) "
+            "       AS total_revenue, "
+            "   COALESCE((SELECT COUNT(DISTINCT customer_account_id) "
+            "             FROM filtered_orders "
+            "             WHERE customer_account_id IS NOT NULL), 0) "
+            "       AS guests_with_orders, "
+            "   COALESCE((SELECT COUNT(*) "
+            "             FROM account "
+            "             WHERE type = 'private' AND node_id = ANY($5) AND balance > 0), 0) "
+            "       AS guests_with_credit, "
+            "   COALESCE((SELECT COUNT(DISTINCT t.source_account) "
+            "             FROM transaction t "
+            "             JOIN account source_account ON t.source_account = source_account.id "
+            "             JOIN account target_account ON t.target_account = target_account.id "
+            "             WHERE t.booked_at >= $1 AND t.booked_at <= $2 "
+            "               AND source_account.type = 'private' "
+            "               AND source_account.node_id = ANY($5) "
+            "               AND target_account.type IN ('cash_exit', 'sepa_exit', 'donation_exit')), 0) "
+            "       AS guests_paid_out, "
+            "   COALESCE((SELECT SUM(p.donation) "
+            "             FROM payout p "
+            "             JOIN account a ON p.customer_account_id = a.id "
+            "             WHERE a.node_id = ANY($5) AND p.payout_run_id IS NOT NULL), 0) "
+            "       AS online_donation, "
+            "   COALESCE((SELECT SUM(c.balance) "
+            "             FROM customers_without_payout_run c "
+            "             WHERE c.node_id = ANY($5) AND c.payout_export = true), 0) "
+            "       AS online_for_payout",
             from_time,
             to_time,
             scope_node.id,
             query.till_id,
-        )
-
-        # Number of guests with orders
-        guests_with_orders = await conn.fetchval(
-            "SELECT COUNT(DISTINCT o.customer_account_id) "
-            "FROM orders_at_node_and_children($3) o "
-            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 AND o.customer_account_id IS NOT NULL "
-            "AND ($4::int IS NULL OR o.till_id = $4)",
-            from_time,
-            to_time,
-            scope_node.id,
-            query.till_id,
-        )
-
-        # Guests with credit (balance > 0)
-        guests_with_credit = await conn.fetchval(
-            "SELECT COUNT(*) FROM account WHERE type = 'private' AND node_id = ANY($1) AND balance > 0",
-            scope_node.ids_to_event_node,
-        )
-
-        # Guests paid out (count of customers with payout transactions)
-        guests_paid_out = await conn.fetchval(
-            "SELECT COUNT(DISTINCT t.source_account) "
-            "FROM transaction t "
-            "JOIN account a ON t.source_account = a.id "
-            "WHERE t.booked_at >= $1 AND t.booked_at <= $2 "
-            "AND a.type = 'private' AND a.node_id = ANY($3) "
-            "AND t.target_account IN (SELECT id FROM account WHERE type IN ('cash_exit', 'sepa_exit', 'donation_exit'))",
-            from_time,
-            to_time,
-            scope_node.ids_to_event_node,
-        )
-
-        # Online donation (sum of donations from payouts)
-        online_donation = await conn.fetchval(
-            "SELECT COALESCE(SUM(p.donation), 0) "
-            "FROM payout p "
-            "JOIN account a ON p.customer_account_id = a.id "
-            "WHERE a.node_id = ANY($1) AND p.payout_run_id IS NOT NULL",
-            scope_node.ids_to_event_node,
-        )
-
-        # Online for payout (sum of pending payout amounts - customers without payout run)
-        online_for_payout = await conn.fetchval(
-            "SELECT COALESCE(SUM(c.balance), 0) "
-            "FROM customers_without_payout_run c "
-            "WHERE c.node_id = ANY($1) AND c.payout_export = true",
             scope_node.ids_to_event_node,
         )
 
         return DashboardOverview(
-            total_guest_credit=float(total_guest_credit or 0),
-            total_revenue=float(total_revenue or 0),
-            guests_with_orders=int(guests_with_orders or 0),
-            guests_with_credit=int(guests_with_credit or 0),
-            guests_paid_out=int(guests_paid_out or 0),
-            online_donation=float(online_donation or 0),
-            online_for_payout=float(online_for_payout or 0),
+            total_guest_credit=float(dashboard_stats["total_guest_credit"] or 0),
+            total_revenue=float(dashboard_stats["total_revenue"] or 0),
+            guests_with_orders=int(dashboard_stats["guests_with_orders"] or 0),
+            guests_with_credit=int(dashboard_stats["guests_with_credit"] or 0),
+            guests_paid_out=int(dashboard_stats["guests_paid_out"] or 0),
+            online_donation=float(dashboard_stats["online_donation"] or 0),
+            online_for_payout=float(dashboard_stats["online_for_payout"] or 0),
         )
 
     @with_db_transaction(read_only=True)
@@ -655,46 +633,24 @@ class OrderStatsService(Service[Config]):
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
 
-        # When filtering by a specific till, we want to show only that till
-        # Otherwise, show all tills with orders in the time period
-        if query.till_id is not None:
-            result = await conn.fetch(
-                "SELECT t.id as till_id, t.name as till_name, "
-                "COALESCE(SUM(li.total_price), 0) as revenue, "
-                "COUNT(DISTINCT o.id) as order_count "
-                "FROM orders_at_node_and_children($3) o "
-                "JOIN till t ON o.till_id = t.id "
-                "JOIN line_item li ON o.id = li.order_id "
-                "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "AND o.till_id = $4 "
-                "AND o.order_type = 'sale' "
-                "AND t.is_virtual IS NOT TRUE "
-                "AND t.name <> 'CheckTerminal' "
-                "GROUP BY t.id, t.name "
-                "ORDER BY revenue DESC",
-                from_time,
-                to_time,
-                scope_node.id,
-                query.till_id,
-            )
-        else:
-            result = await conn.fetch(
-                "SELECT t.id as till_id, t.name as till_name, "
-                "COALESCE(SUM(li.total_price), 0) as revenue, "
-                "COUNT(DISTINCT o.id) as order_count "
-                "FROM orders_at_node_and_children($3) o "
-                "JOIN till t ON o.till_id = t.id "
-                "JOIN line_item li ON o.id = li.order_id "
-                "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "AND o.order_type = 'sale' "
-                "AND t.is_virtual IS NOT TRUE "
-                "AND t.name <> 'CheckTerminal' "
-                "GROUP BY t.id, t.name "
-                "ORDER BY revenue DESC",
-                from_time,
-                to_time,
-                scope_node.id,
-            )
+        result = await conn.fetch(
+            "SELECT t.id as till_id, t.name as till_name, "
+            "COALESCE(SUM(o.total_price), 0) as revenue, "
+            "COUNT(*) as order_count "
+            "FROM orders_at_node_and_children($3) o "
+            "JOIN till t ON o.till_id = t.id "
+            "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+            "AND ($4::int IS NULL OR o.till_id = $4) "
+            "AND o.order_type = 'sale' "
+            "AND t.is_virtual IS NOT TRUE "
+            "AND t.name <> 'CheckTerminal' "
+            "GROUP BY t.id, t.name "
+            "ORDER BY revenue DESC",
+            from_time,
+            to_time,
+            scope_node.id,
+            query.till_id,
+        )
 
         counters = [
             CounterRevenue(
@@ -864,9 +820,8 @@ class OrderStatsService(Service[Config]):
             """
             SELECT
                 EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
-                COALESCE(SUM(li.total_price), 0) as revenue
+                COALESCE(SUM(o.total_price), 0) as revenue
             FROM orders_at_node_and_children($1) o
-            JOIN line_item li ON o.id = li.order_id
             WHERE o.payment_method = 'tag'
                 AND o.booked_at >= $2
                 AND o.booked_at <= now()
@@ -1007,10 +962,9 @@ class OrderStatsService(Service[Config]):
         event_stats = await conn.fetchrow(
             """
             SELECT
-                COALESCE(SUM(li.total_price), 0) as total_revenue,
+                COALESCE(SUM(o.total_price), 0) as total_revenue,
                 COUNT(DISTINCT o.customer_account_id) as guests_with_orders
             FROM orders_at_node_and_children($1) o
-            JOIN line_item li ON o.id = li.order_id
             WHERE o.payment_method = 'tag'
                 AND o.customer_account_id IS NOT NULL
             """,
