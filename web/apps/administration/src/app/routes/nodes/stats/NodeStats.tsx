@@ -566,7 +566,7 @@ export const NodeStats: React.FC = () => {
       </Grid>
       {/* Revenue prediction chart - only show when no product filter is active */}
       {selectedProductId === undefined && prediction && (
-        <Grid size={{ xs: 12, lg: 6 }}>
+        <Grid size={12}>
           <Accordion expanded={expandedSections.prediction} onChange={handleSectionToggle("prediction")} disableGutters sx={sectionSx}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
               <Typography sx={summaryTextSx}>{t("overview.revenuePredictionChart")}</Typography>
@@ -579,7 +579,7 @@ export const NodeStats: React.FC = () => {
       )}
       {/* Only show revenue by counter when no product is selected (not filterable by product) */}
       {selectedProductId === undefined && (
-        <Grid size={{ xs: 12, lg: 6 }}>
+        <Grid size={12}>
           <Accordion expanded={expandedSections.counterChart} onChange={handleSectionToggle("counterChart")} disableGutters sx={sectionSx}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
               <Typography sx={summaryTextSx}>{t("overview.revenuePerCounterChart")}</Typography>

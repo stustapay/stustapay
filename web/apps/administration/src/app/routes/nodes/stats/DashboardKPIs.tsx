@@ -116,10 +116,12 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
     );
   }
 
-  const paymentMethodData: PieChartData[] = paymentMethods.methods.map((method) => ({
-    id: method.payment_method,
-    value: method.revenue,
-  }));
+  const paymentMethodData: PieChartData[] = paymentMethods.methods
+    .filter((method) => method.payment_method !== "tag")
+    .map((method) => ({
+      id: method.payment_method,
+      value: method.revenue,
+    }));
 
   // When a product is selected, show product-specific KPIs
   let kpiCards = selectedProductStats

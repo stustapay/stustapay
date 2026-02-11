@@ -159,19 +159,6 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
         }}
       >
         <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              mb: 2,
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.revenuePerCounter")}
-          </Typography>
           <Skeleton variant="rounded" height={250} />
         </CardContent>
       </Card>
@@ -189,19 +176,6 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
         }}
       >
         <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              mb: 2,
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.revenuePerCounter")}
-          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
             {t("overview.noDataAvailable")}
           </Typography>
@@ -221,19 +195,6 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
         }}
       >
         <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              mb: 2,
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.revenuePerCounter")}
-          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
             {t("overview.noDataAvailable")}
           </Typography>
@@ -257,33 +218,17 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
             direction="row"
             spacing={1}
             alignItems="center"
-            justifyContent="space-between"
+            justifyContent={tillId !== undefined && onClearFilter ? "space-between" : "flex-end"}
             width="100%"
           >
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Typography
-                variant="h6"
-                sx={{
-                  fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                  letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                  color: "text.secondary",
-                }}
-              >
-                {t("overview.revenuePerCounter")}
-              </Typography>
-              {tillId !== undefined && onClearFilter && (
-                <FilterBadge
-                  label={t("overview.filteredBy")}
-                  value={
-                    data.counters.find((c) => c.till_id === tillId)?.till_name || String(tillId)
-                  }
-                  onClear={onClearFilter}
-                  visible={true}
-                />
-              )}
-            </Stack>
+            {tillId !== undefined && onClearFilter && (
+              <FilterBadge
+                label={t("overview.filteredBy")}
+                value={data.counters.find((c) => c.till_id === tillId)?.till_name || String(tillId)}
+                onClear={onClearFilter}
+                visible={true}
+              />
+            )}
             <IconButton
               size="small"
               onClick={handleMenuOpen}

@@ -165,19 +165,6 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
                 }}
             >
                 <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            fontWeight: 500,
-                            textTransform: "uppercase",
-                            letterSpacing: { xs: "0.3px", sm: "0.5px" },
-                            mb: { xs: 1.5, sm: 2 },
-                            color: "text.secondary",
-                        }}
-                    >
-                        {t("overview.revenuePerProduct")}
-                    </Typography>
                     <Skeleton variant="rounded" height={isMobile ? 250 : 300} />
                 </CardContent>
             </Card>
@@ -195,19 +182,6 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
                 }}
             >
                 <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            fontWeight: 500,
-                            textTransform: "uppercase",
-                            letterSpacing: { xs: "0.3px", sm: "0.5px" },
-                            mb: { xs: 1.5, sm: 2 },
-                            color: "text.secondary",
-                        }}
-                    >
-                        {t("overview.revenuePerProduct")}
-                    </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
                         {t("overview.noDataAvailable")}
                     </Typography>
@@ -227,19 +201,6 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
         }}
       >
         <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: { xs: "0.3px", sm: "0.5px" },
-              mb: { xs: 1.5, sm: 2 },
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.revenuePerProduct")}
-          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
             {t("overview.noProductDataAvailable")}
           </Typography>
@@ -263,31 +224,17 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
             direction="row"
             spacing={1}
             alignItems="center"
-            justifyContent="space-between"
+            justifyContent={productId !== undefined && onClearFilter ? "space-between" : "flex-end"}
             width="100%"
           >
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Typography
-                variant="h6"
-                sx={{
-                  fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                  letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-                  color: "text.secondary",
-                }}
-              >
-                {t("overview.revenuePerProduct")}
-              </Typography>
-              {productId !== undefined && onClearFilter && (
-                <FilterBadge
-                  label={t("overview.filteredBy")}
-                  value={filteredProductName}
-                  onClear={onClearFilter}
-                  visible={true}
-                />
-              )}
-            </Stack>
+            {productId !== undefined && onClearFilter && (
+              <FilterBadge
+                label={t("overview.filteredBy")}
+                value={filteredProductName}
+                onClear={onClearFilter}
+                visible={true}
+              />
+            )}
             <IconButton
               size="small"
               onClick={handleMenuOpen}

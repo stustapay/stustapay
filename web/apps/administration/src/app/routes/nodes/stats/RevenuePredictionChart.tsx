@@ -66,7 +66,6 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
         }}
       >
         <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-          <Skeleton variant="text" width={200} height={24} sx={{ mb: 1 }} />
           <Skeleton variant="rounded" height={isSmallMobile ? 200 : isMobile ? 250 : 300} />
         </CardContent>
       </Card>
@@ -90,16 +89,7 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
       }}
     >
       <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 600,
-              fontSize: { xs: "0.875rem", sm: "1rem" },
-            }}
-          >
-            {t("overview.revenuePredictionChart")}
-          </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", mb: 1 }}>
           <Typography
             variant="caption"
             sx={{
@@ -130,9 +120,9 @@ export const RevenuePredictionChart: React.FC<RevenuePredictionChartProps> = ({ 
             axisBottom={{
               tickSize: 5,
               tickPadding: 5,
-              tickRotation: isSmallMobile ? -45 : 0,
+              tickRotation: isSmallMobile ? -45 : isMobile ? -30 : -25,
               legend: t("overview.hourOfDay"),
-              legendOffset: isSmallMobile ? 34 : 40,
+              legendOffset: isSmallMobile ? 34 : isMobile ? 44 : 46,
               legendPosition: "middle",
               tickValues: isSmallMobile ? ["00:00", "06:00", "12:00", "18:00"] : undefined,
             }}

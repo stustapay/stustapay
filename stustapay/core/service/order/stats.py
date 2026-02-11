@@ -1,8 +1,5 @@
-import logging
-from collections.abc import Awaitable
 from datetime import datetime, timedelta, timezone
-from time import perf_counter
-from typing import Optional, TypeVar
+from typing import Optional
 
 import asyncpg
 from pydantic import BaseModel
@@ -23,10 +20,7 @@ from sftkit.error import InvalidArgument
 from stustapay.core.service.product import fetch_pay_out_product, fetch_top_up_product
 from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
 
-LOGGER = logging.getLogger(__name__)
-SLOW_STATS_QUERY_THRESHOLD_MS = 500.0
 REVENUE_PREDICTION_MAX_HISTORY_DAYS = 365
-T = TypeVar("T")
 
 
 class ProductSoldStats(Product):
@@ -171,50 +165,14 @@ def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSetting
 async def _timed_stats_query(
     *,
     query_name: str,
-    query_coro: Awaitable[T],
+    query_coro,
     node_id: Optional[int] = None,
     till_id: Optional[int] = None,
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
-) -> T:
-    started_at = perf_counter()
-    try:
-        result = await query_coro
-    except Exception:
-        elapsed_ms = (perf_counter() - started_at) * 1000
-        LOGGER.exception(
-            "stats query failed: %s took %.1fms (node_id=%s, till_id=%s, from_time=%s, to_time=%s)",
-            query_name,
-            elapsed_ms,
-            node_id,
-            till_id,
-            from_time,
-            to_time,
-        )
-        raise
-
-    elapsed_ms = (perf_counter() - started_at) * 1000
-    if elapsed_ms >= SLOW_STATS_QUERY_THRESHOLD_MS:
-        LOGGER.warning(
-            "slow stats query: %s took %.1fms (node_id=%s, till_id=%s, from_time=%s, to_time=%s)",
-            query_name,
-            elapsed_ms,
-            node_id,
-            till_id,
-            from_time,
-            to_time,
-        )
-    else:
-        LOGGER.info(
-            "stats query: %s took %.1fms (node_id=%s, till_id=%s, from_time=%s, to_time=%s)",
-            query_name,
-            elapsed_ms,
-            node_id,
-            till_id,
-            from_time,
-            to_time,
-        )
-    return result
+):
+    del query_name, node_id, till_id, from_time, to_time
+    return await query_coro
 
 
 async def get_hourly_entry_stats(
@@ -712,11 +670,12 @@ class OrderStatsService(Service[Config]):
                 "    JOIN scope_tills st ON st.id = o.till_id "
                 "    LEFT JOIN line_item li ON li.order_id = o.id "
                 "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+                "      AND o.order_type = 'sale' "
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
                 "    GROUP BY o.id, o.customer_account_id, o.payment_method"
                 ") "
                 "SELECT "
-                "   COALESCE((SELECT SUM(balance) FROM account WHERE type = 'private' AND node_id = ANY($5)), 0) "
+                "   COALESCE((SELECT SUM(balance) FROM account WHERE balance > 0 AND type = 'private' AND node_id = ANY($5)), 0) "
                 "       AS total_guest_credit, "
                 "   COALESCE((SELECT SUM(total_price) FROM filtered_orders WHERE payment_method = 'tag'), 0) "
                 "       AS total_revenue, "
@@ -852,6 +811,7 @@ class OrderStatsService(Service[Config]):
                 "JOIN scope_tills st ON st.id = o.till_id "
                 "LEFT JOIN line_item li ON li.order_id = o.id "
                 "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+                "AND o.order_type = 'top_up' "
                 "AND ($4::int IS NULL OR o.till_id = $4) "
                 "GROUP BY o.payment_method "
                 "ORDER BY revenue DESC",

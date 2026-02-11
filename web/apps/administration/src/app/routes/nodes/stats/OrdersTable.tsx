@@ -213,19 +213,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         }}
       >
         <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.875rem" },
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: { xs: "0.2px", sm: "0.3px", md: "0.5px" },
-              mb: { xs: 1, sm: 1.5, md: 2 },
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.orders")}
-          </Typography>
           <Skeleton variant="rounded" height={isSmallMobile ? 250 : isMobile ? 300 : 400} />
         </CardContent>
       </Card>
@@ -243,19 +230,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         }}
       >
         <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: { xs: "0.3px", sm: "0.5px" },
-              mb: { xs: 1.5, sm: 2 },
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.orders")}
-          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
             {t("overview.noDataAvailable")}
           </Typography>
@@ -275,19 +249,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         }}
       >
         <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: { xs: "0.3px", sm: "0.5px" },
-              mb: { xs: 1.5, sm: 2 },
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.orders")}
-          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
             {t("overview.noOrdersFound")}
           </Typography>
@@ -305,21 +266,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         boxShadow: "none",
       }}
     >
-      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+      <CardContent sx={{ p: { xs: 1, sm: 1.5, md: 2 }, "&:last-child": { pb: { xs: 1, sm: 1.5, md: 2 } } }}>
         <Stack spacing={2}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              color: "text.secondary",
-            }}
-          >
-            {t("overview.orders")}
-          </Typography>
-
           <TableFilterBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}

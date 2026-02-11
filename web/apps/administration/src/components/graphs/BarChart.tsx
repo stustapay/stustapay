@@ -181,7 +181,7 @@ export const BarChart: React.FC<BarChartProps> = ({
         axisBottom={{
           tickSize: 0,
           tickPadding: isSmallMobile ? 4 : isMobile ? 6 : 8,
-          tickRotation: horizontal ? 0 : isSmallMobile ? -65 : isMobile ? -55 : -45,
+          tickRotation: horizontal ? 0 : isSmallMobile ? -55 : isMobile ? -40 : -30,
           //legend: horizontal ? undefined : "Category",
           legendPosition: "middle",
           legendOffset: isSmallMobile ? 35 : isMobile ? 40 : 50,
