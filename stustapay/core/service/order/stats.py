@@ -25,6 +25,7 @@ from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
 
 LOGGER = logging.getLogger(__name__)
 SLOW_STATS_QUERY_THRESHOLD_MS = 500.0
+REVENUE_PREDICTION_MAX_HISTORY_DAYS = 365
 T = TypeVar("T")
 
 
@@ -349,17 +350,22 @@ async def get_hourly_sales_stats(
         to_time=to_time,
         query_coro=conn.fetch_many(
             StatInterval,
+            "with scope_tills as materialized ("
+            "   select t.id "
+            "   from till t "
+            "   join node n on n.id = t.node_id "
+            "   where ($3 = any(n.parent_ids) or n.id = $3)"
+            ") "
             "select "
             "   date_trunc('hour', o.booked_at) as from_time, "
             "   date_trunc('hour', o.booked_at) + interval '1 hour' as to_time, "
             "   sum(li.quantity) as count,"
             "   round(sum(li.total_price), 2) as revenue "
             "from ordr o "
-            "join till t on o.till_id = t.id "
-            "join node n on n.id = t.node_id "
+            "join scope_tills st on st.id = o.till_id "
             "join line_item li on o.id = li.order_id "
-            "where ($3 = any(n.parent_ids) or n.id = $3) "
-            "   and o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
+            "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
+            "   and o.order_type = 'sale' "
             "   and ($4::int IS NULL OR o.till_id = $4) "
             "group by from_time, to_time "
             "order by from_time",
@@ -383,6 +389,12 @@ async def get_hourly_product_stats(
         from_time=from_time,
         to_time=to_time,
         query_coro=conn.fetch(
+            "with scope_tills as materialized ("
+            "   select t.id "
+            "   from till t "
+            "   join node n on n.id = t.node_id "
+            "   where ($3 = any(n.parent_ids) or n.id = $3)"
+            ") "
             "select "
             "   p.id as product_id, "
             "   p.name as product_name, "
@@ -391,13 +403,11 @@ async def get_hourly_product_stats(
             "   sum(li.quantity) as count, "
             "   round(sum(li.total_price), 2) as revenue "
             "from ordr o "
-            "join till t on o.till_id = t.id "
-            "join node n on t.node_id = n.id "
+            "join scope_tills st on st.id = o.till_id "
             "join line_item li on o.id = li.order_id "
             "join product p on li.product_id = p.id "
             "where o.booked_at >= $1 and o.booked_at <= $2 "
             "   and p.type = 'user_defined' "
-            "   and ($3 = any(n.parent_ids) or n.id = $3) "
             "   and p.is_returnable = $4 "
             "   and ($5::int IS NULL OR o.till_id = $5) "
             "group by p.id, p.name, from_time, to_time "
@@ -690,14 +700,18 @@ class OrderStatsService(Service[Config]):
             from_time=from_time,
             to_time=to_time,
             query_coro=conn.fetchrow(
-                "WITH filtered_orders AS MATERIALIZED ("
+                "WITH scope_tills AS MATERIALIZED ("
+                "    SELECT t.id "
+                "    FROM till t "
+                "    JOIN node n ON n.id = t.node_id "
+                "    WHERE ($3 = ANY(n.parent_ids) OR n.id = $3)"
+                "), "
+                "filtered_orders AS MATERIALIZED ("
                 "    SELECT o.id, o.customer_account_id, o.payment_method, COALESCE(SUM(li.total_price), 0) AS total_price "
                 "    FROM ordr o "
-                "    JOIN till t ON o.till_id = t.id "
-                "    JOIN node n ON n.id = t.node_id "
+                "    JOIN scope_tills st ON st.id = o.till_id "
                 "    LEFT JOIN line_item li ON li.order_id = o.id "
                 "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "      AND ($3 = ANY(n.parent_ids) OR n.id = $3) "
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
                 "    GROUP BY o.id, o.customer_account_id, o.payment_method"
                 ") "
@@ -767,15 +781,20 @@ class OrderStatsService(Service[Config]):
             from_time=from_time,
             to_time=to_time,
             query_coro=conn.fetch(
+                "WITH scope_tills AS MATERIALIZED ("
+                "    SELECT t.id "
+                "    FROM till t "
+                "    JOIN node n ON n.id = t.node_id "
+                "    WHERE ($3 = ANY(n.parent_ids) OR n.id = $3)"
+                ") "
                 "SELECT t.id as till_id, t.name as till_name, "
                 "COALESCE(SUM(li.total_price), 0) as revenue, "
                 "COUNT(DISTINCT o.id) as order_count "
                 "FROM ordr o "
                 "JOIN till t ON o.till_id = t.id "
-                "JOIN node n ON n.id = t.node_id "
+                "JOIN scope_tills st ON st.id = t.id "
                 "LEFT JOIN line_item li ON li.order_id = o.id "
                 "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "AND ($3 = ANY(n.parent_ids) OR n.id = $3) "
                 "AND ($4::int IS NULL OR o.till_id = $4) "
                 "AND o.order_type = 'sale' "
                 "AND t.is_virtual IS NOT TRUE "
@@ -820,15 +839,19 @@ class OrderStatsService(Service[Config]):
             from_time=from_time,
             to_time=to_time,
             query_coro=conn.fetch(
+                "WITH scope_tills AS MATERIALIZED ("
+                "    SELECT t.id "
+                "    FROM till t "
+                "    JOIN node n ON n.id = t.node_id "
+                "    WHERE ($3 = ANY(n.parent_ids) OR n.id = $3)"
+                ") "
                 "SELECT o.payment_method, "
                 "COALESCE(SUM(li.total_price), 0) as revenue, "
                 "COUNT(DISTINCT o.id) as order_count "
                 "FROM ordr o "
-                "JOIN till t ON o.till_id = t.id "
-                "JOIN node n ON n.id = t.node_id "
+                "JOIN scope_tills st ON st.id = o.till_id "
                 "LEFT JOIN line_item li ON li.order_id = o.id "
                 "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "AND ($3 = ANY(n.parent_ids) OR n.id = $3) "
                 "AND ($4::int IS NULL OR o.till_id = $4) "
                 "GROUP BY o.payment_method "
                 "ORDER BY revenue DESC",
@@ -917,33 +940,42 @@ class OrderStatsService(Service[Config]):
         events_used = 0
 
         if customer_node_id is not None:
+            history_start = today_start - timedelta(days=REVENUE_PREDICTION_MAX_HISTORY_DAYS)
             # Query all historical hourly revenue from events under the customer node
             # Exclude the current day (using session timezone for consistency)
             historical_data = await _timed_stats_query(
                 query_name="get_revenue_prediction_history_customer",
                 node_id=customer_node_id,
+                from_time=history_start,
                 to_time=today_start,
                 query_coro=conn.fetch(
                     """
+                    WITH scope_tills AS MATERIALIZED (
+                        SELECT t.id, n.event_node_id
+                        FROM till t
+                        JOIN node n ON n.id = t.node_id
+                        WHERE ($1 = ANY(n.parent_ids) OR n.id = $1)
+                    )
                     SELECT
                         EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
                         DATE(o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as day,
                         e.id as event_id,
                         COALESCE(SUM(li.total_price), 0) as revenue
                     FROM ordr o
+                    JOIN scope_tills st ON st.id = o.till_id
                     JOIN line_item li ON o.id = li.order_id
-                    JOIN till t ON o.till_id = t.id
-                    JOIN node n ON t.node_id = n.id
-                    JOIN node event_node ON n.event_node_id = event_node.id
+                    JOIN node event_node ON st.event_node_id = event_node.id
                     JOIN event e ON event_node.event_id = e.id
                     WHERE o.payment_method = 'tag'
+                        AND o.order_type = 'sale'
+                        AND o.booked_at >= $3
                         AND o.booked_at < $2
-                        AND ($1 = ANY(n.parent_ids) OR n.id = $1)
                     GROUP BY hour, day, e.id
                     ORDER BY day, hour
                     """,
                     customer_node_id,
                     today_start,
+                    history_start,
                 ),
             )
             events_used = len(set(row["event_id"] for row in historical_data))
@@ -951,9 +983,11 @@ class OrderStatsService(Service[Config]):
         # Fallback to system-wide data if no customer data
         if not historical_data:
             data_source = "system"
+            history_start = today_start - timedelta(days=REVENUE_PREDICTION_MAX_HISTORY_DAYS)
             historical_data = await _timed_stats_query(
                 query_name="get_revenue_prediction_history_system",
                 node_id=scope_node.id,
+                from_time=history_start,
                 to_time=today_start,
                 query_coro=conn.fetch(
                     """
@@ -967,12 +1001,15 @@ class OrderStatsService(Service[Config]):
                     JOIN till t ON o.till_id = t.id
                     JOIN node n ON t.node_id = n.id
                     WHERE o.payment_method = 'tag'
+                        AND o.order_type = 'sale'
+                        AND o.booked_at >= $2
                         AND o.booked_at < $1
                         AND n.event_node_id IS NOT NULL
                     GROUP BY hour, day, n.event_node_id
                     ORDER BY day, hour
                     """,
                     today_start,
+                    history_start,
                 ),
             )
             events_used = len(set(row["event_id"] for row in historical_data if row["event_id"]))
@@ -986,17 +1023,22 @@ class OrderStatsService(Service[Config]):
             to_time=now,
             query_coro=conn.fetch(
                 """
+                WITH scope_tills AS MATERIALIZED (
+                    SELECT t.id
+                    FROM till t
+                    JOIN node n ON n.id = t.node_id
+                    WHERE ($1 = ANY(n.parent_ids) OR n.id = $1)
+                )
                 SELECT
                     EXTRACT(HOUR FROM o.booked_at AT TIME ZONE current_setting('TIMEZONE')) as hour,
                     COALESCE(SUM(li.total_price), 0) as revenue
                 FROM ordr o
-                JOIN till t ON o.till_id = t.id
-                JOIN node n ON n.id = t.node_id
+                JOIN scope_tills st ON st.id = o.till_id
                 LEFT JOIN line_item li ON li.order_id = o.id
                 WHERE o.payment_method = 'tag'
+                    AND o.order_type = 'sale'
                     AND o.booked_at >= $2
                     AND o.booked_at <= now()
-                    AND ($1 = ANY(n.parent_ids) OR n.id = $1)
                     AND ($3::int IS NULL OR o.till_id = $3)
                 GROUP BY hour
                 ORDER BY hour
@@ -1124,6 +1166,7 @@ class OrderStatsService(Service[Config]):
                 JOIN till t ON o.till_id = t.id
                 JOIN node n ON n.id = t.node_id
                 WHERE o.payment_method = 'tag'
+                    AND o.order_type = 'sale'
                     AND o.booked_at >= $2
                     AND o.booked_at <= $3
                     AND ($1 = ANY(n.parent_ids) OR n.id = $1)
@@ -1141,23 +1184,36 @@ class OrderStatsService(Service[Config]):
         visitor_based_prediction: Optional[float] = None
 
         # Get total revenue and guest count for current event
+        event_stats_from = event.start_date or datetime(year=1970, month=1, day=1, tzinfo=timezone.utc)
+        event_stats_to = now
         event_stats = await _timed_stats_query(
             query_name="get_revenue_prediction_event_stats",
             node_id=scope_node.id,
+            from_time=event_stats_from,
+            to_time=event_stats_to,
             query_coro=conn.fetchrow(
                 """
+                WITH scope_tills AS MATERIALIZED (
+                    SELECT t.id
+                    FROM till t
+                    JOIN node n ON n.id = t.node_id
+                    WHERE ($1 = ANY(n.parent_ids) OR n.id = $1)
+                )
                 SELECT
                     COALESCE(SUM(li.total_price), 0) as total_revenue,
                     COUNT(DISTINCT o.customer_account_id) as guests_with_orders
                 FROM ordr o
-                JOIN till t ON o.till_id = t.id
-                JOIN node n ON n.id = t.node_id
+                JOIN scope_tills st ON st.id = o.till_id
                 LEFT JOIN line_item li ON li.order_id = o.id
                 WHERE o.payment_method = 'tag'
-                    AND ($1 = ANY(n.parent_ids) OR n.id = $1)
+                    AND o.order_type = 'sale'
+                    AND o.booked_at >= $2
+                    AND o.booked_at <= $3
                     AND o.customer_account_id IS NOT NULL
                 """,
                 scope_node.id,
+                event_stats_from,
+                event_stats_to,
             ),
         )
 
