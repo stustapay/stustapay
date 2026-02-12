@@ -127,8 +127,7 @@ export const UserToRoleList: React.FC = () => {
                 onClick={() => navigate(UserToRoleRoutes.edit(params.row.user_id))}
               />,
               <GridActionsCellItem
-                icon={<DeleteIcon />}
-                color="error"
+                icon={<DeleteIcon color="error" />}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row)}
               />,

@@ -25,7 +25,8 @@ export const DragArea: React.FC<EmptyDragProps> = ({ moveButton }) => {
   });
 
   return (
-    <Box ref={drop} minHeight="200px" display="flex" alignItems="center" justifyContent="center">
+    // TODO: fix the type issue with the ref, currently we need to cast it to any
+    <Box ref={drop as any} minHeight="200px" display="flex" alignItems="center" justifyContent="center">
       <Typography>{t("button.dragButtonHere")}</Typography>
     </Box>
   );

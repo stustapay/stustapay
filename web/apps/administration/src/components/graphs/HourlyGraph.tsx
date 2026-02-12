@@ -1,12 +1,12 @@
 import * as React from "react";
 import { DateTime } from "luxon";
-import { ResponsiveLine, Datum, DatumValue } from "@nivo/line";
+import { ResponsiveLine } from "@nivo/line";
 import { TimeseriesStats } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 
 interface Serie {
   id: string;
-  data: Datum[];
+  data: {x: Date, y: number}[];
 }
 
 export type Stats = {
@@ -106,7 +106,7 @@ export const HourlyGraph: React.FC<HourlyGraphProps> = ({ data, dailyEndTime, gr
           }
         },
       }}
-      xFormat={(value: DatumValue) => DateTime.fromJSDate(value as Date).toISO() ?? ""}
+      xFormat={(value: Date) => DateTime.fromJSDate(value ).toISO() ?? ""}
       enableSlices="x"
       enableTouchCrosshair
       curve="monotoneX"

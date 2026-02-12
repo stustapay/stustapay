@@ -127,8 +127,7 @@ export const TillProfileList: React.FC = () => {
                 onClick={() => navigate(`/node/${nodeId}/tills/profiles/${params.row.id}/edit`)}
               />,
               <GridActionsCellItem
-                icon={<DeleteIcon />}
-                color="error"
+                icon={<DeleteIcon color="error" />}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}
               />,

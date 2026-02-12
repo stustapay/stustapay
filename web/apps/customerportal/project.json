@@ -9,65 +9,6 @@
       "options": {
         "command": "npx @rtk-query/codegen-openapi apps/customerportal/openapi-config.js"
       }
-    },
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "compiler": "babel",
-        "outputPath": "dist/apps/customerportal",
-        "index": "apps/customerportal/src/index.html",
-        "baseHref": "/",
-        "main": "apps/customerportal/src/main.tsx",
-        "polyfills": "apps/customerportal/src/polyfills.ts",
-        "tsConfig": "apps/customerportal/tsconfig.app.json",
-        "assets": ["apps/customerportal/src/favicon.svg", "apps/customerportal/src/assets"],
-        "styles": ["apps/customerportal/src/styles.css"],
-        "scripts": [],
-        "webpackConfig": "@nx/react/plugins/webpack"
-      },
-      "configurations": {
-        "development": {
-          "extractLicenses": false,
-          "optimization": false,
-          "sourceMap": true,
-          "vendorChunk": true
-        },
-        "production": {
-          "fileReplacements": [
-            {
-              "replace": "apps/customerportal/src/environments/environment.ts",
-              "with": "apps/customerportal/src/environments/environment.prod.ts"
-            }
-          ],
-          "optimization": true,
-          "outputHashing": "all",
-          "sourceMap": false,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false
-        }
-      }
-    },
-    "serve": {
-      "executor": "@nx/webpack:dev-server",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "customerportal:build",
-        "hmr": true,
-        "port": 4300,
-        "proxyConfig": "apps/customerportal/proxy.conf.json"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "customerportal:build:development"
-        },
-        "production": {
-          "buildTarget": "customerportal:build:production",
-          "hmr": false
-        }
-      }
     }
   },
   "tags": []

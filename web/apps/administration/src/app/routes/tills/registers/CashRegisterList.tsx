@@ -147,8 +147,7 @@ export const CashRegisterList: React.FC = () => {
                 onClick={() => navigate(CashRegistersRoutes.edit(params.row.id))}
               />,
               <GridActionsCellItem
-                icon={<DeleteIcon />}
-                color="error"
+                icon={<DeleteIcon  color="error" />}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}
               />,

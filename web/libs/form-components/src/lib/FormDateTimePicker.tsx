@@ -12,7 +12,7 @@ declare module "@mui/x-date-pickers/models" {
 export type FormDateTimePickerProps<Name extends string, Values> = {
   name: Name;
   formik: FormikProps<Values>;
-} & Omit<DateTimePickerProps<DateTime>, "value" | "onChange" | "slots" | "value">;
+} & Omit<DateTimePickerProps, "value" | "onChange" | "slots" | "value">;
 
 export function FormDateTimePicker<Name extends string, Values extends Partial<Record<Name, string | null>>>({
   name,

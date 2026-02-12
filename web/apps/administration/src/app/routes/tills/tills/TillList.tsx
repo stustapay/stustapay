@@ -146,8 +146,7 @@ export const TillList: React.FC = () => {
                 onClick={() => navigate(TillRoutes.edit(params.row.id, params.row.node_id))}
               />,
               <GridActionsCellItem
-                icon={<DeleteIcon />}
-                color="error"
+                icon={<DeleteIcon color="error" />}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}
               />,

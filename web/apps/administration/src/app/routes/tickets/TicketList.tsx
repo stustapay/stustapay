@@ -148,8 +148,7 @@ export const TicketList: React.FC = () => {
                 onClick={() => handleLockTicket(params.row)}
               />,
               <GridActionsCellItem
-                icon={<DeleteIcon />}
-                color="error"
+                icon={<DeleteIcon color="error" />}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}
               />,
