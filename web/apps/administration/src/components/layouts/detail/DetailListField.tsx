@@ -12,7 +12,9 @@ export const DetailListField: React.FC<DetailListFieldProps> = ({ label, value }
   return (
     <DetailField
       label={label}
-      value={value?.map((item) => <Chip key={item} variant="outlined" label={item} sx={{ mr: 1 }} />)}
+      value={value?.map((item) => (
+        <Chip key={item} variant="outlined" label={item} sx={{ mr: 1 }} />
+      ))}
     />
   );
 };

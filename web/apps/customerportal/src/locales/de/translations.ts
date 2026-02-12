@@ -33,7 +33,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     topup: "Aufladung",
     agb: "AGB",
     faq: "FAQ",
-    privacypolicy: "Datenschutzerklärung"
+    privacypolicy: "Datenschutzerklärung",
   },
   balance: "Guthaben",
   tagPin: "Bändchen-Chip Pin",

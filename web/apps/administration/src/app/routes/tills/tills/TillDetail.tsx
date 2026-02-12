@@ -99,7 +99,12 @@ export const TillDetail: React.FC = () => {
       routes={TillRoutes}
       elementNodeId={till.node_id}
       actions={[
-        { label: t("edit"), onClick: () => navigate(TillRoutes.edit(tillId)), color: "primary", icon: <EditIcon /> },
+        {
+          label: t("edit"),
+          onClick: () => navigate(TillRoutes.edit(tillId)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
         {
           label: t("till.switchTerminal"),
           onClick: () => setSwitchTerminalOpen(true),

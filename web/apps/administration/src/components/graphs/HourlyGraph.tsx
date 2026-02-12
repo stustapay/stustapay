@@ -6,7 +6,7 @@ import { useCurrencyFormatter } from "@/hooks";
 
 interface Serie {
   id: string;
-  data: {x: Date, y: number}[];
+  data: { x: Date; y: number }[];
 }
 
 export type Stats = {
@@ -106,7 +106,7 @@ export const HourlyGraph: React.FC<HourlyGraphProps> = ({ data, dailyEndTime, gr
           }
         },
       }}
-      xFormat={(value: Date) => DateTime.fromJSDate(value ).toISO() ?? ""}
+      xFormat={(value: Date) => DateTime.fromJSDate(value).toISO() ?? ""}
       enableSlices="x"
       enableTouchCrosshair
       curve="monotoneX"

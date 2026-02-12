@@ -36,7 +36,9 @@ export const Index: React.FC = () => {
   if (payoutInfo.in_payout_run && !payoutInfo.payout_date) {
     payout_info = t("payout.infoPayoutScheduled");
   } else if (payoutInfo.in_payout_run && payoutInfo.payout_date) {
-    payout_info = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
+    payout_info = t("payout.infoPayoutCompleted", {
+      payout_date: new Date(payoutInfo.payout_date).toLocaleString(),
+    });
   } else if (customer.has_entered_info) {
     payout_info = t("payout.infoPayoutInitiated");
   } else {

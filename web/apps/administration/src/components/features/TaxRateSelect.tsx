@@ -3,8 +3,10 @@ import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export interface TaxRateSelectProps
-  extends Omit<SelectProps<TaxRate, false>, "options" | "formatOption" | "multiple" | "value" | "onChange"> {
+export interface TaxRateSelectProps extends Omit<
+  SelectProps<TaxRate, false>,
+  "options" | "formatOption" | "multiple" | "value" | "onChange"
+> {
   value: number;
   onChange: (taxRateId: number) => void;
 }
