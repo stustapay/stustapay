@@ -101,11 +101,14 @@ jobs:
             "${{ matrix.distro }}"
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          ARTIFACT_NAME=${{ matrix.distro }}
+          ARTIFACT_NAME=${ARTIFACT_NAME//:} # replace all colons
+          echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
         working-directory: ./src
       - name: Upload debs as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debs
+          name: debs-${{ env.ARTIFACT_NAME }}
           path: debs/*
 
   # if it's a tag, create a release and attach the artifacts to it
