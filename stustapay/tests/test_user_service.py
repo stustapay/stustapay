@@ -58,3 +58,17 @@ async def test_invitation_token_is_stored_hashed_and_raw_token_is_required_for_a
         payload=AcceptInvitationPayload(token=invitation.token, password="safe-password")
     )
     assert accepted["status"] == "success"
+
+
+@pytest.mark.parametrize(
+    ("api_base_url", "expected_invitation_base_url"),
+    [
+        ("http://localhost:8081/api", "http://localhost:8081"),
+        ("http://localhost:8081", "http://localhost:8081"),
+        ("https://admin.example.com/api", "https://admin.example.com"),
+        ("https://api.example.com/api", "https://api.example.com"),
+        ("https://api.example.com/stustapay/api", "https://api.example.com/stustapay"),
+    ],
+)
+def test_invitation_base_url_derivation(api_base_url: str, expected_invitation_base_url: str):
+    assert UserService._invitation_base_url(api_base_url) == expected_invitation_base_url

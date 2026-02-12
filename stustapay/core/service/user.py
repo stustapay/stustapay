@@ -3,6 +3,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
 import asyncpg
 from passlib.context import CryptContext
@@ -201,6 +202,15 @@ class UserService(Service[Config]):
     def _hash_invitation_token(cls, token: str) -> str:
         digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
         return f"{cls.INVITATION_TOKEN_HASH_PREFIX}{digest}"
+
+    @staticmethod
+    def _invitation_base_url(api_base_url: str) -> str:
+        parsed = urlsplit(api_base_url)
+        path = parsed.path.rstrip("/")
+        if path.endswith("/api"):
+            path = path[: -len("/api")]
+
+        return urlunsplit((parsed.scheme, parsed.netloc, path, "", "")).rstrip("/")
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -679,8 +689,10 @@ class UserService(Service[Config]):
         node_info = await conn.fetchrow("select name, description from node where id = $1", node.id)
         node_name = node_info["name"] if node_info else "Node"
 
-        # Construct invitation URL - use administration base_url from config
-        base_url = self.config.administration.base_url.replace("/api", "")
+        # Construct invitation URL from the configured administration API base URL.
+        # We only remove a trailing '/api' path segment to avoid modifying the host
+        # (e.g. https://api.example.com/api -> https://api.example.com).
+        base_url = self._invitation_base_url(self.config.administration.base_url)
         invitation_url = f"{base_url}/accept-invitation?token={token}"
 
         # Create email message
