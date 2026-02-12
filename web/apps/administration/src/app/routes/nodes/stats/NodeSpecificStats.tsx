@@ -18,7 +18,7 @@ import {
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { DailyStatsTable, HourlyGraph, NodeSelect } from "@/components";
 import { useGetProductStatsQuery, ProductTimeseries, ProductOverallStats } from "@/api";
-import { DatumValue, ResponsiveLine } from "@nivo/line";
+import { ResponsiveLine } from "@nivo/line";
 
 const IndividualProductStats: React.FC<{
   nodeId: number;
@@ -64,7 +64,7 @@ const IndividualProductStats: React.FC<{
               }
             },
           }}
-          xFormat={(value: DatumValue) => DateTime.fromJSDate(value as Date).toISO() ?? ""}
+          xFormat={(value: Date) => DateTime.fromJSDate(value).toISO() ?? ""}
           enableSlices="x"
           enableTouchCrosshair
           curve="monotoneX"

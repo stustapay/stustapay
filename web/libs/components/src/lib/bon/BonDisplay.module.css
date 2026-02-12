@@ -1,8 +1,8 @@
 .tseTable td:nth-child(2) {
-    width: 70%;
+  width: 70%;
 }
 
 .qrCode {
-    background-color: white;
-    padding: 16px;
+  background-color: white;
+  padding: 16px;
 }

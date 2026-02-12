@@ -21,7 +21,7 @@ export const CashierList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const [filterOptions, setFilterOptions] = useQueryState(
+  const [filterOptions, setFilterOptions] = useQueryState<{ showZeroBalance: boolean; showWithoutTerminal: boolean }>(
     { showZeroBalance: true, showWithoutTerminal: true },
     FilterOptionsSchema
   );

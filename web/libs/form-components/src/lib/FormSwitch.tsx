@@ -1,8 +1,10 @@
 import { FormControl, FormControlLabel, FormHelperText, Switch, SwitchProps } from "@mui/material";
 import { FormikProps } from "formik";
 
-export interface FormSwitchProps<Name extends string, Values>
-  extends Omit<SwitchProps, "value" | "onChange" | "onBlur" | "error" | "helperText"> {
+export interface FormSwitchProps<Name extends string, Values> extends Omit<
+  SwitchProps,
+  "value" | "onChange" | "onBlur" | "error" | "helperText"
+> {
   label: string;
   name: Name;
   formik: FormikProps<Values>;

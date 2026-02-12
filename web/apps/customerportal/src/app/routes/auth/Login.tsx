@@ -1,6 +1,6 @@
 import { useLoginMutation } from "@/api";
 import { config } from "@/api/common";
-import { ReactComponent as PinUidHowToImg } from "@/assets/img/pin_uid_howto.svg";
+import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Stack, Typography } from "@mui/material";
@@ -111,8 +111,9 @@ export const Login: React.FC = () => {
         <Typography variant="body1" gutterBottom>
           {t("wristbandTagExampleDescription")}
         </Typography>
-        <PinUidHowToImg
+        <img
           title={t("wristbandTagExampleTitle")}
+          src={PinUidHowToImg}
           style={{
             width: "100%",
             height: "auto",

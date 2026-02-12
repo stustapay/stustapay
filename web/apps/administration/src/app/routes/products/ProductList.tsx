@@ -171,8 +171,7 @@ export const ProductList: React.FC = () => {
                 onClick={() => handleLockProduct(params.row)}
               />,
               <GridActionsCellItem
-                icon={<DeleteIcon />}
-                color="error"
+                icon={<DeleteIcon color="error" />}
                 disabled={params.row.is_locked}
                 label={t("delete")}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}

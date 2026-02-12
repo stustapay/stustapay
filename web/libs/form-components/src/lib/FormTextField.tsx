@@ -2,8 +2,10 @@ import * as React from "react";
 import { TextField, TextFieldProps } from "@mui/material";
 import { FormikProps } from "formik";
 
-export interface FormTextFieldProps<Name extends string, Values>
-  extends Omit<TextFieldProps, "value" | "onChange" | "onBlur" | "error" | "helperText"> {
+export interface FormTextFieldProps<Name extends string, Values> extends Omit<
+  TextFieldProps,
+  "value" | "onChange" | "onBlur" | "error" | "helperText"
+> {
   name: Name;
   formik: FormikProps<Values>;
 }

@@ -9,6 +9,7 @@ create `tse` user
 centos7 requires cgroupsv1:
 
 `/etc/default/grub`:
+
 ```
 GRUB_CMDLINE_LINUX_DEFAULT="quiet systemd.unified_cgroup_hierarchy=false"
 ```

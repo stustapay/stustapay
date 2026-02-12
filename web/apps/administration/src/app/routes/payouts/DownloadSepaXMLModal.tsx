@@ -19,7 +19,7 @@ export interface DownloadSepaXMLModalProps {
 
 const FormSchema = z.object({});
 
-type FormValues = z.infer<typeof FormSchema> & { execution_date: DateTime };
+type FormValues = { execution_date: DateTime };
 
 const initialValues: FormValues = {
   execution_date: DateTime.now(),

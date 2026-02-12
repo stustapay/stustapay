@@ -6,25 +6,26 @@ StuStaPay supports the following NFC tags:
 
 You can either program them using the StuStaPay Android App, or if you need larger quantities, find a supplier who can do the programming and id-lasering for you.
 
-
 ## Secret Keys
 
 There are two secret keys (the same for all chips).
 
 To generate those keys:
-``` bash
+
+```bash
 python3 -m stustapay -c <your-config>.yaml token generate-key
 ```
 
 This yields you the generated keys as output:
 
-``` markdown
+```markdown
 Secret keys:
 
 key0 = <16 bytes from `openssl rand -hex 16`>
 key1 = <16 different bytes for key1>
 
 So:
+
 - key0[0]: <for clarification, the first first byte of key0>
 - key0[15]: <key0 last byte>
 - key1[0]: <key1 first byte>
@@ -35,13 +36,14 @@ So:
 The file also describes the concrete bytes used in programming below (`key0[0]`, `key1[0]`, ...).
 The last lines are there so the byte order isn't swapped accidentially.
 
-
 ## Per-Token Secrets
-``` bash
+
+```bash
 python3 -m stustapay -c <your-config>.yaml token generate-nfc --count <number>
 ```
 
 This yields a list of `<number>` individual secrets, for example:
+
 ```
 index,pin
 0,GKBQDPD3411A
@@ -52,13 +54,11 @@ index,pin
 This output should be supplied via a csv file to the NFC chip manufacturer.
 So we provide for each chip:
 
-* individual 12 character random `pin` engraved on back of chip (also stored in chip memory)
-
+- individual 12 character random `pin` engraved on back of chip (also stored in chip memory)
 
 ## Feedback from manufacturer
 
 No feedback is required (the list of pins we generated ourselves is used to verify chips and register them in the backend with an associated chip UID).
-
 
 ## Laser
 
@@ -71,11 +71,9 @@ pay.your-stustapay-event-name.de
 
 and additionally, if possible, either a datamatrix or qr-code with this url: https://pay.your-stustapay-event-name.de
 
-
 ## Chip Programming
 
 Depending on the Chip type the data needs to be flashed into each NFC tag.
-
 
 ### MIFARE Ultralight AES MF0AES(H)20
 
@@ -146,7 +144,6 @@ That's it, the production test should now be quite happy!
 
 This programming leaves the config unlocked, as any additional writes would require an exchange of CMAC-secured messages. See the following section for a sequence of writes that locks the config, but requires the writer to support CMAC.
 
-
 #### Programming MF0AES(H)20 with CMAC communication
 
 This is an alternative programming scheme that starts just after `<<AUTHENTICATED>>` in the above commands.
@@ -171,7 +168,6 @@ a2 2a c0 05 00 00 (disable reading without auth,
                    set virtual card id to 0x05,
                    disable failed auth limit)
 ```
-
 
 ## Testing
 

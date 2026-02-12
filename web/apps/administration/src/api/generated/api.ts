@@ -263,7 +263,11 @@ const injectedRtkApi = api
         invalidatesTags: ["auth"],
       }),
       changePassword: build.mutation<ChangePasswordApiResponse, ChangePasswordApiArg>({
-        query: (queryArg) => ({ url: `/auth/change-password`, method: "POST", body: queryArg.changePasswordPayload }),
+        query: (queryArg) => ({
+          url: `/auth/change-password`,
+          method: "POST",
+          body: queryArg.changePasswordPayload,
+        }),
         invalidatesTags: ["auth"],
       }),
       logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
@@ -1169,7 +1173,10 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       checkPretixConnection: build.mutation<CheckPretixConnectionApiResponse, CheckPretixConnectionApiArg>({
-        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`, method: "POST" }),
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`,
+          method: "POST",
+        }),
         invalidatesTags: ["tree"],
       }),
       fetchPretixProducts: build.mutation<FetchPretixProductsApiResponse, FetchPretixProductsApiArg>({
@@ -1193,7 +1200,10 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
-        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
+        query: (queryArg) => ({
+          url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
+          method: "POST",
+        }),
         invalidatesTags: ["tree"],
       }),
       generateDailyReport: build.mutation<GenerateDailyReportApiResponse, GenerateDailyReportApiArg>({
@@ -1205,7 +1215,10 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateTestDailyReport: build.mutation<GenerateTestDailyReportApiResponse, GenerateTestDailyReportApiArg>({
-        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`, method: "POST" }),
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`,
+          method: "POST",
+        }),
         invalidatesTags: ["tree"],
       }),
       generatePayoutReport: build.mutation<GeneratePayoutReportApiResponse, GeneratePayoutReportApiArg>({

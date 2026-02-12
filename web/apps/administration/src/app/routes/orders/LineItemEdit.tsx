@@ -177,7 +177,9 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
                   ) : (
                     <NumericInput
                       slotProps={{
-                        input: { endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> },
+                        input: {
+                          endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
+                        },
                       }}
                       onChange={(value) => handlePriceChange(p.product.id, value)}
                       value={p.price}

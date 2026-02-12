@@ -35,7 +35,9 @@ export const PasswordChange: React.FC = () => {
 
   const handleSubmit = (values: FormSchema, { setSubmitting }: FormikHelpers<FormSchema>) => {
     setSubmitting(true);
-    changePassword({ changePasswordPayload: { old_password: values.oldPassword, new_password: values.newPassword } })
+    changePassword({
+      changePasswordPayload: { old_password: values.oldPassword, new_password: values.newPassword },
+    })
       .unwrap()
       .then(() => {
         toast.success(t("auth.successfullyChangedPassword"));

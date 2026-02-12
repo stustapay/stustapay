@@ -6,7 +6,7 @@ import { DateTime } from "luxon";
 export type FormTimePickerProps<Name extends string, Values> = {
   name: Name;
   formik: FormikProps<Values>;
-} & Omit<TimePickerProps<DateTime>, "value" | "onChange" | "slots" | "value">;
+} & Omit<TimePickerProps, "value" | "onChange" | "slots" | "value">;
 
 export function FormTimePicker<Name extends string, Values extends Partial<Record<Name, string | null>>>({
   name,

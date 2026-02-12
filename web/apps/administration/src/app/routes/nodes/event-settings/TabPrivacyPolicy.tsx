@@ -64,7 +64,12 @@ export const TabPrivacyPolicy: React.FC<{ nodeId: number; eventSettings: Restric
                 label={t("settings.privacypolicy.content")}
                 value={formik.values.translation_texts[language]?.["privacypolicy"] ?? ""}
                 onChange={(val) => {
-                  const newSettings = updateTranslationTexts(formik.values.translation_texts, language, "privacypolicy", val);
+                  const newSettings = updateTranslationTexts(
+                    formik.values.translation_texts,
+                    language,
+                    "privacypolicy",
+                    val
+                  );
                   formik.setFieldValue("translation_texts", newSettings);
                   formik.setFieldTouched("translation_texts");
                 }}

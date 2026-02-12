@@ -17,7 +17,7 @@ import {
   Event as EventIcon,
   EditOff as EditOffIcon,
 } from "@mui/icons-material";
-import { SimpleTreeView } from "@mui/x-tree-view";
+import { SimpleTreeView, TreeViewItemId } from "@mui/x-tree-view";
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { NavigationTreeItem } from "./NavigationTreeItem";
@@ -65,11 +65,11 @@ export const NavigationTree: React.FC = () => {
     [dispatch]
   );
 
-  const handleToggle = (event: React.SyntheticEvent, itemIds: string[]) => {
+  const handleToggle = (event: React.SyntheticEvent | null, itemIds: TreeViewItemId[]) => {
     setExpanded(itemIds);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, itemId: string | null) => {
+  const handleSelect = (event: React.SyntheticEvent | null, itemId: TreeViewItemId | null) => {
     setSelected(itemId);
   };
 

@@ -27,7 +27,9 @@ export const store = configureStore({
     [uiSlice.name]: persistReducer(uiPersistConfig, uiSlice.reducer),
   }),
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] } })
+    getDefaultMiddleware({
+      serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] },
+    })
       .concat(api.middleware)
       .concat(errorMiddleware),
 });

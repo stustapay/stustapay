@@ -1,40 +1,25 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"],
-      "cache": true
-    },
-    "test": {
-      "cache": true,
-      "options": {
-        "passWithNoTests": true
-      }
+  "parallel": 5,
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": false
     }
   },
-  "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      }
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build", "prebuild", "^prebuild"],
+      "inputs": ["production", "^production"],
+      "cache": true
     }
-  ],
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
-      "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/vite.config.[jt]s",
       "!{projectRoot}/src/test-setup.[jt]s"
     ],
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
@@ -42,20 +27,39 @@
   "generators": {
     "@nx/react": {
       "application": {
+        "babel": true,
         "style": "css",
-        "linter": "eslint",
-        "bundler": "webpack",
-        "babel": true
+        "linter": "none",
+        "bundler": "vite"
       },
       "component": {
         "style": "css"
       },
       "library": {
         "style": "css",
-        "linter": "eslint",
-        "unitTestRunner": "jest"
+        "linter": "none",
+        "unitTestRunner": "vite"
       }
     }
   },
-  "defaultProject": "administration"
+  "defaultProject": "administration",
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ],
+  "tui": {
+    "enabled": true
+  }
 }

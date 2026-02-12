@@ -44,7 +44,9 @@ export const OrderDetail: React.FC = () => {
   } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
+  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery({
+    nodeId: currentNode.id,
+  });
 
   if (isOrderLoading || isTillsLoading || isUsersLoading || isRegistersLoading) {
     return <Loading />;

@@ -2,8 +2,10 @@ import * as React from "react";
 import { NumericInput, NumericInputProps } from "@stustapay/components";
 import { FormikProps } from "formik";
 
-export interface FormNumericInputProps<Name extends string, Values>
-  extends Omit<NumericInputProps, "value" | "onChange" | "error" | "helperText"> {
+export interface FormNumericInputProps<Name extends string, Values> extends Omit<
+  NumericInputProps,
+  "value" | "onChange" | "error" | "helperText"
+> {
   name: Name;
   formik: FormikProps<Values>;
 }
