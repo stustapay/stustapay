@@ -115,6 +115,8 @@ jobs:
   attach-assets:
     name: "Attach assets to release"
     if: ${{ !failure() && !cancelled() && startsWith(github.ref, 'refs/tags/') }}
+    permissions:
+      contents: write
     needs:
       - build_and_test_app
       - build_app_release
