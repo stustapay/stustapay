@@ -1,23 +1,5 @@
-stustapay (0.2.2) stable; urgency=medium
+stustapay (2026.2.1) stable; urgency=medium
 
-  * StuStaPay release 0.2.2
+  * StuStaPay release 2026.2.1
 
- -- Michael Loipführer <milo@sft.lol>  Sun, 30 Nov 2025 18:39:12 +0000
-
-stustapay (0.2.1) stable; urgency=medium
-
-  * StuStaPay release 0.2.1
-
- -- Michael Loipführer <milo@sft.lol>  Sun, 30 Nov 2025 16:02:31 +0000
-
-stustapay (0.2.0) stable; urgency=medium
-
-  * StuStaPay release 0.2.0
-
- -- Michael Loipführer <milo@sft.lol>  Sun, 30 Nov 2025 15:58:56 +0000
-
-stustapay (0.1.0) stable; urgency=medium
-
-  * StuStaPay release 0.1.0
-
- -- Michael Loipführer <milo@sft.lol>  Mon, 29 Jan 2024 19:16:07 +0000
+ -- Michael Loipführer <milo@sft.lol>  Thu, 12 Feb 2026 10:16:07 +0200

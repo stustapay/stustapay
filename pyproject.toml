@@ -111,7 +111,15 @@ asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 
 [tool.bumpversion]
-current_version = "0.2.2"
+current_version = "2026.2.1"
+parse = """(?x)                     # Verbose mode
+    (?P<release>                    # The release part
+        (?:[1-9][0-9]{3})\\.        # YYYY.
+        (?:1[0-2]|[1-9])            # MM.
+    )
+    (?:\\.(?P<patch>\\d+))          # .patch, optional
+"""
+serialize = ["{release}.{patch}"]
 commit = false
 files = [
     { filename = "pyproject.toml" },
@@ -119,3 +127,6 @@ files = [
     { filename = "CHANGELOG.md", search = "Unreleased", replace = "{new_version} ({now:%Y-%m-%d})" },
     { filename = "CHANGELOG.md", search = "v{current_version}...HEAD", replace = "v{current_version}...v{new_version}" },
 ]
+
+[tool.bumpversion.parts.release]
+calver_format = "{YYYY}.{MM}"

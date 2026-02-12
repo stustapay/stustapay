@@ -29,15 +29,14 @@ class Config(BaseModel):
 
 def parse_args():
     parser = argparse.ArgumentParser("StuStaPay release utility")
-    parser.add_argument("part", type=str, choices=["minor", "major", "patch"])
     parser.add_argument("--dry-run", action="store_true")
 
     return parser.parse_args()
 
 
-def _get_bumpversion_config(part: str) -> Config:
+def _get_bumpversion_config() -> Config:
     ret = subprocess.run(
-        ["uv", "run", "bump-my-version", "show", "--format", "json", "--increment", part],
+        ["uv", "run", "bump-my-version", "show", "--format", "json", "--increment", "patch"],
         capture_output=True,
         check=True,
     )
@@ -96,16 +95,16 @@ def _make_git_commit(config: Config, dry_run: bool):
         subprocess.run(["git", "tag", tag_name], check=True)
 
 
-def main(part: str, dry_run: bool):
+def main(dry_run: bool):
     if dry_run:
         print("Performing a dry run ...")
 
     # print current then prompt for new API compatibility version ranges
-    config = _get_bumpversion_config(part)
+    config = _get_bumpversion_config()
     pyproject = _read_pyproject_toml()
     print(f"Current Version: {config.current_version}, Upgrading to version {config.new_version}")
 
-    bump_my_version_args = ["uv", "run", "bump-my-version", "bump", part, "--no-commit", "--no-tag"]
+    bump_my_version_args = ["uv", "run", "bump-my-version", "bump", "patch", "--no-commit", "--no-tag"]
     if dry_run:
         bump_my_version_args.append("--dry-run")
     subprocess.run(bump_my_version_args, check=True)
@@ -121,4 +120,4 @@ def main(part: str, dry_run: bool):
 
 if __name__ == "__main__":
     args = parse_args()
-    main(part=args.part, dry_run=args.dry_run)
+    main(dry_run=args.dry_run)
