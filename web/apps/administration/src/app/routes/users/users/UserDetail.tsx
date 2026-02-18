@@ -22,8 +22,12 @@ export const UserDetail: React.FC = () => {
 
   const token = useAppSelector(selectAuthToken);
   const handleInvite = async () => {
+    if (!user) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/users/${userId}/invite?node_id=${currentNode.id}`, {
+      const response = await fetch(`/api/users/${user.id}/invite?node_id=${user.node_id}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -46,12 +50,16 @@ export const UserDetail: React.FC = () => {
   }
 
   const openConfirmDeleteDialog = () => {
+    if (!user) {
+      return;
+    }
+
     openModal({
       type: "confirm",
       title: t("deleteUser"),
       content: t("deleteUserDescription"),
       onConfirm: () => {
-        deleteUser({ nodeId: currentNode.id, userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
+        deleteUser({ nodeId: user.node_id, userId: user.id }).then(() => navigate(UserRoutes.list(user.node_id)));
       },
     });
   };
@@ -75,11 +83,16 @@ export const UserDetail: React.FC = () => {
         },
         {
           label: t("user.changePassword.title"),
-          onClick: () => navigate(UserRoutes.detailAction(userId, "change-password")),
+          onClick: () => navigate(`${UserRoutes.detail(user.id, user.node_id)}/change-password`),
           color: "primary",
           icon: <EditIcon />,
         },
-        { label: t("edit"), onClick: () => navigate(UserRoutes.edit(userId)), color: "primary", icon: <EditIcon /> },
+        {
+          label: t("edit"),
+          onClick: () => navigate(UserRoutes.edit(user.id, user.node_id)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
         { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
       ]}
     >

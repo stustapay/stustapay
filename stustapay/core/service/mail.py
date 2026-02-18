@@ -18,6 +18,7 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.mail import Mail
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
+from sftkit.error import NotFound
 
 
 class MailService(Service[Config]):
@@ -31,6 +32,71 @@ class MailService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config):
         super().__init__(db_pool, config)
         self.logger = logging.getLogger("mail_service")
+
+    @staticmethod
+    def _parse_config_bool(value: str | None, default: bool = False) -> bool:
+        if value is None:
+            return default
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+
+    @staticmethod
+    def _parse_config_int(value: str | None) -> int | None:
+        if value is None or value.strip() == "":
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    async def _fetch_global_mail_config(
+        self,
+        *,
+        conn: Connection,
+    ) -> tuple[bool, str | None, str | None, int | None, str | None, str | None]:
+        rows = await conn.fetch(
+            "select key, value from config "
+            "where key = any($1)",
+            [
+                "mail.enabled",
+                "mail.default_sender",
+                "mail.smtp_host",
+                "mail.smtp_port",
+                "mail.smtp_username",
+                "mail.smtp_password",
+            ],
+        )
+        config = {str(row["key"]): row["value"] for row in rows}
+        return (
+            self._parse_config_bool(config.get("mail.enabled"), default=False),
+            config.get("mail.default_sender"),
+            config.get("mail.smtp_host"),
+            self._parse_config_int(config.get("mail.smtp_port")),
+            config.get("mail.smtp_username"),
+            config.get("mail.smtp_password"),
+        )
+
+    async def _resolve_mail_settings(
+        self,
+        *,
+        conn: Connection,
+        node_id: int,
+    ) -> tuple[bool, str | None, str | None, int | None, str | None, str | None]:
+        try:
+            event_settings = await fetch_restricted_event_settings_for_node(conn, node_id)
+            return (
+                event_settings.email_enabled,
+                event_settings.email_default_sender,
+                event_settings.email_smtp_host,
+                event_settings.email_smtp_port,
+                event_settings.email_smtp_username,
+                event_settings.email_smtp_password,
+            )
+        except NotFound:
+            node_exists = await conn.fetchval("select exists(select from node where id = $1)", node_id)
+            if not node_exists:
+                raise
+            # Node is not part of an event; fall back to global mail settings.
+            return await self._fetch_global_mail_config(conn=conn)
 
     @with_db_transaction
     async def send_mail(
@@ -47,10 +113,18 @@ class MailService(Service[Config]):
         attachments: dict[str, bytes] | None = None,
         retry_max: int | None = None,
     ):
-        res_config = await fetch_restricted_event_settings_for_node(conn, node_id)
-        if not res_config.email_enabled:
+        (
+            mail_enabled,
+            default_sender,
+            _smtp_host,
+            _smtp_port,
+            _smtp_username,
+            _smtp_password,
+        ) = await self._resolve_mail_settings(conn=conn, node_id=node_id)
+        if not mail_enabled:
             self.logger.warning(
-                f"Mail to {to_addr} was not scheduled for sending because event with node id {node_id} has mail sending deactivated"
+                f"Mail to {to_addr} was not scheduled for sending because mail sending is deactivated "
+                f"for node id {node_id} (event or global settings)"
             )
             return
         mail_id = await conn.fetchval(
@@ -64,7 +138,7 @@ class MailService(Service[Config]):
             message,
             html_message,
             to_addr,
-            from_addr if from_addr is not None else res_config.email_default_sender,
+            from_addr if from_addr is not None else default_sender,
             scheduled_send_date if scheduled_send_date is not None else datetime.now(),
             retry_max if retry_max is not None else self.MAX_RETRY_COUNT,
         )
@@ -129,11 +203,18 @@ class MailService(Service[Config]):
         mail: Mail,
     ) -> None:
         self.logger.debug(f"Sending mail to {mail.to_addr}, attempt {mail.retry_count + 1}/{mail.retry_max}")
-        res_config = await fetch_restricted_event_settings_for_node(conn, mail.node_id)
-        smtp_config = res_config.smtp_config
-        if not smtp_config:
+        (
+            mail_enabled,
+            default_sender,
+            smtp_host,
+            smtp_port,
+            smtp_username,
+            smtp_password,
+        ) = await self._resolve_mail_settings(conn=conn, node_id=mail.node_id)
+        if not mail_enabled:
             self.logger.info(
-                f"The mail was not sent because event with node id {mail.node_id} has mail sending deactivated"
+                f"The mail was not sent because mail sending is deactivated for node id {mail.node_id} "
+                f"(event or global settings)"
             )
             # Mark as failed without retry - configuration issue
             await conn.execute(
@@ -143,14 +224,14 @@ class MailService(Service[Config]):
                     failure_reason = $1
                 where id = $2
                 """,
-                "Mail sending deactivated for this event",
+                "Mail sending deactivated (event/global settings)",
                 mail.id,
             )
             return
 
         message = MIMEMultipart()
         message["Subject"] = mail.subject
-        message["From"] = mail.from_addr if mail.from_addr else res_config.email_default_sender
+        message["From"] = mail.from_addr if mail.from_addr else default_sender
         message["To"] = mail.to_addr
         message["Date"] = formatdate(localtime=True)
 
@@ -170,13 +251,13 @@ class MailService(Service[Config]):
             message.attach(part)
 
         try:
-            assert smtp_config.smtp_host is not None and smtp_config.smtp_port is not None
+            assert smtp_host is not None and smtp_port is not None
             await aiosmtplib.send(
                 message,
-                hostname=smtp_config.smtp_host,
-                port=smtp_config.smtp_port,
-                username=smtp_config.smtp_username,
-                password=smtp_config.smtp_password,
+                hostname=smtp_host,
+                port=smtp_port,
+                username=smtp_username,
+                password=smtp_password,
                 start_tls=True,
             )
             self.logger.debug(f"Mail sent to {mail.to_addr}")
