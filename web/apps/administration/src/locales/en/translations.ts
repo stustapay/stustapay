@@ -319,6 +319,8 @@ export const translations = {
     last7Days: "Last 7 days",
     pollingInterval: "Polling interval",
     pollingOff: "Off",
+    enablePrediction: "Enable prediction",
+    disablePrediction: "Disable prediction",
     advancedFilters: "Advanced filters",
     hideAdvancedFilters: "Hide advanced",
     noDatesAvailable: "No dates available",

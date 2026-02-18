@@ -311,6 +311,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     last7Days: "Letzte 7 Tage",
     pollingInterval: "Aktualisierungsintervall",
     pollingOff: "Aus",
+    enablePrediction: "Prognose aktivieren",
+    disablePrediction: "Prognose deaktivieren",
     advancedFilters: "Erweiterte Filter",
     hideAdvancedFilters: "Erweiterte aus",
     noDatesAvailable: "Keine Daten verfügbar",
