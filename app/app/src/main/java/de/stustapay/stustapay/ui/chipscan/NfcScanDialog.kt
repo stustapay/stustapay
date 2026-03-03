@@ -1,46 +1,40 @@
 package de.stustapay.stustapay.ui.chipscan
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.NearMe
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,37 +46,12 @@ import de.stustapay.stustapay.R
 import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.libssp.ui.theme.NfcScanStyle
-import de.stustapay.stustapay.ui.device.DeviceConfigProvider
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
 
 @Composable
 fun rememberNfcScanDialogState(): DialogDisplayState {
     return rememberDialogDisplayState()
-}
-
-@Composable
-fun NfcClarificationGraphic(
-    modifier: Modifier = Modifier,
-    isSmallScreen: Boolean = false,
-    scale: Float = 1.0f
-) {
-    // Make it the same size as the scan dialog
-    val size = (350 * scale).dp
-    
-    Card(
-        modifier = modifier.size(size),
-        elevation = 4.dp,
-        backgroundColor = MaterialTheme.colors.surface,
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        // Just the image, no text - same size as scan dialog
-        Image(
-            painter = painterResource(id = R.drawable.nfc_topup_clarification),
-            contentDescription = "NFC Top-up Instructions",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
-        )
-    }
 }
 
 @Composable
@@ -112,11 +81,11 @@ fun NfcScanDialog(
     if (state.isOpen()) {
         // Get device-specific configuration
         val deviceConfig = deviceConfigProvider.getDeviceConfig()
-        val scanState by viewModel.scanState.collectAsStateWithLifecycle()
-        
         // Calculate adjusted size based on device config scale factor
-        val adjustedWidth = (350 * deviceConfig.nfcScanDialogScale).dp
-        val adjustedHeight = (350 * deviceConfig.nfcScanDialogScale).dp
+        val baseWidth = if (showClarification) 560 else 350
+        val baseHeight = if (showClarification) 260 else 350
+        val adjustedWidth = (baseWidth * deviceConfig.nfcScanDialogScale).dp
+        val adjustedHeight = (baseHeight * deviceConfig.nfcScanDialogScale).dp
         
         Dialog(
             onDismissRequest = {
@@ -138,41 +107,31 @@ fun NfcScanDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     if (showClarification) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            NfcScanCard(
-                                modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
-                                viewModel = viewModel,
-                                border = border,
-                                checkScan = checkScan,
-                                onScan = { tag ->
-                                    state.close()
-                                    onScan(tag)
-                                },
-                                onCancel = {
-                                    viewModel.stopScan()
-                                    state.close()
-                                    onDismiss()
-                                },
-                                content = { status -> 
-                                    EnhancedNfcScanContent(
-                                        isIminFalcons2 = deviceConfig.isIminFalcons2,
-                                        isSmallScreen = deviceConfig.isSmallScreen,
-                                        scanStatus = status
-                                    )
-                                },
-                            )
-                            
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // Clarification graphic
-                            NfcClarificationGraphic(
-                                modifier = Modifier,
-                                isSmallScreen = deviceConfig.isSmallScreen,
-                                scale = deviceConfig.nfcScanDialogScale
-                            )
-                        }
+                        NfcScanCard(
+                            modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
+                            viewModel = viewModel,
+                            border = border ?: BorderStroke(2.dp, SelfServicePalette.panelBorder),
+                            backgroundColor = SelfServicePalette.panel,
+                            shape = RoundedCornerShape(if (deviceConfig.isSmallScreen) 16.dp else 20.dp),
+                            checkScan = checkScan,
+                            showStatus = false,
+                            showCloseButton = false,
+                            onScan = { tag ->
+                                state.close()
+                                onScan(tag)
+                            },
+                            onCancel = {
+                                viewModel.stopScan()
+                                state.close()
+                                onDismiss()
+                            },
+                            content = { status ->
+                                PencilScanChipContent(
+                                    isSmallScreen = deviceConfig.isSmallScreen,
+                                    scanStatus = status
+                                )
+                            },
+                        )
                     } else {
                         NfcScanCard(
                             modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
@@ -209,45 +168,36 @@ fun NfcScanDialog(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     if (showClarification) {
-                        Row {
-                            NfcScanCard(
-                                modifier = Modifier
-                                    .size(width = adjustedWidth, height = adjustedHeight)
-                                    .offset(
-                                        x = deviceConfig.nfcScanDialogOffset.x,
-                                        y = deviceConfig.nfcScanDialogOffset.y
-                                    ),
-                                viewModel = viewModel,
-                                border = border,
-                                checkScan = checkScan,
-                                onScan = { tag ->
-                                    state.close()
-                                    onScan(tag)
-                                },
-                                onCancel = {
-                                    viewModel.stopScan()
-                                    state.close()
-                                    onDismiss()
-                                },
-                                content = { status -> 
-                                    EnhancedNfcScanContent(
-                                        isIminFalcons2 = deviceConfig.isIminFalcons2,
-                                        isSmallScreen = deviceConfig.isSmallScreen,
-                                        scanStatus = status
-                                    )
-                                },
-                            )
-                            
-                            Spacer(modifier = Modifier.width(16.dp))
-                            
-                            // Clarification graphic positioned to the right of the scan dialog
-                            NfcClarificationGraphic(
-                                modifier = Modifier
-                                    .offset(y = deviceConfig.nfcScanDialogOffset.y),
-                                isSmallScreen = deviceConfig.isSmallScreen,
-                                scale = deviceConfig.nfcScanDialogScale
-                            )
-                        }
+                        NfcScanCard(
+                            modifier = Modifier
+                                .size(width = adjustedWidth, height = adjustedHeight)
+                                .offset(
+                                    x = deviceConfig.nfcScanDialogOffset.x,
+                                    y = deviceConfig.nfcScanDialogOffset.y
+                                ),
+                            viewModel = viewModel,
+                            border = border ?: BorderStroke(2.dp, SelfServicePalette.panelBorder),
+                            backgroundColor = SelfServicePalette.panel,
+                            shape = RoundedCornerShape(if (deviceConfig.isSmallScreen) 16.dp else 20.dp),
+                            checkScan = checkScan,
+                            showStatus = false,
+                            showCloseButton = false,
+                            onScan = { tag ->
+                                state.close()
+                                onScan(tag)
+                            },
+                            onCancel = {
+                                viewModel.stopScan()
+                                state.close()
+                                onDismiss()
+                            },
+                            content = { status ->
+                                PencilScanChipContent(
+                                    isSmallScreen = deviceConfig.isSmallScreen,
+                                    scanStatus = status
+                                )
+                            },
+                        )
                     } else {
                         NfcScanCard(
                             modifier = Modifier
@@ -280,5 +230,80 @@ fun NfcScanDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PencilScanChipContent(
+    isSmallScreen: Boolean,
+    scanStatus: String
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    val centerSize = if (isSmallScreen) 98.dp else 120.dp
+    val nearIconSize = if (isSmallScreen) 24.dp else 30.dp
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 8.dp else 10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(centerSize)
+                .background(Color(0xFF203659), CircleShape)
+                .padding(if (isSmallScreen) 18.dp else 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF2A4A78), CircleShape)
+                    .padding(if (isSmallScreen) 16.dp else 18.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(SelfServicePalette.accent, CircleShape)
+                        .scale(pulseScale),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.NearMe,
+                        contentDescription = null,
+                        tint = SelfServicePalette.backgroundTop,
+                        modifier = Modifier.size(nearIconSize)
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = stringResource(R.string.selfservice_scan_balance_title),
+            color = SelfServicePalette.title,
+            fontWeight = FontWeight.Bold,
+            fontSize = if (isSmallScreen) 18.sp else 20.sp,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = if (scanStatus.isBlank()) {
+                stringResource(R.string.topup_scan_instruction)
+            } else {
+                scanStatus
+            },
+            color = SelfServicePalette.subtitle,
+            fontWeight = FontWeight.Medium,
+            fontSize = if (isSmallScreen) 12.sp else 14.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -23,6 +24,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,6 +47,9 @@ fun NfcScanCard(
     scan: Boolean = true,  // is scanning active?
     keepScanning: Boolean = false,  // after a successful scan, keep on scanning?
     showStatus: Boolean = true,  // display scan status below the content.
+    showCloseButton: Boolean = true,
+    shape: Shape = RoundedCornerShape(10.dp),
+    backgroundColor: Color = MaterialTheme.colors.surface,
     onCancel: () -> Unit = { viewModel.stopScan() },  // Called when cancel button is pressed
     content: @Composable (status: String) -> Unit = {
         // utf8 "satellite antenna"
@@ -96,8 +102,9 @@ fun NfcScanCard(
     }
 
     Card(
-        shape = RoundedCornerShape(10.dp),
+        shape = shape,
         border = border,
+        backgroundColor = backgroundColor,
         modifier = modifier,
         elevation = 8.dp,
     ) {
@@ -107,19 +114,21 @@ fun NfcScanCard(
             contentAlignment = Alignment.Center,
         ) {
             // Cancel button in the top-right corner of the card, moved outside padding area
-            IconButton(
-                onClick = onCancel,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "Cancel",
-                    modifier = Modifier.size(20.dp),
-                    tint = androidx.compose.material.MaterialTheme.colors.primary
-                )
+            if (showCloseButton) {
+                IconButton(
+                    onClick = onCancel,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Cancel",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colors.primary
+                    )
+                }
             }
             
             Column(
@@ -127,7 +136,7 @@ fun NfcScanCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .padding(10.dp)
-                    .padding(top = 36.dp) // Increased padding to prevent content from overlapping with the X button
+                    .padding(top = if (showCloseButton) 36.dp else 10.dp)
                     .fillMaxWidth()
             ) {
                 content(scanState.status)

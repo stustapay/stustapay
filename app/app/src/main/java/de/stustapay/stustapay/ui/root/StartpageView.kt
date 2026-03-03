@@ -1,19 +1,44 @@
 package de.stustapay.stustapay.ui.root
 
-import android.app.Activity
-import android.content.ComponentName
-import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MeetingRoom
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,27 +49,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustapay.stustapay.R
-import de.stustapay.stustapay.model.Access
-import de.stustapay.libssp.util.restartApp
-import de.stustapay.stustapay.ui.nav.NavDest
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.AddCircle
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.Surface
 import androidx.compose.ui.window.Dialog
-import de.stustapay.stustapay.ui.root.TerminalConfigViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.util.restartApp
+import de.stustapay.stustapay.R
+import de.stustapay.stustapay.model.Access
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
+import de.stustapay.stustapay.ui.nav.NavDest
 
 @Composable
 fun StartpageView(
@@ -54,14 +74,17 @@ fun StartpageView(
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
-    val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val activity = LocalActivity.current!!
     val isSelfServiceMode = loginState.hasOnlyTopUpPrivilege() && loginState.hasConfig() && !configLoading
     val isEntryMode = loginState.isEntryMode() && loginState.hasConfig() && !configLoading
+    val gradientColors = if (isSelfServiceMode) {
+        listOf(SelfServicePalette.backgroundTop, SelfServicePalette.backgroundBottom)
+    } else {
+        listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
+    }
     var showInfoDialog by remember { mutableStateOf(false) }
 
     val navigateToHook = { dest: NavDest ->
-        // Only allow navigation if we have a config, but always allow entering settings
         if (!configLoading || dest == RootNavDests.settings) {
             navigateTo(dest)
         }
@@ -83,14 +106,12 @@ fun StartpageView(
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors))
     ) {
-        // Place the IconButton in the Box, aligned to the top start
         IconButton(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(top = 15.dp, start = 20.dp)
                 .size(30.dp),
             onClick = {
-                // Toggle the orientation directly based on the requested orientation
                 when (activity.requestedOrientation) {
                     ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
@@ -105,16 +126,18 @@ fun StartpageView(
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
                     else -> {
-                        // Default to portrait if no specific orientation is set
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
                 }
             },
         ) {
-            Icon(Icons.Filled.ScreenRotation, contentDescription = "Flip Screen")
+            Icon(
+                imageVector = Icons.Filled.ScreenRotation,
+                contentDescription = "Flip Screen",
+                tint = if (isSelfServiceMode) SelfServicePalette.subtitle else MaterialTheme.colors.onSurface
+            )
         }
 
-        // Main content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -219,12 +242,18 @@ fun StartpageView(
         if (isSelfServiceMode) {
             IconButton(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
+                    .align(Alignment.TopEnd)
+                    .padding(top = 12.dp, end = 16.dp)
+                    .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(18.dp))
                     .padding(16.dp)
                     .size(36.dp),
                 onClick = { showInfoDialog = true }
             ) {
-                Icon(Icons.Filled.Info, contentDescription = "Terminal info")
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Terminal info",
+                    tint = SelfServicePalette.subtitle
+                )
             }
         }
 
@@ -232,11 +261,12 @@ fun StartpageView(
             Dialog(onDismissRequest = { showInfoDialog = false }) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colors.surface,
+                    color = SelfServicePalette.panel,
                     elevation = 8.dp,
                 ) {
                     Column(
                         modifier = Modifier
+                            .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(16.dp))
                             .padding(16.dp)
                             .widthIn(min = 260.dp, max = 360.dp)
                     ) {
@@ -261,129 +291,209 @@ private fun SelfServiceLanding(
     onTopUp: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    val profile = rememberSelfServiceDeviceProfile()
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val compactLayout = profile.isSmallScreen || maxWidth < 740.dp
+        val headerSize = if (compactLayout) profile.headlineTitleSize else 48.sp
+        val subSize = if (compactLayout) profile.headlineSubtitleSize else 20.sp
+        val cardHeight = if (profile.isSmallScreen) 156.dp else 190.dp
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = profile.contentPaddingHorizontal,
+                    vertical = profile.contentPaddingVertical
+                ),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
         Text(
             text = stringResource(R.string.selfservice_title),
-            style = MaterialTheme.typography.h4,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            fontSize = headerSize,
+            fontWeight = FontWeight.ExtraBold,
+            color = SelfServicePalette.title
         )
-        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(R.string.selfservice_description),
-            style = MaterialTheme.typography.body1,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            fontSize = subSize,
+            fontWeight = FontWeight.Medium,
+            color = SelfServicePalette.subtitle
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+            if (compactLayout) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SelfServiceActionCard(
+                        icon = Icons.Outlined.AccountBalanceWallet,
+                        title = stringResource(R.string.selfservice_check_balance),
+                        description = stringResource(R.string.selfservice_check_balance_hint),
+                        ctaText = stringResource(R.string.selfservice_action_open),
+                        onClick = onCheckBalance,
+                        highlighted = false,
+                        modifier = Modifier.fillMaxWidth(),
+                        titleSize = profile.actionCardTitleSize,
+                        descriptionSize = profile.actionCardDescriptionSize,
+                        cardHeight = cardHeight
+                    )
 
-        SelfServiceActionCard(
-            icon = Icons.Outlined.AccountBalanceWallet,
-            title = stringResource(R.string.selfservice_check_balance),
-            description = stringResource(R.string.selfservice_check_balance_hint),
-            accent = MaterialTheme.colors.primary,
-            onClick = onCheckBalance
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        SelfServiceActionCard(
-            icon = Icons.Outlined.AddCircle,
-            title = stringResource(R.string.selfservice_topup),
-            description = stringResource(R.string.selfservice_topup_hint),
-            accent = MaterialTheme.colors.secondary,
-            onClick = onTopUp
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        HintRow(
-            text = stringResource(R.string.selfservice_hint_scan),
-            icon = Icons.Outlined.Info
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        HintRow(
-            text = stringResource(R.string.selfservice_hint_payment),
-            icon = Icons.Outlined.Info
-        )
-    }
-}
-
-@Composable
-private fun SelfServiceActionCard(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    accent: Color,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(110.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = 8.dp,
-        backgroundColor = MaterialTheme.colors.surface,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(accent.copy(alpha = 0.15f), shape = RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = accent,
-                    modifier = Modifier.size(32.dp)
-                )
+                    SelfServiceActionCard(
+                        icon = Icons.Outlined.AddCircle,
+                        title = stringResource(R.string.selfservice_topup),
+                        description = stringResource(R.string.selfservice_topup_hint),
+                        ctaText = stringResource(R.string.selfservice_action_start),
+                        onClick = onTopUp,
+                        highlighted = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        titleSize = profile.actionCardTitleSize,
+                        descriptionSize = profile.actionCardDescriptionSize,
+                        cardHeight = cardHeight
+                    )
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    SelfServiceActionCard(
+                        icon = Icons.Outlined.AccountBalanceWallet,
+                        title = stringResource(R.string.selfservice_check_balance),
+                        description = stringResource(R.string.selfservice_check_balance_hint),
+                        ctaText = stringResource(R.string.selfservice_action_open),
+                        onClick = onCheckBalance,
+                        highlighted = false,
+                        modifier = Modifier.weight(1f),
+                        titleSize = profile.actionCardTitleSize,
+                        descriptionSize = profile.actionCardDescriptionSize,
+                        cardHeight = cardHeight
+                    )
+                    SelfServiceActionCard(
+                        icon = Icons.Outlined.AddCircle,
+                        title = stringResource(R.string.selfservice_topup),
+                        description = stringResource(R.string.selfservice_topup_hint),
+                        ctaText = stringResource(R.string.selfservice_action_start),
+                        onClick = onTopUp,
+                        highlighted = true,
+                        modifier = Modifier.weight(1f),
+                        titleSize = profile.actionCardTitleSize,
+                        descriptionSize = profile.actionCardDescriptionSize,
+                        cardHeight = cardHeight
+                    )
+                }
             }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, style = MaterialTheme.typography.h6)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.body2,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-                )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = SelfServicePalette.panelMuted,
+                shape = RoundedCornerShape(12.dp),
+                elevation = 0.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "EN | DE",
+                        color = SelfServicePalette.title,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp
+                    )
+                    Text(
+                        text = stringResource(R.string.selfservice_hint_payment),
+                        color = SelfServicePalette.subtitle,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.End,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HintRow(
-    text: String,
+private fun SelfServiceActionCard(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
+    title: String,
+    description: String,
+    ctaText: String,
+    onClick: () -> Unit,
+    highlighted: Boolean,
+    titleSize: androidx.compose.ui.unit.TextUnit,
+    descriptionSize: androidx.compose.ui.unit.TextUnit,
+    cardHeight: androidx.compose.ui.unit.Dp
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier
+            .height(cardHeight)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        elevation = 0.dp,
+        backgroundColor = if (highlighted) Color(0xFF243A63) else SelfServicePalette.panel,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.body2,
-            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    width = if (highlighted) 2.dp else 1.5.dp,
+                    color = if (highlighted) SelfServicePalette.accent else SelfServicePalette.panelBorder,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(18.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(SelfServicePalette.accent, shape = RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = SelfServicePalette.backgroundTop,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = title,
+                    color = SelfServicePalette.title,
+                    fontSize = titleSize,
+                    lineHeight = titleSize,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = description,
+                    color = SelfServicePalette.subtitle,
+                    fontSize = descriptionSize,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = ctaText,
+                    color = SelfServicePalette.accent,
+                    fontSize = if (descriptionSize <= 13.sp) 15.sp else 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = SelfServicePalette.accent,
+                modifier = Modifier.size(28.dp)
+            )
+        }
     }
 }

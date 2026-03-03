@@ -3,7 +3,6 @@ package de.stustapay.stustapay.ui.account
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,15 +17,12 @@ import de.stustapay.stustapay.ui.nav.NavDestinations
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import de.stustapay.stustapay.ui.nav.navigateTo
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-
 
 object CustomerStatusNavDests : NavDestinations() {
     val scan = NavDest("scan")
     val status = NavDest("status")
     val details = NavDest("details")
 }
-
 
 @Preview
 @Composable
@@ -36,32 +32,22 @@ fun AccountView(
 ) {
     val nav = rememberNavController()
     val scope = rememberCoroutineScope()
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val isSelfService = viewModel.isSelfServiceMode.collectAsStateWithLifecycle()
 
     BackHandler {
         leaveView()
     }
 
-    LaunchedEffect(uiState.value.customer, isSelfService.value) {
-        if (isSelfService.value) {
-            when (uiState.value.customer) {
-                is CustomerStatusRequestState.Done,
-                is CustomerStatusRequestState.DoneDetails -> {
-                    delay(8000)
-                    leaveView()
-                }
-                else -> Unit
-            }
-        }
+    val title = if (isSelfService.value) {
+        stringResource(R.string.selfservice_check_balance)
+    } else {
+        stringResource(R.string.customer_title)
     }
 
-    NavScaffold(
-        title = { Text(stringResource(R.string.customer_title)) }, navigateBack = leaveView
-    ) {
+    val navContent: @Composable () -> Unit = {
         NavHost(navController = nav, startDestination = CustomerStatusNavDests.scan.route) {
             composable(CustomerStatusNavDests.scan.route) {
-                AccountScan(onScan = {
+                AccountScan(isSelfService = isSelfService.value, onScan = {
                     scope.launch {
                         viewModel.fetchAccount(it)
                         nav.navigateTo(CustomerStatusNavDests.status.route)
@@ -86,6 +72,17 @@ fun AccountView(
                     onFinished = leaveView
                 )
             }
+        }
+    }
+
+    if (isSelfService.value) {
+        navContent()
+    } else {
+        NavScaffold(
+            title = { Text(title) },
+            navigateBack = leaveView
+        ) {
+            navContent()
         }
     }
 }

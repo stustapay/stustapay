@@ -2,42 +2,65 @@ package de.stustapay.stustapay.ui.payinout.topup
 
 import android.os.VibrationEffect
 import android.os.Vibrator
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.StatusText
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceCountdownCard
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
+import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
+import kotlinx.coroutines.delay
+
+private const val SELF_SERVICE_SUCCESS_RETURN_SECONDS = 8
 
 @Composable
 fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
     val topUpCompleted by viewModel.topUpCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val topUpConfig by viewModel.terminalLoginState.collectAsStateWithLifecycle()
+    val isSelfService = topUpConfig.hasOnlyTopUpPrivilege()
     val haptic = LocalHapticFeedback.current
     val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
+    var remainingSeconds by rememberSaveable(isSelfService) {
+        mutableIntStateOf(SELF_SERVICE_SUCCESS_RETURN_SECONDS)
+    }
 
-    // so we have a regular variable..
     val completedTopUp = topUpCompleted
     if (completedTopUp == null) {
         Text(
-            text = "no completed TopUp information available",
+            text = stringResource(R.string.topup_missing_success_data),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(10.dp),
@@ -47,48 +70,141 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
     }
 
     LaunchedEffect(Unit) {
-        vibrator.vibrate(VibrationEffect.createOneShot(600, 200))
+        vibrator?.vibrate(VibrationEffect.createOneShot(450, 180))
+    }
+
+    LaunchedEffect(isSelfService) {
+        if (!isSelfService) {
+            return@LaunchedEffect
+        }
+
+        remainingSeconds = SELF_SERVICE_SUCCESS_RETURN_SECONDS
+        while (remainingSeconds > 0) {
+            delay(1000)
+            remainingSeconds -= 1
+        }
+        onDismiss()
+    }
+
+    if (isSelfService) {
+        val profile = rememberSelfServiceDeviceProfile()
+        SelfServiceBackground {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        horizontal = profile.contentPaddingHorizontal,
+                        vertical = profile.contentPaddingVertical
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SelfServiceHeadline(
+                    title = stringResource(R.string.topup_success_title),
+                    subtitle = stringResource(R.string.topup_success_subtitle),
+                    subtitleColor = SelfServicePalette.successMuted,
+                    titleFontSize = profile.headlineTitleSize,
+                    subtitleFontSize = profile.headlineSubtitleSize
+                )
+
+                SelfServicePanel(
+                    modifier = Modifier.fillMaxWidth(),
+                    borderColor = SelfServicePalette.success,
+                    backgroundColor = Color(0xFF174A39)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.material.Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                tint = SelfServicePalette.success,
+                                modifier = Modifier.height(28.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.topup_success_title),
+                                color = SelfServicePalette.successMuted,
+                                fontSize = if (profile.isSmallScreen) 24.sp else 30.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                        Text(
+                            text = "${stringResource(R.string.previous_balance)}: €${"%.2f".format(completedTopUp.oldBalance)}",
+                            color = SelfServicePalette.successMuted,
+                            fontSize = if (profile.isSmallScreen) 14.sp else 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "${stringResource(R.string.topup)}: +€${"%.2f".format(completedTopUp.amount)}",
+                            color = SelfServicePalette.successMuted,
+                            fontSize = if (profile.isSmallScreen) 14.sp else 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "${stringResource(R.string.new_balance)}: €${"%.2f".format(completedTopUp.newBalance)}",
+                            color = SelfServicePalette.title,
+                            fontSize = if (profile.isSmallScreen) 24.sp else 34.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SelfServiceCountdownCard(
+                        label = stringResource(R.string.topup_auto_return_countdown, remainingSeconds),
+                        subLabel = stringResource(R.string.selfservice_auto_return),
+                        progress = remainingSeconds.toFloat() / SELF_SERVICE_SUCCESS_RETURN_SECONDS.toFloat(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    SelfServiceActionButton(
+                        text = stringResource(R.string.topup_back_now),
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(0.55f),
+                        primary = false,
+                        fontSize = profile.buttonTextSize
+                    )
+                }
+            }
+        }
+        return
     }
 
     Scaffold(
         content = { padding ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding()),
-                contentAlignment = Alignment.Center
+                    .padding(bottom = padding.calculateBottomPadding())
+                    .padding(horizontal = 14.dp),
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Image(
-                        imageVector = Icons.Filled.CheckCircle,
-                        modifier = Modifier
-                            .size(size = 120.dp)
-                            .clip(shape = CircleShape)
-                            .padding(top = 2.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.primary),
-                        contentDescription = stringResource(R.string.success),
-                    )
-
-                    TopUpConfirmItem(
-                        name = stringResource(R.string.previous_balance),
-                        price = completedTopUp.oldBalance,
-                    )
-                    TopUpConfirmItem(
-                        name = stringResource(R.string.topup),
-                        price = completedTopUp.amount,
-                    )
-
-                    Divider(modifier = Modifier.padding(vertical = 10.dp))
-
-                    TopUpConfirmItem(
-                        name = stringResource(R.string.new_balance),
-                        price = completedTopUp.newBalance,
-                        bigStyle = true,
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.topup_success_title),
+                    style = MaterialTheme.typography.h4,
+                    fontWeight = FontWeight.Bold
+                )
+                Divider(modifier = Modifier.padding(vertical = 6.dp))
+                TopUpConfirmItem(
+                    name = stringResource(R.string.previous_balance),
+                    price = completedTopUp.oldBalance,
+                )
+                TopUpConfirmItem(
+                    name = stringResource(R.string.topup),
+                    price = completedTopUp.amount,
+                )
+                Divider(modifier = Modifier.padding(vertical = 6.dp))
+                TopUpConfirmItem(
+                    name = stringResource(R.string.new_balance),
+                    price = completedTopUp.newBalance,
+                    bigStyle = true,
+                )
             }
         },
         bottomBar = {
@@ -104,9 +220,9 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                Button(
+                androidx.compose.material.Button(
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                         onDismiss()
                     },
                     modifier = Modifier

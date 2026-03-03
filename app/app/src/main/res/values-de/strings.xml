@@ -37,6 +37,16 @@
     <string name="selfservice_topup_hint">Guthaben hinzufügen und am Kartenterminal zahlen.</string>
     <string name="selfservice_hint_scan">Bändchen bei Aufforderung auf den Leser halten.</string>
     <string name="selfservice_hint_payment">Am Kartenterminal bestätigen und bezahlen.</string>
+    <string name="selfservice_hint_done">Fertig. Danach geht es automatisch zurück zum Startbildschirm.</string>
+    <string name="selfservice_action_open">Öffnen</string>
+    <string name="selfservice_action_start">Starten</string>
+    <string name="selfservice_how_it_works">So funktioniert es</string>
+    <string name="selfservice_scan_balance_title">Bändchen hier vorhalten</string>
+    <string name="selfservice_scan_balance_title_compact">Chip hier vorhalten</string>
+    <string name="selfservice_scan_balance_subtitle">Scannen, um dein Guthaben anzuzeigen</string>
+    <string name="selfservice_chip_label">Bändchen / Chip</string>
+    <string name="selfservice_balance_loading">Dein Bändchen wird gelesen...</string>
+    <string name="selfservice_auto_return">Fertig. Zurück zum Startbildschirm...</string>
 
     <string name="root_item_ticket">Eintritt</string>
     <string name="root_item_sale">Verkauf</string>
@@ -111,6 +121,7 @@
     <string name="pay_cash">🪙\nBar</string>
     <string name="pay_card">💳\nKarte</string>
     <string name="pay_card_topup">💳\nScannen &amp; Bezahlen</string>
+    <string name="selfservice_scan_pay">Scannen &amp; Bezahlen</string>
     <string name="topup_scan_instruction">Chip auf das Lesegerät legen</string>
     <string name="topup_payment_instruction">Zahlung wird über Kartenterminal abgewickelt</string>
     <string name="topup_step_amount">Schritt 1: Betrag eingeben</string>
@@ -120,6 +131,17 @@
     <string name="topup_please_wait">Bitte warten, Zahlung wird verarbeitet...</string>
     <string name="topup_enter_amount">Bitte gib den gewünschten Aufladebetrag ein</string>
     <string name="topup_press_scan_pay">Nun Scannen und bezahlen drücken</string>
+    <string name="selfservice_custom_amount">Eigener Betrag</string>
+    <string name="topup_quick_amounts">Schnellbeträge</string>
+    <string name="topup_success_title">Aufladung erfolgreich</string>
+    <string name="topup_success_subtitle">Dein neues Guthaben ist jetzt verfügbar.</string>
+    <string name="topup_missing_success_data">Keine Daten zur abgeschlossenen Aufladung verfügbar</string>
+    <string name="topup_auto_return_countdown">Automatische Rückkehr in %1$d s</string>
+    <string name="topup_back_now">Jetzt zurück</string>
+    <string name="topup_error_title">Aufladung fehlgeschlagen</string>
+    <string name="topup_error_auto_return_countdown">Zurück zum Startbildschirm in %1$d s</string>
+    <string name="topup_try_again">Erneut versuchen</string>
+    <string name="topup_back_to_start">Zum Start</string>
     <string name="arrow_back">← Zurück</string>
     <string name="check_ok">✓ OK</string>
     <string name="scan_ticket">🎫 Ticket scannen</string>

@@ -38,6 +38,7 @@ fun TopUpView(
         TopUpPage.Failure -> {
             TopUpError(
                 onDismiss = { viewModel.dismissFailure() },
+                onLeaveSelfService = onFinished,
                 viewModel = viewModel,
             )
         }

@@ -16,15 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.runtime.Composable
@@ -32,201 +30,173 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 
-/**
- * Enhanced Account Scan Content with better visual cues for users
- */
 @Composable
 fun EnhancedAccountScanContent(
     isIminFalcons2: Boolean,
     isSmallScreen: Boolean = false,
+    isSelfService: Boolean = false,
     scanStatus: String
 ) {
-    // Pulsing animation for the NFC icon
     val infiniteTransition = rememberInfiniteTransition()
     val pulseAnimation by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.2f,
+        initialValue = 0.94f,
+        targetValue = 1.08f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800),
+            animation = tween(850),
             repeatMode = RepeatMode.Reverse
         )
     )
-    
-    // Create an animated alpha for the arrows to create a "flowing" effect
-    val arrowsAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
+
+    if (isSelfService) {
+        SelfServiceScanContent(
+            isSmallScreen = isSmallScreen,
+            pulseAnimation = pulseAnimation,
+            scanStatus = scanStatus
         )
-    )
-    
-    // Adjust sizes based on screen size
-    val headerFontSize = if (isSmallScreen) 16.sp else 24.sp
-    val subtitleFontSize = if (isSmallScreen) 14.sp else 18.sp
-    val accountIconSize = if (isSmallScreen) 70.dp else 100.dp
-    val iconSize = if (isSmallScreen) 50.dp else 80.dp
-    val touchIconSize = if (isSmallScreen) 24.dp else 40.dp
-    val arrowIconSize = if (isSmallScreen) 16.dp else 24.dp
-    val infoIconSize = if (isSmallScreen) 18.dp else 24.dp
-    val chipBoxWidth = if (isSmallScreen) 80.dp else 120.dp
-    val chipBoxHeight = if (isSmallScreen) 40.dp else 60.dp
-    val statusFontSize = if (isSmallScreen) 12.sp else 16.sp
-    val cardPadding = if (isSmallScreen) 4.dp else 16.dp
-    val contentPadding = if (isSmallScreen) 4.dp else 16.dp
-    val spacerHeight = if (isSmallScreen) 4.dp else 16.dp
-    
+        return
+    }
+
+    val iconSize = if (isSmallScreen) 52.dp else 78.dp
     Card(
         modifier = Modifier
-            .padding(if (isSmallScreen) 2.dp else 8.dp)
+            .padding(if (isSmallScreen) 4.dp else 10.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = 4.dp
     ) {
         Column(
-            modifier = Modifier
-                .padding(cardPadding),
+            modifier = Modifier.padding(if (isSmallScreen) 10.dp else 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Header text - different for Falcon 2
             Text(
-                text = if (isIminFalcons2) "Chip hier vorhalten" else "Scan a Chip",
+                text = if (isIminFalcons2) {
+                    stringResource(R.string.selfservice_scan_balance_title_compact)
+                } else {
+                    stringResource(R.string.nfc_scan_prompt)
+                },
                 fontWeight = FontWeight.Bold,
-                fontSize = headerFontSize,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = if (isSmallScreen) 4.dp else 16.dp)
+                fontSize = if (isSmallScreen) 18.sp else 26.sp,
+                textAlign = TextAlign.Center
             )
-            
-            Text(
-                text = "Kontostand anzeigen",
-                fontSize = subtitleFontSize,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = if (isSmallScreen) 4.dp else 16.dp)
-            )
-            
-            // Main visual container
-            Box(
+            Icon(
+                imageVector = Icons.Filled.NearMe,
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(contentPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                // Account icon in the background
-                Icon(
-                    imageVector = Icons.Filled.AccountBalance,
-                    contentDescription = "Account",
-                    modifier = Modifier
-                        .size(accountIconSize)
-                        .alpha(0.1f),
-                    tint = MaterialTheme.colors.primary
-                )
-                
-                // NFC Icon with pulse animation
-                Icon(
-                    imageVector = Icons.Filled.NearMe,
-                    contentDescription = "NFC",
-                    modifier = Modifier
-                        .size(iconSize)
-                        .scale(pulseAnimation)
-                        .alpha(0.9f),
-                    tint = MaterialTheme.colors.primary
-                )
-                
-                // Touch icon to indicate user action
-                Icon(
-                    imageVector = Icons.Filled.TouchApp,
-                    contentDescription = "Touch",
-                    modifier = Modifier
-                        .align(
-                            if (isIminFalcons2) Alignment.CenterStart else Alignment.Center
-                        )
-                        .padding(start = if (isIminFalcons2) 8.dp else 0.dp)
-                        .size(touchIconSize),
-                    tint = MaterialTheme.colors.secondary
-                )
-                
-                // Info icon
-                Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = "Info",
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(if (isSmallScreen) 4.dp else 8.dp)
-                        .size(infoIconSize),
-                    tint = MaterialTheme.colors.primary
-                )
-                
-                // Directional arrows for Falcon 2 devices (pointing left)
-                if (isIminFalcons2) {
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .alpha(arrowsAlpha),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Multiple arrows pointing left
-                        repeat(3) { index ->
-                            Icon(
-                                imageVector = Icons.Filled.ArrowForward,
-                                contentDescription = "Arrow",
-                                modifier = Modifier
-                                    .size(arrowIconSize)
-                                    .rotate(180f) // Rotate to point left
-                                    .alpha(1f - (index * 0.2f)), // Fade out as they go further
-                                tint = MaterialTheme.colors.secondary
-                            )
-                        }
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(spacerHeight))
-            
-            // Visual chip indicator - simplified on small screens
-            if (!isSmallScreen) {
-                Box(
-                    modifier = Modifier
-                        .size(width = chipBoxWidth, height = chipBoxHeight)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFEEEEEE))
-                        .border(
-                            width = 2.dp,
-                            color = MaterialTheme.colors.primary,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "NFC Chip",
-                        fontSize = if (isSmallScreen) 12.sp else 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.DarkGray
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(spacerHeight))
-            }
-            
-            // Status text
+                    .size(iconSize)
+                    .scale(pulseAnimation),
+                tint = MaterialTheme.colors.primary
+            )
             Text(
                 text = scanStatus,
-                fontSize = statusFontSize,
+                fontSize = if (isSmallScreen) 12.sp else 16.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = if (isSmallScreen) 2.dp else 8.dp)
+                modifier = Modifier.alpha(0.75f)
             )
         }
     }
-} 
+}
+
+@Composable
+private fun SelfServiceScanContent(
+    isSmallScreen: Boolean,
+    pulseAnimation: Float,
+    scanStatus: String,
+) {
+    val titleSize = if (isSmallScreen) 28.sp else 40.sp
+    val subtitleSize = if (isSmallScreen) 14.sp else 20.sp
+    val panelPadding = if (isSmallScreen) 10.dp else 16.dp
+
+    Card(
+        modifier = Modifier
+            .padding(if (isSmallScreen) 4.dp else 8.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 0.dp,
+        backgroundColor = SelfServicePalette.panel,
+    ) {
+        Column(
+            modifier = Modifier
+                .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(16.dp))
+                .padding(panelPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.selfservice_scan_balance_title),
+                color = SelfServicePalette.title,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = titleSize,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = stringResource(R.string.selfservice_scan_balance_subtitle),
+                color = SelfServicePalette.subtitle,
+                fontSize = subtitleSize,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(if (isSmallScreen) 120.dp else 170.dp)
+                    .background(Color(0xFF28497A), CircleShape)
+                    .padding(if (isSmallScreen) 22.dp else 28.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF315A92), CircleShape)
+                        .padding(if (isSmallScreen) 20.dp else 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(SelfServicePalette.accent, CircleShape)
+                            .scale(pulseAnimation),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.NearMe,
+                            contentDescription = null,
+                            tint = SelfServicePalette.backgroundTop,
+                            modifier = Modifier.size(if (isSmallScreen) 20.dp else 30.dp)
+                        )
+                    }
+                }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.TouchApp,
+                    contentDescription = null,
+                    tint = SelfServicePalette.subtitle,
+                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 20.dp)
+                )
+                Text(
+                    text = scanStatus,
+                    color = SelfServicePalette.subtitle,
+                    fontSize = if (isSmallScreen) 12.sp else 15.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}

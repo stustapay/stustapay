@@ -38,6 +38,16 @@
     <string name="selfservice_topup_hint">Add credit and pay at the card terminal.</string>
     <string name="selfservice_hint_scan">Hold your wristband on the reader when prompted.</string>
     <string name="selfservice_hint_payment">Use the card terminal to confirm top-ups.</string>
+    <string name="selfservice_hint_done">Done. You will return to this screen automatically.</string>
+    <string name="selfservice_action_open">Open</string>
+    <string name="selfservice_action_start">Start</string>
+    <string name="selfservice_how_it_works">How it works</string>
+    <string name="selfservice_scan_balance_title">Hold your wristband here</string>
+    <string name="selfservice_scan_balance_title_compact">Hold chip here</string>
+    <string name="selfservice_scan_balance_subtitle">Scan to view your current balance</string>
+    <string name="selfservice_chip_label">Wristband / Tag</string>
+    <string name="selfservice_balance_loading">Reading your wristband...</string>
+    <string name="selfservice_auto_return">Done. Returning to start screen...</string>
 
     <string name="root_item_ticket">Ticket Sale</string>
     <string name="root_item_sale">Product Sale</string>
@@ -134,6 +144,7 @@
     <string name="pay_cash">🪙\nCash</string>
     <string name="pay_card">💳\nCard</string>
     <string name="pay_card_topup">💳\nScan &amp; Pay</string>
+    <string name="selfservice_scan_pay">Scan &amp; Pay</string>
     <string name="topup_scan_instruction">Place your chip on the reader</string>
     <string name="topup_payment_instruction">Payment will be processed via card terminal</string>
     <string name="topup_step_amount">Step 1: Enter Amount</string>
@@ -143,6 +154,17 @@
     <string name="topup_please_wait">Please wait while payment is processing...</string>
     <string name="topup_enter_amount">Enter the desired top-up amount</string>
     <string name="topup_press_scan_pay">Now press Scan &amp; Pay</string>
+    <string name="selfservice_custom_amount">Custom amount</string>
+    <string name="topup_quick_amounts">Quick amounts</string>
+    <string name="topup_success_title">Top-up successful</string>
+    <string name="topup_success_subtitle">Your new balance is ready to use.</string>
+    <string name="topup_missing_success_data">No completed top-up information available</string>
+    <string name="topup_auto_return_countdown">Returning automatically in %1$d s</string>
+    <string name="topup_back_now">Back now</string>
+    <string name="topup_error_title">Top-up failed</string>
+    <string name="topup_error_auto_return_countdown">Returning to start screen in %1$d s</string>
+    <string name="topup_try_again">Try again</string>
+    <string name="topup_back_to_start">Back to start</string>
     <string name="arrow_back">← Back</string>
     <string name="check_ok">✓ OK</string>
     <string name="scan_ticket">🎫 Scan Ticket</string>

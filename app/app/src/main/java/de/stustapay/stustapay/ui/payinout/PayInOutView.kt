@@ -95,14 +95,17 @@ fun CashInOutView(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(loginState.title().title) },
-                // Only show back button if user does not have only the can_topup privilege
-                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
-                    leaveView()
-                },
-            )
+        topBar = if (isSelfServiceMode) {
+            {}
+        } else {
+            {
+                TopAppBar(
+                    title = { Text(loginState.title().title) },
+                    icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
+                        leaveView()
+                    },
+                )
+            }
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
