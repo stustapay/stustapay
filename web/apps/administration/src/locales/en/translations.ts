@@ -509,6 +509,7 @@ export const translations = {
       bannerDeleteFailed: "Banner delete failed",
       bannerImage: "Banner Image",
       bannerImageDescription: "Upload an image to display as a header banner in the customer portal.",
+      bannerImageSpecs: "Recommended: 2000x500 px, wide image with important content centered, max 5 MB.",
       uploading: "Uploading...",
       uploadBanner: "Upload Banner",
       primaryColor: "Primary Color",

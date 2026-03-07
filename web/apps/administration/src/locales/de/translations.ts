@@ -501,6 +501,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       bannerDeleteFailed: "Löschen fehlgeschlagen",
       bannerImage: "Banner Bild",
       bannerImageDescription: "Laden Sie ein Bild hoch, das als Kopfbanner im Kundenportal angezeigt wird.",
+      bannerImageSpecs: "Empfohlen: 2000x500 px, breites Bild mit wichtigen Inhalten mittig, max. 5 MB.",
       uploading: "Lädt hoch...",
       uploadBanner: "Banner hochladen",
       primaryColor: "Hauptfarbe",
