@@ -59,6 +59,14 @@
     <string name="history_sum">Sum</string>
     <string name="history_cancel">Cancel Sale</string>
     <string name="history_confirm">Confirm Cancellation</string>
+    <string name="history_scan_customer">Scan Customer Chip</string>
+    <string name="history_show_recent">Show Recent Orders</string>
+    <string name="history_showing_recent">Showing recent orders for this till</string>
+    <string name="history_showing_customer">Showing orders for the scanned chip</string>
+    <string name="history_empty">No orders found</string>
+    <string name="history_cancel_success">Successfully canceled order</string>
+    <string name="history_cancel_error">Could not cancel order</string>
+    <string name="history_scan_prompt">Place the customer chip on the reader</string>
 
     <string name="stats_daily_revenue">Daily Revenue</string>
     <string name="stats_hourly_revenue">Hourly Revenue</string>
