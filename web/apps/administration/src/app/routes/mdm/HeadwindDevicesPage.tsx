@@ -2,6 +2,7 @@ import {
   HeadwindDeviceWithMapping,
   useDeleteHeadwindMappingMutation,
   useListHeadwindDevicesQuery,
+  useListHeadwindMappingsQuery,
   useRefreshHeadwindMappingTokenMutation,
   useUpsertHeadwindMappingMutation,
 } from "@/api/mdm";
@@ -78,9 +79,18 @@ export const HeadwindDevicesPage: React.FC = () => {
     pageSize: pageModel.pageSize,
     search: debouncedSearch || undefined,
   });
+  const { data: headwindMappings, isLoading: isMappingsLoading } = useListHeadwindMappingsQuery({
+    nodeId: currentNode.id,
+  });
 
   const { data: terminalEntities } = useListTerminalsQuery({ nodeId: currentNode.id });
-  const terminals = React.useMemo(() => (terminalEntities ? selectTerminalAll(terminalEntities) : []), [terminalEntities]);
+  const terminals = React.useMemo(
+    () =>
+      terminalEntities
+        ? selectTerminalAll(terminalEntities).filter((terminal) => terminal.node_id === currentNode.id)
+        : [],
+    [currentNode.id, terminalEntities]
+  );
 
   const [upsertMapping, upsertState] = useUpsertHeadwindMappingMutation();
   const [refreshMapping] = useRefreshHeadwindMappingTokenMutation();
@@ -132,6 +142,12 @@ export const HeadwindDevicesPage: React.FC = () => {
   };
 
   const rows = devices ?? [];
+  const availableTerminals = terminals.filter((terminal) => {
+    const existingMapping = headwindMappings?.find(
+      (mapping) => mapping.terminal_id === terminal.id && mapping.headwind_device_id !== String(dialogDevice?.device.id)
+    );
+    return !existingMapping;
+  });
 
   const columns = React.useMemo<GridColDef<DeviceRow>[]>(() => {
     const cols: GridColDef<DeviceRow>[] = [
@@ -258,7 +274,7 @@ export const HeadwindDevicesPage: React.FC = () => {
     return cols;
   }, [t]);
 
-  if (isLoading) {
+  if (isLoading || isMappingsLoading) {
     return <Loading />;
   }
 
@@ -322,19 +338,11 @@ export const HeadwindDevicesPage: React.FC = () => {
               onChange={(event) => setDialogTerminalId(Number(event.target.value))}
               fullWidth
             >
-              {terminals
-                .filter((terminal) => {
-                  // Filter out terminals that are already mapped to other devices
-                  const existingMapping = devices?.find(
-                    (d) => d.mapping?.terminal_id === terminal.id && d.device.id !== dialogDevice?.device.id
-                  );
-                  return !existingMapping;
-                })
-                .map((terminal) => (
-                  <MenuItem key={terminal.id} value={terminal.id}>
-                    {terminal.name}
-                  </MenuItem>
-                ))}
+              {availableTerminals.map((terminal) => (
+                <MenuItem key={terminal.id} value={terminal.id}>
+                  {terminal.name}
+                </MenuItem>
+              ))}
             </TextField>
           </Stack>
         </DialogContent>
@@ -344,7 +352,7 @@ export const HeadwindDevicesPage: React.FC = () => {
             onClick={handleSubmitMapping}
             variant="contained"
             loading={upsertState.isLoading}
-            disabled={dialogTerminalId === "" || terminals.length === 0}
+            disabled={dialogTerminalId === "" || availableTerminals.length === 0}
           >
             {t("mdm.map")}
           </LoadingButton>
@@ -353,4 +361,3 @@ export const HeadwindDevicesPage: React.FC = () => {
     </ListLayout>
   );
 };
-
