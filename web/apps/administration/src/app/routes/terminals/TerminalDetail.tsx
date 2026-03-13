@@ -1,16 +1,19 @@
 import {
+  selectEntryAreaById,
   selectTillById,
   selectUserById,
   useDeleteTerminalMutation,
   useForceLogoutUserMutation,
   useGetTerminalQuery,
+  useListEntryAreasQuery,
   useListTillsQuery,
   useListUsersQuery,
   useLogoutTerminalMutation,
   useRemoveFromTerminalMutation,
 } from "@/api";
+import { useListHeadwindMappingsQuery } from "@/api/mdm";
 import { config } from "@/api/common";
-import { CashierRoutes, TerminalRoutes, TillRoutes } from "@/app/routes";
+import { CashierRoutes, MdmRoutes, TerminalRoutes, TillRoutes } from "@/app/routes";
 import { TerminalSwitchTill } from "@/components/features";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
@@ -33,6 +36,13 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { TerminalUserLogin } from "./TerminalUserLogin";
 
+const getHeadwindDeviceLabel = (
+  deviceName?: string | null,
+  deviceNumber?: string | null,
+  serial?: string | null,
+  id?: string
+) => deviceName ?? deviceNumber ?? serial ?? id ?? "";
+
 export const TerminalDetail: React.FC = () => {
   const { t } = useTranslation();
   const { terminalId } = useParams();
@@ -49,6 +59,10 @@ export const TerminalDetail: React.FC = () => {
   });
   const { data: users, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: tills, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: entryAreas } = useListEntryAreasQuery({ nodeId: currentNode.id });
+  const { data: headwindMappings, isLoading: isHeadwindMappingsLoading } = useListHeadwindMappingsQuery({
+    nodeId: currentNode.id,
+  });
   const [switchTillOpen, setSwitchTillOpen] = React.useState(false);
   const [loginUserOpen, setLoginUserOpen] = React.useState(false);
 
@@ -98,10 +112,13 @@ export const TerminalDetail: React.FC = () => {
     });
   };
 
-  if (terminal === undefined || tills === undefined) {
+  if (terminal === undefined || tills === undefined || isHeadwindMappingsLoading) {
     return <Loading />;
   }
   const till = terminal.till_id != null ? selectTillById(tills, terminal.till_id) : undefined;
+  const entryArea =
+    terminal.entry_area_id != null && entryAreas ? selectEntryAreaById(entryAreas, terminal.entry_area_id) : undefined;
+  const headwindMapping = headwindMappings?.find((entry) => entry.terminal_id === terminal.id);
 
   const openConfirmRemoveTillDialog = () => {
     if (!till) {
@@ -145,6 +162,7 @@ export const TerminalDetail: React.FC = () => {
           onClick: () => setSwitchTillOpen(true),
           color: "warning",
           icon: <PointOfSaleIcon />,
+          hidden: terminal.mode !== "till",
         },
         ...(till != null
           ? ([
@@ -153,6 +171,7 @@ export const TerminalDetail: React.FC = () => {
                 onClick: openConfirmRemoveTillDialog,
                 color: "warning",
                 icon: <PointOfSaleIcon />,
+                hidden: terminal.mode !== "till",
               } as const,
             ] as const)
           : []),
@@ -161,7 +180,7 @@ export const TerminalDetail: React.FC = () => {
           onClick: () => setLoginUserOpen(true),
           color: "primary",
           icon: <LoginIcon />,
-          hidden: terminal.active_user_id != null,
+          hidden: terminal.active_user_id != null || terminal.mode !== "till",
         },
         {
           label: t("terminal.logout"),
@@ -177,9 +196,25 @@ export const TerminalDetail: React.FC = () => {
         <DetailField label={t("terminal.id")} value={terminal.id} />
         <DetailField label={t("common.name")} value={terminal.name} />
         <DetailField label={t("common.description")} value={terminal.description} />
+        <DetailField label={t("terminal.mode.label")} value={t(`terminal.mode.${terminal.mode}`)} />
+        {entryArea != null && <DetailField label={t("entry.area")} value={entryArea.name} />}
         {till != null && (
           <DetailField linkTo={TillRoutes.detail(till.id, till.node_id)} label={t("terminal.till")} value={till.name} />
         )}
+        <DetailField
+          label={t("mdm.device")}
+          linkTo={headwindMapping != null ? MdmRoutes.list(currentNode.id) : undefined}
+          value={
+            headwindMapping != null
+              ? getHeadwindDeviceLabel(
+                  headwindMapping.headwind_device_name,
+                  headwindMapping.headwind_device_number,
+                  headwindMapping.headwind_device_serial,
+                  headwindMapping.headwind_device_id
+                )
+              : t("mdm.notMapped")
+          }
+        />
         {terminal.active_user_id != null && (
           <>
             <DetailField

@@ -52,6 +52,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.entry import EntryService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
@@ -291,6 +292,13 @@ async def user_tag_service(
 
 
 @pytest.fixture(scope="session")
+async def entry_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
+) -> EntryService:
+    return EntryService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
+
+
+@pytest.fixture(scope="session")
 async def product_service(
     setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
 ) -> ProductService:
@@ -392,6 +400,7 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
             Privilege.grant_vouchers,
             Privilege.grant_free_tickets,
             Privilege.create_user,
+            Privilege.entry_management,
         ],
     )
     return admin_token

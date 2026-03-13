@@ -43,6 +43,13 @@ class TillLayoutService(Service[Config]):
         )
         button_id = row["id"]
 
+        if len(button.product_ids) > 0:
+            await conn.execute(
+                "update product set is_locked = true where id = any($1) and node_id = any($2)",
+                button.product_ids,
+                node.ids_to_event_node,
+            )
+
         for product_id in button.product_ids:
             await conn.execute(
                 "insert into till_button_product (button_id, product_id) values ($1, $2)",
@@ -86,6 +93,12 @@ class TillLayoutService(Service[Config]):
         if row is None:
             raise NotFound(element_type="button", element_id=button_id)
         await conn.execute("delete from till_button_product where button_id = $1", button_id)
+        if len(button.product_ids) > 0:
+            await conn.execute(
+                "update product set is_locked = true where id = any($1) and node_id = any($2)",
+                button.product_ids,
+                node.ids_to_event_node,
+            )
         for product_id in button.product_ids:
             await conn.execute(
                 "insert into till_button_product (button_id, product_id) values ($1, $2)",

@@ -15,7 +15,6 @@ const initialValues: NewProduct = {
   fixed_price: true,
   price_in_vouchers: 0,
   restrictions: [],
-  is_locked: false,
   is_returnable: false,
 };
 

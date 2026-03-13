@@ -15,6 +15,7 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.TerminalMode
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -30,6 +31,8 @@ import kotlinx.serialization.Contextual
  * @param sessionUuid 
  * @param registrationUuid 
  * @param description 
+ * @param mode 
+ * @param entryAreaId 
  * @param activeUserId 
  * @param activeUserRoleId 
  */
@@ -57,6 +60,12 @@ data class Terminal (
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,
+
+    @Contextual @SerialName(value = "mode")
+    val mode: TerminalMode? = null,
+
+    @SerialName(value = "entry_area_id")
+    val entryAreaId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "active_user_id")
     val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,

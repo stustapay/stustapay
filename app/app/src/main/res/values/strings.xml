@@ -44,6 +44,7 @@
     <string name="root_item_topup">Cash In and Out</string>
     <string name="root_item_post_payment">Payment</string>
     <string name="root_item_rewards">Rewards</string>
+    <string name="root_item_entry">Entry Scan</string>
     <string name="root_item_settings">Settings</string>
     <string name="root_item_development">Development</string>
     <string name="root_item_restart_app">Restart App</string>
@@ -58,6 +59,14 @@
     <string name="history_sum">Sum</string>
     <string name="history_cancel">Cancel Sale</string>
     <string name="history_confirm">Confirm Cancellation</string>
+    <string name="history_scan_customer">Scan Customer Chip</string>
+    <string name="history_show_recent">Show Recent Orders</string>
+    <string name="history_showing_recent">Showing recent orders for this till</string>
+    <string name="history_showing_customer">Showing orders for the scanned chip</string>
+    <string name="history_empty">No orders found</string>
+    <string name="history_cancel_success">Successfully canceled order</string>
+    <string name="history_cancel_error">Could not cancel order</string>
+    <string name="history_scan_prompt">Place the customer chip on the reader</string>
 
     <string name="stats_daily_revenue">Daily Revenue</string>
     <string name="stats_hourly_revenue">Hourly Revenue</string>
@@ -88,6 +97,27 @@
     <string name="nfc_scan_cashier_prompt">📡 Scan Cashier Chip</string>
     <string name="nfc_scan_transfer_prompt">📡 Scan Transfer Target Chip</string>
     <string name="nfc_scan_new_prompt">📡 Scan New Chip</string>
+
+    <string name="entry_scan_entry">Scan for entry</string>
+    <string name="entry_scan_exit">Scan for exit</string>
+    <string name="entry_status_allowed">Allowed</string>
+    <string name="entry_status_denied">Denied</string>
+    <string name="entry_status_processing">Checking entry...</string>
+    <string name="entry_reason_allowed_entry">Entry allowed</string>
+    <string name="entry_reason_allowed_exit">Exit allowed</string>
+    <string name="entry_reason_already_inside">Already inside</string>
+    <string name="entry_reason_not_inside">Not inside</string>
+    <string name="entry_reason_not_in_group">Not allowed for this group</string>
+    <string name="entry_reason_outside_window">Outside entry window</string>
+    <string name="entry_reason_unknown_tag">Unknown tag</string>
+    <string name="entry_reason_terminal_wrong_mode">Wrong terminal mode</string>
+    <string name="entry_reason_terminal_not_configured">Terminal not configured</string>
+    <string name="entry_reason_area_not_found">Entry area not found</string>
+    <string name="entry_direction_entry">Entry</string>
+    <string name="entry_direction_exit">Exit</string>
+    <string name="entry_label_area">Area</string>
+    <string name="entry_label_group">Group</string>
+    <string name="entry_label_reason">Reason</string>
 
     <string name="user_title">User</string>
     <string name="user_login">Login</string>

@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
-import { Login, Profile } from "./routes/auth";
+import { AcceptInvitation, Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
 import { EventCreate, NodeOverview, MoneyOverview, NodePageLayout, NodeSettings, NodeCreate } from "./routes/nodes";
 import { NodeStats } from "./routes/nodes/stats";
@@ -70,6 +70,18 @@ import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
 import { HeadwindDevicesPage } from "./routes/mdm";
+import {
+  EntryAreaCreate,
+  EntryAreaDetail,
+  EntryAreaList,
+  EntryAreaUpdate,
+  EntryGroupCreate,
+  EntryGroupDetail,
+  EntryGroupList,
+  EntryGroupUpdate,
+  EntryLogs,
+  EntryPageLayout,
+} from "./routes/entry";
 
 const router = createBrowserRouter([
   {
@@ -90,7 +102,6 @@ const router = createBrowserRouter([
             element: <NodePageLayout />,
             children: [
               { index: true, element: <NodeOverview /> },
-              { path: "stats", element: <NodeStats /> },
               {
                 path: "settings/sumup-redirect",
                 element: <SumupOauthCallback />,
@@ -132,6 +143,10 @@ const router = createBrowserRouter([
                 element: <DsfinvkExport />,
               },
             ],
+          },
+          {
+            path: "stats",
+            element: <NodeStats />,
           },
           {
             path: "create-event",
@@ -369,6 +384,62 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: "entry",
+            element: (
+              <PrivilegeGuard privilege="entry_management">
+                <EntryPageLayout />
+              </PrivilegeGuard>
+            ),
+            children: [
+              {
+                path: "areas",
+                children: [
+                  {
+                    index: true,
+                    element: <EntryAreaList />,
+                  },
+                  {
+                    path: "new",
+                    element: <EntryAreaCreate />,
+                  },
+                  {
+                    path: ":entryAreaId/edit",
+                    element: <EntryAreaUpdate />,
+                  },
+                  {
+                    path: ":entryAreaId",
+                    element: <EntryAreaDetail />,
+                  },
+                ],
+              },
+              {
+                path: "groups",
+                children: [
+                  {
+                    index: true,
+                    element: <EntryGroupList />,
+                  },
+                  {
+                    path: "new",
+                    element: <EntryGroupCreate />,
+                  },
+                  {
+                    path: ":entryGroupId/edit",
+                    element: <EntryGroupUpdate />,
+                  },
+                  {
+                    path: ":entryGroupId",
+                    element: <EntryGroupDetail />,
+                  },
+                ],
+              },
+              {
+                path: "logs",
+                element: <EntryLogs />,
+              },
+            ],
+          },
+          {
             path: "mdm/devices",
             element: (
               <PrivilegeGuard privilege="node_administration">
@@ -539,6 +610,10 @@ const router = createBrowserRouter([
       {
         path: "/login",
         element: <Login />,
+      },
+      {
+        path: "/accept-invitation",
+        element: <AcceptInvitation />,
       },
     ],
   },

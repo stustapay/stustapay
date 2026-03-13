@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.bon.bon import BonJson
@@ -16,6 +19,30 @@ router = APIRouter(
 @router.get("/by-till/{till_id}", response_model=NormalizedList[Order, int])
 async def list_orders_by_till(token: CurrentAuthToken, till_id: int, order_service: ContextOrderService, node_id: int):
     return normalize_list(await order_service.list_orders_by_till(token=token, till_id=till_id, node_id=node_id))
+
+
+@router.get("/filtered", response_model=NormalizedList[Order, int])
+async def list_orders_filtered(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    node_id: int,
+    from_timestamp: Optional[datetime] = None,
+    to_timestamp: Optional[datetime] = None,
+    till_id: Optional[int] = None,
+    subnode_id: Optional[int] = None,
+    limit: Optional[int] = None,
+):
+    return normalize_list(
+        await order_service.list_orders_filtered(
+            token=token,
+            from_timestamp=from_timestamp,
+            to_timestamp=to_timestamp,
+            till_id=till_id,
+            subnode_id=subnode_id,
+            node_id=node_id,
+            limit=limit,
+        )
+    )
 
 
 @router.get("", response_model=NormalizedList[Order, int])

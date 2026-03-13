@@ -29,6 +29,18 @@ ruff:
 ruff-fix:
 	python3 -m ruff check --fix
 
+.PHONY: dev
+dev:
+	python3 tools/dev.py
+
+.PHONY: dev-backend
+dev-backend:
+	python3 tools/dev.py --backend-only
+
+.PHONY: dev-web
+dev-web:
+	python3 tools/dev.py --web-only
+
 .PHONY: generate-openapi
 generate-openapi:
 	python3 -m stustapay -c ./etc/config.yaml customerportal-api --show-openapi > api/customer_portal.json

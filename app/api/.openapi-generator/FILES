@@ -6,6 +6,7 @@ src/main/kotlin/de/stustapay/api/apis/AuthApi.kt
 src/main/kotlin/de/stustapay/api/apis/BaseApi.kt
 src/main/kotlin/de/stustapay/api/apis/CashierApi.kt
 src/main/kotlin/de/stustapay/api/apis/CustomerApi.kt
+src/main/kotlin/de/stustapay/api/apis/EntryApi.kt
 src/main/kotlin/de/stustapay/api/apis/MgmtApi.kt
 src/main/kotlin/de/stustapay/api/apis/OrderApi.kt
 src/main/kotlin/de/stustapay/api/apis/UserApi.kt
@@ -33,6 +34,10 @@ src/main/kotlin/de/stustapay/api/models/CompletedTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/CompletedTopUp.kt
 src/main/kotlin/de/stustapay/api/models/CreateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/CurrentUser.kt
+src/main/kotlin/de/stustapay/api/models/EntryAreaConfig.kt
+src/main/kotlin/de/stustapay/api/models/EntryDirection.kt
+src/main/kotlin/de/stustapay/api/models/EntryScanPayload.kt
+src/main/kotlin/de/stustapay/api/models/EntryScanResult.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
 src/main/kotlin/de/stustapay/api/models/HTTPValidationError.kt
 src/main/kotlin/de/stustapay/api/models/LineItem.kt
@@ -62,14 +67,16 @@ src/main/kotlin/de/stustapay/api/models/SwitchTagPayload.kt
 src/main/kotlin/de/stustapay/api/models/Terminal.kt
 src/main/kotlin/de/stustapay/api/models/TerminalButton.kt
 src/main/kotlin/de/stustapay/api/models/TerminalConfig.kt
+src/main/kotlin/de/stustapay/api/models/TerminalMode.kt
 src/main/kotlin/de/stustapay/api/models/TerminalRegistrationPayload.kt
 src/main/kotlin/de/stustapay/api/models/TerminalRegistrationSuccess.kt
+src/main/kotlin/de/stustapay/api/models/TerminalSecrets.kt
 src/main/kotlin/de/stustapay/api/models/TerminalSumupSecrets.kt
 src/main/kotlin/de/stustapay/api/models/TerminalTillConfig.kt
-src/main/kotlin/de/stustapay/api/models/TerminalUserTagSecrets.kt
 src/main/kotlin/de/stustapay/api/models/Ticket.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResult.kt
 src/main/kotlin/de/stustapay/api/models/TicketScanResultEntry.kt
+src/main/kotlin/de/stustapay/api/models/TicketVoucher.kt
 src/main/kotlin/de/stustapay/api/models/TimeseriesStatsQuery.kt
 src/main/kotlin/de/stustapay/api/models/TransferCashRegisterPayload.kt
 src/main/kotlin/de/stustapay/api/models/TransportAccountChangePayload.kt

@@ -12,7 +12,6 @@ export const NewProductSchema = z.object({
   fixed_price: z.boolean(),
   price_in_vouchers: z.number().optional().nullable(),
   restrictions: z.array(ProductRestrictionSchema),
-  is_locked: z.boolean(),
   is_returnable: z.boolean(),
   tax_rate_id: z.number().int(),
 });

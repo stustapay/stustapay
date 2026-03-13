@@ -62,6 +62,10 @@ async def _check_if_object_exists(conn: Connection, node: Node, object_type: Obj
         return await conn.fetchval(query_string.format("account"), node.id)
     if object_type == ObjectType.user_tag:
         return await conn.fetchval(query_string.format("user_tag"), node.id)
+    if object_type == ObjectType.entry_area:
+        return await conn.fetchval(query_string.format("entry_area"), node.id)
+    if object_type == ObjectType.entry_group:
+        return await conn.fetchval(query_string.format("entry_group"), node.id)
 
     return False
 

@@ -18,6 +18,8 @@ import {
   User,
   UserRole,
   UserTagDetail,
+  EntryArea,
+  EntryGroup,
   api as generatedApi,
   GenerateTestBonApiArg,
   GenerateTestReportApiArg,
@@ -108,8 +110,16 @@ const terminalAdapter = createEntityAdapter<Terminal>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
+const entryAreaAdapter = createEntityAdapter<EntryArea>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
+const entryGroupAdapter = createEntityAdapter<EntryGroup>({
+  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+});
+
 export const api = generatedApi.enhanceEndpoints({
-  addTagTypes: ["config", "tag", "headwind-devices", "headwind-mappings"],
+  addTagTypes: ["config", "tag", "headwind-devices", "headwind-mappings", "entry-areas", "entry-groups"],
   endpoints: {
     listUsers: {
       providesTags: (result) => generateCacheKeys("users", result),
@@ -174,6 +184,12 @@ export const api = generatedApi.enhanceEndpoints({
     getTerminal: {
       providesTags: (result, error, arg) => [{ type: "terminals", id: arg.terminalId }],
     },
+    listEntryAreas: {
+      providesTags: (result) => generateCacheKeys("entry-areas", result),
+    },
+    listEntryGroups: {
+      providesTags: (result) => generateCacheKeys("entry-groups", result),
+    },
     listTses: {
       providesTags: (result) => generateCacheKeys("tses", result),
     },
@@ -230,6 +246,31 @@ export const api = generatedApi.enhanceEndpoints({
       ],
     },
   },
+});
+
+// Inject new endpoints manually (until API is regenerated)
+export const userTagApi = api.injectEndpoints({
+  endpoints: (build) => ({
+    countTagsWithoutAccounts: build.query<number, { nodeId: number }>({
+      query: ({ nodeId }) => ({
+        url: `/user-tags/count-without-accounts`,
+        params: { node_id: nodeId },
+      }),
+      providesTags: ["user_tags"],
+    }),
+    createAccountsForUserTags: build.mutation<
+      { created: number; skipped: number },
+      { nodeId: number; createAccountsPayload: { user_tag_ids?: number[] | null } }
+    >({
+      query: ({ nodeId, createAccountsPayload }) => ({
+        url: `/user-tags/create-accounts`,
+        method: "POST",
+        body: createAccountsPayload,
+        params: { node_id: nodeId },
+      }),
+      invalidatesTags: [{ type: "user_tags", id: "LIST" }],
+    }),
+  }),
 });
 
 export const { selectUserAll, selectUserById, selectUserEntities, selectUserIds, selectUserTotal } =
@@ -325,9 +366,28 @@ export const { selectTerminalAll, selectTerminalById, selectTerminalEntities, se
   convertEntityAdaptorSelectors("Terminal", terminalAdapter.getSelectors());
 
 export const {
+  selectEntryAreaAll,
+  selectEntryAreaById,
+  selectEntryAreaEntities,
+  selectEntryAreaIds,
+  selectEntryAreaTotal,
+} = convertEntityAdaptorSelectors("EntryArea", entryAreaAdapter.getSelectors());
+
+export const {
+  selectEntryGroupAll,
+  selectEntryGroupById,
+  selectEntryGroupEntities,
+  selectEntryGroupIds,
+  selectEntryGroupTotal,
+} = convertEntityAdaptorSelectors("EntryGroup", entryGroupAdapter.getSelectors());
+
+export const {
   selectPayoutRunAll,
   selectPayoutRunById,
   selectPayoutRunEntities,
   selectPayoutRunIds,
   selectPayoutRunTotal,
 } = convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());
+
+// Export hooks for manually injected endpoints
+export const { useCountTagsWithoutAccountsQuery, useCreateAccountsForUserTagsMutation } = userTagApi;

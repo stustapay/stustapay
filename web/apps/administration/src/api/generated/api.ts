@@ -27,6 +27,7 @@ export const addTagTypes = [
   "transactions",
   "mdm",
   "llm",
+  "entry",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -143,6 +144,24 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
           },
+        }),
+        invalidatesTags: ["users"],
+      }),
+      inviteUser: build.mutation<InviteUserApiResponse, InviteUserApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/invite`,
+          method: "POST",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["users"],
+      }),
+      acceptInvitation: build.mutation<AcceptInvitationApiResponse, AcceptInvitationApiArg>({
+        query: (queryArg) => ({
+          url: `/users/accept-invitation`,
+          method: "POST",
+          body: queryArg.acceptInvitationPayload,
         }),
         invalidatesTags: ["users"],
       }),
@@ -708,6 +727,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
+      transferBalance: build.mutation<TransferBalanceApiResponse, TransferBalanceApiArg>({
+        query: (queryArg) => ({
+          url: `/accounts/transfer-balance`,
+          method: "POST",
+          body: queryArg.transferBalancePayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
       updateAccountComment: build.mutation<UpdateAccountCommentApiResponse, UpdateAccountCommentApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/update-comment`,
@@ -724,6 +754,20 @@ const injectedRtkApi = api
           url: `/orders/by-till/${queryArg.tillId}`,
           params: {
             node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["orders"],
+      }),
+      listOrdersFiltered: build.query<ListOrdersFilteredApiResponse, ListOrdersFilteredApiArg>({
+        query: (queryArg) => ({
+          url: `/orders/filtered`,
+          params: {
+            node_id: queryArg.nodeId,
+            from_timestamp: queryArg.fromTimestamp,
+            to_timestamp: queryArg.toTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+            limit: queryArg.limit,
           },
         }),
         providesTags: ["orders"],
@@ -827,6 +871,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -838,6 +884,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -849,6 +897,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -860,6 +910,8 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -871,6 +923,68 @@ const injectedRtkApi = api
             node_id: queryArg.nodeId,
             to_timestamp: queryArg.toTimestamp,
             from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getDashboardOverview: build.query<GetDashboardOverviewApiResponse, GetDashboardOverviewApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/dashboard-overview`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getRevenueByCounter: build.query<GetRevenueByCounterApiResponse, GetRevenueByCounterApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/revenue-by-counter`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getPaymentMethodStats: build.query<GetPaymentMethodStatsApiResponse, GetPaymentMethodStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/payment-methods`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getAvailableDates: build.query<GetAvailableDatesApiResponse, GetAvailableDatesApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/available-dates`,
+          params: {
+            node_id: queryArg.nodeId,
+            subnode_id: queryArg.subnodeId,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getRevenuePrediction: build.query<GetRevenuePredictionApiResponse, GetRevenuePredictionApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/revenue-prediction`,
+          params: {
+            node_id: queryArg.nodeId,
+            till_id: queryArg.tillId,
+            subnode_id: queryArg.subnodeId,
           },
         }),
         providesTags: ["stats"],
@@ -967,6 +1081,26 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
+      countTagsWithoutAccounts: build.query<CountTagsWithoutAccountsApiResponse, CountTagsWithoutAccountsApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/count-without-accounts`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["user_tags"],
+      }),
+      createAccountsForUserTags: build.mutation<CreateAccountsForUserTagsApiResponse, CreateAccountsForUserTagsApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/create-accounts`,
+          method: "POST",
+          body: queryArg.createAccountsPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
       getUserTagDetail: build.query<GetUserTagDetailApiResponse, GetUserTagDetailApiArg>({
         query: (queryArg) => ({
           url: `/user-tags/${queryArg.userTagId}`,
@@ -992,6 +1126,17 @@ const injectedRtkApi = api
           url: `/user-tags/${queryArg.userTagId}/update-vip-status`,
           method: "POST",
           body: queryArg.updateVipStatusPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
+      updateUserTagGroupTag: build.mutation<UpdateUserTagGroupTagApiResponse, UpdateUserTagGroupTagApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/${queryArg.userTagId}/update-group-tag`,
+          method: "POST",
+          body: queryArg.updateGroupTagPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1506,6 +1651,268 @@ const injectedRtkApi = api
         }),
         providesTags: ["llm"],
       }),
+      listEntryAreas: build.query<ListEntryAreasApiResponse, ListEntryAreasApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      createEntryArea: build.mutation<CreateEntryAreaApiResponse, CreateEntryAreaApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas`,
+          method: "POST",
+          body: queryArg.newEntryArea,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      getEntryArea: build.query<GetEntryAreaApiResponse, GetEntryAreaApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      updateEntryArea: build.mutation<UpdateEntryAreaApiResponse, UpdateEntryAreaApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}`,
+          method: "POST",
+          body: queryArg.newEntryArea,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      deleteEntryArea: build.mutation<DeleteEntryAreaApiResponse, DeleteEntryAreaApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      listEntryAreaGroups: build.query<ListEntryAreaGroupsApiResponse, ListEntryAreaGroupsApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      assignEntryGroupToArea: build.mutation<AssignEntryGroupToAreaApiResponse, AssignEntryGroupToAreaApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups`,
+          method: "POST",
+          body: queryArg.entryAreaGroupAssignPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      removeEntryGroupFromArea: build.mutation<RemoveEntryGroupFromAreaApiResponse, RemoveEntryGroupFromAreaApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups/${queryArg.groupId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      listEntryAreaGroupWindows: build.query<ListEntryAreaGroupWindowsApiResponse, ListEntryAreaGroupWindowsApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups/${queryArg.groupId}/windows`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      createEntryAreaGroupWindow: build.mutation<
+        CreateEntryAreaGroupWindowApiResponse,
+        CreateEntryAreaGroupWindowApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups/${queryArg.groupId}/windows`,
+          method: "POST",
+          body: queryArg.newEntryAreaGroupWindow,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      updateEntryAreaGroupWindow: build.mutation<
+        UpdateEntryAreaGroupWindowApiResponse,
+        UpdateEntryAreaGroupWindowApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups/${queryArg.groupId}/windows/${queryArg.windowId}`,
+          method: "POST",
+          body: queryArg.newEntryAreaGroupWindow,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      deleteEntryAreaGroupWindow: build.mutation<
+        DeleteEntryAreaGroupWindowApiResponse,
+        DeleteEntryAreaGroupWindowApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/entry/areas/${queryArg.areaId}/groups/${queryArg.groupId}/windows/${queryArg.windowId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      listEntryGroups: build.query<ListEntryGroupsApiResponse, ListEntryGroupsApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      createEntryGroup: build.mutation<CreateEntryGroupApiResponse, CreateEntryGroupApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups`,
+          method: "POST",
+          body: queryArg.newEntryGroup,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      getEntryGroup: build.query<GetEntryGroupApiResponse, GetEntryGroupApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      updateEntryGroup: build.mutation<UpdateEntryGroupApiResponse, UpdateEntryGroupApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}`,
+          method: "POST",
+          body: queryArg.newEntryGroup,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      deleteEntryGroup: build.mutation<DeleteEntryGroupApiResponse, DeleteEntryGroupApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      listEntryGroupMembers: build.query<ListEntryGroupMembersApiResponse, ListEntryGroupMembersApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}/members`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      addEntryGroupMember: build.mutation<AddEntryGroupMemberApiResponse, AddEntryGroupMemberApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}/members`,
+          method: "POST",
+          body: queryArg.entryGroupMemberAddPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      addEntryGroupMembersByGroupTag: build.mutation<
+        AddEntryGroupMembersByGroupTagApiResponse,
+        AddEntryGroupMembersByGroupTagApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}/members/by-group-tag`,
+          method: "POST",
+          body: queryArg.entryGroupMemberAddByGroupTagPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      removeEntryGroupMember: build.mutation<RemoveEntryGroupMemberApiResponse, RemoveEntryGroupMemberApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/groups/${queryArg.groupId}/members/${queryArg.userTagId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["entry"],
+      }),
+      listEntryScanLogs: build.query<ListEntryScanLogsApiResponse, ListEntryScanLogsApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/logs`,
+          params: {
+            node_id: queryArg.nodeId,
+            area_id: queryArg.areaId,
+            group_id: queryArg.groupId,
+            terminal_id: queryArg.terminalId,
+            direction: queryArg.direction,
+            allowed: queryArg.allowed,
+            user_tag_uid: queryArg.userTagUid,
+            from_time: queryArg.fromTime,
+            to_time: queryArg.toTime,
+            limit: queryArg.limit,
+            offset: queryArg.offset,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
+      exportEntryScanLogs: build.query<ExportEntryScanLogsApiResponse, ExportEntryScanLogsApiArg>({
+        query: (queryArg) => ({
+          url: `/entry/logs/export`,
+          params: {
+            node_id: queryArg.nodeId,
+            area_id: queryArg.areaId,
+            group_id: queryArg.groupId,
+            terminal_id: queryArg.terminalId,
+            direction: queryArg.direction,
+            allowed: queryArg.allowed,
+            user_tag_uid: queryArg.userTagUid,
+            from_time: queryArg.fromTime,
+            to_time: queryArg.toTime,
+            limit: queryArg.limit,
+            offset: queryArg.offset,
+          },
+        }),
+        providesTags: ["entry"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1566,6 +1973,17 @@ export type ChangeUserPasswordApiArg = {
   userId: number;
   nodeId: number;
   changeUserPasswordPayload: ChangeUserPasswordPayload;
+};
+export type InviteUserApiResponse = /** status 200 Successful Response */ UserInvitation;
+export type InviteUserApiArg = {
+  userId: number;
+  nodeId: number;
+};
+export type AcceptInvitationApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string;
+};
+export type AcceptInvitationApiArg = {
+  acceptInvitationPayload: AcceptInvitationPayload;
 };
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
 export type ListUserRolesApiArg = {
@@ -1853,6 +2271,11 @@ export type UpdateVoucherAmountApiArg = {
   nodeId: number;
   updateVoucherAmountPayload: UpdateVoucherAmountPayload;
 };
+export type TransferBalanceApiResponse = /** status 200 Successful Response */ any;
+export type TransferBalanceApiArg = {
+  nodeId: number;
+  transferBalancePayload: TransferBalancePayload;
+};
 export type UpdateAccountCommentApiResponse = /** status 200 Successful Response */ AccountRead;
 export type UpdateAccountCommentApiArg = {
   accountId: number;
@@ -1863,6 +2286,15 @@ export type ListOrdersByTillApiResponse = /** status 200 Successful Response */ 
 export type ListOrdersByTillApiArg = {
   tillId: number;
   nodeId: number;
+};
+export type ListOrdersFilteredApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
+export type ListOrdersFilteredApiArg = {
+  nodeId: number;
+  fromTimestamp?: string | null;
+  toTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+  limit?: number | null;
 };
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
@@ -1920,30 +2352,75 @@ export type GetProductStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetVoucherStatsApiResponse = /** status 200 Successful Response */ VoucherStats;
 export type GetVoucherStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetEntryStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetEntryStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetTopUpStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetPayOutStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetDashboardOverviewApiResponse = /** status 200 Successful Response */ DashboardOverview;
+export type GetDashboardOverviewApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetRevenueByCounterApiResponse = /** status 200 Successful Response */ RevenueByCounter;
+export type GetRevenueByCounterApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodBreakdown;
+export type GetPaymentMethodStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+  tillId?: number | null;
+  subnodeId?: number | null;
+};
+export type GetAvailableDatesApiResponse = /** status 200 Successful Response */ string[];
+export type GetAvailableDatesApiArg = {
+  nodeId: number;
+  subnodeId?: number | null;
+};
+export type GetRevenuePredictionApiResponse = /** status 200 Successful Response */ RevenuePrediction;
+export type GetRevenuePredictionApiArg = {
+  nodeId: number;
+  tillId?: number | null;
+  subnodeId?: number | null;
 };
 export type ListTicketsApiResponse = /** status 200 Successful Response */ NormalizedListTicketInt;
 export type ListTicketsApiArg = {
@@ -1989,6 +2466,15 @@ export type FindUserTagsApiArg = {
   nodeId: number;
   findUserTagPayload: FindUserTagPayload;
 };
+export type CountTagsWithoutAccountsApiResponse = /** status 200 Successful Response */ number;
+export type CountTagsWithoutAccountsApiArg = {
+  nodeId: number;
+};
+export type CreateAccountsForUserTagsApiResponse = /** status 200 Successful Response */ CreateAccountsResponse;
+export type CreateAccountsForUserTagsApiArg = {
+  nodeId: number;
+  createAccountsPayload: CreateAccountsPayload;
+};
 export type GetUserTagDetailApiResponse = /** status 200 Successful Response */ UserTagDetail;
 export type GetUserTagDetailApiArg = {
   userTagId: number;
@@ -2005,6 +2491,12 @@ export type UpdateUserTagVipStatusApiArg = {
   userTagId: number;
   nodeId: number;
   updateVipStatusPayload: UpdateVipStatusPayload;
+};
+export type UpdateUserTagGroupTagApiResponse = /** status 200 Successful Response */ UserTagDetail;
+export type UpdateUserTagGroupTagApiArg = {
+  userTagId: number;
+  nodeId: number;
+  updateGroupTagPayload: UpdateGroupTagPayload;
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = {
@@ -2142,8 +2634,8 @@ export type ListSumupTransactionsApiResponse = /** status 200 Successful Respons
 export type ListSumupTransactionsApiArg = {
   nodeId: number;
   limit?: number;
-  transactionCode?: string;
-  newestTime?: string;
+  transactionCode?: string | null;
+  newestTime?: string | null;
 };
 export type GetSumupCheckoutApiResponse = /** status 200 Successful Response */ SumUpCheckout;
 export type GetSumupCheckoutApiArg = {
@@ -2294,6 +2786,152 @@ export type ListTillProfilesLlmApiResponse = /** status 200 Successful Response 
 export type ListTillProfilesLlmApiArg = {
   nodeId: number;
 };
+export type ListEntryAreasApiResponse = /** status 200 Successful Response */ NormalizedListEntryAreaInt;
+export type ListEntryAreasApiArg = {
+  nodeId: number;
+};
+export type CreateEntryAreaApiResponse = /** status 200 Successful Response */ EntryArea;
+export type CreateEntryAreaApiArg = {
+  nodeId: number;
+  newEntryArea: NewEntryArea;
+};
+export type GetEntryAreaApiResponse = /** status 200 Successful Response */ EntryArea;
+export type GetEntryAreaApiArg = {
+  areaId: number;
+  nodeId: number;
+};
+export type UpdateEntryAreaApiResponse = /** status 200 Successful Response */ EntryArea;
+export type UpdateEntryAreaApiArg = {
+  areaId: number;
+  nodeId: number;
+  newEntryArea: NewEntryArea;
+};
+export type DeleteEntryAreaApiResponse = unknown;
+export type DeleteEntryAreaApiArg = {
+  areaId: number;
+  nodeId: number;
+};
+export type ListEntryAreaGroupsApiResponse = /** status 200 Successful Response */ EntryAreaGroupWithGroup[];
+export type ListEntryAreaGroupsApiArg = {
+  areaId: number;
+  nodeId: number;
+};
+export type AssignEntryGroupToAreaApiResponse = /** status 200 Successful Response */ EntryAreaGroup;
+export type AssignEntryGroupToAreaApiArg = {
+  areaId: number;
+  nodeId: number;
+  entryAreaGroupAssignPayload: EntryAreaGroupAssignPayload;
+};
+export type RemoveEntryGroupFromAreaApiResponse = unknown;
+export type RemoveEntryGroupFromAreaApiArg = {
+  areaId: number;
+  groupId: number;
+  nodeId: number;
+};
+export type ListEntryAreaGroupWindowsApiResponse = /** status 200 Successful Response */ EntryAreaGroupWindow[];
+export type ListEntryAreaGroupWindowsApiArg = {
+  areaId: number;
+  groupId: number;
+  nodeId: number;
+};
+export type CreateEntryAreaGroupWindowApiResponse = /** status 200 Successful Response */ EntryAreaGroupWindow;
+export type CreateEntryAreaGroupWindowApiArg = {
+  areaId: number;
+  groupId: number;
+  nodeId: number;
+  newEntryAreaGroupWindow: NewEntryAreaGroupWindow;
+};
+export type UpdateEntryAreaGroupWindowApiResponse = /** status 200 Successful Response */ EntryAreaGroupWindow;
+export type UpdateEntryAreaGroupWindowApiArg = {
+  areaId: number;
+  groupId: number;
+  windowId: number;
+  nodeId: number;
+  newEntryAreaGroupWindow: NewEntryAreaGroupWindow;
+};
+export type DeleteEntryAreaGroupWindowApiResponse = unknown;
+export type DeleteEntryAreaGroupWindowApiArg = {
+  areaId: number;
+  groupId: number;
+  windowId: number;
+  nodeId: number;
+};
+export type ListEntryGroupsApiResponse = /** status 200 Successful Response */ NormalizedListEntryGroupInt;
+export type ListEntryGroupsApiArg = {
+  nodeId: number;
+};
+export type CreateEntryGroupApiResponse = /** status 200 Successful Response */ EntryGroup;
+export type CreateEntryGroupApiArg = {
+  nodeId: number;
+  newEntryGroup: NewEntryGroup;
+};
+export type GetEntryGroupApiResponse = /** status 200 Successful Response */ EntryGroup;
+export type GetEntryGroupApiArg = {
+  groupId: number;
+  nodeId: number;
+};
+export type UpdateEntryGroupApiResponse = /** status 200 Successful Response */ EntryGroup;
+export type UpdateEntryGroupApiArg = {
+  groupId: number;
+  nodeId: number;
+  newEntryGroup: NewEntryGroup;
+};
+export type DeleteEntryGroupApiResponse = unknown;
+export type DeleteEntryGroupApiArg = {
+  groupId: number;
+  nodeId: number;
+};
+export type ListEntryGroupMembersApiResponse = /** status 200 Successful Response */ EntryGroupMember[];
+export type ListEntryGroupMembersApiArg = {
+  groupId: number;
+  nodeId: number;
+};
+export type AddEntryGroupMemberApiResponse = /** status 200 Successful Response */ EntryGroupMember;
+export type AddEntryGroupMemberApiArg = {
+  groupId: number;
+  nodeId: number;
+  entryGroupMemberAddPayload: EntryGroupMemberAddPayload;
+};
+export type AddEntryGroupMembersByGroupTagApiResponse = /** status 200 Successful Response */ EntryGroupMember[];
+export type AddEntryGroupMembersByGroupTagApiArg = {
+  groupId: number;
+  nodeId: number;
+  entryGroupMemberAddByGroupTagPayload: EntryGroupMemberAddByGroupTagPayload;
+};
+export type RemoveEntryGroupMemberApiResponse = unknown;
+export type RemoveEntryGroupMemberApiArg = {
+  groupId: number;
+  userTagId: number;
+  nodeId: number;
+};
+export type ListEntryScanLogsApiResponse = /** status 200 Successful Response */ EntryScanLog[];
+export type ListEntryScanLogsApiArg = {
+  nodeId: number;
+  areaId?: number | null;
+  groupId?: number | null;
+  terminalId?: number | null;
+  direction?: EntryDirection | null;
+  allowed?: boolean | null;
+  userTagUid?: number | null;
+  fromTime?: string | null;
+  toTime?: string | null;
+  limit?: number;
+  offset?: number;
+};
+export type ExportEntryScanLogsApiResponse = /** status 200 Successful Response */ string;
+export type ExportEntryScanLogsApiArg = {
+  nodeId: number;
+  areaId?: number | null;
+  groupId?: number | null;
+  terminalId?: number | null;
+  direction?: EntryDirection | null;
+  allowed?: boolean | null;
+  userTagUid?: number | null;
+  fromTime?: string | null;
+  toTime?: string | null;
+  limit?: number;
+  offset?: number;
+};
 export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
@@ -2310,6 +2948,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
+  has_bookings: boolean;
   type: ProductType;
   price_per_voucher?: number | null;
 };
@@ -2344,6 +2983,7 @@ export type User = {
   user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
+  email?: string | null;
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
@@ -2355,6 +2995,7 @@ export type UserRead = {
   user_tag_pin?: string | null;
   user_tag_uid?: number | null;
   description?: string | null;
+  email?: string | null;
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
@@ -2371,6 +3012,7 @@ export type Privilege =
   | "node_administration"
   | "customer_management"
   | "payout_management"
+  | "entry_management"
   | "create_user"
   | "allow_privileged_role_assignment"
   | "user_management"
@@ -2388,6 +3030,7 @@ export type CreateUserPayload = {
   description?: string | null;
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
+  email?: string | null;
   password?: string | null;
 };
 export type UpdateUserPayload = {
@@ -2396,9 +3039,24 @@ export type UpdateUserPayload = {
   description?: string | null;
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
+  email?: string | null;
 };
 export type ChangeUserPasswordPayload = {
   new_password: string;
+};
+export type UserInvitation = {
+  id: number;
+  user_id: number;
+  token: string;
+  node_id: number;
+  created_at: string;
+  expires_at: string;
+  accepted_at?: string | null;
+  created_by?: number | null;
+};
+export type AcceptInvitationPayload = {
+  token: string;
+  password: string;
 };
 export type UserRole = {
   name: string;
@@ -2462,6 +3120,7 @@ export type CurrentUser = {
   description?: string | null;
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
+  email?: string | null;
   transport_account_id?: number | null;
   cash_register_id?: number | null;
 };
@@ -2873,6 +3532,11 @@ export type UpdateBalancePayload = {
 export type UpdateVoucherAmountPayload = {
   new_voucher_amount: number;
 };
+export type TransferBalancePayload = {
+  source_account_id: number;
+  target_account_id: number;
+  amount: number;
+};
 export type UpdateAccountCommentPayload = {
   comment: string;
 };
@@ -3120,6 +3784,57 @@ export type TimeseriesStats = {
   daily_intervals: StatInterval[];
   hourly_intervals: StatInterval[];
 };
+export type DashboardOverview = {
+  total_guest_credit: number;
+  total_revenue: number;
+  guests_with_orders: number;
+  guests_with_credit: number;
+  guests_paid_out: number;
+  online_donation: number;
+  online_for_payout: number;
+};
+export type CounterRevenue = {
+  till_id: number;
+  till_name: string;
+  revenue: number;
+  order_count: number;
+};
+export type RevenueByCounter = {
+  counters: CounterRevenue[];
+  total_revenue: number;
+};
+export type PaymentMethodStats = {
+  payment_method: string;
+  revenue: number;
+  order_count: number;
+};
+export type PaymentMethodBreakdown = {
+  methods: PaymentMethodStats[];
+  total_revenue: number;
+};
+export type HourlyPredictionPoint = {
+  hour: number;
+  actual_revenue: number | null;
+  predicted_revenue: number;
+  cumulative_actual: number | null;
+  cumulative_predicted: number;
+};
+export type RevenuePrediction = {
+  current_revenue: number;
+  predicted_end_of_day: number;
+  predicted_event_total: number;
+  confidence_level: string;
+  hours_of_data: number;
+  days_of_data: number;
+  events_used: number;
+  data_source: string;
+  hourly_timeseries: HourlyPredictionPoint[];
+  average_daily_revenue: number;
+  expected_visitors_per_day: number | null;
+  actual_visitors_today: number;
+  historical_revenue_per_visitor: number | null;
+  visitor_based_prediction: number | null;
+};
 export type Ticket = {
   name: string;
   price: number;
@@ -3166,6 +3881,7 @@ export type NewUserTag = {
   uid?: number | null;
   is_vip?: boolean;
   comment?: string | null;
+  group_tag?: string | null;
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -3180,6 +3896,7 @@ export type UserTagDetail = {
   account_id?: number | null;
   user_id?: number | null;
   is_vip?: boolean;
+  group_tag?: string | null;
   account_history: UserTagAccountAssociation[];
 };
 export type NormalizedListUserTagDetailInt = {
@@ -3191,11 +3908,21 @@ export type NormalizedListUserTagDetailInt = {
 export type FindUserTagPayload = {
   search_term: string;
 };
+export type CreateAccountsResponse = {
+  created: number;
+  skipped: number;
+};
+export type CreateAccountsPayload = {
+  user_tag_ids?: number[] | null;
+};
 export type UpdateCommentPayload = {
   comment: string;
 };
 export type UpdateVipStatusPayload = {
   is_vip: boolean;
+};
+export type UpdateGroupTagPayload = {
+  group_tag: string | null;
 };
 export type TseType = "diebold_nixdorf";
 export type TseStatus = "new" | "active" | "disabled" | "failed";
@@ -3300,6 +4027,7 @@ export type PublicEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -3355,7 +4083,9 @@ export type ObjectType =
   | "user_tag"
   | "tse"
   | "account"
-  | "terminal";
+  | "terminal"
+  | "entry_area"
+  | "entry_group";
 export type NodeSeenByUser = {
   id: number;
   parent: number;
@@ -3411,6 +4141,7 @@ export type NewEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -3488,6 +4219,7 @@ export type UpdateEvent = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -3545,6 +4277,7 @@ export type RestrictedEventSettings = {
   start_date?: string | null;
   end_date?: string | null;
   daily_end_time?: string | null;
+  expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
   sumup_payment_enabled: boolean;
@@ -3679,9 +4412,12 @@ export type CustomerRead = {
 export type FindCustomerPayload = {
   search_term: string;
 };
+export type TerminalMode = "till" | "entry" | "exit";
 export type Terminal = {
   name: string;
   description?: string | null;
+  mode?: TerminalMode;
+  entry_area_id?: number | null;
   id: number;
   node_id: number;
   till_id: number | null;
@@ -3699,6 +4435,8 @@ export type NormalizedListTerminalInt = {
 export type NewTerminal = {
   name: string;
   description?: string | null;
+  mode?: TerminalMode;
+  entry_area_id?: number | null;
 };
 export type SwitchTillPayload = {
   new_till_id: number;
@@ -3799,6 +4537,94 @@ export type EventSummary = {
   start_date?: string | null;
   end_date?: string | null;
 };
+export type EntryArea = {
+  name: string;
+  description?: string | null;
+  id: number;
+  node_id: number;
+};
+export type NormalizedListEntryAreaInt = {
+  ids: number[];
+  entities: {
+    [key: string]: EntryArea;
+  };
+};
+export type NewEntryArea = {
+  name: string;
+  description?: string | null;
+};
+export type EntryAreaGroupWithGroup = {
+  id: number;
+  area_id: number;
+  group_id: number;
+  group_name: string;
+  group_description?: string | null;
+};
+export type EntryAreaGroup = {
+  id: number;
+  area_id: number;
+  group_id: number;
+};
+export type EntryAreaGroupAssignPayload = {
+  group_id: number;
+};
+export type EntryAreaGroupWindow = {
+  start_at: string;
+  end_at: string;
+  id: number;
+  area_group_id: number;
+};
+export type NewEntryAreaGroupWindow = {
+  start_at: string;
+  end_at: string;
+};
+export type EntryGroup = {
+  name: string;
+  description?: string | null;
+  id: number;
+  node_id: number;
+};
+export type NormalizedListEntryGroupInt = {
+  ids: number[];
+  entities: {
+    [key: string]: EntryGroup;
+  };
+};
+export type NewEntryGroup = {
+  name: string;
+  description?: string | null;
+};
+export type EntryGroupMember = {
+  user_tag_id: number;
+  user_tag_uid: number | null;
+  user_tag_pin: string;
+  comment?: string | null;
+  is_vip?: boolean;
+};
+export type EntryGroupMemberAddPayload = {
+  user_tag_id?: number | null;
+  user_tag_uid?: number | null;
+};
+export type EntryGroupMemberAddByGroupTagPayload = {
+  group_tag: string;
+};
+export type EntryDirection = "entry" | "exit";
+export type EntryScanLog = {
+  id: number;
+  scanned_at: string;
+  node_id: number;
+  terminal_id: number;
+  terminal_name: string;
+  area_id: number;
+  area_name: string;
+  direction: EntryDirection;
+  user_tag_id: number | null;
+  user_tag_uid: number;
+  allowed: boolean;
+  reason: string;
+  group_id: number | null;
+  group_name: string | null;
+};
 export const {
   useListProductsQuery,
   useLazyListProductsQuery,
@@ -3815,6 +4641,8 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
+  useInviteUserMutation,
+  useAcceptInvitationMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,
   useCreateUserRoleMutation,
@@ -3895,9 +4723,12 @@ export const {
   useDisableAccountMutation,
   useUpdateBalanceMutation,
   useUpdateVoucherAmountMutation,
+  useTransferBalanceMutation,
   useUpdateAccountCommentMutation,
   useListOrdersByTillQuery,
   useLazyListOrdersByTillQuery,
+  useListOrdersFilteredQuery,
+  useLazyListOrdersFilteredQuery,
   useListOrdersQuery,
   useLazyListOrdersQuery,
   useGetOrderQuery,
@@ -3925,6 +4756,16 @@ export const {
   useLazyGetTopUpStatsQuery,
   useGetPayOutStatsQuery,
   useLazyGetPayOutStatsQuery,
+  useGetDashboardOverviewQuery,
+  useLazyGetDashboardOverviewQuery,
+  useGetRevenueByCounterQuery,
+  useLazyGetRevenueByCounterQuery,
+  useGetPaymentMethodStatsQuery,
+  useLazyGetPaymentMethodStatsQuery,
+  useGetAvailableDatesQuery,
+  useLazyGetAvailableDatesQuery,
+  useGetRevenuePredictionQuery,
+  useLazyGetRevenuePredictionQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,
@@ -3937,10 +4778,14 @@ export const {
   useLazyListUserTagSecretsQuery,
   useCreateUserTagsMutation,
   useFindUserTagsMutation,
+  useCountTagsWithoutAccountsQuery,
+  useLazyCountTagsWithoutAccountsQuery,
+  useCreateAccountsForUserTagsMutation,
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,
   useUpdateUserTagVipStatusMutation,
+  useUpdateUserTagGroupTagMutation,
   useListTsesQuery,
   useLazyListTsesQuery,
   useCreateTseMutation,
@@ -4025,4 +4870,36 @@ export const {
   useLazyListEventsLlmQuery,
   useListTillProfilesLlmQuery,
   useLazyListTillProfilesLlmQuery,
+  useListEntryAreasQuery,
+  useLazyListEntryAreasQuery,
+  useCreateEntryAreaMutation,
+  useGetEntryAreaQuery,
+  useLazyGetEntryAreaQuery,
+  useUpdateEntryAreaMutation,
+  useDeleteEntryAreaMutation,
+  useListEntryAreaGroupsQuery,
+  useLazyListEntryAreaGroupsQuery,
+  useAssignEntryGroupToAreaMutation,
+  useRemoveEntryGroupFromAreaMutation,
+  useListEntryAreaGroupWindowsQuery,
+  useLazyListEntryAreaGroupWindowsQuery,
+  useCreateEntryAreaGroupWindowMutation,
+  useUpdateEntryAreaGroupWindowMutation,
+  useDeleteEntryAreaGroupWindowMutation,
+  useListEntryGroupsQuery,
+  useLazyListEntryGroupsQuery,
+  useCreateEntryGroupMutation,
+  useGetEntryGroupQuery,
+  useLazyGetEntryGroupQuery,
+  useUpdateEntryGroupMutation,
+  useDeleteEntryGroupMutation,
+  useListEntryGroupMembersQuery,
+  useLazyListEntryGroupMembersQuery,
+  useAddEntryGroupMemberMutation,
+  useAddEntryGroupMembersByGroupTagMutation,
+  useRemoveEntryGroupMemberMutation,
+  useListEntryScanLogsQuery,
+  useLazyListEntryScanLogsQuery,
+  useExportEntryScanLogsQuery,
+  useLazyExportEntryScanLogsQuery,
 } = injectedRtkApi;

@@ -33,6 +33,10 @@ class TerminalConfigRepository @Inject constructor(
     private val terminalConfigRemoteDataSource: TerminalConfigRemoteDataSource,
     private val nfcRepository: NfcRepository,
 ) {
+    private companion object {
+        const val MISSING_USER_TAG_SECRET_MESSAGE = "terminal config missing user tag secret"
+    }
+
     private val _terminalConfigState =
         MutableStateFlow<TerminalConfigState>(TerminalConfigState.NoConfig)
     var terminalConfigState = _terminalConfigState.asStateFlow()
@@ -60,12 +64,17 @@ class TerminalConfigRepository @Inject constructor(
         while (true) {
             ok = when (val response = terminalConfigRemoteDataSource.getTerminalConfig()) {
                 is Response.OK -> {
-                    _terminalConfigState.update { TerminalConfigState.Success(response.data) }
-                    // if we have secrets, save them
-                    response.data.secrets?.let {
-                        nfcRepository.setTagKeys(it.userTagSecret)
+                    val userTagSecret = response.data.secrets?.userTagSecret
+                    if (userTagSecret == null) {
+                        _terminalConfigState.update {
+                            TerminalConfigState.Error(MISSING_USER_TAG_SECRET_MESSAGE)
+                        }
+                        true
+                    } else {
+                        _terminalConfigState.update { TerminalConfigState.Success(response.data) }
+                        nfcRepository.setTagKeys(userTagSecret)
+                        true
                     }
-                    true
                 }
 
                 is Response.Error -> {

@@ -2,7 +2,6 @@ import { Node } from "@/api";
 import { PayoutRunRoutes, TaxRateRoutes } from "@/app/routes";
 import {
   Dashboard as DashboardIcon,
-  Leaderboard as LeaderboardIcon,
   Money as MoneyIcon,
   Percent as PercentIcon,
   Settings as SettingsIcon,
@@ -14,9 +13,6 @@ import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 
 const getActiveTab = (nodeId: number, location: string) => {
-  if (location.startsWith(`/node/${nodeId}/stats`)) {
-    return `/node/${nodeId}/stats`;
-  }
   if (location.startsWith(`/node/${nodeId}/settings`)) {
     return `/node/${nodeId}/settings`;
   }
@@ -54,14 +50,6 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
           icon={<DashboardIcon />}
           iconPosition="start"
           to={nodeUrl}
-        />
-        <Tab
-          label={t("nodes.statistics")}
-          component={RouterLink}
-          value={`${nodeUrl}/stats`}
-          icon={<LeaderboardIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/stats`}
         />
         <Tab
           label={t("systemAccounts")}

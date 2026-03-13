@@ -90,13 +90,14 @@ export const NavigationTree: React.FC = () => {
       if (!node) {
         return;
       }
-      dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/node/${parent}`)]));
       const firstMatchingMenuId = menuIds.find((val) => location.pathname.startsWith(val));
       if (firstMatchingMenuId) {
         setSelected(firstMatchingMenuId);
       } else {
         setSelected(null);
       }
+
+      dispatch(extendExpandedNodes([nodeId, ...node.parent_ids.map((parent) => `/node/${parent}`)]));
     }
   }, [location, tree, setSelected, dispatch, menuIds]);
 

@@ -55,7 +55,6 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
         variant="standard"
         value={null}
         onChange={addProduct}
-        onlyLocked
       />
     </List>
   );

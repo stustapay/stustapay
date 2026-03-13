@@ -1756,6 +1756,52 @@
           }
         ]
       }
+    },
+    "/entry/scan": {
+      "post": {
+        "tags": [
+          "entry"
+        ],
+        "summary": "Scan a tag for entry or exit",
+        "operationId": "scan_entry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryScanPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryScanResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -2514,6 +2560,17 @@
             ],
             "title": "Description"
           },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "role_ids": {
             "items": {
               "type": "integer"
@@ -2610,6 +2667,17 @@
             ],
             "title": "User Tag Uid"
           },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "transport_account_id": {
             "anyOf": [
               {
@@ -2643,6 +2711,144 @@
         ],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
+      },
+      "EntryAreaConfig": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "EntryAreaConfig"
+      },
+      "EntryDirection": {
+        "type": "string",
+        "enum": [
+          "entry",
+          "exit"
+        ],
+        "title": "EntryDirection"
+      },
+      "EntryScanPayload": {
+        "properties": {
+          "tag_uid": {
+            "type": "integer",
+            "title": "Tag Uid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag_uid"
+        ],
+        "title": "EntryScanPayload"
+      },
+      "EntryScanResult": {
+        "properties": {
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/EntryDirection"
+          },
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "area_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Name"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "is_inside": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Inside"
+          },
+          "scanned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scanned At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allowed",
+          "reason",
+          "direction",
+          "area_id",
+          "area_name",
+          "group_id",
+          "group_name",
+          "is_inside",
+          "scanned_at"
+        ],
+        "title": "EntryScanResult"
       },
       "GrantVoucherPayload": {
         "properties": {
@@ -3370,6 +3576,7 @@
           "node_administration",
           "customer_management",
           "payout_management",
+          "entry_management",
           "create_user",
           "allow_privileged_role_assignment",
           "user_management",
@@ -3644,6 +3851,21 @@
             ],
             "title": "Description"
           },
+          "mode": {
+            "$ref": "#/components/schemas/TerminalMode",
+            "default": "till"
+          },
+          "entry_area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Area Id"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -3815,6 +4037,19 @@
             ],
             "title": "Description"
           },
+          "mode": {
+            "$ref": "#/components/schemas/TerminalMode"
+          },
+          "entry_area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryAreaConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "event_name": {
             "type": "string",
             "title": "Event Name"
@@ -3885,6 +4120,8 @@
           "id",
           "name",
           "description",
+          "mode",
+          "entry_area",
           "event_name",
           "active_user_id",
           "available_roles",
@@ -3895,6 +4132,15 @@
           "test_mode_message"
         ],
         "title": "TerminalConfig"
+      },
+      "TerminalMode": {
+        "type": "string",
+        "enum": [
+          "till",
+          "entry",
+          "exit"
+        ],
+        "title": "TerminalMode"
       },
       "TerminalRegistrationPayload": {
         "properties": {
@@ -4378,6 +4624,28 @@
               }
             ],
             "title": "To Time"
+          },
+          "till_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Till Id"
+          },
+          "subnode_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subnode Id"
           }
         },
         "type": "object",
@@ -4487,6 +4755,17 @@
             ],
             "title": "Description"
           },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "node_id": {
             "type": "integer",
             "title": "Node Id"
@@ -4575,6 +4854,17 @@
               }
             ],
             "title": "Description"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
           },
           "node_id": {
             "type": "integer",

@@ -4,6 +4,7 @@ export const UserTagDetailSchema = z.object({
   // user_tag_uid: z.number().int(),
   user_tag_uid_hex: z.string(),
   comment: z.string().nullable(),
+  group_tag: z.string().nullable().optional(),
   account_id: z.number().int().nullable(),
   account_history: z.array(
     z.object({

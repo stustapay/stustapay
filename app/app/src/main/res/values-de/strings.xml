@@ -57,6 +57,14 @@
     <string name="history_sum">Summe</string>
     <string name="history_cancel">Stornieren</string>
     <string name="history_confirm">Stornierung bestätigen</string>
+    <string name="history_scan_customer">Kundenchip scannen</string>
+    <string name="history_show_recent">Aktuelle Bestellungen</string>
+    <string name="history_showing_recent">Zeige aktuelle Bestellungen dieser Kasse</string>
+    <string name="history_showing_customer">Zeige Bestellungen fuer den gescannten Chip</string>
+    <string name="history_empty">Keine Bestellungen gefunden</string>
+    <string name="history_cancel_success">Bestellung erfolgreich storniert</string>
+    <string name="history_cancel_error">Bestellung konnte nicht storniert werden</string>
+    <string name="history_scan_prompt">Kundenchip auf das Lesegeraet legen</string>
 
     <string name="stats_daily_revenue">Täglicher Umsatz</string>
     <string name="stats_hourly_revenue">Stündlicher Umsatz</string>

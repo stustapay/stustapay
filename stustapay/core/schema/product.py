@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ProductRestriction(enum.Enum):
@@ -31,12 +31,21 @@ class NewProduct(BaseModel):
 
     target_account_id: Optional[int] = None
 
+    @field_validator("price")
+    @classmethod
+    def round_price_to_two_decimals(cls, v: Optional[float]) -> Optional[float]:  # pylint: disable=no-self-argument
+        """Round price to 2 decimal places to avoid precision issues."""
+        if v is None:
+            return None
+        return round(v * 100) / 100
+
 
 class Product(NewProduct):
     node_id: int
     id: int
     tax_name: str
     tax_rate: float
+    has_bookings: bool = False
     fixed_price: bool
     type: ProductType
     price_per_voucher: Optional[float] = None

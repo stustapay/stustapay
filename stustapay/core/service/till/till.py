@@ -54,6 +54,13 @@ async def assign_till_to_terminal(conn: Connection, node: Node, till_id: int, te
     assert till is not None
     if till.terminal_id is not None:
         raise InvalidArgument(f"Till {till.name} already has a terminal assigned")
+    terminal_mode = await conn.fetchval(
+        "select mode from terminal where id = $1 and node_id = any($2)", terminal_id, node.ids_to_root
+    )
+    if terminal_mode is None:
+        raise NotFound(element_type="terminal", element_id=terminal_id)
+    if terminal_mode != "till":
+        raise InvalidArgument("Only till terminals can be assigned to tills")
     await conn.execute("update till set terminal_id = $1 where id = $2", terminal_id, till_id)
 
 
@@ -120,10 +127,19 @@ class TillService(Service[Config]):
     @requires_node()
     @requires_user()
     async def list_tills(self, *, node: Node, conn: Connection) -> list[Till]:
+        if node.ids_to_event_node is None:
+            # If no event node hierarchy, just filter by current node
+            return await conn.fetch_many(
+                Till,
+                "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
+                "where (t.node_id = $1 or $1 = any(n.parent_ids)) and not t.is_virtual "
+                "order by t.name",
+                node.id,
+            )
         return await conn.fetch_many(
             Till,
             "select t.* from till_with_cash_register t join node n on t.node_id = n.id "
-            "where (t.node_id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual "
+            "where (n.id = any($1) or $2 = any(n.parent_ids)) and not t.is_virtual "
             "order by t.name",
             node.ids_to_event_node,
             node.id,

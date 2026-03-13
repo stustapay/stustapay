@@ -15,8 +15,11 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.Privilege
 import de.stustapay.api.models.TerminalButton
+import de.stustapay.api.models.TerminalSecrets
 import de.stustapay.api.models.TerminalSumupSecrets
+import de.stustapay.api.models.UserRole
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -28,22 +31,25 @@ import kotlinx.serialization.Contextual
  * @param id 
  * @param name 
  * @param description 
+ * @param eventName 
  * @param profileName 
  * @param cashRegisterId 
  * @param cashRegisterName 
  * @param allowTopUp 
  * @param allowCashOut 
  * @param allowTicketSale 
+ * @param allowTicketVouchers 
  * @param enableSspPayment 
  * @param enableCashPayment 
  * @param enableCardPayment 
  * @param buttons 
  * @param sumupSecrets 
- * @param secrets 
- * @param activeUserId 
- * @param availableRoles
  * @param postPaymentAllowed 
  * @param sumupPaymentEnabled 
+ * @param userPrivileges 
+ * @param secrets 
+ * @param activeUserId 
+ * @param availableRoles 
  */
 @Serializable
 
@@ -57,6 +63,9 @@ data class TerminalTillConfig (
 
     @SerialName(value = "description")
     val description: kotlin.String?,
+
+    @SerialName(value = "event_name")
+    val eventName: kotlin.String,
 
     @SerialName(value = "profile_name")
     val profileName: kotlin.String,
@@ -76,6 +85,9 @@ data class TerminalTillConfig (
     @SerialName(value = "allow_ticket_sale")
     val allowTicketSale: kotlin.Boolean,
 
+    @SerialName(value = "allow_ticket_vouchers")
+    val allowTicketVouchers: kotlin.Boolean,
+
     @SerialName(value = "enable_ssp_payment")
     val enableSspPayment: kotlin.Boolean,
 
@@ -91,13 +103,26 @@ data class TerminalTillConfig (
     @SerialName(value = "sumup_secrets")
     val sumupSecrets: TerminalSumupSecrets?,
 
-    @SerialName(value = "available_roles")
-    val availableRoles: kotlin.collections.List<UserRole>,
-
     @SerialName(value = "post_payment_allowed")
-    val postPaymentAllowed: kotlin.Boolean? = null,
+    val postPaymentAllowed: kotlin.Boolean,
 
     @SerialName(value = "sumup_payment_enabled")
-    val sumupPaymentEnabled: kotlin.Boolean? = null
+    val sumupPaymentEnabled: kotlin.Boolean,
 
-)
+    @SerialName(value = "user_privileges")
+    val userPrivileges: kotlin.collections.List<@Contextual Privilege>?,
+
+    @SerialName(value = "secrets")
+    val secrets: TerminalSecrets?,
+
+    @SerialName(value = "active_user_id")
+    val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
+
+    @SerialName(value = "available_roles")
+    val availableRoles: kotlin.collections.List<UserRole>
+
+) {
+
+
+}
+

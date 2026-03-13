@@ -35,6 +35,7 @@ const GeneralSettingsSchema = z
     start_date: z.string().optional().nullable(),
     end_date: z.string().optional().nullable(),
     daily_end_time: z.string().optional().nullable(),
+    expected_visitors_per_day: z.number().optional().nullable(),
     post_payment_allowed: z.boolean(),
   })
   .refine(
@@ -156,6 +157,11 @@ export const TabGeneral: React.FC<{
               name="daily_end_time"
               formik={formik}
               label={t("settings.general.daily_end_time")}
+            />
+            <FormNumericInput
+              label={t("settings.general.expected_visitors_per_day")}
+              name="expected_visitors_per_day"
+              formik={formik}
             />
             {/* Toggle Button */}
             <FormControlLabel

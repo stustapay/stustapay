@@ -15,6 +15,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +57,7 @@ fun StartpageView(
     val gradientColors = listOf(MaterialTheme.colors.background, MaterialTheme.colors.onSecondary)
     val activity = LocalActivity.current!!
     val isSelfServiceMode = loginState.hasOnlyTopUpPrivilege() && loginState.hasConfig() && !configLoading
+    val isEntryMode = loginState.isEntryMode() && loginState.hasConfig() && !configLoading
     var showInfoDialog by remember { mutableStateOf(false) }
 
     val navigateToHook = { dest: NavDest ->
@@ -63,6 +65,17 @@ fun StartpageView(
         if (!configLoading || dest == RootNavDests.settings) {
             navigateTo(dest)
         }
+    }
+
+    LaunchedEffect(isEntryMode) {
+        if (isEntryMode) {
+            navigateToHook(RootNavDests.entry)
+        }
+    }
+
+    if (isEntryMode) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
     }
 
     Box(
@@ -124,7 +137,17 @@ fun StartpageView(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Bottom,
                 ) {
-                    if (startpageItems.isNotEmpty()) {
+                    val entryItem = if (loginState.isEntryMode()) {
+                        StartpageItem(
+                            icon = Icons.Filled.MeetingRoom,
+                            label = R.string.root_item_entry,
+                            navDestination = RootNavDests.entry,
+                        )
+                    } else {
+                        null
+                    }
+
+                    if (entryItem != null || startpageItems.isNotEmpty()) {
                         Divider()
                     }
 
@@ -134,6 +157,9 @@ fun StartpageView(
                             .weight(1f)
                             .verticalScroll(scrollState)
                     ) {
+                        if (entryItem != null) {
+                            StartpageEntry(item = entryItem, navigateTo = navigateToHook)
+                        }
                         startpageItems.forEach { item ->
                             if (loginState.checkAccess(item.canAccess)) {
                                 StartpageEntry(item = item, navigateTo = navigateToHook)

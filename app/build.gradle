@@ -57,6 +57,7 @@ tasks.register('modApi') {
             filter { String line -> line.replace("    val buttons: AnyOfLessThanGreaterThan?,", "    val buttons: kotlin.collections.List<TerminalButton>?,") }
             filter { String line -> line.replace("java.math.BigDecimal", "kotlin.Double") }
             filter { String line -> line.replace("kotlin.Double(\"0.0\")", "0.0") }
+            filter { String line -> line.replace("kotlin.Double(\"0\")", "0.0") }
             filter { String line ->
                 if (line.contains("kotlin.Int")) {
                     line.replace("kotlin.Int", "@Contextual com.ionspin.kotlin.bignum.integer.BigInteger")

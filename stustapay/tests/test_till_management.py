@@ -219,7 +219,7 @@ async def test_button_references_max_one_voucher_product(
         )
 
 
-async def test_button_references_locked_products(
+async def test_button_references_products_without_manual_locking(
     event_node: Node,
     product_service: ProductService,
     tax_rate_ust: TaxRate,
@@ -230,17 +230,6 @@ async def test_button_references_locked_products(
         token=event_admin_token,
         node_id=event_node.id,
         product=NewProduct(name="foo", is_locked=False, price=5, tax_rate_id=tax_rate_ust.id),
-    )
-    with pytest.raises(Exception):
-        await till_service.layout.create_button(
-            token=event_admin_token, node_id=event_node.id, button=NewTillButton(name="foo", product_ids=[product.id])
-        )
-
-    product = await product_service.update_product(
-        token=event_admin_token,
-        node_id=event_node.id,
-        product_id=product.id,
-        product=NewProduct(name="foo", is_locked=True, price=5, tax_rate_id=tax_rate_ust.id),
     )
     button = await till_service.layout.create_button(
         token=event_admin_token, node_id=event_node.id, button=NewTillButton(name="foo", product_ids=[product.id])

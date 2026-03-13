@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, computed_field
@@ -14,6 +15,7 @@ class Privilege(enum.Enum):
     node_administration = "node_administration"
     customer_management = "customer_management"
     payout_management = "payout_management"
+    entry_management = "entry_management"
 
     create_user = "create_user"
     allow_privileged_role_assignment = "allow_privileged_role_assignment"
@@ -76,6 +78,7 @@ class NewUser(BaseModel):
     user_tag_pin: Optional[str] = None
     user_tag_uid: Optional[int] = None
     description: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UserWithoutId(NewUser):
@@ -112,6 +115,23 @@ class CurrentUser(BaseModel):
     description: Optional[str] = None
     user_tag_id: Optional[int] = None
     user_tag_uid: Optional[int] = None
+    email: Optional[str] = None
 
     transport_account_id: Optional[int] = None
     cash_register_id: Optional[int] = None
+
+
+class AcceptInvitationPayload(BaseModel):
+    token: str
+    password: str
+
+
+class UserInvitation(BaseModel):
+    id: int
+    user_id: int
+    token: str
+    node_id: int
+    created_at: datetime
+    expires_at: datetime
+    accepted_at: Optional[datetime] = None
+    created_by: Optional[int] = None

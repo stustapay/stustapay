@@ -25,6 +25,7 @@ class _BaseEvent(BaseModel):
     start_date: datetime | None = None
     end_date: datetime | None = None
     daily_end_time: time | None = None
+    expected_visitors_per_day: int | None = None
     post_payment_allowed: bool = False
 
     sumup_topup_enabled: bool
@@ -147,6 +148,8 @@ class ObjectType(enum.Enum):
     tse = "tse"
     account = "account"
     terminal = "terminal"
+    entry_area = "entry_area"
+    entry_group = "entry_group"
 
 
 ALL_OBJECT_TYPES = [e for e in ObjectType]

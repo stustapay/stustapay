@@ -8,6 +8,7 @@ from sftkit.error import InvalidArgument
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.entry import EntryArea, EntryAreaConfig
 from stustapay.core.schema.terminal import (
     CurrentTerminal,
     HeadwindDeviceMapping,
@@ -16,6 +17,7 @@ from stustapay.core.schema.terminal import (
     Terminal,
     TerminalButton,
     TerminalConfig,
+    TerminalMode,
     TerminalRegistrationSuccess,
     TerminalSecrets,
     TerminalSumupSecrets,
@@ -66,6 +68,18 @@ async def _fetch_terminal(conn: Connection, node: Node, terminal_id: int) -> Ter
     )
 
 
+async def _ensure_entry_area(conn: Connection, node: Node, entry_area_id: int) -> EntryArea:
+    entry_area = await conn.fetch_maybe_one(
+        EntryArea,
+        "select * from entry_area where id = $1 and node_id = any($2)",
+        entry_area_id,
+        node.ids_to_root,
+    )
+    if entry_area is None:
+        raise InvalidArgument(f"Entry area {entry_area_id} does not exist")
+    return entry_area
+
+
 class TerminalService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -77,11 +91,22 @@ class TerminalService(Service[Config]):
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
     async def create_terminal(self, *, conn: Connection, node: Node, terminal: NewTerminal) -> Terminal:
+        if terminal.mode == TerminalMode.till:
+            if terminal.entry_area_id is not None:
+                raise InvalidArgument("Till terminals cannot be assigned to an entry area")
+        else:
+            if terminal.entry_area_id is None:
+                raise InvalidArgument("Entry terminals must be assigned to an entry area")
+            await _ensure_entry_area(conn=conn, node=node, entry_area_id=terminal.entry_area_id)
+
         terminal_id = await conn.fetchval(
-            "insert into terminal (node_id, name, description) values ($1, $2, $3) returning id",
+            "insert into terminal (node_id, name, description, mode, entry_area_id) "
+            "values ($1, $2, $3, $4, $5) returning id",
             node.id,
             terminal.name,
             terminal.description,
+            terminal.mode.value,
+            terminal.entry_area_id,
         )
         t = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert t is not None
@@ -110,10 +135,27 @@ class TerminalService(Service[Config]):
     async def update_terminal(
         self, *, conn: Connection, node: Node, terminal_id: int, terminal: NewTerminal
     ) -> Terminal:
+        existing_terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if existing_terminal is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        if terminal.mode == TerminalMode.till:
+            if terminal.entry_area_id is not None:
+                raise InvalidArgument("Till terminals cannot be assigned to an entry area")
+        else:
+            if terminal.entry_area_id is None:
+                raise InvalidArgument("Entry terminals must be assigned to an entry area")
+            await _ensure_entry_area(conn=conn, node=node, entry_area_id=terminal.entry_area_id)
+            if existing_terminal.till_id is not None:
+                await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=existing_terminal.till_id)
+
         term_id = await conn.fetchval(
-            "update terminal set name = $1, description = $2 where id = $3 and node_id = $4 returning id",
+            "update terminal set name = $1, description = $2, mode = $3, entry_area_id = $4 "
+            "where id = $5 and node_id = $6 returning id",
             terminal.name,
             terminal.description,
+            terminal.mode.value,
+            terminal.entry_area_id,
             terminal_id,
             node.id,
         )
@@ -464,11 +506,22 @@ class TerminalService(Service[Config]):
             conn=conn, current_terminal=current_terminal
         )
 
+        entry_area = None
+        if current_terminal.entry_area_id is not None:
+            entry_area = await conn.fetch_maybe_one(
+                EntryAreaConfig,
+                "select id, name, description from entry_area where id = $1 and node_id = any($2)",
+                current_terminal.entry_area_id,
+                event_node.ids_to_root,
+            )
+
         return TerminalConfig(
             id=current_terminal.id,
             name=current_terminal.name,
             event_name=event_node.name,
             description=current_terminal.description,
+            mode=current_terminal.mode,
+            entry_area=entry_area,
             user_privileges=user_privileges,
             available_roles=available_roles,
             active_user_id=current_terminal.active_user_id,
@@ -479,7 +532,7 @@ class TerminalService(Service[Config]):
         )
 
     @with_db_transaction
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def check_user_login(
         self,
         *,
@@ -549,7 +602,7 @@ class TerminalService(Service[Config]):
         return available_roles
 
     @with_db_transaction
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def login_user(
         self,
         *,
@@ -651,7 +704,7 @@ class TerminalService(Service[Config]):
         return user
 
     @with_db_transaction(read_only=True)
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def get_current_user(
         self, *, conn: Connection, current_terminal: CurrentTerminal
     ) -> Optional[CurrentUser]:
@@ -691,7 +744,7 @@ class TerminalService(Service[Config]):
         return user
 
     @with_db_transaction
-    @requires_terminal()
+    @requires_terminal(requires_till=False)
     async def logout_user(self, *, conn: Connection, current_terminal: CurrentTerminal):
         """
         Logout the currently logged-in user. This is always possible

@@ -39,6 +39,8 @@ import kotlinx.serialization.Contextual
  * @param tagHistory 
  * @param userTagUidHex 
  * @param userTagComment 
+ * @param isVip 
+ * @param vipMaxBalance 
  */
 @Serializable
 
@@ -81,7 +83,13 @@ data class Account (
     val userTagUidHex: kotlin.String?,
 
     @SerialName(value = "user_tag_comment")
-    val userTagComment: kotlin.String? = null
+    val userTagComment: kotlin.String? = null,
+
+    @SerialName(value = "is_vip")
+    val isVip: kotlin.Boolean? = false,
+
+    @Contextual @SerialName(value = "vip_max_balance")
+    val vipMaxBalance: kotlin.Double? = null
 
 ) {
 
