@@ -13,6 +13,8 @@ import {
   Select,
   MenuItem,
   Button,
+  IconButton,
+  Tooltip,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -30,7 +32,7 @@ import {
   setStatsPollingInterval,
   setStatsSectionExpanded,
 } from "@/store";
-import { Refresh as RefreshIcon, ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import { Refresh as RefreshIcon, ExpandMore as ExpandMoreIcon, AutoGraph as AutoGraphIcon } from "@mui/icons-material";
 import { DashboardKPIs } from "./DashboardKPIs";
 import { RevenueByCounterChart } from "./RevenueByCounterChart";
 import { RevenueByProductChart } from "./RevenueByProductChart";
@@ -63,6 +65,7 @@ export const NodeStats: React.FC = () => {
   const [selectedSubnodeId, setSelectedSubnodeId] = React.useState<number | undefined>(undefined);
   const [selectedTillId, setSelectedTillId] = React.useState<number | undefined>(undefined);
   const [selectedProductId, setSelectedProductId] = React.useState<number | undefined>(undefined);
+  const [isPredictionEnabled, setIsPredictionEnabled] = React.useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
   const pollingIntervalMs = useAppSelector(selectStatsPollingInterval);
   const expandedSections = useAppSelector(selectStatsExpandedSections) as Record<SectionKey, boolean>;
@@ -113,7 +116,10 @@ export const NodeStats: React.FC = () => {
       tillId: selectedTillId,
       subnodeId: selectedSubnodeId,
     },
-    { pollingInterval: pollingIntervalMs, skip: currentNode.event == null }
+    {
+      pollingInterval: pollingIntervalMs,
+      skip: currentNode.event == null || !isPredictionEnabled || selectedProductId !== undefined,
+    }
   );
 
   const handleManualRefresh = React.useCallback(() => {
@@ -368,27 +374,45 @@ export const NodeStats: React.FC = () => {
 
               <Grid container spacing={{ xs: 1, sm: 1.5 }} alignItems="center">
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <FormControl size="small" fullWidth>
-                    <InputLabel id="polling-select-label" shrink>
-                      {t("overview.pollingInterval")}
-                    </InputLabel>
-                    <Select
-                      labelId="polling-select-label"
-                      id="polling-select"
-                      value={pollingIntervalMs}
-                      label={t("overview.pollingInterval")}
-                      onChange={(e) => dispatch(setStatsPollingInterval(Number(e.target.value)))}
-                      notched
-                    >
-                      <MenuItem value={0}>
-                        <em>{t("overview.pollingOff")}</em>
-                      </MenuItem>
-                      <MenuItem value={30000}>30s</MenuItem>
-                      <MenuItem value={60000}>1min</MenuItem>
-                      <MenuItem value={300000}>5min</MenuItem>
-                      <MenuItem value={1800000}>30min</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <FormControl size="small" fullWidth>
+                      <InputLabel id="polling-select-label" shrink>
+                        {t("overview.pollingInterval")}
+                      </InputLabel>
+                      <Select
+                        labelId="polling-select-label"
+                        id="polling-select"
+                        value={pollingIntervalMs}
+                        label={t("overview.pollingInterval")}
+                        onChange={(e) => dispatch(setStatsPollingInterval(Number(e.target.value)))}
+                        notched
+                      >
+                        <MenuItem value={0}>
+                          <em>{t("overview.pollingOff")}</em>
+                        </MenuItem>
+                        <MenuItem value={30000}>30s</MenuItem>
+                        <MenuItem value={60000}>1min</MenuItem>
+                        <MenuItem value={300000}>5min</MenuItem>
+                        <MenuItem value={1800000}>30min</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <Tooltip title={isPredictionEnabled ? t("overview.disablePrediction") : t("overview.enablePrediction")}>
+                      <IconButton
+                        size="small"
+                        onClick={() => setIsPredictionEnabled((prev) => !prev)}
+                        aria-label={isPredictionEnabled ? t("overview.disablePrediction") : t("overview.enablePrediction")}
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          border: (theme) =>
+                            `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"}`,
+                          color: isPredictionEnabled ? "#42A5F5" : "text.secondary",
+                        }}
+                      >
+                        <AutoGraphIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </Grid>
               </Grid>
 
@@ -560,15 +584,15 @@ export const NodeStats: React.FC = () => {
               tillId={selectedTillId}
               subnodeId={selectedSubnodeId}
               productId={selectedProductId}
-              prediction={prediction}
-              isPredictionLoading={isPredictionLoading}
+              prediction={isPredictionEnabled ? prediction : undefined}
+              isPredictionLoading={isPredictionEnabled ? isPredictionLoading : false}
               pollingIntervalMs={pollingIntervalMs}
             />
           </AccordionDetails>
         </Accordion>
       </Grid>
       {/* Revenue prediction chart - only show when no product filter is active */}
-      {selectedProductId === undefined && prediction && (
+      {isPredictionEnabled && selectedProductId === undefined && prediction && (
         <Grid size={12}>
           <Accordion expanded={expandedSections.prediction} onChange={handleSectionToggle("prediction")} disableGutters sx={sectionSx}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>

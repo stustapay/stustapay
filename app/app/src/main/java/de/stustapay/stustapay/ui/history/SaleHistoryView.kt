@@ -40,8 +40,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.Order
-import de.stustapay.api.models.OrderType
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavScaffold
 import de.stustapay.libssp.ui.theme.errorButtonColors
@@ -63,13 +64,33 @@ fun SaleHistoryView(
     val haptic = LocalHapticFeedback.current
     val status by viewModel.status.collectAsStateWithLifecycle()
     val cancelStatus by viewModel.cancelStatus.collectAsStateWithLifecycle()
+    val canScanCustomerHistory by viewModel.canScanCustomerHistory.collectAsStateWithLifecycle()
+    val historyFilter by viewModel.historyFilter.collectAsStateWithLifecycle()
+    val scanState = rememberNfcScanDialogState()
 
     BackHandler {
         leaveView()
     }
 
-    LaunchedEffect(null) {
+    LaunchedEffect(Unit) {
         viewModel.fetchHistory()
+    }
+
+    NfcScanDialog(
+        state = scanState,
+        onScan = { tag ->
+            scope.launch {
+                detailOrder = null
+                cancelOrder = false
+                viewModel.fetchHistoryForCustomer(tag.uid)
+            }
+        }
+    ) {
+        Text(
+            stringResource(R.string.history_scan_prompt),
+            textAlign = TextAlign.Center,
+            fontSize = 36.sp
+        )
     }
 
     NavScaffold(
@@ -85,6 +106,50 @@ fun SaleHistoryView(
                         .padding(10.dp)
                         .verticalScroll(state = scrollState)
                 ) {
+                    if (canScanCustomerHistory) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { scanState.open() }
+                        ) {
+                            Text(stringResource(R.string.history_scan_customer), fontSize = 24.sp)
+                        }
+
+                        if (historyFilter is SaleHistoryFilter.CustomerOrders) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    scope.launch {
+                                        detailOrder = null
+                                        cancelOrder = false
+                                        viewModel.fetchHistory()
+                                    }
+                                }
+                            ) {
+                                Text(stringResource(R.string.history_show_recent), fontSize = 24.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
+                    Text(
+                        text = when (historyFilter) {
+                            SaleHistoryFilter.RecentOrders -> stringResource(R.string.history_showing_recent)
+                            is SaleHistoryFilter.CustomerOrders -> stringResource(R.string.history_showing_customer)
+                        },
+                        fontSize = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (sales.isEmpty() && status is SaleHistoryStatus.Done) {
+                        Text(stringResource(R.string.history_empty), fontSize = 24.sp)
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
                     for (sale in sales) {
                         Row(
                             modifier = Modifier
@@ -189,7 +254,7 @@ fun SaleHistoryView(
 
                     Divider()
 
-                    if (sale.id == sales.first().id && sale.orderType == OrderType.sale) {
+                    if (viewModel.canCancelOrder(sale)) {
                         Button(modifier = Modifier
                             .fillMaxWidth()
                             .padding(10.dp),
@@ -208,7 +273,7 @@ fun SaleHistoryView(
     when (val castedStatus = cancelStatus) {
         is SaleHistoryStatus.Done -> {
             AlertDialog(
-                title = { Text("Successfully canceled order") },
+                title = { Text(stringResource(R.string.history_cancel_success)) },
                 onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
                 confirmButton = {
                     Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
@@ -219,8 +284,8 @@ fun SaleHistoryView(
         }
         is SaleHistoryStatus.Failed -> {
             AlertDialog(
-                title = { Text("Could not cancel order") },
-                text = { Text(castedStatus.msg)},
+                title = { Text(stringResource(R.string.history_cancel_error)) },
+                text = { Text(castedStatus.msg) },
                 onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
                 confirmButton = {
                     Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {

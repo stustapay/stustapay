@@ -17,6 +17,7 @@ pyvenv.cfg
 # building
 MANIFEST
 dist/
+.gradle/
 app/chip_debug/release/
 
 # testing
