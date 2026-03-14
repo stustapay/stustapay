@@ -1,9 +1,10 @@
-import { useChangeUserPasswordMutation } from "@/api";
+import { useChangeUserPasswordMutation, useGetUserQuery } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { UserRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import i18n from "@/i18n";
+import { Loading } from "@stustapay/components";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import * as React from "react";
@@ -54,18 +55,23 @@ export const UserPasswordChange: React.FC = withPrivilegeGuard("user_management"
   const { currentNode } = useCurrentNode();
   const { userId } = useParams();
   const [updateUser] = useChangeUserPasswordMutation();
+  const { data: user, isLoading } = useGetUserQuery({ nodeId: currentNode.id, userId: Number(userId) });
+
+  if (isLoading || !user) {
+    return <Loading />;
+  }
 
   return (
     <EditLayout
       title={t("user.changePassword.title")}
       submitLabel={t("save")}
-      successRoute={UserRoutes.detail(userId)}
+      successRoute={UserRoutes.detail(user.id, user.node_id)}
       initialValues={initialValues}
       validationSchema={PasswordChangeSchema}
       onSubmit={(u) =>
         updateUser({
-          nodeId: currentNode.id,
-          userId: Number(userId),
+          nodeId: user.node_id,
+          userId: user.id,
           changeUserPasswordPayload: { new_password: u.new_password },
         })
       }

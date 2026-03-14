@@ -17,12 +17,15 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.mail import Mail
+from stustapay.core.service.config import fetch_global_email_config
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
+from sftkit.error import NotFound
 
 
 class MailService(Service[Config]):
     MAIL_SEND_CHECK_INTERVAL = timedelta(seconds=1)
     MAIL_SEND_INTERVAL = timedelta(seconds=0.05)
+    MAIL_PROCESSING_LEASE = timedelta(minutes=5)
     MAX_RETRY_COUNT = 5
     # Doubling backoff pattern for retries: 1sec, 2sec, 4sec, 8sec, 16sec
     BASE_RETRY_DELAY = timedelta(seconds=1)
@@ -32,6 +35,44 @@ class MailService(Service[Config]):
         super().__init__(db_pool, config)
         self.logger = logging.getLogger("mail_service")
 
+    async def _fetch_global_mail_config(
+        self,
+        *,
+        conn: Connection,
+    ) -> tuple[bool, str | None, str | None, int | None, str | None, str | None]:
+        config = await fetch_global_email_config(conn=conn)
+        return (
+            config.email_enabled,
+            config.email_default_sender,
+            config.email_smtp_host,
+            config.email_smtp_port,
+            config.email_smtp_username,
+            config.email_smtp_password,
+        )
+
+    async def _resolve_mail_settings(
+        self,
+        *,
+        conn: Connection,
+        node_id: int,
+    ) -> tuple[bool, str | None, str | None, int | None, str | None, str | None]:
+        try:
+            event_settings = await fetch_restricted_event_settings_for_node(conn, node_id)
+            return (
+                event_settings.email_enabled,
+                event_settings.email_default_sender,
+                event_settings.email_smtp_host,
+                event_settings.email_smtp_port,
+                event_settings.email_smtp_username,
+                event_settings.email_smtp_password,
+            )
+        except NotFound:
+            node_exists = await conn.fetchval("select exists(select from node where id = $1)", node_id)
+            if not node_exists:
+                raise
+            # Node is not part of an event; fall back to global mail settings.
+            return await self._fetch_global_mail_config(conn=conn)
+
     @with_db_transaction
     async def send_mail(
         self,
@@ -39,32 +80,40 @@ class MailService(Service[Config]):
         conn: Connection,
         node_id: int,
         subject: str,
-        message: str,
-        html_message: bool = False,
+        text_message: str,
+        html_message: str | None = None,
         to_addr: str,
         from_addr: str | None = None,
         scheduled_send_date: datetime | None = None,
         attachments: dict[str, bytes] | None = None,
         retry_max: int | None = None,
     ):
-        res_config = await fetch_restricted_event_settings_for_node(conn, node_id)
-        if not res_config.email_enabled:
+        (
+            mail_enabled,
+            default_sender,
+            _smtp_host,
+            _smtp_port,
+            _smtp_username,
+            _smtp_password,
+        ) = await self._resolve_mail_settings(conn=conn, node_id=node_id)
+        if not mail_enabled:
             self.logger.warning(
-                f"Mail to {to_addr} was not scheduled for sending because event with node id {node_id} has mail sending deactivated"
+                f"Mail to {to_addr} was not scheduled for sending because mail sending is deactivated "
+                f"for node id {node_id} (event or global settings)"
             )
             return
         mail_id = await conn.fetchval(
             """
-            INSERT INTO mails (node_id, subject, message, html_message, to_addr, from_addr, scheduled_send_date, retry_max)
+            INSERT INTO mails (node_id, subject, text_message, html_message, to_addr, from_addr, scheduled_send_date, retry_max)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id
             """,
             node_id,
             subject,
-            message,
+            text_message,
             html_message,
             to_addr,
-            from_addr if from_addr is not None else res_config.email_default_sender,
+            from_addr if from_addr is not None else default_sender,
             scheduled_send_date if scheduled_send_date is not None else datetime.now(),
             retry_max if retry_max is not None else self.MAX_RETRY_COUNT,
         )
@@ -81,27 +130,42 @@ class MailService(Service[Config]):
             )
         self.logger.debug(f"Added mail to database buffer for {to_addr}")
 
-    @with_db_transaction(read_only=True)
+    @with_db_transaction
     async def _fetch_mail(self, *, conn: Connection) -> list[Mail]:
-        # fetch all unsent mails from nodes with email enabled that are either:
-        # 1. Due for their first attempt (no retry_next_attempt)
-        # 2. Due for a retry attempt (retry_next_attempt <= now)
-        # 3. Under the maximum retry count
-
+        # Claim due mails before returning them so multiple API processes do not send
+        # the same queued mail concurrently.
+        now = datetime.now()
+        lease_until = now + self.MAIL_PROCESSING_LEASE
         return await conn.fetch_many(
             Mail,
             """
-            select *
-            from mail_with_attachments
-            where send_date is null
-              and (
-                  (retry_next_attempt is null and scheduled_send_date <= $1)
-                  or 
-                  (retry_next_attempt is not null and retry_next_attempt <= $1)
-              )
-              and retry_count < retry_max
+            with due_mails as (
+                select id
+                from mails
+                where send_date is null
+                  and (
+                      (retry_next_attempt is null and scheduled_send_date <= $1)
+                      or
+                      (retry_next_attempt is not null and retry_next_attempt <= $1)
+                  )
+                  and retry_count < retry_max
+                order by scheduled_send_date, id
+                for update skip locked
+            ),
+            claimed_mails as (
+                update mails as m
+                set retry_next_attempt = $2
+                from due_mails d
+                where m.id = d.id
+                returning m.id
+            )
+            select mwa.*
+            from mail_with_attachments mwa
+            join claimed_mails cm on cm.id = mwa.id
+            order by mwa.scheduled_send_date, mwa.id
             """,
-            datetime.now(),
+            now,
+            lease_until,
         )
 
     async def run_mail_service(self):
@@ -129,11 +193,18 @@ class MailService(Service[Config]):
         mail: Mail,
     ) -> None:
         self.logger.debug(f"Sending mail to {mail.to_addr}, attempt {mail.retry_count + 1}/{mail.retry_max}")
-        res_config = await fetch_restricted_event_settings_for_node(conn, mail.node_id)
-        smtp_config = res_config.smtp_config
-        if not smtp_config:
+        (
+            mail_enabled,
+            default_sender,
+            smtp_host,
+            smtp_port,
+            smtp_username,
+            smtp_password,
+        ) = await self._resolve_mail_settings(conn=conn, node_id=mail.node_id)
+        if not mail_enabled:
             self.logger.info(
-                f"The mail was not sent because event with node id {mail.node_id} has mail sending deactivated"
+                f"The mail was not sent because mail sending is deactivated for node id {mail.node_id} "
+                f"(event or global settings)"
             )
             # Mark as failed without retry - configuration issue
             await conn.execute(
@@ -143,24 +214,24 @@ class MailService(Service[Config]):
                     failure_reason = $1
                 where id = $2
                 """,
-                "Mail sending deactivated for this event",
+                "Mail sending deactivated (event/global settings)",
                 mail.id,
             )
             return
 
         message = MIMEMultipart()
         message["Subject"] = mail.subject
-        message["From"] = mail.from_addr if mail.from_addr else res_config.email_default_sender
+        message["From"] = mail.from_addr if mail.from_addr else default_sender
         message["To"] = mail.to_addr
         message["Date"] = formatdate(localtime=True)
 
         if mail.html_message:
-            # TODO: to properly handle html messages, we need to convert html to plain text
-            # and add the plain text version as an alternative part
-            msg = MIMEText(mail.message, "html", "utf-8")
+            alternative = MIMEMultipart("alternative")
+            alternative.attach(MIMEText(mail.text_message, "plain", "utf-8"))
+            alternative.attach(MIMEText(mail.html_message, "html", "utf-8"))
+            message.attach(alternative)
         else:
-            msg = MIMEText(mail.message, "plain", "utf-8")
-        message.attach(msg)
+            message.attach(MIMEText(mail.text_message, "plain", "utf-8"))
 
         for attachment in mail.attachments:
             part = MIMEBase("application", "octet-stream")
@@ -170,13 +241,13 @@ class MailService(Service[Config]):
             message.attach(part)
 
         try:
-            assert smtp_config.smtp_host is not None and smtp_config.smtp_port is not None
+            assert smtp_host is not None and smtp_port is not None
             await aiosmtplib.send(
                 message,
-                hostname=smtp_config.smtp_host,
-                port=smtp_config.smtp_port,
-                username=smtp_config.smtp_username,
-                password=smtp_config.smtp_password,
+                hostname=smtp_host,
+                port=smtp_port,
+                username=smtp_username,
+                password=smtp_password,
                 start_tls=True,
             )
             self.logger.debug(f"Mail sent to {mail.to_addr}")
