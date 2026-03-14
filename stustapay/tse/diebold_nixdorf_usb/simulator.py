@@ -11,12 +11,11 @@ import logging
 import re
 import time
 from datetime import datetime, timedelta, timezone
-from hashlib import sha256, sha384
+from hashlib import sha256
 from inspect import stack
 from random import randbytes, randrange
 from typing import Optional
 
-import ecdsa
 import uvicorn
 from asn1crypto.core import (
     Any,
@@ -28,6 +27,13 @@ from asn1crypto.core import (
 )
 from fastapi import FastAPI, WebSocket
 
+from stustapay.tse.diebold_nixdorf_usb.crypto import (
+    generate_private_key,
+    private_key_from_hex,
+    private_key_to_hex,
+    public_key_to_raw_bytes,
+    sign_raw,
+)
 from stustapay.tse.diebold_nixdorf_usb.protocol import TseResponse, TseSuccess, dnerror
 
 
@@ -85,26 +91,19 @@ class VirtualTSE:
         self.current_transactions["DummyDefaultClientId"] = set()
 
         if private_key_hex is not None:
-            self.sk = ecdsa.SigningKey.from_string(
-                bytes.fromhex(private_key_hex), curve=ecdsa.BRAINPOOLP384r1, hashfunc=sha384
-            )
+            self.sk = private_key_from_hex(private_key_hex)
             if gen_key:
                 print("Secret key supplied, therefore NOT generating a new one.")
         else:
             if gen_key:
-                self.sk = ecdsa.SigningKey.generate(curve=ecdsa.BRAINPOOLP384r1, hashfunc=sha384)
-                print(f"new generated secret key: {self.sk.to_string().hex()}")
+                self.sk = generate_private_key()
+                print(f"new generated secret key: {private_key_to_hex(self.sk)}")
             else:
-                self.sk = ecdsa.SigningKey.from_string(
-                    bytes.fromhex(
-                        "65a194772ded349bf0bf915a4f47f0a33fdc3078399c83530c2e91548119c9705f242056ad91f41ada94bf4954d08228"
-                    ),
-                    curve=ecdsa.BRAINPOOLP384r1,
-                    hashfunc=sha384,
+                self.sk = private_key_from_hex(
+                    "65a194772ded349bf0bf915a4f47f0a33fdc3078399c83530c2e91548119c9705f242056ad91f41ada94bf4954d08228"
                 )
 
-        vk = self.sk.get_verifying_key()
-        self.public_key = Sequence.load(vk.to_der())[1].dump()[3:]
+        self.public_key = public_key_to_raw_bytes(self.sk.public_key())
         self.serial = sha256(self.public_key).hexdigest()
 
         print(f"Serial Number: {self.serial}")
@@ -572,7 +571,7 @@ class VirtualTSE:
             + data["LogTime"].dump()
         )
 
-        signature = self.sk.sign(message).hex()
+        signature = sign_raw(self.sk, message).hex()
         return signature
 
 
