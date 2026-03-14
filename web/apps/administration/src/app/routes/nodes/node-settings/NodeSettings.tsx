@@ -1,7 +1,7 @@
 import { useDeleteNodeMutation, useUpdateNodeMutation } from "@/api";
 import { isErrorResp } from "@/api/utils";
-import { useCurrentNode } from "@/hooks";
-import { Button, Container, LinearProgress, Stack } from "@mui/material";
+import { useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+import { Box, Button, Container, LinearProgress, Stack, Tab } from "@mui/material";
 import { FormSelect, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -12,6 +12,9 @@ import { toast } from "react-toastify";
 import { EventSettings } from "../event-settings";
 import { NodeSettingsSchema, ObjectTypeSchema, type NodeSettingsSchemaType } from "../types";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { useQueryVar } from "@stustapay/utils";
+import { TabGlobalEmail } from "./TabGlobalEmail";
 
 export const NodeConfiguration: React.FC = () => {
   const { t } = useTranslation();
@@ -91,9 +94,11 @@ export const NodeConfiguration: React.FC = () => {
 export const NodeSettings: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canManageGlobalEmail = useCurrentUserHasPrivilege("global_email_management");
   const openModal = useOpenModal();
   const [deleteNode] = useDeleteNodeMutation();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useQueryVar("tab", "node");
 
   if (currentNode.event != null) {
     return <EventSettings />;
@@ -134,7 +139,26 @@ export const NodeSettings: React.FC = () => {
             {t("settings.deleteNode.button")}
           </Button>
         </Stack>
-        <NodeConfiguration />
+        {currentNode.id === 0 && canManageGlobalEmail ? (
+          <TabContext value={activeTab}>
+            <Box display="grid" gridTemplateColumns="min-content auto">
+              <Box sx={{ borderRight: 1, borderColor: "divider" }}>
+                <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
+                  <Tab label={t("common.node")} value="node" />
+                  <Tab label={t("settings.email.tabLabel")} value="email" />
+                </TabList>
+              </Box>
+              <TabPanel value="node">
+                <NodeConfiguration />
+              </TabPanel>
+              <TabPanel value="email">
+                <TabGlobalEmail />
+              </TabPanel>
+            </Box>
+          </TabContext>
+        ) : (
+          <NodeConfiguration />
+        )}
       </Stack>
     </Container>
   );

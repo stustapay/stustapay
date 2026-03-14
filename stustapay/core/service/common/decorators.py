@@ -7,7 +7,7 @@ from sftkit.database import Connection
 
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.tree import Node, ObjectType
+from stustapay.core.schema.tree import Node, ObjectType, ROOT_NODE_ID
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.common.error import EventRequired, NodeIsReadOnly
 from sftkit.error import (
@@ -175,6 +175,74 @@ def requires_user(
 
         if node_required and "node" not in original_signature.parameters:
             _add_arg_to_signature(func, wrapper, "node")
+
+        return wrapper
+
+    return f
+
+
+def requires_root_user(
+    privileges: list[Privilege] | None = None,
+) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
+    """
+    Check if a user is logged in via a user jwt token and has provided privileges assigned at the root node.
+    """
+
+    def f(func: Callable[..., Awaitable[R]]):
+        original_signature = signature(func)
+
+        @wraps(func)
+        async def wrapper(self, **kwargs):
+            if "token" not in kwargs and "current_user" not in kwargs:
+                raise RuntimeError("token or user was not provided to service function call")
+
+            if "conn" not in kwargs:
+                raise RuntimeError(
+                    "requires_root_user needs a database connection, "
+                    "with_db_transaction needs to be put before this decorator"
+                )
+
+            token = kwargs.get("token")
+            user: CurrentUser | None = kwargs.get("current_user")
+            conn: Connection = kwargs["conn"]
+            if user is None:
+                if self.__class__.__name__ == "AuthService":
+                    user = await self.get_user_from_token(conn=conn, token=token)
+                elif hasattr(self, "auth_service"):
+                    user = await self.auth_service.get_user_from_token(conn=conn, token=token)
+                else:
+                    raise RuntimeError("requires_root_user needs self.auth_service to be a AuthService instance")
+
+            if user is None:
+                raise Unauthorized("invalid user token")
+
+            role_privileges = await conn.fetch(
+                "select privileges "
+                "from user_to_role utr join user_role_with_privileges urwp on utr.role_id = urwp.id "
+                "where utr.node_id = $1 and urwp.node_id = $1 and utr.user_id = $2",
+                ROOT_NODE_ID,
+                user.id,
+            )
+            user_privileges = set(chain.from_iterable(row["privileges"] for row in role_privileges))
+            user.privileges = list(user_privileges)
+
+            if privileges and not any(p.value in user_privileges for p in privileges):
+                raise AccessDenied(
+                    f"user does not have any of the required root privileges: {[p.value for p in privileges]}"
+                )
+
+            if "current_user" in original_signature.parameters:
+                kwargs["current_user"] = user
+            elif "current_user" in kwargs:
+                kwargs.pop("current_user")
+
+            if "token" not in original_signature.parameters and "token" in kwargs:
+                kwargs.pop("token")
+
+            if "conn" not in original_signature.parameters:
+                kwargs.pop("conn")
+
+            return await func(self, **kwargs)
 
         return wrapper
 

@@ -8,6 +8,18 @@ class ConfigEntry(BaseModel):
     value: Optional[str]
 
 
+class GlobalEmailConfig(BaseModel):
+    email_enabled: bool
+    email_default_sender: str | None = None
+    email_smtp_host: str | None = None
+    email_smtp_port: int | None = None
+    email_smtp_username: str | None = None
+    email_smtp_password: str | None = None
+    invitation_subject: str | None = None
+    invitation_text_body: str | None = None
+    invitation_html_body: str | None = None
+
+
 class PublicConfig(BaseModel):
     test_mode: bool
     test_mode_message: str

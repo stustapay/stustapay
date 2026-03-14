@@ -570,6 +570,20 @@ export const translations: NestedPartialAsStrings<Translations> = {
       smtp_port: "SMTP-Port",
       smtp_username: "SMTP-Benutzername",
       smtp_password: "SMTP-Passwort",
+      invitation_subject: "Betreff der Einladungs-E-Mail",
+      invitation_text_body: "Textinhalt der Einladungs-E-Mail",
+      invitation_html_body: "HTML-Inhalt der Einladungs-E-Mail",
+      templateVariables: "Template-Variablen",
+      templateVariablesHelp:
+        "Verwenden Sie Jinja-Variablen wie display_name, node_name, invitation_url und expires_at mit der ueblichen Double-Curly-Brace-Syntax.",
+      sendPreviewTestMail: "Vorschau-Testmail senden",
+      testMailQueued: "Vorschau-Testmail wurde in die Warteschlange gestellt",
+      testMailFailed: "Senden der Vorschau-Testmail fehlgeschlagen: {{reason}}",
+      noCurrentUserEmail:
+        "Der Button fuer die Vorschau-Testmail ist deaktiviert, weil fuer Ihren Benutzer keine E-Mail-Adresse konfiguriert ist.",
+      updateSuccess: "Globale E-Mail-Einstellungen erfolgreich aktualisiert",
+      updateFailed: "Aktualisierung der globalen E-Mail-Einstellungen fehlgeschlagen: {{reason}}",
+      loadErrorTitle: "Fehler beim Laden der globalen E-Mail-Einstellungen",
     },
     settingsUpdateError: "Fehler beim Aktualisieren der Einstellung: {{what}}",
     theme: {

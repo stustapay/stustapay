@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import Context, ContextConfigService, get_context
+from stustapay.core.http.context import Context, ContextConfigService, ContextMailService, get_context
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.config import ConfigEntry, PublicConfig
+from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, PublicConfig
 
 router = APIRouter(
     prefix="",
@@ -41,3 +41,26 @@ async def set_config_entry(
     config_service: ContextConfigService,
 ):
     return await config_service.set_config_entry(token=token, entry=config_entry)
+
+
+@router.get("/config/email", response_model=GlobalEmailConfig)
+async def get_global_email_config(token: CurrentAuthToken, config_service: ContextConfigService):
+    return await config_service.get_global_email_config(token=token)
+
+
+@router.post("/config/email", response_model=GlobalEmailConfig)
+async def update_global_email_config(
+    email_config: GlobalEmailConfig,
+    token: CurrentAuthToken,
+    config_service: ContextConfigService,
+):
+    return await config_service.update_global_email_config(token=token, config=email_config)
+
+
+@router.post("/config/email/test", response_model=dict[str, str])
+async def send_global_email_test(
+    token: CurrentAuthToken,
+    config_service: ContextConfigService,
+    mail_service: ContextMailService,
+):
+    return await config_service.send_global_email_test(token=token, mail_service=mail_service)

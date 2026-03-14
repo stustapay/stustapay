@@ -3719,6 +3719,115 @@
         ]
       }
     },
+    "/config/email": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Global Email Config",
+        "operationId": "get_global_email_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalEmailConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Update Global Email Config",
+        "operationId": "update_global_email_config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalEmailConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalEmailConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/config/email/test": {
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Send Global Email Test",
+        "operationId": "send_global_email_test",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Send Global Email Test Config Email Test Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/system-accounts": {
       "get": {
         "tags": [
@@ -14414,6 +14523,107 @@
         ],
         "title": "FindUserTagPayload"
       },
+      "GlobalEmailConfig": {
+        "properties": {
+          "email_enabled": {
+            "type": "boolean",
+            "title": "Email Enabled"
+          },
+          "email_default_sender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Default Sender"
+          },
+          "email_smtp_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Host"
+          },
+          "email_smtp_port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Port"
+          },
+          "email_smtp_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Username"
+          },
+          "email_smtp_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Password"
+          },
+          "invitation_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Subject"
+          },
+          "invitation_text_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Text Body"
+          },
+          "invitation_html_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Html Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email_enabled"
+        ],
+        "title": "GlobalEmailConfig"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -17707,6 +17917,7 @@
         "type": "string",
         "enum": [
           "node_administration",
+          "global_email_management",
           "customer_management",
           "payout_management",
           "entry_management",
@@ -17801,6 +18012,11 @@
           "tax_rate": {
             "type": "number",
             "title": "Tax Rate"
+          },
+          "has_bookings": {
+            "type": "boolean",
+            "title": "Has Bookings",
+            "default": false
           },
           "type": {
             "$ref": "#/components/schemas/ProductType"

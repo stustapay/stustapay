@@ -61,7 +61,7 @@ export const ProductDetail: React.FC = () => {
         },
         {
           label: t("delete"),
-          disabled: product.has_bookings,
+          disabled: product.has_bookings ?? false,
           onClick: openConfirmDeleteDialog,
           color: "error",
           icon: <DeleteIcon />,
@@ -70,7 +70,7 @@ export const ProductDetail: React.FC = () => {
     >
       <DetailView>
         <DetailField label={t("product.name")} value={product.name} />
-        <DetailBoolField label={t("product.hasBookings")} value={product.has_bookings} />
+        <DetailBoolField label={t("product.hasBookings")} value={product.has_bookings ?? false} />
         <DetailBoolField label={t("product.isReturnable")} value={product.is_returnable} />
         <DetailBoolField label={t("product.isFixedPrice")} value={product.fixed_price} />
         <DetailListField label={t("product.restrictions")} value={product?.restrictions} />
