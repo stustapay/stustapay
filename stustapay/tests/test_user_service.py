@@ -5,7 +5,7 @@ import pytest
 
 from sftkit.error import AccessDenied, InvalidArgument
 from sftkit.database import Connection
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import ROOT_NODE_ID, Node
 from stustapay.core.schema.config import GlobalEmailConfig
 from stustapay.core.schema.user import AcceptInvitationPayload, NewUser, NewUserRole, Privilege
 from stustapay.core.service.config import ConfigService
@@ -118,8 +118,12 @@ async def test_invitation_uses_global_email_templates(
         mail_service=mail_service,
     )
 
-    mail = await db_connection.fetchrow("select subject, text_message, html_message from mails order by id desc limit 1")
+    mail = await db_connection.fetchrow(
+        "select node_id, from_addr, subject, text_message, html_message from mails order by id desc limit 1"
+    )
     assert mail is not None
+    assert mail["node_id"] == ROOT_NODE_ID
+    assert mail["from_addr"] == "noreply@example.test"
     assert "Templated User" in mail["subject"]
     assert "accept-invitation?token=" in mail["text_message"]
     assert "<html" in mail["html_message"]
@@ -168,8 +172,12 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
         mail_service=mail_service,
     )
 
-    mail = await db_connection.fetchrow("select subject, text_message, html_message from mails order by id desc limit 1")
+    mail = await db_connection.fetchrow(
+        "select node_id, from_addr, subject, text_message, html_message from mails order by id desc limit 1"
+    )
     assert mail is not None
+    assert mail["node_id"] == ROOT_NODE_ID
+    assert mail["from_addr"] == "noreply@example.test"
     assert mail["subject"] == f"Invitation to manage {event_node.name}"
     assert "Fallback User" in mail["text_message"]
     assert "ignored" in mail["html_message"]
@@ -217,8 +225,12 @@ async def test_invitation_uses_partial_template_overrides(
         mail_service=mail_service,
     )
 
-    mail = await db_connection.fetchrow("select subject, text_message, html_message from mails order by id desc limit 1")
+    mail = await db_connection.fetchrow(
+        "select node_id, from_addr, subject, text_message, html_message from mails order by id desc limit 1"
+    )
     assert mail is not None
+    assert mail["node_id"] == ROOT_NODE_ID
+    assert mail["from_addr"] == "noreply@example.test"
     assert mail["subject"] == "Custom subject for Partial Template User"
     assert "accept-invitation?token=" in mail["text_message"]
     assert "Custom HTML for Partial Template User" in mail["html_message"]

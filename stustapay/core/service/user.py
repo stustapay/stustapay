@@ -735,7 +735,8 @@ class UserService(Service[Config]):
             else None
         )
 
-        # Send email
+        # Invitations must always be sent via the global mail configuration,
+        # independent of the node the invited user will manage.
         await mail_service.send_mail(
             conn=conn,
             node_id=ROOT_NODE_ID,
