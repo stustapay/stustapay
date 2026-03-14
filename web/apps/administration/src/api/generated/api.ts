@@ -666,6 +666,18 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/config`, method: "POST", body: queryArg.configEntry }),
         invalidatesTags: ["config"],
       }),
+      getGlobalEmailConfig: build.query<GetGlobalEmailConfigApiResponse, GetGlobalEmailConfigApiArg>({
+        query: () => ({ url: `/config/email` }),
+        providesTags: ["config"],
+      }),
+      updateGlobalEmailConfig: build.mutation<UpdateGlobalEmailConfigApiResponse, UpdateGlobalEmailConfigApiArg>({
+        query: (queryArg) => ({ url: `/config/email`, method: "POST", body: queryArg.globalEmailConfig }),
+        invalidatesTags: ["config"],
+      }),
+      sendGlobalEmailTest: build.mutation<SendGlobalEmailTestApiResponse, SendGlobalEmailTestApiArg>({
+        query: () => ({ url: `/config/email/test`, method: "POST" }),
+        invalidatesTags: ["config"],
+      }),
       listSystemAccounts: build.query<ListSystemAccountsApiResponse, ListSystemAccountsApiArg>({
         query: (queryArg) => ({
           url: `/system-accounts`,
@@ -2240,6 +2252,16 @@ export type SetConfigEntryApiResponse = /** status 200 Successful Response */ Co
 export type SetConfigEntryApiArg = {
   configEntry: ConfigEntry;
 };
+export type GetGlobalEmailConfigApiResponse = /** status 200 Successful Response */ GlobalEmailConfig;
+export type GetGlobalEmailConfigApiArg = void;
+export type UpdateGlobalEmailConfigApiResponse = /** status 200 Successful Response */ GlobalEmailConfig;
+export type UpdateGlobalEmailConfigApiArg = {
+  globalEmailConfig: GlobalEmailConfig;
+};
+export type SendGlobalEmailTestApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string;
+};
+export type SendGlobalEmailTestApiArg = void;
 export type ListSystemAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type ListSystemAccountsApiArg = {
   nodeId: number;
@@ -2948,7 +2970,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
-  has_bookings: boolean;
+  has_bookings?: boolean;
   type: ProductType;
   price_per_voucher?: number | null;
 };
@@ -3010,6 +3032,7 @@ export type NormalizedListUserInt = {
 };
 export type Privilege =
   | "node_administration"
+  | "global_email_management"
   | "customer_management"
   | "payout_management"
   | "entry_management"
@@ -3452,6 +3475,17 @@ export type NormalizedListConfigEntryStr = {
     [key: string]: ConfigEntry;
   };
 };
+export type GlobalEmailConfig = {
+  email_enabled: boolean;
+  email_default_sender?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_username?: string | null;
+  email_smtp_password?: string | null;
+  invitation_subject?: string | null;
+  invitation_text_body?: string | null;
+  invitation_html_body?: string | null;
+};
 export type AccountType =
   | "private"
   | "sale_exit"
@@ -3723,7 +3757,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: string]: CashierRead;
+    [key: string]: Cashier;
   };
 };
 export type CashierProductStats = {
@@ -4715,6 +4749,10 @@ export const {
   useListConfigEntriesQuery,
   useLazyListConfigEntriesQuery,
   useSetConfigEntryMutation,
+  useGetGlobalEmailConfigQuery,
+  useLazyGetGlobalEmailConfigQuery,
+  useUpdateGlobalEmailConfigMutation,
+  useSendGlobalEmailTestMutation,
   useListSystemAccountsQuery,
   useLazyListSystemAccountsQuery,
   useFindAccountsMutation,

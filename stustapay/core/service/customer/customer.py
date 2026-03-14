@@ -286,7 +286,7 @@ class CustomerService(Service[Config]):
             try:
                 await mail_service.send_mail(
                     subject=email_info["subject"],
-                    message=email_info["message"],
+                    text_message=email_info["message"],
                     from_addr=email_info["from_addr"],
                     to_addr=email_info["to_addr"],
                     node_id=email_info["node_id"],
@@ -379,4 +379,3 @@ class CustomerService(Service[Config]):
             "image": result["banner_image"],
             "mime_type": result["banner_image_mime_type"] or "image/png"
         }
-

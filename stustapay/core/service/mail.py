@@ -17,6 +17,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.mail import Mail
+from stustapay.core.service.config import fetch_global_email_config
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from sftkit.error import NotFound
 
@@ -24,6 +25,7 @@ from sftkit.error import NotFound
 class MailService(Service[Config]):
     MAIL_SEND_CHECK_INTERVAL = timedelta(seconds=1)
     MAIL_SEND_INTERVAL = timedelta(seconds=0.05)
+    MAIL_PROCESSING_LEASE = timedelta(minutes=5)
     MAX_RETRY_COUNT = 5
     # Doubling backoff pattern for retries: 1sec, 2sec, 4sec, 8sec, 16sec
     BASE_RETRY_DELAY = timedelta(seconds=1)
@@ -33,46 +35,19 @@ class MailService(Service[Config]):
         super().__init__(db_pool, config)
         self.logger = logging.getLogger("mail_service")
 
-    @staticmethod
-    def _parse_config_bool(value: str | None, default: bool = False) -> bool:
-        if value is None:
-            return default
-        return value.strip().lower() in {"1", "true", "yes", "on"}
-
-    @staticmethod
-    def _parse_config_int(value: str | None) -> int | None:
-        if value is None or value.strip() == "":
-            return None
-        try:
-            return int(value)
-        except ValueError:
-            return None
-
     async def _fetch_global_mail_config(
         self,
         *,
         conn: Connection,
     ) -> tuple[bool, str | None, str | None, int | None, str | None, str | None]:
-        rows = await conn.fetch(
-            "select key, value from config "
-            "where key = any($1)",
-            [
-                "mail.enabled",
-                "mail.default_sender",
-                "mail.smtp_host",
-                "mail.smtp_port",
-                "mail.smtp_username",
-                "mail.smtp_password",
-            ],
-        )
-        config = {str(row["key"]): row["value"] for row in rows}
+        config = await fetch_global_email_config(conn=conn)
         return (
-            self._parse_config_bool(config.get("mail.enabled"), default=False),
-            config.get("mail.default_sender"),
-            config.get("mail.smtp_host"),
-            self._parse_config_int(config.get("mail.smtp_port")),
-            config.get("mail.smtp_username"),
-            config.get("mail.smtp_password"),
+            config.email_enabled,
+            config.email_default_sender,
+            config.email_smtp_host,
+            config.email_smtp_port,
+            config.email_smtp_username,
+            config.email_smtp_password,
         )
 
     async def _resolve_mail_settings(
@@ -105,8 +80,8 @@ class MailService(Service[Config]):
         conn: Connection,
         node_id: int,
         subject: str,
-        message: str,
-        html_message: bool = False,
+        text_message: str,
+        html_message: str | None = None,
         to_addr: str,
         from_addr: str | None = None,
         scheduled_send_date: datetime | None = None,
@@ -129,13 +104,13 @@ class MailService(Service[Config]):
             return
         mail_id = await conn.fetchval(
             """
-            INSERT INTO mails (node_id, subject, message, html_message, to_addr, from_addr, scheduled_send_date, retry_max)
+            INSERT INTO mails (node_id, subject, text_message, html_message, to_addr, from_addr, scheduled_send_date, retry_max)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id
             """,
             node_id,
             subject,
-            message,
+            text_message,
             html_message,
             to_addr,
             from_addr if from_addr is not None else default_sender,
@@ -155,27 +130,42 @@ class MailService(Service[Config]):
             )
         self.logger.debug(f"Added mail to database buffer for {to_addr}")
 
-    @with_db_transaction(read_only=True)
+    @with_db_transaction
     async def _fetch_mail(self, *, conn: Connection) -> list[Mail]:
-        # fetch all unsent mails from nodes with email enabled that are either:
-        # 1. Due for their first attempt (no retry_next_attempt)
-        # 2. Due for a retry attempt (retry_next_attempt <= now)
-        # 3. Under the maximum retry count
-
+        # Claim due mails before returning them so multiple API processes do not send
+        # the same queued mail concurrently.
+        now = datetime.now()
+        lease_until = now + self.MAIL_PROCESSING_LEASE
         return await conn.fetch_many(
             Mail,
             """
-            select *
-            from mail_with_attachments
-            where send_date is null
-              and (
-                  (retry_next_attempt is null and scheduled_send_date <= $1)
-                  or 
-                  (retry_next_attempt is not null and retry_next_attempt <= $1)
-              )
-              and retry_count < retry_max
+            with due_mails as (
+                select id
+                from mails
+                where send_date is null
+                  and (
+                      (retry_next_attempt is null and scheduled_send_date <= $1)
+                      or
+                      (retry_next_attempt is not null and retry_next_attempt <= $1)
+                  )
+                  and retry_count < retry_max
+                order by scheduled_send_date, id
+                for update skip locked
+            ),
+            claimed_mails as (
+                update mails as m
+                set retry_next_attempt = $2
+                from due_mails d
+                where m.id = d.id
+                returning m.id
+            )
+            select mwa.*
+            from mail_with_attachments mwa
+            join claimed_mails cm on cm.id = mwa.id
+            order by mwa.scheduled_send_date, mwa.id
             """,
-            datetime.now(),
+            now,
+            lease_until,
         )
 
     async def run_mail_service(self):
@@ -236,12 +226,12 @@ class MailService(Service[Config]):
         message["Date"] = formatdate(localtime=True)
 
         if mail.html_message:
-            # TODO: to properly handle html messages, we need to convert html to plain text
-            # and add the plain text version as an alternative part
-            msg = MIMEText(mail.message, "html", "utf-8")
+            alternative = MIMEMultipart("alternative")
+            alternative.attach(MIMEText(mail.text_message, "plain", "utf-8"))
+            alternative.attach(MIMEText(mail.html_message, "html", "utf-8"))
+            message.attach(alternative)
         else:
-            msg = MIMEText(mail.message, "plain", "utf-8")
-        message.attach(msg)
+            message.attach(MIMEText(mail.text_message, "plain", "utf-8"))
 
         for attachment in mail.attachments:
             part = MIMEBase("application", "octet-stream")

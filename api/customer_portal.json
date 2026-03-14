@@ -8,67 +8,6 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/auth/login/qr": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "customer login via QR code",
-        "operationId": "login_with_qr",
-        "parameters": [
-          {
-            "name": "username",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Username"
-            }
-          },
-          {
-            "name": "pin",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Pin"
-            }
-          },
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -1972,6 +1911,11 @@
           "tax_rate": {
             "type": "number",
             "title": "Tax Rate"
+          },
+          "has_bookings": {
+            "type": "boolean",
+            "title": "Has Bookings",
+            "default": false
           },
           "type": {
             "$ref": "#/components/schemas/ProductType"

@@ -13,6 +13,7 @@ ADMIN_ROLE_NAME = "admin"
 class Privilege(enum.Enum):
     # general management privileges
     node_administration = "node_administration"
+    global_email_management = "global_email_management"
     customer_management = "customer_management"
     payout_management = "payout_management"
     entry_management = "entry_management"
