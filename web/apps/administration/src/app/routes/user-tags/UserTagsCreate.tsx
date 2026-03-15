@@ -5,37 +5,45 @@ import {
   useListUserTagSecretsQuery,
 } from "@/api";
 import { UserTagRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { RestrictionSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 import { ProductRestrictionSchema } from "@stustapay/models";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
-import { RestrictionSelect } from "@/components/features";
-import { FormikProps } from "formik";
 import { Select } from "@stustapay/components";
 import { FormTextField } from "@stustapay/form-components";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { ChevronLeft } from "@mui/icons-material";
+import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import {
   Alert,
   Box,
   Button,
   FormHelperText,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  styled,
+  Grid,
+  IconButton,
+  LinearProgress,
   MenuItem,
   Paper,
-  Stack,
   Select as MuiSelect,
   SelectChangeEvent,
+  Stack,
+  Typography,
+  styled,
 } from "@mui/material";
 import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import * as Papa from "papaparse";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { UserTagGridEditor } from "./UserTagGridEditor";
+import {
+  collectUserTagGridIssues,
+  createEmptyUserTagGridRow,
+  createUserTagGridRows,
+  serializeUserTagGridRows,
+  type UserTagGridIssue,
+  type UserTagGridRow,
+} from "./userTagGrid";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -49,34 +57,60 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
-const CsvTagsSchema = z.array(
-  z.object({
-    pin: z.string(),
-    uid: z.number().optional(),
-    is_vip: z.boolean().optional(),
-    comment: z.string().optional(),
-    group_tag: z.string().optional(),
-  })
-);
+type ColumnMapping = {
+  pin: string | null;
+  uid: string | null;
+  is_vip: string | null;
+  comment: string | null;
+  group_tag: string | null;
+};
 
-const NewUserTagsSchema = z.object({
-  secret_id: z.number().int(),
-  restriction: ProductRestrictionSchema.nullable(),
-  default_group_tag: z.string().optional(),
-  tags: CsvTagsSchema,
+const UserTagGridRowSchema = z.object({
+  id: z.string(),
+  pin: z.string().default(""),
+  uid: z.string().optional().default(""),
+  is_vip: z.string().optional().default(""),
+  comment: z.string().optional().default(""),
+  group_tag: z.string().optional().default(""),
 });
 
-type NewUserTags = z.infer<typeof NewUserTagsSchema>;
+export const NewUserTagsSchema = z
+  .object({
+    secret_id: z.number().int(),
+    restriction: ProductRestrictionSchema.nullable(),
+    default_group_tag: z.string().optional(),
+    tags: z.array(UserTagGridRowSchema),
+  })
+  .superRefine((values, ctx) => {
+    const issues = collectUserTagGridIssues(values.tags);
+    issues.forEach((issue) => {
+      if (issue.rowIndex == null || issue.field == null) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["tags"],
+          message: issue.messageKey,
+        });
+        return;
+      }
 
-const initialValues: NewUserTags = {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tags", issue.rowIndex, issue.field],
+        message: issue.messageKey,
+      });
+    });
+  });
+
+export type NewUserTags = z.infer<typeof NewUserTagsSchema>;
+
+export const initialValues: NewUserTags = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   secret_id: null as any,
   restriction: null,
   default_group_tag: "",
-  tags: [],
+  tags: [createEmptyUserTagGridRow()],
 };
 
-// Column name variations for auto-detection
 const COLUMN_VARIANTS: Record<string, string[]> = {
   pin: ["pin", "PIN", "tag_pin", "Tag Pin", "tagPin", "tag-pin", "tag pin"],
   uid: ["uid", "UID", "tag_uid", "Tag UID", "tagUid", "tag-uid", "tag uid", "id", "ID", "tag_id", "Tag ID"],
@@ -85,25 +119,7 @@ const COLUMN_VARIANTS: Record<string, string[]> = {
   group_tag: ["group_tag", "groupTag", "group-tag", "group", "Group Tag", "group tag"],
 };
 
-// Parse UID string, handling both decimal and hex formats
-function parseUid(uidString: string | undefined): number | undefined {
-  if (!uidString) return undefined;
-  const trimmed = uidString.trim();
-  // Check if it's hex (starts with 0x or contains only hex chars)
-  if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
-    return parseInt(trimmed, 16);
-  }
-  // Check if it's all hex digits (without 0x prefix) - but not pure decimal
-  if (/^[0-9A-Fa-f]+$/.test(trimmed) && !/^\d+$/.test(trimmed)) {
-    return parseInt(trimmed, 16);
-  }
-  // Otherwise parse as decimal
-  const parsed = Number(trimmed);
-  return isNaN(parsed) ? undefined : parsed;
-}
-
-// Auto-detect delimiter by trying common ones
-function detectDelimiter(csvContent: string): string {
+const detectDelimiter = (csvContent: string): string => {
   const delimiters = [",", ";", "\t", "|"];
   let bestDelimiter = ",";
   let maxConsistentColumns = 0;
@@ -118,10 +134,9 @@ function detectDelimiter(csvContent: string): string {
   }
 
   return bestDelimiter;
-}
+};
 
-// Auto-detect column mapping
-function detectColumnMapping(headers: string[]): ColumnMapping {
+const detectColumnMapping = (headers: string[]): ColumnMapping => {
   const mapping: ColumnMapping = {
     pin: null,
     uid: null,
@@ -141,28 +156,17 @@ function detectColumnMapping(headers: string[]): ColumnMapping {
           break;
         }
       }
-      if (mapping[fieldKey]) break;
+      if (mapping[fieldKey]) {
+        break;
+      }
     }
   }
 
   return mapping;
-}
-
-type ColumnMapping = {
-  pin: string | null;
-  uid: string | null;
-  is_vip: string | null;
-  comment: string | null;
-  group_tag: string | null;
 };
 
-const parseCsv = (
-  csvContent: string,
-  columnMapping: ColumnMapping
-): Array<{ pin: string; uid?: number; is_vip?: boolean; comment?: string; group_tag?: string }> | null => {
-  // Auto-detect delimiter
+const parseCsvToGridRows = (csvContent: string, columnMapping: ColumnMapping): UserTagGridRow[] | null => {
   const delimiter = detectDelimiter(csvContent);
-
   const parsed = Papa.parse<Record<string, string>>(csvContent, {
     delimiter: delimiter || "",
     header: true,
@@ -171,9 +175,9 @@ const parseCsv = (
   });
 
   if (parsed.errors.length > 0) {
-    const nonCriticalErrors = parsed.errors.filter((e) => e.code !== "MissingQuotes");
+    const nonCriticalErrors = parsed.errors.filter((error) => error.code !== "MissingQuotes");
     if (nonCriticalErrors.length > 0) {
-      toast.error(`There was an error in the csv file: ${nonCriticalErrors.map((e) => e.message).join(", ")}`);
+      toast.error(`There was an error in the csv file: ${nonCriticalErrors.map((error) => error.message).join(", ")}`);
       return null;
     }
   }
@@ -183,43 +187,48 @@ const parseCsv = (
     return null;
   }
 
-  // Check that pin column is mapped
   if (!columnMapping.pin) {
-    toast.error("PIN column must be mapped");
     return null;
   }
 
-  // Process the data using the column mapping
-  const processedData = parsed.data.map((item) => {
-    const pin = columnMapping.pin ? item[columnMapping.pin]?.trim() : "";
-    const uidStr = columnMapping.uid ? item[columnMapping.uid]?.trim() : undefined;
-    const isVipStr = columnMapping.is_vip ? item[columnMapping.is_vip]?.trim() : undefined;
-    const comment = columnMapping.comment ? item[columnMapping.comment]?.trim() : undefined;
-    const groupTag = columnMapping.group_tag ? item[columnMapping.group_tag]?.trim() : undefined;
+  const importedRows = parsed.data.map((item) => ({
+    pin: columnMapping.pin ? item[columnMapping.pin]?.trim() ?? "" : "",
+    uid: columnMapping.uid ? item[columnMapping.uid]?.trim() ?? "" : "",
+    is_vip: columnMapping.is_vip ? item[columnMapping.is_vip]?.trim() ?? "" : "",
+    comment: columnMapping.comment ? item[columnMapping.comment]?.trim() ?? "" : "",
+    group_tag: columnMapping.group_tag ? item[columnMapping.group_tag]?.trim() ?? "" : "",
+  }));
 
-    return {
-      pin: pin || "",
-      uid: parseUid(uidStr),
-      is_vip: isVipStr ? isVipStr.toLowerCase() === "true" || isVipStr === "1" : undefined,
-      comment: comment || undefined,
-      group_tag: groupTag || undefined,
-    };
-  });
-
-  const validated = CsvTagsSchema.safeParse(processedData);
-  if (!validated.success) {
-    toast.error(`There was an error in the csv file: ${validated.error.issues.map((i) => i.message).join(", ")}`);
-    return null;
-  }
-  return validated.data;
+  return createUserTagGridRows(importedRows);
 };
 
-const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
+export const buildCreateUserTagsPayload = (userTags: NewUserTags) => {
+  const defaultGroupTag = userTags.default_group_tag?.trim() || undefined;
+  return serializeUserTagGridRows(userTags.tags).map((tag) => ({
+    pin: tag.pin,
+    secret_id: userTags.secret_id,
+    ...(userTags.restriction != null ? { restriction: userTags.restriction } : {}),
+    ...(tag.uid != null ? { uid: tag.uid } : {}),
+    ...(tag.is_vip != null ? { is_vip: tag.is_vip } : {}),
+    ...(tag.comment != null ? { comment: tag.comment } : {}),
+    ...((tag.group_tag ?? defaultGroupTag) != null ? { group_tag: tag.group_tag ?? defaultGroupTag } : {}),
+  }));
+};
+
+const buildValidationSummary = (issues: UserTagGridIssue[]) => {
+  const fieldIssues = issues.filter((issue) => issue.rowIndex != null);
+  if (fieldIssues.length === 0) {
+    return issues.map((issue) => issue.messageKey);
+  }
+
+  return fieldIssues.map((issue) => `${issue.messageKey}:${issue.rowIndex! + 1}`);
+};
+
+export const UserTagsCreateForm: React.FC<FormikProps<NewUserTags>> = (props) => {
   const { currentNode } = useCurrentNode();
   const { t } = useTranslation();
-  const { values, setFieldValue } = props;
+  const { values, errors, setFieldValue } = props;
   const { data: userTagsSecrets, error } = useListUserTagSecretsQuery({ nodeId: currentNode.id });
-
   const [csvHeaders, setCsvHeaders] = React.useState<string[]>([]);
   const [columnMapping, setColumnMapping] = React.useState<ColumnMapping>({
     pin: null,
@@ -230,6 +239,20 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
   });
   const [showColumnMapping, setShowColumnMapping] = React.useState(false);
   const [csvContent, setCsvContent] = React.useState<string | null>(null);
+
+  const gridIssues = React.useMemo(() => collectUserTagGridIssues(values.tags), [values.tags]);
+  const nonEmptyRowCount = React.useMemo(
+    () => serializeUserTagGridRows(values.tags).length,
+    [values.tags]
+  );
+  const validationSummary = React.useMemo(() => buildValidationSummary(gridIssues), [gridIssues]);
+  const showSecretError = userTagsSecrets && userTagsSecrets.length > 0 && values.secret_id == null;
+
+  React.useEffect(() => {
+    if (userTagsSecrets && userTagsSecrets.length === 1 && values.secret_id == null) {
+      setFieldValue("secret_id", userTagsSecrets[0].id);
+    }
+  }, [setFieldValue, userTagsSecrets, values.secret_id]);
 
   if (error) {
     return <Alert severity="error">{`Error loading user tag secrets: ${error}`}</Alert>;
@@ -244,24 +267,18 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
       toast.error("No file was selected");
       return;
     }
-    const file = event.target.files[0];
 
+    const file = event.target.files[0];
     const reader = new FileReader();
     reader.onload = (loadedFile) => {
-      const res = loadedFile.target?.result;
-      if (!res) {
-        toast.error("Error uploading file");
-        return;
-      }
-      if (typeof res !== "string") {
+      const result = loadedFile.target?.result;
+      if (typeof result !== "string") {
         toast.error("Error uploading file, expected a plain text file but got something else");
         return;
       }
 
-      // Parse headers first
-      const delimiter = detectDelimiter(res);
-      const parsed = Papa.parse<Record<string, string>>(res, {
-        delimiter: delimiter || "",
+      const parsed = Papa.parse<Record<string, string>>(result, {
+        delimiter: detectDelimiter(result),
         header: true,
         skipEmptyLines: false,
         preview: 1,
@@ -273,32 +290,32 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         return;
       }
 
-      const headers = parsed.meta.fields;
-      setCsvHeaders(headers);
-      setCsvContent(res);
-
-      // Auto-detect column mapping
-      const detectedMapping = detectColumnMapping(headers);
-      setColumnMapping(detectedMapping);
+      setCsvHeaders(parsed.meta.fields);
+      setCsvContent(result);
+      setColumnMapping(detectColumnMapping(parsed.meta.fields));
       setShowColumnMapping(true);
     };
     reader.readAsText(file);
   };
 
   const handleApplyMapping = () => {
-    if (!csvContent) return;
+    if (!csvContent) {
+      return;
+    }
 
     if (!columnMapping.pin) {
       toast.error(t("userTag.columnMapping.pinRequired"));
       return;
     }
 
-    const tags = parseCsv(csvContent, columnMapping);
-    if (tags) {
-      setFieldValue("tags", tags);
-      setShowColumnMapping(false);
-      toast.success(t("userTag.columnMapping.mappingApplied"));
+    const importedRows = parseCsvToGridRows(csvContent, columnMapping);
+    if (!importedRows) {
+      return;
     }
+
+    setFieldValue("tags", importedRows);
+    setShowColumnMapping(false);
+    toast.success(t("userTag.columnMapping.mappingApplied"));
   };
 
   return (
@@ -306,7 +323,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
       <RestrictionSelect
         label={t("userTag.restriction")}
         value={values.restriction}
-        onChange={(val) => setFieldValue("restriction", val)}
+        onChange={(value) => setFieldValue("restriction", value)}
         multiple={false}
       />
       <FormTextField
@@ -319,27 +336,47 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
       <Select
         label={t("userTag.secret")}
         multiple={false}
-        value={userTagsSecrets.find((v) => v.id === values.secret_id) ?? null}
+        value={userTagsSecrets.find((secret) => secret.id === values.secret_id) ?? null}
         options={userTagsSecrets}
         formatOption={(secret: UserTagSecret) => secret.description}
         onChange={(secret) => secret && setFieldValue("secret_id", secret.id)}
       />
+      {userTagsSecrets.length === 0 && <Alert severity="warning">{t("userTag.noSecretConfigured")}</Alert>}
+      {showSecretError && (
+        <FormHelperText error>{t("userTag.secretRequired")}</FormHelperText>
+      )}
 
-      <Typography>{t("userTag.uploadPinCsvDescription")}</Typography>
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <Stack spacing={2}>
+          <Typography variant="h6">{t("userTag.grid.title")}</Typography>
+          <UserTagGridEditor rows={values.tags} issues={gridIssues} onChange={(rows) => setFieldValue("tags", rows)} />
+        </Stack>
+      </Paper>
 
-      <Button
-        component="label"
-        role={undefined}
-        variant="contained"
-        startIcon={<CloudUploadIcon />}
-        sx={{ maxWidth: 400 }}
-      >
-        {t("userTag.uploadPinCsv")}
-        <VisuallyHiddenInput type="file" accept=".csv,.txt" onChange={(event) => handleCsvUpload(event)} />
-      </Button>
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <Stack spacing={2}>
+          <Typography variant="h6">{t("userTag.uploadPinCsv")}</Typography>
+          <Typography>{t("userTag.uploadPinCsvDescription")}</Typography>
+          <Button
+            component="label"
+            role={undefined}
+            variant="contained"
+            startIcon={<CloudUploadIcon />}
+            sx={{ maxWidth: 400 }}
+          >
+            {t("userTag.uploadPinCsv")}
+            <VisuallyHiddenInput
+              data-testid="user-tag-csv-upload"
+              type="file"
+              accept=".csv,.txt"
+              onChange={handleCsvUpload}
+            />
+          </Button>
+        </Stack>
+      </Paper>
 
       {showColumnMapping && csvHeaders.length > 0 && (
-        <Paper sx={{ p: 2, mt: 2 }}>
+        <Paper sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
             {t("userTag.columnMapping.title")}
           </Typography>
@@ -352,8 +389,8 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                 <FormHelperText>{t("userTag.pin") + " *"}</FormHelperText>
                 <MuiSelect
                   value={columnMapping.pin ?? ""}
-                  onChange={(e: SelectChangeEvent<string>) =>
-                    setColumnMapping({ ...columnMapping, pin: e.target.value || null })
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    setColumnMapping({ ...columnMapping, pin: event.target.value || null })
                   }
                   fullWidth
                   required
@@ -373,8 +410,8 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                 <FormHelperText>{t("userTag.uid")}</FormHelperText>
                 <MuiSelect
                   value={columnMapping.uid ?? ""}
-                  onChange={(e: SelectChangeEvent<string>) =>
-                    setColumnMapping({ ...columnMapping, uid: e.target.value || null })
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    setColumnMapping({ ...columnMapping, uid: event.target.value || null })
                   }
                   fullWidth
                   displayEmpty
@@ -395,8 +432,8 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                 <FormHelperText>{t("userTag.vipStatus")}</FormHelperText>
                 <MuiSelect
                   value={columnMapping.is_vip ?? ""}
-                  onChange={(e: SelectChangeEvent<string>) =>
-                    setColumnMapping({ ...columnMapping, is_vip: e.target.value || null })
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    setColumnMapping({ ...columnMapping, is_vip: event.target.value || null })
                   }
                   fullWidth
                   displayEmpty
@@ -415,8 +452,8 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                 <FormHelperText>{t("userTag.comment")}</FormHelperText>
                 <MuiSelect
                   value={columnMapping.comment ?? ""}
-                  onChange={(e: SelectChangeEvent<string>) =>
-                    setColumnMapping({ ...columnMapping, comment: e.target.value || null })
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    setColumnMapping({ ...columnMapping, comment: event.target.value || null })
                   }
                   fullWidth
                   displayEmpty
@@ -437,8 +474,8 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
                 <FormHelperText>{t("userTag.groupTag")}</FormHelperText>
                 <MuiSelect
                   value={columnMapping.group_tag ?? ""}
-                  onChange={(e: SelectChangeEvent<string>) =>
-                    setColumnMapping({ ...columnMapping, group_tag: e.target.value || null })
+                  onChange={(event: SelectChangeEvent<string>) =>
+                    setColumnMapping({ ...columnMapping, group_tag: event.target.value || null })
                   }
                   fullWidth
                   displayEmpty
@@ -466,35 +503,28 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         </Paper>
       )}
 
-      {values.tags.length > 0 && (
-        <Box>
-          <Typography>{t("userTag.willCreate", { nTags: values.tags.length })}</Typography>
-          <Typography>{t("userTag.firstNTags", { actualNum: Math.min(values.tags.length, 10) })}</Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t("userTag.pin")}</TableCell>
-                  <TableCell>{t("userTag.uid")}</TableCell>
-                  <TableCell>{t("userTag.vipStatus")}</TableCell>
-                  <TableCell>{t("userTag.comment")}</TableCell>
-                  <TableCell>{t("userTag.groupTag")}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {values.tags.slice(0, 10).map((tag) => (
-                  <TableRow key={tag.pin}>
-                    <TableCell>{tag.pin}</TableCell>
-                    <TableCell>{tag.uid}</TableCell>
-                    <TableCell>{tag.is_vip ? t("common.yes") : t("common.no")}</TableCell>
-                    <TableCell>{tag.comment}</TableCell>
-                    <TableCell>{tag.group_tag}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+      {(validationSummary.length > 0 || showSecretError) && (
+        <Alert severity="error">
+          <Stack>
+            {showSecretError && <Typography variant="body2">{t("userTag.secretRequired")}</Typography>}
+            {validationSummary.map((entry) => {
+              const [messageKey, rowNumber] = entry.split(":");
+              return (
+                <Typography key={entry} variant="body2">
+                  {rowNumber
+                    ? t("userTag.grid.validationRow", { row: Number(rowNumber), message: t(messageKey) })
+                    : t(messageKey)}
+                </Typography>
+              );
+            })}
+          </Stack>
+        </Alert>
+      )}
+
+      {nonEmptyRowCount > 0 && (
+        <Alert severity={errors.tags ? "warning" : "info"}>
+          {t("userTag.willCreate", { nTags: nonEmptyRowCount })}
+        </Alert>
       )}
     </>
   );
@@ -503,35 +533,80 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
 export const UserTagsCreate: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const navigate = useNavigate();
   const [createUserTags] = useCreateUserTagsMutation();
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
 
-  const handleSubmit = (userTags: NewUserTags) => {
-    return createUserTags({
+  const handleSubmit = (userTags: NewUserTags, { setSubmitting }: FormikHelpers<NewUserTags>) => {
+    setSubmitting(true);
+    setSubmitError(null);
+
+    createUserTags({
       nodeId: currentNode.id,
-      newUserTags: userTags.tags.map((t) => {
-        const defaultGroupTag = userTags.default_group_tag?.trim() || undefined;
-        return {
-          pin: t.pin,
-          secret_id: userTags.secret_id,
-          restriction: userTags.restriction,
-          uid: t.uid,
-          is_vip: t.is_vip,
-          comment: t.comment,
-          group_tag: t.group_tag ?? defaultGroupTag,
-        };
-      }),
-    });
+      newUserTags: buildCreateUserTagsPayload(userTags),
+    })
+      .unwrap()
+      .then(() => {
+        setSubmitting(false);
+        navigate(`${UserTagRoutes.list()}?createAccounts=true`);
+      })
+      .catch((err) => {
+        const errorMessage =
+          (typeof err === "object" &&
+            err !== null &&
+            "data" in err &&
+            typeof err.data === "object" &&
+            err.data !== null &&
+            "detail" in err.data &&
+            typeof err.data.detail === "string" &&
+            err.data.detail) ||
+          (typeof err === "object" &&
+            err !== null &&
+            "error" in err &&
+            typeof err.error === "string" &&
+            err.error) ||
+          t("userTag.createFailed");
+
+        setSubmitting(false);
+        setSubmitError(errorMessage);
+        toast.error(errorMessage);
+      });
   };
 
   return (
-    <CreateLayout
-      title={t("userTag.create")}
-      submitLabel={t("add")}
-      successRoute={`${UserTagRoutes.list()}?createAccounts=true`}
-      initialValues={initialValues}
-      validationSchema={NewUserTagsSchema}
-      onSubmit={handleSubmit}
-      form={TagsForm}
-    />
+    <Stack spacing={2}>
+      <Grid container spacing={1}>
+        <Grid display="flex" alignItems="center">
+          <IconButton onClick={() => navigate(-1)}>
+            <ChevronLeft />
+          </IconButton>
+          <Typography component="div" variant="h5">
+            {t("userTag.create")}
+          </Typography>
+        </Grid>
+      </Grid>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={toFormikValidationSchema(NewUserTagsSchema)}
+        onSubmit={handleSubmit}
+      >
+        {(formik) => (
+          <Form onSubmit={formik.handleSubmit}>
+            <Stack spacing={2}>
+              <Paper sx={{ p: 3 }}>
+                <Stack spacing={2}>
+                  <UserTagsCreateForm {...formik} />
+                </Stack>
+                {formik.isSubmitting && <LinearProgress />}
+              </Paper>
+              {submitError && <Alert severity="error">{submitError}</Alert>}
+              <Button type="submit" fullWidth variant="contained" color="primary" disabled={formik.isSubmitting}>
+                {t("add")}
+              </Button>
+            </Stack>
+          </Form>
+        )}
+      </Formik>
+    </Stack>
   );
 };
