@@ -1,7 +1,7 @@
 \documentclass[a4paper]{article}
 \usepackage[PUTF,T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{tabularx}
+\usepackage{array}
 \usepackage{longtable}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
@@ -10,26 +10,29 @@
 \usepackage{ngerman}
 \usepackage{fancyhdr}
 \usepackage{lastpage}
-\usepackage{xpatch}
 \usepackage{seqsplit}
+\usepackage{tabularx}
 
-% use sans serif font
 \renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+\renewcommand{\arraystretch}{1.18}
 
 \usepackage{geometry}
 \geometry{
   a4paper,
-  total={170mm,257mm},
-  left=20mm,
-  top=35mm,
-  bottom=35mm,
-  heightrounded,
- }
- 
- %Thanks, Ulrike: https://github.com/u-fischer/putfenc
- \makeatletter
+  left=18mm,
+  right=18mm,
+  top=22mm,
+  bottom=24mm,
+  headheight=16pt,
+  headsep=10pt,
+  footskip=18mm,
+  heightrounded
+}
 
-% Unterdrücken der aux-Ausgabe:
+\makeatletter
 \def\qr@writebinarymatrixtoauxfile#1{}%
 \makeatother
 
@@ -37,150 +40,160 @@
 \DeclareFontShape{PUTF}{pdf}{m}{n}{ <-> ecrm1000 }{}%
 \DeclareFontSubstitution{PUTF}{pdf}{m}{n}%
 
-
 \definecolor{papercolor}{rgb}{1,1,1}
 \definecolor{bgcolor}{rgb}{1,1,1}
-\definecolor{textcolor}{rgb}{0,0,0}
+\definecolor{textcolor}{rgb}{0.1,0.12,0.16}
+\definecolor{textmuted}{rgb}{0.43,0.47,0.52}
+\definecolor{linecolor}{rgb}{0.81,0.84,0.88}
+\definecolor{panelbg}{rgb}{0.96,0.97,0.98}
+\definecolor{panelstrong}{rgb}{0.92,0.95,0.98}
+\definecolor{accent}{rgb}{0.15,0.31,0.51}
 
-\pagecolor{bgcolor}
+\pagecolor{papercolor}
 
+\usepackage[xetex,
+            colorlinks=true,linkcolor=accent,citecolor=accent,
+            anchorcolor=accent,urlcolor=accent,bookmarks=true,
+            bookmarksopen=true,bookmarksopenlevel=0,plainpages=false,
+            bookmarksnumbered=true,hyperindex=false,pdfstartview=,
+            pdfauthor={TeamFestlichPay},
+            pdftitle={TeamFestlichPay Umsatzbericht}]{hyperref}
 
-\usepackage[xetex,%
-            colorlinks=true,linkcolor=blue,citecolor=blue,%
-            anchorcolor=red,urlcolor=blue,bookmarks=true,%
-            bookmarksopen=true,bookmarksopenlevel=0,plainpages=false,%
-            bookmarksnumbered=true,hyperindex=false,pdfstartview=,%
-            pdfauthor={TeamFestlichPay},%
-            pdftitle={TeamFestlichPay Umsatzbericht},%
-            %pdfsubject={TeamFestlichPay Umsatzbericht}%
-]{hyperref}
-
-
-% for deterministic build
 \special{pdf:trailerid [
     <00112233445566778899aabbccddeeff>
     <00112233445566778899aabbccddeeff>
 ]}
 
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{textmuted}{TeamFestlichPay Umsatzbericht}}
+\fancyhead[R]{\small\textcolor{textmuted}{\VAR[node.name|latex]}}
+\fancyfoot[C]{\textcolor{textmuted}{Seite \thepage/\pageref*{LastPage}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{linecolor}\leaders\hrule height \headrulewidth\hfill}}
+
+\newcommand{\SectionTitle}[1]{%
+  {\Large\textbf{#1}}\par\vspace{0.65em}%
+}
+
 \begin{document}
-    \color{textcolor}
+\color{textcolor}
 
-    \newgeometry{
-      a4paper,
-      total={170mm,257mm},
-      left=20mm,
-      top=0mm,
-      bottom=35mm,
-      heightrounded,
-    }
+\begin{minipage}[t]{0.48\textwidth}
+\fcolorbox{linecolor}{panelbg}{
+\parbox[t][4.6cm][t]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{
+{\small\textcolor{textmuted}{Aussteller}}\par
+\vspace{0.55em}
+{\Large\textbf{\VAR[config.issuer|latex]}}\par
+\vspace{0.4em}
+\VAR[config.address.strip()|latex]\par
+\BLOCK[ if config.ust_id ]
+\vspace{0.5em}
+{\small\textcolor{textmuted}{USt-IdNr.}}\par
+\VAR[config.ust_id|latex]
+\BLOCK[ endif ]
+}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\fcolorbox{linecolor}{panelbg}{
+\parbox[t][4.6cm][t]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{
+{\small\textcolor{textmuted}{Bericht}}\par
+\vspace{0.55em}
+{\Large\textbf{Umsatzbericht}}\par
+\textcolor{textmuted}{\VAR[config.title|latex]}\par
+\vspace{0.75em}
+\begin{tabular}{@{}p{4.2cm}p{3.6cm}@{}}
+Stand / Bereich & \VAR[node.name|latex] \\
+Zeitraum von & \VAR[from_time|datetime] \\
+Zeitraum bis & \VAR[to_time|datetime] \\
+\end{tabular}
+}}
+\end{minipage}
 
-    \pagestyle{fancy}
-    \fancypagestyle{plain}{ % pages containing chapter start
-        \fancyhf{}
-        \fancyhead{} % clear all header fields
-        \renewcommand{\headrulewidth}{0pt}
-    }
-    \fancyfoot[C]{\textcolor{textcolor}Seite \thepage/\pageref*{LastPage}}
+\vspace{1.2em}
 
+\fcolorbox{linecolor}{panelstrong}{
+\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{
+{\small\textcolor{textmuted}{Gesamtumsatz im Berichtszeitraum}}\par
+\vspace{0.4em}
+{\fontsize{28}{32}\selectfont\textbf{\VAR[total_revenue|money]}}\par
+\vspace{0.35em}
+\textcolor{textmuted}{\VAR[summary.order_count] Buchungen im ausgewaehlten Zeitraum}
+}}
 
+\vspace{1em}
 
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\fcolorbox{linecolor}{panelbg}{\parbox[t][1.65cm][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+{\small\textcolor{textmuted}{Durchschnitt pro Buchung}}\par
+\vspace{0.25em}
+{\large\textbf{\VAR[summary.average_order_value|money]}}}} &
+\fcolorbox{linecolor}{panelbg}{\parbox[t][1.65cm][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+{\small\textcolor{textmuted}{Durchschnitt pro Berichtstag}}\par
+\vspace{0.25em}
+{\large\textbf{\VAR[summary.average_day_revenue|money]}}}} \\
+[0.65em]
+\fcolorbox{linecolor}{panelbg}{\parbox[t][1.65cm][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+{\small\textcolor{textmuted}{Umsatzstaerkster Tag}}\par
+\vspace{0.2em}
+{\normalsize\textbf{\VAR[summary.top_day_label|latex]}}}} &
+\fcolorbox{linecolor}{panelbg}{\parbox[t][1.65cm][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+{\small\textcolor{textmuted}{Umsatz am Spitzentag}}\par
+\vspace{0.25em}
+{\large\textbf{\VAR[summary.top_day_revenue|money]}}}} \\
+\end{tabularx}
 
-    \begin{center}
-        \LARGE\textsf{TeamFestlichPay} \\
-        \Huge{Umsatzbericht} \\
-        \LARGE\textsf{\VAR[config.title|latex]}
-    \end{center}
-    \vspace{2em}
+\vspace{1.3em}
 
-    % Addresse und Steuer ID
-    %\begin{flushright}
-    %    \VAR[config.issuer|latex] \\
-    %    \VAR[config.address.strip()|latex] \\
-    %    USt-IdNr. \VAR[config.ust_id|latex] \\
-    %\end{flushright}
+\SectionTitle{Tagesuebersicht}
 
-    \noindent
-    \VAR[node.name|latex] \\
-    %\VAR[node.description|latex] \\
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X>{\raggedleft\arraybackslash}p{3.2cm}}
+\rowcolor{panelbg}
+\textbf{Datum} & \textbf{Gesamtumsatz} \\
+\BLOCK[ if daily_revenue_stats ]
+\BLOCK[ for daily in daily_revenue_stats ]
+\VAR[daily.day|latex] & \VAR[daily.revenue|money] \\
+\BLOCK[endfor]
+\BLOCK[ else ]
+\multicolumn{2}{l}{\textcolor{textmuted}{Keine Umsaetze im Zeitraum.}} \\
+\BLOCK[ endif ]
+\end{tabularx}
 
-    \vspace{2em}
+\clearpage
 
-    \begin{center}
-        \LARGE\textbf{Übersicht} \\
-    \end{center}
-    \vspace{2em}
+\SectionTitle{Einzelauflistung}
+\textcolor{textmuted}{Alle Buchungen sind nach Berichtstag gruppiert. Die Positionen je Buchung werden direkt unterhalb der Transaktion aufgefuehrt.}
+\vspace{0.75em}
 
-    {
-    \large
-    \begin{tabular*}{10cm}{ p{6cm} p{6cm} }
-        Beginn                             & \VAR[from_time|datetime] \\
-        Letzter berücksichtigter Zeitpunkt & \VAR[to_time|datetime] \\
-        Gesamtumsatz                       & \VAR[total_revenue|money] \\
-        %Gebühren                           & \VAR[fees|money] (\VAR[fees_percent|percent]) \\
-        %Auszahlung nach Gebühren           & \VAR[revenue_minus_fees|money] \\
-    \end{tabular*}
-    }
-
-    \vspace{2em}
-
-    \begin{center}
-        \LARGE\textbf{Nach Tagen} \\
-    \end{center}
-    \vspace{2em}
-    
-    % Auflistung nach Tagen
-    \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
-    \rowcolors{2}{}{bgcolor!80}
-    \begin{tabularx}{\textwidth}{ R R R R R }
-        %\textbf{Datum} & \textbf{Gesamtumsatz} & \textbf{Gebühren} & \textbf{Auszahlung} \\
-        \textbf{Datum} & \textbf{Gesamtumsatz} \\
-        \hline
-        \BLOCK[ for daily in daily_revenue_stats ]
-        %\VAR[daily.day] & \VAR[daily.revenue|money] & \VAR[daily.fees|money] & \VAR[daily.revenue_minus_fees|money] \\
-        \VAR[daily.day] & \VAR[daily.revenue|money] \\
-        \BLOCK[endfor]
-    \end{tabularx}
-
-    \vfill
-    \restoregeometry
-    \pagebreak
-
-    % hier ist null abstand oben.
-    % vermutlich wegen dem fancy header, hatte keine zeit mehr das zu fixen
-    % null abstand oben haben wir auch bei natürlichen page brakes
-    % muss korrigiert werden
-
-    \begin{center}
-        \LARGE\textbf{Einzelauflistung} \\
-    \end{center}
-    \vspace{1em}
-
-    \rowcolors{0}{}{}
-
-    \begin{center}
-    \begin{longtable}{lllll}
-    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} %& \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline 
-    \endfirsthead
-    
-    \hline
-    \multicolumn{5}{l}
-    {{... Fortsetzung der vorherigen Seite}} \\
-    \hline \multicolumn{1}{c}{\textbf{Datum \& Uhrzeit}} & \multicolumn{1}{c}{\textbf{Transaktionsnummer}} & \multicolumn{1}{c}{\textbf{Betrag}} %& \multicolumn{1}{c}{\textbf{Gebühr}} & \multicolumn{1}{c}{\textbf{Auszahlung}} \\ \hline
-    \endhead
-    
-    \hline \multicolumn{5}{r}{{Fortsetzung auf der nächsten Seite ...}} \\ \hline
-    \endfoot
-    
-    \hline \hline
-    \endlastfoot
-        \BLOCK[ for order in orders ]
-        %\VAR[order.booked_at|datetime] & \VAR["{:010}".format(order.id)] & \VAR[order.total_price|money] & \VAR[order.fees|money] & \VAR[order.total_price_minus_fees|money] \\
-        \VAR[order.booked_at|datetime] & \VAR["{:010}".format(order.id)] & \VAR[order.total_price|money] \\
-        \BLOCK[endfor]
-    \end{longtable}
-    \end{center}
-
-    \begin{tabularx}{\textwidth}{ RRRRR }
-    \end{tabularx}
+\BLOCK[ if order_groups ]
+\begin{longtable}{>{\raggedright\arraybackslash}p{1.7cm}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{8.0cm}>{\raggedleft\arraybackslash}p{2.5cm}}
+\rowcolor{panelbg}
+\textbf{Uhrzeit} & \textbf{Transaktion} & \textbf{Details} & \textbf{Betrag} \\
+\endfirsthead
+\rowcolor{panelbg}
+\textbf{Uhrzeit} & \textbf{Transaktion} & \textbf{Details} & \textbf{Betrag} \\
+\endhead
+\BLOCK[ for group in order_groups ]
+\rowcolor{panelstrong}
+\multicolumn{3}{l}{\textbf{\VAR[group.date_label|latex]}} & \textbf{\VAR[group.day_total|money]} \\
+\BLOCK[ for order in group.orders ]
+\VAR[order.time_label|latex] & \VAR[order.transaction_id|latex] &
+\BLOCK[ if order.customer_tag_uid_hex ]Tag-ID: \VAR[order.customer_tag_uid_hex|latex]\BLOCK[ else ]Direktbuchung\BLOCK[ endif ] &
+\VAR[order.total_price|money] \\
+\BLOCK[ if order.line_items ]
+\BLOCK[ for item in order.line_items ]
+& & {\footnotesize\hspace*{0.75em}\VAR[item.quantity] x \VAR[item.product_name|latex] zu \VAR[item.unit_price|money]} & {\footnotesize\VAR[item.total_price|money]} \\
+\BLOCK[endfor]
+\BLOCK[ else ]
+& & {\footnotesize\hspace*{0.75em}\textcolor{textmuted}{Keine Positionsdaten verfuegbar}} & \\
+\BLOCK[ endif ]
+\BLOCK[endfor]
+\BLOCK[endfor]
+\end{longtable}
+\BLOCK[ else ]
+\textcolor{textmuted}{Keine Einzelbuchungen im Zeitraum.}
+\BLOCK[ endif ]
 
 \end{document}
