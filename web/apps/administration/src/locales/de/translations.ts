@@ -207,6 +207,18 @@ export const translations: NestedPartialAsStrings<Translations> = {
     passwordsDontMatch: "Passwörter stimmen nicht überein",
     passwordChangeFailed: "Passwortänderung fehlgeschlagen: {{reason}}.",
   },
+  help: {
+    open: "Anleitung",
+    title: "Bedienungsanleitung",
+    intro:
+      "Diese Anleitung beschreibt die wichtigsten Abläufe im Admin-Portal und verlinkt direkt in die passenden Bereiche.",
+    contents: "Inhaltsverzeichnis",
+    relatedLinks: "Passende Portal-Links",
+    currentContext: "Aktueller Kontext: {{node}}. Öffne die Anleitung direkt aus einem Event, damit kontextbezogene Shortcuts verfügbar sind.",
+    selectNodeHint:
+      "Aktuell ist kein Event-Kontext aktiv. Node-spezifische Shortcuts bleiben deaktiviert, bis du die Anleitung aus einem Event oder Knoten öffnest.",
+    requiresNodeContext: "Verfügbar, sobald ein Event oder Knoten ausgewählt ist.",
+  },
   cashier: {
     login: "Anmeldung",
     name: "Name",

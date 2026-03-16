@@ -202,6 +202,18 @@ export const translations = {
     passwordsDontMatch: "Passwords do not match",
     passwordChangeFailed: "Changing password failed: {{reason}}.",
   },
+  help: {
+    open: "Guide",
+    title: "Admin Guide",
+    intro:
+      "This guide explains the most important workflows in the administration portal and links directly to the relevant sections.",
+    contents: "Contents",
+    relatedLinks: "Relevant portal links",
+    currentContext: "Current context: {{node}}. Open this guide directly from an event to keep context-specific shortcuts.",
+    selectNodeHint:
+      "No event context is active right now. Node-specific shortcuts stay disabled until you open the guide from a node or event.",
+    requiresNodeContext: "Available after selecting an event or node.",
+  },
   cashier: {
     login: "Login",
     name: "Name",

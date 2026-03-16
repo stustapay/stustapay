@@ -70,6 +70,7 @@ import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
 import { HeadwindDevicesPage } from "./routes/mdm";
+import { HelpPage } from "./routes/help";
 import {
   EntryAreaCreate,
   EntryAreaDetail,
@@ -89,6 +90,10 @@ const router = createBrowserRouter([
     element: <AuthenticatedRoot />,
     errorElement: <ErrorPage />,
     children: [
+      {
+        path: "help",
+        element: <HelpPage />,
+      },
       {
         path: "profile",
         element: <Profile />,
