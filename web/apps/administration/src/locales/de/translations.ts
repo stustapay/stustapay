@@ -186,6 +186,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
   userTagSecret: {
     create: "Neues Benutzer-Tag Secret für dieses Ereignis hochladen",
     createButton: "Secret hochladen",
+    generate: "Secret-Schlüssel generieren",
+    generateHint: "Erzeugt zwei zufällige 16-Byte-Hex-Schlüssel. Danach können Sie sie weiterhin manuell bearbeiten.",
     key0: "Hex-codierter key0 dieses Secrets",
     key1: "Hex-codierter key1 dieses Secrets",
   },

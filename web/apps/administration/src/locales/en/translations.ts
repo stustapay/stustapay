@@ -181,6 +181,8 @@ export const translations = {
   userTagSecret: {
     create: "Upload a new user tag secret for this event",
     createButton: "Upload secret",
+    generate: "Generate secret keys",
+    generateHint: "Creates two random 16-byte hex keys. You can still edit them manually afterwards.",
     key0: "Hex encoded key0 of this secret",
     key1: "Hex encoded key1 of this secret",
   },
