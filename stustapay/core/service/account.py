@@ -22,6 +22,16 @@ from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
 
 
+def _get_search_patterns(search_term: str) -> list[str]:
+    patterns = []
+    for token in search_term.strip().split():
+        normalized_token = token.lower()
+        if normalized_token.startswith("0x") and len(normalized_token) > 2:
+            normalized_token = normalized_token[2:]
+        patterns.append(f"%{normalized_token}%")
+    return patterns
+
+
 async def get_system_account_for_node(*, conn: Connection, node: Node, account_type: AccountType) -> Account:
     return await conn.fetch_one(
         Account,
@@ -86,20 +96,24 @@ class AccountService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def find_customers(self, *, conn: Connection, node: Node, search_term: str) -> list[Customer]:
+        search_patterns = _get_search_patterns(search_term)
         return await conn.fetch_many(
             Customer,
             "select c.* from customer c "
-            "where c.node_id = any ($2) and "
-            "   (c.name like $1 "
-            "   or c.comment like $1 "
-            "   or (c.user_tag_pin is not null and lower(c.user_tag_pin) like $1) "
-            "   or (c.user_tag_uid is not null and to_hex(c.user_tag_uid::bigint) like $1) "
-            "   or lower(c.email) like $1 "
-            "   or c.account_name @@ $3 "
-            "   or lower(c.iban) like $1)",
-            f"%{search_term.lower()}%",
+            "where c.node_id = any($1) and not exists ("
+            "   select 1 from unnest($2::text[]) as token(pattern) "
+            "   where not ("
+            "       coalesce(c.name, '') ilike token.pattern "
+            "       or coalesce(c.comment, '') ilike token.pattern "
+            "       or coalesce(c.user_tag_pin, '') ilike token.pattern "
+            "       or (c.user_tag_uid is not null and to_hex(c.user_tag_uid::bigint) ilike token.pattern) "
+            "       or coalesce(c.email, '') ilike token.pattern "
+            "       or coalesce(c.account_name, '') ilike token.pattern "
+            "       or coalesce(c.iban, '') ilike token.pattern"
+            "   )"
+            ")",
             node.ids_to_root,
-            search_term.lower(),
+            search_patterns,
         )
 
     @with_db_transaction(read_only=True)
@@ -131,16 +145,21 @@ class AccountService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
+        search_patterns = _get_search_patterns(search_term)
         return await conn.fetch_many(
             Account,
             "select * from account_with_history a "
-            "where a.node_id = any ($2) and "
-            "   ((a.name like $1 "
-            "   or a.comment like $1 "
-            "   or (a.user_tag_pin is not null and a.user_tag_pin like $1)) "
-            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $1)) ",
-            f"%{search_term.lower()}%",
+            "where a.node_id = any($1) and not exists ("
+            "   select 1 from unnest($2::text[]) as token(pattern) "
+            "   where not ("
+            "       coalesce(a.name, '') ilike token.pattern "
+            "       or coalesce(a.comment, '') ilike token.pattern "
+            "       or coalesce(a.user_tag_pin, '') ilike token.pattern "
+            "       or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) ilike token.pattern)"
+            "   )"
+            ")",
             node.ids_to_root,
+            search_patterns,
         )
 
     @with_db_transaction

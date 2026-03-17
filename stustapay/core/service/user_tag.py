@@ -14,6 +14,16 @@ from stustapay.core.service.common.decorators import requires_node, requires_use
 from sftkit.error import InvalidArgument, NotFound
 
 
+def _get_search_patterns(search_term: str) -> list[str]:
+    patterns = []
+    for token in search_term.strip().split():
+        normalized_token = token.lower()
+        if normalized_token.startswith("0x") and len(normalized_token) > 2:
+            normalized_token = normalized_token[2:]
+        patterns.append(f"%{normalized_token}%")
+    return patterns
+
+
 async def fetch_user_tag_secret(conn: Connection, secret_id: int) -> UserTagSecret | None:
     return await conn.fetch_maybe_one(
         UserTagSecret,
@@ -261,6 +271,7 @@ class UserTagService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user([Privilege.entry_management])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
+        search_patterns = _get_search_patterns(search_term)
         # Try to parse search term as integer for UID search
         search_uid: int | None = None
         try:
@@ -275,24 +286,41 @@ class UserTagService(Service[Config]):
                 pass
 
         if search_uid is not None:
-            # Search by UID (integer), hex representation, and PIN
+            # Search by exact UID, and case-insensitive partial matches on text fields.
             return await conn.fetch_many(
                 UserTagDetail,
                 "select * from user_tag_with_history utwh "
-                "where (uid = $1 or (uid is not null and to_hex(uid::bigint) like $2) or lower(pin) like $2) "
-                "and node_id = any($3)",
+                "where node_id = any($2) and ("
+                "   uid = $1 "
+                "   or not exists ("
+                "       select 1 from unnest($3::text[]) as token(pattern) "
+                "       where not ("
+                "           coalesce(pin, '') ilike token.pattern "
+                "           or coalesce(comment, '') ilike token.pattern "
+                "           or coalesce(group_tag, '') ilike token.pattern "
+                "           or (uid is not null and to_hex(uid::bigint) ilike token.pattern)"
+                "       )"
+                "   )"
+                ")",
                 search_uid,
-                f"%{search_term.lower()}%",
                 node.ids_to_event_node,
+                search_patterns,
             )
         else:
-            # Search by hex representation and PIN only
             return await conn.fetch_many(
                 UserTagDetail,
                 "select * from user_tag_with_history utwh "
-                "where ((uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1) and node_id = any($2)",
-                f"%{search_term.lower()}%",
+                "where node_id = any($1) and not exists ("
+                "   select 1 from unnest($2::text[]) as token(pattern) "
+                "   where not ("
+                "       coalesce(pin, '') ilike token.pattern "
+                "       or coalesce(comment, '') ilike token.pattern "
+                "       or coalesce(group_tag, '') ilike token.pattern "
+                "       or (uid is not null and to_hex(uid::bigint) ilike token.pattern)"
+                "   )"
+                ")",
                 node.ids_to_event_node,
+                search_patterns,
             )
 
     @with_db_transaction

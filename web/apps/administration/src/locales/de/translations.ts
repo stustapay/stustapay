@@ -865,10 +865,11 @@ export const translations: NestedPartialAsStrings<Translations> = {
       "Nutze Benutzer-Tags für Armband-Zuordnung, Kontoverknüpfung und NFC-Supportfälle.",
     quickActions: "Schnellzugriffe",
     searchCustomersDescription:
-      "Finde einen bestimmten Besucher, prüfe sein Guthaben und öffne die Auszahlungsdetails.",
+      "Suche nach Name, Kommentar, E-Mail, IBAN, Konto-Inhaber, PIN oder UID und öffne direkt die Kundendetails.",
     payoutRunsDescription: "Prüfe ausstehende Auszahlungsbeträge und öffne bestehende Auszahlungsläufe.",
-    accountsDescription: "Bearbeite Guthaben und andere konto-bezogene Supportfälle.",
-    userTagsDescription: "Untersuche Probleme bei Armbändern und Kontozuordnungen.",
+    accountsDescription: "Suche Konten über Name, Kommentar, PIN oder UID und bearbeite konto-bezogene Supportfälle.",
+    userTagsDescription:
+      "Suche Benutzer-Tags über PIN, UID, Kommentar oder Gruppen-Tag und prüfe Armband- oder Zuordnungsprobleme.",
     openSearch: "Kundensuche öffnen",
     openPayoutRuns: "Auszahlungsläufe öffnen",
     openAccounts: "Konten öffnen",

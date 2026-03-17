@@ -283,12 +283,43 @@ async def test_find_user_tags_by_pin(
 
     # Search by PIN
     results = await user_tag_service.find_user_tags(
-        token=global_admin_token, node_id=event_node.id, search_term=pin
+        token=global_admin_token, node_id=event_node.id, search_term=pin.upper()
     )
 
     # Should find the tag
     found_tag = next((t for t in results if t.id == tag.id), None)
     assert found_tag is not None
+
+
+async def test_find_user_tags_by_comment_and_group_tag(
+    user_tag_service: UserTagService,
+    event_node: Node,
+    global_admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
+):
+    tag = await create_random_user_tag()
+    await db_connection.execute(
+        "update user_tag set comment = $1, group_tag = $2 where id = $3",
+        "Blue Crew Alpha",
+        "North Gate",
+        tag.id,
+    )
+
+    search_terms = [
+        "crew",
+        "NORTH",
+        "alpha gate",
+    ]
+
+    for search_term in search_terms:
+        results = await user_tag_service.find_user_tags(
+            token=global_admin_token,
+            node_id=event_node.id,
+            search_term=search_term,
+        )
+        found_tag = next((result_tag for result_tag in results if result_tag.id == tag.id), None)
+        assert found_tag is not None, f"expected user tag match for search term {search_term!r}"
 
 
 async def test_create_user_tags_with_hex_uid(
