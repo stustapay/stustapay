@@ -65,6 +65,12 @@ export const UserList: React.FC = () => {
       flex: 1,
     },
     {
+      field: "email",
+      headerName: t("userEmail"),
+      flex: 1,
+      renderCell: (params) => params.row.email || t("user.noEmail"),
+    },
+    {
       field: "description",
       headerName: t("userDescription"),
       flex: 2,

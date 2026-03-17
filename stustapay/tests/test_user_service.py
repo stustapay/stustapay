@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import secrets
+from typing import Any
 
 import pytest
 
@@ -7,7 +8,7 @@ from sftkit.error import AccessDenied, InvalidArgument
 from sftkit.database import Connection
 from stustapay.core.schema.tree import ROOT_NODE_ID, Node
 from stustapay.core.schema.config import GlobalEmailConfig
-from stustapay.core.schema.user import AcceptInvitationPayload, NewUser, NewUserRole, Privilege
+from stustapay.core.schema.user import AcceptInvitationPayload, NewUser, NewUserRole, Privilege, UpdateCurrentUserProfilePayload, User
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.user import UserService
@@ -20,6 +21,58 @@ async def test_change_password(user_service: UserService, event_admin_user, even
     await user_service.change_password(token=event_admin_token, old_password=password, new_password="rofl")
 
     await user_service.login_user(username=usr.login, password="rofl")
+
+
+async def test_get_current_user_profile_returns_fresh_email(
+    user_service: UserService,
+    event_admin_token: str,
+):
+    await user_service.update_current_user_profile(
+        token=event_admin_token,
+        profile=UpdateCurrentUserProfilePayload(email="fresh-profile@example.com"),
+    )
+
+    current_user = await user_service.get_current_user_profile(token=event_admin_token)
+
+    assert current_user.email == "fresh-profile@example.com"
+
+
+async def test_update_current_user_profile_updates_email(
+    user_service: UserService,
+    event_admin_token: str,
+    event_admin_user: tuple[User, str],
+    event_node: Node,
+):
+    user, _ = event_admin_user
+
+    updated_user = await user_service.update_current_user_profile(
+        token=event_admin_token,
+        profile=UpdateCurrentUserProfilePayload(email="admin-updated@example.com"),
+    )
+
+    assert updated_user.email == "admin-updated@example.com"
+
+    fetched_user = await user_service.get_user(token=event_admin_token, node_id=event_node.id, user_id=user.id)
+    assert fetched_user is not None
+    assert fetched_user.email == "admin-updated@example.com"
+
+
+async def test_update_current_user_profile_works_without_user_management(
+    user_service: UserService,
+    cashier: Any,
+    event_admin_token: str,
+    event_node: Node,
+):
+    updated_user = await user_service.update_current_user_profile(
+        token=cashier.token,
+        profile=UpdateCurrentUserProfilePayload(email="cashier@example.com"),
+    )
+
+    assert updated_user.email == "cashier@example.com"
+
+    fetched_user = await user_service.get_user(token=event_admin_token, node_id=event_node.id, user_id=cashier.id)
+    assert fetched_user is not None
+    assert fetched_user.email == "cashier@example.com"
 
 
 async def test_invitation_token_is_stored_hashed_and_raw_token_is_required_for_acceptance(

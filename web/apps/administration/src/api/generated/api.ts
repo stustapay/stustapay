@@ -284,6 +284,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/auth/change-password`, method: "POST", body: queryArg.changePasswordPayload }),
         invalidatesTags: ["auth"],
       }),
+      getProfile: build.query<GetProfileApiResponse, GetProfileApiArg>({
+        query: () => ({ url: `/auth/profile` }),
+        providesTags: ["auth"],
+      }),
+      updateProfile: build.mutation<UpdateProfileApiResponse, UpdateProfileApiArg>({
+        query: (queryArg) => ({ url: `/auth/profile`, method: "POST", body: queryArg.updateCurrentUserProfilePayload }),
+        invalidatesTags: ["auth"],
+      }),
       logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
         query: () => ({ url: `/auth/logout`, method: "POST" }),
         invalidatesTags: ["auth"],
@@ -2059,6 +2067,12 @@ export type ChangePasswordApiResponse = /** status 200 Successful Response */ an
 export type ChangePasswordApiArg = {
   changePasswordPayload: ChangePasswordPayload;
 };
+export type GetProfileApiResponse = /** status 200 Successful Response */ CurrentUser;
+export type GetProfileApiArg = void;
+export type UpdateProfileApiResponse = /** status 200 Successful Response */ CurrentUser;
+export type UpdateProfileApiArg = {
+  updateCurrentUserProfilePayload: UpdateCurrentUserProfilePayload;
+};
 export type LogoutApiResponse = unknown;
 export type LogoutApiArg = void;
 export type ListTillsApiResponse = /** status 200 Successful Response */ NormalizedListTillInt;
@@ -3169,6 +3183,9 @@ export type ChangePasswordPayload = {
   old_password: string;
   new_password: string;
 };
+export type UpdateCurrentUserProfilePayload = {
+  email?: string | null;
+};
 export type Till = {
   name: string;
   description?: string | null;
@@ -3757,7 +3774,7 @@ export type CashierRead = {
 export type NormalizedListCashierInt = {
   ids: number[];
   entities: {
-    [key: string]: Cashier;
+    [key: string]: CashierRead;
   };
 };
 export type CashierProductStats = {
@@ -4694,6 +4711,9 @@ export const {
   useDeleteTaxRateMutation,
   useLoginMutation,
   useChangePasswordMutation,
+  useGetProfileQuery,
+  useLazyGetProfileQuery,
+  useUpdateProfileMutation,
   useLogoutMutation,
   useListTillsQuery,
   useLazyListTillsQuery,

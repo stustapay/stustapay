@@ -203,6 +203,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
     oldPassword: "Altes Passwort",
     newPassword: "Neues Passwort",
     confirmNewPassword: "Neues Passwort bestätigen",
+    invalidEmail: "Bitte eine gültige E-Mail-Adresse eingeben",
+    profileUpdated: "Profil erfolgreich aktualisiert",
+    profileUpdateFailed: "Profilaktualisierung fehlgeschlagen: {{reason}}.",
     successfullyChangedPassword: "Passwort erfolgreich geändert",
     passwordsDontMatch: "Passwörter stimmen nicht überein",
     passwordChangeFailed: "Passwortänderung fehlgeschlagen: {{reason}}.",
@@ -850,6 +853,26 @@ export const translations: NestedPartialAsStrings<Translations> = {
   customer: {
     search: "Suche nach Kunden",
     customers: "Kunden",
+    overviewTitle: "Übersicht Kundenbetrieb",
+    overviewIntro:
+      "Behalte Restguthaben, ausstehende Auszahlungen und die wichtigsten Support-Einstiege für das Team im Blick.",
+    pendingPayoutOverview: "Übersicht ausstehender Auszahlungen",
+    supportGuide: "Welcher Bereich wofür",
+    supportCustomersDescription:
+      "Öffne Kundendetails für Guthaben, Auszahlungsstatus und hinterlegte Auszahlungsinformationen.",
+    supportAccountsDescription: "Nutze Konten für Guthaben-Transfers, Kommentare und direkte Kontooperationen.",
+    supportUserTagsDescription:
+      "Nutze Benutzer-Tags für Armband-Zuordnung, Kontoverknüpfung und NFC-Supportfälle.",
+    quickActions: "Schnellzugriffe",
+    searchCustomersDescription:
+      "Finde einen bestimmten Besucher, prüfe sein Guthaben und öffne die Auszahlungsdetails.",
+    payoutRunsDescription: "Prüfe ausstehende Auszahlungsbeträge und öffne bestehende Auszahlungsläufe.",
+    accountsDescription: "Bearbeite Guthaben und andere konto-bezogene Supportfälle.",
+    userTagsDescription: "Untersuche Probleme bei Armbändern und Kontozuordnungen.",
+    openSearch: "Kundensuche öffnen",
+    openPayoutRuns: "Auszahlungsläufe öffnen",
+    openAccounts: "Konten öffnen",
+    openUserTags: "Benutzer-Tags öffnen",
     bankAccountHolder: "Kontoinhaber",
     donation: "Spende",
     payoutRun: "Aus-Zahlungslauf",

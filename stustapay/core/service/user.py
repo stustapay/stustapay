@@ -21,6 +21,7 @@ from stustapay.core.schema.user import (
     NewUserToRoles,
     Privilege,
     RoleToNode,
+    UpdateCurrentUserProfilePayload,
     User,
     UserInvitation,
     UserRole,
@@ -640,6 +641,23 @@ class UserService(Service[Config]):
         new_password_hashed = self._hash_password(new_password)
 
         await conn.execute("update usr set password = $2 where id = $1", current_user.id, new_password_hashed)
+
+    @with_db_transaction
+    @requires_user(node_required=False)
+    async def get_current_user_profile(self, *, current_user: CurrentUser) -> CurrentUser:
+        return current_user
+
+    @with_db_transaction
+    @requires_user(node_required=False)
+    async def update_current_user_profile(
+        self,
+        *,
+        conn: Connection,
+        current_user: CurrentUser,
+        profile: UpdateCurrentUserProfilePayload,
+    ) -> CurrentUser:
+        await conn.execute("update usr set email = $2 where id = $1", current_user.id, profile.email)
+        return current_user.model_copy(update={"email": profile.email})
 
     @with_db_transaction
     @requires_user(node_required=False)
