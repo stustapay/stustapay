@@ -526,6 +526,131 @@ async def get_hourly_product_stats(
     ]
 
 
+async def get_product_breakdown_stats(
+    *,
+    conn: Connection,
+    node: Node,
+    query: TimeseriesStatsQuery,
+    from_time: datetime,
+    to_time: datetime,
+    selected_date_ranges: Optional[list[tuple[datetime, datetime]]] = None,
+) -> tuple[list[ProductTimeseries], list[ProductOverallStats], list[ProductTimeseries], list[ProductOverallStats]]:
+    selected_date_filter, selected_date_params = build_selected_date_condition(
+        field_name="o.booked_at",
+        start_param_index=5,
+        selected_date_ranges=selected_date_ranges or [],
+    )
+    result = await _timed_stats_query(
+        query_name="get_product_breakdown_stats",
+        node_id=node.id,
+        till_id=query.till_id,
+        from_time=from_time,
+        to_time=to_time,
+        query_coro=conn.fetch(
+            "with scope_tills as materialized ("
+            "   select t.id "
+            "   from till t "
+            "   join node n on n.id = t.node_id "
+            "   where ($3 = any(n.parent_ids) or n.id = $3)"
+            "), product_sales as materialized ("
+            "   select "
+            "       p.id as product_id, "
+            "       p.name as product_name, "
+            "       p.is_returnable as is_returnable, "
+            "       date_trunc('hour', o.booked_at) as hour_bucket, "
+            "       sum(li.quantity) as count, "
+            "       round(sum(li.total_price), 2) as revenue "
+            "   from ordr o "
+            "   join scope_tills st on st.id = o.till_id "
+            "   join line_item li on o.id = li.order_id "
+            "   join product p on li.product_id = p.id "
+            "   where o.booked_at >= $1 and o.booked_at <= $2 "
+            "       and p.type = 'user_defined' "
+            "       and ($4::int is null or o.till_id = $4) "
+            f"       {selected_date_filter} "
+            "   group by p.id, p.name, p.is_returnable, hour_bucket "
+            ") "
+            "select "
+            "   product_id, "
+            "   product_name, "
+            "   is_returnable, "
+            "   hour_bucket as from_time, "
+            "   hour_bucket + interval '1 hour' as to_time, "
+            "   count, "
+            "   revenue, "
+            "   false as is_overall "
+            "from product_sales "
+            "union all "
+            "select "
+            "   product_id, "
+            "   product_name, "
+            "   is_returnable, "
+            "   null as from_time, "
+            "   null as to_time, "
+            "   sum(count) as count, "
+            "   round(sum(revenue), 2) as revenue, "
+            "   true as is_overall "
+            "from product_sales "
+            "group by product_id, product_name, is_returnable "
+            "order by is_returnable, product_id, is_overall, from_time",
+            from_time,
+            to_time,
+            node.id,
+            query.till_id,
+            *selected_date_params,
+        ),
+    )
+
+    product_hourly_map: dict[int, list[StatInterval]] = {}
+    deposit_hourly_map: dict[int, list[StatInterval]] = {}
+    product_names: dict[int, str] = {}
+    deposit_names: dict[int, str] = {}
+    product_overall_stats: list[ProductOverallStats] = []
+    deposit_overall_stats: list[ProductOverallStats] = []
+
+    for row in result:
+        product_id = int(row["product_id"])
+        product_name = row["product_name"]
+        is_returnable = bool(row["is_returnable"])
+        is_overall = bool(row["is_overall"])
+        target_hourly_map = deposit_hourly_map if is_returnable else product_hourly_map
+        target_names = deposit_names if is_returnable else product_names
+        target_overall_stats = deposit_overall_stats if is_returnable else product_overall_stats
+
+        target_names[product_id] = product_name
+
+        if is_overall:
+            target_overall_stats.append(
+                ProductOverallStats(
+                    product_id=product_id,
+                    product_name=product_name,
+                    count=int(row["count"]),
+                    revenue=float(row["revenue"]),
+                )
+            )
+            continue
+
+        target_hourly_map.setdefault(product_id, []).append(
+            StatInterval(
+                from_time=row["from_time"],
+                to_time=row["to_time"],
+                count=row["count"],
+                revenue=row["revenue"],
+            )
+        )
+
+    product_hourly_intervals = [
+        ProductTimeseries(product_id=product_id, product_name=product_names[product_id], intervals=intervals)
+        for product_id, intervals in product_hourly_map.items()
+    ]
+    deposit_hourly_intervals = [
+        ProductTimeseries(product_id=product_id, product_name=deposit_names[product_id], intervals=intervals)
+        for product_id, intervals in deposit_hourly_map.items()
+    ]
+
+    return product_hourly_intervals, product_overall_stats, deposit_hourly_intervals, deposit_overall_stats
+
+
 async def get_daily_stats(*, hourly_stats: Timeseries, event: PublicEventSettings) -> Timeseries:
     if event.daily_end_time is None:
         raise InvalidArgument("daily end time must be set for this event to accurately compute the daily statistics")
@@ -739,44 +864,16 @@ class OrderStatsService(Service[Config]):
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
-        hourly_product_stats = await get_hourly_product_stats(
-            conn=conn,
-            node=scope_node,
-            query=query,
-            from_time=from_time,
-            to_time=to_time,
-            returnable=False,
-            selected_date_ranges=selected_date_ranges,
-        )
-        hourly_deposit_stats = await get_hourly_product_stats(
-            conn=conn,
-            node=scope_node,
-            query=query,
-            from_time=from_time,
-            to_time=to_time,
-            returnable=True,
-            selected_date_ranges=selected_date_ranges,
-        )
-
-        product_overall_stats = []
-        for hourly_product in hourly_product_stats:
-            s = ProductOverallStats(
-                product_id=hourly_product.product_id, count=0, revenue=0, product_name=hourly_product.product_name
+        hourly_product_stats, product_overall_stats, hourly_deposit_stats, deposit_overall_stats = (
+            await get_product_breakdown_stats(
+                conn=conn,
+                node=scope_node,
+                query=query,
+                from_time=from_time,
+                to_time=to_time,
+                selected_date_ranges=selected_date_ranges,
             )
-            for interval in hourly_product.intervals:
-                s.count += interval.count  # pylint: disable=no-member
-                s.revenue += interval.revenue  # pylint: disable=no-member
-            product_overall_stats.append(s)
-
-        deposit_overall_stats = []
-        for hourly_deposit in hourly_deposit_stats:
-            s = ProductOverallStats(
-                product_id=hourly_deposit.product_id, count=0, revenue=0, product_name=hourly_deposit.product_name
-            )
-            for interval in hourly_deposit.intervals:
-                s.count += interval.count  # pylint: disable=no-member
-                s.revenue += interval.revenue  # pylint: disable=no-member
-            deposit_overall_stats.append(s)
+        )
 
         return ProductStats(
             from_time=hourly_stats.from_time,

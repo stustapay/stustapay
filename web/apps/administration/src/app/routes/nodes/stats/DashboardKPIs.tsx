@@ -6,6 +6,7 @@ import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { PieChart, PieChartData } from "@/components";
 import { useGetDashboardOverviewQuery, useGetPaymentMethodStatsQuery, useGetProductStatsQuery, RevenuePrediction } from "@/api";
 import { useTranslation } from "react-i18next";
+import { statsQueryOptions } from "./queryOptions";
 
 export type DashboardKPIsProps = {
   fromTimestamp?: DateTime;
@@ -47,7 +48,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
   const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery(
     {
@@ -58,7 +59,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
   const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery(
     {
@@ -69,7 +70,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   // Get selected product stats if productId is specified

@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { TableFilterBar } from "@/components/tables/TableFilterBar";
 import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
 import { useFilterableTable } from "@/hooks/useFilterableTable";
+import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
@@ -56,7 +57,7 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   const dateStr = React.useMemo(() => {

@@ -42,6 +42,7 @@ import { RevenueByCounterTable } from "./RevenueByCounterTable";
 import { QuantitiesByProductTable } from "./QuantitiesByProductTable";
 import { OrdersTable } from "./OrdersTable";
 import { RevenuePredictionChart } from "./RevenuePredictionChart";
+import { statsQueryOptions } from "./queryOptions";
 
 type SectionKey =
   | "filters"
@@ -71,6 +72,7 @@ export const NodeStats: React.FC = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
   const pollingIntervalMs = useAppSelector(selectStatsPollingInterval);
   const expandedSections = useAppSelector(selectStatsExpandedSections) as Record<SectionKey, boolean>;
+  const predictionPollingIntervalMs = pollingIntervalMs > 0 ? Math.max(pollingIntervalMs, 300000) : 0;
 
   const effectiveFilterNodeId = selectedSubnodeId ?? currentNode.id;
 
@@ -108,10 +110,10 @@ export const NodeStats: React.FC = () => {
 
   const { data: availableDates } = useGetAvailableDatesQuery(
     { nodeId: currentNode.id, subnodeId: selectedSubnodeId },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
-  const { data: tills } = useListTillsQuery({ nodeId: effectiveFilterNodeId }, { pollingInterval: pollingIntervalMs });
-  const { data: products } = useListProductsQuery({ nodeId: effectiveFilterNodeId }, { pollingInterval: pollingIntervalMs });
+  const { data: tills } = useListTillsQuery({ nodeId: effectiveFilterNodeId }, statsQueryOptions(pollingIntervalMs));
+  const { data: products } = useListProductsQuery({ nodeId: effectiveFilterNodeId }, statsQueryOptions(pollingIntervalMs));
   const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery(
     {
       nodeId: currentNode.id,
@@ -119,7 +121,7 @@ export const NodeStats: React.FC = () => {
       subnodeId: selectedSubnodeId,
     },
     {
-      pollingInterval: pollingIntervalMs,
+      ...statsQueryOptions(predictionPollingIntervalMs),
       skip: currentNode.event == null || !isPredictionEnabled || selectedProductId !== undefined,
     }
   );

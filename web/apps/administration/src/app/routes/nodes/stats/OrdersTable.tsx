@@ -26,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import { TableFilterBar, ColumnFilterConfig } from "@/components/tables/TableFilterBar";
 import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
 import { useFilterableTable } from "@/hooks/useFilterableTable";
+import { statsQueryOptions } from "./queryOptions";
 
 export type OrdersTableProps = {
   fromTimestamp?: DateTime;
@@ -88,7 +89,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   const previousQueryKeyRef = React.useRef(queryKey);
   const lastIntegratedPageKeyRef = React.useRef<string | null>(null);
 
-  const { data: tills } = useListTillsQuery({ nodeId: effectiveNodeId }, { pollingInterval: pollingIntervalMs });
+  const { data: tills } = useListTillsQuery({ nodeId: effectiveNodeId }, statsQueryOptions(pollingIntervalMs));
   const { data: ordersData, isLoading, fulfilledTimeStamp } = useListOrdersFilteredQuery(
     {
       nodeId: currentNode.id,
@@ -100,7 +101,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
       limit: PAGE_SIZE,
       offset: currentOffset,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   const currentPageOrders = React.useMemo(() => {

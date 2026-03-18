@@ -25,6 +25,7 @@ import { FilterBadge } from "@/components/common/FilterBadge";
 import { useCurrentNode, useCurrencyFormatter } from "@/hooks";
 import { useGetProductStatsQuery } from "@/api";
 import { useTranslation } from "react-i18next";
+import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByProductChartProps = {
   fromTimestamp?: DateTime;
@@ -83,7 +84,7 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   // Create a map of product_name to product_id for bar click handling

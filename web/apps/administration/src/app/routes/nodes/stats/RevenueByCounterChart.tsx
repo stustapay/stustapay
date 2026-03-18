@@ -25,6 +25,7 @@ import { FilterBadge } from "@/components/common/FilterBadge";
 import { useCurrentNode } from "@/hooks";
 import { useGetRevenueByCounterQuery } from "@/api";
 import { useTranslation } from "react-i18next";
+import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByCounterChartProps = {
   fromTimestamp?: DateTime;
@@ -80,7 +81,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   // Create a map of till_name to till_id for bar click handling
