@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 export type RevenueByCounterChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   pollingIntervalMs?: number;
@@ -41,6 +42,7 @@ type SortOption = "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
 export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   pollingIntervalMs = 0,
@@ -74,6 +76,7 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },

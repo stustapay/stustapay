@@ -26,6 +26,7 @@ import { useFilterableTable } from "@/hooks/useFilterableTable";
 export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   pollingIntervalMs?: number;
@@ -34,6 +35,7 @@ export type RevenueByCounterTableProps = {
 export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   pollingIntervalMs = 0,
@@ -50,13 +52,19 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
     { pollingInterval: pollingIntervalMs }
   );
 
-  const dateStr = fromTimestamp?.toISODate() ?? toTimestamp?.toISODate() ?? "Total";
+  const dateStr = React.useMemo(() => {
+    if (selectedDates && selectedDates.length > 1) {
+      return t("overview.selectedDatesCount", { count: selectedDates.length });
+    }
+    return fromTimestamp?.toISODate() ?? toTimestamp?.toISODate() ?? "Total";
+  }, [fromTimestamp, selectedDates, t, toTimestamp]);
 
   // Use filterable table hook
   const {

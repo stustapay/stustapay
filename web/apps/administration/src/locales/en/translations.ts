@@ -357,6 +357,7 @@ export const translations = {
     filterProduct: "Filter by Product",
     allProducts: "All Products",
     allDates: "All Dates",
+    selectedDatesCount: "{{count}} dates selected",
     today: "Today",
     yesterday: "Yesterday",
     last7Days: "Last 7 days",

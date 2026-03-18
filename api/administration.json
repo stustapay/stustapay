@@ -4553,6 +4553,41 @@
               ],
               "title": "Limit"
             }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5268,6 +5303,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5383,6 +5437,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5500,6 +5573,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5615,6 +5707,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5732,6 +5843,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5847,6 +5977,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5964,6 +6113,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -6079,6 +6247,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],

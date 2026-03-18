@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
@@ -32,6 +32,7 @@ async def get_product_stats(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_product_stats(
         token=token,
@@ -40,6 +41,7 @@ async def get_product_stats(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -54,6 +56,7 @@ async def get_voucher_stats(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_voucher_stats(
         token=token,
@@ -62,6 +65,7 @@ async def get_voucher_stats(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -76,6 +80,7 @@ async def get_entry_stats(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_entry_stats(
         token=token,
@@ -84,6 +89,7 @@ async def get_entry_stats(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -98,6 +104,7 @@ async def get_top_up_stats(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_top_up_stats(
         token=token,
@@ -106,6 +113,7 @@ async def get_top_up_stats(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -120,6 +128,7 @@ async def get_pay_out_stats(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_pay_out_stats(
         token=token,
@@ -128,6 +137,7 @@ async def get_pay_out_stats(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -142,6 +152,7 @@ async def get_dashboard_overview(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_dashboard_overview(
         token=token,
@@ -150,6 +161,7 @@ async def get_dashboard_overview(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -164,6 +176,7 @@ async def get_revenue_by_counter(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_revenue_by_counter(
         token=token,
@@ -172,6 +185,7 @@ async def get_revenue_by_counter(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )
@@ -186,6 +200,7 @@ async def get_payment_method_stats(
     from_timestamp: Optional[datetime] = None,
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return await order_service.stats.get_payment_method_stats(
         token=token,
@@ -194,6 +209,7 @@ async def get_payment_method_stats(
             from_time=from_timestamp,
             till_id=till_id,
             subnode_id=subnode_id,
+            selected_dates=selected_dates,
         ),
         node_id=node_id,
     )

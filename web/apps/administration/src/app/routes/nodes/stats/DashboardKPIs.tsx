@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 export type DashboardKPIsProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   productId?: number;
@@ -21,6 +22,7 @@ export type DashboardKPIsProps = {
 export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   productId,
@@ -41,6 +43,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
@@ -51,6 +54,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
@@ -61,6 +65,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },

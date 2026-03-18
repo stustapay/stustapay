@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 export type RevenueByProductChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   productId?: number;
@@ -42,6 +43,7 @@ type SortOption = "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
 export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   productId,
@@ -77,6 +79,7 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },

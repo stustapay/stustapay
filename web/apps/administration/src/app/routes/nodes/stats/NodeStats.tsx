@@ -20,6 +20,8 @@ import {
   AccordionDetails,
   Typography,
   Chip,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
@@ -61,7 +63,7 @@ export const NodeStats: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const dispatch = useAppDispatch();
   const [datePreset, setDatePreset] = React.useState<DatePreset>("all");
-  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+  const [selectedDates, setSelectedDates] = React.useState<string[]>([]);
   const [selectedSubnodeId, setSelectedSubnodeId] = React.useState<number | undefined>(undefined);
   const [selectedTillId, setSelectedTillId] = React.useState<number | undefined>(undefined);
   const [selectedProductId, setSelectedProductId] = React.useState<number | undefined>(undefined);
@@ -128,7 +130,7 @@ export const NodeStats: React.FC = () => {
 
   const clearAllFilterSelections = React.useCallback(() => {
     setDatePreset("all");
-    setSelectedDate(null);
+    setSelectedDates([]);
     setSelectedSubnodeId(undefined);
     setSelectedTillId(undefined);
     setSelectedProductId(undefined);
@@ -189,6 +191,12 @@ export const NodeStats: React.FC = () => {
     return now < boundaryToday ? boundaryToday.minus({ days: 1 }) : boundaryToday;
   }, [businessDayStartForDate]);
 
+  const sortedSelectedDates = React.useMemo(() => [...selectedDates].sort(), [selectedDates]);
+  const selectedDatesForQuery = React.useMemo(
+    () => (datePreset === "custom" && sortedSelectedDates.length > 0 ? sortedSelectedDates : undefined),
+    [datePreset, sortedSelectedDates]
+  );
+
   // Determine timestamp bounds based on selected date and event settings
   const fromTimestamp = React.useMemo(() => {
     if (datePreset === "all") {
@@ -203,16 +211,16 @@ export const NodeStats: React.FC = () => {
     if (datePreset === "last7") {
       return currentBusinessDayStart.minus({ days: 6 });
     }
-    if (!selectedDate) {
+    if (sortedSelectedDates.length === 0) {
       return undefined;
     }
 
-    const dt = DateTime.fromISO(selectedDate);
+    const dt = DateTime.fromISO(sortedSelectedDates[0]);
     if (eventSettings.daily_end_time) {
       return businessDayStartForDate(dt);
     }
     return dt.startOf("day");
-  }, [datePreset, selectedDate, eventSettings.daily_end_time, currentBusinessDayStart, businessDayStartForDate]);
+  }, [datePreset, sortedSelectedDates, eventSettings.daily_end_time, currentBusinessDayStart, businessDayStartForDate]);
 
   const toTimestamp = React.useMemo(() => {
     if (!fromTimestamp) return undefined;
@@ -220,8 +228,13 @@ export const NodeStats: React.FC = () => {
     if (datePreset === "last7") {
       return fromTimestamp.plus({ days: 7 }).minus({ milliseconds: 1 });
     }
+    if (datePreset === "custom" && sortedSelectedDates.length > 0) {
+      const lastDate = DateTime.fromISO(sortedSelectedDates[sortedSelectedDates.length - 1]);
+      const lastRangeStart = eventSettings.daily_end_time ? businessDayStartForDate(lastDate) : lastDate.startOf("day");
+      return lastRangeStart.plus({ days: 1 }).minus({ milliseconds: 1 });
+    }
     return fromTimestamp.plus({ days: 1 }).minus({ milliseconds: 1 });
-  }, [fromTimestamp, datePreset]);
+  }, [fromTimestamp, datePreset, sortedSelectedDates, eventSettings.daily_end_time, businessDayStartForDate]);
 
   const selectedSubnodeName = React.useMemo(
     () => subnodeOptions.find((node) => node.id === selectedSubnodeId)?.name,
@@ -242,9 +255,14 @@ export const NodeStats: React.FC = () => {
     if (datePreset === "today") return t("overview.today");
     if (datePreset === "yesterday") return t("overview.yesterday");
     if (datePreset === "last7") return t("overview.last7Days");
-    if (datePreset === "custom" && selectedDate) return DateTime.fromISO(selectedDate).toLocaleString(DateTime.DATE_MED);
+    if (datePreset === "custom" && sortedSelectedDates.length === 1) {
+      return DateTime.fromISO(sortedSelectedDates[0]).toLocaleString(DateTime.DATE_MED);
+    }
+    if (datePreset === "custom" && sortedSelectedDates.length > 1) {
+      return t("overview.selectedDatesCount", { count: sortedSelectedDates.length });
+    }
     return undefined;
-  }, [datePreset, selectedDate, t]);
+  }, [datePreset, sortedSelectedDates, t]);
 
   const hasActiveFilters =
     dateFilterLabel !== undefined ||
@@ -287,28 +305,37 @@ export const NodeStats: React.FC = () => {
                     <Select
                       labelId="date-select-label"
                       id="date-select"
-                      value={selectedDate ?? ""}
+                      multiple
+                      value={selectedDates}
                       label={t("overview.filterDate")}
                       onChange={(e) => {
-                        const val = e.target.value as string;
-                        if (val === "") {
-                          setSelectedDate(null);
+                        const value = [...(e.target.value as string[])].sort();
+                        if (value.length === 0) {
                           setDatePreset("all");
+                          setSelectedDates([]);
                           return;
                         }
-                        setSelectedDate(val);
+                        setSelectedDates(value);
                         setDatePreset("custom");
                       }}
                       displayEmpty
                       notched
+                      renderValue={(selected) => {
+                        const values = selected as string[];
+                        if (values.length === 0) {
+                          return <em>{t("overview.allDates")}</em>;
+                        }
+                        if (values.length === 1) {
+                          return DateTime.fromISO(values[0]).toLocaleString(DateTime.DATE_MED);
+                        }
+                        return t("overview.selectedDatesCount", { count: values.length });
+                      }}
                     >
-                      <MenuItem value="">
-                        <em>{t("overview.allDates")}</em>
-                      </MenuItem>
                       {availableDates && availableDates.length > 0 ? (
                         availableDates.map((date) => (
                           <MenuItem key={date} value={date}>
-                            {DateTime.fromISO(date).toLocaleString(DateTime.DATE_MED)}
+                            <Checkbox checked={selectedDates.includes(date)} size="small" />
+                            <ListItemText primary={DateTime.fromISO(date).toLocaleString(DateTime.DATE_MED)} />
                           </MenuItem>
                         ))
                       ) : (
@@ -423,7 +450,7 @@ export const NodeStats: React.FC = () => {
                   size="small"
                   onClick={() => {
                     setDatePreset("all");
-                    setSelectedDate(null);
+                    setSelectedDates([]);
                   }}
                 />
                 <Chip
@@ -432,7 +459,7 @@ export const NodeStats: React.FC = () => {
                   size="small"
                   onClick={() => {
                     setDatePreset("today");
-                    setSelectedDate(null);
+                    setSelectedDates([]);
                   }}
                 />
                 <Chip
@@ -441,7 +468,7 @@ export const NodeStats: React.FC = () => {
                   size="small"
                   onClick={() => {
                     setDatePreset("yesterday");
-                    setSelectedDate(null);
+                    setSelectedDates([]);
                   }}
                 />
                 <Chip
@@ -450,7 +477,7 @@ export const NodeStats: React.FC = () => {
                   size="small"
                   onClick={() => {
                     setDatePreset("last7");
-                    setSelectedDate(null);
+                    setSelectedDates([]);
                   }}
                 />
               </Stack>
@@ -534,7 +561,7 @@ export const NodeStats: React.FC = () => {
                       label={`${t("overview.filterDate")}: ${dateFilterLabel}`}
                       onDelete={() => {
                         setDatePreset("all");
-                        setSelectedDate(null);
+                        setSelectedDates([]);
                       }}
                     />
                   )}
@@ -581,6 +608,7 @@ export const NodeStats: React.FC = () => {
             <DashboardKPIs
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
+              selectedDates={selectedDatesForQuery}
               tillId={selectedTillId}
               subnodeId={selectedSubnodeId}
               productId={selectedProductId}
@@ -615,6 +643,7 @@ export const NodeStats: React.FC = () => {
               <RevenueByCounterChart
                 fromTimestamp={fromTimestamp}
                 toTimestamp={toTimestamp}
+                selectedDates={selectedDatesForQuery}
                 tillId={selectedTillId}
                 subnodeId={selectedSubnodeId}
                 pollingIntervalMs={pollingIntervalMs}
@@ -634,6 +663,7 @@ export const NodeStats: React.FC = () => {
             <RevenueByProductChart
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
+              selectedDates={selectedDatesForQuery}
               tillId={selectedTillId}
               subnodeId={selectedSubnodeId}
               productId={selectedProductId}
@@ -653,6 +683,7 @@ export const NodeStats: React.FC = () => {
             <QuantitiesByProductTable
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
+              selectedDates={selectedDatesForQuery}
               tillId={selectedTillId}
               subnodeId={selectedSubnodeId}
               productId={selectedProductId}
@@ -672,6 +703,7 @@ export const NodeStats: React.FC = () => {
               <RevenueByCounterTable
                 fromTimestamp={fromTimestamp}
                 toTimestamp={toTimestamp}
+                selectedDates={selectedDatesForQuery}
                 tillId={selectedTillId}
                 subnodeId={selectedSubnodeId}
                 pollingIntervalMs={pollingIntervalMs}
@@ -689,6 +721,7 @@ export const NodeStats: React.FC = () => {
             <OrdersTable
               fromTimestamp={fromTimestamp}
               toTimestamp={toTimestamp}
+              selectedDates={selectedDatesForQuery}
               tillId={selectedTillId}
               subnodeId={selectedSubnodeId}
               productId={selectedProductId}

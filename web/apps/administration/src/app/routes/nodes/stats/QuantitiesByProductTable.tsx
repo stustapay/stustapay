@@ -25,6 +25,7 @@ import { useFilterableTable } from "@/hooks/useFilterableTable";
 export type QuantitiesByProductTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   productId?: number;
@@ -41,6 +42,7 @@ type ProductRow = {
 export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   productId,
@@ -58,6 +60,7 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },

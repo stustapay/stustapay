@@ -349,6 +349,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     filterProduct: "Nach Produkt filtern",
     allProducts: "Alle Produkte",
     allDates: "Alle Daten",
+    selectedDatesCount: "{{count}} Tage ausgewählt",
     today: "Heute",
     yesterday: "Gestern",
     last7Days: "Letzte 7 Tage",

@@ -61,6 +61,7 @@ class TimeseriesStatsQuery(BaseModel):
     to_time: Optional[datetime]
     till_id: Optional[int] = None
     subnode_id: Optional[int] = None
+    selected_dates: Optional[list[str]] = None
 
 
 class ProductTimeseries(BaseModel):
@@ -153,9 +154,70 @@ class RevenuePrediction(BaseModel):
     visitor_based_prediction: Optional[float]  # Alternative prediction: expected_visitors * historical_revenue_per_visitor
 
 
+def get_selected_date_ranges(
+    query: TimeseriesStatsQuery, event: Optional[PublicEventSettings]
+) -> list[tuple[datetime, datetime]]:
+    if not query.selected_dates:
+        return []
+
+    ranges: list[tuple[datetime, datetime]] = []
+    seen_dates: set[str] = set()
+    normalized_dates: list[str] = []
+    for selected_date_value in query.selected_dates:
+        normalized_dates.extend(part.strip() for part in selected_date_value.split(",") if part.strip())
+
+    for selected_date in sorted(normalized_dates):
+        if selected_date in seen_dates:
+            continue
+        seen_dates.add(selected_date)
+
+        try:
+            base_date = datetime.fromisoformat(selected_date).replace(tzinfo=timezone.utc)
+        except ValueError as exc:
+            raise InvalidArgument(f"Invalid selected date: {selected_date}") from exc
+        if event is not None and event.daily_end_time is not None:
+            start_time = base_date.replace(
+                hour=event.daily_end_time.hour,
+                minute=event.daily_end_time.minute,
+                second=event.daily_end_time.second,
+                microsecond=0,
+            )
+        else:
+            start_time = base_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        end_time = start_time + timedelta(days=1) - timedelta(milliseconds=1)
+        ranges.append((start_time, end_time))
+
+    return ranges
+
+
+def build_selected_date_condition(
+    *,
+    field_name: str,
+    start_param_index: int,
+    selected_date_ranges: list[tuple[datetime, datetime]],
+) -> tuple[str, list[datetime]]:
+    if not selected_date_ranges:
+        return "", []
+
+    clauses: list[str] = []
+    params: list[datetime] = []
+    next_param = start_param_index
+    for range_start, range_end in selected_date_ranges:
+        clauses.append(f"({field_name} >= ${next_param} AND {field_name} <= ${next_param + 1})")
+        params.extend([range_start, range_end])
+        next_param += 2
+
+    return f" AND ({' OR '.join(clauses)})", params
+
+
 def get_event_time_bounds(query: TimeseriesStatsQuery, event: PublicEventSettings) -> tuple[datetime, datetime]:
     if query.from_time is not None and query.to_time is not None and query.from_time > query.to_time:
         raise InvalidArgument("Stats start time must be before end time")
+
+    selected_date_ranges = get_selected_date_ranges(query, event)
+    if selected_date_ranges:
+        return selected_date_ranges[0][0], selected_date_ranges[-1][1]
 
     # "All dates" requests do not send explicit bounds and should include all available data,
     # not only the configured event start/end window.
@@ -184,8 +246,19 @@ async def _timed_stats_query(
 
 
 async def get_hourly_entry_stats(
-    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+    *,
+    conn: Connection,
+    node: Node,
+    query: TimeseriesStatsQuery,
+    from_time: datetime,
+    to_time: datetime,
+    selected_date_ranges: Optional[list[tuple[datetime, datetime]]] = None,
 ) -> Timeseries:
+    selected_date_filter, selected_date_params = build_selected_date_condition(
+        field_name="o.booked_at",
+        start_param_index=5,
+        selected_date_ranges=selected_date_ranges or [],
+    )
     stats = await _timed_stats_query(
         query_name="get_hourly_entry_stats",
         node_id=node.id,
@@ -207,12 +280,14 @@ async def get_hourly_entry_stats(
             "where ($3 = any(n.parent_ids) or n.id = $3) "
             "   and p.ticket_metadata_id is not null and o.booked_at >= $1 and o.booked_at <= $2 "
             "   and ($4::int IS NULL OR o.till_id = $4) "
+            f"{selected_date_filter} "
             "group by from_time, to_time "
             "order by from_time",
             from_time,
             to_time,
             node.id,
             query.till_id,
+            *selected_date_params,
         ),
     )
 
@@ -220,9 +295,20 @@ async def get_hourly_entry_stats(
 
 
 async def get_hourly_top_up_stats(
-    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+    *,
+    conn: Connection,
+    node: Node,
+    query: TimeseriesStatsQuery,
+    from_time: datetime,
+    to_time: datetime,
+    selected_date_ranges: Optional[list[tuple[datetime, datetime]]] = None,
 ) -> Timeseries:
     top_up_product = await fetch_top_up_product(conn=conn, node=node)
+    selected_date_filter, selected_date_params = build_selected_date_condition(
+        field_name="o.booked_at",
+        start_param_index=6,
+        selected_date_ranges=selected_date_ranges or [],
+    )
 
     stats = await _timed_stats_query(
         query_name="get_hourly_top_up_stats",
@@ -245,6 +331,7 @@ async def get_hourly_top_up_stats(
             "where ($3 = any(n.parent_ids) or n.id = $3) "
             "   and p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
             "   and ($5::int IS NULL OR o.till_id = $5) "
+            f"{selected_date_filter} "
             "group by from_time, to_time "
             "order by from_time",
             from_time,
@@ -252,6 +339,7 @@ async def get_hourly_top_up_stats(
             node.id,
             top_up_product.id,
             query.till_id,
+            *selected_date_params,
         ),
     )
 
@@ -259,9 +347,20 @@ async def get_hourly_top_up_stats(
 
 
 async def get_hourly_pay_out_stats(
-    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+    *,
+    conn: Connection,
+    node: Node,
+    query: TimeseriesStatsQuery,
+    from_time: datetime,
+    to_time: datetime,
+    selected_date_ranges: Optional[list[tuple[datetime, datetime]]] = None,
 ) -> Timeseries:
     pay_out_product = await fetch_pay_out_product(conn=conn, node=node)
+    selected_date_filter, selected_date_params = build_selected_date_condition(
+        field_name="o.booked_at",
+        start_param_index=6,
+        selected_date_ranges=selected_date_ranges or [],
+    )
 
     stats = await _timed_stats_query(
         query_name="get_hourly_pay_out_stats",
@@ -284,6 +383,7 @@ async def get_hourly_pay_out_stats(
             "where ($3 = any(n.parent_ids) or n.id = $3) "
             "   and p.id = $4 and o.booked_at >= $1 and o.booked_at <= $2 "
             "   and ($5::int IS NULL OR o.till_id = $5) "
+            f"{selected_date_filter} "
             "group by from_time, to_time "
             "order by from_time",
             from_time,
@@ -291,6 +391,7 @@ async def get_hourly_pay_out_stats(
             node.id,
             pay_out_product.id,
             query.till_id,
+            *selected_date_params,
         ),
     )
 
@@ -298,7 +399,13 @@ async def get_hourly_pay_out_stats(
 
 
 async def get_hourly_sales_stats(
-    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime
+    *,
+    conn: Connection,
+    node: Node,
+    query: TimeseriesStatsQuery,
+    from_time: datetime,
+    to_time: datetime,
+    selected_date_ranges: Optional[list[tuple[datetime, datetime]]] = None,
 ) -> Timeseries:
     """
     We are interested in general sales revenue excluding all topups, payouts and ticket sales.
@@ -308,6 +415,11 @@ async def get_hourly_sales_stats(
     currently not possible in the system).
     """
 
+    selected_date_filter, selected_date_params = build_selected_date_condition(
+        field_name="o.booked_at",
+        start_param_index=5,
+        selected_date_ranges=selected_date_ranges or [],
+    )
     stats = await _timed_stats_query(
         query_name="get_hourly_sales_stats",
         node_id=node.id,
@@ -333,12 +445,14 @@ async def get_hourly_sales_stats(
             "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
             "   and o.order_type = 'sale' "
             "   and ($4::int IS NULL OR o.till_id = $4) "
+            f"{selected_date_filter} "
             "group by from_time, to_time "
             "order by from_time",
             from_time,
             to_time,
             node.id,
             query.till_id,
+            *selected_date_params,
         ),
     )
 
@@ -346,8 +460,20 @@ async def get_hourly_sales_stats(
 
 
 async def get_hourly_product_stats(
-    *, conn: Connection, node: Node, query: TimeseriesStatsQuery, from_time: datetime, to_time: datetime, returnable=False
+    *,
+    conn: Connection,
+    node: Node,
+    query: TimeseriesStatsQuery,
+    from_time: datetime,
+    to_time: datetime,
+    returnable=False,
+    selected_date_ranges: Optional[list[tuple[datetime, datetime]]] = None,
 ) -> list[ProductTimeseries]:
+    selected_date_filter, selected_date_params = build_selected_date_condition(
+        field_name="o.booked_at",
+        start_param_index=6,
+        selected_date_ranges=selected_date_ranges or [],
+    )
     result = await _timed_stats_query(
         query_name=f"get_hourly_product_stats:returnable={returnable}",
         node_id=node.id,
@@ -376,6 +502,7 @@ async def get_hourly_product_stats(
             "   and p.type = 'user_defined' "
             "   and p.is_returnable = $4 "
             "   and ($5::int IS NULL OR o.till_id = $5) "
+            f"{selected_date_filter} "
             "group by p.id, p.name, from_time, to_time "
             "order by from_time",
             from_time,
@@ -383,6 +510,7 @@ async def get_hourly_product_stats(
             node.id,
             returnable,
             query.till_id,
+            *selected_date_params,
         ),
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
@@ -482,9 +610,15 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
 
         hourly_stats = await get_hourly_entry_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            selected_date_ranges=selected_date_ranges,
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
@@ -504,9 +638,15 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
 
         hourly_stats = await get_hourly_top_up_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            selected_date_ranges=selected_date_ranges,
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
@@ -526,9 +666,15 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
 
         hourly_stats = await get_hourly_pay_out_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            selected_date_ranges=selected_date_ranges,
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
         return TimeseriesStats(
@@ -582,16 +728,34 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
         hourly_stats = await get_hourly_sales_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            selected_date_ranges=selected_date_ranges,
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
         hourly_product_stats = await get_hourly_product_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time, returnable=False
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            returnable=False,
+            selected_date_ranges=selected_date_ranges,
         )
         hourly_deposit_stats = await get_hourly_product_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time, returnable=True
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            returnable=True,
+            selected_date_ranges=selected_date_ranges,
         )
 
         product_overall_stats = []
@@ -631,8 +795,14 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
         hourly_stats = await get_hourly_sales_stats(
-            conn=conn, node=scope_node, query=query, from_time=from_time, to_time=to_time
+            conn=conn,
+            node=scope_node,
+            query=query,
+            from_time=from_time,
+            to_time=to_time,
+            selected_date_ranges=selected_date_ranges,
         )
         daily_stats = await get_daily_stats(hourly_stats=hourly_stats, event=event)
 
@@ -652,6 +822,12 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
+        selected_date_filter, selected_date_params = build_selected_date_condition(
+            field_name="o.booked_at",
+            start_param_index=6,
+            selected_date_ranges=selected_date_ranges,
+        )
 
         if scope_node.ids_to_event_node is None:
             raise InvalidArgument("Dashboard overview can only be computed for nodes within an event")
@@ -676,6 +852,7 @@ class OrderStatsService(Service[Config]):
                 "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
                 "      AND o.order_type = 'sale' "
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
+                f"      {selected_date_filter} "
                 "), "
                 "revenue_orders AS MATERIALIZED ("
                 "    SELECT o.id "
@@ -684,6 +861,7 @@ class OrderStatsService(Service[Config]):
                 "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
                 "      AND o.order_type IN ('sale', 'cancel_sale') "
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
+                f"      {selected_date_filter} "
                 "), "
                 "filtered_revenue AS MATERIALIZED ("
                 "    SELECT COALESCE(ROUND(SUM(li.total_price), 2), 0) AS total_revenue "
@@ -728,6 +906,7 @@ class OrderStatsService(Service[Config]):
                 scope_node.id,
                 query.till_id,
                 scope_node.ids_to_event_node,
+                *selected_date_params,
             ),
         )
 
@@ -750,6 +929,12 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
+        selected_date_filter, selected_date_params = build_selected_date_condition(
+            field_name="o.booked_at",
+            start_param_index=5,
+            selected_date_ranges=selected_date_ranges,
+        )
 
         result = await _timed_stats_query(
             query_name="get_revenue_by_counter",
@@ -773,6 +958,7 @@ class OrderStatsService(Service[Config]):
                 "LEFT JOIN line_item li ON li.order_id = o.id "
                 "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
                 "AND ($4::int IS NULL OR o.till_id = $4) "
+                f"{selected_date_filter} "
                 "AND o.order_type = 'sale' "
                 "AND t.is_virtual IS NOT TRUE "
                 "AND t.name <> 'CheckTerminal' "
@@ -782,6 +968,7 @@ class OrderStatsService(Service[Config]):
                 to_time,
                 scope_node.id,
                 query.till_id,
+                *selected_date_params,
             ),
         )
 
@@ -808,6 +995,12 @@ class OrderStatsService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=query.subnode_id)
         event = await fetch_event_for_node(conn=conn, node=scope_node)
         from_time, to_time = get_event_time_bounds(query, event)
+        selected_date_ranges = get_selected_date_ranges(query, event)
+        selected_date_filter, selected_date_params = build_selected_date_condition(
+            field_name="o.booked_at",
+            start_param_index=5,
+            selected_date_ranges=selected_date_ranges,
+        )
 
         result = await _timed_stats_query(
             query_name="get_payment_method_stats",
@@ -831,12 +1024,14 @@ class OrderStatsService(Service[Config]):
                 "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
                 "AND o.order_type = 'top_up' "
                 "AND ($4::int IS NULL OR o.till_id = $4) "
+                f"{selected_date_filter} "
                 "GROUP BY o.payment_method "
                 "ORDER BY revenue DESC",
                 from_time,
                 to_time,
                 scope_node.id,
                 query.till_id,
+                *selected_date_params,
             ),
         )
 

@@ -1,6 +1,6 @@
 import { Order, selectTillById, selectUserById, useListTillsQuery, useListUsersQuery } from "@/api";
 import { CashierRoutes, OrderRoutes, TillRoutes } from "@/app/routes";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import {
   AddCard as AddCardIcon,
   ShoppingCart as ShoppingCartIcon,
@@ -40,6 +40,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canViewOrderLinks = useCurrentUserHasPrivilege(OrderRoutes.privilege);
   const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
 
@@ -65,9 +66,13 @@ export const OrderTable: React.FC<OrderListProps> = ({
       field: "id",
       headerName: t("order.id"),
       renderCell: (params) => (
-        <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
-          {params.row.id}
-        </Link>
+        canViewOrderLinks ? (
+          <Link component={RouterLink} to={OrderRoutes.detail(params.row.id)}>
+            {params.row.id}
+          </Link>
+        ) : (
+          params.row.id
+        )
       ),
       width: 100,
     },

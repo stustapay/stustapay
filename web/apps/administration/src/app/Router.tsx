@@ -503,6 +503,7 @@ const router = createBrowserRouter([
           },
           {
             path: "orders",
+            element: <PrivilegeGuard privilege="node_administration" />,
             children: [
               {
                 path: ":orderId/edit",

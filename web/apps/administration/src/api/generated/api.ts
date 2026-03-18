@@ -788,6 +788,8 @@ const injectedRtkApi = api
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
             limit: queryArg.limit,
+            offset: queryArg.offset,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["orders"],
@@ -893,6 +895,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -906,6 +909,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -919,6 +923,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -932,6 +937,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -945,6 +951,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -958,6 +965,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -971,6 +979,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -984,6 +993,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -2370,6 +2380,8 @@ export type ListOrdersFilteredApiArg = {
   tillId?: number | null;
   subnodeId?: number | null;
   limit?: number | null;
+  offset?: number | null;
+  selectedDates?: string[] | null;
 };
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
@@ -2429,6 +2441,7 @@ export type GetProductStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetVoucherStatsApiResponse = /** status 200 Successful Response */ VoucherStats;
 export type GetVoucherStatsApiArg = {
@@ -2437,6 +2450,7 @@ export type GetVoucherStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetEntryStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetEntryStatsApiArg = {
@@ -2445,6 +2459,7 @@ export type GetEntryStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetTopUpStatsApiArg = {
@@ -2453,6 +2468,7 @@ export type GetTopUpStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetPayOutStatsApiArg = {
@@ -2461,6 +2477,7 @@ export type GetPayOutStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetDashboardOverviewApiResponse = /** status 200 Successful Response */ DashboardOverview;
 export type GetDashboardOverviewApiArg = {
@@ -2469,6 +2486,7 @@ export type GetDashboardOverviewApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetRevenueByCounterApiResponse = /** status 200 Successful Response */ RevenueByCounter;
 export type GetRevenueByCounterApiArg = {
@@ -2477,6 +2495,7 @@ export type GetRevenueByCounterApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodBreakdown;
 export type GetPaymentMethodStatsApiArg = {
@@ -2485,6 +2504,7 @@ export type GetPaymentMethodStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetAvailableDatesApiResponse = /** status 200 Successful Response */ string[];
 export type GetAvailableDatesApiArg = {
