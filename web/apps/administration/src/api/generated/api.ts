@@ -1163,6 +1163,20 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
+      updateUserTagAccountCreationBlocked: build.mutation<
+        UpdateUserTagAccountCreationBlockedApiResponse,
+        UpdateUserTagAccountCreationBlockedApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/user-tags/${queryArg.userTagId}/update-account-creation-blocked`,
+          method: "POST",
+          body: queryArg.updateAccountCreationBlockedPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
       listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
         query: (queryArg) => ({
           url: `/tses/`,
@@ -1410,6 +1424,31 @@ const injectedRtkApi = api
           url: `/customers/find-customers`,
           method: "POST",
           body: queryArg.findCustomerPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
+      findCustomerTagSwapCandidates: build.mutation<
+        FindCustomerTagSwapCandidatesApiResponse,
+        FindCustomerTagSwapCandidatesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/customers/tag-swap/find-tags`,
+          method: "POST",
+          body: queryArg.findTagSwapCandidatesPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
+      swapCustomerTag: build.mutation<SwapCustomerTagApiResponse, SwapCustomerTagApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/tag-swap`,
+          method: "POST",
+          body: queryArg.swapCustomerTagPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -2534,6 +2573,12 @@ export type UpdateUserTagGroupTagApiArg = {
   nodeId: number;
   updateGroupTagPayload: UpdateGroupTagPayload;
 };
+export type UpdateUserTagAccountCreationBlockedApiResponse = /** status 200 Successful Response */ UserTagDetail;
+export type UpdateUserTagAccountCreationBlockedApiArg = {
+  userTagId: number;
+  nodeId: number;
+  updateAccountCreationBlockedPayload: UpdateAccountCreationBlockedPayload;
+};
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = {
   nodeId: number;
@@ -2682,6 +2727,16 @@ export type FindCustomersApiResponse = /** status 200 Successful Response */ Cus
 export type FindCustomersApiArg = {
   nodeId: number;
   findCustomerPayload: FindCustomerPayload;
+};
+export type FindCustomerTagSwapCandidatesApiResponse = /** status 200 Successful Response */ UserTagSwapCandidate[];
+export type FindCustomerTagSwapCandidatesApiArg = {
+  nodeId: number;
+  findTagSwapCandidatesPayload: FindTagSwapCandidatesPayload;
+};
+export type SwapCustomerTagApiResponse = /** status 200 Successful Response */ SwapCustomerTagResponse;
+export type SwapCustomerTagApiArg = {
+  nodeId: number;
+  swapCustomerTagPayload: SwapCustomerTagPayload;
 };
 export type GetCustomerApiResponse = /** status 200 Successful Response */ CustomerRead;
 export type GetCustomerApiArg = {
@@ -3571,7 +3626,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: AccountRead;
+    [key: string]: Account;
   };
 };
 export type FindAccountPayload = {
@@ -3948,6 +4003,7 @@ export type UserTagDetail = {
   user_id?: number | null;
   is_vip?: boolean;
   group_tag?: string | null;
+  account_creation_blocked?: boolean;
   account_history: UserTagAccountAssociation[];
 };
 export type NormalizedListUserTagDetailInt = {
@@ -3974,6 +4030,9 @@ export type UpdateVipStatusPayload = {
 };
 export type UpdateGroupTagPayload = {
   group_tag: string | null;
+};
+export type UpdateAccountCreationBlockedPayload = {
+  account_creation_blocked: boolean;
 };
 export type TseType = "diebold_nixdorf";
 export type TseStatus = "new" | "active" | "disabled" | "failed";
@@ -4463,6 +4522,30 @@ export type CustomerRead = {
 export type FindCustomerPayload = {
   search_term: string;
 };
+export type UserTagSwapCandidate = {
+  user_tag_id: number;
+  uid: number | null;
+  pin: string;
+  comment?: string | null;
+  account_id?: number | null;
+  account_creation_blocked?: boolean;
+  target_mode?: string | null;
+  target_reason?: string | null;
+};
+export type FindTagSwapCandidatesPayload = {
+  search_term: string;
+  mode: string;
+};
+export type SwapCustomerTagResponse = {
+  customer_account_id: number;
+  used_existing_target_account: boolean;
+};
+export type SwapCustomerTagPayload = {
+  source_user_tag_id: number;
+  target_user_tag_id: number;
+  comment: string;
+  block_source_tag?: boolean;
+};
 export type TerminalMode = "till" | "entry" | "exit";
 export type Terminal = {
   name: string;
@@ -4844,6 +4927,7 @@ export const {
   useUpdateUserTagCommentMutation,
   useUpdateUserTagVipStatusMutation,
   useUpdateUserTagGroupTagMutation,
+  useUpdateUserTagAccountCreationBlockedMutation,
   useListTsesQuery,
   useLazyListTsesQuery,
   useCreateTseMutation,
@@ -4886,6 +4970,8 @@ export const {
   useGetSumupCheckoutQuery,
   useLazyGetSumupCheckoutQuery,
   useFindCustomersMutation,
+  useFindCustomerTagSwapCandidatesMutation,
+  useSwapCustomerTagMutation,
   useGetCustomerQuery,
   useLazyGetCustomerQuery,
   usePreventCustomerPayoutMutation,

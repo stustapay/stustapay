@@ -99,6 +99,7 @@ describe("CustomerOverview", () => {
     expect(screen.getByText("EUR 500.50")).toBeTruthy();
 
     expect(screen.getByText("customer.openSearch").closest("a")?.getAttribute("href")).toBe("/node/5/customers/search");
+    expect(screen.getByText("customer.tagSwap.open").closest("a")?.getAttribute("href")).toBe("/node/5/customers/tag-swap");
     expect(screen.getByText("customer.openPayoutRuns").closest("a")?.getAttribute("href")).toBe("/node/5/payout-runs");
     expect(screen.getByText("customer.openAccounts").closest("a")?.getAttribute("href")).toBe("/node/5/accounts");
     expect(screen.getByText("customer.openUserTags").closest("a")?.getAttribute("href")).toBe("/node/5/user-tags");

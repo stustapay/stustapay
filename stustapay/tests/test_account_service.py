@@ -130,6 +130,114 @@ async def test_account_balance_transfer_rejects_invalid_requests(
         )
 
 
+async def test_swap_customer_tag_without_existing_target_account(
+    account_service: AccountService,
+    event_admin_token: str,
+    db_connection: Connection,
+    event_node: Node,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+    source_account_id = await db_connection.fetchval(
+        "insert into account(node_id, user_tag_id, type, name, balance, vouchers) "
+        "values ($1, $2, 'private', 'source-account', 4.50, 2) returning id",
+        event_node.id,
+        source_tag.id,
+    )
+
+    result = await account_service.swap_customer_tag(
+        token=event_admin_token,
+        node_id=event_node.id,
+        source_user_tag_id=source_tag.id,
+        target_user_tag_id=target_tag.id,
+        comment="defekt",
+        block_source_tag=True,
+    )
+
+    account = await account_service.get_account(token=event_admin_token, node_id=event_node.id, account_id=source_account_id)
+    source_tag_blocked = await db_connection.fetchval(
+        "select account_creation_blocked from user_tag where id = $1",
+        source_tag.id,
+    )
+    source_tag_comment = await db_connection.fetchval("select comment from user_tag where id = $1", source_tag.id)
+
+    assert result.customer_account_id == source_account_id
+    assert result.used_existing_target_account is False
+    assert account.user_tag_id == target_tag.id
+    assert account.user_tag_uid == target_tag.uid
+    assert source_tag_blocked is True
+    assert source_tag_comment == "defekt"
+    assert len(account.tag_history) == 1
+    assert account.tag_history[0].user_tag_id == source_tag.id
+
+
+async def test_swap_customer_tag_rejects_source_tag_assigned_to_user(
+    account_service: AccountService,
+    event_admin_token: str,
+    db_connection: Connection,
+    event_node: Node,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+
+    source_account_id = await db_connection.fetchval(
+        "insert into account(node_id, user_tag_id, type, name) values ($1, $2, 'private', 'source-account') returning id",
+        event_node.id,
+        source_tag.id,
+    )
+    await db_connection.execute(
+        "insert into usr (login, display_name, user_tag_id, customer_account_id, node_id) values ($1, $2, $3, $4, $5)",
+        "linked-user-source-account",
+        "Linked User",
+        source_tag.id,
+        source_account_id,
+        event_node.id,
+    )
+
+    with pytest.raises(InvalidArgument, match="Source tag is assigned to a user"):
+        await account_service.swap_customer_tag(
+            token=event_admin_token,
+            node_id=event_node.id,
+            source_user_tag_id=source_tag.id,
+            target_user_tag_id=target_tag.id,
+            comment="defektes band",
+            block_source_tag=True,
+        )
+
+
+async def test_swap_customer_tag_rejects_in_use_target_account(
+    account_service: AccountService,
+    event_admin_token: str,
+    db_connection: Connection,
+    event_node: Node,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+    await db_connection.execute(
+        "insert into account(node_id, user_tag_id, type, name) values ($1, $2, 'private', 'source-account')",
+        event_node.id,
+        source_tag.id,
+    )
+    await db_connection.execute(
+        "insert into account(node_id, user_tag_id, type, name, balance) values ($1, $2, 'private', 'target-account', 1.00)",
+        event_node.id,
+        target_tag.id,
+    )
+
+    with pytest.raises(InvalidArgument, match="in-use account"):
+        await account_service.swap_customer_tag(
+            token=event_admin_token,
+            node_id=event_node.id,
+            source_user_tag_id=source_tag.id,
+            target_user_tag_id=target_tag.id,
+            comment="defekt",
+            block_source_tag=True,
+        )
+
+
 async def test_find_accounts_does_not_leak_accounts_from_other_nodes(
     account_service: AccountService,
     event_admin_token: str,

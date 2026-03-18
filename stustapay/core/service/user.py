@@ -45,7 +45,7 @@ from stustapay.core.service.email_templates import (
 from stustapay.core.service.mail import MailService
 from sftkit.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
-from stustapay.core.service.user_tag import get_or_assign_user_tag
+from stustapay.core.service.user_tag import ensure_private_account_creation_allowed, get_or_assign_user_tag
 
 
 class UserLoginSuccess(BaseModel):
@@ -86,6 +86,7 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
     user_tag_id = None
     if user.user_tag_uid is not None:
         user_tag_id = await get_or_assign_user_tag(conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid)
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
 
     row = await conn.fetchrow(
         "update usr "
@@ -332,6 +333,8 @@ class UserService(Service[Config]):
             )
 
         if customer_account_id is None:
+            if user_tag_id is not None:
+                await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.id,

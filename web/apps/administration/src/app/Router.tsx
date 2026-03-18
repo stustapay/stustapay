@@ -65,7 +65,7 @@ import {
 } from "./routes/users";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
-import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
+import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch, CustomerTagSwap } from "./routes/customers";
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
@@ -193,6 +193,10 @@ const router = createBrowserRouter([
               {
                 path: "search",
                 element: <CustomerSearch />,
+              },
+              {
+                path: "tag-swap",
+                element: <CustomerTagSwap />,
               },
               {
                 path: ":customerId",

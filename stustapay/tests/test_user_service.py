@@ -323,3 +323,39 @@ async def test_global_email_management_privilege_is_root_only_for_role_definitio
             is_privileged=False,
             privileges=[Privilege.global_email_management],
         )
+
+
+async def test_update_user_rejects_blocked_tag_assignment(
+    user_service: UserService,
+    event_admin_token: str,
+    event_node: Node,
+    db_connection: Connection,
+    create_random_user_tag,
+):
+    blocked_tag = await create_random_user_tag()
+    await db_connection.execute("update user_tag set account_creation_blocked = true where id = $1", blocked_tag.id)
+
+    user = await user_service.create_user(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_user=NewUser(
+            login=f"blocked-tag-user-{secrets.token_hex(4)}",
+            display_name="Blocked Tag User",
+            description="",
+        ),
+    )
+
+    with pytest.raises(InvalidArgument, match="Tag is blocked from account creation"):
+        await user_service.update_user(
+            token=event_admin_token,
+            node_id=event_node.id,
+            user_id=user.id,
+            user=NewUser(
+                login=user.login,
+                display_name=user.display_name,
+                description=user.description,
+                user_tag_pin=blocked_tag.pin,
+                user_tag_uid=blocked_tag.uid,
+                email=user.email,
+            ),
+        )

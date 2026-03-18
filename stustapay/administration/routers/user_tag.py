@@ -10,6 +10,7 @@ from stustapay.core.schema.user_tag import (
     CreateAccountsResponse,
     NewUserTag,
     NewUserTagSecret,
+    UpdateAccountCreationBlockedPayload,
     UserTagSecret,
 )
 
@@ -150,4 +151,19 @@ async def update_user_tag_group_tag(
         token=token, user_tag_id=user_tag_id, group_tag=payload.group_tag, node_id=node_id
     )
 
+
+@router.post("/user-tags/{user_tag_id}/update-account-creation-blocked", response_model=UserTagDetail)
+async def update_user_tag_account_creation_blocked(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    user_tag_id: int,
+    payload: UpdateAccountCreationBlockedPayload,
+    node_id: int,
+):
+    return await user_tag_service.update_user_tag_account_creation_blocked(
+        token=token,
+        user_tag_id=user_tag_id,
+        account_creation_blocked=payload.account_creation_blocked,
+        node_id=node_id,
+    )
 

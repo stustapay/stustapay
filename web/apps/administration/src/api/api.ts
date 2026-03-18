@@ -27,6 +27,9 @@ import {
   GenerateRevenueReportApiArg,
   UpdateUserTagCommentApiArg,
   UpdateUserTagVipStatusApiArg,
+  UpdateUserTagAccountCreationBlockedApiArg,
+  FindCustomerTagSwapCandidatesApiArg,
+  SwapCustomerTagApiArg,
   Transaction,
 } from "./generated/api";
 import { Account, Cashier } from "@stustapay/models";
@@ -239,38 +242,47 @@ export const api = generatedApi.enhanceEndpoints({
         { type: "user_tags", id: userTagId }
       ],
     },
+    updateUserTagAccountCreationBlocked: {
+      query: ({
+        userTagId,
+        nodeId,
+        updateAccountCreationBlockedPayload,
+      }: UpdateUserTagAccountCreationBlockedApiArg) => ({
+        url: `/user-tags/${userTagId}/update-account-creation-blocked`,
+        method: "POST",
+        body: { account_creation_blocked: updateAccountCreationBlockedPayload.account_creation_blocked },
+        params: { node_id: nodeId },
+      }),
+      invalidatesTags: (result, error, { userTagId }) => [
+        { type: "user_tags", id: "LIST" },
+        { type: "user_tags", id: userTagId },
+      ],
+    },
     getUserTagDetail: {
       providesTags: (result, error, arg) => [
         { type: "user_tags", id: "LIST" },
         { type: "user_tags", id: arg.userTagId }
       ],
     },
-  },
-});
-
-// Inject new endpoints manually (until API is regenerated)
-export const userTagApi = api.injectEndpoints({
-  endpoints: (build) => ({
-    countTagsWithoutAccounts: build.query<number, { nodeId: number }>({
-      query: ({ nodeId }) => ({
-        url: `/user-tags/count-without-accounts`,
-        params: { node_id: nodeId },
-      }),
-      providesTags: ["user_tags"],
-    }),
-    createAccountsForUserTags: build.mutation<
-      { created: number; skipped: number },
-      { nodeId: number; createAccountsPayload: { user_tag_ids?: number[] | null } }
-    >({
-      query: ({ nodeId, createAccountsPayload }) => ({
-        url: `/user-tags/create-accounts`,
+    findCustomerTagSwapCandidates: {
+      query: ({ nodeId, findTagSwapCandidatesPayload }: FindCustomerTagSwapCandidatesApiArg) => ({
+        url: `/customers/tag-swap/find-tags`,
         method: "POST",
-        body: createAccountsPayload,
+        body: findTagSwapCandidatesPayload,
         params: { node_id: nodeId },
       }),
-      invalidatesTags: [{ type: "user_tags", id: "LIST" }],
-    }),
-  }),
+      invalidatesTags: [],
+    },
+    swapCustomerTag: {
+      query: ({ nodeId, swapCustomerTagPayload }: SwapCustomerTagApiArg) => ({
+        url: `/customers/tag-swap`,
+        method: "POST",
+        body: swapCustomerTagPayload,
+        params: { node_id: nodeId },
+      }),
+      invalidatesTags: ["accounts", "user_tags", "orders", "payouts"],
+    },
+  },
 });
 
 export const { selectUserAll, selectUserById, selectUserEntities, selectUserIds, selectUserTotal } =
@@ -388,6 +400,3 @@ export const {
   selectPayoutRunIds,
   selectPayoutRunTotal,
 } = convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());
-
-// Export hooks for manually injected endpoints
-export const { useCountTagsWithoutAccountsQuery, useCreateAccountsForUserTagsMutation } = userTagApi;

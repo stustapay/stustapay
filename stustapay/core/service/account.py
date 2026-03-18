@@ -10,7 +10,9 @@ from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.tree import Node
+from stustapay.core.schema.user_tag import SwapCustomerTagResponse
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
+from stustapay.core.schema.user_tag_models import UserTagSwapCandidate
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import (
     requires_node,
@@ -20,6 +22,7 @@ from stustapay.core.service.common.decorators import (
 from sftkit.error import InvalidArgument, NotFound
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
+from stustapay.core.service.user_tag import ensure_private_account_creation_allowed
 
 
 def _get_search_patterns(search_term: str) -> list[str]:
@@ -30,6 +33,173 @@ def _get_search_patterns(search_term: str) -> list[str]:
             normalized_token = normalized_token[2:]
         patterns.append(f"%{normalized_token}%")
     return patterns
+
+
+def _parse_search_uid(search_term: str) -> int | None:
+    try:
+        return int(search_term.strip())
+    except ValueError:
+        try:
+            return int(search_term.strip().replace("0x", "").replace("0X", ""), 16)
+        except ValueError:
+            return None
+
+
+async def _tag_has_previous_association(conn: Connection, user_tag_id: int) -> bool:
+    return bool(
+        await conn.fetchval(
+            "select exists(select from account_tag_association_history where user_tag_id = $1)",
+            user_tag_id,
+        )
+    )
+
+
+async def _is_reusable_stub_account(conn: Connection, account_id: int) -> bool:
+    result = await conn.fetchval(
+        """
+        select
+            a.type = 'private'
+            and round(a.balance, 2) = 0
+            and a.vouchers = 0
+            and not exists(select from ordr where customer_account_id = a.id)
+            and not exists(select from payout where customer_account_id = a.id)
+            and not exists(select from ticket_voucher where customer_account_id = a.id)
+            and not exists(select from customer_session where customer = a.id)
+            and not exists(select from usr where customer_account_id = a.id)
+            and not exists(select from account_tag_association_history where account_id = a.id)
+            and not exists(
+                select
+                from customer_info ci
+                where ci.customer_account_id = a.id
+                  and (
+                      coalesce(ci.iban, '') != ''
+                      or coalesce(ci.account_name, '') != ''
+                      or coalesce(ci.email, '') != ''
+                      or coalesce(ci.donation, 0) != 0
+                      or ci.donate_all
+                      or ci.has_entered_info
+                      or ci.payout_export = false
+                  )
+            )
+        from account a
+        where a.id = $1
+        """,
+        account_id,
+    )
+    return bool(result)
+
+
+async def _move_customer_account_references(
+    *,
+    conn: Connection,
+    source_account_id: int,
+    target_account_id: int,
+    target_user_tag_id: int,
+):
+    await conn.execute("delete from customer_info where customer_account_id = $1", target_account_id)
+    await conn.execute(
+        "update customer_info set customer_account_id = $2 where customer_account_id = $1",
+        source_account_id,
+        target_account_id,
+    )
+    await conn.execute(
+        "update payout set customer_account_id = $2 where customer_account_id = $1",
+        source_account_id,
+        target_account_id,
+    )
+    await conn.execute(
+        "update ordr set customer_account_id = $2 where customer_account_id = $1",
+        source_account_id,
+        target_account_id,
+    )
+    await conn.execute(
+        "update ticket_voucher set customer_account_id = $2 where customer_account_id = $1",
+        source_account_id,
+        target_account_id,
+    )
+    await conn.execute(
+        "update customer_session set customer = $2 where customer = $1",
+        source_account_id,
+        target_account_id,
+    )
+    await conn.execute(
+        "update usr set customer_account_id = $2, user_tag_id = $3 where customer_account_id = $1",
+        source_account_id,
+        target_account_id,
+        target_user_tag_id,
+    )
+
+
+async def _search_user_tag_rows(conn: Connection, node: Node, search_term: str):
+    search_patterns = _get_search_patterns(search_term)
+    search_uid = _parse_search_uid(search_term)
+
+    if search_uid is not None:
+        return await conn.fetch(
+            """
+            select
+                ut.id,
+                ut.uid,
+                ut.pin,
+                ut.comment,
+                coalesce(ut.account_creation_blocked, false) as account_creation_blocked,
+                a.id as account_id,
+                a.type as account_type,
+                u.id as user_id
+            from user_tag ut
+            left join account a on a.user_tag_id = ut.id and a.node_id = any($2)
+            left join usr u on u.user_tag_id = ut.id
+            where ut.node_id = any($2)
+              and (
+                  ut.uid = $1
+                  or not exists (
+                      select 1
+                      from unnest($3::text[]) as token(pattern)
+                      where not (
+                          coalesce(ut.pin, '') ilike token.pattern
+                          or coalesce(ut.comment, '') ilike token.pattern
+                          or coalesce(ut.group_tag, '') ilike token.pattern
+                          or (ut.uid is not null and to_hex(ut.uid::bigint) ilike token.pattern)
+                      )
+                  )
+              )
+            order by ut.pin asc
+            """,
+            search_uid,
+            node.ids_to_event_node,
+            search_patterns,
+        )
+
+    return await conn.fetch(
+        """
+        select
+            ut.id,
+            ut.uid,
+            ut.pin,
+            ut.comment,
+            coalesce(ut.account_creation_blocked, false) as account_creation_blocked,
+            a.id as account_id,
+            a.type as account_type,
+            u.id as user_id
+        from user_tag ut
+        left join account a on a.user_tag_id = ut.id and a.node_id = any($1)
+        left join usr u on u.user_tag_id = ut.id
+        where ut.node_id = any($1)
+          and not exists (
+              select 1
+              from unnest($2::text[]) as token(pattern)
+              where not (
+                  coalesce(ut.pin, '') ilike token.pattern
+                  or coalesce(ut.comment, '') ilike token.pattern
+                  or coalesce(ut.group_tag, '') ilike token.pattern
+                  or (ut.uid is not null and to_hex(ut.uid::bigint) ilike token.pattern)
+              )
+          )
+        order by ut.pin asc
+        """,
+        node.ids_to_event_node,
+        search_patterns,
+    )
 
 
 async def get_system_account_for_node(*, conn: Connection, node: Node, account_type: AccountType) -> Account:
@@ -160,6 +330,184 @@ class AccountService(Service[Config]):
             ")",
             node.ids_to_root,
             search_patterns,
+        )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def find_customer_tag_swap_candidates(
+        self, *, conn: Connection, node: Node, search_term: str, mode: str
+    ) -> list[UserTagSwapCandidate]:
+        if mode not in {"source", "target"}:
+            raise InvalidArgument("Invalid tag swap search mode")
+
+        rows = await _search_user_tag_rows(conn=conn, node=node, search_term=search_term)
+        candidates: list[UserTagSwapCandidate] = []
+
+        for row in rows:
+            account_id = row["account_id"]
+            account_type = row["account_type"]
+            user_tag_id = row["id"]
+            account_creation_blocked = bool(row["account_creation_blocked"])
+            user_id = row["user_id"]
+
+            if mode == "source":
+                if account_id is None or account_type != AccountType.private.value or user_id is not None:
+                    continue
+                candidates.append(
+                    UserTagSwapCandidate(
+                        user_tag_id=user_tag_id,
+                        uid=row["uid"],
+                        pin=row["pin"],
+                        comment=row["comment"],
+                        account_id=account_id,
+                        account_creation_blocked=account_creation_blocked,
+                        target_mode="source",
+                    )
+                )
+                continue
+
+            target_mode = "direct"
+            target_reason: str | None = None
+
+            if account_creation_blocked:
+                target_mode = "unavailable"
+                target_reason = "blocked_from_account_creation"
+            elif user_id is not None:
+                target_mode = "unavailable"
+                target_reason = "tag_assigned_to_user"
+            elif await _tag_has_previous_association(conn=conn, user_tag_id=user_tag_id):
+                target_mode = "unavailable"
+                target_reason = "tag_has_previous_association"
+            elif account_id is None:
+                target_mode = "direct"
+            elif account_type != AccountType.private.value:
+                target_mode = "unavailable"
+                target_reason = "target_account_is_not_private"
+            elif await _is_reusable_stub_account(conn=conn, account_id=account_id):
+                target_mode = "reuse_stub"
+            else:
+                target_mode = "unavailable"
+                target_reason = "target_account_in_use"
+
+            candidates.append(
+                UserTagSwapCandidate(
+                    user_tag_id=user_tag_id,
+                    uid=row["uid"],
+                    pin=row["pin"],
+                    comment=row["comment"],
+                    account_id=account_id,
+                    account_creation_blocked=account_creation_blocked,
+                    target_mode=target_mode,
+                    target_reason=target_reason,
+                )
+            )
+
+        return candidates
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def swap_customer_tag(
+        self,
+        *,
+        conn: Connection,
+        current_user: User,
+        node: Node,
+        source_user_tag_id: int,
+        target_user_tag_id: int,
+        comment: str,
+        block_source_tag: bool,
+    ) -> SwapCustomerTagResponse:
+        if source_user_tag_id == target_user_tag_id:
+            raise InvalidArgument("Source and target tag must differ")
+
+        source_account = await get_account_by_tag_id(conn=conn, node=node, tag_id=source_user_tag_id)
+        if source_account is None or source_account.type != AccountType.private:
+            raise InvalidArgument("Source tag is not assigned to a private customer account")
+        if await conn.fetchval("select exists(select from usr where user_tag_id = $1)", source_user_tag_id):
+            raise InvalidArgument("Source tag is assigned to a user")
+
+        target_row = await conn.fetchrow(
+            """
+            select
+                ut.id,
+                ut.node_id,
+                coalesce(ut.account_creation_blocked, false) as account_creation_blocked,
+                a.id as account_id,
+                a.type as account_type,
+                u.id as user_id
+            from user_tag ut
+            left join account a on a.user_tag_id = ut.id and a.node_id = any($2)
+            left join usr u on u.user_tag_id = ut.id
+            where ut.id = $1 and ut.node_id = any($2)
+            """,
+            target_user_tag_id,
+            node.ids_to_event_node,
+        )
+        if target_row is None:
+            raise NotFound(element_type="user_tag", element_id=str(target_user_tag_id))
+        if target_row["account_creation_blocked"]:
+            raise InvalidArgument("Target tag is blocked from account creation")
+        if target_row["user_id"] is not None:
+            raise InvalidArgument("Target tag is already assigned to a user")
+        if await _tag_has_previous_association(conn=conn, user_tag_id=target_user_tag_id):
+            raise InvalidArgument("Target tag has been previously associated with an account")
+
+        target_account_id = target_row["account_id"]
+        used_existing_target_account = False
+
+        if target_account_id is None:
+            await conn.execute(
+                "update account set user_tag_id = $2 where id = $1",
+                source_account.id,
+                target_user_tag_id,
+            )
+            active_account_id = source_account.id
+        else:
+            if target_row["account_type"] != AccountType.private.value:
+                raise InvalidArgument("Target tag is assigned to a non-private account")
+            if not await _is_reusable_stub_account(conn=conn, account_id=target_account_id):
+                raise InvalidArgument("Target tag is already assigned to an in-use account")
+
+            used_existing_target_account = True
+
+            if round(source_account.balance, 2) != 0 or source_account.vouchers != 0:
+                await book_transaction(
+                    conn=conn,
+                    source_account_id=source_account.id,
+                    target_account_id=target_account_id,
+                    conducting_user_id=current_user.id,
+                    amount=source_account.balance,
+                    voucher_amount=source_account.vouchers,
+                    description="Admin tag swap account migration",
+                )
+
+            await _move_customer_account_references(
+                conn=conn,
+                source_account_id=source_account.id,
+                target_account_id=target_account_id,
+                target_user_tag_id=target_user_tag_id,
+            )
+            await conn.execute("update account set user_tag_id = null where id = $1", source_account.id)
+            await conn.execute(
+                "update account_tag_association_history set account_id = $2 where account_id = $1",
+                source_account.id,
+                target_account_id,
+            )
+            active_account_id = target_account_id
+
+        await conn.execute("update user_tag set comment = $2 where id = $1", source_user_tag_id, comment or None)
+        if block_source_tag:
+            await conn.execute(
+                "update user_tag set account_creation_blocked = true where id = $1",
+                source_user_tag_id,
+            )
+
+        active_customer = await fetch_customer(conn=conn, node=node, customer_id=active_account_id)
+        return SwapCustomerTagResponse(
+            customer_account_id=active_customer.id,
+            used_existing_target_account=used_existing_target_account,
         )
 
     @with_db_transaction
@@ -337,6 +685,7 @@ class AccountService(Service[Config]):
             raise InvalidArgument("Tag is already registered")
 
         # create a new customer account for the given tag
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag["user_tag_id"])
         account_id = await conn.fetchval(
             "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
             node.event_node_id,
@@ -407,6 +756,7 @@ class AccountService(Service[Config]):
         )
         if new_user_tag_id is None:
             raise NotFound(element_type="user_tag", element_id=new_user_tag_pin)
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=new_user_tag_id)
 
         new_tag_is_registered = await conn.fetchval(
             "select exists(select from account where user_tag_id = $1)", new_user_tag_id
@@ -472,6 +822,7 @@ class AccountService(Service[Config]):
         )
         if new_user_tag_id is None:
             raise NotFound(element_type="user_tag", element_id=str(new_user_tag_uid))
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=new_user_tag_id)
 
         new_tag_is_registered = await conn.fetchval(
             "select exists(select from account where user_tag_id = $1)", new_user_tag_id

@@ -57,3 +57,24 @@ class CreateAccountsPayload(BaseModel):
 class CreateAccountsResponse(BaseModel):
     created: int
     skipped: int
+
+
+class FindTagSwapCandidatesPayload(BaseModel):
+    search_term: str
+    mode: str
+
+
+class SwapCustomerTagPayload(BaseModel):
+    source_user_tag_id: int
+    target_user_tag_id: int
+    comment: str
+    block_source_tag: bool = True
+
+
+class SwapCustomerTagResponse(BaseModel):
+    customer_account_id: int
+    used_existing_target_account: bool
+
+
+class UpdateAccountCreationBlockedPayload(BaseModel):
+    account_creation_blocked: bool

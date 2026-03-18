@@ -11,6 +11,7 @@ import {
   Payments as PaymentsIcon,
   Search as SearchIcon,
   Sell as SellIcon,
+  SwapHoriz as SwapHorizIcon,
   Wallet as WalletIcon,
 } from "@mui/icons-material";
 import { Alert, Box, Paper, Skeleton, Stack, Typography } from "@mui/material";
@@ -282,6 +283,13 @@ export const CustomerOverview = withPrivilegeGuard(Privilege.node_administration
             description={t("customer.searchCustomersDescription")}
             cta={t("customer.openSearch")}
             to={CustomerRoutes.action("search", currentNode.id)}
+          />
+          <ActionCard
+            icon={SwapHorizIcon}
+            title={t("customer.tagSwap.title")}
+            description={t("customer.tagSwap.quickActionDescription")}
+            cta={t("customer.tagSwap.open")}
+            to={CustomerRoutes.action("tag-swap", currentNode.id)}
           />
           <ActionCard
             icon={PaymentsIcon}
