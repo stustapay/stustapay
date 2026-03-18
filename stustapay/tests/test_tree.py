@@ -49,6 +49,7 @@ dummy_event = NewEvent(
     pretix_organizer=None,
     pretix_shop_url=None,
     pretix_ticket_ids=[],
+    pretix_topup_ids=[],
 )
 
 
@@ -145,6 +146,7 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
                 pretix_organizer=None,
                 pretix_shop_url=None,
                 pretix_ticket_ids=[],
+                pretix_topup_ids=[],
             ),
         )
 

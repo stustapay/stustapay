@@ -892,6 +892,15 @@ const injectedRtkApi = api
         }),
         providesTags: ["tickets"],
       }),
+      getPresaleStats: build.query<GetPresaleStatsApiResponse, GetPresaleStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/tickets/stats/presale`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["tickets"],
+      }),
       getTicket: build.query<GetTicketApiResponse, GetTicketApiArg>({
         query: (queryArg) => ({
           url: `/tickets/${queryArg.ticketId}`,
@@ -1856,6 +1865,10 @@ export type CreateTicketApiArg = {
 };
 export type ListExternalTicketsApiResponse = /** status 200 Successful Response */ ExternalTicket[];
 export type ListExternalTicketsApiArg = {
+  nodeId: number;
+};
+export type GetPresaleStatsApiResponse = /** status 200 Successful Response */ PresaleStats;
+export type GetPresaleStatsApiArg = {
   nodeId: number;
 };
 export type GetTicketApiResponse = /** status 200 Successful Response */ Ticket;
@@ -3008,9 +3021,22 @@ export type ExternalTicket = {
   ticket_type: ExternalTicketType;
   external_link?: string | null;
   customer_email?: string | null;
+  customer_name?: string | null;
+  initial_top_up_amount?: number;
+  pretix_item_id?: number | null;
+  pretix_product_name?: string | null;
   id: number;
   customer_account_id: number;
   has_checked_in: boolean;
+  cancelled?: boolean;
+};
+export type PresaleStats = {
+  total_tickets: number;
+  checked_in_tickets: number;
+  cancelled_tickets: number;
+  total_credit_sold: number;
+  credit_activated: number;
+  credit_pending: number;
 };
 export type UserTagSecret = {
   key0: string;
@@ -3186,6 +3212,7 @@ export type PublicEventSettings = {
   pretix_organizer: string | null;
   pretix_event: string | null;
   pretix_ticket_ids: number[] | null;
+  pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3291,6 +3318,7 @@ export type NewEvent = {
   pretix_organizer: string | null;
   pretix_event: string | null;
   pretix_ticket_ids: number[] | null;
+  pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3346,6 +3374,7 @@ export type UpdateEvent = {
   pretix_organizer: string | null;
   pretix_event: string | null;
   pretix_ticket_ids: number[] | null;
+  pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3404,6 +3433,7 @@ export type RestrictedEventSettings = {
   pretix_organizer: string | null;
   pretix_event: string | null;
   pretix_ticket_ids: number[] | null;
+  pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
   bon_address: string;
@@ -3713,6 +3743,8 @@ export const {
   useCreateTicketMutation,
   useListExternalTicketsQuery,
   useLazyListExternalTicketsQuery,
+  useGetPresaleStatsQuery,
+  useLazyGetPresaleStatsQuery,
   useGetTicketQuery,
   useLazyGetTicketQuery,
   useUpdateTicketMutation,

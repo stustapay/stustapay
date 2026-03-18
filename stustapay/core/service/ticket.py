@@ -13,7 +13,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
-from stustapay.ticket_shop.ticket_provider import ExternalTicket, fetch_external_tickets
+from stustapay.ticket_shop.ticket_provider import ExternalTicket, PresaleStats, fetch_external_tickets
 
 
 async def fetch_ticket(*, conn: Connection, node: Node, ticket_id: int) -> Optional[Ticket]:
@@ -162,3 +162,23 @@ class TicketService(Service[Config]):
     @requires_user([Privilege.node_administration])
     async def list_external_tickets(self, *, conn: Connection, node: Node) -> list[ExternalTicket]:
         return await fetch_external_tickets(conn=conn, node=node)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def get_presale_stats(self, *, conn: Connection, node: Node) -> PresaleStats:
+        stats = await conn.fetch_one(
+            PresaleStats,
+            "select "
+            "   count(*) filter (where not cancelled) as total_tickets, "
+            "   count(*) filter (where not cancelled and a.user_tag_id is not null) as checked_in_tickets, "
+            "   count(*) filter (where cancelled) as cancelled_tickets, "
+            "   coalesce(sum(initial_top_up_amount) filter (where not cancelled), 0.0) as total_credit_sold, "
+            "   coalesce(sum(initial_top_up_amount) filter (where not cancelled and a.user_tag_id is not null), 0.0) as credit_activated, "
+            "   coalesce(sum(initial_top_up_amount) filter (where not cancelled) - sum(initial_top_up_amount) filter (where not cancelled and a.user_tag_id is not null), 0.0) as credit_pending "
+            "from ticket_voucher tv "
+            "join account a on tv.customer_account_id = a.id "
+            "where tv.node_id = $1",
+            node.event_node_id,
+        )
+        return stats

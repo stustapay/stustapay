@@ -129,6 +129,13 @@ async def make_ticket_sale_bookings(
                 scanned_ticket.account.id,
             )
 
+        # Mark voucher for Pretix checkin sync (if this was a presale voucher)
+        if scanned_ticket.ticket_voucher is not None:
+            await conn.execute(
+                "update ticket_voucher set needs_pretix_checkin = true where id = $1",
+                scanned_ticket.ticket_voucher.id,
+            )
+
         customers.append(
             CustomerRegistration(
                 account_id=customer_account_id,

@@ -14,7 +14,6 @@ interface BalanceCardProps {
 }
 
 const BalanceCard: React.FC<BalanceCardProps> = ({ amount, label, actions }) => {
-  const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
 
   return (
