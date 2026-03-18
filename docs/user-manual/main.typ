@@ -159,6 +159,28 @@ Hierzu muss das Eintrittsbändchen des Kunden gescannt werden.
 
 #pagebreak()
 
+= Administration: Tag-Tausch
+Falls ein Kunden-Tag defekt ist oder ersetzt werden muss, kann der Tausch im Admin-Portal durchgeführt werden.
+Die Funktion befindet sich in der Kundenverwaltung unter "Kunden" > "Tag-Tausch".
+
+Beim Tag-Tausch wird ein bestehendes Kundenkonto von einem alten Tag auf ein neues Tag umgehängt.
+Dies ist insbesondere dann sinnvoll, wenn das Armband oder der Chip des Kunden nicht mehr zuverlässig funktioniert, das zugehörige Konto mit Guthaben und Bestellhistorie aber erhalten bleiben soll.
+
+Der Ablauf ist wie folgt:
+- Im Feld "Quell-Tag" wird das aktuell verwendete Kunden-Tag gesucht und ausgewählt.
+- Im Feld "Ziel-Tag" wird das Ersatz-Tag gesucht und ausgewählt.
+- Optional kann ein Kommentar hinterlegt werden, zum Beispiel der Grund für den Tausch.
+- Standardmäßig wird das alte Tag nach dem Tausch für neue Kontoerstellungen gesperrt. Diese Option sollte in der Regel aktiv bleiben.
+- Der Tausch wird anschließend mit "Tag tauschen" bestätigt.
+
+Wichtige Hinweise:
+- Als Ziel können nur unbenutzte Tags oder leere Stub-Konten verwendet werden.
+- Tags, die bereits einem Benutzerkonto zugeordnet sind, können nicht als Quelle oder Ziel für einen Kundentausch verwendet werden.
+- Bei Wiederverwendung eines leeren Zielkontos werden bestehende Kundendaten wie Verkäufe, Auszahlungen, Gutscheine und Sitzungen auf das Zielkonto verschoben.
+- Das alte Tag bleibt in der Historie nachvollziehbar, kann aber nach der Sperrung nicht mehr versehentlich erneut für ein neues Kundenkonto verwendet werden.
+
+#pagebreak()
+
 = Verkaufshistorie
 Mit dem Menüpunkt "Bestellverlauf" können die letzten Verkäufe des Terminals eingesehen werden.
 Es ist hier außerdem möglich, die letzte Transaktion zu stornieren.
@@ -194,4 +216,3 @@ Falls ein Stand also mehrere Terminals hat ist hier die Summe der Verkäufe alle
     caption: [Stündlicher Umsatz in der Statistik-Ansicht]
   )]
 )
-
