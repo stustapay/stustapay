@@ -17,10 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,8 +41,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.Order
 import de.stustapay.api.models.OrderType
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
-import de.stustapay.stustapay.ui.nav.NavScaffold
 import de.stustapay.libssp.ui.theme.errorButtonColors
 import de.stustapay.libssp.util.formatCurrencyValue
 import kotlinx.coroutines.launch
@@ -72,105 +74,97 @@ fun SaleHistoryView(
         viewModel.fetchHistory()
     }
 
-    NavScaffold(
-        title = { Text(stringResource(R.string.history_title)) },
-        navigateBack = leaveView
+    OperatorScaffold(
+        title = stringResource(R.string.history_title),
+        subtitle = "Recent sales with detail drill-down and last-sale cancellation.",
+        icon = Icons.Filled.History,
+        terminalLabel = "Dialog",
+        footerHint = saleHistoryStatusText(status),
+        footerSection = "History",
+        footerStatus = "${sales.size} sales",
+        onBack = leaveView,
     ) {
-        Scaffold(
-            content = { padding ->
-                Column(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize()
-                        .padding(10.dp)
-                        .verticalScroll(state = scrollState)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(state = scrollState),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (sales.isEmpty()) {
+                OperatorInfoCard(
+                    title = "No sales loaded",
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    for (sale in sales) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp)
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    viewModel.idleStatus()
-                                    detailOrder = sale
-                                },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                sale.bookedAt.toZonedDateTime()
-                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                    .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
-                                fontSize = 24.sp
-                            )
-                            Text(formatCurrencyValue(sale.totalPrice), fontSize = 24.sp)
-                        }
-                    }
-                }
-            },
-            bottomBar = {
-                Column {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Divider()
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                        Column {
-                            val text = when (status) {
-                                is SaleHistoryStatus.Idle -> {
-                                    stringResource(R.string.common_status_idle)
-                                }
-
-                                is SaleHistoryStatus.Fetching -> {
-                                    stringResource(R.string.common_status_fetching)
-                                }
-
-                                is SaleHistoryStatus.Done -> {
-                                    stringResource(R.string.common_status_done)
-                                }
-
-                                is SaleHistoryStatus.Failed -> {
-                                    (status as SaleHistoryStatus.Failed).msg
-                                }
-                            }
-                            Text(text, fontSize = 24.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Fetch history from the backend to show recent order activity on this terminal.",
+                        color = OperatorPalette.subtitle,
+                    )
                 }
             }
-        )
-    }
 
-    if (detailOrder != null) {
-        val sale = detailOrder!!
-        Dialog(onDismissRequest = { detailOrder = null }) {
-            Card(
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.width(350.dp),
-                elevation = 8.dp,
-            ) {
-                Column {
+            sales.forEach { sale ->
+                OperatorPanel(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.idleStatus()
+                            detailOrder = sale
+                        },
+                ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), fontSize = 24.sp
+                                .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
+                            fontSize = 24.sp,
+                            color = OperatorPalette.title,
+                        )
+                        Text(
+                            formatCurrencyValue(sale.totalPrice),
+                            fontSize = 24.sp,
+                            color = OperatorPalette.accent,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (detailOrder != null) {
+        val sale = detailOrder!!
+        Dialog(onDismissRequest = { detailOrder = null }) {
+            OperatorPanel(
+                backgroundColor = OperatorPalette.panel,
+                borderColor = OperatorPalette.panelBorder,
+                modifier = Modifier.width(350.dp),
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            sale.bookedAt.toZonedDateTime()
+                                .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            fontSize = 24.sp,
+                            color = OperatorPalette.title,
                         )
 
                         Text(
                             sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                .format(DateTimeFormatter.ofPattern("HH:mm:ss")), fontSize = 24.sp
+                                .format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+                            fontSize = 24.sp,
+                            color = OperatorPalette.title,
                         )
                     }
-
-                    Divider()
 
                     for (item in sale.lineItems) {
                         ProductConfirmItem(
@@ -180,19 +174,14 @@ fun SaleHistoryView(
                         )
                     }
 
-                    Divider()
-
                     ProductConfirmItem(
                         name = stringResource(R.string.history_sum),
                         price = sale.totalPrice,
                     )
 
-                    Divider()
-
                     if (sale.id == sales.first().id && sale.orderType == OrderType.sale) {
                         Button(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
+                            .fillMaxWidth(),
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 cancelOrder = true
@@ -240,21 +229,21 @@ fun SaleHistoryView(
             detailOrder = null
             cancelOrder = false
         }) {
-            Card(
-                shape = RoundedCornerShape(10.dp),
+            OperatorPanel(
+                backgroundColor = OperatorPalette.panel,
+                borderColor = OperatorPalette.panelBorder,
                 modifier = Modifier.width(350.dp),
-                elevation = 8.dp,
             ) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         stringResource(R.string.history_confirm),
                         textAlign = TextAlign.Center,
-                        fontSize = 48.sp
+                        fontSize = 48.sp,
+                        color = OperatorPalette.title,
                     )
 
                     Button(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
+                        .fillMaxWidth(),
                         colors = errorButtonColors(),
                         onClick = {
                             scope.launch {
@@ -270,5 +259,14 @@ fun SaleHistoryView(
             }
         }
 
+    }
+}
+
+private fun saleHistoryStatusText(status: SaleHistoryStatus): String {
+    return when (status) {
+        is SaleHistoryStatus.Idle -> "Idle"
+        is SaleHistoryStatus.Fetching -> "Fetching history from the backend."
+        is SaleHistoryStatus.Done -> "History loaded."
+        is SaleHistoryStatus.Failed -> status.msg
     }
 }

@@ -1,13 +1,12 @@
 package de.stustapay.stustapay.ui.ticket
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,10 +19,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
-import de.stustapay.stustapay.ui.nav.TopAppBar
-import de.stustapay.stustapay.ui.nav.TopAppBarIcon
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmBottomBar
 import kotlinx.coroutines.launch
@@ -42,21 +40,21 @@ fun TicketScan(
 
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(config.title().title) },
-                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
-                    leaveView()
-                },
-            )
-        },
-        content = { paddingValues ->
+    OperatorScaffold(
+        title = config.title().title,
+        subtitle = "Scan ticket tags and build the draft before confirming payment.",
+        icon = Icons.Filled.ConfirmationNumber,
+        terminalLabel = "Ticket",
+        footerHint = status,
+        footerSection = "Tickets",
+        footerStatus = "${ticketStatus.scans.size} scanned",
+        onBack = leaveView,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = paddingValues.calculateBottomPadding()),
+                    .weight(1f)
+                    .fillMaxWidth(),
             ) {
                 item {
                     if (!config.canHandleCash()) {
@@ -67,13 +65,8 @@ fun TicketScan(
                             .padding(horizontal = 20.dp, vertical = 20.dp)
                             .fillMaxWidth(),
                         border = when (tagScanStatus) {
-                            is TagScanStatus.Duplicate -> {
-                                BorderStroke(2.dp, MaterialTheme.colors.error)
-                            }
-
-                            else -> {
-                                null
-                            }
+                            is TagScanStatus.Duplicate -> BorderStroke(2.dp, MaterialTheme.colors.error)
+                            else -> null
                         },
                         checkScan = { uid ->
                             viewModel.checkTagScan(uid)
@@ -87,18 +80,9 @@ fun TicketScan(
                         keepScanning = true,
                     ) {
                         val scanText = when (tagScanStatus) {
-                            is TagScanStatus.Scan -> {
-                                // TICKET
-                                stringResource(R.string.scan_ticket)
-                            }
-
-                            is TagScanStatus.Duplicate -> {
-                                stringResource(R.string.duplicate_ticket_scan)
-                            }
-
-                            is TagScanStatus.NoScan -> {
-                                stringResource(R.string.ticket_scanning_off)
-                            }
+                            is TagScanStatus.Scan -> stringResource(R.string.scan_ticket)
+                            is TagScanStatus.Duplicate -> stringResource(R.string.duplicate_ticket_scan)
+                            is TagScanStatus.NoScan -> stringResource(R.string.ticket_scanning_off)
                         }
 
                         Text(
@@ -114,8 +98,7 @@ fun TicketScan(
                     }
                 }
             }
-        },
-        bottomBar = {
+
             ProductConfirmBottomBar(
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
@@ -136,5 +119,5 @@ fun TicketScan(
                 },
             )
         }
-    )
+    }
 }

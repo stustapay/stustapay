@@ -1,17 +1,9 @@
 package de.stustapay.stustapay.ui.sale
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.Scaffold
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.FailureIcon
+import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 
 @Composable
 fun SaleError(
@@ -35,21 +29,21 @@ fun SaleError(
     val haptic = LocalHapticFeedback.current
     val config = saleConfig
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = {
-                if (config is SaleConfig.Ready) {
-                    Text(config.tillName)
-                } else {
-                    Text("No Till")
-                }
-            })
-        },
-        content = { padding ->
+    OperatorScaffold(
+        title = if (config is SaleConfig.Ready) config.tillName else "No Till",
+        subtitle = "Sale validation or booking failed.",
+        icon = Icons.Filled.ErrorOutline,
+        terminalLabel = "Error",
+        footerHint = status,
+        footerSection = "Sale",
+        footerStatus = "Failed",
+        onBack = onDismiss,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding()),
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -63,20 +57,15 @@ fun SaleError(
                     Text(status, fontSize = 24.sp)
                 }
             }
-        },
-        bottomBar = {
-            Button(
+
+            OperatorPrimaryButton(
+                text = "Back",
+                icon = Icons.Filled.ErrorOutline,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDismiss()
                 },
-                modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth()
-                    .height(70.dp)
-            ) {
-                Text(text = "Back")
-            }
+            )
         }
-    )
+    }
 }

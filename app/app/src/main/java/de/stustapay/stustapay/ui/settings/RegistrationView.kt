@@ -1,7 +1,19 @@
 package de.stustapay.stustapay.ui.settings
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -14,7 +26,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustapay.stustapay.repository.ForceDeregisterState
 import de.stustapay.stustapay.ui.barcode.QRScanView
-import de.stustapay.stustapay.ui.common.PrefGroup
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.settings.RegistrationUiState.*
 import de.stustapay.libssp.ui.theme.errorButtonColors
 import kotlinx.coroutines.CoroutineScope
@@ -89,7 +104,7 @@ fun Registered(
     }
 
     Button(
-        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+        modifier = Modifier.fillMaxWidth(),
         onClick = {
             showConfirm = true
         },
@@ -109,38 +124,41 @@ fun RegistrationOverview(
     allowForceDeregister: ForceDeregisterState,
     onForceDeregister: () -> Unit,
 ) {
-
-    PrefGroup(title = { Text("Server Connection") }) {
-
-        var endpointUrl: String? = null
-        var message: String? = null
-        when (registrationUiState) {
-            Idle -> {
-                message = "waiting for input"
-            }
-            is Message -> {
-                message = registrationUiState.msg
-            }
-            is HasEndpoint -> {
-                endpointUrl = registrationUiState.endpointUrl
-                message = registrationUiState.msg
-            }
+    var endpointUrl: String? = null
+    var message: String = "waiting for input"
+    when (registrationUiState) {
+        Idle -> Unit
+        is Message -> {
+            message = registrationUiState.msg.orEmpty()
         }
+        is HasEndpoint -> {
+            endpointUrl = registrationUiState.endpointUrl
+            message = registrationUiState.msg.orEmpty()
+        }
+    }
 
-        Column {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        OperatorInfoCard(
+            title = "Current terminal association",
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(text = "Message: $message", color = OperatorPalette.title)
             Text(
-                text = message!!,
-                modifier = Modifier.padding(start = 15.dp, end = 10.dp)
+                text = "Endpoint: ${endpointUrl ?: "not connected"}",
+                color = OperatorPalette.subtitle,
             )
             Text(
-                text = "endpoint: ${endpointUrl ?: "not connected"}",
-                modifier = Modifier.padding(start = 15.dp, end = 10.dp),
+                text = "Force deregister follows only if the backend cannot remove the association.",
+                color = OperatorPalette.subtitle,
             )
         }
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Row {
+        Column(
+            modifier = Modifier.weight(0.45f),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             if (registrationUiState is HasEndpoint) {
                 Registered(
                     onDeregister = onDeregister,
@@ -148,13 +166,15 @@ fun RegistrationOverview(
                     onForceDeregister = onForceDeregister,
                 )
             } else {
-                Button(modifier = Modifier.padding(start = 10.dp, end = 10.dp), onClick = {
-                    scope.launch {
-                        navController.navigate("scan")
-                    }
-                }) {
-                    Text(text = "Scan Registration QR Code")
-                }
+                OperatorPrimaryButton(
+                    text = "Scan registration QR code",
+                    icon = Icons.Filled.QrCode2,
+                    onClick = {
+                        scope.launch {
+                            navController.navigate("scan")
+                        }
+                    },
+                )
             }
         }
     }
@@ -162,7 +182,10 @@ fun RegistrationOverview(
 
 @Preview
 @Composable
-fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
+fun RegistrationView(
+    navigateBack: () -> Unit = {},
+    viewModel: RegistrationViewModel = hiltViewModel(),
+) {
 
     // when the registrationUiState flow changes, re-draw this function (collect)
     // we only want the latest value of the flow, i.e. a state (asState)
@@ -177,25 +200,46 @@ fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
     NavHost(
         navController = navController,
         startDestination = "register",
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         composable("register") {
-            RegistrationOverview(
-                scope = scope,
-                navController = navController,
-                registrationUiState = registrationUiState,
-                onDeregister = { scope.launch { viewModel.deregister() } },
-                allowForceDeregister = allowForceDeregister,
-                onForceDeregister = { scope.launch { viewModel.deregister(force = true) } },
-            )
+            OperatorScaffold(
+                title = "Registration",
+                subtitle = "Server connection state with deregistration confirmation flow.",
+                icon = Icons.Filled.Link,
+                terminalLabel = "Core Connection",
+                footerHint = "Represents the registered state and the first deregistration confirmation from the live flow.",
+                footerSection = "Registration",
+                footerStatus = if (registrationUiState is HasEndpoint) "Registered" else "Awaiting QR",
+                onBack = navigateBack,
+            ) {
+                RegistrationOverview(
+                    scope = scope,
+                    navController = navController,
+                    registrationUiState = registrationUiState,
+                    onDeregister = { scope.launch { viewModel.deregister() } },
+                    allowForceDeregister = allowForceDeregister,
+                    onForceDeregister = { scope.launch { viewModel.deregister(force = true) } },
+                )
+            }
         }
         composable("scan") {
-            QRScanView { qrcode ->
-                scope.launch {
-                    viewModel.register(qrcode)
+            OperatorScaffold(
+                title = "Registration Scan",
+                subtitle = "Scan the backend-issued QR code to attach this terminal.",
+                icon = Icons.Filled.QrCode2,
+                terminalLabel = "Camera",
+                footerHint = "Uses the existing QRScanView and returns directly to the registration summary after a scan.",
+                footerSection = "Registration",
+                footerStatus = "Scanner",
+                onBack = { navController.popBackStack() },
+            ) {
+                QRScanView { qrcode ->
+                    scope.launch {
+                        viewModel.register(qrcode)
+                    }
+                    navController.navigate("register")
                 }
-                navController.navigate("register")
             }
         }
     }

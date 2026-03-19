@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,7 +25,7 @@ import de.stustapay.stustapay.ui.common.pay.CashECPay
 import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmLineItem
-import de.stustapay.stustapay.ui.nav.NavScaffold
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import kotlinx.coroutines.launch
 
 @Composable
@@ -51,16 +53,22 @@ fun TicketConfirm(
         goBack()
     }
 
-    NavScaffold(
-        title = { Text(config.title().title) },
-        navigateBack = goBack
-    ) { pv ->
+    OperatorScaffold(
+        title = config.title().title,
+        subtitle = "Review the scanned tickets and complete payment.",
+        icon = Icons.Filled.ConfirmationNumber,
+        terminalLabel = "Confirm",
+        footerHint = status,
+        footerSection = "Tickets",
+        footerStatus = "Ready",
+        onBack = goBack,
+    ) {
         Column {
             if (!config.canHandleCash()) {
-                NoCashRegisterWarning(modifier = Modifier.padding(10.dp))
+                NoCashRegisterWarning()
             }
             CashECPay(
-                modifier = Modifier.padding(pv),
+                modifier = Modifier.fillMaxSize(),
                 status = { StatusText(status) },
                 onPaymentRequested = CashECCallback.NoTag(
                     onEC = {
@@ -83,12 +91,9 @@ fun TicketConfirm(
                 ready = config.isTerminalReady(),
                 getAmount = { viewModel.getPrice() },
             ) { paddingValues ->
-                // TODO: pending ticket sale display
-
                 LazyColumn(
                     modifier = Modifier
                         .padding(bottom = paddingValues.calculateBottomPadding())
-                        .padding(horizontal = 10.dp)
                         .fillMaxSize()
                 ) {
 

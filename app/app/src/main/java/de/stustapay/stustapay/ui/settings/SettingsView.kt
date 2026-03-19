@@ -1,27 +1,26 @@
 package de.stustapay.stustapay.ui.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.stustapay.stustapay.ui.common.PrefGroup
-import de.stustapay.stustapay.ui.common.PrefLink
+import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.nav.NavDest
-import de.stustapay.stustapay.ui.nav.NavScaffold
 
 
 object SettingsNavDest {
@@ -33,46 +32,51 @@ object SettingsNavDest {
 
 
 @Composable
-fun SettingsRootView(navController: NavHostController) {
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
+fun SettingsRootView(
+    navController: NavHostController,
+    navigateBack: () -> Unit,
+) {
+    OperatorScaffold(
+        title = "Settings",
+        subtitle = "Terminal configuration entry point with connection, reader, and about routes.",
+        icon = Icons.Filled.Settings,
+        terminalLabel = "Local Config",
+        footerHint = "This screen routes into server registration, EC reader maintenance, and app information.",
+        footerSection = "Config",
+        footerStatus = "3 routes",
+        onBack = navigateBack,
     ) {
-        item {
-            PrefLink(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings"
-                    )
-                },
-                title = { Text(text = "Core Connection") },
-                subtitle = { Text(text = "Server settings") },
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                navController.navigate(SettingsNavDest.connection.route)
+                OperatorActionCard(
+                    title = "Core Connection",
+                    description = "Register or deregister the terminal and update the backend endpoint association.",
+                    icon = Icons.Filled.Link,
+                    onClick = { navController.navigate(SettingsNavDest.connection.route) },
+                    modifier = Modifier.weight(1f),
+                    emphasized = true,
+                )
+                OperatorActionCard(
+                    title = "EC Card Reader",
+                    description = "Open the SumUp maintenance and login settings route.",
+                    icon = Icons.Filled.ShoppingCart,
+                    onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
+                    modifier = Modifier.weight(1f),
+                )
             }
-        }
-        item {
-            PrefLink(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "EC Settings"
-                    )
-                },
-                title = { Text(text = "EC Card Reader") },
-            ) {
-                navController.navigate(SettingsNavDest.ecreader.route)
-            }
-        }
-        item {
-            PrefGroup(title = { Text("About") }) {
-                PrefLink(
-                    icon = { Icon(imageVector = Icons.Default.Info, contentDescription = "About") },
-                    title = { Text(text = "About this App") },
-                ) {
-                    navController.navigate(SettingsNavDest.about.route)
-                }
-            }
+            OperatorActionCard(
+                title = "About this App",
+                description = "Inspect version name and build code information for this installation.",
+                icon = Icons.Filled.Info,
+                onClick = { navController.navigate(SettingsNavDest.about.route) },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -82,30 +86,26 @@ fun SettingsRootView(navController: NavHostController) {
 @Composable
 fun SettingsView(leaveView: () -> Unit = {}) {
     val navController = rememberNavController()
-    val scaffoldState = rememberScaffoldState()
 
-    NavScaffold(
-        title = { Text(text = "Settings") },
-        state = scaffoldState,
-        navigateBack = {
-            if (navController.currentDestination?.route == SettingsNavDest.root.route) {
-                leaveView()
-            } else {
-                navController.popBackStack()
-            }
-        },
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = SettingsNavDest.root.route,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-        ) {
-            composable(SettingsNavDest.root.route) { SettingsRootView(navController) }
-            composable(SettingsNavDest.connection.route) { RegistrationView() }
-            composable(SettingsNavDest.ecreader.route) { ECSettingsView() }
-            composable(SettingsNavDest.about.route) { AboutView() }
+    NavHost(
+        navController = navController,
+        startDestination = SettingsNavDest.root.route,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        composable(SettingsNavDest.root.route) {
+            SettingsRootView(
+                navController = navController,
+                navigateBack = leaveView,
+            )
+        }
+        composable(SettingsNavDest.connection.route) {
+            RegistrationView(navigateBack = { navController.popBackStack() })
+        }
+        composable(SettingsNavDest.ecreader.route) {
+            ECSettingsView(navigateBack = { navController.popBackStack() })
+        }
+        composable(SettingsNavDest.about.route) {
+            AboutView(navigateBack = { navController.popBackStack() })
         }
     }
 }

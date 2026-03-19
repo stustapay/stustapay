@@ -11,6 +11,7 @@ import de.stustapay.libssp.util.Result
 import de.stustapay.libssp.util.asResult
 import de.stustapay.stustapay.repository.InfallibleRepository
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -54,6 +55,12 @@ class TerminalConfigViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = LoginProfileUIState.Error("Loading..."),
     )
+
+    fun refreshAccessData() {
+        viewModelScope.launch {
+            fetchAccessData()
+        }
+    }
 
     suspend fun fetchAccessData() {
         try {

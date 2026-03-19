@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.stustapay.model.UserState
+import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
@@ -35,5 +36,17 @@ class StartpageViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TerminalLoginState(),
+    )
+
+    val terminalStatusMessage = terminalConfigRepository.terminalConfigState.map { state ->
+        when (state) {
+            is TerminalConfigState.NoConfig -> null
+            is TerminalConfigState.Error -> "Configuration error: ${state.message}"
+            is TerminalConfigState.Success -> state.config.testModeMessage.takeIf { state.config.testMode }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null,
     )
 }

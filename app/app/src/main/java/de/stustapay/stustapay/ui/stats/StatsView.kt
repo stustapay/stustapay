@@ -1,31 +1,16 @@
 package de.stustapay.stustapay.ui.stats
 
-import android.app.DatePickerDialog
-import android.widget.DatePicker
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,10 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.stustapay.libssp.ui.theme.StartpageItemStyle
 import de.stustapay.libssp.util.formatCurrencyValue
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.nav.NavScaffold
+import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
@@ -54,56 +41,35 @@ fun StatsView(
         viewModel.fetchHistory()
     }
 
-    NavScaffold(
-        title = { Text(stringResource(R.string.root_item_stats)) }, navigateBack = {
+    OperatorScaffold(
+        title = stringResource(R.string.root_item_stats),
+        subtitle = when (currentSubView) {
+            StatsSubView.Root -> "Revenue analytics for daily and hourly breakdowns."
+            StatsSubView.DailyRevenue -> "Daily revenue intervals loaded from sales history."
+            StatsSubView.HourlyRevenue -> "Hourly revenue intervals loaded from sales history."
+        },
+        icon = Icons.Filled.DateRange,
+        terminalLabel = "Analytics",
+        footerHint = statsStatusText(status),
+        footerSection = "Stats",
+        footerStatus = when (currentSubView) {
+            StatsSubView.Root -> "2 routes"
+            StatsSubView.DailyRevenue -> "Daily"
+            StatsSubView.HourlyRevenue -> "Hourly"
+        },
+        onBack = {
             when (currentSubView) {
                 StatsSubView.Root -> leaveView()
                 StatsSubView.DailyRevenue -> viewModel.goTo(StatsSubView.Root)
                 StatsSubView.HourlyRevenue -> viewModel.goTo(StatsSubView.Root)
             }
-        }
+        },
     ) {
-        Scaffold(content = { padding ->
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
-            ) {
-                when (currentSubView) {
-                    StatsSubView.Root -> StatsViewRoot(viewModel, leaveView)
-                    StatsSubView.DailyRevenue -> StatsViewDailyRevenue(viewModel)
-                    StatsSubView.HourlyRevenue -> StatsViewHourlyRevenue(viewModel)
-                }
-            }
-        }, bottomBar = {
-            Column {
-                Spacer(modifier = Modifier.height(10.dp))
-                Divider()
-
-                Box(modifier = Modifier.padding(10.dp)) {
-                    Column {
-                        val text = when (status) {
-                            is StatsStatus.Idle -> {
-                                stringResource(R.string.common_status_idle)
-                            }
-
-                            is StatsStatus.Fetching -> {
-                                stringResource(R.string.common_status_fetching)
-                            }
-
-                            is StatsStatus.Done -> {
-                                stringResource(R.string.common_status_done)
-                            }
-
-                            is StatsStatus.Failed -> {
-                                (status as StatsStatus.Failed).msg
-                            }
-                        }
-                        Text(text, fontSize = 24.sp)
-                    }
-                }
-            }
-        })
+        when (currentSubView) {
+            StatsSubView.Root -> StatsViewRoot(viewModel, leaveView)
+            StatsSubView.DailyRevenue -> StatsViewDailyRevenue(viewModel)
+            StatsSubView.HourlyRevenue -> StatsViewHourlyRevenue(viewModel)
+        }
     }
 }
 
@@ -111,8 +77,6 @@ fun StatsView(
 fun StatsViewRoot(
     viewModel: StatsViewModel, leaveView: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-
     BackHandler {
         leaveView()
     }
@@ -120,54 +84,24 @@ fun StatsViewRoot(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
-            .verticalScroll(state = scrollState)
+            .verticalScroll(state = rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                viewModel.goTo(StatsSubView.DailyRevenue)
-            }
-            .padding(horizontal = 24.dp, vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowRight,
-                modifier = Modifier
-                    .padding(all = 2.dp)
-                    .size(size = 28.dp),
-                contentDescription = null,
-                tint = MaterialTheme.colors.primary
-            )
-
-            Text(
-                modifier = Modifier.padding(start = 16.dp),
-                text = stringResource(R.string.stats_daily_revenue),
-                style = StartpageItemStyle,
-            )
-        }
-
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                viewModel.goTo(StatsSubView.HourlyRevenue)
-            }
-            .padding(horizontal = 24.dp, vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowRight,
-                modifier = Modifier
-                    .padding(all = 2.dp)
-                    .size(size = 28.dp),
-                contentDescription = null,
-                tint = MaterialTheme.colors.primary
-            )
-
-            Text(
-                modifier = Modifier.padding(start = 16.dp),
-                text = stringResource(R.string.stats_hourly_revenue),
-                style = StartpageItemStyle,
-            )
-        }
+        OperatorActionCard(
+            title = stringResource(R.string.stats_daily_revenue),
+            description = "Open revenue totals grouped by day.",
+            icon = Icons.Filled.DateRange,
+            onClick = { viewModel.goTo(StatsSubView.DailyRevenue) },
+            modifier = Modifier.fillMaxWidth(),
+            emphasized = true,
+        )
+        OperatorActionCard(
+            title = stringResource(R.string.stats_hourly_revenue),
+            description = "Open revenue totals grouped by hour.",
+            icon = Icons.Filled.DateRange,
+            onClick = { viewModel.goTo(StatsSubView.HourlyRevenue) },
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -175,33 +109,42 @@ fun StatsViewRoot(
 fun StatsViewDailyRevenue(
     viewModel: StatsViewModel
 ) {
-    val scrollState = rememberScrollState()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
 
     BackHandler {
         viewModel.goTo(StatsSubView.Root)
     }
 
-    Column(
+    OperatorPanel(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
-            .verticalScroll(state = scrollState)
     ) {
-        for (dailyStats in stats.dailyIntervals) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    dailyStats.fromTime.toZonedDateTime()
-                        .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                        .format(DateTimeFormatter.ofPattern("E dd.MM.yyyy")), fontSize = 24.sp
-                )
-                Text(formatCurrencyValue(dailyStats.revenue), fontSize = 24.sp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(state = rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            stats.dailyIntervals.forEach { dailyStats ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        dailyStats.fromTime.toZonedDateTime()
+                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                            .format(DateTimeFormatter.ofPattern("E dd.MM.yyyy")),
+                        fontSize = 24.sp,
+                        color = OperatorPalette.title,
+                    )
+                    Text(
+                        formatCurrencyValue(dailyStats.revenue),
+                        fontSize = 24.sp,
+                        color = OperatorPalette.accent,
+                    )
+                }
             }
         }
     }
@@ -211,36 +154,54 @@ fun StatsViewDailyRevenue(
 fun StatsViewHourlyRevenue(
     viewModel: StatsViewModel
 ) {
-    val scrollState = rememberScrollState()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
 
     BackHandler {
         viewModel.goTo(StatsSubView.Root)
     }
 
-    Column(
+    OperatorPanel(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
-            .verticalScroll(state = scrollState)
     ) {
-        for (hourlyStats in stats.hourlyIntervals) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    hourlyStats.fromTime.toZonedDateTime()
-                        .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                        .format(DateTimeFormatter.ofPattern("E HH:mm")) + " - " + hourlyStats.toTime.toZonedDateTime()
-                        .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                        .format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 24.sp
-                )
-                Text(formatCurrencyValue(hourlyStats.revenue), fontSize = 24.sp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(state = rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            stats.hourlyIntervals.forEach { hourlyStats ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        hourlyStats.fromTime.toZonedDateTime()
+                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                            .format(DateTimeFormatter.ofPattern("E HH:mm")) + " - " + hourlyStats.toTime.toZonedDateTime()
+                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                            .format(DateTimeFormatter.ofPattern("HH:mm")),
+                        fontSize = 24.sp,
+                        color = OperatorPalette.title,
+                    )
+                    Text(
+                        formatCurrencyValue(hourlyStats.revenue),
+                        fontSize = 24.sp,
+                        color = OperatorPalette.accent,
+                    )
+                }
             }
         }
+    }
+}
+
+private fun statsStatusText(status: StatsStatus): String {
+    return when (status) {
+        is StatsStatus.Idle -> "Idle"
+        is StatsStatus.Fetching -> "Fetching statistics from history."
+        is StatsStatus.Done -> "Statistics loaded."
+        is StatsStatus.Failed -> status.msg
     }
 }

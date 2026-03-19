@@ -21,6 +21,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -38,6 +39,9 @@ import dagger.hilt.android.EntryPointAccessors
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
@@ -47,6 +51,7 @@ import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
 @Composable
 fun AccountScan(
     isSelfService: Boolean = false,
+    onBack: () -> Unit = {},
     onScan: (NfcTag) -> Unit
 ) {
     // Get DeviceConfigProvider using Hilt EntryPoint
@@ -114,62 +119,85 @@ fun AccountScan(
         return
     }
     
-    // Use the same responsive approach as in NfcScanDialog
-    Box(
-        modifier = Modifier
-            .padding(20.dp)
-            .fillMaxWidth(),
-        contentAlignment = Alignment.Center
+    OperatorScaffold(
+        title = stringResource(R.string.customer_title),
+        subtitle = "Scan a customer tag to load balance, vouchers, and recent order history.",
+        icon = Icons.Filled.Person,
+        terminalLabel = "Account",
+        footerHint = "Ready for NFC scan.",
+        footerSection = "Account",
+        footerStatus = "Awaiting tag",
+        onBack = onBack,
     ) {
-        if (deviceConfig.useCenteredDialog) {
-            // For small screens like Sunmi L2S Pro, use a simple centered approach
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OperatorInfoCard(
+                title = "Balance Check",
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                NfcScanCard(
-                    modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
-                    onScan = onScan,
-                    keepScanning = true,
-                    content = { status ->
-                        // Use our enhanced content with small screen awareness
-                        EnhancedAccountScanContent(
-                            isIminFalcons2 = deviceConfig.isIminFalcons2,
-                            isSmallScreen = deviceConfig.isSmallScreen,
-                            isSelfService = isSelfService,
-                            scanStatus = status
-                        )
-                    }
+                Text(
+                    text = "Present a customer card or wristband to open the account overview and drill down into recent orders.",
+                    color = OperatorPalette.subtitle,
                 )
             }
-        } else {
-            // For other devices, use the original approach with offset positioning
+
             Box(
                 modifier = Modifier
-                    .size(1000.dp, 800.dp)
-                    .padding(
-                        start = if (deviceConfig.isSmallScreen) 150.dp else 350.dp
-                    ),
-                contentAlignment = Alignment.CenterStart
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
             ) {
-                NfcScanCard(
-                    modifier = Modifier
-                        .size(width = adjustedWidth, height = adjustedHeight)
-                        .offset(
-                            x = deviceConfig.nfcScanDialogOffset.x,
-                            y = deviceConfig.nfcScanDialogOffset.y
-                        ),
-                    onScan = onScan,
-                    keepScanning = true,
-                    content = { status ->
-                        EnhancedAccountScanContent(
-                            isIminFalcons2 = deviceConfig.isIminFalcons2,
-                            isSmallScreen = deviceConfig.isSmallScreen,
-                            isSelfService = isSelfService,
-                            scanStatus = status
+                if (deviceConfig.useCenteredDialog) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        NfcScanCard(
+                            modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
+                            onScan = onScan,
+                            keepScanning = true,
+                            content = { status ->
+                                EnhancedAccountScanContent(
+                                    isIminFalcons2 = deviceConfig.isIminFalcons2,
+                                    isSmallScreen = deviceConfig.isSmallScreen,
+                                    isSelfService = isSelfService,
+                                    scanStatus = status
+                                )
+                            }
                         )
                     }
-                )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(1000.dp, 800.dp)
+                            .padding(
+                                start = if (deviceConfig.isSmallScreen) 150.dp else 350.dp
+                            ),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        NfcScanCard(
+                            modifier = Modifier
+                                .size(width = adjustedWidth, height = adjustedHeight)
+                                .offset(
+                                    x = deviceConfig.nfcScanDialogOffset.x,
+                                    y = deviceConfig.nfcScanDialogOffset.y
+                                ),
+                            onScan = onScan,
+                            keepScanning = true,
+                            content = { status ->
+                                EnhancedAccountScanContent(
+                                    isIminFalcons2 = deviceConfig.isIminFalcons2,
+                                    isSmallScreen = deviceConfig.isSmallScreen,
+                                    isSelfService = isSelfService,
+                                    scanStatus = status
+                                )
+                            }
+                        )
+                    }
+                }
             }
         }
     }

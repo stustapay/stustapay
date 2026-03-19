@@ -1,9 +1,9 @@
 package de.stustapay.stustapay.ui.sale
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Scaffold
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -12,9 +12,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
-import de.stustapay.stustapay.ui.nav.TopAppBar
-import de.stustapay.stustapay.ui.nav.TopAppBarIcon
 import kotlinx.coroutines.launch
 
 /**
@@ -30,27 +29,47 @@ fun SaleSelection(
     val status by viewModel.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val config = saleConfig
+    var totalPrice = 0.0
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    if (config is SaleConfig.Ready) {
-                        Text(config.tillName)
-                    } else {
-                        Text("No Till")
+    if (config is SaleConfig.Ready) {
+        for (button in config.buttons) {
+            if (saleStatus.buttonSelection[button.value.id] != null) {
+                when (val buttonStatus = saleStatus.buttonSelection[button.value.id]!!) {
+                    is SaleItemAmount.FreePrice -> {
+                        totalPrice += buttonStatus.price.toDouble() / 100.0
                     }
-                },
-                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
-                    leaveView()
-                },
-            )
-        },
-        content = { paddingValues ->
 
-            // if we only have one free price item to sell
-            // directly show the number keyboard.
+                    is SaleItemAmount.FixedPrice -> {
+                        totalPrice += when (val price = button.value.price) {
+                            is SaleItemPrice.FreePrice -> {
+                                buttonStatus.amount * (price.defaultPrice ?: 0.0)
+                            }
 
+                            is SaleItemPrice.FixedPrice -> {
+                                buttonStatus.amount * price.price
+                            }
+
+                            is SaleItemPrice.Returnable -> {
+                                buttonStatus.amount * (price.price ?: 0.0)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    OperatorScaffold(
+        title = if (config is SaleConfig.Ready) config.tillName else "No Till",
+        subtitle = "Select products, adjust quantities, and build the basket.",
+        icon = Icons.Filled.ShoppingCart,
+        terminalLabel = "Sale",
+        footerHint = status,
+        footerSection = "Basket",
+        footerStatus = if (config is SaleConfig.Ready) "Ready" else "Loading",
+        onBack = leaveView,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             if (config is SaleConfig.Ready &&
                 config.buttons.size == 1 &&
                 config.buttons.all { it.value.price is SaleItemPrice.FreePrice }
@@ -58,46 +77,14 @@ fun SaleSelection(
                 val button = config.buttons.values.last()
                 SaleSelectionFreePrice(
                     buttonId = button.id,
-                    modifier = Modifier
-                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                    modifier = Modifier.weight(1f),
                     viewModel = viewModel,
                 )
             } else {
                 SaleSelectionList(
-                    modifier = Modifier
-                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                    modifier = Modifier.weight(1f),
                     viewModel = viewModel
                 )
-            }
-        },
-        bottomBar = {
-            var totalPrice = 0.0
-            if (config is SaleConfig.Ready) {
-                for (button in config.buttons) {
-                    if (saleStatus.buttonSelection[button.value.id] != null) {
-                        when (val buttonStatus = saleStatus.buttonSelection[button.value.id]!!) {
-                            is SaleItemAmount.FreePrice -> {
-                                totalPrice += buttonStatus.price.toDouble() / 100.0
-                            }
-
-                            is SaleItemAmount.FixedPrice -> {
-                                totalPrice += when (val price = button.value.price) {
-                                    is SaleItemPrice.FreePrice -> {
-                                        buttonStatus.amount * (price.defaultPrice ?: 0.0)
-                                    }
-
-                                    is SaleItemPrice.FixedPrice -> {
-                                        buttonStatus.amount * price.price
-                                    }
-
-                                    is SaleItemPrice.Returnable -> {
-                                        buttonStatus.amount * (price.price ?: 0.0)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
             ProductSelectionBottomBar(
@@ -141,5 +128,5 @@ fun SaleSelection(
                 price = totalPrice
             )
         }
-    )
+    }
 }

@@ -11,10 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,8 +36,11 @@ import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.FailureIcon
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.SuccessIcon
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
-import de.stustapay.stustapay.ui.nav.NavScaffold
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,64 +71,81 @@ fun EntryView(
     }
     val scanCardSize = (350 * deviceConfig.nfcScanDialogScale).dp
 
-    NavScaffold(
-        title = { Text(terminalState.title().title) },
-        navigateBack = leaveView,
-    ) { _ ->
-        Scaffold(
-            content = { paddingValues ->
-                Column(
+    OperatorScaffold(
+        title = terminalState.title().title,
+        subtitle = scanLabel,
+        icon = Icons.Filled.MeetingRoom,
+        terminalLabel = when (mode) {
+            TerminalMode.entry -> "Entry"
+            TerminalMode.exit -> "Exit"
+            else -> "Access"
+        },
+        footerHint = if (status.isNotBlank()) {
+            status
+        } else {
+            "Hold a wristband near the reader to resolve access for this terminal mode."
+        },
+        footerSection = "Entry",
+        footerStatus = when {
+            requestActive -> "Checking"
+            scanResult?.allowed == true -> "Allowed"
+            scanResult?.allowed == false -> "Denied"
+            else -> "Ready"
+        },
+        onBack = leaveView,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                NfcScanCard(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        NfcScanCard(
-                            modifier = Modifier
-                                .size(scanCardSize, scanCardSize)
-                                .offset(
-                                    x = if (deviceConfig.useCenteredDialog) 0.dp else deviceConfig.nfcScanDialogOffset.x,
-                                    y = if (deviceConfig.useCenteredDialog) 0.dp else deviceConfig.nfcScanDialogOffset.y
-                                ),
-                            onScan = { tag ->
-                                scope.launch {
-                                    viewModel.tagScanned(tag)
-                                }
-                            },
-                            scan = !requestActive,
-                            keepScanning = true,
-                            showStatus = false,
-                        ) {
-                            EnhancedNfcScanContent(
-                                isIminFalcons2 = deviceConfig.isIminFalcons2,
-                                isSmallScreen = deviceConfig.isSmallScreen,
-                                scanStatus = it,
-                                headerText = scanLabel
-                            )
+                        .size(scanCardSize, scanCardSize)
+                        .offset(
+                            x = if (deviceConfig.useCenteredDialog) 0.dp else deviceConfig.nfcScanDialogOffset.x,
+                            y = if (deviceConfig.useCenteredDialog) 0.dp else deviceConfig.nfcScanDialogOffset.y
+                        ),
+                    onScan = { tag ->
+                        scope.launch {
+                            viewModel.tagScanned(tag)
                         }
-                    }
-
-                    if (scanResult != null) {
-                        EntryResultCard(result = scanResult!!, status = status)
-                    } else if (status.isNotBlank()) {
-                        StatusText(status)
-                    }
+                    },
+                    scan = !requestActive,
+                    keepScanning = true,
+                    showStatus = false,
+                ) {
+                    EnhancedNfcScanContent(
+                        isIminFalcons2 = deviceConfig.isIminFalcons2,
+                        isSmallScreen = deviceConfig.isSmallScreen,
+                        scanStatus = it,
+                        headerText = scanLabel
+                    )
                 }
-            },
-        )
+            }
+
+            if (scanResult != null) {
+                EntryResultCard(result = scanResult!!, status = status)
+            } else if (status.isNotBlank()) {
+                OperatorInfoCard(
+                    title = "Scan status",
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(text = status, color = OperatorPalette.subtitle)
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun EntryResultCard(result: EntryScanResult, status: String) {
-    val accent = if (result.allowed) MaterialTheme.colors.primary else MaterialTheme.colors.error
+    val accent = if (result.allowed) OperatorPalette.success else OperatorPalette.danger
     val directionLabel = if (result.direction == EntryDirection.entry) {
         stringResource(R.string.entry_direction_entry)
     } else {
@@ -138,12 +157,12 @@ private fun EntryResultCard(result: EntryScanResult, status: String) {
         stringResource(R.string.entry_status_denied)
     }
 
-    Card(
+    OperatorPanel(
         modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(2.dp, accent),
-        elevation = 6.dp,
+        borderColor = accent,
+        backgroundColor = if (result.allowed) OperatorPalette.successPanel else OperatorPalette.panel,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -154,12 +173,10 @@ private fun EntryResultCard(result: EntryScanResult, status: String) {
                     FailureIcon(modifier = Modifier.size(40.dp))
                 }
                 Column {
-                    Text(text = heading, style = MaterialTheme.typography.h6)
-                    Text(text = directionLabel, style = MaterialTheme.typography.body2)
+                    Text(text = heading, color = OperatorPalette.title, fontSize = 24.sp)
+                    Text(text = directionLabel, color = OperatorPalette.subtitle, fontSize = 16.sp)
                 }
             }
-
-            Spacer(modifier = Modifier.size(12.dp))
 
             EntryResultRow(label = stringResource(R.string.entry_label_area), value = result.areaName)
             EntryResultRow(label = stringResource(R.string.entry_label_group), value = result.groupName)
@@ -180,7 +197,7 @@ private fun EntryResultRow(label: String, value: String?) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, style = MaterialTheme.typography.body2)
-        Text(text = value, style = MaterialTheme.typography.body1, fontSize = 16.sp)
+        Text(text = label, color = OperatorPalette.subtitle, fontSize = 16.sp)
+        Text(text = value, color = OperatorPalette.title, fontSize = 16.sp)
     }
 }

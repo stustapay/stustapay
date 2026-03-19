@@ -1,0 +1,558 @@
+package de.stustapay.stustapay.ui.common.operator
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.Icons
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+
+object OperatorPalette {
+    val backgroundTop = SelfServicePalette.backgroundTop
+    val backgroundBottom = SelfServicePalette.backgroundBottom
+    val panel = Color(0xFF18253D)
+    val panelMuted = Color(0xFF12213A)
+    val panelBorder = SelfServicePalette.panelBorder
+    val title = SelfServicePalette.title
+    val subtitle = Color(0xFFA9B7CC)
+    val accent = SelfServicePalette.accent
+    val accentText = backgroundTop
+    val success = SelfServicePalette.success
+    val successPanel = Color(0xFF16342A)
+    val danger = Color(0xFFFF6B6B)
+    val pill = Color(0xFF1C2B46)
+}
+
+@Composable
+fun OperatorBackground(
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(OperatorPalette.backgroundTop, OperatorPalette.backgroundBottom)
+                )
+            ),
+        content = content,
+    )
+}
+
+@Composable
+fun OperatorScaffold(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    terminalLabel: String,
+    footerHint: String,
+    footerSection: String,
+    footerStatus: String,
+    modifier: Modifier = Modifier,
+    languageLabel: String = "EN | DE",
+    onBack: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val compactLayout = maxWidth < 600.dp
+        val scaffoldPadding = if (compactLayout) 12.dp else 24.dp
+        val scaffoldSpacing = if (compactLayout) 12.dp else 20.dp
+
+        OperatorBackground {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(scaffoldPadding),
+                verticalArrangement = Arrangement.spacedBy(scaffoldSpacing),
+            ) {
+                OperatorHeader(
+                    title = title,
+                    subtitle = subtitle,
+                    icon = icon,
+                    terminalLabel = terminalLabel,
+                    languageLabel = languageLabel,
+                    onBack = onBack,
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    content = content,
+                )
+                OperatorFooter(
+                    hint = footerHint,
+                    sectionLabel = footerSection,
+                    statusLabel = footerStatus,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OperatorHeader(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    terminalLabel: String,
+    modifier: Modifier = Modifier,
+    languageLabel: String = "EN | DE",
+    onBack: (() -> Unit)? = null,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val compactLayout = maxWidth < 720.dp
+        val horizontalPadding = if (compactLayout) 12.dp else 16.dp
+        val verticalPadding = if (compactLayout) 14.dp else 18.dp
+        val titleSize = if (compactLayout) 22.sp else 30.sp
+        val subtitleSize = if (compactLayout) 14.sp else 16.sp
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = OperatorPalette.panelMuted,
+            border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+            elevation = 0.dp,
+        ) {
+            if (compactLayout) {
+                Column(
+                    modifier = Modifier.padding(horizontal = horizontalPadding, vertical = verticalPadding),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (onBack != null) {
+                            OperatorCircleIcon(
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                                backgroundColor = OperatorPalette.pill,
+                                tint = OperatorPalette.title,
+                                modifier = Modifier.clickable(onClick = onBack),
+                            )
+                        }
+                        OperatorCircleIcon(
+                            icon = icon,
+                            backgroundColor = OperatorPalette.success,
+                            tint = OperatorPalette.backgroundTop,
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = title,
+                                color = OperatorPalette.title,
+                                fontSize = titleSize,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = subtitle,
+                                color = OperatorPalette.subtitle,
+                                fontSize = subtitleSize,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 4,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OperatorHeaderPill(text = languageLabel)
+                        OperatorHeaderPill(text = terminalLabel)
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.padding(horizontal = horizontalPadding, vertical = verticalPadding),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (onBack != null) {
+                            OperatorCircleIcon(
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                                backgroundColor = OperatorPalette.pill,
+                                tint = OperatorPalette.title,
+                                modifier = Modifier.clickable(onClick = onBack),
+                            )
+                        }
+                        OperatorCircleIcon(
+                            icon = icon,
+                            backgroundColor = OperatorPalette.success,
+                            tint = OperatorPalette.backgroundTop,
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = title,
+                                color = OperatorPalette.title,
+                                fontSize = titleSize,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = subtitle,
+                                color = OperatorPalette.subtitle,
+                                fontSize = subtitleSize,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OperatorHeaderPill(text = languageLabel)
+                        OperatorHeaderPill(text = terminalLabel)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OperatorFooter(
+    hint: String,
+    sectionLabel: String,
+    statusLabel: String,
+    modifier: Modifier = Modifier,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val compactLayout = maxWidth < 680.dp
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = OperatorPalette.panelMuted,
+            border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+            elevation = 0.dp,
+        ) {
+            if (compactLayout) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(
+                        text = hint,
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OperatorHeaderPill(text = sectionLabel, accent = false)
+                        OperatorHeaderPill(text = statusLabel, accent = true)
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = hint,
+                        modifier = Modifier.weight(1f),
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OperatorHeaderPill(text = sectionLabel, accent = false)
+                        OperatorHeaderPill(text = statusLabel, accent = true)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OperatorPanel(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = OperatorPalette.panel,
+    borderColor: Color = OperatorPalette.panelBorder,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val compactLayout = maxWidth < 420.dp
+        val panelPadding = if (compactLayout) 14.dp else 20.dp
+        val panelRadius = if (compactLayout) 20.dp else 24.dp
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(panelRadius),
+            color = backgroundColor,
+            border = BorderStroke(1.5.dp, borderColor),
+            elevation = 0.dp,
+        ) {
+            Box(
+                modifier = Modifier.padding(panelPadding),
+                content = content,
+            )
+        }
+    }
+}
+
+@Composable
+fun OperatorActionCard(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    emphasized: Boolean = false,
+) {
+    OperatorPanel(
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        ),
+        backgroundColor = if (emphasized) Color(0xFF223553) else OperatorPalette.panel,
+        borderColor = if (emphasized) OperatorPalette.accent else OperatorPalette.panelBorder,
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val compactLayout = maxWidth < 420.dp
+            val stackedLayout = maxWidth < 320.dp
+            val titleSize = if (compactLayout) 22.sp else 26.sp
+            val bodySize = if (compactLayout) 15.sp else 16.sp
+            val bodyLineHeight = if (compactLayout) 20.sp else 22.sp
+            val iconContainer = if (compactLayout) 42.dp else 48.dp
+            val iconSize = if (compactLayout) 20.dp else 24.dp
+
+            if (stackedLayout) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OperatorCircleIcon(
+                        icon = icon,
+                        backgroundColor = if (emphasized) OperatorPalette.accent else OperatorPalette.pill,
+                        tint = if (emphasized) OperatorPalette.accentText else OperatorPalette.accent,
+                        containerSize = iconContainer,
+                        iconSize = iconSize,
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = title,
+                            color = OperatorPalette.title,
+                            fontSize = titleSize,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = description,
+                            color = OperatorPalette.subtitle,
+                            fontSize = bodySize,
+                            lineHeight = bodyLineHeight,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(if (compactLayout) 10.dp else 14.dp)) {
+                    OperatorCircleIcon(
+                        icon = icon,
+                        backgroundColor = if (emphasized) OperatorPalette.accent else OperatorPalette.pill,
+                        tint = if (emphasized) OperatorPalette.accentText else OperatorPalette.accent,
+                        containerSize = iconContainer,
+                        iconSize = iconSize,
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = title,
+                            color = OperatorPalette.title,
+                            fontSize = titleSize,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = description,
+                            color = OperatorPalette.subtitle,
+                            fontSize = bodySize,
+                            lineHeight = bodyLineHeight,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OperatorInfoCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    OperatorPanel(modifier = modifier) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val compactLayout = maxWidth < 420.dp
+
+            Column(verticalArrangement = Arrangement.spacedBy(if (compactLayout) 8.dp else 10.dp), content = {
+                Text(
+                    text = title,
+                    color = OperatorPalette.title,
+                    fontSize = if (compactLayout) 22.sp else 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                content()
+            })
+        }
+    }
+}
+
+@Composable
+fun OperatorPrimaryButton(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(92.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = OperatorPalette.accent,
+            contentColor = OperatorPalette.accentText,
+        ),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp))
+            Text(text = text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun OperatorSecondaryButton(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(92.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = OperatorPalette.pill,
+            contentColor = OperatorPalette.title,
+        ),
+        border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp))
+            Text(text = text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun OperatorHeaderPill(
+    text: String,
+    accent: Boolean = false,
+) {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = OperatorPalette.pill,
+        border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+        elevation = 0.dp,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            color = if (accent) OperatorPalette.accent else OperatorPalette.title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun OperatorCircleIcon(
+    icon: ImageVector,
+    backgroundColor: Color,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    containerSize: androidx.compose.ui.unit.Dp = 48.dp,
+    iconSize: androidx.compose.ui.unit.Dp = 24.dp,
+) {
+    Box(
+        modifier = modifier
+            .size(containerSize)
+            .background(backgroundColor, CircleShape)
+            .border(1.dp, backgroundColor, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(iconSize),
+        )
+    }
+}

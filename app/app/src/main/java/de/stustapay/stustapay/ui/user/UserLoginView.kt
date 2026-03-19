@@ -1,10 +1,17 @@
 package de.stustapay.stustapay.ui.user
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,6 +27,10 @@ import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
+import de.stustapay.stustapay.ui.common.operator.OperatorSecondaryButton
 import de.stustapay.libssp.ui.theme.errorButtonColors
 import kotlinx.coroutines.launch
 
@@ -68,6 +79,8 @@ fun UserLoginView(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
 
         var scanTarget by remember { mutableStateOf(ScanTarget.Login) }
@@ -130,16 +143,20 @@ fun UserLoginView(
 
             is UserRolesState.Unknown -> {}
             is UserRolesState.Error -> {
-                ListItem(
-                    text = { Text(userRolesV.msg) },
-                    icon = {
+                OperatorInfoCard(
+                    title = "Role lookup failed",
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Icon(
                             Icons.Filled.Warning,
                             contentDescription = null,
-                            modifier = Modifier.size(56.dp)
+                            modifier = Modifier.size(28.dp),
+                            tint = OperatorPalette.danger,
                         )
+                        Text(userRolesV.msg, color = OperatorPalette.subtitle)
                     }
-                )
+                }
             }
         }
 
@@ -161,107 +178,90 @@ fun UserLoginView(
             }
         }
 
-        ListItem(
-            text = { Text(user) },
-            secondaryText = { Text(subtext ?: "") },
-            icon = {
+        OperatorInfoCard(
+            title = "Current session",
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(
                     Icons.Filled.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(28.dp),
+                    tint = OperatorPalette.accent,
                 )
+                Column {
+                    Text(text = user, color = OperatorPalette.title)
+                    if (!subtext.isNullOrBlank()) {
+                        Text(text = subtext, color = OperatorPalette.subtitle)
+                    }
+                }
             }
-        )
-
-        Divider()
+        }
 
         if (userUIStateV !is UserUIState.LoggedIn || userUIStateV.showLoginUser) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+            OperatorPrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = if (userUIStateV !is UserUIState.LoggedIn) {
+                    stringResource(R.string.user_login)
+                } else {
+                    stringResource(R.string.user_login_other)
+                },
+                icon = Icons.Filled.QrCode2,
                 onClick = {
                     viewModel.clearErrors()
                     scanTarget = ScanTarget.Login
                     scanState.open()
                 },
-            ) {
-                Text(if (userUIStateV !is UserUIState.LoggedIn) {
-                    stringResource(R.string.user_login)
-                } else {
-                    stringResource(R.string.user_login_other)
-                }, fontSize = 24.sp, textAlign = TextAlign.Center)
-            }
+            )
         }
 
         if (userUIStateV is UserUIState.LoggedIn) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+            OperatorSecondaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.user_logout),
+                icon = Icons.Filled.Logout,
                 onClick = {
                     scope.launch {
                         viewModel.logout()
                     }
                 },
-                colors = errorButtonColors(),
-            ) {
-                Text(
-                    stringResource(R.string.user_logout),
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        Divider()
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        val statusV = status
-        if (statusV != null) {
-            ListItem(
-                text = { Text(statusV) },
-                icon = {
-                    Icon(
-                        Icons.Filled.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(56.dp)
-                    )
-                }
             )
         }
 
-        Spacer(modifier = Modifier.height(15.dp))
-
-        if (userUIStateV is UserUIState.LoggedIn && userUIStateV.showCreateUser) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                onClick = { goToUserCreateView() }
+        val statusV = status
+        if (statusV != null) {
+            OperatorInfoCard(
+                title = "Status",
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(
-                    stringResource(R.string.user_create_title),
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(
+                        Icons.Filled.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = OperatorPalette.accent,
+                    )
+                    Text(statusV, color = OperatorPalette.subtitle)
+                }
             }
         }
 
         if (userUIStateV is UserUIState.LoggedIn && userUIStateV.showCreateUser) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+            OperatorPrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.user_create_title),
+                icon = Icons.Filled.PersonAdd,
+                onClick = { goToUserCreateView() }
+            )
+        }
+
+        if (userUIStateV is UserUIState.LoggedIn && userUIStateV.showCreateUser) {
+            OperatorSecondaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.user_display_title),
+                icon = Icons.Filled.Person,
                 onClick = { goToUserDisplayView() }
-            ) {
-                Text(
-                    stringResource(R.string.user_display_title),
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
+            )
         }
     }
 }

@@ -6,19 +6,11 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.ImageView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +32,8 @@ import com.google.zxing.qrcode.QRCodeWriter
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.SuccessIcon
+import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import kotlinx.coroutines.delay
 
@@ -86,21 +80,21 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
         onConfirm()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = {
-                if (config is SaleConfig.Ready) {
-                    Text(config.tillName)
-                } else {
-                    Text("No Till")
-                }
-            })
-        },
-        content = { padding ->
+    OperatorScaffold(
+        title = if (config is SaleConfig.Ready) config.tillName else "No Till",
+        subtitle = "Sale completed successfully.",
+        icon = Icons.Filled.CheckCircle,
+        terminalLabel = "Complete",
+        footerHint = status,
+        footerSection = "Sale",
+        footerStatus = "Done",
+        onBack = onConfirm,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -176,34 +170,15 @@ fun SaleSuccess(viewModel: SaleViewModel, onConfirm: () -> Unit) {
                     }
                 }
             }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = 5.dp)
-                    .fillMaxWidth()
-            ) {
-                Divider(modifier = Modifier.padding(top = 10.dp))
-                Text(
-                    text = status,
-                    modifier = Modifier.fillMaxWidth(),
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
 
-                Button(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onConfirm()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                ) {
-                    Text(text = "Done")
-                }
-            }
+            OperatorPrimaryButton(
+                text = "Done",
+                icon = Icons.Filled.CheckCircle,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onConfirm()
+                },
+            )
         }
-    )
+    }
 }

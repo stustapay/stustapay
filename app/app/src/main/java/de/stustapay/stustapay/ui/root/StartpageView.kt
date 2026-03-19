@@ -62,6 +62,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
+import de.stustapay.stustapay.ui.common.TerminalLoginState
+import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import de.stustapay.stustapay.ui.nav.NavDest
@@ -74,6 +79,7 @@ fun StartpageView(
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
+    val terminalStatusMessage by viewModel.terminalStatusMessage.collectAsStateWithLifecycle()
     val activity = LocalActivity.current!!
     val isSelfServiceMode = loginState.hasOnlyTopUpPrivilege() && loginState.hasConfig() && !configLoading
     val isEntryMode = loginState.isEntryMode() && loginState.hasConfig() && !configLoading
@@ -93,6 +99,12 @@ fun StartpageView(
     LaunchedEffect(isEntryMode) {
         if (isEntryMode) {
             navigateToHook(RootNavDests.entry)
+        }
+    }
+
+    LaunchedEffect(isSelfServiceMode) {
+        if (!isSelfServiceMode) {
+            terminalConfigViewModel.refreshAccessData()
         }
     }
 
@@ -144,11 +156,6 @@ fun StartpageView(
                 .padding(top = 5.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (!isSelfServiceMode) {
-                TerminalConfig(viewModel = terminalConfigViewModel)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
             if (isSelfServiceMode) {
                 SelfServiceLanding(
                     onCheckBalance = { navigateToHook(RootNavDests.status) },
@@ -156,86 +163,15 @@ fun StartpageView(
                     modifier = Modifier.weight(1f)
                 )
             } else {
-                Column(
+                OperatorLanding(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Bottom,
-                ) {
-                    val entryItem = if (loginState.isEntryMode()) {
-                        StartpageItem(
-                            icon = Icons.Filled.MeetingRoom,
-                            label = R.string.root_item_entry,
-                            navDestination = RootNavDests.entry,
-                        )
-                    } else {
-                        null
-                    }
-
-                    if (entryItem != null || startpageItems.isNotEmpty()) {
-                        Divider()
-                    }
-
-                    val scrollState = rememberScrollState()
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .verticalScroll(scrollState)
-                    ) {
-                        if (entryItem != null) {
-                            StartpageEntry(item = entryItem, navigateTo = navigateToHook)
-                        }
-                        startpageItems.forEach { item ->
-                            if (loginState.checkAccess(item.canAccess)) {
-                                StartpageEntry(item = item, navigateTo = navigateToHook)
-                            }
-                        }
-                    }
-
-                    Divider()
-
-                    if (loginState.hasConfig()) {
-                        StartpageEntry(
-                            item = StartpageItem(
-                                icon = Icons.Filled.Person,
-                                navDestination = RootNavDests.user,
-                                label = R.string.user_title,
-                            ),
-                            navigateTo = navigateToHook
-                        )
-                    }
-
-                    if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
-                        StartpageEntry(
-                            item = StartpageItem(
-                                icon = Icons.Filled.Settings,
-                                label = R.string.root_item_settings,
-                                navDestination = RootNavDests.settings,
-                            ),
-                            navigateTo = navigateToHook
-                        )
-                    }
-
-                    if (loginState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
-                        StartpageEntry(
-                            item = StartpageItem(
-                                icon = Icons.Filled.DeveloperMode,
-                                label = R.string.root_item_development,
-                                navDestination = RootNavDests.development,
-                            ),
-                            navigateTo = navigateToHook
-                        )
-                    }
-
-                    StartpageEntry(
-                        item = StartpageItem(
-                            icon = Icons.Filled.Refresh,
-                            label = R.string.root_item_restart_app,
-                            navDestination = RootNavDests.startpage,
-                        ),
-                        navigateTo = {
-                            restartApp(activity)
-                        }
-                    )
-                }
+                    loginState = loginState,
+                    configLoading = configLoading,
+                    terminalStatusMessage = terminalStatusMessage,
+                    onNavigate = navigateToHook,
+                    onRefreshConfig = { terminalConfigViewModel.refreshAccessData() },
+                    onRestart = { restartApp(activity) },
+                )
             }
         }
 
@@ -282,6 +218,227 @@ fun StartpageView(
                 }
             }
         }
+    }
+}
+
+private data class OperatorMenuCard(
+    val icon: ImageVector,
+    val title: String,
+    val description: String,
+    val emphasized: Boolean = false,
+    val onClick: () -> Unit,
+)
+
+@Composable
+private fun OperatorLanding(
+    loginState: TerminalLoginState,
+    configLoading: Boolean,
+    terminalStatusMessage: String?,
+    onNavigate: (NavDest) -> Unit,
+    onRefreshConfig: () -> Unit,
+    onRestart: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val terminalName = loginState.title()
+    val primaryCards = buildList {
+        if (loginState.hasConfig()) {
+            add(
+                OperatorMenuCard(
+                    icon = Icons.Filled.Person,
+                    title = stringResource(R.string.user_title),
+                    description = "User login, profile, and role maintenance.",
+                    onClick = { onNavigate(RootNavDests.user) },
+                )
+            )
+        }
+
+        val entryItem = if (loginState.isEntryMode()) {
+            StartpageItem(
+                icon = Icons.Filled.MeetingRoom,
+                label = R.string.root_item_entry,
+                navDestination = RootNavDests.entry,
+            )
+        } else {
+            null
+        }
+
+        if (entryItem != null) {
+            add(entryItem.toOperatorCard(onNavigate))
+        }
+
+        startpageItems.forEach { item ->
+            if (loginState.checkAccess(item.canAccess)) {
+                add(item.toOperatorCard(onNavigate))
+            }
+        }
+
+        if (loginState.checkAccess { user, _ -> Access.canChangeConfig(user) } || !loginState.hasConfig()) {
+            add(
+                OperatorMenuCard(
+                    icon = Icons.Filled.Settings,
+                    title = stringResource(R.string.root_item_settings),
+                    description = "Terminal connection, EC reader, and app information.",
+                    onClick = { onNavigate(RootNavDests.settings) },
+                )
+            )
+        }
+
+        if (!loginState.hasConfig() || configLoading || !terminalStatusMessage.isNullOrBlank()) {
+            add(
+                OperatorMenuCard(
+                    icon = Icons.Filled.Refresh,
+                    title = "Refresh setup",
+                    description = "Retry terminal configuration and login sync with the backend.",
+                    emphasized = true,
+                    onClick = onRefreshConfig,
+                )
+            )
+        }
+
+        if (loginState.checkAccess { user, _ -> Access.canHackTheSystem(user) }) {
+            add(
+                OperatorMenuCard(
+                    icon = Icons.Filled.DeveloperMode,
+                    title = stringResource(R.string.root_item_development),
+                    description = "Network, QR, and SumUp diagnostic tools.",
+                    onClick = { onNavigate(RootNavDests.development) },
+                )
+            )
+        }
+        add(
+            OperatorMenuCard(
+                icon = Icons.Filled.Refresh,
+                title = stringResource(R.string.root_item_restart_app),
+                description = "Restart the app and reload terminal state.",
+                onClick = onRestart,
+            )
+        )
+    }
+
+    OperatorScaffold(
+        modifier = modifier,
+        title = terminalName.title.ifBlank { "Operator Console" },
+        subtitle = terminalName.subtitle ?: if (loginState.hasConfig()) {
+            "All available workflows for this terminal."
+        } else {
+            "Configure the terminal to unlock the full operator workflow."
+        },
+        icon = Icons.Filled.Settings,
+        terminalLabel = when {
+            configLoading -> "Loading"
+            loginState.hasConfig() -> "Configured"
+            else -> "No Config"
+        },
+        footerHint = if (configLoading) {
+            "Configuration is still loading. Settings remain available while the terminal initializes."
+        } else {
+            "${primaryCards.size} workflows visible for the current profile."
+        },
+        footerSection = "Menu",
+        footerStatus = if (loginState.hasConfig()) "Ready" else "Setup",
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val columns = when {
+                maxWidth >= 1240.dp -> 3
+                maxWidth >= 860.dp -> 2
+                else -> 1
+            }
+            val cardRows = primaryCards.chunked(columns)
+            val scrollState = rememberScrollState()
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                if (!loginState.hasConfig()) {
+                    OperatorInfoCard(
+                        title = "Terminal setup required",
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = "Open Settings to register this terminal against the backend before using operator workflows.",
+                            color = OperatorPalette.subtitle,
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+
+                if (!terminalStatusMessage.isNullOrBlank()) {
+                    OperatorInfoCard(
+                        title = "Configuration status",
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = terminalStatusMessage,
+                            color = OperatorPalette.subtitle,
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+
+                cardRows.forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        rowItems.forEach { item ->
+                            OperatorActionCard(
+                                title = item.title,
+                                description = item.description,
+                                icon = item.icon,
+                                emphasized = item.emphasized,
+                                onClick = item.onClick,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+
+                        repeat(columns - rowItems.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StartpageItem.toOperatorCard(onNavigate: (NavDest) -> Unit): OperatorMenuCard {
+    val destination = navDestination
+    return OperatorMenuCard(
+        icon = icon,
+        title = stringResource(label),
+        description = operatorCardDescription(destination?.route),
+        emphasized = destination == RootNavDests.sale || destination == RootNavDests.topup,
+        onClick = {
+            if (destination != null) {
+                onNavigate(destination)
+            }
+        },
+    )
+}
+
+private fun operatorCardDescription(route: String?): String {
+    return when (route) {
+        RootNavDests.entry.route -> "Scan tags and apply entry/exit decisions."
+        RootNavDests.sale.route -> "Build baskets, confirm products, and take payment."
+        RootNavDests.topup.route -> "Load cash or card value onto a customer account."
+        RootNavDests.postpayment.route -> "Collect post-paid balances from tagged accounts."
+        RootNavDests.ticket.route -> "Sell and confirm ticket products."
+        RootNavDests.rewards.route -> "Grant vouchers and free-ticket rewards."
+        RootNavDests.history.route -> "Inspect recent sales and order details."
+        RootNavDests.status.route -> "Check balances and customer account status."
+        RootNavDests.swap.route -> "Swap customer media and keep the balance linked."
+        RootNavDests.cashier.route -> "Manage cashier tills, deposits, and transport."
+        RootNavDests.vault.route -> "Handle vault withdrawals and secure cash movements."
+        RootNavDests.stats.route -> "View high-level sales and terminal statistics."
+        else -> "Open the selected operator workflow."
     }
 }
 

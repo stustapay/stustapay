@@ -12,17 +12,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,20 +37,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.common.Spinner
+import de.stustapay.libssp.util.formatCurrencyValue
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.common.CloseContent
+import de.stustapay.stustapay.ui.common.TagItem
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
+import de.stustapay.stustapay.ui.common.operator.OperatorSecondaryButton
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBottomActions
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceCountdownCard
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
 import de.stustapay.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -94,91 +103,222 @@ fun AccountStatus(
         }
     }
 
-    Scaffold(content = {
-        CloseContent(
-            modifier = Modifier
-                .padding(it)
-                .padding(10.dp),
-            onClose = {
-                viewModel.idleState()
-                navigateTo(CustomerStatusNavDests.scan)
-            },
+    OperatorScaffold(
+        title = stringResource(R.string.customer_title),
+        subtitle = "Balance, vouchers, and customer restrictions after NFC scan.",
+        icon = Icons.Filled.Person,
+        terminalLabel = "Account",
+        footerHint = operatorCustomerStatusText(uiState.customer),
+        footerSection = "Status",
+        footerStatus = operatorCustomerStatusBadge(uiState.customer),
+        onBack = {
+            viewModel.idleState()
+            navigateTo(CustomerStatusNavDests.scan)
+        },
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
             ) {
                 when (val customer = uiState.customer) {
                     is CustomerStatusRequestState.Failed -> {
-                        Text(stringResource(R.string.failed_fetching))
+                        OperatorInfoCard(
+                            title = "Lookup failed",
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = customer.msg.ifBlank { stringResource(R.string.failed_fetching) },
+                                color = OperatorPalette.subtitle,
+                            )
+                        }
                     }
 
-                    is CustomerStatusRequestState.Idle -> {}
+                    is CustomerStatusRequestState.Idle -> {
+                        OperatorInfoCard(
+                            title = "Awaiting customer tag",
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = "Return to the scan screen and present a customer card or wristband to load the balance.",
+                                color = OperatorPalette.subtitle,
+                            )
+                        }
+                    }
 
                     is CustomerStatusRequestState.Fetching -> {
-                        Spinner()
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Spinner()
+                        }
                     }
 
                     is CustomerStatusRequestState.Done -> {
-                        val account = customer.account
-                        AccountProperties(
-                            account = account,
+                        OperatorAccountSummary(
+                            account = customer.account,
                             showComment = commentVisible,
                         )
                     }
 
                     is CustomerStatusRequestState.DoneDetails -> {
-                        val account = customer.account
-                        AccountProperties(
-                            account = account,
+                        OperatorAccountSummary(
+                            account = customer.account,
                             showComment = commentVisible,
                         )
                     }
                 }
             }
-        }
-    }, bottomBar = {
-        Column {
-            Divider(modifier = Modifier.padding(vertical = 10.dp))
 
-            if (uiState.canViewCustomerOrders) {
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
+            if (uiState.canViewCustomerOrders &&
+                (uiState.customer is CustomerStatusRequestState.Done || uiState.customer is CustomerStatusRequestState.DoneDetails)
+            ) {
+                OperatorSecondaryButton(
+                    text = stringResource(R.string.customer_details),
+                    icon = Icons.AutoMirrored.Filled.List,
                     onClick = {
                         scope.launch {
                             viewModel.fetchCustomerOrders()
                             navigateTo(CustomerStatusNavDests.details)
                         }
-                    }) {
-                    Text(stringResource(R.string.customer_details))
-                }
-
-                Divider(modifier = Modifier.padding(vertical = 10.dp))
-            }
-
-            Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
-                val text = when (val state = uiState.customer) {
-                    is CustomerStatusRequestState.Idle -> {
-                        stringResource(R.string.common_status_idle)
-                    }
-
-                    is CustomerStatusRequestState.Fetching -> {
-                        stringResource(R.string.common_status_fetching)
-                    }
-
-                    is CustomerStatusRequestState.Done,
-                    is CustomerStatusRequestState.DoneDetails -> {
-                        stringResource(R.string.common_status_done)
-                    }
-
-                    is CustomerStatusRequestState.Failed -> {
-                        state.msg
-                    }
-                }
-                Text(text, fontSize = 24.sp)
+                    },
+                )
             }
         }
-    })
+    }
+}
+
+@Composable
+private fun OperatorAccountSummary(
+    account: de.stustapay.api.models.Account,
+    showComment: Boolean,
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(end = 4.dp)
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        OperatorPanel(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                account.userTagUid?.let { userTagUid ->
+                    TagItem(
+                        de.stustapay.libssp.model.NfcTag(userTagUid, null),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Text(
+                    text = formatCurrencyValue(account.balance),
+                    color = OperatorPalette.title,
+                    fontSize = 46.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                )
+
+                Text(
+                    text = "Current balance",
+                    color = OperatorPalette.subtitle,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+
+                if (account.vouchers > 0) {
+                    Text(
+                        text = "${account.vouchers} ${stringResource(R.string.customer_vouchers)}",
+                        color = OperatorPalette.accent,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+
+        OperatorInfoCard(
+            title = "Customer Overview",
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            account.restriction?.let { restriction ->
+                OperatorSummaryRow(
+                    label = stringResource(R.string.customer_restriction),
+                    value = when (restriction.value) {
+                        "under_18" -> stringResource(R.string.under_18_years)
+                        "under_16" -> stringResource(R.string.under_16_years)
+                        else -> restriction.value
+                    }
+                )
+            }
+
+            account.name?.let { name ->
+                OperatorSummaryRow(
+                    label = stringResource(R.string.customer_name),
+                    value = name,
+                )
+            }
+
+            val comment = account.comment
+            if (showComment && !comment.isNullOrEmpty()) {
+                OperatorSummaryRow(
+                    label = stringResource(R.string.customer_comment),
+                    value = comment,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OperatorSummaryRow(
+    label: String,
+    value: String,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = label,
+            color = OperatorPalette.subtitle,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+        )
+        Text(
+            text = value,
+            color = OperatorPalette.title,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+fun operatorCustomerStatusText(state: CustomerStatusRequestState): String {
+    return when (state) {
+        is CustomerStatusRequestState.Idle -> stringResource(R.string.common_status_idle)
+        is CustomerStatusRequestState.Fetching -> stringResource(R.string.common_status_fetching)
+        is CustomerStatusRequestState.Done,
+        is CustomerStatusRequestState.DoneDetails -> stringResource(R.string.common_status_done)
+        is CustomerStatusRequestState.Failed -> state.msg.ifBlank { stringResource(R.string.failed_fetching) }
+    }
+}
+
+private fun operatorCustomerStatusBadge(state: CustomerStatusRequestState): String {
+    return when (state) {
+        is CustomerStatusRequestState.Idle -> "Idle"
+        is CustomerStatusRequestState.Fetching -> "Loading"
+        is CustomerStatusRequestState.Done,
+        is CustomerStatusRequestState.DoneDetails -> "Loaded"
+        is CustomerStatusRequestState.Failed -> "Error"
+    }
 }
 
 @Composable

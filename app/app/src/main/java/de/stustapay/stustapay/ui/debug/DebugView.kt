@@ -1,19 +1,19 @@
 package de.stustapay.stustapay.ui.debug
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Router
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustapay.stustapay.ui.barcode.QRScanView
+import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.nav.NavDest
 import de.stustapay.stustapay.ui.nav.NavDestinations
-import de.stustapay.stustapay.ui.nav.NavScaffold
 
 object DevelopNavDest : NavDestinations() {
     val main = NavDest("main", title = "Development")
@@ -25,40 +25,40 @@ object DevelopNavDest : NavDestinations() {
 @Preview
 @Composable
 fun DebugView(leaveView: () -> Unit = {}) {
-
     val nav = rememberNavController()
-    val scaffoldState = rememberScaffoldState()
 
-    NavScaffold(
-        title = { Text(text = DevelopNavDest.title(nav) ?: "Development") },
-        state = scaffoldState,
-        navigateBack = {
-            if (nav.currentDestination?.route == DevelopNavDest.main.route) {
-                leaveView()
-            } else {
-                nav.popBackStack()
-            }
-        },
-    ) { paddingValues ->
-        NavHost(
-            navController = nav,
-            startDestination = DevelopNavDest.main.route,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-        ) {
-            composable(DevelopNavDest.main.route) {
-                DebugNavView(nav)
-            }
-            composable(DevelopNavDest.net.route) {
-                NetDebugView()
-            }
-            composable(DevelopNavDest.qr.route) {
+    NavHost(
+        navController = nav,
+        startDestination = DevelopNavDest.main.route,
+        modifier = Modifier,
+    ) {
+        composable(DevelopNavDest.main.route) {
+            DebugNavView(
+                navigateBack = leaveView,
+                onOpenNetwork = { nav.navigate(DevelopNavDest.net.route) },
+                onOpenQr = { nav.navigate(DevelopNavDest.qr.route) },
+                onOpenEc = { nav.navigate(DevelopNavDest.ec.route) },
+            )
+        }
+        composable(DevelopNavDest.net.route) {
+            NetDebugView(navigateBack = { nav.popBackStack() })
+        }
+        composable(DevelopNavDest.qr.route) {
+            OperatorScaffold(
+                title = "QR Scan",
+                subtitle = "Live camera capture for registration and support codes.",
+                icon = Icons.Filled.QrCodeScanner,
+                terminalLabel = "Camera",
+                footerHint = "The live camera preview remains unchanged; only the route shell now matches the new operator design.",
+                footerSection = "Scanner",
+                footerStatus = "Live",
+                onBack = { nav.popBackStack() },
+            ) {
                 QRScanView()
             }
-            composable(DevelopNavDest.ec.route) {
-                ECDebugView()
-            }
+        }
+        composable(DevelopNavDest.ec.route) {
+            ECDebugView(navigateBack = { nav.popBackStack() })
         }
     }
 }
