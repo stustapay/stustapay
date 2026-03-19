@@ -30,12 +30,20 @@ export const BarChart: React.FC<BarChartProps> = ({
 }) => {
   const formatCurrency = useCurrencyFormatter();
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isDark = theme.palette.mode === "dark";
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("md", "lg"));
   const maxCategoryLabelLength = isSmallMobile ? 10 : isMobile ? 14 : 24;
+  const compactNumberFormatter = React.useMemo(
+    () =>
+      new Intl.NumberFormat(i18n.language, {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }),
+    [i18n.language]
+  );
 
   const truncateLabel = React.useCallback(
     (value: string | number) => {
@@ -48,11 +56,27 @@ export const BarChart: React.FC<BarChartProps> = ({
     [maxCategoryLabelLength]
   );
 
+  const formatValueAxisLabel = React.useCallback(
+    (value: string | number) => {
+      const numericValue = Number(value);
+      if (!Number.isFinite(numericValue)) {
+        return String(value);
+      }
+
+      if (horizontal && useCurrency && isMobile) {
+        return compactNumberFormatter.format(numericValue);
+      }
+
+      return useCurrency ? formatCurrency(numericValue) : String(value);
+    },
+    [compactNumberFormatter, formatCurrency, horizontal, isMobile, useCurrency]
+  );
+
   const defaultMargin = React.useMemo(() => {
     if (isSmallMobile) {
       return {
         top: 10,
-        right: horizontal && useCurrency ? 50 : 8,
+        right: horizontal && useCurrency ? 72 : 8,
         bottom: horizontal ? 30 : 40,
         left: horizontal ? 62 : 36,
         ...margin,
@@ -61,7 +85,7 @@ export const BarChart: React.FC<BarChartProps> = ({
     if (isMobile) {
       return {
         top: 12,
-        right: horizontal && useCurrency ? 55 : 10,
+        right: horizontal && useCurrency ? 88 : 10,
         bottom: horizontal ? 34 : 45,
         left: horizontal ? 70 : 42,
         ...margin,
@@ -186,8 +210,9 @@ export const BarChart: React.FC<BarChartProps> = ({
           legendPosition: "middle",
           legendOffset: isSmallMobile ? 35 : isMobile ? 40 : 50,
           format: horizontal
-            ? (useCurrency ? (value) => formatCurrency(value) : undefined)
+            ? (value) => formatValueAxisLabel(value)
             : (value) => truncateLabel(value),
+          tickValues: horizontal && isMobile ? 4 : undefined,
         }}
         axisLeft={{
           tickSize: 0,
@@ -201,7 +226,7 @@ export const BarChart: React.FC<BarChartProps> = ({
           format: horizontal
             ? (value) => truncateLabel(value)
             : useCurrency
-              ? (value) => formatCurrency(value)
+              ? (value) => formatValueAxisLabel(value)
               : undefined,
         }}
         enableLabel={!isSmallMobile}

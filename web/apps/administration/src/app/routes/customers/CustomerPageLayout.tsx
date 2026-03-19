@@ -1,6 +1,6 @@
 import { useNode } from "@/api/nodes";
 import { CustomerRoutes } from "@/app/routes";
-import { Dashboard as DashboardIcon, Search as SearchIcon } from "@mui/icons-material";
+import { Dashboard as DashboardIcon, Search as SearchIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -8,6 +8,9 @@ import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink, useLocation, useParams, Navigate } from "react-router-dom";
 
 const getActiveTab = (location: string) => {
+  if (location.startsWith(CustomerRoutes.action("tag-swap"))) {
+    return CustomerRoutes.action("tag-swap");
+  }
   if (location.startsWith(CustomerRoutes.action("search"))) {
     return CustomerRoutes.action("search");
   }
@@ -52,6 +55,14 @@ export const CustomerPageLayout: React.FC = () => {
           component={RouterLink}
           value={CustomerRoutes.action("search")}
           to={CustomerRoutes.action("search")}
+        />
+        <Tab
+          label={t("customer.tagSwap.tab")}
+          icon={<SwapHorizIcon />}
+          iconPosition="start"
+          component={RouterLink}
+          value={CustomerRoutes.action("tag-swap")}
+          to={CustomerRoutes.action("tag-swap")}
         />
       </Tabs>
       <Box sx={{ mt: 2 }}>

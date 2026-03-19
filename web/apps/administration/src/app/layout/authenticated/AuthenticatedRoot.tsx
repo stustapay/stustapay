@@ -1,12 +1,14 @@
-import { useGetTreeForCurrentUserQuery, useLogoutMutation } from "@/api";
+import { useGetProfileQuery, useGetTreeForCurrentUserQuery, useLogoutMutation } from "@/api";
 import { config } from "@/api/common";
+import { HelpRoutes, getNodeIdFromPath } from "@/app/routes";
 import { AppBar, DrawerHeader, Main, LanguageSelect} from "@/components";
 import { drawerWidth } from "@/components/layouts/constants";
-import { selectCurrentUser, useAppSelector } from "@/store";
+import { selectCurrentUser, setCurrentUser, useAppDispatch, useAppSelector } from "@/store";
 import {
   AccountCircle as AccountCircleIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  HelpOutline as HelpOutlineIcon,
   Logout as LogoutIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
@@ -39,8 +41,12 @@ export const AuthenticatedRoot: React.FC = () => {
   const location = useLocation();
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
+  const currentNodeId = getNodeIdFromPath(location.pathname);
+  const helpRoute = HelpRoutes.index(currentNodeId);
+  const dispatch = useAppDispatch();
 
   const user = useAppSelector(selectCurrentUser);
+  const { data: currentProfile } = useGetProfileQuery(undefined, { skip: !user });
 
   const { isLoading: isTreeLoading, error: treeError } = useGetTreeForCurrentUserQuery();
 
@@ -49,6 +55,12 @@ export const AuthenticatedRoot: React.FC = () => {
       setOpen(false);
     }
   }, [isMobile]);
+
+  React.useEffect(() => {
+    if (currentProfile) {
+      dispatch(setCurrentUser(currentProfile));
+    }
+  }, [currentProfile, dispatch]);
 
   if (!user) {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
@@ -102,6 +114,15 @@ export const AuthenticatedRoot: React.FC = () => {
             </RouterLink>
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, flexShrink: 0 }}>
+            {isMobile ? (
+              <IconButton color="inherit" component={RouterLink} to={helpRoute} size="small" aria-label={t("help.open")}>
+                <HelpOutlineIcon fontSize="small" />
+              </IconButton>
+            ) : (
+              <Button component={RouterLink} color="inherit" to={helpRoute} startIcon={<HelpOutlineIcon />}>
+                {t("help.open")}
+              </Button>
+            )}
             {isMobile ? (
               <IconButton color="inherit" component={RouterLink} to="/profile" size="small" aria-label={t("auth.profile")}>
                 <AccountCircleIcon fontSize="small" />

@@ -151,7 +151,8 @@ create or replace view user_tag_with_history as
         a.id                                       as account_id,
         u.id                                       as user_id,
         coalesce(hist.account_history, '[]'::json) as account_history,
-        coalesce(ut.is_vip, false)                 as is_vip
+        coalesce(ut.is_vip, false)                 as is_vip,
+        coalesce(ut.account_creation_blocked, false) as account_creation_blocked
     from
         user_tag ut
         left join account a on a.user_tag_id = ut.id

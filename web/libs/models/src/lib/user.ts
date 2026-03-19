@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const PrivilegeSchema = z.enum([
   "node_administration",
+  "global_email_management",
   "customer_management",
   "payout_management",
   "entry_management",

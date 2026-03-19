@@ -12,7 +12,7 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.tree import Node, ObjectType
+from stustapay.core.schema.tree import ROOT_NODE_ID, Node, ObjectType
 from stustapay.core.schema.user import (
     AcceptInvitationPayload,
     CurrentUser,
@@ -21,6 +21,7 @@ from stustapay.core.schema.user import (
     NewUserToRoles,
     Privilege,
     RoleToNode,
+    UpdateCurrentUserProfilePayload,
     User,
     UserInvitation,
     UserRole,
@@ -29,15 +30,22 @@ from stustapay.core.schema.user import (
     format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
+from stustapay.core.service.config import fetch_global_email_config
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
 )
+from stustapay.core.service.email_templates import (
+    DEFAULT_INVITATION_SUBJECT,
+    DEFAULT_INVITATION_TEXT_BODY,
+    render_invitation_html,
+    render_template_string,
+)
 from stustapay.core.service.mail import MailService
 from sftkit.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
-from stustapay.core.service.user_tag import get_or_assign_user_tag
+from stustapay.core.service.user_tag import ensure_private_account_creation_allowed, get_or_assign_user_tag
 
 
 class UserLoginSuccess(BaseModel):
@@ -78,6 +86,7 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
     user_tag_id = None
     if user.user_tag_uid is not None:
         user_tag_id = await get_or_assign_user_tag(conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid)
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
 
     row = await conn.fetchrow(
         "update usr "
@@ -192,6 +201,22 @@ class UserService(Service[Config]):
 
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+    @staticmethod
+    def _validate_role_privileges(role_node_id: int, privileges: list[Privilege]) -> None:
+        if role_node_id != ROOT_NODE_ID and Privilege.global_email_management in privileges:
+            raise InvalidArgument("The global_email_management privilege can only be assigned to roles at the root node")
+
+    @staticmethod
+    def _get_invitation_template_context(
+        *, user: User, node_name: str, invitation_url: str, expires_at: datetime
+    ) -> dict[str, object]:
+        return {
+            "display_name": user.display_name,
+            "node_name": node_name,
+            "invitation_url": invitation_url,
+            "expires_at": expires_at.strftime("%Y-%m-%d %H:%M"),
+        }
+
     def _hash_password(self, password: str) -> str:
         return self.pwd_context.hash(password)
 
@@ -222,6 +247,7 @@ class UserService(Service[Config]):
     @requires_node(object_types=[ObjectType.user_role])
     @requires_user([Privilege.user_management])
     async def create_user_role(self, *, conn: Connection, node: Node, new_role: NewUserRole) -> UserRole:
+        self._validate_role_privileges(node.id, new_role.privileges)
         role_id = await conn.fetchval(
             "insert into user_role (node_id, name, is_privileged) values ($1, $2, $3) returning id",
             node.id,
@@ -247,6 +273,7 @@ class UserService(Service[Config]):
         role = await _get_user_role(conn=conn, role_id=role_id)
         if role is None or role.node_id not in node.ids_to_root:
             raise NotFound(element_type="user_role", element_id=role_id)
+        self._validate_role_privileges(role.node_id, privileges)
 
         await conn.execute("update user_role set is_privileged = $2 where id = $1", role_id, is_privileged)
 
@@ -306,6 +333,8 @@ class UserService(Service[Config]):
             )
 
         if customer_account_id is None:
+            if user_tag_id is not None:
+                await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.id,
@@ -618,6 +647,23 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_user(node_required=False)
+    async def get_current_user_profile(self, *, current_user: CurrentUser) -> CurrentUser:
+        return current_user
+
+    @with_db_transaction
+    @requires_user(node_required=False)
+    async def update_current_user_profile(
+        self,
+        *,
+        conn: Connection,
+        current_user: CurrentUser,
+        profile: UpdateCurrentUserProfilePayload,
+    ) -> CurrentUser:
+        await conn.execute("update usr set email = $2 where id = $1", current_user.id, profile.email)
+        return current_user.model_copy(update={"email": profile.email})
+
+    @with_db_transaction
+    @requires_user(node_required=False)
     async def logout_user(self, *, conn: Connection, current_user: User, token: str) -> bool:
         token_payload = self.auth_service.decode_user_jwt_payload(token)
         assert token_payload is not None
@@ -694,30 +740,30 @@ class UserService(Service[Config]):
         # (e.g. https://api.example.com/api -> https://api.example.com).
         base_url = self._invitation_base_url(self.config.administration.base_url)
         invitation_url = f"{base_url}/accept-invitation?token={token}"
+        context = self._get_invitation_template_context(
+            user=user,
+            node_name=node_name,
+            invitation_url=invitation_url,
+            expires_at=expires_at,
+        )
+        email_config = await fetch_global_email_config(conn=conn)
 
-        # Create email message
-        subject = f"Invitation to manage {node_name}"
-        message = f"""Hello {user.display_name},
+        subject = render_template_string(email_config.invitation_subject or DEFAULT_INVITATION_SUBJECT, context)
+        message = render_template_string(email_config.invitation_text_body or DEFAULT_INVITATION_TEXT_BODY, context)
+        html_message = (
+            render_invitation_html(email_config.invitation_html_body, context, subject)
+            if email_config.invitation_html_body
+            else None
+        )
 
-You have been invited to manage {node_name} in the StuStaPay administration portal.
-
-To activate your account, please click the following link and set your password:
-{invitation_url}
-
-This invitation will expire on {expires_at.strftime('%Y-%m-%d %H:%M')}.
-
-If you did not expect this invitation, please ignore this email.
-
-Best regards,
-The StuStaPay Team
-"""
-
-        # Send email
+        # Invitations must always be sent via the global mail configuration,
+        # independent of the node the invited user will manage.
         await mail_service.send_mail(
             conn=conn,
-            node_id=node.id,
+            node_id=ROOT_NODE_ID,
             subject=subject,
-            message=message,
+            text_message=message,
+            html_message=html_message,
             to_addr=user.email,
         )
 

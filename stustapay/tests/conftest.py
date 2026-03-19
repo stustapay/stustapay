@@ -392,6 +392,7 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
             Privilege.payout_management,
             Privilege.view_node_stats,
             Privilege.allow_privileged_role_assignment,
+            Privilege.global_email_management,
             Privilege.node_administration,
             Privilege.cash_transport,
             Privilege.customer_management,

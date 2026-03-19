@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, EmailStr, computed_field
 
 from stustapay.core.schema.user_tag import UserTag, format_user_tag_uid
 
@@ -13,6 +13,7 @@ ADMIN_ROLE_NAME = "admin"
 class Privilege(enum.Enum):
     # general management privileges
     node_administration = "node_administration"
+    global_email_management = "global_email_management"
     customer_management = "customer_management"
     payout_management = "payout_management"
     entry_management = "entry_management"
@@ -119,6 +120,10 @@ class CurrentUser(BaseModel):
 
     transport_account_id: Optional[int] = None
     cash_register_id: Optional[int] = None
+
+
+class UpdateCurrentUserProfilePayload(BaseModel):
+    email: EmailStr | None = None
 
 
 class AcceptInvitationPayload(BaseModel):

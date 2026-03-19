@@ -1,5 +1,6 @@
 import {
   useGetUserTagDetailQuery,
+  useUpdateUserTagAccountCreationBlockedMutation,
   useUpdateUserTagCommentMutation,
   useUpdateUserTagGroupTagMutation,
   useUpdateUserTagVipStatusMutation,
@@ -30,6 +31,7 @@ export const UserTagDetail: React.FC = () => {
   const [updateComment] = useUpdateUserTagCommentMutation();
   const [updateGroupTag] = useUpdateUserTagGroupTagMutation();
   const [updateVipStatus] = useUpdateUserTagVipStatusMutation();
+  const [updateAccountCreationBlocked] = useUpdateUserTagAccountCreationBlockedMutation();
   const { data, error, isLoading } = useGetUserTagDetailQuery({
     nodeId: currentNode.id,
     userTagId: Number(userTagId),
@@ -95,6 +97,24 @@ export const UserTagDetail: React.FC = () => {
       });
   };
 
+  const handleUpdateAccountCreationBlocked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newBlockedStatus = e.target.checked;
+    updateAccountCreationBlocked({
+      nodeId: currentNode.id,
+      userTagId: Number(userTagId),
+      updateAccountCreationBlockedPayload: { account_creation_blocked: newBlockedStatus },
+    })
+      .unwrap()
+      .then(() => {
+        toast.success(
+          newBlockedStatus ? t("userTag.accountCreationBlockedEnabled") : t("userTag.accountCreationBlockedDisabled")
+        );
+      })
+      .catch(() => {
+        toast.error(t("userTag.accountCreationBlockedUpdateFailed"));
+      });
+  };
+
   return (
     <DetailLayout title={t("userTag.userTag")} routes={UserTagRoutes}>
       <Paper>
@@ -111,6 +131,17 @@ export const UserTagDetail: React.FC = () => {
             <FormControlLabel
               control={<Switch checked={Boolean(data.is_vip)} onChange={handleUpdateVipStatus} />}
               label={t("userTag.vipStatus") || "VIP Status"}
+            />
+          </ListItem>
+          <ListItem>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(data.account_creation_blocked)}
+                  onChange={handleUpdateAccountCreationBlocked}
+                />
+              }
+              label={t("userTag.accountCreationBlocked")}
             />
           </ListItem>
           {data.account_id != null ? (

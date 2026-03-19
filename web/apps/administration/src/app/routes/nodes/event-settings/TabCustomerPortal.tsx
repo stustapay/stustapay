@@ -162,6 +162,10 @@ const BannerUpload: React.FC<BannerUploadProps> = ({ nodeId }) => {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t("settings.customerPortal.bannerImageDescription") || "Upload an image to display as a header banner in the customer portal."}
       </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+        {t("settings.customerPortal.bannerImageSpecs")
+          || "Recommended: 2000x500 px, wide image with important content centered, max 5 MB."}
+      </Typography>
 
       {bannerUrl && (
         <Box sx={{ mb: 2, position: "relative" }}>
@@ -354,5 +358,4 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     </Stack>
   );
 };
-
 

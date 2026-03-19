@@ -1,12 +1,12 @@
 import uuid
 from typing import Optional
 
-from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.jwt import InvalidTokenError, decode, encode
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.terminal import CurrentTerminal, Terminal
 from stustapay.core.schema.till import Till
@@ -36,32 +36,32 @@ class AuthService(Service[Config]):
 
     def decode_user_jwt_payload(self, token: str) -> Optional[UserTokenMetadata]:
         try:
-            payload = jwt.decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
+            payload = decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
             try:
                 return UserTokenMetadata.model_validate(payload)
             except ValidationError:
                 return None
-        except JWTError:
+        except InvalidTokenError:
             return None
 
     def create_user_access_token(self, token_metadata: UserTokenMetadata) -> str:
         to_encode = {"user_id": token_metadata.user_id, "session_id": token_metadata.session_id}
-        encoded_jwt = jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
+        encoded_jwt = encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
         return encoded_jwt
 
     def decode_customer_jwt_payload(self, token: str) -> Optional[CustomerTokenMetadata]:
         try:
-            payload = jwt.decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
+            payload = decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
             try:
                 return CustomerTokenMetadata.model_validate(payload)
             except ValidationError:
                 return None
-        except JWTError:
+        except InvalidTokenError:
             return None
 
     def create_customer_access_token(self, token_metadata: CustomerTokenMetadata) -> str:
         to_encode = {"customer_id": token_metadata.customer_id, "session_id": token_metadata.session_id}
-        encoded_jwt = jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
+        encoded_jwt = encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
         return encoded_jwt
 
     @with_db_transaction(read_only=True)
@@ -96,17 +96,17 @@ class AuthService(Service[Config]):
 
     def decode_terminal_jwt_payload(self, token: str) -> Optional[TerminalTokenMetadata]:
         try:
-            payload = jwt.decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
+            payload = decode(token, self.config.core.secret_key, algorithms=[self.config.core.jwt_token_algorithm])
             try:
                 return TerminalTokenMetadata.model_validate(payload)
             except ValidationError:
                 return None
-        except JWTError:
+        except InvalidTokenError:
             return None
 
     def create_terminal_access_token(self, token_metadata: TerminalTokenMetadata):
         to_encode = {"terminal_id": token_metadata.terminal_id, "session_uuid": str(token_metadata.session_uuid)}
-        encoded_jwt = jwt.encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
+        encoded_jwt = encode(to_encode, self.config.core.secret_key, algorithm=self.config.core.jwt_token_algorithm)
         return encoded_jwt
 
     @with_db_transaction(read_only=True)

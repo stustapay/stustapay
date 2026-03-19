@@ -14,8 +14,8 @@ class Mail(BaseModel):
     id: int
     node_id: int
     subject: str
-    message: str
-    html_message: bool
+    text_message: str
+    html_message: str | None
     to_addr: str
     from_addr: str
     send_date: datetime | None

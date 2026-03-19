@@ -22,10 +22,12 @@ import { useTranslation } from "react-i18next";
 import { TableFilterBar } from "@/components/tables/TableFilterBar";
 import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
 import { useFilterableTable } from "@/hooks/useFilterableTable";
+import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   pollingIntervalMs?: number;
@@ -34,6 +36,7 @@ export type RevenueByCounterTableProps = {
 export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   pollingIntervalMs = 0,
@@ -50,13 +53,19 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
-  const dateStr = fromTimestamp?.toISODate() ?? toTimestamp?.toISODate() ?? "Total";
+  const dateStr = React.useMemo(() => {
+    if (selectedDates && selectedDates.length > 1) {
+      return t("overview.selectedDatesCount", { count: selectedDates.length });
+    }
+    return fromTimestamp?.toISODate() ?? toTimestamp?.toISODate() ?? "Total";
+  }, [fromTimestamp, selectedDates, t, toTimestamp]);
 
   // Use filterable table hook
   const {

@@ -89,6 +89,31 @@ Configuration of products, cash desks, accounts, ...
 - react
 - nodejs
 
+## Local development
+
+- **Backend & admin web together**
+  - Create a local config if you do not have one yet:
+    - `cp etc/config.yaml config.yaml`
+    - adjust it for your local database and services
+  - Start the core development environment from the repo root:
+    - `make dev`
+  - This will start:
+    - the main backend APIs (`terminalserver-api`, `administration-api`, `customerportal-api`)
+    - the administration web frontend (available at http://localhost:4200/)
+
+- **Backend only**
+  - `make dev-backend`
+
+- **Admin web only**
+  - From the repo root:
+    - `make dev-web`
+  - Or, directly in `web/`:
+    - `cd web && npm run start`
+
+## Deployment
+
+Local multi-environment Azure deployment tooling lives under [`tools/deploy/`](/Users/thomastelaak/code/stustapay/tools/deploy) and is configured via [`deploy/README.md`](/Users/thomastelaak/code/stustapay/deploy/README.md). It supports `dry-run`, `bootstrap-server`, `deploy`, `list-releases` and `rollback` for explicit targets like `primary` and `weu`.
+
 ## License
 
 Released under the **GNU Affero General Public License** version 3 or later,

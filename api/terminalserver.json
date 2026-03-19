@@ -3574,6 +3574,7 @@
         "type": "string",
         "enum": [
           "node_administration",
+          "global_email_management",
           "customer_management",
           "payout_management",
           "entry_management",
@@ -3668,6 +3669,11 @@
           "tax_rate": {
             "type": "number",
             "title": "Tax Rate"
+          },
+          "has_bookings": {
+            "type": "boolean",
+            "title": "Has Bookings",
+            "default": false
           },
           "type": {
             "$ref": "#/components/schemas/ProductType"

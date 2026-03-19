@@ -18,17 +18,20 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from "@mui/icons-material";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { Order, LineItem, LineItemRead, Product, useListTillsQuery, selectTillById, useListOrdersFilteredQuery } from "@/api";
+import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+import { Order, LineItem, Product, useListTillsQuery, selectTillById, useListOrdersFilteredQuery } from "@/api";
+import { OrderRoutes } from "@/app/routes";
 import { useTranslation } from "react-i18next";
 import { TableFilterBar, ColumnFilterConfig } from "@/components/tables/TableFilterBar";
 import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
 import { useFilterableTable } from "@/hooks/useFilterableTable";
+import { statsQueryOptions } from "./queryOptions";
 
 export type OrdersTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   productId?: number;
@@ -38,7 +41,7 @@ export type OrdersTableProps = {
 type TableRowData = {
   order: Order;
   lineItem: { product: Product; quantity: number; product_price: number; total_price: number };
-  orderDate: number; // timestamp for sorting
+  orderDate: number;
   orderId: number;
   orderType: string;
   tillName: string;
@@ -48,11 +51,12 @@ type TableRowData = {
   total: number;
 };
 
-const INITIAL_DISPLAY_LIMIT = 50;
+const PAGE_SIZE = 50;
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   productId,
@@ -63,38 +67,117 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [showAll, setShowAll] = React.useState(false);
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const canViewOrderLinks = useCurrentUserHasPrivilege(OrderRoutes.privilege);
   const effectiveNodeId = subnodeId ?? currentNode.id;
-  const { data: tills } = useListTillsQuery({ nodeId: effectiveNodeId }, { pollingInterval: pollingIntervalMs });
+  const queryKey = React.useMemo(
+    () =>
+      JSON.stringify({
+        nodeId: currentNode.id,
+        fromTimestamp: fromTimestamp?.toISO() ?? null,
+        toTimestamp: toTimestamp?.toISO() ?? null,
+        selectedDates: selectedDates ?? null,
+        tillId: tillId ?? null,
+        subnodeId: subnodeId ?? null,
+      }),
+    [currentNode.id, fromTimestamp, selectedDates, subnodeId, tillId, toTimestamp]
+  );
+  const [currentOffset, setCurrentOffset] = React.useState(0);
+  const [pendingAppendOffset, setPendingAppendOffset] = React.useState<number | null>(null);
+  const [loadedOrders, setLoadedOrders] = React.useState<Order[] | undefined>(undefined);
+  const [hasMoreOrders, setHasMoreOrders] = React.useState(false);
+  const previousQueryKeyRef = React.useRef(queryKey);
+  const lastIntegratedPageKeyRef = React.useRef<string | null>(null);
 
-  const { data: ordersData, isLoading } = useListOrdersFilteredQuery(
+  const { data: tills } = useListTillsQuery({ nodeId: effectiveNodeId }, statsQueryOptions(pollingIntervalMs));
+  const { data: ordersData, isLoading, fulfilledTimeStamp } = useListOrdersFilteredQuery(
     {
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
-      tillId: tillId,
-      subnodeId: subnodeId,
+      selectedDates,
+      tillId,
+      subnodeId,
+      limit: PAGE_SIZE,
+      offset: currentOffset,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
-  const orders = React.useMemo(() => {
-    if (!ordersData) return undefined;
-    return ordersData.ids.map((id) => ordersData.entities[id]);
+  const currentPageOrders = React.useMemo(() => {
+    if (!ordersData) {
+      return undefined;
+    }
+
+    return ordersData.ids
+      .map((id) => ordersData.entities[id])
+      .filter((order): order is Order => order != null);
   }, [ordersData]);
 
-  // Flatten orders with line items for table display
+  React.useEffect(() => {
+    if (previousQueryKeyRef.current === queryKey) {
+      return;
+    }
+
+    previousQueryKeyRef.current = queryKey;
+    lastIntegratedPageKeyRef.current = null;
+    setCurrentOffset(0);
+    setPendingAppendOffset(null);
+    setLoadedOrders(undefined);
+    setHasMoreOrders(false);
+  }, [queryKey]);
+
+  React.useEffect(() => {
+    if (!currentPageOrders) {
+      return;
+    }
+
+    const currentPageKey = `${queryKey}|${currentOffset}|${fulfilledTimeStamp ?? 0}`;
+    if (lastIntegratedPageKeyRef.current === currentPageKey) {
+      return;
+    }
+
+    if (currentOffset === 0) {
+      setLoadedOrders(currentPageOrders);
+      setHasMoreOrders(currentPageOrders.length === PAGE_SIZE);
+      setPendingAppendOffset(null);
+      lastIntegratedPageKeyRef.current = currentPageKey;
+      return;
+    }
+
+    if (pendingAppendOffset === currentOffset) {
+      setLoadedOrders((previousOrders) => {
+        const existingIds = new Set((previousOrders ?? []).map((order) => order.id));
+        return [...(previousOrders ?? []), ...currentPageOrders.filter((order) => !existingIds.has(order.id))];
+      });
+      setHasMoreOrders(currentPageOrders.length === PAGE_SIZE);
+      setPendingAppendOffset(null);
+      lastIntegratedPageKeyRef.current = currentPageKey;
+      return;
+    }
+
+    lastIntegratedPageKeyRef.current = null;
+    setCurrentOffset(0);
+    setPendingAppendOffset(null);
+    setLoadedOrders(undefined);
+    setHasMoreOrders(false);
+  }, [currentOffset, currentPageOrders, fulfilledTimeStamp, pendingAppendOffset, queryKey]);
+
+  const orders = loadedOrders;
+
   const tableRowsData = React.useMemo((): TableRowData[] => {
-    if (!orders) return [];
+    if (!orders) {
+      return [];
+    }
+
     const rows: TableRowData[] = [];
-    orders.forEach((order: Order) => {
+    orders.forEach((order) => {
       if (order.line_items && order.line_items.length > 0) {
         order.line_items.forEach((lineItem: LineItem) => {
-          // Filter by productId if specified
           if (productId !== undefined && lineItem.product.id !== productId) {
             return;
           }
+
           const totalPrice = lineItem.product_price * lineItem.quantity;
           rows.push({
             order,
@@ -115,7 +198,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
           });
         });
       } else if (productId === undefined) {
-        // Only show orders without line items when no product filter is applied
         rows.push({
           order,
           lineItem: {
@@ -149,14 +231,16 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         });
       }
     });
-    return rows;
-  }, [orders, tills, productId]);
 
-  // Get unique order types for filters
+    return rows;
+  }, [orders, productId, tills]);
+
   const orderTypes = React.useMemo(() => {
     const types = new Set<string>();
     tableRowsData.forEach((row) => {
-      if (row.orderType) types.add(row.orderType);
+      if (row.orderType) {
+        types.add(row.orderType);
+      }
     });
     return Array.from(types).sort();
   }, [tableRowsData]);
@@ -193,22 +277,24 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
     defaultSort: { field: "orderDate", direction: "desc" },
   });
 
-  // Limit displayed data to INITIAL_DISPLAY_LIMIT unless showAll is true
-  const displayedData = React.useMemo(() => {
-    if (showAll) return filteredData;
-    return filteredData.slice(0, INITIAL_DISPLAY_LIMIT);
-  }, [filteredData, showAll]);
+  const handleLoadNextPage = React.useCallback(() => {
+    if (!hasMoreOrders) {
+      return;
+    }
 
-  const hasMoreData = filteredData.length > INITIAL_DISPLAY_LIMIT;
-  const remainingCount = filteredData.length - INITIAL_DISPLAY_LIMIT;
+    const nextOffset = currentOffset + PAGE_SIZE;
+    setPendingAppendOffset(nextOffset);
+    setCurrentOffset(nextOffset);
+  }, [currentOffset, hasMoreOrders]);
 
-  if (isLoading) {
+  if (isLoading && !orders) {
     return (
       <Card
         sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-          border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+          backgroundColor: (themeOverride) =>
+            themeOverride.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+          border: (themeOverride) =>
+            `1px solid ${themeOverride.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
           boxShadow: "none",
         }}
       >
@@ -223,9 +309,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
     return (
       <Card
         sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-          border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+          backgroundColor: (themeOverride) =>
+            themeOverride.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+          border: (themeOverride) =>
+            `1px solid ${themeOverride.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
           boxShadow: "none",
         }}
       >
@@ -242,9 +329,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
     return (
       <Card
         sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-          border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+          backgroundColor: (themeOverride) =>
+            themeOverride.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+          border: (themeOverride) =>
+            `1px solid ${themeOverride.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
           boxShadow: "none",
         }}
       >
@@ -260,9 +348,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   return (
     <Card
       sx={{
-        backgroundColor: (theme) =>
-          theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-        border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+        backgroundColor: (themeOverride) =>
+          themeOverride.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+        border: (themeOverride) =>
+          `1px solid ${themeOverride.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
         boxShadow: "none",
       }}
     >
@@ -281,29 +370,33 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
 
           {isSmallMobile ? (
             <Stack spacing={1}>
-              {displayedData.length === 0 ? (
+              {filteredData.length === 0 ? (
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem", textAlign: "center", py: 2 }}>
                   {t("overview.noOrdersMatchFilter")}
                 </Typography>
               ) : (
-                displayedData.map((row, idx) => (
+                filteredData.map((row, idx) => (
                   <Box
                     key={`${row.order.id}-${idx}`}
                     sx={{
-                      border: (theme) =>
-                        `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
+                      border: (themeOverride) =>
+                        `1px solid ${themeOverride.palette.mode === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}`,
                       borderRadius: 1,
                       p: 1.25,
                     }}
                   >
                     <Stack spacing={0.4}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Link
-                          to={`/node/${currentNode.id}/orders/${row.order.id}`}
-                          style={{ color: "#73BF69", textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}
-                        >
-                          #{row.order.id}
-                        </Link>
+                        {canViewOrderLinks ? (
+                          <Link
+                            to={`/node/${currentNode.id}/orders/${row.order.id}`}
+                            style={{ color: "#73BF69", textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}
+                          >
+                            #{row.order.id}
+                          </Link>
+                        ) : (
+                          <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>#{row.order.id}</Typography>
+                        )}
                         <Typography sx={{ color: "#73BF69", fontWeight: 600, fontSize: "0.85rem" }}>
                           {formatCurrency(row.lineItem.total_price)}
                         </Typography>
@@ -329,8 +422,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                   height: "8px",
                 },
                 "&::-webkit-scrollbar-track": {
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+                  backgroundColor: (themeOverride) =>
+                    themeOverride.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
                   borderRadius: "4px",
                 },
                 "&::-webkit-scrollbar-thumb": {
@@ -425,7 +518,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {displayedData.length === 0 ? (
+                    {filteredData.length === 0 ? (
                       <TableRow>
                         <TableCell
                           colSpan={8}
@@ -440,7 +533,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                         </TableCell>
                       </TableRow>
                     ) : (
-                      displayedData.map((row, idx) => (
+                      filteredData.map((row, idx) => (
                         <TableRow key={`${row.order.id}-${idx}`}>
                           <TableCell>
                             {isMobile
@@ -448,23 +541,27 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                               : DateTime.fromISO(row.order.booked_at).toFormat("yyyy-MM-dd HH:mm:ss")}
                           </TableCell>
                           <TableCell>
-                            <Link
-                              to={`/node/${currentNode.id}/orders/${row.order.id}`}
-                              style={{
-                                color: "#73BF69",
-                                textDecoration: "none",
-                                transition: "color 0.2s ease-in-out",
-                                fontSize: "inherit",
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.textDecoration = "underline";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.textDecoration = "none";
-                              }}
-                            >
-                              {row.order.id}
-                            </Link>
+                            {canViewOrderLinks ? (
+                              <Link
+                                to={`/node/${currentNode.id}/orders/${row.order.id}`}
+                                style={{
+                                  color: "#73BF69",
+                                  textDecoration: "none",
+                                  transition: "color 0.2s ease-in-out",
+                                  fontSize: "inherit",
+                                }}
+                                onMouseEnter={(event) => {
+                                  event.currentTarget.style.textDecoration = "underline";
+                                }}
+                                onMouseLeave={(event) => {
+                                  event.currentTarget.style.textDecoration = "none";
+                                }}
+                              >
+                                {row.order.id}
+                              </Link>
+                            ) : (
+                              row.order.id
+                            )}
                           </TableCell>
                           <TableCell>{row.order.order_type}</TableCell>
                           <TableCell>{row.tillName}</TableCell>
@@ -490,13 +587,13 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             </Box>
           )}
 
-          {hasMoreData && (
+          {hasMoreOrders && (
             <Box sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
               <Button
                 variant="text"
                 size="small"
-                onClick={() => setShowAll(!showAll)}
-                endIcon={showAll ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                onClick={handleLoadNextPage}
+                endIcon={<ExpandMoreIcon />}
                 sx={{
                   color: "#73BF69",
                   textTransform: "none",
@@ -506,9 +603,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                   },
                 }}
               >
-                {showAll
-                  ? t("overview.showLess")
-                  : t("overview.showMore", { count: remainingCount })}
+                {t("overview.showMore", { count: PAGE_SIZE })}
               </Button>
             </Box>
           )}

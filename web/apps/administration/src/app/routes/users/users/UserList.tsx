@@ -35,13 +35,13 @@ export const UserList: React.FC = () => {
     return <Loading />;
   }
 
-  const openConfirmDeleteDialog = (userId: number) => {
+  const openConfirmDeleteDialog = (userId: number, userNodeId: number) => {
     openModal({
       type: "confirm",
       title: t("deleteUser"),
       content: t("deleteUserDescription"),
       onConfirm: () => {
-        deleteUser({ nodeId: currentNode.id, userId })
+        deleteUser({ nodeId: userNodeId, userId })
           .unwrap()
           .catch(() => undefined);
       },
@@ -63,6 +63,12 @@ export const UserList: React.FC = () => {
       field: "display_name",
       headerName: t("userDisplayName"),
       flex: 1,
+    },
+    {
+      field: "email",
+      headerName: t("userEmail"),
+      flex: 1,
+      renderCell: (params) => params.row.email || t("user.noEmail"),
     },
     {
       field: "description",
@@ -102,7 +108,7 @@ export const UserList: React.FC = () => {
                 icon={<DeleteIcon />}
                 color="primary"
                 label={t("delete")}
-                onClick={() => openConfirmDeleteDialog(params.row.id)}
+                onClick={() => openConfirmDeleteDialog(params.row.id, params.row.node_id)}
               />,
             ]
           : [],

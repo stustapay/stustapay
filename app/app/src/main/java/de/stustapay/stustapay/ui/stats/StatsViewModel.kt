@@ -8,6 +8,7 @@ import de.stustapay.stustapay.repository.MgmtRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import javax.inject.Inject
 
@@ -37,7 +38,9 @@ class StatsViewModel @Inject constructor(
 
     suspend fun fetchHistory() {
         _status.update { StatsStatus.Fetching }
-        when (val res = mgmtRepository.getRevenueStats(null, null)) {
+        val now = OffsetDateTime.now()
+        val fromTime = now.toLocalDate().atTime(LocalTime.MIN).atOffset(now.offset)
+        when (val res = mgmtRepository.getRevenueStats(fromTime, now)) {
             is Response.OK -> {
                 _stats.update {
                     res.data

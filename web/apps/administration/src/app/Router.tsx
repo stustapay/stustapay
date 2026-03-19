@@ -65,11 +65,12 @@ import {
 } from "./routes/users";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
-import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch } from "./routes/customers";
+import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch, CustomerTagSwap } from "./routes/customers";
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
 import { HeadwindDevicesPage } from "./routes/mdm";
+import { HelpPage } from "./routes/help";
 import {
   EntryAreaCreate,
   EntryAreaDetail,
@@ -89,6 +90,10 @@ const router = createBrowserRouter([
     element: <AuthenticatedRoot />,
     errorElement: <ErrorPage />,
     children: [
+      {
+        path: "help",
+        element: <HelpPage />,
+      },
       {
         path: "profile",
         element: <Profile />,
@@ -188,6 +193,10 @@ const router = createBrowserRouter([
               {
                 path: "search",
                 element: <CustomerSearch />,
+              },
+              {
+                path: "tag-swap",
+                element: <CustomerTagSwap />,
               },
               {
                 path: ":customerId",
@@ -494,6 +503,7 @@ const router = createBrowserRouter([
           },
           {
             path: "orders",
+            element: <PrivilegeGuard privilege="node_administration" />,
             children: [
               {
                 path: ":orderId/edit",

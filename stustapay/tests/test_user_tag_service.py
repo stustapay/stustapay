@@ -212,6 +212,75 @@ async def test_create_accounts_for_tags_empty_list(
     assert result["skipped"] == 0
 
 
+async def test_update_user_tag_account_creation_blocked(
+    user_tag_service: UserTagService,
+    event_node: Node,
+    event_admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    user_tag = await create_random_user_tag()
+
+    updated = await user_tag_service.update_user_tag_account_creation_blocked(
+        token=event_admin_token,
+        node_id=event_node.id,
+        user_tag_id=user_tag.id,
+        account_creation_blocked=True,
+    )
+    assert updated.account_creation_blocked is True
+
+    reverted = await user_tag_service.update_user_tag_account_creation_blocked(
+        token=event_admin_token,
+        node_id=event_node.id,
+        user_tag_id=user_tag.id,
+        account_creation_blocked=False,
+    )
+    assert reverted.account_creation_blocked is False
+
+
+async def test_create_accounts_for_tags_ignores_blocked_tags(
+    user_tag_service: UserTagService,
+    event_node: Node,
+    event_admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
+):
+    allowed_tag = await create_random_user_tag()
+    blocked_tag = await create_random_user_tag()
+    await db_connection.execute("update user_tag set account_creation_blocked = true where id = $1", blocked_tag.id)
+
+    count = await user_tag_service.count_tags_without_accounts(token=event_admin_token, node_id=event_node.id)
+    result = await user_tag_service.create_accounts_for_tags(
+        token=event_admin_token,
+        node_id=event_node.id,
+        user_tag_ids=[allowed_tag.id, blocked_tag.id],
+    )
+
+    allowed_account_count = await db_connection.fetchval("select count(*) from account where user_tag_id = $1", allowed_tag.id)
+    blocked_account_count = await db_connection.fetchval("select count(*) from account where user_tag_id = $1", blocked_tag.id)
+
+    assert count >= 1
+    assert result["created"] == 1
+    assert result["skipped"] == 0
+    assert allowed_account_count == 1
+    assert blocked_account_count == 0
+
+
+async def test_blocked_tag_rejects_private_account_creation(
+    db_connection: Connection,
+    event_node: Node,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    blocked_tag = await create_random_user_tag()
+    await db_connection.execute("update user_tag set account_creation_blocked = true where id = $1", blocked_tag.id)
+
+    with pytest.raises(Exception, match="Tag is blocked from account creation"):
+        await db_connection.execute(
+            "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private')",
+            event_node.id,
+            blocked_tag.id,
+        )
+
+
 async def test_find_user_tags_by_decimal_uid(
     user_tag_service: UserTagService,
     event_node: Node,
@@ -283,12 +352,43 @@ async def test_find_user_tags_by_pin(
 
     # Search by PIN
     results = await user_tag_service.find_user_tags(
-        token=global_admin_token, node_id=event_node.id, search_term=pin
+        token=global_admin_token, node_id=event_node.id, search_term=pin.upper()
     )
 
     # Should find the tag
     found_tag = next((t for t in results if t.id == tag.id), None)
     assert found_tag is not None
+
+
+async def test_find_user_tags_by_comment_and_group_tag(
+    user_tag_service: UserTagService,
+    event_node: Node,
+    global_admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
+):
+    tag = await create_random_user_tag()
+    await db_connection.execute(
+        "update user_tag set comment = $1, group_tag = $2 where id = $3",
+        "Blue Crew Alpha",
+        "North Gate",
+        tag.id,
+    )
+
+    search_terms = [
+        "crew",
+        "NORTH",
+        "alpha gate",
+    ]
+
+    for search_term in search_terms:
+        results = await user_tag_service.find_user_tags(
+            token=global_admin_token,
+            node_id=event_node.id,
+            search_term=search_term,
+        )
+        found_tag = next((result_tag for result_tag in results if result_tag.id == tag.id), None)
+        assert found_tag is not None, f"expected user tag match for search term {search_term!r}"
 
 
 async def test_create_user_tags_with_hex_uid(

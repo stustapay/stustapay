@@ -584,3 +584,26 @@ create trigger create_customer_info_trigger
     for each row
     when (NEW.type = 'private')
 execute function create_customer_info();
+
+create or replace function ensure_private_account_tag_is_allowed() returns trigger as
+$$
+begin
+    if NEW.type = 'private' and NEW.user_tag_id is not null and exists(
+        select 1
+        from user_tag ut
+        where ut.id = NEW.user_tag_id
+          and coalesce(ut.account_creation_blocked, false)
+    ) then
+        raise exception 'Tag is blocked from account creation';
+    end if;
+
+    return NEW;
+end
+$$ language plpgsql set search_path = "$user", public;
+
+drop trigger if exists ensure_private_account_tag_is_allowed_trigger on account;
+create trigger ensure_private_account_tag_is_allowed_trigger
+    before insert or update of user_tag_id, type
+    on account
+    for each row
+execute function ensure_private_account_tag_is_allowed();

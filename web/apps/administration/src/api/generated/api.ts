@@ -284,6 +284,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/auth/change-password`, method: "POST", body: queryArg.changePasswordPayload }),
         invalidatesTags: ["auth"],
       }),
+      getProfile: build.query<GetProfileApiResponse, GetProfileApiArg>({
+        query: () => ({ url: `/auth/profile` }),
+        providesTags: ["auth"],
+      }),
+      updateProfile: build.mutation<UpdateProfileApiResponse, UpdateProfileApiArg>({
+        query: (queryArg) => ({ url: `/auth/profile`, method: "POST", body: queryArg.updateCurrentUserProfilePayload }),
+        invalidatesTags: ["auth"],
+      }),
       logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
         query: () => ({ url: `/auth/logout`, method: "POST" }),
         invalidatesTags: ["auth"],
@@ -666,6 +674,18 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/config`, method: "POST", body: queryArg.configEntry }),
         invalidatesTags: ["config"],
       }),
+      getGlobalEmailConfig: build.query<GetGlobalEmailConfigApiResponse, GetGlobalEmailConfigApiArg>({
+        query: () => ({ url: `/config/email` }),
+        providesTags: ["config"],
+      }),
+      updateGlobalEmailConfig: build.mutation<UpdateGlobalEmailConfigApiResponse, UpdateGlobalEmailConfigApiArg>({
+        query: (queryArg) => ({ url: `/config/email`, method: "POST", body: queryArg.globalEmailConfig }),
+        invalidatesTags: ["config"],
+      }),
+      sendGlobalEmailTest: build.mutation<SendGlobalEmailTestApiResponse, SendGlobalEmailTestApiArg>({
+        query: () => ({ url: `/config/email/test`, method: "POST" }),
+        invalidatesTags: ["config"],
+      }),
       listSystemAccounts: build.query<ListSystemAccountsApiResponse, ListSystemAccountsApiArg>({
         query: (queryArg) => ({
           url: `/system-accounts`,
@@ -768,6 +788,8 @@ const injectedRtkApi = api
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
             limit: queryArg.limit,
+            offset: queryArg.offset,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["orders"],
@@ -873,6 +895,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -886,6 +909,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -899,6 +923,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -912,6 +937,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -925,6 +951,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -938,6 +965,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -951,6 +979,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -964,6 +993,7 @@ const injectedRtkApi = api
             from_timestamp: queryArg.fromTimestamp,
             till_id: queryArg.tillId,
             subnode_id: queryArg.subnodeId,
+            selected_dates: queryArg.selectedDates,
           },
         }),
         providesTags: ["stats"],
@@ -1137,6 +1167,20 @@ const injectedRtkApi = api
           url: `/user-tags/${queryArg.userTagId}/update-group-tag`,
           method: "POST",
           body: queryArg.updateGroupTagPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
+      updateUserTagAccountCreationBlocked: build.mutation<
+        UpdateUserTagAccountCreationBlockedApiResponse,
+        UpdateUserTagAccountCreationBlockedApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/user-tags/${queryArg.userTagId}/update-account-creation-blocked`,
+          method: "POST",
+          body: queryArg.updateAccountCreationBlockedPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1390,6 +1434,31 @@ const injectedRtkApi = api
           url: `/customers/find-customers`,
           method: "POST",
           body: queryArg.findCustomerPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
+      findCustomerTagSwapCandidates: build.mutation<
+        FindCustomerTagSwapCandidatesApiResponse,
+        FindCustomerTagSwapCandidatesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/customers/tag-swap/find-tags`,
+          method: "POST",
+          body: queryArg.findTagSwapCandidatesPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
+      swapCustomerTag: build.mutation<SwapCustomerTagApiResponse, SwapCustomerTagApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/tag-swap`,
+          method: "POST",
+          body: queryArg.swapCustomerTagPayload,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -2047,6 +2116,12 @@ export type ChangePasswordApiResponse = /** status 200 Successful Response */ an
 export type ChangePasswordApiArg = {
   changePasswordPayload: ChangePasswordPayload;
 };
+export type GetProfileApiResponse = /** status 200 Successful Response */ CurrentUser;
+export type GetProfileApiArg = void;
+export type UpdateProfileApiResponse = /** status 200 Successful Response */ CurrentUser;
+export type UpdateProfileApiArg = {
+  updateCurrentUserProfilePayload: UpdateCurrentUserProfilePayload;
+};
 export type LogoutApiResponse = unknown;
 export type LogoutApiArg = void;
 export type ListTillsApiResponse = /** status 200 Successful Response */ NormalizedListTillInt;
@@ -2240,6 +2315,16 @@ export type SetConfigEntryApiResponse = /** status 200 Successful Response */ Co
 export type SetConfigEntryApiArg = {
   configEntry: ConfigEntry;
 };
+export type GetGlobalEmailConfigApiResponse = /** status 200 Successful Response */ GlobalEmailConfig;
+export type GetGlobalEmailConfigApiArg = void;
+export type UpdateGlobalEmailConfigApiResponse = /** status 200 Successful Response */ GlobalEmailConfig;
+export type UpdateGlobalEmailConfigApiArg = {
+  globalEmailConfig: GlobalEmailConfig;
+};
+export type SendGlobalEmailTestApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string;
+};
+export type SendGlobalEmailTestApiArg = void;
 export type ListSystemAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type ListSystemAccountsApiArg = {
   nodeId: number;
@@ -2295,6 +2380,8 @@ export type ListOrdersFilteredApiArg = {
   tillId?: number | null;
   subnodeId?: number | null;
   limit?: number | null;
+  offset?: number | null;
+  selectedDates?: string[] | null;
 };
 export type ListOrdersApiResponse = /** status 200 Successful Response */ NormalizedListOrderInt;
 export type ListOrdersApiArg = {
@@ -2354,6 +2441,7 @@ export type GetProductStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetVoucherStatsApiResponse = /** status 200 Successful Response */ VoucherStats;
 export type GetVoucherStatsApiArg = {
@@ -2362,6 +2450,7 @@ export type GetVoucherStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetEntryStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetEntryStatsApiArg = {
@@ -2370,6 +2459,7 @@ export type GetEntryStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetTopUpStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetTopUpStatsApiArg = {
@@ -2378,6 +2468,7 @@ export type GetTopUpStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetPayOutStatsApiArg = {
@@ -2386,6 +2477,7 @@ export type GetPayOutStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetDashboardOverviewApiResponse = /** status 200 Successful Response */ DashboardOverview;
 export type GetDashboardOverviewApiArg = {
@@ -2394,6 +2486,7 @@ export type GetDashboardOverviewApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetRevenueByCounterApiResponse = /** status 200 Successful Response */ RevenueByCounter;
 export type GetRevenueByCounterApiArg = {
@@ -2402,6 +2495,7 @@ export type GetRevenueByCounterApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodBreakdown;
 export type GetPaymentMethodStatsApiArg = {
@@ -2410,6 +2504,7 @@ export type GetPaymentMethodStatsApiArg = {
   fromTimestamp?: string | null;
   tillId?: number | null;
   subnodeId?: number | null;
+  selectedDates?: string[] | null;
 };
 export type GetAvailableDatesApiResponse = /** status 200 Successful Response */ string[];
 export type GetAvailableDatesApiArg = {
@@ -2497,6 +2592,12 @@ export type UpdateUserTagGroupTagApiArg = {
   userTagId: number;
   nodeId: number;
   updateGroupTagPayload: UpdateGroupTagPayload;
+};
+export type UpdateUserTagAccountCreationBlockedApiResponse = /** status 200 Successful Response */ UserTagDetail;
+export type UpdateUserTagAccountCreationBlockedApiArg = {
+  userTagId: number;
+  nodeId: number;
+  updateAccountCreationBlockedPayload: UpdateAccountCreationBlockedPayload;
 };
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = {
@@ -2646,6 +2747,16 @@ export type FindCustomersApiResponse = /** status 200 Successful Response */ Cus
 export type FindCustomersApiArg = {
   nodeId: number;
   findCustomerPayload: FindCustomerPayload;
+};
+export type FindCustomerTagSwapCandidatesApiResponse = /** status 200 Successful Response */ UserTagSwapCandidate[];
+export type FindCustomerTagSwapCandidatesApiArg = {
+  nodeId: number;
+  findTagSwapCandidatesPayload: FindTagSwapCandidatesPayload;
+};
+export type SwapCustomerTagApiResponse = /** status 200 Successful Response */ SwapCustomerTagResponse;
+export type SwapCustomerTagApiArg = {
+  nodeId: number;
+  swapCustomerTagPayload: SwapCustomerTagPayload;
 };
 export type GetCustomerApiResponse = /** status 200 Successful Response */ CustomerRead;
 export type GetCustomerApiArg = {
@@ -2948,7 +3059,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
-  has_bookings: boolean;
+  has_bookings?: boolean;
   type: ProductType;
   price_per_voucher?: number | null;
 };
@@ -3010,6 +3121,7 @@ export type NormalizedListUserInt = {
 };
 export type Privilege =
   | "node_administration"
+  | "global_email_management"
   | "customer_management"
   | "payout_management"
   | "entry_management"
@@ -3145,6 +3257,9 @@ export type LoginPayload = {
 export type ChangePasswordPayload = {
   old_password: string;
   new_password: string;
+};
+export type UpdateCurrentUserProfilePayload = {
+  email?: string | null;
 };
 export type Till = {
   name: string;
@@ -3452,6 +3567,17 @@ export type NormalizedListConfigEntryStr = {
     [key: string]: ConfigEntry;
   };
 };
+export type GlobalEmailConfig = {
+  email_enabled: boolean;
+  email_default_sender?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_username?: string | null;
+  email_smtp_password?: string | null;
+  invitation_subject?: string | null;
+  invitation_text_body?: string | null;
+  invitation_html_body?: string | null;
+};
 export type AccountType =
   | "private"
   | "sale_exit"
@@ -3520,7 +3646,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: AccountRead;
+    [key: string]: Account;
   };
 };
 export type FindAccountPayload = {
@@ -3897,6 +4023,7 @@ export type UserTagDetail = {
   user_id?: number | null;
   is_vip?: boolean;
   group_tag?: string | null;
+  account_creation_blocked?: boolean;
   account_history: UserTagAccountAssociation[];
 };
 export type NormalizedListUserTagDetailInt = {
@@ -3923,6 +4050,9 @@ export type UpdateVipStatusPayload = {
 };
 export type UpdateGroupTagPayload = {
   group_tag: string | null;
+};
+export type UpdateAccountCreationBlockedPayload = {
+  account_creation_blocked: boolean;
 };
 export type TseType = "diebold_nixdorf";
 export type TseStatus = "new" | "active" | "disabled" | "failed";
@@ -4412,6 +4542,30 @@ export type CustomerRead = {
 export type FindCustomerPayload = {
   search_term: string;
 };
+export type UserTagSwapCandidate = {
+  user_tag_id: number;
+  uid: number | null;
+  pin: string;
+  comment?: string | null;
+  account_id?: number | null;
+  account_creation_blocked?: boolean;
+  target_mode?: string | null;
+  target_reason?: string | null;
+};
+export type FindTagSwapCandidatesPayload = {
+  search_term: string;
+  mode: string;
+};
+export type SwapCustomerTagResponse = {
+  customer_account_id: number;
+  used_existing_target_account: boolean;
+};
+export type SwapCustomerTagPayload = {
+  source_user_tag_id: number;
+  target_user_tag_id: number;
+  comment: string;
+  block_source_tag?: boolean;
+};
 export type TerminalMode = "till" | "entry" | "exit";
 export type Terminal = {
   name: string;
@@ -4660,6 +4814,9 @@ export const {
   useDeleteTaxRateMutation,
   useLoginMutation,
   useChangePasswordMutation,
+  useGetProfileQuery,
+  useLazyGetProfileQuery,
+  useUpdateProfileMutation,
   useLogoutMutation,
   useListTillsQuery,
   useLazyListTillsQuery,
@@ -4715,6 +4872,10 @@ export const {
   useListConfigEntriesQuery,
   useLazyListConfigEntriesQuery,
   useSetConfigEntryMutation,
+  useGetGlobalEmailConfigQuery,
+  useLazyGetGlobalEmailConfigQuery,
+  useUpdateGlobalEmailConfigMutation,
+  useSendGlobalEmailTestMutation,
   useListSystemAccountsQuery,
   useLazyListSystemAccountsQuery,
   useFindAccountsMutation,
@@ -4786,6 +4947,7 @@ export const {
   useUpdateUserTagCommentMutation,
   useUpdateUserTagVipStatusMutation,
   useUpdateUserTagGroupTagMutation,
+  useUpdateUserTagAccountCreationBlockedMutation,
   useListTsesQuery,
   useLazyListTsesQuery,
   useCreateTseMutation,
@@ -4828,6 +4990,8 @@ export const {
   useGetSumupCheckoutQuery,
   useLazyGetSumupCheckoutQuery,
   useFindCustomersMutation,
+  useFindCustomerTagSwapCandidatesMutation,
+  useSwapCustomerTagMutation,
   useGetCustomerQuery,
   useLazyGetCustomerQuery,
   usePreventCustomerPayoutMutation,

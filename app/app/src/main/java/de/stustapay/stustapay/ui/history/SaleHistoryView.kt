@@ -17,9 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,13 +40,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.Order
-import de.stustapay.api.models.OrderType
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
-import de.stustapay.stustapay.ui.common.operator.OperatorPalette
-import de.stustapay.stustapay.ui.common.operator.OperatorPanel
-import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
+import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
+import de.stustapay.stustapay.ui.nav.NavScaffold
 import de.stustapay.libssp.ui.theme.errorButtonColors
 import de.stustapay.libssp.util.formatCurrencyValue
 import kotlinx.coroutines.launch
@@ -65,106 +64,178 @@ fun SaleHistoryView(
     val haptic = LocalHapticFeedback.current
     val status by viewModel.status.collectAsStateWithLifecycle()
     val cancelStatus by viewModel.cancelStatus.collectAsStateWithLifecycle()
+    val canScanCustomerHistory by viewModel.canScanCustomerHistory.collectAsStateWithLifecycle()
+    val historyFilter by viewModel.historyFilter.collectAsStateWithLifecycle()
+    val scanState = rememberNfcScanDialogState()
 
     BackHandler {
         leaveView()
     }
 
-    LaunchedEffect(null) {
+    LaunchedEffect(Unit) {
         viewModel.fetchHistory()
     }
 
-    OperatorScaffold(
-        title = stringResource(R.string.history_title),
-        subtitle = "Recent sales with detail drill-down and last-sale cancellation.",
-        icon = Icons.Filled.History,
-        terminalLabel = "Dialog",
-        footerHint = saleHistoryStatusText(status),
-        footerSection = "History",
-        footerStatus = "${sales.size} sales",
-        onBack = leaveView,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(state = scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (sales.isEmpty()) {
-                OperatorInfoCard(
-                    title = "No sales loaded",
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        text = "Fetch history from the backend to show recent order activity on this terminal.",
-                        color = OperatorPalette.subtitle,
-                    )
-                }
-            }
-
-            sales.forEach { sale ->
-                OperatorPanel(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            viewModel.idleStatus()
-                            detailOrder = sale
-                        },
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            sale.bookedAt.toZonedDateTime()
-                                .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
-                            fontSize = 24.sp,
-                            color = OperatorPalette.title,
-                        )
-                        Text(
-                            formatCurrencyValue(sale.totalPrice),
-                            fontSize = 24.sp,
-                            color = OperatorPalette.accent,
-                        )
-                    }
-                }
+    NfcScanDialog(
+        state = scanState,
+        onScan = { tag ->
+            scope.launch {
+                detailOrder = null
+                cancelOrder = false
+                viewModel.fetchHistoryForCustomer(tag.uid)
             }
         }
+    ) {
+        Text(
+            stringResource(R.string.history_scan_prompt),
+            textAlign = TextAlign.Center,
+            fontSize = 36.sp
+        )
+    }
+
+    NavScaffold(
+        title = { Text(stringResource(R.string.history_title)) },
+        navigateBack = leaveView
+    ) {
+        Scaffold(
+            content = { padding ->
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .padding(10.dp)
+                        .verticalScroll(state = scrollState)
+                ) {
+                    if (canScanCustomerHistory) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { scanState.open() }
+                        ) {
+                            Text(stringResource(R.string.history_scan_customer), fontSize = 24.sp)
+                        }
+
+                        if (historyFilter is SaleHistoryFilter.CustomerOrders) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    scope.launch {
+                                        detailOrder = null
+                                        cancelOrder = false
+                                        viewModel.fetchHistory()
+                                    }
+                                }
+                            ) {
+                                Text(stringResource(R.string.history_show_recent), fontSize = 24.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
+                    Text(
+                        text = when (historyFilter) {
+                            SaleHistoryFilter.RecentOrders -> stringResource(R.string.history_showing_recent)
+                            is SaleHistoryFilter.CustomerOrders -> stringResource(R.string.history_showing_customer)
+                        },
+                        fontSize = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (sales.isEmpty() && status is SaleHistoryStatus.Done) {
+                        Text(stringResource(R.string.history_empty), fontSize = 24.sp)
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
+                    for (sale in sales) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp)
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.idleStatus()
+                                    detailOrder = sale
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                sale.bookedAt.toZonedDateTime()
+                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                    .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
+                                fontSize = 24.sp
+                            )
+                            Text(formatCurrencyValue(sale.totalPrice), fontSize = 24.sp)
+                        }
+                    }
+                }
+            },
+            bottomBar = {
+                Column {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                        Column {
+                            val text = when (status) {
+                                is SaleHistoryStatus.Idle -> {
+                                    stringResource(R.string.common_status_idle)
+                                }
+
+                                is SaleHistoryStatus.Fetching -> {
+                                    stringResource(R.string.common_status_fetching)
+                                }
+
+                                is SaleHistoryStatus.Done -> {
+                                    stringResource(R.string.common_status_done)
+                                }
+
+                                is SaleHistoryStatus.Failed -> {
+                                    (status as SaleHistoryStatus.Failed).msg
+                                }
+                            }
+                            Text(text, fontSize = 24.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        )
     }
 
     if (detailOrder != null) {
         val sale = detailOrder!!
         Dialog(onDismissRequest = { detailOrder = null }) {
-            OperatorPanel(
-                backgroundColor = OperatorPalette.panel,
-                borderColor = OperatorPalette.panelBorder,
+            Card(
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.width(350.dp),
+                elevation = 8.dp,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column {
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .padding(10.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            fontSize = 24.sp,
-                            color = OperatorPalette.title,
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), fontSize = 24.sp
                         )
 
                         Text(
                             sale.bookedAt.toZonedDateTime()
                                 .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                .format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-                            fontSize = 24.sp,
-                            color = OperatorPalette.title,
+                                .format(DateTimeFormatter.ofPattern("HH:mm:ss")), fontSize = 24.sp
                         )
                     }
+
+                    Divider()
 
                     for (item in sale.lineItems) {
                         ProductConfirmItem(
@@ -174,14 +245,19 @@ fun SaleHistoryView(
                         )
                     }
 
+                    Divider()
+
                     ProductConfirmItem(
                         name = stringResource(R.string.history_sum),
                         price = sale.totalPrice,
                     )
 
-                    if (sale.id == sales.first().id && sale.orderType == OrderType.sale) {
+                    Divider()
+
+                    if (viewModel.canCancelOrder(sale)) {
                         Button(modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .padding(10.dp),
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 cancelOrder = true
@@ -197,7 +273,7 @@ fun SaleHistoryView(
     when (val castedStatus = cancelStatus) {
         is SaleHistoryStatus.Done -> {
             AlertDialog(
-                title = { Text("Successfully canceled order") },
+                title = { Text(stringResource(R.string.history_cancel_success)) },
                 onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
                 confirmButton = {
                     Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
@@ -208,8 +284,8 @@ fun SaleHistoryView(
         }
         is SaleHistoryStatus.Failed -> {
             AlertDialog(
-                title = { Text("Could not cancel order") },
-                text = { Text(castedStatus.msg)},
+                title = { Text(stringResource(R.string.history_cancel_error)) },
+                text = { Text(castedStatus.msg) },
                 onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
                 confirmButton = {
                     Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
@@ -229,21 +305,21 @@ fun SaleHistoryView(
             detailOrder = null
             cancelOrder = false
         }) {
-            OperatorPanel(
-                backgroundColor = OperatorPalette.panel,
-                borderColor = OperatorPalette.panelBorder,
+            Card(
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.width(350.dp),
+                elevation = 8.dp,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column {
                     Text(
                         stringResource(R.string.history_confirm),
                         textAlign = TextAlign.Center,
-                        fontSize = 48.sp,
-                        color = OperatorPalette.title,
+                        fontSize = 48.sp
                     )
 
                     Button(modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(10.dp),
                         colors = errorButtonColors(),
                         onClick = {
                             scope.launch {
@@ -259,14 +335,5 @@ fun SaleHistoryView(
             }
         }
 
-    }
-}
-
-private fun saleHistoryStatusText(status: SaleHistoryStatus): String {
-    return when (status) {
-        is SaleHistoryStatus.Idle -> "Idle"
-        is SaleHistoryStatus.Fetching -> "Fetching history from the backend."
-        is SaleHistoryStatus.Done -> "History loaded."
-        is SaleHistoryStatus.Failed -> status.msg
     }
 }

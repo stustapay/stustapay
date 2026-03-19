@@ -14,6 +14,16 @@ from stustapay.core.service.common.decorators import requires_node, requires_use
 from sftkit.error import InvalidArgument, NotFound
 
 
+def _get_search_patterns(search_term: str) -> list[str]:
+    patterns = []
+    for token in search_term.strip().split():
+        normalized_token = token.lower()
+        if normalized_token.startswith("0x") and len(normalized_token) > 2:
+            normalized_token = normalized_token[2:]
+        patterns.append(f"%{normalized_token}%")
+    return patterns
+
+
 async def fetch_user_tag_secret(conn: Connection, secret_id: int) -> UserTagSecret | None:
     return await conn.fetch_maybe_one(
         UserTagSecret,
@@ -86,6 +96,17 @@ async def get_or_assign_user_tag(conn: Connection, node: Node, pin: Optional[str
     return user_tag_id
 
 
+async def ensure_private_account_creation_allowed(conn: Connection, user_tag_id: int):
+    is_blocked = await conn.fetchval(
+        "select account_creation_blocked from user_tag where id = $1",
+        user_tag_id,
+    )
+    if is_blocked is None:
+        raise NotFound(element_type="user_tag", element_id=str(user_tag_id))
+    if is_blocked:
+        raise InvalidArgument("Tag is blocked from account creation")
+
+
 async def create_accounts_for_tags(
     conn: Connection, node_id: int, user_tag_ids: list[int] | None = None
 ) -> dict[str, int]:
@@ -105,7 +126,7 @@ async def create_accounts_for_tags(
             select ut.id
             from user_tag ut
             left join account a on a.user_tag_id = ut.id
-            where ut.node_id = $1 and a.id is null
+            where ut.node_id = $1 and a.id is null and coalesce(ut.account_creation_blocked, false) = false
             """,
             node_id,
         )
@@ -116,7 +137,7 @@ async def create_accounts_for_tags(
             select ut.id
             from user_tag ut
             left join account a on a.user_tag_id = ut.id
-            where ut.id = any($1) and ut.node_id = $2 and a.id is null
+            where ut.id = any($1) and ut.node_id = $2 and a.id is null and coalesce(ut.account_creation_blocked, false) = false
             """,
             user_tag_ids,
             node_id,
@@ -146,6 +167,7 @@ async def create_accounts_for_tags(
 
     for tag_row in tags_without_accounts:
         tag_id = tag_row["id"]
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=tag_id)
         # Create account for this tag
         await conn.execute(
             "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private')",
@@ -257,10 +279,38 @@ class UserTagService(Service[Config]):
         assert detail is not None
         return detail
 
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user([Privilege.node_administration])
+    async def update_user_tag_account_creation_blocked(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        current_user: CurrentUser,
+        user_tag_id: int,
+        account_creation_blocked: bool,
+    ) -> UserTagDetail:
+        ret = await conn.fetchval(
+            "update user_tag set account_creation_blocked = $1 where id = $2 and node_id = $3 returning id",
+            account_creation_blocked,
+            user_tag_id,
+            node.id,
+        )
+        if ret is None:
+            raise InvalidArgument(f"User tag {user_tag_id} does not exist")
+
+        detail = await self.get_user_tag_detail(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
+            conn=conn, node_id=node.id, current_user=current_user, user_tag_id=user_tag_id
+        )
+        assert detail is not None
+        return detail
+
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user([Privilege.entry_management])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
+        search_patterns = _get_search_patterns(search_term)
         # Try to parse search term as integer for UID search
         search_uid: int | None = None
         try:
@@ -275,24 +325,41 @@ class UserTagService(Service[Config]):
                 pass
 
         if search_uid is not None:
-            # Search by UID (integer), hex representation, and PIN
+            # Search by exact UID, and case-insensitive partial matches on text fields.
             return await conn.fetch_many(
                 UserTagDetail,
                 "select * from user_tag_with_history utwh "
-                "where (uid = $1 or (uid is not null and to_hex(uid::bigint) like $2) or lower(pin) like $2) "
-                "and node_id = any($3)",
+                "where node_id = any($2) and ("
+                "   uid = $1 "
+                "   or not exists ("
+                "       select 1 from unnest($3::text[]) as token(pattern) "
+                "       where not ("
+                "           coalesce(pin, '') ilike token.pattern "
+                "           or coalesce(comment, '') ilike token.pattern "
+                "           or coalesce(group_tag, '') ilike token.pattern "
+                "           or (uid is not null and to_hex(uid::bigint) ilike token.pattern)"
+                "       )"
+                "   )"
+                ")",
                 search_uid,
-                f"%{search_term.lower()}%",
                 node.ids_to_event_node,
+                search_patterns,
             )
         else:
-            # Search by hex representation and PIN only
             return await conn.fetch_many(
                 UserTagDetail,
                 "select * from user_tag_with_history utwh "
-                "where ((uid is not null and to_hex(uid::bigint) like $1) or lower(pin) like $1) and node_id = any($2)",
-                f"%{search_term.lower()}%",
+                "where node_id = any($1) and not exists ("
+                "   select 1 from unnest($2::text[]) as token(pattern) "
+                "   where not ("
+                "       coalesce(pin, '') ilike token.pattern "
+                "       or coalesce(comment, '') ilike token.pattern "
+                "       or coalesce(group_tag, '') ilike token.pattern "
+                "       or (uid is not null and to_hex(uid::bigint) ilike token.pattern)"
+                "   )"
+                ")",
                 node.ids_to_event_node,
+                search_patterns,
             )
 
     @with_db_transaction
@@ -313,7 +380,7 @@ class UserTagService(Service[Config]):
             select count(*)
             from user_tag ut
             left join account a on a.user_tag_id = ut.id
-            where ut.node_id = $1 and a.id is null
+            where ut.node_id = $1 and a.id is null and coalesce(ut.account_creation_blocked, false) = false
             """,
             node.id,
         )

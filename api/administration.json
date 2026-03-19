@@ -1502,6 +1502,82 @@
         ]
       }
     },
+    "/auth/profile": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "get current user profile",
+        "operationId": "get_profile",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUser"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "update current user profile",
+        "operationId": "update_profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCurrentUserProfilePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUser"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -3719,6 +3795,115 @@
         ]
       }
     },
+    "/config/email": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Global Email Config",
+        "operationId": "get_global_email_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalEmailConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Update Global Email Config",
+        "operationId": "update_global_email_config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalEmailConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalEmailConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/config/email/test": {
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Send Global Email Test",
+        "operationId": "send_global_email_test",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Send Global Email Test Config Email Test Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/system-accounts": {
       "get": {
         "tags": [
@@ -4367,6 +4552,41 @@
                 }
               ],
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5083,6 +5303,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5198,6 +5437,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5315,6 +5573,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5430,6 +5707,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5547,6 +5843,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5662,6 +5977,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -5779,6 +6113,25 @@
               ],
               "title": "Subnode Id"
             }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
+            }
           }
         ],
         "responses": {
@@ -5894,6 +6247,25 @@
                 }
               ],
               "title": "Subnode Id"
+            }
+          },
+          {
+            "name": "selected_dates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Selected Dates"
             }
           }
         ],
@@ -6945,6 +7317,75 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateGroupTagPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTagDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user-tags/{user_tag_id}/update-account-creation-blocked": {
+      "post": {
+        "tags": [
+          "user_tags"
+        ],
+        "summary": "Update User Tag Account Creation Blocked",
+        "operationId": "update_user_tag_account_creation_blocked",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Tag Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountCreationBlockedPayload"
               }
             }
           }
@@ -8763,6 +9204,130 @@
                     "$ref": "#/components/schemas/Customer"
                   },
                   "title": "Response Find Customers Customers Find Customers Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/tag-swap/find-tags": {
+      "post": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Find Customer Tag Swap Candidates",
+        "operationId": "find_customer_tag_swap_candidates",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindTagSwapCandidatesPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserTagSwapCandidate"
+                  },
+                  "title": "Response Find Customer Tag Swap Candidates Customers Tag Swap Find Tags Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/tag-swap": {
+      "post": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Swap Customer Tag",
+        "operationId": "swap_customer_tag",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapCustomerTagPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapCustomerTagResponse"
                 }
               }
             }
@@ -14401,6 +14966,24 @@
         ],
         "title": "FindCustomerPayload"
       },
+      "FindTagSwapCandidatesPayload": {
+        "properties": {
+          "search_term": {
+            "type": "string",
+            "title": "Search Term"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "search_term",
+          "mode"
+        ],
+        "title": "FindTagSwapCandidatesPayload"
+      },
       "FindUserTagPayload": {
         "properties": {
           "search_term": {
@@ -14413,6 +14996,107 @@
           "search_term"
         ],
         "title": "FindUserTagPayload"
+      },
+      "GlobalEmailConfig": {
+        "properties": {
+          "email_enabled": {
+            "type": "boolean",
+            "title": "Email Enabled"
+          },
+          "email_default_sender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Default Sender"
+          },
+          "email_smtp_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Host"
+          },
+          "email_smtp_port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Port"
+          },
+          "email_smtp_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Username"
+          },
+          "email_smtp_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Smtp Password"
+          },
+          "invitation_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Subject"
+          },
+          "invitation_text_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Text Body"
+          },
+          "invitation_html_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Html Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email_enabled"
+        ],
+        "title": "GlobalEmailConfig"
       },
       "HTTPValidationError": {
         "properties": {
@@ -17707,6 +18391,7 @@
         "type": "string",
         "enum": [
           "node_administration",
+          "global_email_management",
           "customer_management",
           "payout_management",
           "entry_management",
@@ -17801,6 +18486,11 @@
           "tax_rate": {
             "type": "number",
             "title": "Tax Rate"
+          },
+          "has_bookings": {
+            "type": "boolean",
+            "title": "Has Bookings",
+            "default": false
           },
           "type": {
             "$ref": "#/components/schemas/ProductType"
@@ -19174,6 +19864,52 @@
         ],
         "title": "SumUpTransaction"
       },
+      "SwapCustomerTagPayload": {
+        "properties": {
+          "source_user_tag_id": {
+            "type": "integer",
+            "title": "Source User Tag Id"
+          },
+          "target_user_tag_id": {
+            "type": "integer",
+            "title": "Target User Tag Id"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          },
+          "block_source_tag": {
+            "type": "boolean",
+            "title": "Block Source Tag",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_user_tag_id",
+          "target_user_tag_id",
+          "comment"
+        ],
+        "title": "SwapCustomerTagPayload"
+      },
+      "SwapCustomerTagResponse": {
+        "properties": {
+          "customer_account_id": {
+            "type": "integer",
+            "title": "Customer Account Id"
+          },
+          "used_existing_target_account": {
+            "type": "boolean",
+            "title": "Used Existing Target Account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_account_id",
+          "used_existing_target_account"
+        ],
+        "title": "SwapCustomerTagResponse"
+      },
       "SwitchTerminalPayload": {
         "properties": {
           "new_terminal_id": {
@@ -20098,6 +20834,19 @@
         ],
         "title": "UpdateAccountCommentPayload"
       },
+      "UpdateAccountCreationBlockedPayload": {
+        "properties": {
+          "account_creation_blocked": {
+            "type": "boolean",
+            "title": "Account Creation Blocked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_creation_blocked"
+        ],
+        "title": "UpdateAccountCreationBlockedPayload"
+      },
       "UpdateBalancePayload": {
         "properties": {
           "new_balance": {
@@ -20123,6 +20872,24 @@
           "comment"
         ],
         "title": "UpdateCommentPayload"
+      },
+      "UpdateCurrentUserProfilePayload": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "title": "UpdateCurrentUserProfilePayload"
       },
       "UpdateEvent": {
         "properties": {
@@ -21067,6 +21834,11 @@
             ],
             "title": "Group Tag"
           },
+          "account_creation_blocked": {
+            "type": "boolean",
+            "title": "Account Creation Blocked",
+            "default": false
+          },
           "account_history": {
             "items": {
               "$ref": "#/components/schemas/UserTagAccountAssociation"
@@ -21182,6 +21954,85 @@
           "node_id"
         ],
         "title": "UserTagSecret"
+      },
+      "UserTagSwapCandidate": {
+        "properties": {
+          "user_tag_id": {
+            "type": "integer",
+            "title": "User Tag Id"
+          },
+          "uid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uid"
+          },
+          "pin": {
+            "type": "string",
+            "title": "Pin"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "account_creation_blocked": {
+            "type": "boolean",
+            "title": "Account Creation Blocked",
+            "default": false
+          },
+          "target_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Mode"
+          },
+          "target_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_tag_id",
+          "uid",
+          "pin"
+        ],
+        "title": "UserTagSwapCandidate"
       },
       "UserToRoles": {
         "properties": {

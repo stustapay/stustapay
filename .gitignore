@@ -17,6 +17,7 @@ pyvenv.cfg
 # building
 MANIFEST
 dist/
+.gradle/
 app/chip_debug/release/
 
 # testing
@@ -54,6 +55,10 @@ TODO.md
 
 # docs
 /docs/**/*.pdf
+
+/deploy/common.env
+/deploy/environments/*.env
+!/deploy/environments/*.env.example
 
 /run
 DigiCertGlobalRootCA.crt.pem

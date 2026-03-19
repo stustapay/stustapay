@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
+from stustapay.core.schema.user import CurrentUser, UpdateCurrentUserProfilePayload
 from stustapay.core.service.user import UserLoginResult
 
 router = APIRouter(
@@ -40,6 +41,23 @@ async def change_password(
     await user_service.change_password(
         token=token, old_password=payload.old_password, new_password=payload.new_password
     )
+
+
+@router.get("/profile", summary="get current user profile", response_model=CurrentUser)
+async def get_profile(
+    token: CurrentAuthToken,
+    user_service: ContextUserService,
+):
+    return await user_service.get_current_user_profile(token=token)
+
+
+@router.post("/profile", summary="update current user profile", response_model=CurrentUser)
+async def update_profile(
+    token: CurrentAuthToken,
+    payload: UpdateCurrentUserProfilePayload,
+    user_service: ContextUserService,
+):
+    return await user_service.update_current_user_profile(token=token, profile=payload)
 
 
 @router.post(

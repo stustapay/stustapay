@@ -2,9 +2,8 @@ import argparse
 import base64
 import pprint
 from datetime import timezone
-from hashlib import sha256, sha384
+from hashlib import sha256
 
-import ecdsa
 from asn1crypto.core import (
     Any,
     Integer,
@@ -14,6 +13,8 @@ from asn1crypto.core import (
     Sequence,
 )
 from dateutil import parser
+
+from stustapay.tse.diebold_nixdorf_usb.crypto import public_key_from_raw_bytes, verify_raw
 
 
 # initialize data structures
@@ -70,7 +71,7 @@ def main(qr_code: str):
     else:
         signaturealgorithm = SignatureAlgorithm_seq()
         signaturealgorithm["signatureAlgorithm"] = "0.4.0.127.0.7.1.1.4.1.4"  # ecdsa-plain-SHA384
-        vk = ecdsa.VerifyingKey.from_string(base64.b64decode(public_key), curve=ecdsa.BRAINPOOLP384r1, hashfunc=sha384)
+        vk = public_key_from_raw_bytes(base64.b64decode(public_key))
 
     if qr[9] != "unixTime":  # case sensitive != UnixTime ...
         raise NotImplementedError()
@@ -100,11 +101,8 @@ def main(qr_code: str):
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(data.native)
     print(f"raw message: {message.hex()!r}\n\n")
-    try:  # verify
-        result = vk.verify(base64.b64decode(signature), message)
-        print(f"Signature valid: {result}")
-    except ecdsa.BadSignatureError:
-        print("Signature invalid")
+    result = verify_raw(vk, base64.b64decode(signature), message)
+    print(f"Signature valid: {result}")
 
 
 if __name__ == "__main__":
