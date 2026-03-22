@@ -20,6 +20,9 @@ export const authSlice = createSlice({
       state.user = null;
       state.token = null;
     },
+    setCurrentUser: (state, action: { payload: CurrentUser }) => {
+      state.user = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addMatcher(api.endpoints.login.matchFulfilled, (state, action) => {
@@ -40,7 +43,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { forceLogout } = authSlice.actions;
+export const { forceLogout, setCurrentUser } = authSlice.actions;
 
 export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectAuthToken = (state: RootState) => state.auth.token;

@@ -6,10 +6,12 @@ import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { PieChart, PieChartData } from "@/components";
 import { useGetDashboardOverviewQuery, useGetPaymentMethodStatsQuery, useGetProductStatsQuery, RevenuePrediction } from "@/api";
 import { useTranslation } from "react-i18next";
+import { statsQueryOptions } from "./queryOptions";
 
 export type DashboardKPIsProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   productId?: number;
@@ -21,6 +23,7 @@ export type DashboardKPIsProps = {
 export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   productId,
@@ -41,30 +44,33 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
   const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery(
     {
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
   const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery(
     {
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   // Get selected product stats if productId is specified

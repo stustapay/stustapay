@@ -21,6 +21,7 @@ from stustapay.core.schema.user import (
     NewUserToRoles,
     Privilege,
     RoleToNode,
+    UpdateCurrentUserProfilePayload,
     User,
     UserInvitation,
     UserRole,
@@ -44,7 +45,7 @@ from stustapay.core.service.email_templates import (
 from stustapay.core.service.mail import MailService
 from sftkit.error import AccessDenied, InvalidArgument, NotFound
 from stustapay.core.service.tree.common import fetch_node
-from stustapay.core.service.user_tag import get_or_assign_user_tag
+from stustapay.core.service.user_tag import ensure_private_account_creation_allowed, get_or_assign_user_tag
 
 
 class UserLoginSuccess(BaseModel):
@@ -85,6 +86,7 @@ async def update_user(*, conn: Connection, node: Node, user_id: int, user: NewUs
     user_tag_id = None
     if user.user_tag_uid is not None:
         user_tag_id = await get_or_assign_user_tag(conn=conn, node=node, pin=user.user_tag_pin, uid=user.user_tag_uid)
+        await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
 
     row = await conn.fetchrow(
         "update usr "
@@ -331,6 +333,8 @@ class UserService(Service[Config]):
             )
 
         if customer_account_id is None:
+            if user_tag_id is not None:
+                await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.id,
@@ -640,6 +644,23 @@ class UserService(Service[Config]):
         new_password_hashed = self._hash_password(new_password)
 
         await conn.execute("update usr set password = $2 where id = $1", current_user.id, new_password_hashed)
+
+    @with_db_transaction
+    @requires_user(node_required=False)
+    async def get_current_user_profile(self, *, current_user: CurrentUser) -> CurrentUser:
+        return current_user
+
+    @with_db_transaction
+    @requires_user(node_required=False)
+    async def update_current_user_profile(
+        self,
+        *,
+        conn: Connection,
+        current_user: CurrentUser,
+        profile: UpdateCurrentUserProfilePayload,
+    ) -> CurrentUser:
+        await conn.execute("update usr set email = $2 where id = $1", current_user.id, profile.email)
+        return current_user.model_copy(update={"email": profile.email})
 
     @with_db_transaction
     @requires_user(node_required=False)

@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from typing import Dict, Optional, Set
 from uuid import UUID
 
@@ -78,6 +79,8 @@ from stustapay.core.service.order.pending_order import (
     save_pending_topup,
 )
 from stustapay.core.service.order.sumup import SumupService
+from stustapay.core.service.order.stats import build_selected_date_condition, get_selected_date_ranges
+from stustapay.core.service.tree.common import fetch_event_for_node
 from stustapay.core.service.product import (
     fetch_discount_product,
     fetch_pay_out_product,
@@ -1676,70 +1679,82 @@ class OrderService(Service[Config]):
         till_id: Optional[int] = None,
         subnode_id: Optional[int] = None,
         limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        selected_dates: Optional[list[str]] = None,
     ) -> list[Order]:
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=subnode_id)
-        param_count = 1
         conditions: list[str] = []
         params: list = [scope_node.id]
 
         conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
 
         if from_timestamp is not None:
-            param_count += 1
-            conditions.append(f"o.booked_at >= ${param_count}")
             params.append(from_timestamp)
+            conditions.append(f"o.booked_at >= ${len(params)}")
 
         if to_timestamp is not None:
-            param_count += 1
-            conditions.append(f"o.booked_at <= ${param_count}")
             params.append(to_timestamp)
+            conditions.append(f"o.booked_at <= ${len(params)}")
 
         if till_id is not None:
-            param_count += 1
-            conditions.append(f"o.till_id = ${param_count}")
             params.append(till_id)
+            conditions.append(f"o.till_id = ${len(params)}")
+
+        event = await fetch_event_for_node(conn=conn, node=scope_node)
+        selected_date_filter, selected_date_params = build_selected_date_condition(
+            field_name="o.booked_at",
+            start_param_index=len(params) + 1,
+            selected_date_ranges=get_selected_date_ranges(
+                SimpleNamespace(selected_dates=selected_dates),
+                event,
+            ),
+        )
+        if selected_date_filter:
+            conditions.append(selected_date_filter.removeprefix(" AND "))
+            params.extend(selected_date_params)
 
         where_clause = " AND ".join(conditions)
-        param_count += 1
-        
-        limit_clause = ""
-        if limit is not None:
-            param_count += 1
-            limit_clause = f" ORDER BY o.booked_at DESC LIMIT ${param_count}"
-            # Note: We need to order by booked_at to get the *latest* orders when limiting
-            # But the inner query selects IDs. 
-            
-            # More efficient strategy:
-            # We want the *IDs* of the latest orders matching criteria.
-            # So the inner query should do the limiting.
-            
-            # Let's adjust the query construction slightly.
-            # original: select * from order_value_prefiltered((select array_agg(o.id) from ordr o where {where_clause}), node_id)
-            
-            # The order_value_prefiltered takes an array of IDs.
-            # We should limit the IDs we pass to it.
-            
-            # Wait, `array_agg` doesn't preserve order or limit easily inside aggregation without subquery.
-            
-            # Better approach:
-            # select array_agg(id) from (select o.id from ordr o where ... w.booked_at ... order by booked_at desc limit N) as sub
-       
-        # Let's rewrite the inner query part
-        inner_query = f"SELECT o.id FROM ordr o WHERE {where_clause}"
-        
-        if limit is not None:
-             # param_count is already incremented for node_id (which will be added next), so limit uses param_count + 1
-             limit_param_idx = param_count + 1
-             inner_query += f" ORDER BY o.booked_at DESC LIMIT ${limit_param_idx}"
-             
-        # Wrap in array_agg
-        array_agg_query = f"SELECT array_agg(sub.id) FROM ({inner_query}) as sub"
-        
-        query = f"select * from order_value_prefiltered(({array_agg_query}), ${param_count})"
-        params.append(scope_node.event_node_id)
-        
+
         if limit is not None:
             params.append(limit)
+            limit_param_idx = len(params)
+        else:
+            limit_param_idx = None
+
+        if offset is not None:
+            params.append(offset)
+            offset_param_idx = len(params)
+        else:
+            offset_param_idx = None
+
+        params.append(scope_node.event_node_id)
+        event_node_param_idx = len(params)
+
+        inner_query = f"""
+            SELECT o.id, o.booked_at
+            FROM ordr o
+            WHERE {where_clause}
+            ORDER BY o.booked_at DESC, o.id DESC
+        """
+
+        if limit is not None:
+            inner_query += f" LIMIT ${limit_param_idx}"
+
+        if offset is not None:
+            inner_query += f" OFFSET ${offset_param_idx}"
+
+        query = f"""
+            WITH selected_orders AS (
+                {inner_query}
+            )
+            SELECT ov.*
+            FROM order_value_prefiltered(
+                (SELECT array_agg(so.id ORDER BY so.booked_at DESC, so.id DESC) FROM selected_orders so),
+                ${event_node_param_idx}
+            ) ov
+            JOIN selected_orders so ON so.id = ov.id
+            ORDER BY so.booked_at DESC, so.id DESC
+        """
 
         return await conn.fetch_many(Order, query, *params)
 

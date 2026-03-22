@@ -110,6 +110,10 @@ Configuration of products, cash desks, accounts, ...
   - Or, directly in `web/`:
     - `cd web && npm run start`
 
+## Deployment
+
+Local multi-environment Azure deployment tooling lives under [`tools/deploy/`](/Users/thomastelaak/code/stustapay/tools/deploy) and is configured via [`deploy/README.md`](/Users/thomastelaak/code/stustapay/deploy/README.md). It supports `dry-run`, `bootstrap-server`, `deploy`, `list-releases` and `rollback` for explicit targets like `primary` and `weu`.
+
 ## License
 
 Released under the **GNU Affero General Public License** version 3 or later,

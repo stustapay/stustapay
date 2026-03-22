@@ -47,6 +47,8 @@ node_modules/
 
 # local
 TODO.md
+.agents/state/*.md
+!.agents/state/.gitkeep
 
 # nix
 /.direnv
@@ -55,6 +57,10 @@ TODO.md
 
 # docs
 /docs/**/*.pdf
+
+/deploy/common.env
+/deploy/environments/*.env
+!/deploy/environments/*.env.example
 
 /run
 DigiCertGlobalRootCA.crt.pem

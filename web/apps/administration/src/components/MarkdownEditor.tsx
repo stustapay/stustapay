@@ -1,8 +1,7 @@
 import { Box, Stack, TextField, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { MarkdownContent } from "./MarkdownContent";
 
 export interface MarkdownEditorProps {
   value: string;
@@ -24,7 +23,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ label, value, on
         <Box display="grid" gridTemplateRows="min-content auto">
           <Typography variant="body1">{t("preview")}</Typography>
           <Box border={1} borderColor="divider" padding={1}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+            <MarkdownContent value={value} />
           </Box>
         </Box>
       )}

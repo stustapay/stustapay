@@ -12,8 +12,12 @@
 - `make test` — runs `pytest` with doctests and coverage against `stustapay`.
 - `make lint` — runs `ruff`, `pylint`, and `mypy` checks; use `make ruff-fix` for autofixes.
 - `make format` / `make check-format` — format with Ruff or verify formatting.
+- `make verify-backend` — repo-standard backend validation (`make test` + `make lint`).
+- `make verify-web-administration` / `make verify-web-customerportal` — lint, test, and build the relevant Nx app.
+- `make verify-android` — build, unit-test, and lint the Android app.
 - `python3 -m stustapay -c etc/config.yaml terminalserver-api` — example service entrypoint; adjust command for `customerportal-api` or `administration-api`.
 - `make generate-openapi` — regenerate `api/*.json` from the configured services.
+- `make sync-contract` — regenerate backend OpenAPI specs plus web and Android generated clients.
 
 ## Coding Style & Naming Conventions
 - Target Python 3.11; 4-space indent; max line length 120 (tool-enforced).
@@ -36,3 +40,11 @@
 - Do not commit secrets; keep credentials and keys out of `etc/*.yaml` and API spec outputs.
 - Use the provided sample configs as templates; document any new environment variables in PR descriptions.
 - When regenerating OpenAPI files, review diffs for unintended surface changes before committing.
+
+## Repo-Local Agent Workflow
+- This repo now includes Codex-oriented skills under `.agents/skills/`. Use them for non-trivial work instead of inventing a fresh workflow each time.
+- Start with `stustapay-intake` for feature work, refactors, or debugging that spans more than one file or surface.
+- Use `stustapay-build` for normal implementation, `stustapay-contract-sync` when API contracts or generated clients may have changed, `stustapay-review` for review-only tasks, `stustapay-qa` before handing work back, and `stustapay-ship` for the final readiness pass.
+- Use `.agents/scripts/changed_surfaces.py` and `.agents/scripts/required_checks.py` to map diffs to required validation commands.
+- Keep persistent handoff artifacts in `.agents/state/*.md` when the task spans multiple turns. These files are gitignored except for the tracked `.gitkeep`.
+- Treat generated artifacts in `api/`, `web/apps/*/src/api/generated/`, and `app/api/` as downstream of handwritten contract changes and review them separately.

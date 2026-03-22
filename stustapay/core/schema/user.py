@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, EmailStr, computed_field
 
 from stustapay.core.schema.user_tag import UserTag, format_user_tag_uid
 
@@ -120,6 +120,10 @@ class CurrentUser(BaseModel):
 
     transport_account_id: Optional[int] = None
     cash_register_id: Optional[int] = None
+
+
+class UpdateCurrentUserProfilePayload(BaseModel):
+    email: EmailStr | None = None
 
 
 class AcceptInvitationPayload(BaseModel):

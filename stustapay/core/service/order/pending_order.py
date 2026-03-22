@@ -29,6 +29,7 @@ from stustapay.core.service.order.booking import (
 )
 from stustapay.core.service.product import fetch_top_up_product
 from stustapay.core.service.till.common import get_cash_register_account_id
+from stustapay.core.service.user_tag import ensure_private_account_creation_allowed
 
 
 async def fetch_pending_order(conn: Connection, uuid: UUID) -> PendingOrder:
@@ -108,6 +109,7 @@ async def make_ticket_sale_bookings(
 
         customer_account_id: int
         if scanned_ticket.account is None:
+            await ensure_private_account_creation_allowed(conn=conn, user_tag_id=user_tag_id)
             customer_account_id = await conn.fetchval(
                 "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
                 node.event_node_id,

@@ -11,6 +11,21 @@ export interface IRouteBuilder {
 
 export const nodeUrlBaseRegex = /^\/node\/(?<nodeId>[\d]+)/;
 
+export const getNodeIdFromPath = (path?: string | null): number | null => {
+  if (!path) {
+    return null;
+  }
+
+  const match = path.match(nodeUrlBaseRegex);
+  const nodeId = match?.groups?.nodeId;
+  if (!nodeId) {
+    return null;
+  }
+
+  const parsed = Number(nodeId);
+  return Number.isInteger(parsed) ? parsed : null;
+};
+
 class RouteBuilder implements IRouteBuilder {
   constructor(
     private resourceUrl: string,
@@ -77,3 +92,6 @@ export const MdmRoutes = new RouteBuilder("mdm/devices", "node_administration", 
 export const EntryAreaRoutes = new RouteBuilder("entry/areas", "entry_management", "entry_area");
 export const EntryGroupRoutes = new RouteBuilder("entry/groups", "entry_management", "entry_group");
 export const EntryLogRoutes = new RouteBuilder("entry/logs", "entry_management");
+export const HelpRoutes = {
+  index: (nodeId?: number | null) => (nodeId != null ? `/help?nodeId=${nodeId}` : "/help"),
+};

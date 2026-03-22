@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -31,6 +31,8 @@ async def list_orders_filtered(
     till_id: Optional[int] = None,
     subnode_id: Optional[int] = None,
     limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    selected_dates: Optional[list[str]] = Query(None),
 ):
     return normalize_list(
         await order_service.list_orders_filtered(
@@ -41,6 +43,8 @@ async def list_orders_filtered(
             subnode_id=subnode_id,
             node_id=node_id,
             limit=limit,
+            offset=offset,
+            selected_dates=selected_dates,
         )
     )
 

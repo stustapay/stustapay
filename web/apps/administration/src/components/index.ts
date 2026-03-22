@@ -6,6 +6,7 @@ export * from "./EditableListItem";
 export * from "./layouts";
 export * from "./ExpandableLinkMenu";
 export * from "./MarkdownEditor";
+export * from "./MarkdownContent";
 export * from "./graphs";
 export * from "./NodeSelect";
 export * from "./LanguageSelect";

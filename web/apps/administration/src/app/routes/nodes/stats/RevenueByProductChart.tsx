@@ -25,10 +25,12 @@ import { FilterBadge } from "@/components/common/FilterBadge";
 import { useCurrentNode, useCurrencyFormatter } from "@/hooks";
 import { useGetProductStatsQuery } from "@/api";
 import { useTranslation } from "react-i18next";
+import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByProductChartProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
+  selectedDates?: string[];
   tillId?: number;
   subnodeId?: number;
   productId?: number;
@@ -42,6 +44,7 @@ type SortOption = "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
 export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
   fromTimestamp,
   toTimestamp,
+  selectedDates,
   tillId,
   subnodeId,
   productId,
@@ -77,10 +80,11 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
       nodeId: currentNode.id,
       fromTimestamp: fromTimestamp?.toISO() ?? undefined,
       toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates,
       tillId: tillId,
       subnodeId: subnodeId,
     },
-    { pollingInterval: pollingIntervalMs }
+    statsQueryOptions(pollingIntervalMs)
   );
 
   // Create a map of product_name to product_id for bar click handling

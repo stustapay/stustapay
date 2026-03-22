@@ -41,8 +41,38 @@ dev-backend:
 dev-web:
 	python3 tools/dev.py --web-only
 
+.PHONY: verify-backend
+verify-backend:
+	$(MAKE) test
+	$(MAKE) lint
+
+.PHONY: verify-web-administration
+verify-web-administration:
+	cd web && npx nx run administration:lint
+	cd web && npx nx run administration:test
+	cd web && npx nx run administration:build
+
+.PHONY: verify-web-customerportal
+verify-web-customerportal:
+	cd web && npx nx run customerportal:lint
+	cd web && npx nx run customerportal:test
+	cd web && npx nx run customerportal:build
+
+.PHONY: verify-web
+verify-web: verify-web-administration verify-web-customerportal
+
+.PHONY: verify-android
+verify-android:
+	cd app && ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+
 .PHONY: generate-openapi
 generate-openapi:
 	python3 -m stustapay -c ./etc/config.yaml customerportal-api --show-openapi > api/customer_portal.json
 	python3 -m stustapay -c ./etc/config.yaml administration-api --show-openapi > api/administration.json
 	python3 -m stustapay -c ./etc/config.yaml terminalserver-api --show-openapi > api/terminalserver.json
+
+.PHONY: sync-contract
+sync-contract: generate-openapi
+	cd web && npx nx run administration:generate-openapi
+	cd web && npx nx run customerportal:generate-openapi
+	cd app && ./gradlew api
