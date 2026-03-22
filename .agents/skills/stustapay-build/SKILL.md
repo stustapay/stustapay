@@ -1,0 +1,32 @@
+---
+name: stustapay-build
+description: Use when implementing or debugging StuStaPay changes after intake. Covers backend, web, Android, config, and generated-artifact workflows, with validation chosen from the repo-local verification commands.
+---
+
+# StuStaPay Build
+
+Use this skill for day-to-day production work after `stustapay-intake`.
+
+## Start
+
+- Read `.agents/state/plan.md` if it exists.
+- Recompute impacted checks from the changed paths before deciding what to run.
+- Prefer the stable repo entrypoints over ad hoc commands:
+  - `make verify-backend`
+  - `make verify-web-administration`
+  - `make verify-web-customerportal`
+  - `make verify-android`
+  - `make sync-contract`
+
+## Surface rules
+
+- Backend source of truth lives under `stustapay/`.
+- Web source of truth lives under `web/apps/` and `web/libs/`; shared library changes imply both web apps.
+- Android source of truth lives under `app/app`, `app/libssp`, `app/chip_debug`, and generated client code under `app/api`.
+- Treat generated code as downstream of handwritten backend contract changes; do not hand-edit generated clients as the primary fix.
+
+## When to branch into other skills
+
+- Switch to `stustapay-contract-sync` if endpoint or schema changes affect OpenAPI or generated clients.
+- Switch to `stustapay-review` for a review-only request.
+- Switch to `stustapay-qa` once code is ready for browser, API, or device validation.
