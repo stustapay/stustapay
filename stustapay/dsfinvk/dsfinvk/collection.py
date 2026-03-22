@@ -17,7 +17,7 @@ class Collection:
         self.records[record.filename].append(record)
 
     def write(self, name, xml_path, dtd_path):
-        with ZipFile(name, "w", compression=ZIP_DEFLATED, compresslevel=9) as zf:
+        with ZipFile(name, "w", compression=ZIP_DEFLATED, compresslevel=9, strict_timestamps=False) as zf:
             for k, records in self.records.items():
                 b = StringIO()
                 w = csv.DictWriter(
