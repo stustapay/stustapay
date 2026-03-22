@@ -47,6 +47,8 @@ node_modules/
 
 # local
 TODO.md
+.agents/state/*.md
+!.agents/state/.gitkeep
 
 # nix
 /.direnv
