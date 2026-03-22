@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,7 +24,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,13 +33,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.ErrorDialog
-import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
-import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelectionDialog
-import de.stustapay.stustapay.ui.common.pay.CashECCallback
-import de.stustapay.stustapay.ui.common.pay.CashECPay
-import de.stustapay.stustapay.ui.common.pay.NoCashRegisterWarning
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
@@ -52,6 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TopUpSelection(
     viewModel: TopUpViewModel,
+    onBack: (() -> Unit)? = null,
 ) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val topUpState by viewModel.topUpState.collectAsStateWithLifecycle()
@@ -60,7 +54,6 @@ fun TopUpSelection(
     val uiLocked by viewModel.uiLocked.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current as Activity
     val maxAmount = (topUpConfig.maxAccountBalance * 100).toUInt()
 
     val currentStep = when {
@@ -75,62 +68,27 @@ fun TopUpSelection(
         }
     }
 
-    CashECPay(
-        modifier = Modifier.fillMaxSize(),
-        checkAmount = {
-            viewModel.checkAmountLocal(topUpState.currentAmount.toDouble() / 100.0)
-        },
-        status = {
-            if (topUpConfig.hasOnlyTopUpPrivilege()) {
-                TopUpSelfServiceStatus(status = status)
-            } else {
-                StatusText(status = status)
-            }
-        },
-        onPaymentRequested = CashECCallback.Tag(
-            onEC = {
-                scope.launch {
-                    viewModel.topUpWithCard(context, it)
-                }
-            },
-            onCash = {
-                scope.launch {
-                    viewModel.topUpWithCash(it)
-                }
-            },
-        ),
-        ready = topUpConfig.hasConfig() && !requestActive && topUpState.currentAmount > 0u,
-        interactionBlocked = uiLocked || requestActive,
-        getAmount = { topUpState.currentAmount },
-    ) { paddingValues ->
-        if (topUpConfig.hasOnlyTopUpPrivilege()) {
-            SelfServiceTopUpContent(
-                currentStep = currentStep,
-                amount = topUpState.currentAmount,
-                maxAmount = maxAmount,
-                requestActive = requestActive,
-                onAmountUpdate = { viewModel.setAmount(it) },
-                onClear = { viewModel.clearDraft() },
-                bottomPadding = paddingValues.calculateBottomPadding()
-            )
-        } else {
-            if (!topUpConfig.canHandleCash() && !topUpConfig.hasOnlyTopUpPrivilege()) {
-                NoCashRegisterWarning(modifier = Modifier.padding(4.dp))
-            }
-            AmountSelection(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = paddingValues.calculateBottomPadding()),
-                initialAmount = { topUpState.currentAmount },
-                onAmountUpdate = { viewModel.setAmount(it) },
-                onClear = { viewModel.clearDraft() },
-                config = AmountConfig.Money(
-                    limit = maxAmount,
-                    cents = false,
-                )
-            )
-        }
+    if (topUpConfig.hasOnlyTopUpPrivilege()) {
+        SelfServiceTopUpContent(
+            currentStep = currentStep,
+            amount = topUpState.currentAmount,
+            maxAmount = maxAmount,
+            requestActive = requestActive,
+            onAmountUpdate = { viewModel.setAmount(it) },
+            onClear = { viewModel.clearDraft() },
+            bottomPadding = 0.dp,
+        )
+    } else {
+        OperatorTopUpSelection(
+            viewModel = viewModel,
+            onBack = onBack,
+            footerHint = status,
+            maxAmount = maxAmount,
+            canHandleCash = topUpConfig.canHandleCash(),
+            requestActive = requestActive,
+            uiLocked = uiLocked,
+            amount = topUpState.currentAmount,
+        )
     }
 }
 

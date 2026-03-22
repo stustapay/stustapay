@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.sp
 import dagger.hilt.android.EntryPointAccessors
 import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
-import de.stustapay.stustapay.ui.chipscan.EnhancedNfcScanContent
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.device.DeviceConfigProvider
 import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
@@ -66,15 +66,15 @@ fun PayOutScan(
                     .offset(
                         x = deviceConfig.nfcScanDialogOffset.x,
                         y = deviceConfig.nfcScanDialogOffset.y
-                    ),
+                ),
                 onScan = onScan,
                 showStatus = false,
+                border = androidx.compose.foundation.BorderStroke(2.dp, de.stustapay.stustapay.ui.common.operator.OperatorPalette.panelBorder),
+                backgroundColor = de.stustapay.stustapay.ui.common.operator.OperatorPalette.panelMuted,
                 content = { scanStatus ->
-                    // Use the enhanced NFC scan content
-                    EnhancedNfcScanContent(
-                        isIminFalcons2 = deviceConfig.isIminFalcons2,
-                        isSmallScreen = deviceConfig.isSmallScreen,
-                        scanStatus = scanStatus
+                    PencilOperatorScanContent(
+                        scanStatus = scanStatus,
+                        isSmallScreen = deviceConfig.isSmallScreen
                     )
                 }
             )

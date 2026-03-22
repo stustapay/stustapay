@@ -22,6 +22,7 @@ fun TopUpView(
         TopUpPage.Selection -> {
             TopUpSelection(
                 viewModel = viewModel,
+                onBack = onFinished,
             )
         }
 

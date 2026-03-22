@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -134,42 +130,9 @@ fun TopUpError(
         return
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.topup_error_title),
-                    style = MaterialTheme.typography.h5,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = status,
-                    style = MaterialTheme.typography.body1,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
-            }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = 8.dp)
-            ) {
-                Divider(modifier = Modifier.padding(top = 10.dp, bottom = 6.dp))
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.done))
-                }
-            }
-        }
+    OperatorTopUpError(
+        terminalTitle = topUpConfig.title().title,
+        footerHint = status,
+        onDismiss = onDismiss,
     )
 }

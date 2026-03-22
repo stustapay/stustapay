@@ -26,6 +26,7 @@ import de.stustapay.stustapay.model.UserRolesState
 import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
@@ -103,10 +104,10 @@ fun UserLoginView(
         ) {
             when (scanTarget) {
                 ScanTarget.Login -> {
-                    Text(
-                        stringResource(R.string.nfc_scan_login),
-                        textAlign = TextAlign.Center,
-                        fontSize = 40.sp
+                    PencilOperatorScanContent(
+                        title = stringResource(R.string.nfc_scan_login),
+                        subtitle = stringResource(R.string.nfc_scan_description),
+                        scanStatus = status ?: ""
                     )
                 }
             }

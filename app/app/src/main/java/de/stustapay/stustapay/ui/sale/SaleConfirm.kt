@@ -1,8 +1,17 @@
 package de.stustapay.stustapay.ui.sale
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.TabRowDefaults.Divider
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -10,15 +19,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.api.models.PendingLineItem
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.operator.OperatorActionButton
+import de.stustapay.stustapay.ui.common.operator.OperatorAdaptivePaymentLayout
+import de.stustapay.stustapay.ui.common.operator.OperatorMetricCard
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorPaymentLayoutProfile
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorRailSummaryRow
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
-import de.stustapay.stustapay.ui.common.pay.ProductConfirmBottomBar
-import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
-import de.stustapay.stustapay.ui.common.pay.ProductConfirmLineItem
+import de.stustapay.libssp.util.formatCurrencyValue
 
 /**
  * View for displaying available purchase items
@@ -51,71 +67,262 @@ fun SaleConfirm(
         footerHint = status,
         footerSection = "Sale",
         footerStatus = "Ready",
+        showFooter = false,
         onBack = onEdit,
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                ProductConfirmItem(
-                    name = stringResource(R.string.price),
-                    price = checkedSale.totalPrice,
-                    bigStyle = true,
+        OperatorAdaptivePaymentLayout(
+            modifier = Modifier.fillMaxSize(),
+            mainContent = { profile ->
+                SaleConfirmMainContent(
+                    profile = profile,
+                    checkedSale = checkedSale,
                 )
-                Divider(thickness = 2.dp)
-                ProductConfirmItem(
-                    name = stringResource(R.string.credit_left),
-                    price = checkedSale.newBalance,
+            },
+            railContent = { profile ->
+                SaleConfirmRail(
+                    profile = profile,
+                    checkedSale = checkedSale,
+                    status = status,
+                    ready = config is SaleConfig.Ready,
+                    onEdit = onEdit,
+                    onConfirm = onConfirm,
                 )
-                if (checkedSale.newVoucherBalance > 0) {
-                    ProductConfirmItem(
-                        name = stringResource(R.string.remaining_vouchers),
-                        quantity = checkedSale.newVoucherBalance.intValue(),
-                    )
-                }
-                Divider(thickness = 2.dp)
-            }
+            },
+        )
+    }
+}
 
+@Composable
+private fun ColumnScope.SaleConfirmMainContent(
+    profile: OperatorPaymentLayoutProfile,
+    checkedSale: de.stustapay.api.models.PendingSale,
+) {
+    val topCards = buildList {
+        add(
+            Triple(
+                stringResource(R.string.price),
+                formatSaleAmount(checkedSale.totalPrice),
+                true,
+            )
+        )
+        add(
+            Triple(
+                stringResource(R.string.credit_left),
+                formatSaleAmount(checkedSale.newBalance),
+                checkedSale.newBalance > 0.0,
+            )
+        )
+        if (checkedSale.newVoucherBalance > 0) {
+            add(
+                Triple(
+                    stringResource(R.string.remaining_vouchers),
+                    checkedSale.newVoucherBalance.intValue().toString(),
+                    true,
+                )
+            )
+        }
+    }
+
+    val rows = topCards.chunked(2)
+    rows.forEach { rowCards ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(profile.gap),
+        ) {
+            rowCards.forEach { (label, value, accent) ->
+                OperatorMetricCard(
+                    label = label,
+                    value = value,
+                    accent = accent,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            repeat(2 - rowCards.size) {
+                Column(modifier = Modifier.weight(1f)) {}
+            }
+        }
+    }
+
+    OperatorPanel(
+        modifier = if (profile.counterLayout) {
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        } else {
+            Modifier.fillMaxWidth()
+        },
+        backgroundColor = OperatorPalette.panelMuted,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(profile.gap)) {
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(profile.gap),
             ) {
-
                 if (checkedSale.usedVouchers > 0) {
                     item {
-                        ProductConfirmItem(
-                            name = stringResource(R.string.used_vouchers),
-                            quantity = checkedSale.usedVouchers.intValue(),
+                        SaleConfirmVoucherCard(
+                            title = stringResource(R.string.used_vouchers),
+                            value = checkedSale.usedVouchers.intValue().toString(),
                         )
                     }
                 }
+                items(checkedSale.lineItems) { lineItem ->
+                    SaleConfirmLineItemCard(lineItem = lineItem)
+                }
+            }
+        }
+    }
+}
 
-                for (lineItem in checkedSale.lineItems) {
-                    item {
-                        ProductConfirmLineItem(
-                            lineItem = lineItem
-                        )
-                    }
+@Composable
+private fun ColumnScope.SaleConfirmRail(
+    profile: OperatorPaymentLayoutProfile,
+    checkedSale: de.stustapay.api.models.PendingSale,
+    status: String,
+    ready: Boolean,
+    onEdit: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    val itemCount = checkedSale.lineItems.size
+
+    OperatorPanel(
+        modifier = if (profile.counterLayout) Modifier.fillMaxHeight() else Modifier.fillMaxWidth(),
+        backgroundColor = OperatorPalette.panelMuted,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(profile.gap)) {
+            Text(
+                text = status,
+                color = OperatorPalette.subtitle,
+                fontSize = 15.sp,
+                lineHeight = 21.sp,
+                fontWeight = FontWeight.Medium,
+            )
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                color = OperatorPalette.panel,
+                border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+                elevation = 0.dp,
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    OperatorRailSummaryRow(
+                        label = stringResource(R.string.operator_items),
+                        value = itemCount.toString(),
+                    )
                 }
             }
 
-            ProductConfirmBottomBar(
-                abortText = stringResource(R.string.edit),
-                submitSize = 24.sp,
-                submitText = stringResource(R.string.book_order),
-                status = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = status,
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 18.sp,
-                            fontFamily = FontFamily.Monospace,
-                        )
-                    }
-                },
-                ready = config is SaleConfig.Ready,
-                onAbort = onEdit,
-                onSubmit = onConfirm,
+            OperatorActionButton(
+                text = stringResource(R.string.book_order),
+                onClick = onConfirm,
+                enabled = ready,
+            )
+            OperatorActionButton(
+                text = stringResource(R.string.edit),
+                onClick = onEdit,
+                enabled = ready,
+                primary = false,
             )
         }
     }
 }
+
+@Composable
+private fun SaleConfirmLineItemCard(
+    lineItem: PendingLineItem,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = OperatorPalette.panel,
+        border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+        elevation = 0.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = lineItem.product.name,
+                    color = OperatorPalette.title,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = formatCurrencyValue(lineItem.totalPrice),
+                    color = OperatorPalette.accent,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "${lineItem.quantity.intValue()} × ${formatCurrencyValue(lineItem.productPrice)}",
+                    color = OperatorPalette.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = lineItem.taxName,
+                    color = OperatorPalette.subtitle,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SaleConfirmVoucherCard(
+    title: String,
+    value: String,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = OperatorPalette.panel,
+        border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+        elevation = 0.dp,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = title,
+                color = OperatorPalette.title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = value,
+                color = OperatorPalette.accent,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold,
+            )
+        }
+    }
+}
+
+private fun formatSaleAmount(amount: Double): String = "%.2f€".format(amount)

@@ -1,21 +1,48 @@
 package de.stustapay.stustapay.ui.sale
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.Text
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
-import de.stustapay.stustapay.ui.common.amountselect.AmountSelectionDialog
+import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
+import de.stustapay.stustapay.ui.common.operator.OperatorSecondaryButton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+
+private data class SaleSelectionEntry(
+    val caption: String,
+    val type: SaleSelectionItemType,
+)
 
 @Composable
 fun SaleSelectionList(
@@ -28,7 +55,7 @@ fun SaleSelectionList(
     val priceSelectionState = rememberDialogDisplayState()
     val config = saleConfig
 
-    AmountSelectionDialog(
+    SaleAmountSelectionDialog(
         state = priceSelectionState,
         config = AmountConfig.Money(cents = true, limit = 15000u),
         initialAmount = {
@@ -43,89 +70,193 @@ fun SaleSelectionList(
         },
     )
 
-    LazyColumn(
-        modifier = modifier
-            .padding(horizontal = 2.dp)
-            .fillMaxSize()
-    ) {
-        val vouchers = saleStatus.voucherAmount ?: saleStatus.checkedSale?.usedVouchers?.intValue()
+    val vouchers = saleStatus.voucherAmount ?: saleStatus.checkedSale?.usedVouchers?.intValue()
+    val buttons = if (config is SaleConfig.Ready) config.buttons.values.toList() else emptyList()
+
+    val entries = buildList {
         if (vouchers != null && (saleStatus.checkedSale?.oldVoucherBalance?.intValue() ?: 0) > 0) {
-            // if the server says we used vouchers,
-            // allow adjustment here
-            item {
-                SaleSelectionItem(
+            add(
+                SaleSelectionEntry(
                     caption = stringResource(R.string.voucher),
                     type = SaleSelectionItemType.Vouchers(
                         amount = vouchers,
                         maxAmount = saleStatus.checkedSale?.oldVoucherBalance?.intValue() ?: -1,
                         onIncr = { viewModel.incrementVouchers() },
                         onDecr = { viewModel.decrementVouchers() },
-                    )
+                    ),
                 )
-            }
+            )
         }
 
-        if (config is SaleConfig.Ready) {
-            for (button in config.buttons) {
-                item {
+        buttons.forEach { button ->
+            var returnCaption = "Extra Glas"
+            val saleCaption = if (button.price is SaleItemPrice.Returnable) {
+                val captionSplit = button.caption.split("///", limit = 2)
+                if (captionSplit.size == 2) {
+                    returnCaption = captionSplit[1]
+                }
+                captionSplit[0]
+            } else {
+                button.caption
+            }
 
-                    // sale captions can contain "product///return" so we can set the return button caption
-                    // TODO: we should have an extra caption field for this anyway
-                    var returnCaption = "Extra Glas"
-                    val saleCaption = if (button.value.price is SaleItemPrice.Returnable) {
-                        val captionSplit = button.value.caption.split("///", limit = 2)
-                        if (captionSplit.size == 2) {
-                            returnCaption = captionSplit[1]
+            add(
+                SaleSelectionEntry(
+                    caption = saleCaption,
+                    type = when (val price = button.price) {
+                        is SaleItemPrice.FixedPrice -> {
+                            SaleSelectionItemType.FixedPrice(
+                                price = price,
+                                amount = (saleStatus.buttonSelection[button.id] as? SaleItemAmount.FixedPrice),
+                                onIncr = { viewModel.incrementButton(button.id) },
+                                onDecr = { viewModel.decrementButton(button.id) },
+                            )
                         }
-                        captionSplit[0]
-                    } else {
-                        button.value.caption
-                    }
-                    SaleSelectionItem(
-                        caption = saleCaption,
-                        type = when (val price = button.value.price) {
-                            is SaleItemPrice.FixedPrice -> {
-                                SaleSelectionItemType.FixedPrice(
-                                    price = price,
-                                    amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
-                                    onIncr = { viewModel.incrementButton(button.value.id) },
-                                    onDecr = { viewModel.decrementButton(button.value.id) },
-                                )
-                            }
 
-                            is SaleItemPrice.Returnable -> {
-                                // returnable items can become negative and positive.
-                                SaleSelectionItemType.Returnable(
-                                    price = price,
-                                    amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FixedPrice),
-                                    onIncr = { viewModel.incrementButton(button.value.id) },
-                                    onDecr = { viewModel.decrementButton(button.value.id) },
-                                    incrementText = returnCaption,
-                                )
-                            }
+                        is SaleItemPrice.Returnable -> {
+                            SaleSelectionItemType.Returnable(
+                                price = price,
+                                amount = (saleStatus.buttonSelection[button.id] as? SaleItemAmount.FixedPrice),
+                                onIncr = { viewModel.incrementButton(button.id) },
+                                onDecr = { viewModel.decrementButton(button.id) },
+                                incrementText = returnCaption,
+                            )
+                        }
 
-                            is SaleItemPrice.FreePrice -> {
-                                SaleSelectionItemType.FreePrice(
-                                    // TODO: preselect default price.defaultPrice when no freeprice is set yet
-                                    amount = (saleStatus.buttonSelection[button.value.id] as? SaleItemAmount.FreePrice),
-                                    onPriceEdit = { clear ->
-                                        if (clear) {
-                                            viewModel.adjustPrice(
-                                                button.value.id,
-                                                newPrice = FreePrice.Unset
-                                            )
-                                        } else {
-                                            // after the price was edited, where do we want to set it to?
-                                            // we could add this mechanism to the PriceSelectionState.
-                                            priceTargetButtonId.update { button.value.id }
-                                            priceSelectionState.open()
-                                        }
+                        is SaleItemPrice.FreePrice -> {
+                            SaleSelectionItemType.FreePrice(
+                                amount = (saleStatus.buttonSelection[button.id] as? SaleItemAmount.FreePrice),
+                                onPriceEdit = { clear ->
+                                    if (clear) {
+                                        viewModel.adjustPrice(
+                                            button.id,
+                                            newPrice = FreePrice.Unset
+                                        )
+                                    } else {
+                                        priceTargetButtonId.update { button.id }
+                                        priceSelectionState.open()
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
+                    },
+                )
+            )
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = modifier
+            .padding(horizontal = 2.dp)
+            .fillMaxSize()
+    ) {
+        val cardLayout = maxWidth >= 760.dp
+
+        if (cardLayout) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+            ) {
+                items(entries) { entry ->
+                    SaleSelectionItem(
+                        caption = entry.caption,
+                        type = entry.type,
+                        layout = SaleSelectionItemLayout.Card,
                     )
                 }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                items(entries) { entry ->
+                    SaleSelectionItem(
+                        caption = entry.caption,
+                        type = entry.type,
+                        layout = SaleSelectionItemLayout.ListRow,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SaleAmountSelectionDialog(
+    state: de.stustapay.libssp.ui.common.DialogDisplayState,
+    initialAmount: () -> UInt,
+    config: AmountConfig,
+    onEnter: (UInt) -> Unit,
+    onClear: () -> Unit,
+) {
+    if (!state.isOpen()) {
+        return
+    }
+
+    var currentAmount by remember(state.isOpen(), initialAmount()) {
+        mutableStateOf(initialAmount())
+    }
+
+    Dialog(onDismissRequest = { state.close() }) {
+        OperatorPanel(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 520.dp)
+        ) {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = "Set custom price",
+                    color = OperatorPalette.title,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                AmountSelection(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(420.dp),
+                    amount = currentAmount,
+                    onAmountUpdate = { currentAmount = it },
+                    onClear = {
+                        currentAmount = 0u
+                        onClear()
+                    },
+                    config = config,
+                    title = {
+                        Text(
+                            text = "Free price item",
+                            color = OperatorPalette.accent,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    },
+                )
+                OperatorPrimaryButton(
+                    text = "Apply price",
+                    icon = Icons.Filled.CheckCircle,
+                    onClick = {
+                        onEnter(currentAmount)
+                        state.close()
+                    },
+                )
+                OperatorSecondaryButton(
+                    text = "Clear price",
+                    icon = Icons.Filled.Refresh,
+                    onClick = {
+                        currentAmount = 0u
+                        onClear()
+                        state.close()
+                    },
+                )
+                OperatorSecondaryButton(
+                    text = stringResource(R.string.back),
+                    icon = Icons.Filled.Edit,
+                    onClick = { state.close() },
+                )
             }
         }
     }

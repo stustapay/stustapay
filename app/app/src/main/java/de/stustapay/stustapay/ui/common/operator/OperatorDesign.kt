@@ -84,13 +84,15 @@ fun OperatorScaffold(
     footerStatus: String,
     modifier: Modifier = Modifier,
     languageLabel: String = "EN | DE",
+    showFooter: Boolean = true,
     onBack: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val compactLayout = maxWidth < 600.dp
+        val routeHeader = onBack != null
         val scaffoldPadding = if (compactLayout) 12.dp else 24.dp
-        val scaffoldSpacing = if (compactLayout) 12.dp else 20.dp
+        val scaffoldSpacing = if (routeHeader) 10.dp else if (compactLayout) 12.dp else 20.dp
 
         OperatorBackground {
             Column(
@@ -106,6 +108,7 @@ fun OperatorScaffold(
                     terminalLabel = terminalLabel,
                     languageLabel = languageLabel,
                     onBack = onBack,
+                    compactRouteHeader = routeHeader,
                 )
                 Box(
                     modifier = Modifier
@@ -113,11 +116,13 @@ fun OperatorScaffold(
                         .fillMaxWidth(),
                     content = content,
                 )
-                OperatorFooter(
-                    hint = footerHint,
-                    sectionLabel = footerSection,
-                    statusLabel = footerStatus,
-                )
+                if (showFooter) {
+                    OperatorFooter(
+                        hint = footerHint,
+                        sectionLabel = footerSection,
+                        statusLabel = footerStatus,
+                    )
+                }
             }
         }
     }
@@ -132,8 +137,35 @@ fun OperatorHeader(
     modifier: Modifier = Modifier,
     languageLabel: String = "EN | DE",
     onBack: (() -> Unit)? = null,
+    compactRouteHeader: Boolean = false,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        if (compactRouteHeader && onBack != null) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = OperatorPalette.panelMuted,
+                border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+                elevation = 0.dp,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OperatorCircleIcon(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        backgroundColor = OperatorPalette.pill,
+                        tint = OperatorPalette.title,
+                        modifier = Modifier.clickable(onClick = onBack),
+                        containerSize = 40.dp,
+                        iconSize = 20.dp,
+                    )
+                }
+            }
+            return@BoxWithConstraints
+        }
+
         val compactLayout = maxWidth < 720.dp
         val horizontalPadding = if (compactLayout) 12.dp else 16.dp
         val verticalPadding = if (compactLayout) 14.dp else 18.dp

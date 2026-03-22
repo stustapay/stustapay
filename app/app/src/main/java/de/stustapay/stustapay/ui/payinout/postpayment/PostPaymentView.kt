@@ -18,41 +18,68 @@ fun PostPaymentView(
     leaveView: () -> Unit = {},
     viewModel: PostPaymentViewModel = hiltViewModel(),
 ) {
-
-
     val status by viewModel.status.collectAsStateWithLifecycle()
     val payOutState by viewModel.payOutState.collectAsStateWithLifecycle()
     val config by viewModel.terminalLoginState.collectAsStateWithLifecycle()
+    val navTarget by viewModel.navState.collectAsStateWithLifecycle()
+    val completedTopUp by viewModel.topUpCompleted.collectAsStateWithLifecycle()
+    val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-
 
     if (!config.canHandleCash()) {
         NoCashRegisterWarning(modifier = Modifier.padding(20.dp), bigStyle = true)
         return
     }
 
-    val checkedPayOut = payOutState.getCheckedPayout()
-    if (checkedPayOut == null) {
-        PostPaymentScan(
-            onScan = { tag ->
-                scope.launch {
-                    viewModel.tagScanned(tag)
-                }
-            },
-            status = status,
-            leaveView = leaveView,
-        )
-    } else {
-        PostPaymentSelection(
-            leaveView = leaveView,
-            viewModel = viewModel,
-            payout = checkedPayOut,
-            onClear = {
-                scope.launch {
-                    viewModel.clearDraft()
-                }
-            },
-        )
+    when (navTarget) {
+        PostPaymentPage.Selection -> {
+            val checkedPayOut = payOutState.getCheckedPayout()
+            if (checkedPayOut == null) {
+                PostPaymentScan(
+                    onScan = { tag ->
+                        scope.launch {
+                            viewModel.tagScanned(tag)
+                        }
+                    },
+                    status = status,
+                    leaveView = leaveView,
+                )
+            } else {
+                PostPaymentSelection(
+                    leaveView = leaveView,
+                    viewModel = viewModel,
+                    payout = checkedPayOut,
+                    onClear = {
+                        scope.launch {
+                            viewModel.clearDraft()
+                        }
+                    },
+                )
+            }
+        }
+
+        PostPaymentPage.Done -> {
+            OperatorPostPaymentSuccess(
+                terminalTitle = config.title().title,
+                footerHint = status,
+                completedTopUp = completedTopUp,
+                successMessage = successMessage,
+                onDismiss = {
+                    viewModel.dismissSuccess()
+                    leaveView()
+                },
+            )
+        }
+
+        PostPaymentPage.Failure -> {
+            OperatorPostPaymentError(
+                terminalTitle = config.title().title,
+                footerHint = status,
+                onDismiss = {
+                    viewModel.dismissFailure()
+                    leaveView()
+                },
+            )
+        }
     }
 }
-

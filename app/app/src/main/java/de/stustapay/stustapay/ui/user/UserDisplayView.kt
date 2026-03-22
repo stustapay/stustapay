@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 
@@ -43,12 +45,21 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                         .padding(20.dp)
                 ) {
                     NfcScanCard(
+                        border = androidx.compose.foundation.BorderStroke(2.dp, OperatorPalette.panelBorder),
+                        backgroundColor = OperatorPalette.panelMuted,
+                        showStatus = false,
                         keepScanning = true,
                         onScan = { tag ->
                             scope.launch {
                                 viewModel.display(tag)
                             }
-                        }
+                        },
+                        content = { scanStatus ->
+                            PencilOperatorScanContent(
+                                scanStatus = scanStatus,
+                                subtitle = stringResource(R.string.nfc_scan_description)
+                            )
+                        },
                     )
                 }
             },

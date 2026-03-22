@@ -20,6 +20,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
@@ -77,6 +78,10 @@ fun ProductSelectionItem(
     leftButtonPress: () -> Unit = {},
     rightButtonPress: () -> Unit = {},
     sameSizeButtons: Boolean = false,
+    itemPriceColor: Color = Color.Unspecified,
+    itemAmountColor: Color = Color.Unspecified,
+    leftButtonTextColor: Color = Color.Unspecified,
+    rightButtonTextColor: Color = Color.Unspecified,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -98,6 +103,7 @@ fun ProductSelectionItem(
                 textAlign = TextAlign.Right,
                 modifier = Modifier.weight(0.65f),
                 fontSize = 22.sp,
+                color = itemPriceColor,
             )
 
             Text(
@@ -105,6 +111,7 @@ fun ProductSelectionItem(
                 textAlign = TextAlign.Right,
                 modifier = Modifier.weight(0.35f),
                 fontSize = 22.sp,
+                color = itemAmountColor,
             )
         }
 
@@ -139,7 +146,8 @@ fun ProductSelectionItem(
                     Text(
                         text = leftButtonText,
                         style = leftButtonStyle,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = leftButtonTextColor,
                     )
                 }
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
@@ -157,6 +165,7 @@ fun ProductSelectionItem(
                         text = rightButtonText,
                         style = rightButtonStyle,
                         textAlign = TextAlign.Center,
+                        color = rightButtonTextColor,
                     )
                 }
             }

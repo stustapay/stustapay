@@ -3,15 +3,18 @@ package de.stustapay.stustapay.ui.common.pay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -20,9 +23,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.stustapay.libssp.ui.theme.LargeButtonStyle
-import de.stustapay.libssp.ui.theme.errorButtonColors
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 
 @Preview
 @Composable
@@ -61,256 +64,138 @@ fun ProductSelectionBottomBar(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    Column(
-        modifier = modifier
-            .padding(horizontal = 10.dp)
-            .padding(bottom = 5.dp)
-            .fillMaxWidth()
-    ) {
-        if (price != null) {
-            Divider()
-            ProductConfirmItem(
-                name = stringResource(R.string.history_sum),
-                price = price,
-            )
-            Divider()
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.padding(vertical = 3.dp)
-        ) {
-            status()
-        }
-
-        // There are four cases to consider for the payment methods in terms of layout:
-        // 0 enabled -> Layer 8 issue
-        // 1 enabled -> Show custom confirmation text (single line)
-        // 2 enabled -> Use symbols and long text
-        // 3 enabled -> Use symbols and short text
-
-        if (!sspEnabled && !cashEnabled && !cardEnabled) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.padding(vertical = 10.dp)
-            ) {
-                Button(
-                    enabled = ready, colors = errorButtonColors(), onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onAbort()
-                    }, modifier = Modifier
-                        .height(55.dp)
-                        .fillMaxWidth(0.5f)
-                        .padding(end = 5.dp)
-                ) {
-                    Text(text = abortText, fontSize = abortSize)
-                }
-
-                Button(
-                    enabled = false,
-                    onClick = {},
-                    modifier = Modifier
-                        .height(55.dp)
-                        .fillMaxWidth()
-                        .padding(start = 5.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.pay_no_payment_method_configured),
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle
-                    )
-                }
-            }
-        } else if ((sspEnabled && !cashEnabled && !cardEnabled) || (!sspEnabled && cashEnabled && !cardEnabled) || (!sspEnabled && !cashEnabled && cardEnabled)) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.padding(vertical = 10.dp)
-            ) {
-                Button(
-                    enabled = ready, colors = errorButtonColors(), onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onAbort()
-                    }, modifier = Modifier
-                        .height(55.dp)
-                        .fillMaxWidth(0.5f)
-                        .padding(end = 5.dp)
-                ) {
-                    Text(text = abortText, fontSize = abortSize)
-                }
-
-                Button(
-                    enabled = (ready && sspEnabled) || (ready && cashEnabled && cashierHasRegister) || (ready && cardEnabled && amountIsPositive),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (sspEnabled) {
-                            onSubmitSsp()
-                        } else if (cashEnabled) {
-                            onSubmitCash()
-                        } else if (cardEnabled) {
-                            onSubmitCard()
-                        }
-                    },
-                    modifier = Modifier
-                        .height(55.dp)
-                        .fillMaxWidth()
-                        .padding(start = 5.dp)
-                ) {
-                    Text(
-                        text = submitText,
-                        fontSize = submitSize,
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle
-                    )
-                }
-            }
-        } else if ((sspEnabled && cashEnabled && !cardEnabled) || (!sspEnabled && cashEnabled && cardEnabled) || (sspEnabled && !cashEnabled && cardEnabled)) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .height(100.dp)
-            ) {
-                Button(
-                    enabled = (ready && sspEnabled) || (ready && cashierHasRegister),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (sspEnabled) {
-                            onSubmitSsp()
-                        } else {
-                            onSubmitCash()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.5f)
-                        .padding(horizontal = 5.dp)
-                ) {
-                    Text(
-                        text = if (sspEnabled) {
-                            stringResource(R.string.pay_stustapay)
-                        } else {
-                            stringResource(R.string.pay_cash)
-                        },
-                        fontSize = submitSize,
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle
-                    )
-                }
-
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(horizontal = 5.dp),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (cardEnabled) {
-                            onSubmitCard()
-                        } else {
-                            onSubmitCash()
-                        }
-                    },
-                    enabled = (ready && cardEnabled && amountIsPositive) || (ready && cashierHasRegister),
-                ) {
-                    Text(
-                        text = if (cardEnabled) {
-                            stringResource(R.string.pay_card)
-                        } else {
-                            stringResource(R.string.pay_cash)
-                        },
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle,
-                        fontSize = submitSize,
-                    )
-                }
-            }
-
-            Button(
-                enabled = ready, colors = errorButtonColors(), onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onAbort()
-                }, modifier = Modifier
-                    .height(55.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(text = abortText, fontSize = abortSize)
-            }
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .height(100.dp)
-            ) {
-                Button(
+    val paymentActions = buildList {
+        if (sspEnabled) {
+            add(
+                SelectionAction(
+                    label = stringResource(R.string.pay_stustapay),
                     enabled = ready,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onSubmitSsp()
-                    },
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.33f)
-                        .padding(horizontal = 5.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.pay_stustapay),
-                        fontSize = 25.sp,
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle
-                    )
-                }
-
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth(0.5f)
-                        .fillMaxHeight()
-                        .padding(horizontal = 5.dp),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onSubmitCash()
-                    },
+                    onClick = onSubmitSsp,
+                )
+            )
+        }
+        if (cashEnabled) {
+            add(
+                SelectionAction(
+                    label = stringResource(R.string.pay_cash),
                     enabled = ready && cashierHasRegister,
-                ) {
-                    Text(
-                        stringResource(R.string.pay_cash),
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle,
-                        fontSize = 25.sp,
-                    )
-                }
-
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(horizontal = 5.dp),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onSubmitCard()
-                    },
+                    onClick = onSubmitCash,
+                )
+            )
+        }
+        if (cardEnabled) {
+            add(
+                SelectionAction(
+                    label = stringResource(R.string.pay_card),
                     enabled = ready && amountIsPositive,
+                    onClick = onSubmitCard,
+                )
+            )
+        }
+    }
+
+    OperatorPanel(
+        modifier = modifier.fillMaxWidth(),
+        backgroundColor = OperatorPalette.panelMuted,
+        borderColor = OperatorPalette.panelBorder,
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (price != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        stringResource(R.string.pay_card),
-                        textAlign = TextAlign.Center,
-                        style = LargeButtonStyle,
-                        fontSize = 25.sp,
+                        text = stringResource(R.string.history_sum),
+                        color = OperatorPalette.subtitle,
+                        fontSize = 18.sp,
+                    )
+                    Text(
+                        text = "%.02f€".format(price),
+                        color = OperatorPalette.title,
+                        fontSize = 26.sp,
                     )
                 }
             }
 
-            Button(
-                enabled = ready, colors = errorButtonColors(), onClick = {
+            status()
+
+            if (paymentActions.isEmpty()) {
+                SelectionActionButton(
+                    text = stringResource(R.string.pay_no_payment_method_configured),
+                    enabled = false,
+                    emphasized = false,
+                    onClick = {},
+                )
+            } else {
+                paymentActions.forEach { action ->
+                    SelectionActionButton(
+                        text = action.label,
+                        enabled = action.enabled,
+                        emphasized = true,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            action.onClick()
+                        },
+                    )
+                }
+            }
+
+            SelectionActionButton(
+                text = "Clear basket",
+                enabled = ready,
+                emphasized = false,
+                destructive = true,
+                onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onAbort()
-                }, modifier = Modifier
-                    .height(55.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(text = abortText, fontSize = abortSize)
-            }
+                },
+            )
         }
+    }
+}
+
+private data class SelectionAction(
+    val label: String,
+    val enabled: Boolean,
+    val onClick: () -> Unit,
+)
+
+@Composable
+private fun SelectionActionButton(
+    text: String,
+    enabled: Boolean,
+    emphasized: Boolean,
+    destructive: Boolean = false,
+    onClick: () -> Unit,
+) {
+    val backgroundColor = when {
+        destructive -> Color(0xFFB91C1C)
+        emphasized -> OperatorPalette.accent
+        else -> OperatorPalette.pill
+    }
+    val contentColor = if (emphasized) OperatorPalette.accentText else Color.White
+
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = backgroundColor,
+            contentColor = contentColor,
+            disabledBackgroundColor = OperatorPalette.panel,
+            disabledContentColor = OperatorPalette.subtitle,
+        ),
+    ) {
+        Text(
+            text = text,
+            color = contentColor,
+            fontSize = 22.sp,
+            textAlign = TextAlign.Center,
+        )
     }
 }

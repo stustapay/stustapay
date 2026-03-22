@@ -159,12 +159,14 @@ fun AccountScan(
                             modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
                             onScan = onScan,
                             keepScanning = true,
+                            showStatus = false,
+                            border = BorderStroke(2.dp, OperatorPalette.panelBorder),
+                            backgroundColor = OperatorPalette.panelMuted,
+                            shape = RoundedCornerShape(if (deviceConfig.isSmallScreen) 18.dp else 22.dp),
                             content = { status ->
-                                EnhancedAccountScanContent(
-                                    isIminFalcons2 = deviceConfig.isIminFalcons2,
-                                    isSmallScreen = deviceConfig.isSmallScreen,
-                                    isSelfService = isSelfService,
-                                    scanStatus = status
+                                PencilOperatorBalanceScanContent(
+                                    scanStatus = status,
+                                    isSmallScreen = deviceConfig.isSmallScreen
                                 )
                             }
                         )
@@ -187,12 +189,14 @@ fun AccountScan(
                                 ),
                             onScan = onScan,
                             keepScanning = true,
+                            showStatus = false,
+                            border = BorderStroke(2.dp, OperatorPalette.panelBorder),
+                            backgroundColor = OperatorPalette.panelMuted,
+                            shape = RoundedCornerShape(if (deviceConfig.isSmallScreen) 18.dp else 22.dp),
                             content = { status ->
-                                EnhancedAccountScanContent(
-                                    isIminFalcons2 = deviceConfig.isIminFalcons2,
-                                    isSmallScreen = deviceConfig.isSmallScreen,
-                                    isSelfService = isSelfService,
-                                    scanStatus = status
+                                PencilOperatorBalanceScanContent(
+                                    scanStatus = status,
+                                    isSmallScreen = deviceConfig.isSmallScreen
                                 )
                             }
                         )
@@ -279,6 +283,88 @@ private fun PencilCheckBalancePanelContent(
             color = SelfServicePalette.subtitle,
             fontWeight = FontWeight.Medium,
             fontSize = if (isSmallScreen) 12.sp else 14.sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun PencilOperatorBalanceScanContent(
+    isSmallScreen: Boolean,
+    scanStatus: String,
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    val outerSize = if (isSmallScreen) 120.dp else 168.dp
+    val midPadding = if (isSmallScreen) 18.dp else 22.dp
+    val innerPadding = if (isSmallScreen) 16.dp else 20.dp
+    val iconSize = if (isSmallScreen) 24.dp else 30.dp
+    val statusText = scanStatus.ifBlank { stringResource(R.string.nfc_scan_ready) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 14.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.selfservice_check_balance),
+            color = OperatorPalette.title,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = if (isSmallScreen) 28.sp else 34.sp,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = stringResource(R.string.selfservice_scan_balance_subtitle),
+            color = OperatorPalette.subtitle,
+            fontWeight = FontWeight.Medium,
+            fontSize = if (isSmallScreen) 12.sp else 15.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Box(
+            modifier = Modifier
+                .size(outerSize)
+                .background(Color(0xFF203659), CircleShape)
+                .padding(midPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF2A4A78), CircleShape)
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(SelfServicePalette.accent, CircleShape)
+                        .scale(pulseScale),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.NearMe,
+                        contentDescription = null,
+                        tint = SelfServicePalette.backgroundTop,
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = statusText,
+            color = OperatorPalette.subtitle,
+            fontWeight = FontWeight.Medium,
+            fontSize = if (isSmallScreen) 13.sp else 16.sp,
             textAlign = TextAlign.Center
         )
     }

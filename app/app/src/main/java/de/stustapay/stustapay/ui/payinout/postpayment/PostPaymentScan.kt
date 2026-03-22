@@ -18,9 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.material.IconButton
 import androidx.compose.material.Icon
 import de.stustapay.libssp.model.NfcTag
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.StatusText
-import de.stustapay.libssp.ui.theme.NfcScanStyle
+import androidx.compose.ui.res.stringResource
 
 
 @Composable
@@ -71,23 +74,12 @@ fun PostPaymentScan(
                         .fillMaxWidth(),
                     onScan = onScan,
                     showStatus = false,
+                    border = androidx.compose.foundation.BorderStroke(2.dp, OperatorPalette.panelBorder),
+                    backgroundColor = OperatorPalette.panelMuted,
                 ) { scanStatus ->
-                    Text(
-                        text = "Scan a Chip",
-                        modifier = Modifier.fillMaxWidth(),
-                        style = NfcScanStyle,
-                    )
-                    Text(
-                        // Money with wings emoji
-                        text = "\uD83D\uDCB8",
-                        modifier = Modifier.fillMaxWidth(),
-                        fontSize = 100.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        text = scanStatus,
-                        modifier = Modifier.fillMaxWidth(),
-                        fontSize = 26.sp,
+                    PencilOperatorScanContent(
+                        scanStatus = scanStatus,
+                        subtitle = stringResource(R.string.nfc_scan_description)
                     )
                 }
             }

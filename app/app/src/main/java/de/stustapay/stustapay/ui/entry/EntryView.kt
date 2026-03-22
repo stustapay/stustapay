@@ -31,8 +31,8 @@ import de.stustapay.api.models.EntryDirection
 import de.stustapay.api.models.EntryScanResult
 import de.stustapay.api.models.TerminalMode
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.chipscan.EnhancedNfcScanContent
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
 import de.stustapay.stustapay.ui.common.FailureIcon
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.SuccessIcon
@@ -119,12 +119,14 @@ fun EntryView(
                     scan = !requestActive,
                     keepScanning = true,
                     showStatus = false,
+                    border = BorderStroke(2.dp, OperatorPalette.panelBorder),
+                    backgroundColor = OperatorPalette.panelMuted,
                 ) {
-                    EnhancedNfcScanContent(
-                        isIminFalcons2 = deviceConfig.isIminFalcons2,
-                        isSmallScreen = deviceConfig.isSmallScreen,
+                    PencilOperatorScanContent(
+                        title = scanLabel,
+                        subtitle = stringResource(R.string.nfc_scan_description),
                         scanStatus = it,
-                        headerText = scanLabel
+                        isSmallScreen = deviceConfig.isSmallScreen
                     )
                 }
             }

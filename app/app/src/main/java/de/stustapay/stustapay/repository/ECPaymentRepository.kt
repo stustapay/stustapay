@@ -20,6 +20,23 @@ class ECPaymentRepository @Inject constructor(
     private val terminalConfigRepository: TerminalConfigRepository,
 )
 {
+    fun isReady(): Boolean {
+        return sumUp.isLoggedIn()
+    }
+
+    suspend fun startCardReaderSetup(context: Activity): String? {
+        return try {
+            sumUp.cardReaderSettings(context)
+            when (val state = sumUp.paymentStatus.value) {
+                is SumUpState.Error -> state.msg
+                is SumUpState.Failed -> state.msg
+                else -> null
+            }
+        } catch (exc: Exception) {
+            exc.message ?: "EC reader setup could not be started."
+        }
+    }
+
     suspend fun wakeup() {
         sumUp.wakeup()
     }

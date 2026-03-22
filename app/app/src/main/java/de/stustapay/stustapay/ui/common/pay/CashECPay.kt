@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
@@ -41,6 +40,8 @@ import de.stustapay.libssp.ui.theme.LargeButtonStyle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.nav.navigateTo
 
@@ -255,11 +256,12 @@ fun CashECSelection(
                     ) { },
                 contentAlignment = Alignment.Center
             ) {
-                Card(
+                OperatorPanel(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
-                    elevation = 6.dp
+                    backgroundColor = OperatorPalette.panel,
+                    borderColor = OperatorPalette.panelBorder,
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -269,7 +271,8 @@ fun CashECSelection(
                         CircularProgressIndicator(modifier = Modifier.size(22.dp))
                         Text(
                             text = stringResource(R.string.common_status_fetching),
-                            style = MaterialTheme.typography.subtitle1
+                            style = MaterialTheme.typography.subtitle1,
+                            color = OperatorPalette.title,
                         )
                     }
                 }

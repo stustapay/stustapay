@@ -178,6 +178,7 @@ class PostPaymentViewModel @Inject constructor(
     fun clearDraft() {
         _topUpCompleted.update { null }
         _postPaymentState.update { PostPaymentState() }
+        _successMessage.update { null }
         _status.update { "ready" }
         clearPayOutState()
     }
@@ -362,19 +363,23 @@ class PostPaymentViewModel @Inject constructor(
                 clearDraft()
                 clearPayOutState()
                 _topUpCompleted.update { response.data }
+                _successMessage.update { null }
                 _status.update { "$topUpType TopUp successful!" }
+                _navState.update { PostPaymentPage.Done }
             }
 
             is Response.Error.Service.AlreadyProcessed -> {
-                // TODO: get a CompletedTopUp here from response, and navigate to Done-Page
                 clearDraft()
+                clearPayOutState()
                 _status.update { "$topUpType TopUp successful!" }
+                _successMessage.update { "$topUpType payment was already processed." }
                 _actuallyOk.update { true }
-                _navState.update { PostPaymentPage.Failure }
+                _navState.update { PostPaymentPage.Done }
             }
 
             is Response.Error -> {
                 _status.update { "$topUpType TopUp failed! ${response.msg()}" }
+                _successMessage.update { null }
                 _actuallyOk.update { false }
                 _navState.update { PostPaymentPage.Failure }
             }
@@ -389,6 +394,7 @@ class PostPaymentViewModel @Inject constructor(
     /** when a topup was successful and the confirmation was dismissed */
     fun dismissSuccess() {
         // todo: some feedback during this refresh?
+        _successMessage.update { null }
         viewModelScope.launch {
             terminalConfigRepository.tokenRefresh()
         }

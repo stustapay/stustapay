@@ -31,6 +31,7 @@ import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
 import de.stustapay.stustapay.ui.common.CloseContent
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
@@ -71,8 +72,10 @@ fun VaultView(
                                     viewModel.fetchTag(tag)
                                 }
                             }) {
-                            Text(
-                                stringResource(R.string.nfc_scan_prompt), style = NfcScanStyle
+                            PencilOperatorScanContent(
+                                title = stringResource(R.string.nfc_scan_title_plain),
+                                subtitle = stringResource(R.string.nfc_scan_description),
+                                scanStatus = ""
                             )
                         }
                     }

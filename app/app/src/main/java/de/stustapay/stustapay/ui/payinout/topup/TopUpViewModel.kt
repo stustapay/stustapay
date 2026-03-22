@@ -141,6 +141,19 @@ class TopUpViewModel @Inject constructor(
         return true
     }
 
+    fun isCardReaderReady(): Boolean {
+        return ecPaymentRepository.isReady()
+    }
+
+    suspend fun startCardReaderSetup(context: Activity) {
+        _status.update { "EC reader setup..." }
+        val startError = ecPaymentRepository.startCardReaderSetup(context)
+        if (startError != null) {
+            _status.update { startError }
+            _errorMessage.update { startError }
+        }
+    }
+
     /**
      * validates the amount so we can continue to checkout
      */

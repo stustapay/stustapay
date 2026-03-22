@@ -42,6 +42,7 @@ import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
 import de.stustapay.stustapay.ui.common.CloseContent
 import de.stustapay.stustapay.ui.common.SuccessIcon
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
@@ -83,9 +84,10 @@ fun CashierView(
                                     viewModel.fetchTag(tag)
                                 }
                             }) {
-                            Text(
-                                stringResource(R.string.nfc_scan_cashier_prompt),
-                                style = NfcScanStyle
+                            PencilOperatorScanContent(
+                                title = stringResource(R.string.nfc_scan_cashier_prompt),
+                                subtitle = stringResource(R.string.nfc_scan_description),
+                                scanStatus = ""
                             )
                         }
                     } else if (uiState.nav is CashierNavState.Transfer) {
@@ -96,9 +98,10 @@ fun CashierView(
                                     viewModel.completeTransfer(tag)
                                 }
                             }) {
-                            Text(
-                                stringResource(R.string.nfc_scan_transfer_prompt),
-                                style = NfcScanStyle
+                            PencilOperatorScanContent(
+                                title = stringResource(R.string.nfc_scan_transfer_prompt),
+                                subtitle = stringResource(R.string.nfc_scan_description),
+                                scanStatus = ""
                             )
                         }
                     }

@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -26,14 +23,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceCountdownCard
@@ -51,7 +46,6 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val topUpConfig by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val isSelfService = topUpConfig.hasOnlyTopUpPrivilege()
-    val haptic = LocalHapticFeedback.current
     val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
     var remainingSeconds by rememberSaveable(isSelfService) {
         mutableIntStateOf(SELF_SERVICE_SUCCESS_RETURN_SECONDS)
@@ -176,62 +170,10 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
         return
     }
 
-    Scaffold(
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding())
-                    .padding(horizontal = 14.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.topup_success_title),
-                    style = MaterialTheme.typography.h4,
-                    fontWeight = FontWeight.Bold
-                )
-                Divider(modifier = Modifier.padding(vertical = 6.dp))
-                TopUpConfirmItem(
-                    name = stringResource(R.string.previous_balance),
-                    price = completedTopUp.oldBalance,
-                )
-                TopUpConfirmItem(
-                    name = stringResource(R.string.topup),
-                    price = completedTopUp.amount,
-                )
-                Divider(modifier = Modifier.padding(vertical = 6.dp))
-                TopUpConfirmItem(
-                    name = stringResource(R.string.new_balance),
-                    price = completedTopUp.newBalance,
-                    bigStyle = true,
-                )
-            }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = 5.dp)
-                    .fillMaxWidth()
-            ) {
-                Divider(modifier = Modifier.padding(top = 10.dp))
-                StatusText(
-                    status = status,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                androidx.compose.material.Button(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        onDismiss()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                ) {
-                    Text(text = stringResource(R.string.done))
-                }
-            }
-        }
+    OperatorTopUpSuccess(
+        terminalTitle = topUpConfig.title().title,
+        footerHint = status,
+        completedTopUp = completedTopUp,
+        onDismiss = onDismiss,
     )
 }

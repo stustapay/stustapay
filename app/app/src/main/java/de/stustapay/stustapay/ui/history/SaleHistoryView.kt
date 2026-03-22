@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.Order
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavScaffold
@@ -86,10 +87,10 @@ fun SaleHistoryView(
             }
         }
     ) {
-        Text(
-            stringResource(R.string.history_scan_prompt),
-            textAlign = TextAlign.Center,
-            fontSize = 36.sp
+        PencilOperatorScanContent(
+            title = stringResource(R.string.history_scan_customer),
+            subtitle = stringResource(R.string.history_scan_prompt),
+            scanStatus = status.toString()
         )
     }
 

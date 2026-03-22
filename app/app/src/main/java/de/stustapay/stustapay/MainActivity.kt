@@ -124,14 +124,15 @@ class MainActivity : ComponentActivity(), SysUiController {
             window.insetsController?.let {
                 it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 window.navigationBarColor = getColor(R.color.black_semitransparent)
-                it.hide(WindowInsets.Type.navigationBars())
+                it.hide(WindowInsets.Type.systemBars())
             }
         } else {
             var uiVisibility = window.decorView.systemUiVisibility
 
+            uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_FULLSCREEN
             // don't draw essential navigation controls (home, back, ...)
             uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_IMMERSIVE
+            uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 
             window.decorView.systemUiVisibility = uiVisibility
         }
@@ -145,12 +146,13 @@ class MainActivity : ComponentActivity(), SysUiController {
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.show(WindowInsets.Type.navigationBars())
+            window.insetsController?.show(WindowInsets.Type.systemBars())
         } else {
             var uiVisibility: Int = window.decorView.systemUiVisibility
 
+            uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
             uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.inv()
-            uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE.inv()
+            uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY.inv()
 
             window.decorView.systemUiVisibility = uiVisibility
         }

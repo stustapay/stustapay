@@ -1,14 +1,29 @@
 package de.stustapay.stustapay.ui.sale
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import de.stustapay.stustapay.ui.common.pay.ProductSelectionItem
-import de.stustapay.libssp.ui.theme.ProductButtonBigStyle
-import de.stustapay.libssp.ui.theme.ProductButtonStyle
-import de.stustapay.libssp.ui.theme.errorButtonColors
-import de.stustapay.libssp.ui.theme.okButtonColors
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 
 sealed interface SaleSelectionItemType {
     data class FixedPrice(
@@ -39,22 +54,27 @@ sealed interface SaleSelectionItemType {
     ) : SaleSelectionItemType
 }
 
+enum class SaleSelectionItemLayout {
+    Card,
+    ListRow,
+}
+
 @Preview
 @Composable
 fun PreviewSaleSelectionItem() {
     Column {
         SaleSelectionItem(
             caption = "Robbenfutter",
-            SaleSelectionItemType.FixedPrice(
+            type = SaleSelectionItemType.FixedPrice(
                 onIncr = {},
                 onDecr = {},
                 price = SaleItemPrice.FixedPrice(13.37),
                 amount = SaleItemAmount.FixedPrice(42),
-            )
+            ),
         )
         SaleSelectionItem(
             caption = "Internetkanister",
-            SaleSelectionItemType.FreePrice(
+            type = SaleSelectionItemType.FreePrice(
                 onPriceEdit = {},
                 amount = SaleItemAmount.FreePrice(4200u),
             )
@@ -88,110 +108,265 @@ fun PreviewSaleSelectionItem() {
 fun SaleSelectionItem(
     caption: String,
     type: SaleSelectionItemType,
+    layout: SaleSelectionItemLayout = SaleSelectionItemLayout.Card,
 ) {
-    var sameSizeButtons = false
-
+    val isReturnable = type is SaleSelectionItemType.Returnable
     val itemPrice: String
-    val itemAmount: String?
-    var itemAmountDelimiter: String = "×"
-
-    val rightButtonText: String
-    var rightButtonStyle = ProductButtonBigStyle
-
-    var leftButtonColors = ButtonDefaults.buttonColors()
-    var rightButtonColors = errorButtonColors()
+    val quantityLabel: String?
+    val primaryText: String
+    val secondaryText: String?
+    val primaryAction: () -> Unit
+    val secondaryAction: (() -> Unit)?
+    val primaryButtonColor: Color
+    val primaryButtonTextColor: Color
+    val secondaryButtonColor: Color
+    val secondaryButtonTextColor: Color
 
     when (type) {
         is SaleSelectionItemType.FixedPrice -> {
             val amount: Int = type.amount?.amount ?: 0
             itemPrice = "%.02f€".format(type.price.price)
-            itemAmount = "%d".format(amount)
-            rightButtonText = "‒"
+            quantityLabel = if (amount > 0) "×$amount" else null
+            primaryText = "+ Add"
+            secondaryText = if (amount > 0) "−" else null
+            primaryAction = type.onIncr
+            secondaryAction = if (amount > 0) type.onDecr else null
+            primaryButtonColor = OperatorPalette.accent
+            primaryButtonTextColor = OperatorPalette.accentText
+            secondaryButtonColor = Color(0xFFB91C1C)
+            secondaryButtonTextColor = Color.White
         }
 
         is SaleSelectionItemType.Returnable -> {
-
-            if (caption.contains("Pfand")) {
-                sameSizeButtons = true
-                val amount: Int = type.amount?.amount ?: 0
-                itemPrice = "%.02f€".format(type.price.price)
-                itemAmount = "%d".format(amount)
-                rightButtonText = type.incrementText
-                rightButtonStyle = ProductButtonStyle
-                leftButtonColors = errorButtonColors()
-                rightButtonColors = okButtonColors()
-            }
-            else {
-                val amount: Int = type.amount?.amount ?: 0
-                itemPrice = "%.02f€".format(type.price.price)
-                itemAmount = "%d".format(amount)
-                leftButtonColors = errorButtonColors()
-                rightButtonText = "‒"
-            }
+            val amount: Int = type.amount?.amount ?: 0
+            itemPrice = "%.02f€".format(type.price.price ?: 0.0)
+            quantityLabel = if (amount != 0) amount.toString() else null
+            primaryText = "Add"
+            secondaryText = "−"
+            primaryAction = type.onDecr
+            secondaryAction = type.onIncr
+            primaryButtonColor = Color(0xFFB91C1C)
+            primaryButtonTextColor = Color.White
+            secondaryButtonColor = Color(0xFFEAB308)
+            secondaryButtonTextColor = Color(0xFF1A1200)
         }
 
         is SaleSelectionItemType.FreePrice -> {
             val price: Double = (type.amount?.price?.toDouble() ?: 0.0) / 100
             itemPrice = "%.02f€".format(price)
-            itemAmount = null
-            rightButtonText = "⌫"
+            quantityLabel = null
+            primaryText = if (type.amount == null) "Set price" else "Edit price"
+            secondaryText = if (type.amount != null) "Clear" else null
+            primaryAction = { type.onPriceEdit(false) }
+            secondaryAction = if (type.amount != null) ({ type.onPriceEdit(true) }) else null
+            primaryButtonColor = OperatorPalette.accent
+            primaryButtonTextColor = OperatorPalette.accentText
+            secondaryButtonColor = Color(0xFFB91C1C)
+            secondaryButtonTextColor = Color.White
         }
 
         is SaleSelectionItemType.Vouchers -> {
-            itemPrice = "%d".format(type.amount)
-            itemAmount = "%d".format(type.maxAmount)
-            itemAmountDelimiter = "/"
-            rightButtonText = "‒"
+            itemPrice = "${type.amount}/${type.maxAmount}"
+            quantityLabel = null
+            primaryText = "+ Voucher"
+            secondaryText = if (type.amount > 0) "−" else null
+            primaryAction = type.onIncr
+            secondaryAction = if (type.amount > 0) type.onDecr else null
+            primaryButtonColor = OperatorPalette.accent
+            primaryButtonTextColor = OperatorPalette.accentText
+            secondaryButtonColor = Color(0xFFB91C1C)
+            secondaryButtonTextColor = Color.White
         }
     }
 
-    ProductSelectionItem(
-        itemPrice = itemPrice,
-        itemAmount = itemAmount,
-        itemAmountDelimiter = itemAmountDelimiter,
-        sameSizeButtons = sameSizeButtons,
-        leftButtonText = caption,
-        leftButtonColors = leftButtonColors,
-        rightButtonText = rightButtonText,
-        rightButtonStyle = rightButtonStyle,
-        rightButtonColors = rightButtonColors,
-        leftButtonPress = {
-            when (type) {
-                is SaleSelectionItemType.FixedPrice -> {
-                    type.onIncr()
+    if (layout == SaleSelectionItemLayout.ListRow) {
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = OperatorPalette.panel,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = caption,
+                            color = OperatorPalette.title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+
+                        if (quantityLabel != null) {
+                            Box(
+                                modifier = Modifier
+                                    .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
+                                    .padding(horizontal = 9.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    text = quantityLabel,
+                                    color = OperatorPalette.subtitle,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
+                    }
                 }
 
-                is SaleSelectionItemType.Returnable -> {
-                    type.onDecr()
-                }
+                Text(
+                    text = itemPrice,
+                    color = OperatorPalette.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                )
 
-                is SaleSelectionItemType.FreePrice -> {
-                    type.onPriceEdit(false)
-                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (secondaryText != null && secondaryAction != null) {
+                        Button(
+                            onClick = secondaryAction,
+                            modifier = Modifier
+                                .height(40.dp)
+                                .widthIn(min = if (secondaryText.length > 1) 68.dp else 44.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = secondaryButtonColor,
+                                contentColor = secondaryButtonTextColor,
+                            ),
+                        ) {
+                            Text(
+                                text = secondaryText,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
 
-                is SaleSelectionItemType.Vouchers -> {
-                    type.onIncr()
-                }
-            }
-        },
-        rightButtonPress = {
-            when (type) {
-                is SaleSelectionItemType.FixedPrice -> {
-                    type.onDecr()
-                }
-
-                is SaleSelectionItemType.Returnable -> {
-                    type.onIncr()
-                }
-
-                is SaleSelectionItemType.FreePrice -> {
-                    type.onPriceEdit(true)
-                }
-
-                is SaleSelectionItemType.Vouchers -> {
-                    type.onDecr()
+                    Button(
+                        onClick = primaryAction,
+                        modifier = Modifier
+                            .height(40.dp)
+                            .widthIn(min = if (isReturnable || primaryText.length > 4) 88.dp else 72.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = primaryButtonColor,
+                            contentColor = primaryButtonTextColor,
+                        ),
+                    ) {
+                        Text(
+                            text = primaryText,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
-    )
+        return
+    }
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = OperatorPalette.panel,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
+                Text(
+                    text = caption,
+                    color = OperatorPalette.title,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (quantityLabel != null) {
+                    Box(
+                        modifier = Modifier
+                            .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = quantityLabel,
+                            color = OperatorPalette.subtitle,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = itemPrice,
+                color = OperatorPalette.subtitle,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Button(
+                    onClick = primaryAction,
+                    modifier = Modifier
+                        .weight(if (secondaryText != null) 0.72f else 1f)
+                        .height(38.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = primaryButtonColor,
+                        contentColor = primaryButtonTextColor,
+                    ),
+                ) {
+                    Text(
+                        text = primaryText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                if (secondaryText != null && secondaryAction != null) {
+                    Button(
+                        onClick = secondaryAction,
+                        modifier = Modifier
+                            .weight(0.28f)
+                            .height(38.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = secondaryButtonColor,
+                            contentColor = secondaryButtonTextColor,
+                        ),
+                    ) {
+                        Text(
+                            text = secondaryText,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
