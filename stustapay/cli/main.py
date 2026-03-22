@@ -68,12 +68,10 @@ def dsfinvk_export(
         Path,
         typer.Option("--filename", "-f", help="output file path of resulting zip file"),
     ] = Path("dsfinV_k.zip"),
-    index_xml: Annotated[Path, typer.Option("--xml", help="index.xml file to include")] = Path(
-        "./stustapay/dsfinvk/assets/index.xml"
-    ),
-    dtd_file: Annotated[Path, typer.Option(help="*.dtd file to include")] = Path(
-        "./stustapay/dsfinvk/assets/gdpdu-01-09-2004.dtd"
-    ),
+    index_xml: Annotated[Path, typer.Option("--xml", help="index.xml file to include")] = Path(__file__).parent.parent
+    / Path("dsfinvk/assets/index.xml"),
+    dtd_file: Annotated[Path, typer.Option(help="*.dtd file to include")] = Path(__file__).parent.parent
+    / Path("dsfinvk/assets/gdpdu-01-09-2004.dtd"),
     dry_run: bool = False,
 ):
     """Export all data required by dsfinvk to the given zip file."""
