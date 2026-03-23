@@ -171,7 +171,7 @@ fun VaultView(
                                                 viewModel.completeWithdraw()
                                             }
                                         }) {
-                                        Text("Withdraw")
+                                        Text("Einpacken")
                                     }
                                 }
                             }
@@ -199,7 +199,7 @@ fun VaultView(
                                                 viewModel.completeDeposit()
                                             }
                                         }) {
-                                        Text("Deposit")
+                                        Text("Auspacken")
                                     }
                                 }
                             }
@@ -217,11 +217,11 @@ fun VaultView(
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text(
-                                        "Withdrawal successfull",
+                                        "Einpacken erfolgreich",
                                         style = MaterialTheme.typography.h5
                                     )
                                     ProductConfirmItem(
-                                        name = "Withdrawn",
+                                        name = "Eingepackt",
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -232,7 +232,7 @@ fun VaultView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in transport account", fontSize = 30.sp)
+                                    Text("im Transportkonto", fontSize = 30.sp)
                                 }
                             }
                         }
@@ -248,9 +248,9 @@ fun VaultView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Deposit successfull", style = MaterialTheme.typography.h5)
+                                    Text("Auspacken erfolgreich", style = MaterialTheme.typography.h5)
                                     ProductConfirmItem(
-                                        name = "Deposited",
+                                        name = "Ausgepackt",
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -261,7 +261,7 @@ fun VaultView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in transport account", fontSize = 30.sp)
+                                    Text("im Transportkonto", fontSize = 30.sp)
                                 }
                             }
                         }

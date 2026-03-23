@@ -145,7 +145,7 @@ fun UserLoginView(
             is UserRolesState.Unknown -> {}
             is UserRolesState.Error -> {
                 OperatorInfoCard(
-                    title = "Role lookup failed",
+                    title = stringResource(R.string.user_role_lookup_failed),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -180,7 +180,7 @@ fun UserLoginView(
         }
 
         OperatorInfoCard(
-            title = "Current session",
+            title = stringResource(R.string.user_current_session),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -232,7 +232,7 @@ fun UserLoginView(
         val statusV = status
         if (statusV != null) {
             OperatorInfoCard(
-                title = "Status",
+                title = stringResource(R.string.user_status_title),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -144,7 +144,7 @@ fun ProductSelectionBottomBar(
             }
 
             SelectionActionButton(
-                text = "Clear basket",
+                text = "Warenkorb leeren",
                 enabled = ready,
                 emphasized = false,
                 destructive = true,

@@ -355,10 +355,22 @@ private fun CompactSaleBasketPanel(
             )
         }
         if (cashEnabled) {
-            add(CompactPaymentAction("Cash", ready && cashierHasRegister, onSubmitCash))
+            add(
+                CompactPaymentAction(
+                    stringResource(R.string.pay_cash).substringAfter('\n'),
+                    ready && cashierHasRegister,
+                    onSubmitCash,
+                )
+            )
         }
         if (cardEnabled) {
-            add(CompactPaymentAction("Card", ready && amountIsPositive, onSubmitCard))
+            add(
+                CompactPaymentAction(
+                    stringResource(R.string.pay_card).substringAfter('\n'),
+                    ready && amountIsPositive,
+                    onSubmitCard,
+                )
+            )
         }
     }
 
@@ -369,7 +381,7 @@ private fun CompactSaleBasketPanel(
         Column(verticalArrangement = Arrangement.spacedBy(if (compactHandheld) 8.dp else 10.dp)) {
             if (!compactHandheld) {
                 Text(
-                    text = "Current order",
+                    text = stringResource(R.string.sale_current_order),
                     color = OperatorPalette.title,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -397,7 +409,7 @@ private fun CompactSaleBasketPanel(
                 }
                 if (basketLines.size > 6) {
                     Text(
-                        text = "+${basketLines.size - 6} more",
+                        text = stringResource(R.string.sale_more_items, basketLines.size - 6),
                         color = OperatorPalette.subtitle,
                         fontSize = 13.sp,
                     )
@@ -410,7 +422,7 @@ private fun CompactSaleBasketPanel(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Total",
+                    text = stringResource(R.string.sale_total_label),
                     color = OperatorPalette.title,
                     fontSize = if (compactHandheld) 17.sp else 18.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -424,7 +436,7 @@ private fun CompactSaleBasketPanel(
             }
 
             Text(
-                text = "${basketCount} items",
+                text = stringResource(R.string.sale_items_count, basketCount),
                 color = if (basketCount > 0) OperatorPalette.accent else OperatorPalette.subtitle,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -438,7 +450,7 @@ private fun CompactSaleBasketPanel(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CompactActionButton(
-                            text = "No payment method configured",
+                            text = stringResource(R.string.sale_no_payment_method_configured),
                             enabled = false,
                             emphasized = false,
                             modifier = Modifier.weight(1f),
@@ -456,14 +468,14 @@ private fun CompactSaleBasketPanel(
                     }
                 } else {
                     CompactActionButton(
-                        text = "No payment method configured",
+                        text = stringResource(R.string.sale_no_payment_method_configured),
                         enabled = false,
                         emphasized = false,
                         onClick = {},
                     )
                     if (basketCount > 0) {
                         Text(
-                            text = "Clear basket",
+                            text = stringResource(R.string.sale_clear_basket),
                             color = OperatorPalette.danger,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -504,7 +516,7 @@ private fun CompactSaleBasketPanel(
                 }
                 if (!compactHandheld && basketCount > 0) {
                     Text(
-                        text = "Clear basket",
+                        text = stringResource(R.string.sale_clear_basket),
                         color = OperatorPalette.danger,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -516,6 +528,7 @@ private fun CompactSaleBasketPanel(
     }
 }
 
+@Composable
 private fun buildSaleBasketSummary(
     config: SaleConfig.Ready,
     saleStatus: SaleStatus,
@@ -555,8 +568,8 @@ private fun buildSaleBasketSummary(
     val voucherAmount = saleStatus.voucherAmount
     if (voucherAmount != null && voucherAmount > 0) {
         lines += SaleBasketSummaryLine(
-            label = "$voucherAmount ${if (voucherAmount == 1) "voucher" else "vouchers"}",
-            value = "Applied",
+            label = "$voucherAmount ${if (voucherAmount == 1) stringResource(R.string.sale_voucher_singular) else stringResource(R.string.sale_voucher_plural)}",
+            value = stringResource(R.string.sale_applied),
         )
     }
 

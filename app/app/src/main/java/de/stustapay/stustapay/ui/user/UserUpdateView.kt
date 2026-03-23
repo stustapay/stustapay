@@ -52,7 +52,7 @@ fun UserUpdateView(viewModel: UserViewModel) {
 
     val currentUserV = currentUser
     if (currentUserV == null) {
-        Text("current user is null")
+        Text(stringResource(R.string.user_update_no_current_user))
         return
     }
 

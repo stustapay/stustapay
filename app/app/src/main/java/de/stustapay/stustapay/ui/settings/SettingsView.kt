@@ -12,12 +12,14 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.nav.NavDest
@@ -37,13 +39,13 @@ fun SettingsRootView(
     navigateBack: () -> Unit,
 ) {
     OperatorScaffold(
-        title = "Settings",
-        subtitle = "Terminal configuration entry point with connection, reader, and about routes.",
+        title = stringResource(R.string.root_item_settings),
+        subtitle = stringResource(R.string.settings_subtitle),
         icon = Icons.Filled.Settings,
-        terminalLabel = "Local Config",
-        footerHint = "This screen routes into server registration, EC reader maintenance, and app information.",
-        footerSection = "Config",
-        footerStatus = "3 routes",
+        terminalLabel = stringResource(R.string.settings_terminal_label),
+        footerHint = stringResource(R.string.settings_footer_hint),
+        footerSection = stringResource(R.string.settings_footer_section),
+        footerStatus = stringResource(R.string.settings_footer_status),
         onBack = navigateBack,
     ) {
         Column(
@@ -55,24 +57,24 @@ fun SettingsRootView(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 OperatorActionCard(
-                    title = "Core Connection",
-                    description = "Register or deregister the terminal and update the backend endpoint association.",
+                    title = stringResource(R.string.settings_core_connection),
+                    description = stringResource(R.string.settings_core_connection_desc),
                     icon = Icons.Filled.Link,
                     onClick = { navController.navigate(SettingsNavDest.connection.route) },
                     modifier = Modifier.weight(1f),
                     emphasized = true,
                 )
                 OperatorActionCard(
-                    title = "EC Card Reader",
-                    description = "Open the SumUp maintenance and login settings route.",
+                    title = stringResource(R.string.settings_ec_reader),
+                    description = stringResource(R.string.settings_ec_reader_desc),
                     icon = Icons.Filled.ShoppingCart,
                     onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
                     modifier = Modifier.weight(1f),
                 )
             }
             OperatorActionCard(
-                title = "About this App",
-                description = "Inspect version name and build code information for this installation.",
+                title = stringResource(R.string.settings_about_app),
+                description = stringResource(R.string.settings_about_app_desc),
                 icon = Icons.Filled.Info,
                 onClick = { navController.navigate(SettingsNavDest.about.route) },
                 modifier = Modifier.fillMaxWidth(),

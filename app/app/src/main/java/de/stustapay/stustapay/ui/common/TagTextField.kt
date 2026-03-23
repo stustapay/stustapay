@@ -22,7 +22,7 @@ fun TagTextField(
 
     TextField(
         value = value,
-        placeholder = { Text("Tag UID in Hex") },
+        placeholder = { Text("Chip-ID in Hex") },
         onValueChange = {
             value = it
             onTagIDChanged(tagIDfromString(value)?.toBigInteger())

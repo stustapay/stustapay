@@ -151,11 +151,11 @@ fun AccountDetails(
 
     OperatorScaffold(
         title = stringResource(R.string.customer_details),
-        subtitle = "Recent account activity and transaction drill-down for the scanned customer.",
+        subtitle = stringResource(R.string.account_details_subtitle),
         icon = Icons.AutoMirrored.Filled.List,
-        terminalLabel = "Account",
+        terminalLabel = stringResource(R.string.account_terminal_label),
         footerHint = operatorCustomerStatusText(uiState.customer),
-        footerSection = "History",
+        footerSection = stringResource(R.string.account_footer_section_history),
         footerStatus = operatorDetailsBadge(uiState.customer),
         onBack = { navigateTo(CustomerStatusNavDests.status) },
     ) {
@@ -186,7 +186,10 @@ fun AccountDetails(
                             )
 
                             Text(
-                                text = "Current balance ${formatCurrencyValue(customer.account.balance)}",
+                                text = stringResource(
+                                    R.string.account_details_current_balance,
+                                    formatCurrencyValue(customer.account.balance),
+                                ),
                                 color = OperatorPalette.subtitle,
                                 fontSize = 18.sp,
                             )
@@ -195,11 +198,11 @@ fun AccountDetails(
 
                     if (customer.orders.isEmpty()) {
                         OperatorInfoCard(
-                            title = "No recent orders",
+                            title = stringResource(R.string.account_details_no_recent_orders),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                                text = "This customer has no recent order activity available on the terminal.",
+                                text = stringResource(R.string.account_details_no_recent_orders_desc),
                                 color = OperatorPalette.subtitle,
                             )
                         }
@@ -234,7 +237,7 @@ fun AccountDetails(
 
             is CustomerStatusRequestState.Failed -> {
                 OperatorInfoCard(
-                    title = "History unavailable",
+                    title = stringResource(R.string.account_details_unavailable),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
@@ -246,11 +249,11 @@ fun AccountDetails(
 
             else -> {
                 OperatorInfoCard(
-                    title = "No detail data loaded",
+                    title = stringResource(R.string.account_details_no_data),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "Fetch a customer account first, then open details to inspect recent orders.",
+                        text = stringResource(R.string.account_details_no_data_desc),
                         color = OperatorPalette.subtitle,
                     )
                 }
@@ -393,12 +396,13 @@ private fun OperatorOrderListEntry(order: Order, onClick: () -> Unit) {
     }
 }
 
+@Composable
 private fun operatorDetailsBadge(state: CustomerStatusRequestState): String {
     return when (state) {
-        is CustomerStatusRequestState.DoneDetails -> "${state.orders.size} orders"
-        is CustomerStatusRequestState.Done -> "No orders"
-        is CustomerStatusRequestState.Fetching -> "Loading"
-        is CustomerStatusRequestState.Failed -> "Error"
-        is CustomerStatusRequestState.Idle -> "Idle"
+        is CustomerStatusRequestState.DoneDetails -> stringResource(R.string.account_badge_orders, state.orders.size)
+        is CustomerStatusRequestState.Done -> stringResource(R.string.account_badge_no_orders)
+        is CustomerStatusRequestState.Fetching -> stringResource(R.string.account_badge_loading)
+        is CustomerStatusRequestState.Failed -> stringResource(R.string.account_badge_error)
+        is CustomerStatusRequestState.Idle -> stringResource(R.string.common_status_idle)
     }
 }

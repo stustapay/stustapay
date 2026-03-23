@@ -1,6 +1,7 @@
 package de.stustapay.stustapay
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
@@ -19,6 +20,7 @@ import de.stustapay.stustapay.ui.Main
 import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.libssp.util.SysUiController
 import de.stustapay.stustapay.display.CustomerDisplayManager
+import de.stustapay.stustapay.locale.AppLocaleManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -39,6 +41,10 @@ class MainActivity : ComponentActivity(), SysUiController {
     lateinit var customerDisplayManager: CustomerDisplayManager
 
     val viewModel: MainActivityViewModel by viewModels()
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleManager.wrapContext(newBase))
+    }
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {

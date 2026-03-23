@@ -32,9 +32,9 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceCountdownCard
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import kotlinx.coroutines.delay
 
@@ -92,7 +92,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                SelfServiceHeadline(
+                SelfServiceSectionHeader(
                     title = stringResource(R.string.topup_success_title),
                     subtitle = stringResource(R.string.topup_success_subtitle),
                     subtitleColor = SelfServicePalette.successMuted,

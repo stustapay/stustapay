@@ -105,7 +105,7 @@ fun EnhancedNfcScanContent(
         ) {
             // Header text - different for Falcon 2 and uses smaller text for small screens
             Text(
-                text = headerText ?: if (isIminFalcons2) "Chip hier vorhalten" else "Scan a Chip",
+                text = headerText ?: if (isIminFalcons2) "Chip hier vorhalten" else "Chip scannen",
                 fontWeight = FontWeight.Bold,
                 fontSize = headerFontSize,
                 textAlign = TextAlign.Center,
@@ -133,7 +133,7 @@ fun EnhancedNfcScanContent(
                 // Touch icon to indicate user action
                 Icon(
                     imageVector = Icons.Filled.TouchApp,
-                    contentDescription = "Touch",
+                    contentDescription = "Berührung",
                     modifier = Modifier
                         .align(
                             if (isIminFalcons2) Alignment.CenterStart else Alignment.Center
@@ -155,7 +155,7 @@ fun EnhancedNfcScanContent(
                         repeat(3) { index ->
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Arrow",
+                                contentDescription = "Pfeil",
                                 modifier = Modifier
                                     .size(arrowIconSize)
                                     .rotate(180f) // Rotate to point left
@@ -185,7 +185,7 @@ fun EnhancedNfcScanContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "NFC Chip",
+                        text = "NFC-Chip",
                         fontSize = if (isSmallScreen) 12.sp else 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.DarkGray

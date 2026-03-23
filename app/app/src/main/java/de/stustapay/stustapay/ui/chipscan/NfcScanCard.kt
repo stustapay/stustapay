@@ -124,7 +124,7 @@ fun NfcScanCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Cancel",
+                        contentDescription = "Abbrechen",
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colors.primary
                     )

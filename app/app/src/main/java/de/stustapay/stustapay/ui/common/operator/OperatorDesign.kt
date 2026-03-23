@@ -83,7 +83,7 @@ fun OperatorScaffold(
     footerSection: String,
     footerStatus: String,
     modifier: Modifier = Modifier,
-    languageLabel: String = "EN | DE",
+    languageLabel: String = "DE | EN | NL",
     showFooter: Boolean = true,
     onBack: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
@@ -135,7 +135,7 @@ fun OperatorHeader(
     icon: ImageVector,
     terminalLabel: String,
     modifier: Modifier = Modifier,
-    languageLabel: String = "EN | DE",
+    languageLabel: String = "DE | EN | NL",
     onBack: (() -> Unit)? = null,
     compactRouteHeader: Boolean = false,
 ) {

@@ -68,6 +68,7 @@ import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import de.stustapay.stustapay.ui.nav.NavDest
 
@@ -145,7 +146,7 @@ fun StartpageView(
         ) {
             Icon(
                 imageVector = Icons.Filled.ScreenRotation,
-                contentDescription = "Flip Screen",
+                contentDescription = stringResource(R.string.content_desc_rotate_screen),
                 tint = if (isSelfServiceMode) SelfServicePalette.subtitle else MaterialTheme.colors.onSurface
             )
         }
@@ -187,7 +188,7 @@ fun StartpageView(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "Terminal info",
+                    contentDescription = stringResource(R.string.content_desc_terminal_info),
                     tint = SelfServicePalette.subtitle
                 )
             }
@@ -246,7 +247,7 @@ private fun OperatorLanding(
                 OperatorMenuCard(
                     icon = Icons.Filled.Person,
                     title = stringResource(R.string.user_title),
-                    description = "User login, profile, and role maintenance.",
+                    description = stringResource(R.string.operator_user_desc),
                     onClick = { onNavigate(RootNavDests.user) },
                 )
             )
@@ -277,7 +278,7 @@ private fun OperatorLanding(
                 OperatorMenuCard(
                     icon = Icons.Filled.Settings,
                     title = stringResource(R.string.root_item_settings),
-                    description = "Terminal connection, EC reader, and app information.",
+                    description = stringResource(R.string.operator_settings_desc),
                     onClick = { onNavigate(RootNavDests.settings) },
                 )
             )
@@ -287,8 +288,8 @@ private fun OperatorLanding(
             add(
                 OperatorMenuCard(
                     icon = Icons.Filled.Refresh,
-                    title = "Refresh setup",
-                    description = "Retry terminal configuration and login sync with the backend.",
+                    title = stringResource(R.string.operator_refresh_setup_title),
+                    description = stringResource(R.string.operator_refresh_setup_desc),
                     emphasized = true,
                     onClick = onRefreshConfig,
                 )
@@ -300,7 +301,7 @@ private fun OperatorLanding(
                 OperatorMenuCard(
                     icon = Icons.Filled.DeveloperMode,
                     title = stringResource(R.string.root_item_development),
-                    description = "Network, QR, and SumUp diagnostic tools.",
+                    description = stringResource(R.string.operator_development_desc),
                     onClick = { onNavigate(RootNavDests.development) },
                 )
             )
@@ -309,7 +310,7 @@ private fun OperatorLanding(
             OperatorMenuCard(
                 icon = Icons.Filled.Refresh,
                 title = stringResource(R.string.root_item_restart_app),
-                description = "Restart the app and reload terminal state.",
+                description = stringResource(R.string.operator_restart_desc),
                 onClick = onRestart,
             )
         )
@@ -317,25 +318,29 @@ private fun OperatorLanding(
 
     OperatorScaffold(
         modifier = modifier,
-        title = terminalName.title.ifBlank { "Operator Console" },
+        title = terminalName.title.ifBlank { stringResource(R.string.operator_console_title) },
         subtitle = terminalName.subtitle ?: if (loginState.hasConfig()) {
-            "All available workflows for this terminal."
+            stringResource(R.string.operator_console_subtitle_ready)
         } else {
-            "Configure the terminal to unlock the full operator workflow."
+            stringResource(R.string.operator_console_subtitle_setup)
         },
         icon = Icons.Filled.Settings,
         terminalLabel = when {
-            configLoading -> "Loading"
-            loginState.hasConfig() -> "Configured"
-            else -> "No Config"
+            configLoading -> stringResource(R.string.operator_console_loading)
+            loginState.hasConfig() -> stringResource(R.string.operator_console_configured)
+            else -> stringResource(R.string.operator_console_no_config)
         },
         footerHint = if (configLoading) {
-            "Configuration is still loading. Settings remain available while the terminal initializes."
+            stringResource(R.string.operator_console_footer_loading)
         } else {
-            "${primaryCards.size} workflows visible for the current profile."
+            stringResource(R.string.operator_console_footer_workflows_visible, primaryCards.size)
         },
-        footerSection = "Menu",
-        footerStatus = if (loginState.hasConfig()) "Ready" else "Setup",
+        footerSection = stringResource(R.string.operator_console_footer_section),
+        footerStatus = if (loginState.hasConfig()) {
+            stringResource(R.string.operator_console_footer_ready)
+        } else {
+            stringResource(R.string.operator_console_footer_setup)
+        },
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val columns = when {
@@ -354,11 +359,11 @@ private fun OperatorLanding(
             ) {
                 if (!loginState.hasConfig()) {
                     OperatorInfoCard(
-                        title = "Terminal setup required",
+                        title = stringResource(R.string.operator_setup_required),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
-                            text = "Open Settings to register this terminal against the backend before using operator workflows.",
+                            text = stringResource(R.string.operator_setup_required_desc),
                             color = OperatorPalette.subtitle,
                             fontSize = 18.sp,
                             lineHeight = 24.sp,
@@ -369,7 +374,7 @@ private fun OperatorLanding(
 
                 if (!terminalStatusMessage.isNullOrBlank()) {
                     OperatorInfoCard(
-                        title = "Configuration status",
+                        title = stringResource(R.string.operator_configuration_status),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
@@ -424,21 +429,22 @@ private fun StartpageItem.toOperatorCard(onNavigate: (NavDest) -> Unit): Operato
     )
 }
 
+@Composable
 private fun operatorCardDescription(route: String?): String {
     return when (route) {
-        RootNavDests.entry.route -> "Scan tags and apply entry/exit decisions."
-        RootNavDests.sale.route -> "Build baskets, confirm products, and take payment."
-        RootNavDests.topup.route -> "Load cash or card value onto a customer account."
-        RootNavDests.postpayment.route -> "Collect post-paid balances from tagged accounts."
-        RootNavDests.ticket.route -> "Sell and confirm ticket products."
-        RootNavDests.rewards.route -> "Grant vouchers and free-ticket rewards."
-        RootNavDests.history.route -> "Inspect recent sales and order details."
-        RootNavDests.status.route -> "Check balances and customer account status."
-        RootNavDests.swap.route -> "Swap customer media and keep the balance linked."
-        RootNavDests.cashier.route -> "Manage cashier tills, deposits, and transport."
-        RootNavDests.vault.route -> "Handle vault withdrawals and secure cash movements."
-        RootNavDests.stats.route -> "View high-level sales and terminal statistics."
-        else -> "Open the selected operator workflow."
+        RootNavDests.entry.route -> stringResource(R.string.operator_workflow_entry_desc)
+        RootNavDests.sale.route -> stringResource(R.string.operator_workflow_sale_desc)
+        RootNavDests.topup.route -> stringResource(R.string.operator_workflow_topup_desc)
+        RootNavDests.postpayment.route -> stringResource(R.string.operator_workflow_postpayment_desc)
+        RootNavDests.ticket.route -> stringResource(R.string.operator_workflow_ticket_desc)
+        RootNavDests.rewards.route -> stringResource(R.string.operator_workflow_rewards_desc)
+        RootNavDests.history.route -> stringResource(R.string.operator_workflow_history_desc)
+        RootNavDests.status.route -> stringResource(R.string.operator_workflow_status_desc)
+        RootNavDests.swap.route -> stringResource(R.string.operator_workflow_swap_desc)
+        RootNavDests.cashier.route -> stringResource(R.string.operator_workflow_cashier_desc)
+        RootNavDests.vault.route -> stringResource(R.string.operator_workflow_vault_desc)
+        RootNavDests.stats.route -> stringResource(R.string.operator_workflow_stats_desc)
+        else -> stringResource(R.string.operator_workflow_default_desc)
     }
 }
 
@@ -464,18 +470,12 @@ private fun SelfServiceLanding(
                 ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-        Text(
-            text = stringResource(R.string.selfservice_title),
-            fontSize = headerSize,
-            fontWeight = FontWeight.ExtraBold,
-            color = SelfServicePalette.title
-        )
-        Text(
-            text = stringResource(R.string.selfservice_description),
-            fontSize = subSize,
-            fontWeight = FontWeight.Medium,
-            color = SelfServicePalette.subtitle
-        )
+            SelfServiceSectionHeader(
+                title = stringResource(R.string.selfservice_title),
+                subtitle = stringResource(R.string.selfservice_description),
+                titleFontSize = headerSize,
+                subtitleFontSize = subSize
+            )
 
             if (compactLayout) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -542,29 +542,19 @@ private fun SelfServiceLanding(
                 shape = RoundedCornerShape(12.dp),
                 elevation = 0.dp
             ) {
-                Row(
+                Text(
+                    text = stringResource(R.string.selfservice_hint_payment),
+                    color = SelfServicePalette.subtitle,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Start,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "EN | DE",
-                        color = SelfServicePalette.title,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp
-                    )
-                    Text(
-                        text = stringResource(R.string.selfservice_hint_payment),
-                        color = SelfServicePalette.subtitle,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.End,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                        .fillMaxWidth()
+                )
             }
         }
     }

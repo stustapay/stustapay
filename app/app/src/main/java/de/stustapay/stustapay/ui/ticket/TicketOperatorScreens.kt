@@ -174,7 +174,7 @@ fun OperatorTicketConfirm(
     val checkedSale = ticketDraft.pendingSale ?: run {
         Column {
             Text(status)
-            Text("no sale check present!")
+            Text("Keine Verkaufsprüfung vorhanden!")
         }
         return
     }
@@ -197,9 +197,9 @@ fun OperatorTicketConfirm(
 
     OperatorScaffold(
         title = config.title().title,
-        subtitle = "Review the scanned tickets and complete payment.",
+        subtitle = "Gescannte Tickets prüfen und Zahlung abschließen.",
         icon = Icons.Filled.ConfirmationNumber,
-        terminalLabel = "Confirm",
+        terminalLabel = "Bestätigen",
         footerHint = status,
         footerSection = stringResource(R.string.tickets),
         footerStatus = stringResource(R.string.operator_status_ready),
@@ -286,7 +286,7 @@ fun OperatorTicketSuccess(
 ) {
     OperatorScaffold(
         title = terminalTitle,
-        subtitle = "Ticket sale completed successfully.",
+        subtitle = "Ticketverkauf erfolgreich abgeschlossen.",
         icon = Icons.Filled.CheckCircle,
         terminalLabel = stringResource(R.string.tickets),
         footerHint = footerHint,
@@ -339,7 +339,7 @@ fun OperatorTicketError(
 ) {
     OperatorScaffold(
         title = terminalTitle,
-        subtitle = "Ticket flow failed before completion.",
+        subtitle = "Ticketablauf vor dem Abschluss fehlgeschlagen.",
         icon = Icons.Filled.ErrorOutline,
         terminalLabel = stringResource(R.string.tickets),
         footerHint = footerHint,

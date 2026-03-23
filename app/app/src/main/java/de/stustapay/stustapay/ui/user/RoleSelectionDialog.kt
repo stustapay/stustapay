@@ -144,7 +144,7 @@ fun RoleButtonList(
 ) {
     when (roles) {
         is UserRolesState.Unknown -> {
-            Text("Loading roles...", fontSize = 20.sp, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.user_roles_loading), fontSize = 20.sp, textAlign = TextAlign.Center)
         }
 
         is UserRolesState.Error -> {

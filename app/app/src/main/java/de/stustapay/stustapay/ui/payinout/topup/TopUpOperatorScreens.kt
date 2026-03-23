@@ -320,7 +320,7 @@ private fun TopUpCompactHeader(onBack: (() -> Unit)?) {
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = "Zurück",
                         tint = OperatorPalette.title,
                         modifier = Modifier
                             .size(36.dp)

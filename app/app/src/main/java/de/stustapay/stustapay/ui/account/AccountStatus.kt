@@ -54,9 +54,9 @@ import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBottomActions
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceCountdownCard
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import de.stustapay.stustapay.ui.nav.NavDest
 import kotlinx.coroutines.delay
@@ -105,11 +105,11 @@ fun AccountStatus(
 
     OperatorScaffold(
         title = stringResource(R.string.customer_title),
-        subtitle = "Balance, vouchers, and customer restrictions after NFC scan.",
+        subtitle = stringResource(R.string.account_status_subtitle),
         icon = Icons.Filled.Person,
-        terminalLabel = "Account",
+        terminalLabel = stringResource(R.string.account_terminal_label),
         footerHint = operatorCustomerStatusText(uiState.customer),
-        footerSection = "Status",
+        footerSection = stringResource(R.string.account_footer_section_status),
         footerStatus = operatorCustomerStatusBadge(uiState.customer),
         onBack = {
             viewModel.idleState()
@@ -128,7 +128,7 @@ fun AccountStatus(
                 when (val customer = uiState.customer) {
                     is CustomerStatusRequestState.Failed -> {
                         OperatorInfoCard(
-                            title = "Lookup failed",
+                            title = stringResource(R.string.account_lookup_failed),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
@@ -140,11 +140,11 @@ fun AccountStatus(
 
                     is CustomerStatusRequestState.Idle -> {
                         OperatorInfoCard(
-                            title = "Awaiting customer tag",
+                            title = stringResource(R.string.account_waiting_customer_tag_title),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                                text = "Return to the scan screen and present a customer card or wristband to load the balance.",
+                                text = stringResource(R.string.account_waiting_customer_tag_desc),
                                 color = OperatorPalette.subtitle,
                             )
                         }
@@ -229,7 +229,7 @@ private fun OperatorAccountSummary(
                 )
 
                 Text(
-                    text = "Current balance",
+                    text = stringResource(R.string.account_current_balance_label),
                     color = OperatorPalette.subtitle,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
@@ -247,7 +247,7 @@ private fun OperatorAccountSummary(
         }
 
         OperatorInfoCard(
-            title = "Customer Overview",
+            title = stringResource(R.string.account_customer_overview),
             modifier = Modifier.fillMaxWidth(),
         ) {
             account.restriction?.let { restriction ->
@@ -311,13 +311,14 @@ fun operatorCustomerStatusText(state: CustomerStatusRequestState): String {
     }
 }
 
+@Composable
 private fun operatorCustomerStatusBadge(state: CustomerStatusRequestState): String {
     return when (state) {
-        is CustomerStatusRequestState.Idle -> "Idle"
-        is CustomerStatusRequestState.Fetching -> "Loading"
+        is CustomerStatusRequestState.Idle -> stringResource(R.string.common_status_idle)
+        is CustomerStatusRequestState.Fetching -> stringResource(R.string.account_badge_loading)
         is CustomerStatusRequestState.Done,
-        is CustomerStatusRequestState.DoneDetails -> "Loaded"
-        is CustomerStatusRequestState.Failed -> "Error"
+        is CustomerStatusRequestState.DoneDetails -> stringResource(R.string.account_badge_loaded)
+        is CustomerStatusRequestState.Failed -> stringResource(R.string.account_badge_error)
     }
 }
 
@@ -377,12 +378,13 @@ private fun SelfServiceAccountStatus(
                 is CustomerStatusRequestState.Idle -> stringResource(R.string.selfservice_scan_balance_subtitle)
             }
 
-            SelfServiceHeadline(
+            SelfServiceSectionHeader(
                 title = stringResource(R.string.selfservice_check_balance),
                 subtitle = subtitle,
                 subtitleColor = subtitleColor,
                 titleFontSize = profile.headlineTitleSize,
-                subtitleFontSize = profile.headlineSubtitleSize
+                subtitleFontSize = profile.headlineSubtitleSize,
+                showLanguageSelector = uiState.customer !is CustomerStatusRequestState.Fetching
             )
 
             when (val customer = uiState.customer) {

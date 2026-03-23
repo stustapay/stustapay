@@ -44,18 +44,18 @@ fun StatsView(
     OperatorScaffold(
         title = stringResource(R.string.root_item_stats),
         subtitle = when (currentSubView) {
-            StatsSubView.Root -> "Revenue analytics for daily and hourly breakdowns."
-            StatsSubView.DailyRevenue -> "Daily revenue intervals loaded from sales history."
-            StatsSubView.HourlyRevenue -> "Hourly revenue intervals loaded from sales history."
+            StatsSubView.Root -> stringResource(R.string.stats_subtitle_root)
+            StatsSubView.DailyRevenue -> stringResource(R.string.stats_subtitle_daily)
+            StatsSubView.HourlyRevenue -> stringResource(R.string.stats_subtitle_hourly)
         },
         icon = Icons.Filled.DateRange,
-        terminalLabel = "Analytics",
+        terminalLabel = stringResource(R.string.stats_terminal_label),
         footerHint = statsStatusText(status),
-        footerSection = "Stats",
+        footerSection = stringResource(R.string.stats_footer_section),
         footerStatus = when (currentSubView) {
-            StatsSubView.Root -> "2 routes"
-            StatsSubView.DailyRevenue -> "Daily"
-            StatsSubView.HourlyRevenue -> "Hourly"
+            StatsSubView.Root -> stringResource(R.string.stats_footer_root)
+            StatsSubView.DailyRevenue -> stringResource(R.string.stats_footer_daily)
+            StatsSubView.HourlyRevenue -> stringResource(R.string.stats_footer_hourly)
         },
         onBack = {
             when (currentSubView) {
@@ -89,7 +89,7 @@ fun StatsViewRoot(
     ) {
         OperatorActionCard(
             title = stringResource(R.string.stats_daily_revenue),
-            description = "Open revenue totals grouped by day.",
+            description = stringResource(R.string.stats_daily_desc),
             icon = Icons.Filled.DateRange,
             onClick = { viewModel.goTo(StatsSubView.DailyRevenue) },
             modifier = Modifier.fillMaxWidth(),
@@ -97,7 +97,7 @@ fun StatsViewRoot(
         )
         OperatorActionCard(
             title = stringResource(R.string.stats_hourly_revenue),
-            description = "Open revenue totals grouped by hour.",
+            description = stringResource(R.string.stats_hourly_desc),
             icon = Icons.Filled.DateRange,
             onClick = { viewModel.goTo(StatsSubView.HourlyRevenue) },
             modifier = Modifier.fillMaxWidth(),
@@ -197,11 +197,12 @@ fun StatsViewHourlyRevenue(
     }
 }
 
+@Composable
 private fun statsStatusText(status: StatsStatus): String {
     return when (status) {
-        is StatsStatus.Idle -> "Idle"
-        is StatsStatus.Fetching -> "Fetching statistics from history."
-        is StatsStatus.Done -> "Statistics loaded."
+        is StatsStatus.Idle -> stringResource(R.string.common_status_idle)
+        is StatsStatus.Fetching -> stringResource(R.string.stats_status_fetching)
+        is StatsStatus.Done -> stringResource(R.string.stats_status_done)
         is StatsStatus.Failed -> status.msg
     }
 }

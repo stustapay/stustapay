@@ -303,7 +303,7 @@ fun CashierView(
                                                 viewModel.completeWithdraw()
                                             }
                                         }) {
-                                        Text("Withdraw")
+                                        Text("Abschöpfen")
                                     }
                                 }
                             }
@@ -331,7 +331,7 @@ fun CashierView(
                                                 viewModel.completeDeposit()
                                             }
                                         }) {
-                                        Text("Deposit")
+                                        Text("Bestücken")
                                     }
                                 }
                             }
@@ -348,7 +348,7 @@ fun CashierView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Equip successfull", style = MaterialTheme.typography.h5)
+                                    Text("Bestückung erfolgreich", style = MaterialTheme.typography.h5)
                                     Text(
                                         "%.02f€".format(uiState.userInfo?.cashDrawerBalance),
                                         modifier = Modifier.padding(
@@ -356,7 +356,7 @@ fun CashierView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in cash register", fontSize = 36.sp)
+                                    Text("in der Barkasse", fontSize = 36.sp)
                                 }
                             }
                         }
@@ -373,11 +373,11 @@ fun CashierView(
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text(
-                                        "Withdrawal successfull",
+                                        "Abschöpfen erfolgreich",
                                         style = MaterialTheme.typography.h5
                                     )
                                     ProductConfirmItem(
-                                        name = "Withdrawn",
+                                        name = "Abgeschöpft",
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -388,7 +388,7 @@ fun CashierView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in cash register", fontSize = 36.sp)
+                                    Text("in der Barkasse", fontSize = 36.sp)
                                 }
                             }
                         }
@@ -404,9 +404,9 @@ fun CashierView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Deposit successfull", style = MaterialTheme.typography.h5)
+                                    Text("Bestückung erfolgreich", style = MaterialTheme.typography.h5)
                                     ProductConfirmItem(
-                                        name = "Deposited",
+                                        name = "Bestückt",
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -417,7 +417,7 @@ fun CashierView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in cash register", fontSize = 36.sp)
+                                    Text("in der Barkasse", fontSize = 36.sp)
                                 }
                             }
                         }

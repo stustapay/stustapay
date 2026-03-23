@@ -9,9 +9,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.stustapay.stustapay.BuildConfig
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
@@ -20,13 +22,13 @@ import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 @Composable
 fun AboutView(navigateBack: () -> Unit = {}) {
     OperatorScaffold(
-        title = "About",
-        subtitle = "Version and build metadata for the installed app.",
+        title = stringResource(R.string.about_title),
+        subtitle = stringResource(R.string.about_subtitle),
         icon = Icons.Filled.Info,
-        terminalLabel = "App Info",
-        footerHint = "Read-only build metadata from BuildConfig.",
-        footerSection = "About",
-        footerStatus = "Read only",
+        terminalLabel = stringResource(R.string.about_terminal_label),
+        footerHint = stringResource(R.string.about_footer_hint),
+        footerSection = stringResource(R.string.about_footer_section),
+        footerStatus = stringResource(R.string.about_footer_status),
         onBack = navigateBack,
     ) {
         Column(
@@ -34,7 +36,7 @@ fun AboutView(navigateBack: () -> Unit = {}) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             OperatorInfoCard(
-                title = "Version name",
+                title = stringResource(R.string.about_version_name),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
@@ -43,7 +45,7 @@ fun AboutView(navigateBack: () -> Unit = {}) {
                 )
             }
             OperatorInfoCard(
-                title = "Version code",
+                title = stringResource(R.string.about_version_code),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(

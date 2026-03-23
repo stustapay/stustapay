@@ -36,9 +36,9 @@ import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelectionDialog
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import kotlinx.coroutines.launch
 
@@ -139,11 +139,12 @@ private fun SelfServiceTopUpContent(
                 else -> stringResource(R.string.topup_step_payment)
             }
 
-            SelfServiceHeadline(
+            SelfServiceSectionHeader(
                 title = stringResource(R.string.selfservice_topup),
                 subtitle = subtitle,
                 titleFontSize = profile.headlineTitleSize,
-                subtitleFontSize = profile.headlineSubtitleSize
+                subtitleFontSize = profile.headlineSubtitleSize,
+                showLanguageSelector = currentStep == 1 && !requestActive
             )
 
             SelfServiceTopUpStepper(

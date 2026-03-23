@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import de.stustapay.stustapay.barcode.ZXingQRCode
+import de.stustapay.stustapay.R
 import androidx.camera.core.Preview as CameraPreview
 import androidx.compose.ui.geometry.Size as geomSize
 
@@ -101,11 +103,12 @@ fun QRScanView(
     continuous: Boolean = false,
     onScanSuccess: (String) -> Unit = {},
 ) {
+    val scanningText = stringResource(R.string.qr_scan_scanning)
     var code: String? by remember {
         mutableStateOf(null)
     }
-    var status by remember {
-        mutableStateOf("scanning...")
+    var status by remember(scanningText) {
+        mutableStateOf(scanningText)
     }
 
     val context = LocalContext.current
@@ -148,7 +151,7 @@ fun QRScanView(
                 .fillMaxWidth()
         ) {
             Text(
-                "status: ",
+                stringResource(R.string.qr_scan_status),
                 fontSize = 16.sp
             )
             Text(
@@ -200,7 +203,7 @@ fun QRScanView(
                 )
 
             } else {
-                Text("no camera permission")
+                Text(stringResource(R.string.no_camera_permission))
             }
 
             CameraOverlay(

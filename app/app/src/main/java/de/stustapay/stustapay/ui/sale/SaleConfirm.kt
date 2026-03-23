@@ -54,19 +54,19 @@ fun SaleConfirm(
     if (checkedSale == null) {
         Column {
             Text(status)
-            Text("no sale check present!")
+            Text(stringResource(R.string.sale_no_check_present))
         }
         return
     }
 
     OperatorScaffold(
-        title = if (config is SaleConfig.Ready) config.tillName else "No Till",
+        title = if (config is SaleConfig.Ready) config.tillName else stringResource(R.string.sale_no_till),
         subtitle = stringResource(R.string.sale_check_your_order),
         icon = Icons.Filled.ShoppingCart,
-        terminalLabel = "Confirm",
+        terminalLabel = stringResource(R.string.sale_terminal_confirm),
         footerHint = status,
-        footerSection = "Sale",
-        footerStatus = "Ready",
+        footerSection = stringResource(R.string.sale_compact_title),
+        footerStatus = stringResource(R.string.sale_footer_ready),
         showFooter = false,
         onBack = onEdit,
     ) {

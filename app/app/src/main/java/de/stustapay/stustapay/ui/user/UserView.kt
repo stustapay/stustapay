@@ -46,12 +46,12 @@ fun UserView(
         composable(UserNavDest.info.route) {
             OperatorScaffold(
                 title = stringResource(R.string.user_title),
-                subtitle = "User login, session switch, and operator management tools.",
+                subtitle = stringResource(R.string.user_view_info_subtitle),
                 icon = Icons.Filled.Person,
-                terminalLabel = "User",
-                footerHint = "Login state and user administration routes for this terminal.",
-                footerSection = "User",
-                footerStatus = "Root",
+                terminalLabel = stringResource(R.string.user_view_terminal_label),
+                footerHint = stringResource(R.string.user_view_footer_hint),
+                footerSection = stringResource(R.string.user_view_footer_section),
+                footerStatus = stringResource(R.string.user_view_footer_root),
                 onBack = {
                     viewModel.idleState()
                     leaveView()
@@ -69,12 +69,12 @@ fun UserView(
         composable(UserNavDest.create.route) {
             OperatorScaffold(
                 title = stringResource(R.string.user_create_title),
-                subtitle = "Create a new operator on a scanned tag and assign non-privileged roles.",
+                subtitle = stringResource(R.string.user_view_create_subtitle),
                 icon = Icons.Filled.PersonAdd,
-                terminalLabel = "Create",
-                footerHint = "Scans an empty tag before showing the creation form.",
-                footerSection = "User",
-                footerStatus = "Create",
+                terminalLabel = stringResource(R.string.user_view_create_terminal),
+                footerHint = stringResource(R.string.user_view_create_hint),
+                footerSection = stringResource(R.string.user_view_footer_section),
+                footerStatus = stringResource(R.string.user_view_create_terminal),
                 onBack = {
                     viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
@@ -88,12 +88,12 @@ fun UserView(
         composable(UserNavDest.update.route) {
             OperatorScaffold(
                 title = stringResource(R.string.user_update_title),
-                subtitle = "Adjust role assignments for the currently displayed operator.",
+                subtitle = stringResource(R.string.user_view_update_subtitle),
                 icon = Icons.Filled.Edit,
-                terminalLabel = "Update",
-                footerHint = "Keeps the existing user update behavior and validation rules.",
-                footerSection = "User",
-                footerStatus = "Update",
+                terminalLabel = stringResource(R.string.user_view_update_terminal),
+                footerHint = stringResource(R.string.user_view_update_hint),
+                footerSection = stringResource(R.string.user_view_footer_section),
+                footerStatus = stringResource(R.string.user_view_update_terminal),
                 onBack = {
                     viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)
@@ -105,12 +105,12 @@ fun UserView(
         composable(UserNavDest.display.route) {
             OperatorScaffold(
                 title = stringResource(R.string.user_display_title),
-                subtitle = "Show scanned operator details before editing roles or description.",
+                subtitle = stringResource(R.string.user_view_display_subtitle),
                 icon = Icons.Filled.Badge,
-                terminalLabel = "Display",
-                footerHint = "Scans and shows the current operator record attached to a tag.",
-                footerSection = "User",
-                footerStatus = "Display",
+                terminalLabel = stringResource(R.string.user_view_display_terminal),
+                footerHint = stringResource(R.string.user_view_display_hint),
+                footerSection = stringResource(R.string.user_view_footer_section),
+                footerStatus = stringResource(R.string.user_view_display_terminal),
                 onBack = {
                     viewModel.idleState()
                     navController.navigateTo(UserNavDest.info.route)

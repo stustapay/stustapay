@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustapay.stustapay.repository.ForceDeregisterState
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.barcode.QRScanView
 import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
@@ -48,10 +50,10 @@ fun Registered(
     if (showConfirm) {
         AlertDialog(
             title = {
-                Text(text = "Deregister Terminal")
+                Text(text = stringResource(R.string.registration_deregister))
             },
             text = {
-                Text("Do you really want do remove the terminal's server association?")
+                Text(stringResource(R.string.registration_deregister_confirm))
             },
             onDismissRequest = { showConfirm = false },
             confirmButton = {
@@ -62,7 +64,7 @@ fun Registered(
                         onDeregister()
                         showConfirm = false
                     }) {
-                    Text("Yes")
+                    Text(stringResource(R.string.common_yes))
                 }
             },
             dismissButton = {
@@ -70,17 +72,22 @@ fun Registered(
                     onClick = {
                         showConfirm = false
                     }) {
-                    Text("Abort deregistration")
+                    Text(stringResource(R.string.registration_abort_deregistration))
                 }
             }
         )
     } else if (allowForceDeregister is ForceDeregisterState.Allow && showForceConfirm) {
         AlertDialog(
             title = {
-                Text(text = "Force Terminal Deregistration")
+                Text(text = stringResource(R.string.registration_force_deregister))
             },
             text = {
-                Text("Could not deregister at the server: ${allowForceDeregister.msg}\nForce-Deregister?")
+                Text(
+                    stringResource(
+                        R.string.registration_force_deregister_confirm,
+                        allowForceDeregister.msg,
+                    )
+                )
             },
             onDismissRequest = { showForceConfirm = false },
             confirmButton = {
@@ -89,7 +96,7 @@ fun Registered(
                     onClick = {
                         onForceDeregister()
                     }) {
-                    Text("Yes")
+                    Text(stringResource(R.string.common_yes))
                 }
             },
             dismissButton = {
@@ -97,7 +104,7 @@ fun Registered(
                     onClick = {
                         showForceConfirm = false
                     }) {
-                    Text("Abort")
+                    Text(stringResource(R.string.registration_abort))
                 }
             }
         )
@@ -110,7 +117,7 @@ fun Registered(
         },
         colors = errorButtonColors()
     ) {
-        Text(text = "Deregister Terminal")
+        Text(text = stringResource(R.string.registration_deregister))
     }
 }
 
@@ -125,7 +132,7 @@ fun RegistrationOverview(
     onForceDeregister: () -> Unit,
 ) {
     var endpointUrl: String? = null
-    var message: String = "waiting for input"
+    var message: String = stringResource(R.string.registration_waiting_input)
     when (registrationUiState) {
         Idle -> Unit
         is Message -> {
@@ -142,16 +149,22 @@ fun RegistrationOverview(
         horizontalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         OperatorInfoCard(
-            title = "Current terminal association",
+            title = stringResource(R.string.registration_status_title),
             modifier = Modifier.weight(1f),
         ) {
-            Text(text = "Message: $message", color = OperatorPalette.title)
             Text(
-                text = "Endpoint: ${endpointUrl ?: "not connected"}",
+                text = stringResource(R.string.registration_status_message, message),
+                color = OperatorPalette.title,
+            )
+            Text(
+                text = stringResource(
+                    R.string.registration_status_endpoint,
+                    endpointUrl ?: stringResource(R.string.registration_status_not_connected),
+                ),
                 color = OperatorPalette.subtitle,
             )
             Text(
-                text = "Force deregister follows only if the backend cannot remove the association.",
+                text = stringResource(R.string.registration_status_force_hint),
                 color = OperatorPalette.subtitle,
             )
         }
@@ -167,7 +180,7 @@ fun RegistrationOverview(
                 )
             } else {
                 OperatorPrimaryButton(
-                    text = "Scan registration QR code",
+                    text = stringResource(R.string.registration_scan_qr),
                     icon = Icons.Filled.QrCode2,
                     onClick = {
                         scope.launch {
@@ -204,13 +217,17 @@ fun RegistrationView(
     ) {
         composable("register") {
             OperatorScaffold(
-                title = "Registration",
-                subtitle = "Server connection state with deregistration confirmation flow.",
+                title = stringResource(R.string.registration_title),
+                subtitle = stringResource(R.string.registration_subtitle),
                 icon = Icons.Filled.Link,
-                terminalLabel = "Core Connection",
-                footerHint = "Represents the registered state and the first deregistration confirmation from the live flow.",
-                footerSection = "Registration",
-                footerStatus = if (registrationUiState is HasEndpoint) "Registered" else "Awaiting QR",
+                terminalLabel = stringResource(R.string.registration_terminal_label),
+                footerHint = stringResource(R.string.registration_footer_hint),
+                footerSection = stringResource(R.string.registration_footer_section),
+                footerStatus = if (registrationUiState is HasEndpoint) {
+                    stringResource(R.string.registration_footer_registered)
+                } else {
+                    stringResource(R.string.registration_footer_waiting_qr)
+                },
                 onBack = navigateBack,
             ) {
                 RegistrationOverview(
@@ -225,13 +242,13 @@ fun RegistrationView(
         }
         composable("scan") {
             OperatorScaffold(
-                title = "Registration Scan",
-                subtitle = "Scan the backend-issued QR code to attach this terminal.",
+                title = stringResource(R.string.registration_scan_title),
+                subtitle = stringResource(R.string.registration_scan_subtitle),
                 icon = Icons.Filled.QrCode2,
-                terminalLabel = "Camera",
-                footerHint = "Uses the existing QRScanView and returns directly to the registration summary after a scan.",
-                footerSection = "Registration",
-                footerStatus = "Scanner",
+                terminalLabel = stringResource(R.string.registration_scan_terminal_label),
+                footerHint = stringResource(R.string.registration_scan_footer_hint),
+                footerSection = stringResource(R.string.registration_footer_section),
+                footerStatus = stringResource(R.string.registration_status_scanner),
                 onBack = { navController.popBackStack() },
             ) {
                 QRScanView { qrcode ->

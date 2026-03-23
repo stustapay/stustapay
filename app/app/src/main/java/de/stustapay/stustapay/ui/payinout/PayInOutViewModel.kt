@@ -27,14 +27,14 @@ enum class CashInOutTab(
 ) {
     // Top with upwards arrow above
     TopUp(
-        title = "TopUp \uD83D\uDD1D",
+        title = "Aufladen \uD83D\uDD1D",
         access = { state -> state.checkAccess { u, t -> Access.canTopUp(t, u) } },
         route = "topup",
     ),
 
     // Money with wings
     PayOut(
-        title = "PayOut \uD83D\uDCB8",
+        title = "Auszahlen \uD83D\uDCB8",
         access = { state -> state.checkAccess { u, t -> Access.canPayOut(t, u) } },
         route = "payout",
     ),

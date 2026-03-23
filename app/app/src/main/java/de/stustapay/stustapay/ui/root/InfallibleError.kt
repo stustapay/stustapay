@@ -117,7 +117,7 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                         }
                         if (text != null) {
                             StatusText(
-                                "status: $text",
+                                "Status: $text",
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -135,8 +135,8 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                     ) {
                         Text(
                             text = when (state) {
-                                is InfallibleState.CanRetry -> "Retry request"
-                                is InfallibleState.Retrying -> "Retrying..."
+                                is InfallibleState.CanRetry -> "Anfrage erneut senden"
+                                is InfallibleState.Retrying -> "Wird erneut gesendet..."
                                 InfallibleState.Hide -> "unreachable"
                                 is InfallibleState.RetrySuccess -> "unreachable"
                             },
@@ -177,17 +177,17 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                             Text(
                                 when (val topUp = resp.topUp) {
                                     is Response.OK -> {
-                                        "TopUp of %.2f successful!".format(topUp.data.amount)
+                                        "Aufladung über %.2f erfolgreich!".format(topUp.data.amount)
                                     }
 
                                     is Response.Error.Service.AlreadyProcessed -> {
-                                        "TopUp successful! (was already booked: %s)".format(
+                                        "Aufladung erfolgreich! (war bereits gebucht: %s)".format(
                                             topUp.msg()
                                         )
                                     }
 
                                     is Response.Error -> {
-                                        "Contact Finanzteam! TopUp aborted: %s".format(
+                                        "Finanzteam kontaktieren! Aufladung abgebrochen: %s".format(
                                             topUp.msg()
                                         )
                                     }
@@ -202,17 +202,17 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                             Text(
                                 when (val ticketSale = resp.ticketSale) {
                                     is Response.OK -> {
-                                        "Ticket sale successful!"
+                                        "Ticketverkauf erfolgreich!"
                                     }
 
                                     is Response.Error.Service.AlreadyProcessed -> {
-                                        "Ticket sale successful! (was already booked: %s)".format(
+                                        "Ticketverkauf erfolgreich! (war bereits gebucht: %s)".format(
                                             ticketSale.msg()
                                         )
                                     }
 
                                     is Response.Error -> {
-                                        "Contact Finanzteam! Ticket sale aborted: %s".format(
+                                        "Finanzteam kontaktieren! Ticketverkauf abgebrochen: %s".format(
                                             ticketSale.msg()
                                         )
                                     }
@@ -232,7 +232,7 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                     }) {
                         Text(
                             // SPARKLING HEART
-                            text = "Continue \uD83D\uDC96",
+                            text = "Weiter \uD83D\uDC96",
                             style = StartpageItemStyle,
                         )
                     }
@@ -242,7 +242,7 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
             is InfallibleState.Hide -> {
                 item {
                     // hide is default in viewmodel :)
-                    Text("popup initializing...")
+                    Text("Popup wird initialisiert...")
                 }
             }
         }

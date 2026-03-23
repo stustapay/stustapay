@@ -16,9 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
@@ -40,13 +42,13 @@ fun ECSettingsView(
     val context = LocalActivity.current!!
 
     OperatorScaffold(
-        title = "EC Reader",
-        subtitle = "SumUp configuration and maintenance for the configured terminal.",
+        title = stringResource(R.string.ec_reader_title),
+        subtitle = stringResource(R.string.ec_reader_subtitle),
         icon = Icons.Filled.CreditCard,
-        terminalLabel = "Settings",
-        footerHint = "Keeps the existing SumUp login, logout, and reader maintenance actions.",
-        footerSection = "Reader",
-        footerStatus = "Settings",
+        terminalLabel = stringResource(R.string.ec_reader_terminal_label),
+        footerHint = stringResource(R.string.ec_reader_footer_hint),
+        footerSection = stringResource(R.string.ec_reader_footer_section),
+        footerStatus = stringResource(R.string.ec_reader_footer_status),
         onBack = navigateBack,
     ) {
         Column(
@@ -54,26 +56,29 @@ fun ECSettingsView(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             OperatorInfoCard(
-                title = "Current reader state",
+                title = stringResource(R.string.ec_reader_state_title),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = sumUpLoginState ?: "No login info", color = OperatorPalette.title)
+                Text(
+                    text = sumUpLoginState ?: stringResource(R.string.ec_reader_no_login_info),
+                    color = OperatorPalette.title,
+                )
                 Text(text = status, color = OperatorPalette.title)
                 Text(text = sumUpState.msg(), color = OperatorPalette.subtitle)
             }
 
             OperatorPrimaryButton(
-                text = "User/password login",
+                text = stringResource(R.string.ec_reader_login_user_password),
                 icon = Icons.Filled.Login,
                 onClick = { scope.launch { viewModel.openLogin(context) } },
             )
             OperatorPrimaryButton(
-                text = "Token login",
+                text = stringResource(R.string.ec_reader_login_token),
                 icon = Icons.Filled.Key,
                 onClick = { scope.launch { viewModel.performTokenLogin(context) } },
             )
             OperatorSecondaryButton(
-                text = "Card reader settings",
+                text = stringResource(R.string.ec_reader_settings_button),
                 icon = Icons.Filled.PointOfSale,
                 onClick = { scope.launch { viewModel.openCardReader(context) } },
             )

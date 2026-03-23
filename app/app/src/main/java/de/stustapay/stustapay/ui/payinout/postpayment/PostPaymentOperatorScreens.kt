@@ -139,13 +139,13 @@ private fun OperatorPostPaymentMainContent(
     OperatorPanel(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                text = "Outstanding balance",
+                text = stringResource(R.string.operator_outstanding),
                 color = OperatorPalette.title,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
             )
             Text(
-                text = "Customer: ${payout.tag.uidHex().takeLast(8)}",
+                text = "${stringResource(R.string.operator_customer_wristband)}: ${payout.tag.uidHex().takeLast(8)}",
                 color = OperatorPalette.subtitle,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
@@ -157,7 +157,7 @@ private fun OperatorPostPaymentMainContent(
                 fontWeight = FontWeight.ExtraBold,
             )
             Text(
-                text = "Choose card or cash on the right and complete the settlement with one clear action.",
+                text = stringResource(R.string.postpayment_guidance),
                 color = OperatorPalette.subtitle,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
@@ -165,7 +165,7 @@ private fun OperatorPostPaymentMainContent(
             )
             if (profile.counterLayout) {
                 Text(
-                    text = "After confirmation, the flow continues to success or failure without showing the same amount twice.",
+                    text = stringResource(R.string.postpayment_guidance_compact),
                     color = OperatorPalette.subtitle,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
@@ -190,11 +190,15 @@ private fun OperatorPostPaymentSummaryRail(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(profile.gap)) {
             OperatorStatePanel(
-                title = if (requestActive) "Collecting..." else "Ready to collect",
-                message = if (requestActive) {
-                    "The settlement is currently being booked."
+                title = if (requestActive) {
+                    stringResource(R.string.postpayment_collecting_title)
                 } else {
-                    "Choose the payment method for the prepared amount."
+                    stringResource(R.string.postpayment_ready_collect_title)
+                },
+                message = if (requestActive) {
+                    stringResource(R.string.postpayment_collecting_message)
+                } else {
+                    stringResource(R.string.postpayment_ready_collect_message)
                 },
                 success = true,
             )

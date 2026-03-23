@@ -69,20 +69,20 @@ fun SaleSuccess(
     }
 
     OperatorScaffold(
-        title = if (config is SaleConfig.Ready) config.tillName else "No Till",
-        subtitle = "Sale completed and ready for the next customer.",
+        title = if (config is SaleConfig.Ready) config.tillName else stringResource(R.string.sale_no_till),
+        subtitle = stringResource(R.string.sale_success_subtitle),
         icon = Icons.Filled.CheckCircle,
-        terminalLabel = "Complete",
+        terminalLabel = stringResource(R.string.sale_terminal_complete),
         footerHint = status,
-        footerSection = "Sale",
-        footerStatus = "Done",
+        footerSection = stringResource(R.string.sale_compact_title),
+        footerStatus = stringResource(R.string.sale_footer_done),
         onBack = onConfirm,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
                 OperatorStatePanel(
                     title = stringResource(R.string.ticket_order_booked),
-                    message = "Hand over the order and continue with the next basket.",
+                    message = stringResource(R.string.sale_success_message),
                     success = true,
                 )
                 Row(
@@ -153,7 +153,7 @@ fun SaleSuccess(
                             )
                         }
                         OperatorActionButton(
-                            text = "Next basket",
+                            text = stringResource(R.string.sale_next_basket),
                             onClick = onConfirm,
                         )
                         if (completedSale.paymentMethod != PaymentMethod.tag && completedSale.bonUrl.isNotBlank()) {
@@ -187,14 +187,14 @@ private fun ReceiptQrCard(receiptUrl: String) {
     OperatorPanel(backgroundColor = OperatorPalette.panel) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             androidx.compose.material.Text(
-                text = "Receipt QR",
+                text = stringResource(R.string.sale_receipt_qr),
                 color = OperatorPalette.title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
             )
             Image(
                 bitmap = qrCodeBitmap.asImageBitmap(),
-                contentDescription = "Receipt QR code",
+                contentDescription = stringResource(R.string.content_desc_receipt_qr),
                 modifier = Modifier.fillMaxWidth(),
             )
         }

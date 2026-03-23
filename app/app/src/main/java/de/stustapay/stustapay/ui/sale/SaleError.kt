@@ -26,13 +26,13 @@ fun SaleError(
     val config = saleConfig
 
     OperatorScaffold(
-        title = if (config is SaleConfig.Ready) config.tillName else "No Till",
-        subtitle = "Sale validation or booking failed.",
+        title = if (config is SaleConfig.Ready) config.tillName else stringResource(R.string.sale_no_till),
+        subtitle = stringResource(R.string.sale_error_subtitle),
         icon = Icons.Filled.ErrorOutline,
-        terminalLabel = "Error",
+        terminalLabel = stringResource(R.string.sale_terminal_error),
         footerHint = status,
-        footerSection = "Sale",
-        footerStatus = "Failed",
+        footerSection = stringResource(R.string.sale_compact_title),
+        footerStatus = stringResource(R.string.sale_footer_failed),
         onBack = onDismiss,
     ) {
         OperatorAdaptivePaymentLayout(
@@ -47,7 +47,7 @@ fun SaleError(
                 OperatorPanel {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OperatorActionButton(
-                            text = "Back to basket",
+                            text = stringResource(R.string.sale_back_to_basket),
                             onClick = onDismiss,
                             destructive = true,
                         )

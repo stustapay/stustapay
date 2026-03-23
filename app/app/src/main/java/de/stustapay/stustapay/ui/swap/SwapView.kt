@@ -162,7 +162,7 @@ fun SwapView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Swap successfull", style = MaterialTheme.typography.h5)
+                                    Text(stringResource(R.string.swap_successful), style = MaterialTheme.typography.h5)
                                 }
                             }
                         }

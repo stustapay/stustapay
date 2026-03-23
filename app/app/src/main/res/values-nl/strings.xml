@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="done">Klaar</string>
+    <string name="common_status_failed">Mislukt</string>
+
+    <string name="selfservice_title">Saldo controleren of opwaarderen</string>
+    <string name="selfservice_description">Kies wat u wilt doen.</string>
+    <string name="selfservice_check_balance">Saldo controleren</string>
+    <string name="selfservice_check_balance_hint">Toon het huidige saldo van uw polsbandje.</string>
+    <string name="selfservice_topup">Saldo opwaarderen</string>
+    <string name="selfservice_topup_hint">Voeg saldo toe en betaal aan de kaartterminal.</string>
+    <string name="selfservice_hint_scan">Houd uw polsbandje tegen de lezer wanneer dat wordt gevraagd.</string>
+    <string name="selfservice_hint_payment">Bevestig en betaal aan de kaartterminal.</string>
+    <string name="selfservice_hint_done">Klaar. U gaat automatisch terug naar het startscherm.</string>
+    <string name="selfservice_action_open">Openen</string>
+    <string name="selfservice_action_start">Starten</string>
+    <string name="selfservice_how_it_works">Zo werkt het</string>
+    <string name="selfservice_scan_balance_title">Houd uw polsbandje hier</string>
+    <string name="selfservice_scan_balance_title_compact">Houd chip hier</string>
+    <string name="selfservice_scan_balance_subtitle">Scan om uw saldo te bekijken</string>
+    <string name="selfservice_chip_label">Polsbandje / Chip</string>
+    <string name="selfservice_balance_loading">Uw polsbandje wordt gelezen...</string>
+    <string name="selfservice_auto_return">Klaar. Terug naar het startscherm...</string>
+    <string name="customer_display_welcome_event">Welkom bij %1$s</string>
+    <string name="customer_display_welcome_title">Welkom bij</string>
+    <string name="customer_display_select_action">Maak een keuze</string>
+    <string name="customer_display_scan_title">Scan uw chip of tag</string>
+    <string name="customer_display_scan_instruction">Houd uw chip tegen de lezer</string>
+    <string name="customer_display_insufficient_funds_title">⚠️ ONVOLDOENDE SALDO ⚠️</string>
+    <string name="customer_display_required_amount">Benodigd bedrag: %1$.2f €</string>
+    <string name="customer_display_available_balance">Beschikbaar saldo: %1$.2f €</string>
+    <string name="customer_display_missing_amount">Ontbrekend bedrag: %1$.2f €</string>
+    <string name="customer_display_topup_needed">Waardeer uw account op om door te gaan.</string>
+    <string name="customer_display_sale_completed">Aankoop voltooid</string>
+    <string name="customer_display_total_amount">Totaalbedrag:</string>
+    <string name="customer_display_new_balance">Nieuw saldo:</string>
+    <string name="customer_display_topup_completed">Opwaarderen voltooid</string>
+    <string name="customer_display_topup_amount">Opgewaardeerd bedrag:</string>
+    <string name="customer_display_sale_total_highlight">TOTAALBEDRAG: %1$s €</string>
+    <string name="customer_display_current_balance">Huidig saldo:</string>
+    <string name="customer_display_products">Producten:</string>
+
+    <string name="customer_name">Naam</string>
+    <string name="customer_vouchers">Bonnen</string>
+    <string name="customer_comment">Opmerking</string>
+    <string name="customer_restriction">Beperking</string>
+
+    <string name="topup">Opwaarderen</string>
+    <string name="previous_balance">Vorig saldo</string>
+    <string name="new_balance">Nieuw saldo</string>
+    <string name="error">Fout</string>
+    <string name="selfservice_scan_pay">Scannen &amp; betalen</string>
+    <string name="topup_scan_instruction">Houd uw chip tegen de lezer</string>
+    <string name="topup_payment_instruction">De betaling wordt verwerkt via de kaartterminal</string>
+    <string name="topup_step_amount">Stap 1: Bedrag invoeren</string>
+    <string name="topup_step_scan">Stap 2: Chip scannen</string>
+    <string name="topup_step_payment">Stap 3: Kaartbetaling</string>
+    <string name="topup_ready_to_scan">Klaar om uw chip te scannen</string>
+    <string name="topup_please_wait">Even geduld, de betaling wordt verwerkt...</string>
+    <string name="topup_enter_amount">Voer het gewenste opwaardeerbedrag in</string>
+    <string name="topup_press_scan_pay">Druk nu op Scannen &amp; betalen</string>
+    <string name="selfservice_custom_amount">Eigen bedrag</string>
+    <string name="topup_quick_amounts">Snelle bedragen</string>
+    <string name="topup_success_title">Opwaarderen gelukt</string>
+    <string name="topup_success_subtitle">Uw nieuwe saldo is direct beschikbaar.</string>
+    <string name="topup_missing_success_data">Geen gegevens van een voltooide opwaardering beschikbaar</string>
+    <string name="topup_auto_return_countdown">Automatisch terug over %1$d s</string>
+    <string name="topup_back_now">Nu terug</string>
+    <string name="topup_error_title">Opwaarderen mislukt</string>
+    <string name="topup_error_auto_return_countdown">Terug naar het startscherm over %1$d s</string>
+    <string name="topup_try_again">Opnieuw proberen</string>
+    <string name="topup_back_to_start">Naar start</string>
+
+    <string name="nfc_scan_title_plain">Chip scannen</string>
+    <string name="nfc_scan_ready">Klaar om te scannen</string>
+    <string name="nfc_scan_success">Scannen gelukt</string>
+    <string name="nfc_scan_description">Houd uw polsbandje of cashkaart tegen de lezer.\nNiet uw bankkaart.</string>
+
+    <string name="failed_fetching">Ophalen mislukt</string>
+</resources>

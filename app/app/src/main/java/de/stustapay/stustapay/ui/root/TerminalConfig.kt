@@ -56,7 +56,7 @@ fun TerminalConfig(
             if (configLoading) {
                 Spinner()
             } else {
-                Icon(Icons.Filled.Refresh, "Refresh")
+                Icon(Icons.Filled.Refresh, "Aktualisieren")
             }
         }
         Column(

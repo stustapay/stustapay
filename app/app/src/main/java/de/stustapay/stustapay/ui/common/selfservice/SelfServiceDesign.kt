@@ -1,7 +1,9 @@
 package de.stustapay.stustapay.ui.common.selfservice
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -19,13 +21,20 @@ import androidx.compose.material.Card
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.locale.AppLanguage
+import de.stustapay.stustapay.locale.AppLocaleManager
 
 object SelfServicePalette {
     val backgroundTop = Color(0xFF0A1322)
@@ -106,6 +115,90 @@ fun SelfServiceHeadline(
             color = subtitleColor,
             fontWeight = FontWeight.SemiBold,
             fontSize = subtitleFontSize
+        )
+    }
+}
+
+@Composable
+fun SelfServiceLanguageSelector(modifier: Modifier = Modifier) {
+    val activity = LocalActivity.current
+    val context = LocalContext.current
+    var selectedLanguage by remember(context) {
+        mutableStateOf(AppLocaleManager.currentLanguage(context))
+    }
+
+    Row(
+        modifier = modifier
+            .background(SelfServicePalette.panelMuted, RoundedCornerShape(16.dp))
+            .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(16.dp))
+            .padding(horizontal = 6.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AppLanguage.entries.forEach { language ->
+            val selected = language == selectedLanguage
+
+            Text(
+                text = language.shortLabel,
+                color = if (selected) {
+                    SelfServicePalette.backgroundTop
+                } else {
+                    SelfServicePalette.subtitle
+                },
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .background(
+                        if (selected) SelfServicePalette.accent else Color.Transparent,
+                        RoundedCornerShape(10.dp)
+                    )
+                    .clickable {
+                        if (language == selectedLanguage) {
+                            return@clickable
+                        }
+
+                        selectedLanguage = language
+                        if (activity != null) {
+                            AppLocaleManager.switchLanguage(activity, language)
+                        } else {
+                            AppLocaleManager.persistLanguage(context, language)
+                        }
+                    }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun SelfServiceSectionHeader(
+    title: String,
+    subtitle: String,
+    subtitleColor: Color = SelfServicePalette.subtitle,
+    titleFontSize: androidx.compose.ui.unit.TextUnit = 42.sp,
+    subtitleFontSize: androidx.compose.ui.unit.TextUnit = 19.sp,
+    showLanguageSelector: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        if (showLanguageSelector) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                SelfServiceLanguageSelector()
+            }
+        }
+
+        SelfServiceHeadline(
+            title = title,
+            subtitle = subtitle,
+            subtitleColor = subtitleColor,
+            titleFontSize = titleFontSize,
+            subtitleFontSize = subtitleFontSize
         )
     }
 }

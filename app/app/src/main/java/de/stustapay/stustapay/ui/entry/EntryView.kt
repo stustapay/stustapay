@@ -76,21 +76,21 @@ fun EntryView(
         subtitle = scanLabel,
         icon = Icons.Filled.MeetingRoom,
         terminalLabel = when (mode) {
-            TerminalMode.entry -> "Entry"
-            TerminalMode.exit -> "Exit"
-            else -> "Access"
+            TerminalMode.entry -> "Einlass"
+            TerminalMode.exit -> "Auslass"
+            else -> "Zugang"
         },
         footerHint = if (status.isNotBlank()) {
             status
         } else {
-            "Hold a wristband near the reader to resolve access for this terminal mode."
+            "Halten Sie ein Bändchen an das Lesegerät, um den Zutritt für diesen Terminalmodus zu prüfen."
         },
-        footerSection = "Entry",
+        footerSection = "Einlass",
         footerStatus = when {
-            requestActive -> "Checking"
-            scanResult?.allowed == true -> "Allowed"
-            scanResult?.allowed == false -> "Denied"
-            else -> "Ready"
+            requestActive -> "Prüft"
+            scanResult?.allowed == true -> "Erlaubt"
+            scanResult?.allowed == false -> "Abgelehnt"
+            else -> "Bereit"
         },
         onBack = leaveView,
     ) {
@@ -135,7 +135,7 @@ fun EntryView(
                 EntryResultCard(result = scanResult!!, status = status)
             } else if (status.isNotBlank()) {
                 OperatorInfoCard(
-                    title = "Scan status",
+                    title = "Scan-Status",
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(text = status, color = OperatorPalette.subtitle)

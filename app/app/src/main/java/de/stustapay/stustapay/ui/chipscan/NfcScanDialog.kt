@@ -50,6 +50,7 @@ import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
 
 @Composable
@@ -385,22 +386,13 @@ private fun PencilScanChipContent(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 14.dp)
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.selfservice_topup),
-                color = SelfServicePalette.title,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = if (isSmallScreen) 30.sp else 40.sp
-            )
-            Text(
-                text = stringResource(R.string.topup_step_scan),
-                color = SelfServicePalette.subtitle,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = if (isSmallScreen) 14.sp else 18.sp
-            )
-        }
+        SelfServiceSectionHeader(
+            title = stringResource(R.string.selfservice_topup),
+            subtitle = stringResource(R.string.topup_step_scan),
+            titleFontSize = if (isSmallScreen) 30.sp else 40.sp,
+            subtitleFontSize = if (isSmallScreen) 14.sp else 18.sp,
+            showLanguageSelector = false
+        )
 
         PencilScanStepper(isSmallScreen = isSmallScreen)
 

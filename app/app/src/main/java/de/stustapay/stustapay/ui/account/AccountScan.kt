@@ -121,12 +121,12 @@ fun AccountScan(
     
     OperatorScaffold(
         title = stringResource(R.string.customer_title),
-        subtitle = "Scan a customer tag to load balance, vouchers, and recent order history.",
+        subtitle = stringResource(R.string.account_scan_subtitle),
         icon = Icons.Filled.Person,
-        terminalLabel = "Account",
-        footerHint = "Ready for NFC scan.",
-        footerSection = "Account",
-        footerStatus = "Awaiting tag",
+        terminalLabel = stringResource(R.string.account_terminal_label),
+        footerHint = stringResource(R.string.account_scan_ready_nfc),
+        footerSection = stringResource(R.string.account_terminal_label),
+        footerStatus = stringResource(R.string.account_scan_waiting_tag),
         onBack = onBack,
     ) {
         Column(
@@ -134,11 +134,11 @@ fun AccountScan(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OperatorInfoCard(
-                title = "Balance Check",
+                title = stringResource(R.string.account_scan_balance_check_title),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "Present a customer card or wristband to open the account overview and drill down into recent orders.",
+                    text = stringResource(R.string.account_scan_balance_check_desc),
                     color = OperatorPalette.subtitle,
                 )
             }

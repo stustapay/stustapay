@@ -55,7 +55,7 @@ fun LoginProfile(
             Text(
                 modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
                 textAlign = TextAlign.Center,
-                text = "No Login",
+                text = "Nicht eingeloggt",
                 style = MaterialTheme.typography.body1,
             )
         }

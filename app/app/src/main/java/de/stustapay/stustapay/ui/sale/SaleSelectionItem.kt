@@ -18,11 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 
 sealed interface SaleSelectionItemType {
@@ -121,13 +123,14 @@ fun SaleSelectionItem(
     val primaryButtonTextColor: Color
     val secondaryButtonColor: Color
     val secondaryButtonTextColor: Color
+    var primaryIsSymbol = false
 
     when (type) {
         is SaleSelectionItemType.FixedPrice -> {
             val amount: Int = type.amount?.amount ?: 0
             itemPrice = "%.02f€".format(type.price.price)
             quantityLabel = if (amount > 0) "×$amount" else null
-            primaryText = "+ Add"
+            primaryText = stringResource(R.string.sale_action_add_symbol)
             secondaryText = if (amount > 0) "−" else null
             primaryAction = type.onIncr
             secondaryAction = if (amount > 0) type.onDecr else null
@@ -135,13 +138,14 @@ fun SaleSelectionItem(
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
+            primaryIsSymbol = true
         }
 
         is SaleSelectionItemType.Returnable -> {
             val amount: Int = type.amount?.amount ?: 0
             itemPrice = "%.02f€".format(type.price.price ?: 0.0)
             quantityLabel = if (amount != 0) amount.toString() else null
-            primaryText = "Add"
+            primaryText = stringResource(R.string.sale_action_add_symbol)
             secondaryText = "−"
             primaryAction = type.onDecr
             secondaryAction = type.onIncr
@@ -149,14 +153,19 @@ fun SaleSelectionItem(
             primaryButtonTextColor = Color.White
             secondaryButtonColor = Color(0xFFEAB308)
             secondaryButtonTextColor = Color(0xFF1A1200)
+            primaryIsSymbol = true
         }
 
         is SaleSelectionItemType.FreePrice -> {
             val price: Double = (type.amount?.price?.toDouble() ?: 0.0) / 100
             itemPrice = "%.02f€".format(price)
             quantityLabel = null
-            primaryText = if (type.amount == null) "Set price" else "Edit price"
-            secondaryText = if (type.amount != null) "Clear" else null
+            primaryText = if (type.amount == null) {
+                stringResource(R.string.sale_set_price)
+            } else {
+                stringResource(R.string.sale_edit_price)
+            }
+            secondaryText = if (type.amount != null) stringResource(R.string.sale_clear_price) else null
             primaryAction = { type.onPriceEdit(false) }
             secondaryAction = if (type.amount != null) ({ type.onPriceEdit(true) }) else null
             primaryButtonColor = OperatorPalette.accent
@@ -168,7 +177,7 @@ fun SaleSelectionItem(
         is SaleSelectionItemType.Vouchers -> {
             itemPrice = "${type.amount}/${type.maxAmount}"
             quantityLabel = null
-            primaryText = "+ Voucher"
+            primaryText = stringResource(R.string.sale_action_add_symbol)
             secondaryText = if (type.amount > 0) "−" else null
             primaryAction = type.onIncr
             secondaryAction = if (type.amount > 0) type.onDecr else null
@@ -176,6 +185,7 @@ fun SaleSelectionItem(
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
+            primaryIsSymbol = true
         }
     }
 
@@ -260,7 +270,7 @@ fun SaleSelectionItem(
                         onClick = primaryAction,
                         modifier = Modifier
                             .height(40.dp)
-                            .widthIn(min = if (isReturnable || primaryText.length > 4) 88.dp else 72.dp),
+                            .widthIn(min = if (primaryIsSymbol) 52.dp else if (isReturnable || primaryText.length > 4) 88.dp else 72.dp),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = primaryButtonColor,
                             contentColor = primaryButtonTextColor,
@@ -268,8 +278,8 @@ fun SaleSelectionItem(
                     ) {
                         Text(
                             text = primaryText,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = if (primaryIsSymbol) 24.sp else 12.sp,
+                            fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
                             maxLines = 1,
                         )
                     }
@@ -334,7 +344,7 @@ fun SaleSelectionItem(
                 Button(
                     onClick = primaryAction,
                     modifier = Modifier
-                        .weight(if (secondaryText != null) 0.72f else 1f)
+                        .weight(if (primaryIsSymbol) 0.32f else if (secondaryText != null) 0.72f else 1f)
                         .height(38.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = primaryButtonColor,
@@ -343,8 +353,8 @@ fun SaleSelectionItem(
                 ) {
                     Text(
                         text = primaryText,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontSize = if (primaryIsSymbol) 24.sp else 13.sp,
+                        fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
                     )
                 }
 

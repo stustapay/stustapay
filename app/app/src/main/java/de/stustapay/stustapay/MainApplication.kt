@@ -10,6 +10,7 @@ import android.os.Build
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 import de.stustapay.stustapay.device.ManagedConfigWatcher
+import de.stustapay.stustapay.locale.AppLocaleManager
 import de.stustapay.stustapay.net.TerminalApiAccessor
 import javax.inject.Inject
 
@@ -54,6 +55,8 @@ class MainApplication : Application() {
     
     override fun onCreate() {
         super.onCreate()
+
+        AppLocaleManager.applyStoredLocale(this)
         
         // Set up network monitoring
         setupNetworkMonitoring()

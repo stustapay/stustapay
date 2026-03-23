@@ -112,7 +112,7 @@ fun CashInOutView(
 
             if (tabList.isEmpty()) {
                 ErrorScreen(onDismiss = leaveView) {
-                    Text("no action available", fontSize = 28.sp)
+                    Text("Keine Aktion verfügbar", fontSize = 28.sp)
                 }
             } else {
                 val startRoute = tabList[0].route
