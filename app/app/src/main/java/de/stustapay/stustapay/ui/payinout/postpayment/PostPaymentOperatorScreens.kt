@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.payinout.postpayment
 
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,8 +52,9 @@ fun OperatorPostPaymentSelection(
     onClear: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current as Activity
+    val context = LocalActivity.current as Activity
     val selectedAmount by viewModel.postPaymentState.collectAsStateWithLifecycle()
+    val terminalLoginState by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     var showCashConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(payout.uuid) {
@@ -74,10 +75,9 @@ fun OperatorPostPaymentSelection(
     }
 
     val currentAmount = selectedAmount.currentAmount
-    val remainingBalance = (payout.maxAmount + currentAmount).coerceAtMost(0.0)
 
     OperatorScaffold(
-        title = viewModel.terminalLoginState.value.title().title,
+        title = terminalLoginState.title().title,
         subtitle = stringResource(R.string.postpayment_operator_subtitle),
         icon = Icons.Filled.PointOfSale,
         terminalLabel = stringResource(R.string.root_item_post_payment),
@@ -88,7 +88,10 @@ fun OperatorPostPaymentSelection(
         } else {
             formatEuroAmount(currentAmount)
         },
+        showFooter = false,
         onBack = leaveView,
+        headerFlowTitle = stringResource(R.string.root_item_post_payment),
+        headerTillLabel = terminalLoginState.title().title,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
@@ -275,7 +278,10 @@ fun OperatorPostPaymentSuccess(
         footerHint = footerHint,
         footerSection = stringResource(R.string.root_item_post_payment),
         footerStatus = stringResource(R.string.operator_status_complete),
+        showFooter = false,
         onBack = onDismiss,
+        headerFlowTitle = stringResource(R.string.root_item_post_payment),
+        headerTillLabel = terminalTitle,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
@@ -349,7 +355,10 @@ fun OperatorPostPaymentError(
         footerHint = footerHint,
         footerSection = stringResource(R.string.root_item_post_payment),
         footerStatus = stringResource(R.string.operator_status_issue),
+        showFooter = false,
         onBack = onDismiss,
+        headerFlowTitle = stringResource(R.string.root_item_post_payment),
+        headerTillLabel = terminalTitle,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = {

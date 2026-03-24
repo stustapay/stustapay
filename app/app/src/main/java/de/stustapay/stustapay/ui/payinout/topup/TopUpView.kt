@@ -28,10 +28,8 @@ fun TopUpView(
 
         TopUpPage.Done -> {
             TopUpSuccess(
-                onDismiss = {
-                    viewModel.dismissSuccess()
-                    onFinished?.invoke()
-                },
+                onDismiss = { viewModel.dismissSuccess() },
+                onLeaveSelfService = onFinished,
                 viewModel = viewModel,
             )
         }

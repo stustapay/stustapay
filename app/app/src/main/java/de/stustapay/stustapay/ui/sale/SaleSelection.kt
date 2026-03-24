@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorBackground
+import de.stustapay.stustapay.ui.common.operator.OperatorCompactFlowHeader
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import kotlinx.coroutines.launch
@@ -251,79 +252,13 @@ private fun CompactSaleHeader(
     compactHandheld: Boolean,
     tillLabel: String?,
 ) {
-    if (compactHandheld) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            color = OperatorPalette.panel,
-            border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
-            elevation = 0.dp,
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CompactCircleButton(
-                    icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    backgroundColor = OperatorPalette.pill,
-                    onClick = onBack,
-                    size = 36.dp,
-                )
-                Text(
-                    text = stringResource(R.string.sale_compact_title),
-                    color = OperatorPalette.title,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                if (!tillLabel.isNullOrBlank()) {
-                    Text(
-                        text = tillLabel,
-                        color = OperatorPalette.subtitle,
-                        fontSize = 13.sp,
-                        maxLines = 1,
-                    )
-                }
-            }
-        }
-        return
-    }
-
-    OperatorPanel(
+    OperatorCompactFlowHeader(
+        flowTitle = stringResource(R.string.sale_compact_title),
+        tillLabel = tillLabel,
+        onBack = onBack,
+        compactHandheld = compactHandheld,
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = OperatorPalette.panel,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CompactCircleButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                backgroundColor = OperatorPalette.pill,
-                onClick = onBack,
-                size = 40.dp,
-            )
-            Column {
-                Text(
-                    text = stringResource(R.string.sale_compact_title),
-                    color = OperatorPalette.title,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                )
-                if (!tillLabel.isNullOrBlank()) {
-                    Text(
-                        text = tillLabel,
-                        color = OperatorPalette.subtitle,
-                        fontSize = 14.sp,
-                    )
-                }
-            }
-        }
-    }
+    )
 }
 
 @Composable

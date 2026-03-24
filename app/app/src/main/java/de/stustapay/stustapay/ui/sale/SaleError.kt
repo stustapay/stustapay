@@ -33,7 +33,10 @@ fun SaleError(
         footerHint = status,
         footerSection = stringResource(R.string.sale_compact_title),
         footerStatus = stringResource(R.string.sale_footer_failed),
+        showFooter = false,
         onBack = onDismiss,
+        headerFlowTitle = stringResource(R.string.sale_compact_title),
+        headerTillLabel = if (config is SaleConfig.Ready) config.tillName else null,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = {

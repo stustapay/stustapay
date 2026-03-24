@@ -7,6 +7,7 @@ import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.UserRepository
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import de.stustapay.libssp.util.mapState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,20 +22,18 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 enum class CashInOutTab(
-    val title: String,
+    val titleRes: Int,
     val access: (TerminalLoginState) -> Boolean,
     val route: String,
 ) {
-    // Top with upwards arrow above
     TopUp(
-        title = "Aufladen \uD83D\uDD1D",
+        titleRes = R.string.payinout_tab_topup,
         access = { state -> state.checkAccess { u, t -> Access.canTopUp(t, u) } },
         route = "topup",
     ),
 
-    // Money with wings
     PayOut(
-        title = "Auszahlen \uD83D\uDCB8",
+        titleRes = R.string.payinout_tab_payout,
         access = { state -> state.checkAccess { u, t -> Access.canPayOut(t, u) } },
         route = "payout",
     ),

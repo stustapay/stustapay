@@ -69,6 +69,8 @@ fun SaleConfirm(
         footerStatus = stringResource(R.string.sale_footer_ready),
         showFooter = false,
         onBack = onEdit,
+        headerFlowTitle = stringResource(R.string.sale_compact_title),
+        headerTillLabel = if (config is SaleConfig.Ready) config.tillName else null,
     ) {
         OperatorAdaptivePaymentLayout(
             modifier = Modifier.fillMaxSize(),

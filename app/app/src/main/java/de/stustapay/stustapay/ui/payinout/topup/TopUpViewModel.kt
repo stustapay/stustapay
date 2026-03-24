@@ -1,14 +1,17 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
 import android.app.Activity
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.netsource.TopUpRemoteDataSource
 import de.stustapay.stustapay.repository.ECPaymentRepository
@@ -47,6 +50,7 @@ data class TopUpState(
 
 @HiltViewModel
 class TopUpViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val topUpApi: TopUpRemoteDataSource,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val userRepository: UserRepository,
@@ -105,7 +109,12 @@ class TopUpViewModel @Inject constructor(
                     delay(2 * 60 * 1000)
                 }
             } catch (e: Exception) {
-                _status.update { "Token refresh error: ${e.message}" }
+                _status.update {
+                    context.getString(
+                        R.string.topup_status_token_refresh_error,
+                        e.message ?: context.getString(R.string.error)
+                    )
+                }
             }
         }
     }
@@ -125,7 +134,7 @@ class TopUpViewModel @Inject constructor(
     fun clearDraft() {
         _topUpCompleted.update { null }
         _topUpState.update { TopUpState() }
-        _status.update { "ready" }
+        _status.update { context.getString(R.string.operator_status_ready) }
         _uiLocked.update { false }
         
         // Reset customer display to welcome state
@@ -135,7 +144,7 @@ class TopUpViewModel @Inject constructor(
     fun checkAmountLocal(amount: Double): Boolean {
         val minimum = 1.0
         if (amount < minimum) {
-            _status.update { "Mindestbetrag %.2f €".format(minimum) }
+            _status.update { context.getString(R.string.topup_status_minimum_amount, minimum) }
             return false
         }
         return true
@@ -146,7 +155,7 @@ class TopUpViewModel @Inject constructor(
     }
 
     suspend fun startCardReaderSetup(context: Activity) {
-        _status.update { "EC reader setup..." }
+        _status.update { this.context.getString(R.string.topup_status_ec_reader_setup) }
         val startError = ecPaymentRepository.startCardReaderSetup(context)
         if (startError != null) {
             _status.update { startError }
@@ -166,7 +175,7 @@ class TopUpViewModel @Inject constructor(
         // server-side check
         return when (val response = topUpApi.checkTopUp(newTopUp)) {
             is Response.OK -> {
-                _status.update { "TopUp possible" }
+                _status.update { context.getString(R.string.topup_status_topup_possible) }
                 true
             }
 
@@ -195,6 +204,10 @@ class TopUpViewModel @Inject constructor(
         )
     }
 
+    private fun topUpTypeCard(): String = context.getString(R.string.topup_payment_type_card)
+
+    private fun topUpTypeCash(): String = context.getString(R.string.topup_payment_type_cash)
+
     /** called from the card payment button */
     suspend fun topUpWithCard(context: Activity, tag: NfcTag) {
         if (_uiLocked.value) {
@@ -202,7 +215,7 @@ class TopUpViewModel @Inject constructor(
         }
         _uiLocked.update { true }
         try {
-            _status.update { "Card TopUp in progress..." }
+            _status.update { context.getString(R.string.topup_status_card_in_progress) }
             // wake the soon-needed reader :)
             // TODO: move this even before the chip scan
             // CashECPay could get a prepareEC callback function for that.
@@ -230,12 +243,12 @@ class TopUpViewModel @Inject constructor(
             // if the transaction has completed, but the callback to the POS terminal got missing
             // due to wlan glitches etc.
 
-            if (!registerTopUp("Card", newTopUp)) {
+            if (!registerTopUp(topUpTypeCard(), newTopUp)) {
                 // already updates status message
                 return
             }
 
-            _status.update { "Remove the chip. Starting EC transaction..." }
+            _status.update { context.getString(R.string.topup_status_remove_chip_start_ec) }
 
             // workaround so the sumup activity is not in foreground too quickly.
             // when it's active, nfc intents are no longer captured by us, apparently,
@@ -246,20 +259,20 @@ class TopUpViewModel @Inject constructor(
             // perform ec transaction
             when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
                 is ECPaymentResult.Failure -> {
-                    _status.update { "EC: ${paymentResult.msg}" }
+                    _status.update { context.getString(R.string.topup_status_ec_result, paymentResult.msg) }
                     topUpApi.cancelPendingTopUp(newTopUp.uuid)
                     return
                 }
 
                 is ECPaymentResult.Success -> {
-                    _status.update { "EC: ${paymentResult.result.msg}" }
+                    _status.update { context.getString(R.string.topup_status_ec_result, paymentResult.result.msg) }
                 }
             }
 
             // when successful, book the transaction
             // if this doesn't reach the backend, the backend will book the topUp on its own
             // when sumup confirms the payment.
-            bookTopUp("Card", newTopUp)
+            bookTopUp(topUpTypeCard(), newTopUp)
         } finally {
             _uiLocked.update { false }
         }
@@ -271,7 +284,7 @@ class TopUpViewModel @Inject constructor(
         }
         _uiLocked.update { true }
         try {
-            _status.update { "Cash TopUp in progress..." }
+            _status.update { context.getString(R.string.topup_status_cash_in_progress) }
 
             val newTopUp = NewTopUp(
                 amount = _topUpState.value.currentAmount.toDouble() / 100,
@@ -286,18 +299,18 @@ class TopUpViewModel @Inject constructor(
                 return
             }
 
-            bookTopUp("Cash", newTopUp)
+            bookTopUp(topUpTypeCash(), newTopUp)
         } finally {
             _uiLocked.update { false }
         }
     }
 
     private suspend fun registerTopUp(topUpType: String, newTopUp: NewTopUp): Boolean {
-        _status.update { "Announcing $topUpType TopUp..." }
+        _status.update { context.getString(R.string.topup_status_announcing, topUpType) }
 
         when (val response = topUpApi.registerTopUp(newTopUp)) {
             is Response.OK -> {
-                _status.update { "$topUpType TopUp announced!" }
+                _status.update { context.getString(R.string.topup_status_announced, topUpType) }
                 return true
             }
 
@@ -315,12 +328,12 @@ class TopUpViewModel @Inject constructor(
     }
 
     private suspend fun bookTopUp(topUpType: String, newTopUp: NewTopUp) {
-        _status.update { "Booking $topUpType TopUp..." }
+        _status.update { context.getString(R.string.topup_status_booking, topUpType) }
         when (val response = infallibleRepository.bookTopUp(newTopUp)) {
             is Response.OK -> {
                 clearDraft()
                 _topUpCompleted.update { response.data }
-                _status.update { "$topUpType TopUp successful!" }
+                _status.update { context.getString(R.string.topup_status_successful, topUpType) }
                 _navState.update { TopUpPage.Done }
                 
                 // Update the customer display with the top-up information
@@ -328,7 +341,7 @@ class TopUpViewModel @Inject constructor(
             }
 
             is Response.Error -> {
-                _status.update { "$topUpType TopUp failed! ${response.msg()}" }
+                _status.update { context.getString(R.string.topup_status_failed, topUpType, response.msg()) }
                 _navState.update { TopUpPage.Failure }
                 
                 // Reset customer display to welcome state on error
@@ -367,6 +380,7 @@ class TopUpViewModel @Inject constructor(
 
     /** when a topup was successful and the confirmation was dismissed */
     fun dismissSuccess() {
+        _status.update { context.getString(R.string.operator_status_ready) }
         // todo: some feedback during this refresh?
         viewModelScope.launch {
             terminalConfigRepository.tokenRefresh()

@@ -1,15 +1,18 @@
 package de.stustapay.stustapay.ui.sale
 
 import android.app.Activity
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.integer.BigInteger
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.mapState
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
@@ -45,6 +48,7 @@ enum class ScanTarget {
 
 @HiltViewModel
 class SaleViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val saleRepository: SaleRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
@@ -69,7 +73,7 @@ class SaleViewModel @Inject constructor(
     val saleCompleted = _saleCompleted.asStateFlow()
 
     // status message
-    private val _status = MutableStateFlow("loading")
+    private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
 
     // error popup
@@ -152,9 +156,9 @@ class SaleViewModel @Inject constructor(
         customerDisplayManager.updateState(CustomerDisplayState.Welcome)
         
         if (success) {
-            _status.update { "Order cleared - ready." }
+            _status.update { context.getString(R.string.sale_status_order_cleared_ready) }
         } else {
-            _status.update { "Order cleared" }
+            _status.update { context.getString(R.string.ticket_order_cleared) }
         }
     }
 
@@ -208,7 +212,7 @@ class SaleViewModel @Inject constructor(
         // and not fold them and check if sum == 0
         // because one can have negative returnable items!
         if (_saleStatus.value.buttonSelection.isEmpty()) {
-            _error.update { "No items in sale" }
+            _error.update { context.getString(R.string.sale_status_no_items) }
             _navState.update { SalePage.Error }
             return
         }
@@ -236,7 +240,7 @@ class SaleViewModel @Inject constructor(
 
         val tag = _saleStatus.value.tag
         if (tag == null) {
-            _status.update { "Scanning tag..." }
+            _status.update { context.getString(R.string.sale_status_scanning_tag) }
             scanTarget.update { ScanTarget.CheckSale }
             _enableScan.update { true }
             
@@ -246,7 +250,7 @@ class SaleViewModel @Inject constructor(
             return
         }
 
-        _status.update { "Checking order..." }
+        _status.update { context.getString(R.string.order_checking) }
 
         // check if the sale is nice and well
         val response = saleRepository.checkSale(
@@ -260,7 +264,7 @@ class SaleViewModel @Inject constructor(
                     newSale.updateWithPendingSale(response.data)
                     newSale
                 }
-                _status.update { "Order validated!" }
+                _status.update { context.getString(R.string.sale_status_order_validated) }
                 
                 // Update customer display with the validated sale
                 val pendingSale = response.data
@@ -321,11 +325,11 @@ class SaleViewModel @Inject constructor(
 
     suspend fun checkSaleCash() {
         if (_saleStatus.value.buttonSelection.isEmpty()) {
-            _status.update { "Nothing ordered!" }
+            _status.update { context.getString(R.string.sale_status_nothing_ordered) }
             return
         }
 
-        _status.update { "Checking order..." }
+        _status.update { context.getString(R.string.order_checking) }
 
         val response = saleRepository.checkSale(
             _saleStatus.value.getNewSale(method = PaymentMethod.cash)
@@ -338,7 +342,7 @@ class SaleViewModel @Inject constructor(
                     newSale.updateWithPendingSale(response.data)
                     newSale
                 }
-                _status.update { "Order validated!" }
+                _status.update { context.getString(R.string.sale_status_order_validated) }
                 _navState.update { SalePage.Confirm }
             }
 
@@ -357,11 +361,11 @@ class SaleViewModel @Inject constructor(
 
     suspend fun checkSaleCard() {
         if (_saleStatus.value.buttonSelection.isEmpty()) {
-            _status.update { "Nothing ordered!" }
+            _status.update { context.getString(R.string.sale_status_nothing_ordered) }
             return
         }
 
-        _status.update { "Checking order..." }
+        _status.update { context.getString(R.string.order_checking) }
 
         val response = saleRepository.checkSale(
             _saleStatus.value.getNewSale(method = PaymentMethod.sumup)
@@ -374,7 +378,7 @@ class SaleViewModel @Inject constructor(
                     newSale.updateWithPendingSale(response.data)
                     newSale
                 }
-                _status.update { "Order validated!" }
+                _status.update { context.getString(R.string.sale_status_order_validated) }
                 _navState.update { SalePage.Confirm }
             }
 
@@ -402,7 +406,7 @@ class SaleViewModel @Inject constructor(
         val tag = _saleStatus.value.tag
         val sale = _saleStatus.value.checkedSale
         if (sale == null) {
-            _status.update { "Unchecked sale!" }
+            _status.update { context.getString(R.string.sale_status_unchecked_sale) }
             return
         }
 
@@ -418,7 +422,7 @@ class SaleViewModel @Inject constructor(
 
             // TODO: register pending sale for guaranteed sumup processing
 
-            _status.update { "Starting EC transaction..." }
+            _status.update { context.getString(R.string.sale_status_starting_ec) }
 
             // workaround so the sumup activity is not in foreground too quickly.
             // when it's active, nfc intents are no longer captured by us, apparently,
@@ -428,12 +432,12 @@ class SaleViewModel @Inject constructor(
 
             when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
                 is ECPaymentResult.Failure -> {
-                    _status.update { "EC: ${paymentResult.msg}" }
+                    _status.update { context.getString(R.string.topup_status_ec_result, paymentResult.msg) }
                     return
                 }
 
                 is ECPaymentResult.Success -> {
-                    _status.update { "EC: ${paymentResult.result.msg}" }
+                    _status.update { context.getString(R.string.topup_status_ec_result, paymentResult.result.msg) }
                 }
             }
         }
@@ -448,7 +452,7 @@ class SaleViewModel @Inject constructor(
             is Response.OK -> {
                 // delete the sale draft
                 clearSale()
-                _status.update { "Order booked!" }
+                _status.update { context.getString(R.string.ticket_order_booked) }
                 // now we have a completed sale
                 _saleCompleted.update { response.data }
                 _navState.update { SalePage.Success }
@@ -515,7 +519,7 @@ class SaleViewModel @Inject constructor(
                 is TerminalConfigState.Success -> {
                     val till = terminalConfig.config.till
                     if (till != null) {
-                        _status.update { "Ready for order." }
+                        _status.update { context.getString(R.string.sale_status_ready_for_order) }
                         SaleConfig.Ready(
                             buttons = terminalConfig.config.till?.buttons?.associate {
                                 Pair(
@@ -531,7 +535,7 @@ class SaleViewModel @Inject constructor(
                             till = till,
                         )
                     } else {
-                        _status.update { "No till assigned to terminal" }
+                        _status.update { context.getString(R.string.sale_status_no_till_assigned) }
                         SaleConfig.NotReady
                     }
                 }
@@ -542,7 +546,7 @@ class SaleViewModel @Inject constructor(
                 }
 
                 is TerminalConfigState.NoConfig -> {
-                    _status.update { "Loading..." }
+                    _status.update { context.getString(R.string.operator_console_loading) }
                     SaleConfig.NotReady
                 }
             }

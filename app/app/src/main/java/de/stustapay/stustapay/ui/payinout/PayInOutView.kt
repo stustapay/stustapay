@@ -1,6 +1,5 @@
 package de.stustapay.stustapay.ui.payinout
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,14 +21,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.payinout.payout.PayOutView
 import de.stustapay.stustapay.ui.payinout.topup.TopUpView
 import de.stustapay.stustapay.ui.common.ErrorScreen
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
-import de.stustapay.stustapay.ui.root.RootNavDests
 import kotlinx.coroutines.delay
 
 
@@ -38,9 +37,6 @@ fun CashInOutView(
     leaveView: () -> Unit = {},
     viewModel: PayInOutViewModel = hiltViewModel()
 ) {
-    // Get activity context
-    val context = LocalContext.current
-    
     // State to detect if we should force leave due to logout
     var shouldExitDueToLogout by remember { mutableStateOf(false) }
     
@@ -86,12 +82,18 @@ fun CashInOutView(
 
     val navController = rememberNavController()
 
-    LaunchedEffect(activeTab) {
-        if (activeTab < tabList.size) {
-            navController.navigateTo(
-                tabList[activeTab].route
-            )
+    LaunchedEffect(activeTab, tabList) {
+        if (tabList.isEmpty()) {
+            return@LaunchedEffect
         }
+
+        val safeActiveTab = activeTab.coerceIn(0, tabList.lastIndex)
+        if (safeActiveTab != activeTab) {
+            viewModel.cashInOutTabSelected(safeActiveTab)
+            return@LaunchedEffect
+        }
+
+        navController.navigateTo(tabList[safeActiveTab].route)
     }
 
     Scaffold(
@@ -112,7 +114,7 @@ fun CashInOutView(
 
             if (tabList.isEmpty()) {
                 ErrorScreen(onDismiss = leaveView) {
-                    Text("Keine Aktion verfügbar", fontSize = 28.sp)
+                    Text(stringResource(R.string.payinout_no_action_available), fontSize = 28.sp)
                 }
             } else {
                 val startRoute = tabList[0].route
@@ -122,7 +124,7 @@ fun CashInOutView(
                     TabRow(selectedTabIndex = activeTab) {
                         tabList.forEachIndexed { idx, elem ->
                             Tab(
-                                text = { Text(elem.title) },
+                                text = { Text(stringResource(elem.titleRes)) },
                                 selected = activeTab == idx,
                                 onClick = { viewModel.cashInOutTabSelected(idx) }
                             )

@@ -76,7 +76,10 @@ fun SaleSuccess(
         footerHint = status,
         footerSection = stringResource(R.string.sale_compact_title),
         footerStatus = stringResource(R.string.sale_footer_done),
+        showFooter = false,
         onBack = onConfirm,
+        headerFlowTitle = stringResource(R.string.sale_compact_title),
+        headerTillLabel = if (config is SaleConfig.Ready) config.tillName else null,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->

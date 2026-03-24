@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -124,20 +126,23 @@ fun NfcScanCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Abbrechen",
+                        contentDescription = stringResource(R.string.common_action_cancel),
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colors.primary
                     )
                 }
             }
             
+            val contentPadding = if (showCloseButton) 10.dp else 8.dp
+            val contentTopPadding = if (showCloseButton) 36.dp else 8.dp
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(10.dp)
-                    .padding(top = if (showCloseButton) 36.dp else 10.dp)
+                    .padding(contentPadding)
+                    .padding(top = contentTopPadding)
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
             ) {
                 content(scanState.status)
 

@@ -58,7 +58,7 @@ fun SwapView(
                 viewModel.setOldTagUid(tag.uid)
                 viewModel.setOldTagPin(tag.pin.orEmpty())
                 viewModel.returnToRoot()
-            }) {
+            }) { _, _ ->
             Text(
                 stringResource(R.string.nfc_scan_prompt), style = NfcScanStyle
             )
@@ -70,7 +70,7 @@ fun SwapView(
                 scope.launch {
                     viewModel.swap(tag)
                 }
-            }) {
+            }) { _, _ ->
             Text(
                 stringResource(R.string.nfc_scan_new_prompt), style = NfcScanStyle
             )

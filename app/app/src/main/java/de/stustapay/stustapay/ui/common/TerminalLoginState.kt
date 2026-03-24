@@ -62,6 +62,13 @@ class TerminalLoginState(
         }
         return terminal.config.till?.cashRegisterId != null;
     }
+
+    fun canHandleCardTopUp(): Boolean {
+        if (terminal !is TerminalConfigState.Success) {
+            return false
+        }
+        return terminal.config.till?.enableCardPayment == true
+    }
     
     /**
      * Returns the maximum account balance for the current customer

@@ -101,13 +101,14 @@ fun UserLoginView(
                     }
                 }
             },
-        ) {
+        ) { status, compactLayout ->
             when (scanTarget) {
                 ScanTarget.Login -> {
                     PencilOperatorScanContent(
                         title = stringResource(R.string.nfc_scan_login),
                         subtitle = stringResource(R.string.nfc_scan_description),
-                        scanStatus = status ?: ""
+                        scanStatus = status,
+                        isSmallScreen = compactLayout,
                     )
                 }
             }

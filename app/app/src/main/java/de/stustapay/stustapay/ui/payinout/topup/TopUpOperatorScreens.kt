@@ -1,9 +1,10 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
@@ -30,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +44,7 @@ import de.stustapay.stustapay.ui.chipscan.NfcScanDialogVariant
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
+import de.stustapay.stustapay.ui.common.operator.OperatorCompactFlowHeader
 import de.stustapay.stustapay.ui.common.operator.OperatorActionButton
 import de.stustapay.stustapay.ui.common.operator.OperatorAdaptivePaymentLayout
 import de.stustapay.stustapay.ui.common.operator.OperatorAmountOptionCard
@@ -68,15 +68,17 @@ private enum class TopUpPaymentMethod {
 fun OperatorTopUpSelection(
     viewModel: TopUpViewModel,
     onBack: (() -> Unit)? = null,
+    terminalTitle: String,
     footerHint: String,
     maxAmount: UInt,
+    canHandleCard: Boolean,
     canHandleCash: Boolean,
     requestActive: Boolean,
     uiLocked: Boolean,
     amount: UInt,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current as Activity
+    val context = LocalActivity.current as Activity
     val scanState = rememberNfcScanDialogState()
     val amountDialogState = rememberDialogDisplayState()
     val paymentSelectionViewModel: CashECSelectionViewModel = hiltViewModel()
@@ -129,7 +131,14 @@ fun OperatorTopUpSelection(
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            TopUpCompactHeader(onBack = onBack)
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                OperatorCompactFlowHeader(
+                    flowTitle = stringResource(R.string.topup),
+                    tillLabel = terminalTitle.takeIf { it.isNotBlank() },
+                    onBack = onBack,
+                    compactHandheld = maxWidth < 760.dp,
+                )
+            }
 
             OperatorAdaptivePaymentLayout(
                 modifier = Modifier
@@ -150,11 +159,15 @@ fun OperatorTopUpSelection(
                     OperatorTopUpSummaryRail(
                         profile = profile,
                         amount = amount,
+                        canHandleCard = canHandleCard,
                         canHandleCash = canHandleCash,
                         footerHint = footerHint,
                         requestActive = requestActive,
                         uiLocked = uiLocked,
                         onCard = {
+                            if (!canHandleCard) {
+                                return@OperatorTopUpSummaryRail
+                            }
                             if (!viewModel.checkAmountLocal(amount.toDouble() / 100.0)) {
                                 return@OperatorTopUpSummaryRail
                             }
@@ -260,81 +273,33 @@ private fun OperatorTopUpMainContent(
         }
     }
 
-    OperatorPanel(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (profile.counterLayout) Modifier else Modifier),
-        backgroundColor = OperatorPalette.panelMuted,
-    ) {
-        val statusHint = footerHint.takeUnless { it.isBlank() || it == "ready" }
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = if (requestActive) {
-                    stringResource(R.string.topup_please_wait)
-                } else if (statusHint != null) {
-                    statusHint
-                } else {
-                    "Betrag wählen und Zahlung rechts starten."
-                },
-                color = OperatorPalette.title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-            )
-            Text(
-                text = if (statusHint != null && !requestActive) {
-                    stringResource(R.string.topup_press_scan_pay)
-                } else {
-                    stringResource(R.string.topup_press_scan_pay)
-                },
-                color = OperatorPalette.subtitle,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-    }
-}
-
-@Composable
-private fun TopUpCompactHeader(onBack: (() -> Unit)?) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-        color = OperatorPalette.panel,
-        border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
-        elevation = 0.dp,
-    ) {
-        Row(
+    val statusHint = footerHint.takeUnless { it.isBlank() || it == "ready" }
+    if (requestActive || statusHint != null) {
+        OperatorPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                .then(if (profile.counterLayout) Modifier else Modifier),
+            backgroundColor = OperatorPalette.panelMuted,
         ) {
-            if (onBack != null) {
-                Surface(
-                    modifier = Modifier.clickable(onClick = onBack),
-                    shape = CircleShape,
-                    color = OperatorPalette.pill,
-                    elevation = 0.dp,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Zurück",
-                        tint = OperatorPalette.title,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .padding(9.dp),
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = if (requestActive) {
+                        stringResource(R.string.topup_please_wait)
+                    } else {
+                        statusHint.orEmpty()
+                    },
+                    color = OperatorPalette.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+                Text(
+                    text = stringResource(R.string.topup_press_scan_pay),
+                    color = OperatorPalette.subtitle,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                )
             }
-            Text(
-                text = stringResource(R.string.topup),
-                color = OperatorPalette.title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
         }
     }
 }
@@ -343,6 +308,7 @@ private fun TopUpCompactHeader(onBack: (() -> Unit)?) {
 private fun OperatorTopUpSummaryRail(
     profile: OperatorPaymentLayoutProfile,
     amount: UInt,
+    canHandleCard: Boolean,
     canHandleCash: Boolean,
     footerHint: String,
     requestActive: Boolean,
@@ -350,47 +316,92 @@ private fun OperatorTopUpSummaryRail(
     onCard: () -> Unit,
     onCash: () -> Unit,
 ) {
+    val hasAnyPaymentMethod = canHandleCard || canHandleCash
     OperatorPanel(
         modifier = if (profile.counterLayout) Modifier.fillMaxHeight() else Modifier.fillMaxWidth(),
         backgroundColor = OperatorPalette.panelMuted,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(profile.gap)) {
-            Text(
-                text = stringResource(R.string.topup_operator_summary_title),
-                color = OperatorPalette.title,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.ExtraBold,
-            )
-            OperatorRailSummaryRow(
-                label = stringResource(R.string.operator_payment_method),
-                value = if (canHandleCash) {
-                    "${stringResource(R.string.pay_card).replace("\n", " / ")}"
-                } else {
-                    stringResource(R.string.pay_card).replace("\n", " ")
-                },
-            )
-            val statusHint = footerHint.takeUnless { it.isBlank() || it == "ready" }
-            if (statusHint != null) {
+        if (profile.counterLayout) {
+            Column(verticalArrangement = Arrangement.spacedBy(profile.gap)) {
                 Text(
-                    text = statusHint,
-                    color = OperatorPalette.subtitle,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    text = stringResource(R.string.topup_operator_summary_title),
+                    color = OperatorPalette.title,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.ExtraBold,
                 )
+                OperatorRailSummaryRow(
+                    label = stringResource(R.string.operator_payment_method),
+                    value = if (canHandleCard && canHandleCash) {
+                        "${stringResource(R.string.pay_card).replace("\n", " / ")}"
+                    } else if (canHandleCard) {
+                        stringResource(R.string.pay_card).replace("\n", " ")
+                    } else if (canHandleCash) {
+                        stringResource(R.string.topup_operator_take_cash)
+                    } else {
+                        stringResource(R.string.topup_operator_no_payment_method_help)
+                    },
+                )
+                if (!hasAnyPaymentMethod) {
+                    Text(
+                        text = stringResource(R.string.topup_operator_no_payment_method_help),
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                val statusHint = footerHint.takeUnless { it.isBlank() || it == "ready" }
+                if (statusHint != null) {
+                    Text(
+                        text = statusHint,
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                if (canHandleCard) {
+                    OperatorActionButton(
+                        text = stringResource(R.string.topup_operator_scan_pay),
+                        onClick = onCard,
+                        enabled = amount > 0u && !requestActive && !uiLocked,
+                    )
+                }
+                if (canHandleCash) {
+                    OperatorActionButton(
+                        text = stringResource(R.string.topup_operator_take_cash),
+                        onClick = onCash,
+                        enabled = amount > 0u && !requestActive && !uiLocked,
+                        primary = false,
+                    )
+                }
             }
-            OperatorActionButton(
-                text = stringResource(R.string.topup_operator_scan_pay),
-                onClick = onCard,
-                enabled = amount > 0u && !requestActive && !uiLocked,
-            )
-            if (canHandleCash) {
-                OperatorActionButton(
-                    text = stringResource(R.string.topup_operator_take_cash),
-                    onClick = onCash,
-                    enabled = amount > 0u && !requestActive && !uiLocked,
-                    primary = false,
-                )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (!hasAnyPaymentMethod) {
+                    Text(
+                        text = stringResource(R.string.topup_operator_no_payment_method_help),
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                if (canHandleCard) {
+                    OperatorActionButton(
+                        text = stringResource(R.string.topup_operator_scan_pay),
+                        onClick = onCard,
+                        enabled = amount > 0u && !requestActive && !uiLocked,
+                    )
+                }
+                if (canHandleCash) {
+                    OperatorActionButton(
+                        text = stringResource(R.string.topup_operator_take_cash),
+                        onClick = onCash,
+                        enabled = amount > 0u && !requestActive && !uiLocked,
+                        primary = false,
+                    )
+                }
             }
         }
     }
@@ -499,7 +510,10 @@ fun OperatorTopUpSuccess(
         footerHint = footerHint,
         footerSection = stringResource(R.string.topup),
         footerStatus = stringResource(R.string.operator_status_complete),
+        showFooter = false,
         onBack = onDismiss,
+        headerFlowTitle = stringResource(R.string.topup),
+        headerTillLabel = terminalTitle,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
@@ -568,7 +582,10 @@ fun OperatorTopUpError(
         footerHint = footerHint,
         footerSection = stringResource(R.string.topup),
         footerStatus = stringResource(R.string.operator_status_issue),
+        showFooter = false,
         onBack = onDismiss,
+        headerFlowTitle = stringResource(R.string.topup),
+        headerTillLabel = terminalTitle,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = {

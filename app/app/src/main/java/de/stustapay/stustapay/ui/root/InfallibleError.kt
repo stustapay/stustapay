@@ -117,7 +117,7 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                         }
                         if (text != null) {
                             StatusText(
-                                "Status: $text",
+                                stringResource(R.string.infallible_status_format, text),
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -135,8 +135,8 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                     ) {
                         Text(
                             text = when (state) {
-                                is InfallibleState.CanRetry -> "Anfrage erneut senden"
-                                is InfallibleState.Retrying -> "Wird erneut gesendet..."
+                                is InfallibleState.CanRetry -> stringResource(R.string.infallible_retry_send)
+                                is InfallibleState.Retrying -> stringResource(R.string.infallible_retry_sending)
                                 InfallibleState.Hide -> "unreachable"
                                 is InfallibleState.RetrySuccess -> "unreachable"
                             },
@@ -231,8 +231,7 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
                         viewModel.dismiss()
                     }) {
                         Text(
-                            // SPARKLING HEART
-                            text = "Weiter \uD83D\uDC96",
+                            text = stringResource(R.string.continue_label),
                             style = StartpageItemStyle,
                         )
                     }
@@ -242,7 +241,7 @@ fun InfallibleErrorContent(viewModel: InfallibleErrorViewModel, state: Infallibl
             is InfallibleState.Hide -> {
                 item {
                     // hide is default in viewmodel :)
-                    Text("Popup wird initialisiert...")
+                    Text(stringResource(R.string.infallible_popup_initializing))
                 }
             }
         }

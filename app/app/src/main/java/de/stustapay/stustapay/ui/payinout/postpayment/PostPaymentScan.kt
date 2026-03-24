@@ -47,8 +47,8 @@ fun PostPaymentScan(
                     IconButton(onClick = { leaveView() }) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Abbrechen",
-                            tint = Color.Red
+                            contentDescription = stringResource(R.string.common_action_cancel),
+                            tint = OperatorPalette.danger,
                         )
                     }
                 }

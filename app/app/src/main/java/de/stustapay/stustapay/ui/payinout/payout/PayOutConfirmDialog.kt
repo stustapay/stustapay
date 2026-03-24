@@ -63,7 +63,7 @@ fun PayOutConfirmDialog(
     if (state.isOpen()) {
         Dialog(
             onDismissRequest = {
-                state.close()
+                onAbort()
             },
             properties = DialogProperties(
                 dismissOnBackPress = true,

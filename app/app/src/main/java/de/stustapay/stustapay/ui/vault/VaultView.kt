@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,11 +72,12 @@ fun VaultView(
                                 scope.launch {
                                     viewModel.fetchTag(tag)
                                 }
-                            }) {
+                            }) { _, compactLayout ->
                             PencilOperatorScanContent(
                                 title = stringResource(R.string.nfc_scan_title_plain),
                                 subtitle = stringResource(R.string.nfc_scan_description),
-                                scanStatus = ""
+                                scanStatus = "",
+                                isSmallScreen = compactLayout,
                             )
                         }
                     }
@@ -171,7 +173,7 @@ fun VaultView(
                                                 viewModel.completeWithdraw()
                                             }
                                         }) {
-                                        Text("Einpacken")
+                                        Text(stringResource(R.string.vault_pack))
                                     }
                                 }
                             }
@@ -199,7 +201,7 @@ fun VaultView(
                                                 viewModel.completeDeposit()
                                             }
                                         }) {
-                                        Text("Auspacken")
+                                        Text(stringResource(R.string.vault_unpack))
                                     }
                                 }
                             }
@@ -217,11 +219,12 @@ fun VaultView(
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text(
-                                        "Einpacken erfolgreich",
-                                        style = MaterialTheme.typography.h5
+                                        stringResource(R.string.vault_pack_success),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
                                     )
                                     ProductConfirmItem(
-                                        name = "Eingepackt",
+                                        name = stringResource(R.string.vault_packed_label),
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -232,7 +235,7 @@ fun VaultView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("im Transportkonto", fontSize = 30.sp)
+                                    Text(stringResource(R.string.vault_balance_in_transport_account), fontSize = 30.sp)
                                 }
                             }
                         }
@@ -248,9 +251,13 @@ fun VaultView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Auspacken erfolgreich", style = MaterialTheme.typography.h5)
+                                    Text(
+                                        stringResource(R.string.vault_unpack_success),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
                                     ProductConfirmItem(
-                                        name = "Ausgepackt",
+                                        name = stringResource(R.string.vault_unpacked_label),
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -261,7 +268,7 @@ fun VaultView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("im Transportkonto", fontSize = 30.sp)
+                                    Text(stringResource(R.string.vault_balance_in_transport_account), fontSize = 30.sp)
                                 }
                             }
                         }

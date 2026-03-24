@@ -41,7 +41,11 @@ import kotlinx.coroutines.delay
 private const val SELF_SERVICE_SUCCESS_RETURN_SECONDS = 8
 
 @Composable
-fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
+fun TopUpSuccess(
+    onDismiss: () -> Unit,
+    onLeaveSelfService: (() -> Unit)? = null,
+    viewModel: TopUpViewModel
+) {
     val topUpCompleted by viewModel.topUpCompleted.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val topUpConfig by viewModel.terminalLoginState.collectAsStateWithLifecycle()
@@ -78,6 +82,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
             remainingSeconds -= 1
         }
         onDismiss()
+        onLeaveSelfService?.invoke()
     }
 
     if (isSelfService) {
@@ -159,7 +164,10 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     )
                     SelfServiceActionButton(
                         text = stringResource(R.string.topup_back_now),
-                        onClick = onDismiss,
+                        onClick = {
+                            onDismiss()
+                            onLeaveSelfService?.invoke()
+                        },
                         modifier = Modifier.weight(0.55f),
                         primary = false,
                         fontSize = profile.buttonTextSize

@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.R
@@ -31,7 +30,7 @@ import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 @Composable
 fun PreviewSelectionBottomBar() {
     ProductSelectionBottomBar(
-        status = { Text("stuff") },
+        status = { Text(stringResource(R.string.operator_status_ready)) },
         ready = true,
         onAbort = {},
         price = 0.0,
@@ -50,11 +49,6 @@ fun ProductSelectionBottomBar(
     onSubmitSsp: () -> Unit = {},
     onSubmitCash: () -> Unit = {},
     onSubmitCard: () -> Unit = {},
-    // WASTEBASKET symbol
-    abortText: String = "\uD83D\uDDD1",
-    abortSize: TextUnit = 24.sp,
-    submitText: String = "✓",
-    submitSize: TextUnit = 30.sp,
     price: Double? = null,
     sspEnabled: Boolean = true,
     cashEnabled: Boolean = false,
@@ -144,7 +138,7 @@ fun ProductSelectionBottomBar(
             }
 
             SelectionActionButton(
-                text = "Warenkorb leeren",
+                text = stringResource(R.string.sale_clear_basket),
                 enabled = ready,
                 emphasized = false,
                 destructive = true,

@@ -67,7 +67,10 @@ fun OperatorTicketScan(
         footerHint = status,
         footerSection = stringResource(R.string.tickets),
         footerStatus = "${ticketStatus.scans.size}",
+        showFooter = false,
         onBack = leaveView,
+        headerFlowTitle = stringResource(R.string.tickets),
+        headerTillLabel = config.title().title,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
@@ -102,6 +105,7 @@ fun OperatorTicketScan(
                             title = scanText,
                             subtitle = stringResource(R.string.nfc_scan_description),
                             scanStatus = status,
+                            showStatusPanel = false,
                         )
                     }
                 }
@@ -174,7 +178,7 @@ fun OperatorTicketConfirm(
     val checkedSale = ticketDraft.pendingSale ?: run {
         Column {
             Text(status)
-            Text("Keine Verkaufsprüfung vorhanden!")
+            Text(stringResource(R.string.ticket_no_sale_check_present))
         }
         return
     }
@@ -197,13 +201,16 @@ fun OperatorTicketConfirm(
 
     OperatorScaffold(
         title = config.title().title,
-        subtitle = "Gescannte Tickets prüfen und Zahlung abschließen.",
+        subtitle = stringResource(R.string.ticket_confirm_subtitle),
         icon = Icons.Filled.ConfirmationNumber,
-        terminalLabel = "Bestätigen",
+        terminalLabel = stringResource(R.string.ticket_terminal_confirm),
         footerHint = status,
         footerSection = stringResource(R.string.tickets),
         footerStatus = stringResource(R.string.operator_status_ready),
+        showFooter = false,
         onBack = goBack,
+        headerFlowTitle = stringResource(R.string.tickets),
+        headerTillLabel = config.title().title,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
@@ -286,13 +293,16 @@ fun OperatorTicketSuccess(
 ) {
     OperatorScaffold(
         title = terminalTitle,
-        subtitle = "Ticketverkauf erfolgreich abgeschlossen.",
+        subtitle = stringResource(R.string.ticket_success_subtitle),
         icon = Icons.Filled.CheckCircle,
         terminalLabel = stringResource(R.string.tickets),
         footerHint = footerHint,
         footerSection = stringResource(R.string.tickets),
         footerStatus = stringResource(R.string.operator_status_complete),
+        showFooter = false,
         onBack = onConfirm,
+        headerFlowTitle = stringResource(R.string.tickets),
+        headerTillLabel = terminalTitle,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = { profile ->
@@ -339,13 +349,16 @@ fun OperatorTicketError(
 ) {
     OperatorScaffold(
         title = terminalTitle,
-        subtitle = "Ticketablauf vor dem Abschluss fehlgeschlagen.",
+        subtitle = stringResource(R.string.ticket_error_subtitle),
         icon = Icons.Filled.ErrorOutline,
         terminalLabel = stringResource(R.string.tickets),
         footerHint = footerHint,
         footerSection = stringResource(R.string.tickets),
         footerStatus = stringResource(R.string.operator_status_issue),
+        showFooter = false,
         onBack = onDismiss,
+        headerFlowTitle = stringResource(R.string.tickets),
+        headerTillLabel = terminalTitle,
     ) {
         OperatorAdaptivePaymentLayout(
             mainContent = {

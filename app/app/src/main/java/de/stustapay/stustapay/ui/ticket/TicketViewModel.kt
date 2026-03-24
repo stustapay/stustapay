@@ -131,7 +131,7 @@ class TicketViewModel @Inject constructor(
 
                     val scanResult = scanned[0]
                     if (scanResult.customerTagUid != tag.uid) {
-                        _status.update { "returned ticket id != ticket unknown" }
+                        _status.update { resourcesProvider.getString(R.string.ticket_status_returned_mismatch) }
                         return
                     }
 
@@ -142,7 +142,7 @@ class TicketViewModel @Inject constructor(
                         )
                     )
                     if (!ret) {
-                        _status.update { "failed to store new ticket" }
+                        _status.update { resourcesProvider.getString(R.string.ticket_status_store_failed) }
                     }
                     newStatus
                 }
@@ -161,7 +161,7 @@ class TicketViewModel @Inject constructor(
 
     /** when the delete-selections button is clicked */
     fun clearDraft() {
-        _status.update { "cleared" }
+        _status.update { resourcesProvider.getString(R.string.ticket_order_cleared) }
         _tagScanStatus.update { TagScanStatus.Scan }
         _ticketDraft.update { TicketDraft() }
     }
@@ -228,13 +228,13 @@ class TicketViewModel @Inject constructor(
     suspend fun processSale(context: Activity, paymentMethod: PaymentMethod) {
         // checks
         if (_ticketDraft.value.scans.isEmpty()) {
-            _status.update { "Not all tags were scanned!" }
+            _status.update { resourcesProvider.getString(R.string.ticket_status_not_all_tags_scanned) }
             return
         }
 
         val pendingSale = _ticketDraft.value.pendingSale
         if (pendingSale == null) {
-            _status.update { "no ticket sale check present" }
+            _status.update { resourcesProvider.getString(R.string.ticket_status_no_sale_check_present) }
             return
         }
 
@@ -258,7 +258,7 @@ class TicketViewModel @Inject constructor(
         val response = ticketApi.registerTicketSale(newSale)
         when (response) {
             is Response.OK -> {
-                _status.update { "Ticket order announced!" }
+                _status.update { resourcesProvider.getString(R.string.ticket_status_order_announced) }
             }
 
             is Response.Error.Service -> {

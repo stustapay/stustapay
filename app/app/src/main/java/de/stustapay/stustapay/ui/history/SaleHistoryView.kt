@@ -86,11 +86,12 @@ fun SaleHistoryView(
                 viewModel.fetchHistoryForCustomer(tag.uid)
             }
         }
-    ) {
+    ) { status, compactLayout ->
         PencilOperatorScanContent(
             title = stringResource(R.string.history_scan_customer),
             subtitle = stringResource(R.string.history_scan_prompt),
-            scanStatus = status.toString()
+            scanStatus = status,
+            isSmallScreen = compactLayout,
         )
     }
 
@@ -278,7 +279,7 @@ fun SaleHistoryView(
                 onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
                 confirmButton = {
                     Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
-                        Text("OK")
+                        Text(stringResource(android.R.string.ok))
                     }
                 }
             )
@@ -290,7 +291,7 @@ fun SaleHistoryView(
                 onDismissRequest = { scope.launch { viewModel.idleCancelStatus() } },
                 confirmButton = {
                     Button(onClick = { scope.launch { viewModel.idleCancelStatus() } }) {
-                        Text("OK")
+                        Text(stringResource(android.R.string.ok))
                     }
                 }
             )

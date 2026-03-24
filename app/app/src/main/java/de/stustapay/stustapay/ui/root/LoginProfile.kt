@@ -1,15 +1,17 @@
 package de.stustapay.stustapay.ui.root
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.stustapay.R
 
 @Composable
 fun LoginProfile(
@@ -41,13 +43,13 @@ fun LoginProfile(
                 modifier = Modifier.padding(top = 5.dp),
                 textAlign = TextAlign.Center,
                 text = login.username,
-                style = MaterialTheme.typography.h5,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
             )
             Text(
                 modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
                 text = login.role,
-                style = MaterialTheme.typography.body1,
+                fontSize = 18.sp,
             )
         }
 
@@ -55,8 +57,8 @@ fun LoginProfile(
             Text(
                 modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
                 textAlign = TextAlign.Center,
-                text = "Nicht eingeloggt",
-                style = MaterialTheme.typography.body1,
+                text = stringResource(R.string.not_logged_in),
+                fontSize = 18.sp,
             )
         }
 
@@ -69,7 +71,7 @@ fun LoginProfile(
                     bottom = 30.dp,
                 ),
                 text = login.message,
-                style = MaterialTheme.typography.body1,
+                fontSize = 18.sp,
             )
         }
     }

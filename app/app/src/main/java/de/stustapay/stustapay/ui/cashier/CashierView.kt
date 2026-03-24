@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -83,11 +84,12 @@ fun CashierView(
                                 scope.launch {
                                     viewModel.fetchTag(tag)
                                 }
-                            }) {
+                            }) { _, compactLayout ->
                             PencilOperatorScanContent(
                                 title = stringResource(R.string.nfc_scan_cashier_prompt),
                                 subtitle = stringResource(R.string.nfc_scan_description),
-                                scanStatus = ""
+                                scanStatus = "",
+                                isSmallScreen = compactLayout,
                             )
                         }
                     } else if (uiState.nav is CashierNavState.Transfer) {
@@ -97,11 +99,12 @@ fun CashierView(
                                 scope.launch {
                                     viewModel.completeTransfer(tag)
                                 }
-                            }) {
+                            }) { _, compactLayout ->
                             PencilOperatorScanContent(
                                 title = stringResource(R.string.nfc_scan_transfer_prompt),
                                 subtitle = stringResource(R.string.nfc_scan_description),
-                                scanStatus = ""
+                                scanStatus = "",
+                                isSmallScreen = compactLayout,
                             )
                         }
                     }
@@ -303,7 +306,7 @@ fun CashierView(
                                                 viewModel.completeWithdraw()
                                             }
                                         }) {
-                                        Text("Abschöpfen")
+                                        Text(stringResource(R.string.cashier_withdraw))
                                     }
                                 }
                             }
@@ -331,7 +334,7 @@ fun CashierView(
                                                 viewModel.completeDeposit()
                                             }
                                         }) {
-                                        Text("Bestücken")
+                                        Text(stringResource(R.string.cashier_deposit))
                                     }
                                 }
                             }
@@ -348,7 +351,11 @@ fun CashierView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Bestückung erfolgreich", style = MaterialTheme.typography.h5)
+                                    Text(
+                                        stringResource(R.string.cashier_deposit_success),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
                                     Text(
                                         "%.02f€".format(uiState.userInfo?.cashDrawerBalance),
                                         modifier = Modifier.padding(
@@ -356,7 +363,7 @@ fun CashierView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in der Barkasse", fontSize = 36.sp)
+                                    Text(stringResource(R.string.cashier_balance_in_drawer), fontSize = 36.sp)
                                 }
                             }
                         }
@@ -373,11 +380,12 @@ fun CashierView(
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text(
-                                        "Abschöpfen erfolgreich",
-                                        style = MaterialTheme.typography.h5
+                                        stringResource(R.string.cashier_withdraw_success),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
                                     )
                                     ProductConfirmItem(
-                                        name = "Abgeschöpft",
+                                        name = stringResource(R.string.cashier_withdrawn_label),
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -388,7 +396,7 @@ fun CashierView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in der Barkasse", fontSize = 36.sp)
+                                    Text(stringResource(R.string.cashier_balance_in_drawer), fontSize = 36.sp)
                                 }
                             }
                         }
@@ -404,9 +412,13 @@ fun CashierView(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
-                                    Text("Bestückung erfolgreich", style = MaterialTheme.typography.h5)
+                                    Text(
+                                        stringResource(R.string.cashier_deposit_success),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
                                     ProductConfirmItem(
-                                        name = "Bestückt",
+                                        name = stringResource(R.string.cashier_deposited_label),
                                         price = uiState.amount.toDouble() / 100.0,
                                         bigStyle = true,
                                     )
@@ -417,7 +429,7 @@ fun CashierView(
                                         ),
                                         style = MoneyAmountStyle,
                                     )
-                                    Text("in der Barkasse", fontSize = 36.sp)
+                                    Text(stringResource(R.string.cashier_balance_in_drawer), fontSize = 36.sp)
                                 }
                             }
                         }
@@ -434,7 +446,9 @@ fun CashierView(
                                 ) {
                                     SuccessIcon(modifier = Modifier.size(120.dp))
                                     Text(
-                                        "Transfer successfull", style = MaterialTheme.typography.h5
+                                        stringResource(R.string.cashier_transfer_success),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
                                     )
                                 }
                             }

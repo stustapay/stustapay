@@ -56,6 +56,112 @@ object OperatorPalette {
     val pill = Color(0xFF1C2B46)
 }
 
+/**
+ * Compact header matching the sale flow: back (optional), primary flow title, till/terminal on the side.
+ * [compactHandheld] true = single row with till trailing; false = back + stacked title/till in a panel.
+ */
+@Composable
+fun OperatorCompactFlowHeader(
+    flowTitle: String,
+    tillLabel: String?,
+    onBack: (() -> Unit)?,
+    compactHandheld: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (compactHandheld) {
+        Surface(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            color = OperatorPalette.panel,
+            border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+            elevation = 0.dp,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (onBack != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(OperatorPalette.pill, CircleShape)
+                            .clickable(onClick = onBack),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = OperatorPalette.title,
+                        )
+                    }
+                }
+                Text(
+                    text = flowTitle,
+                    color = OperatorPalette.title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                if (!tillLabel.isNullOrBlank()) {
+                    Text(
+                        text = tillLabel,
+                        color = OperatorPalette.subtitle,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+        return
+    }
+
+    OperatorPanel(
+        modifier = modifier.fillMaxWidth(),
+        backgroundColor = OperatorPalette.panel,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (onBack != null) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(OperatorPalette.pill, CircleShape)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = OperatorPalette.title,
+                    )
+                }
+            }
+            Column {
+                Text(
+                    text = flowTitle,
+                    color = OperatorPalette.title,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+                if (!tillLabel.isNullOrBlank()) {
+                    Text(
+                        text = tillLabel,
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun OperatorBackground(
     modifier: Modifier = Modifier,
@@ -86,6 +192,9 @@ fun OperatorScaffold(
     languageLabel: String = "DE | EN | NL",
     showFooter: Boolean = true,
     onBack: (() -> Unit)? = null,
+    /** When set with [onBack], shows the same compact header as sale (flow title + till). */
+    headerFlowTitle: String? = null,
+    headerTillLabel: String? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -109,6 +218,8 @@ fun OperatorScaffold(
                     languageLabel = languageLabel,
                     onBack = onBack,
                     compactRouteHeader = routeHeader,
+                    headerFlowTitle = headerFlowTitle,
+                    headerTillLabel = headerTillLabel,
                 )
                 Box(
                     modifier = Modifier
@@ -138,8 +249,22 @@ fun OperatorHeader(
     languageLabel: String = "DE | EN | NL",
     onBack: (() -> Unit)? = null,
     compactRouteHeader: Boolean = false,
+    headerFlowTitle: String? = null,
+    headerTillLabel: String? = null,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        if (onBack != null && headerFlowTitle != null) {
+            val compactHandheld = maxWidth < 760.dp
+            OperatorCompactFlowHeader(
+                flowTitle = headerFlowTitle,
+                tillLabel = headerTillLabel,
+                onBack = onBack,
+                compactHandheld = compactHandheld,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            return@BoxWithConstraints
+        }
+
         if (compactRouteHeader && onBack != null) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),

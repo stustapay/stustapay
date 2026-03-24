@@ -82,8 +82,10 @@ fun TopUpSelection(
         OperatorTopUpSelection(
             viewModel = viewModel,
             onBack = onBack,
+            terminalTitle = topUpConfig.title().title,
             footerHint = status,
             maxAmount = maxAmount,
+            canHandleCard = topUpConfig.canHandleCardTopUp(),
             canHandleCash = topUpConfig.canHandleCash(),
             requestActive = requestActive,
             uiLocked = uiLocked,

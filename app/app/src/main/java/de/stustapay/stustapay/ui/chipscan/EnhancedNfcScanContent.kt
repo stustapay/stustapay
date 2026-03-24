@@ -122,7 +122,7 @@ fun EnhancedNfcScanContent(
                 // NFC Icon with pulse animation
                 Icon(
                     imageVector = Icons.Filled.NearMe,
-                    contentDescription = "NFC",
+                    contentDescription = stringResource(R.string.nfc_icon_description),
                     modifier = Modifier
                         .size(iconSize)
                         .scale(pulseAnimation)
@@ -133,7 +133,7 @@ fun EnhancedNfcScanContent(
                 // Touch icon to indicate user action
                 Icon(
                     imageVector = Icons.Filled.TouchApp,
-                    contentDescription = "Berührung",
+                    contentDescription = stringResource(R.string.touch_icon_description),
                     modifier = Modifier
                         .align(
                             if (isIminFalcons2) Alignment.CenterStart else Alignment.Center
@@ -155,7 +155,7 @@ fun EnhancedNfcScanContent(
                         repeat(3) { index ->
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Pfeil",
+                                contentDescription = stringResource(R.string.arrow_icon_description),
                                 modifier = Modifier
                                     .size(arrowIconSize)
                                     .rotate(180f) // Rotate to point left
@@ -185,7 +185,7 @@ fun EnhancedNfcScanContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "NFC-Chip",
+                        text = stringResource(R.string.nfc_chip_label),
                         fontSize = if (isSmallScreen) 12.sp else 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.DarkGray
