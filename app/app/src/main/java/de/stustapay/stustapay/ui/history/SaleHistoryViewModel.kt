@@ -15,10 +15,12 @@ import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.stustapay.repository.UserRepository
+import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -56,6 +58,17 @@ class SaleHistoryViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(),
             initialValue = false
         )
+
+    val terminalLoginState = combine(
+        userRepository.userState,
+        terminalConfigRepository.terminalConfigState
+    ) { user, terminal ->
+        TerminalLoginState(user, terminal)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = TerminalLoginState(),
+    )
 
     private val activeTillId = terminalConfigRepository.terminalConfigState
         .map { configState ->

@@ -151,8 +151,24 @@ class PostPaymentViewModel @Inject constructor(
                 true
             }
 
+            is Response.Error.Service.NotEnoughFunds -> {
+                _status.update { context.getString(R.string.no_balance_for_payout) }
+                false
+            }
+
             is Response.Error.Service -> {
-                _status.update { response.msg() }
+                // Some server variants send English messages even for “no balance” scenarios.
+                // Map them back to our localized UI strings.
+                val msg = response.msg()
+                if (msg.contains("Cannot payout", ignoreCase = true) &&
+                    (msg.contains("zero", ignoreCase = true) ||
+                        msg.contains("negative", ignoreCase = true) ||
+                        msg.contains("current balance", ignoreCase = true))
+                ) {
+                    _status.update { context.getString(R.string.no_balance_for_payout) }
+                } else {
+                    _status.update { msg }
+                }
                 false
             }
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,7 +28,6 @@ import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.StatusText
-import de.stustapay.stustapay.ui.common.TagSelectedItem
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
 import de.stustapay.stustapay.ui.common.operator.OperatorActionButton
@@ -48,7 +48,6 @@ fun PayOutSelection(
     onSelectMaximumPayout: () -> Unit,
     usesMaximumPayout: Boolean,
     onClear: () -> Unit,
-    amountConfig: AmountConfig.Money,
     ready: Boolean,
     onPayout: () -> Unit,
 ) {
@@ -66,11 +65,10 @@ fun PayOutSelection(
     )
 
     OperatorAdaptivePaymentLayout(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxSize(),
         mainContent = { profile ->
             OperatorPayOutMainContent(
                 profile = profile,
-                payout = payout,
                 maxCents = maxCents,
                 displayAmount = amount,
                 usesMaximumPayout = usesMaximumPayout,
@@ -98,7 +96,6 @@ fun PayOutSelection(
 @Composable
 private fun OperatorPayOutMainContent(
     profile: OperatorPaymentLayoutProfile,
-    payout: CheckedPayOut,
     maxCents: UInt,
     displayAmount: UInt,
     usesMaximumPayout: Boolean,
@@ -108,10 +105,10 @@ private fun OperatorPayOutMainContent(
     onClear: () -> Unit,
     status: String,
 ) {
-    TagSelectedItem(
-        tag = payout.tag,
-        onClear = onClear,
-        showChipId = false,
+    OperatorActionButton(
+        text = stringResource(R.string.common_action_scan),
+        onClick = onClear,
+        primary = false,
     )
     StatusText(status, modifier = Modifier.padding(vertical = 4.dp))
     Row(

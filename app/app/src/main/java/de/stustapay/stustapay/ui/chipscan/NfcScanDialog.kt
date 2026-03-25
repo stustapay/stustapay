@@ -125,9 +125,6 @@ fun NfcScanDialog(
             showClarification -> 560.dp
             else -> (350 * deviceConfig.nfcScanDialogScale).dp
         }.coerceAtMost(maxDialogHeight)
-        val useCenteredLayout = deviceConfig.useCenteredDialog ||
-            (showClarification && !deviceConfig.isIminFalcons2) ||
-            !deviceConfig.isIminFalcons2
 
         Dialog(
             onDismissRequest = {
@@ -141,237 +138,126 @@ fun NfcScanDialog(
                 usePlatformDefaultWidth = false
             )
         ) {
-            if (useCenteredLayout) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (showClarification) {
-                        NfcScanCard(
-                            modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
-                            viewModel = viewModel,
-                            border = border ?: BorderStroke(
-                                2.dp,
-                                if (variant == NfcScanDialogVariant.Operator) {
-                                    OperatorPalette.panelBorder
-                                } else {
-                                    SelfServicePalette.panelBorder
-                                }
-                            ),
-                            backgroundColor = if (variant == NfcScanDialogVariant.Operator) {
-                                OperatorPalette.panel
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                val scanCardModifier = Modifier
+                    .then(modifier)
+                    .size(width = adjustedWidth, height = adjustedHeight)
+                    .then(
+                        if (deviceConfig.isIminFalcons2) {
+                            Modifier.offset(
+                                x = deviceConfig.nfcScanDialogOffset.x,
+                                y = deviceConfig.nfcScanDialogOffset.y,
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
+
+                if (showClarification) {
+                    NfcScanCard(
+                        modifier = scanCardModifier,
+                        viewModel = viewModel,
+                        border = border ?: BorderStroke(
+                            2.dp,
+                            if (variant == NfcScanDialogVariant.Operator) {
+                                OperatorPalette.panelBorder
                             } else {
-                                SelfServicePalette.panel
-                            },
-                            shape = RoundedCornerShape(if (effectiveSmallScreen) 16.dp else 20.dp),
-                            checkScan = checkScan,
-                            showStatus = false,
-                            showCloseButton = true,
-                            onScan = { tag ->
-                                state.close()
-                                onScan(tag)
-                            },
-                            onCancel = {
-                                viewModel.stopScan()
-                                state.close()
-                                onDismiss()
-                            },
-                            content = { status ->
-                                when {
-                                    variant == NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status,
-                                        showStatusPanel = false,
-                                    )
-                                    showClarification -> PencilScanChipContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status
-                                    )
-                                    variant == NfcScanDialogVariant.Sale -> PencilSaleScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status
-                                    )
-                                    else -> content(status, effectiveSmallScreen)
-                                }
-                            },
-                        )
-                    } else {
-                        NfcScanCard(
-                            modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
-                            viewModel = viewModel,
-                            showCloseButton = true,
-                            border = if (variant != NfcScanDialogVariant.Sale) {
-                                border ?: BorderStroke(
-                                    2.dp,
-                                    if (variant == NfcScanDialogVariant.Operator) {
-                                        OperatorPalette.panelBorder
-                                    } else {
-                                        SelfServicePalette.panelBorder
-                                    }
-                                )
-                            } else {
-                                border
-                            },
-                            backgroundColor = when (variant) {
-                                NfcScanDialogVariant.Sale -> SelfServicePalette.panelMuted
-                                NfcScanDialogVariant.Operator -> OperatorPalette.panelMuted
-                                NfcScanDialogVariant.Default -> OperatorPalette.panelMuted
-                            },
-                            shape = if (variant != NfcScanDialogVariant.Sale) {
-                                RoundedCornerShape(if (effectiveSmallScreen) 18.dp else 22.dp)
-                            } else {
-                                RoundedCornerShape(10.dp)
-                            },
-                            checkScan = checkScan,
-                            showStatus = false,
-                            onScan = { tag ->
-                                state.close()
-                                onScan(tag)
-                            },
-                            onCancel = {
-                                viewModel.stopScan()
-                                state.close()
-                                onDismiss()
-                            },
-                            content = { status ->
-                                when (variant) {
-                                    NfcScanDialogVariant.Default -> content(status, effectiveSmallScreen)
-                                    NfcScanDialogVariant.Sale -> PencilSaleScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status
-                                    )
-                                    NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status,
-                                        showStatusPanel = false,
-                                    )
-                                }
-                            },
-                        )
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(1000.dp, 800.dp)
-                        .padding(
-                            start = if (effectiveSmallScreen) 150.dp else 350.dp
+                                SelfServicePalette.panelBorder
+                            }
                         ),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    if (showClarification) {
-                        NfcScanCard(
-                            modifier = Modifier
-                                .size(width = adjustedWidth, height = adjustedHeight)
-                                .offset(
-                                    x = deviceConfig.nfcScanDialogOffset.x,
-                                    y = deviceConfig.nfcScanDialogOffset.y
-                                ),
-                            viewModel = viewModel,
-                            border = border ?: BorderStroke(
+                        backgroundColor = if (variant == NfcScanDialogVariant.Operator) {
+                            OperatorPalette.panel
+                        } else {
+                            SelfServicePalette.panel
+                        },
+                        shape = RoundedCornerShape(if (effectiveSmallScreen) 16.dp else 20.dp),
+                        checkScan = checkScan,
+                        showStatus = false,
+                        showCloseButton = true,
+                        onScan = { tag ->
+                            state.close()
+                            onScan(tag)
+                        },
+                        onCancel = {
+                            viewModel.stopScan()
+                            state.close()
+                            onDismiss()
+                        },
+                        content = { status ->
+                            when {
+                                variant == NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
+                                    isSmallScreen = effectiveSmallScreen,
+                                    scanStatus = status,
+                                    showStatusPanel = false,
+                                )
+                                showClarification -> PencilScanChipContent(
+                                    isSmallScreen = effectiveSmallScreen,
+                                    scanStatus = status
+                                )
+                                variant == NfcScanDialogVariant.Sale -> PencilSaleScanContent(
+                                    isSmallScreen = effectiveSmallScreen,
+                                    scanStatus = status
+                                )
+                                else -> content(status, effectiveSmallScreen)
+                            }
+                        },
+                    )
+                } else {
+                    NfcScanCard(
+                        modifier = scanCardModifier,
+                        viewModel = viewModel,
+                        showCloseButton = true,
+                        border = if (variant != NfcScanDialogVariant.Sale) {
+                            border ?: BorderStroke(
                                 2.dp,
                                 if (variant == NfcScanDialogVariant.Operator) {
                                     OperatorPalette.panelBorder
                                 } else {
                                     SelfServicePalette.panelBorder
                                 }
-                            ),
-                            backgroundColor = if (variant == NfcScanDialogVariant.Operator) {
-                                OperatorPalette.panel
-                            } else {
-                                SelfServicePalette.panel
-                            },
-                            shape = RoundedCornerShape(if (effectiveSmallScreen) 16.dp else 20.dp),
-                            checkScan = checkScan,
-                            showStatus = false,
-                            showCloseButton = true,
-                            onScan = { tag ->
-                                state.close()
-                                onScan(tag)
-                            },
-                            onCancel = {
-                                viewModel.stopScan()
-                                state.close()
-                                onDismiss()
-                            },
-                            content = { status ->
-                                when {
-                                    variant == NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status,
-                                        showStatusPanel = false,
-                                    )
-                                    showClarification -> PencilScanChipContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status
-                                    )
-                                    variant == NfcScanDialogVariant.Sale -> PencilSaleScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status
-                                    )
-                                    else -> content(status, effectiveSmallScreen)
-                                }
-                            },
-                        )
-                    } else {
-                        NfcScanCard(
-                            modifier = Modifier
-                                .size(width = adjustedWidth, height = adjustedHeight)
-                                .offset(
-                                    x = deviceConfig.nfcScanDialogOffset.x,
-                                    y = deviceConfig.nfcScanDialogOffset.y
-                                ),
-                            viewModel = viewModel,
-                            showCloseButton = true,
-                            border = if (variant != NfcScanDialogVariant.Sale) {
-                                border ?: BorderStroke(
-                                    2.dp,
-                                    if (variant == NfcScanDialogVariant.Operator) {
-                                        OperatorPalette.panelBorder
-                                    } else {
-                                        SelfServicePalette.panelBorder
-                                    }
+                            )
+                        } else {
+                            border
+                        },
+                        backgroundColor = when (variant) {
+                            NfcScanDialogVariant.Sale -> SelfServicePalette.panelMuted
+                            NfcScanDialogVariant.Operator -> OperatorPalette.panelMuted
+                            NfcScanDialogVariant.Default -> OperatorPalette.panelMuted
+                        },
+                        shape = if (variant != NfcScanDialogVariant.Sale) {
+                            RoundedCornerShape(if (effectiveSmallScreen) 18.dp else 22.dp)
+                        } else {
+                            RoundedCornerShape(10.dp)
+                        },
+                        checkScan = checkScan,
+                        showStatus = false,
+                        onScan = { tag ->
+                            state.close()
+                            onScan(tag)
+                        },
+                        onCancel = {
+                            viewModel.stopScan()
+                            state.close()
+                            onDismiss()
+                        },
+                        content = { status ->
+                            when (variant) {
+                                NfcScanDialogVariant.Default -> content(status, effectiveSmallScreen)
+                                NfcScanDialogVariant.Sale -> PencilSaleScanContent(
+                                    isSmallScreen = effectiveSmallScreen,
+                                    scanStatus = status
                                 )
-                            } else {
-                                border
-                            },
-                            backgroundColor = when (variant) {
-                                NfcScanDialogVariant.Sale -> SelfServicePalette.panelMuted
-                                NfcScanDialogVariant.Operator -> OperatorPalette.panelMuted
-                                NfcScanDialogVariant.Default -> OperatorPalette.panelMuted
-                            },
-                            shape = if (variant != NfcScanDialogVariant.Sale) {
-                                RoundedCornerShape(if (effectiveSmallScreen) 18.dp else 22.dp)
-                            } else {
-                                RoundedCornerShape(10.dp)
-                            },
-                            checkScan = checkScan,
-                            showStatus = false,
-                            onScan = { tag ->
-                                state.close()
-                                onScan(tag)
-                            },
-                            onCancel = {
-                                viewModel.stopScan()
-                                state.close()
-                                onDismiss()
-                            },
-                            content = { status ->
-                                when (variant) {
-                                    NfcScanDialogVariant.Default -> content(status, effectiveSmallScreen)
-                                    NfcScanDialogVariant.Sale -> PencilSaleScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status
-                                    )
-                                    NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
-                                        isSmallScreen = effectiveSmallScreen,
-                                        scanStatus = status,
-                                        showStatusPanel = false,
-                                    )
-                                }
-                            },
-                        )
-                    }
+                                NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
+                                    isSmallScreen = effectiveSmallScreen,
+                                    scanStatus = status,
+                                    showStatusPanel = false,
+                                )
+                            }
+                        },
+                    )
                 }
             }
         }

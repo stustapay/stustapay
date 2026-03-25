@@ -162,14 +162,12 @@ fun AccountStatus(
                     is CustomerStatusRequestState.Done -> {
                         OperatorAccountSummary(
                             account = customer.account,
-                            showComment = commentVisible,
                         )
                     }
 
                     is CustomerStatusRequestState.DoneDetails -> {
                         OperatorAccountSummary(
                             account = customer.account,
-                            showComment = commentVisible,
                         )
                     }
                 }
@@ -196,7 +194,6 @@ fun AccountStatus(
 @Composable
 private fun OperatorAccountSummary(
     account: de.stustapay.api.models.Account,
-    showComment: Boolean,
 ) {
     val scrollState = rememberScrollState()
 
@@ -243,37 +240,6 @@ private fun OperatorAccountSummary(
                         fontWeight = FontWeight.Bold,
                     )
                 }
-            }
-        }
-
-        OperatorInfoCard(
-            title = stringResource(R.string.account_customer_overview),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            account.restriction?.let { restriction ->
-                OperatorSummaryRow(
-                    label = stringResource(R.string.customer_restriction),
-                    value = when (restriction.value) {
-                        "under_18" -> stringResource(R.string.under_18_years)
-                        "under_16" -> stringResource(R.string.under_16_years)
-                        else -> restriction.value
-                    }
-                )
-            }
-
-            account.name?.let { name ->
-                OperatorSummaryRow(
-                    label = stringResource(R.string.customer_name),
-                    value = name,
-                )
-            }
-
-            val comment = account.comment
-            if (showComment && !comment.isNullOrEmpty()) {
-                OperatorSummaryRow(
-                    label = stringResource(R.string.customer_comment),
-                    value = comment,
-                )
             }
         }
     }

@@ -97,16 +97,12 @@ fun PayOutView(
                 onSelectMaximumPayout = { viewModel.selectMaximumPayout() },
                 usesMaximumPayout = payOutState.isMaximumPayoutAmountSelected(),
                 onClear = { viewModel.clearDraft() },
-                amountConfig = AmountConfig.Money(
-                    limit = payOutState.getMaxAmount(),
-                ),
                 ready = config.hasConfig(),
                 onPayout = { scope.launch { viewModel.requestPayOut() } },
             )
         }
         scannedTag != null && status != checkingStatus -> {
             PayOutBlockedAfterScan(
-                tag = scannedTag,
                 status = status,
                 onClearTag = { viewModel.clearDraft() },
             )

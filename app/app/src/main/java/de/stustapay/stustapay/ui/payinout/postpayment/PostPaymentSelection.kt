@@ -12,7 +12,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.StatusText
-import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.payinout.payout.CheckedPayOut
 import de.stustapay.stustapay.ui.payinout.payout.PayOutConfirmDialog
 import de.stustapay.stustapay.ui.payinout.payout.PayOutSelection
@@ -90,9 +89,6 @@ fun PostPaymentSelection(
         onSelectMaximumPayout = { viewModel.selectMaximumPayOut() },
         usesMaximumPayout = payOutState.isMaximumPayoutAmountSelected(),
         onClear = { viewModel.clearDraft() },
-        amountConfig = AmountConfig.Money(
-            limit = payOutState.getMaxAmount(),
-        ),
         ready = loginState.hasConfig(),
         onPayout = { scope.launch { viewModel.requestPayOut() } },
     )

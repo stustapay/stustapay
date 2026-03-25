@@ -280,7 +280,7 @@ private fun OperatorTopUpMainContent(
                     )
                     OperatorAmountOptionCard(
                         title = stringResource(R.string.selfservice_custom_amount),
-                        amount = if (customSelected) formatEuroAmount(amount) else stringResource(R.string.operator_pending),
+                        amount = if (customSelected && amount > 0u) formatEuroAmount(amount) else "",
                         description = stringResource(R.string.topup_operator_custom_amount_hint),
                         selected = customSelected,
                         modifier = Modifier.weight(1f),
