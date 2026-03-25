@@ -85,8 +85,10 @@ fun PostPaymentSelection(
         status = status,
         payout = payout,
         amount = payOutState.getAmount(),
-        onAmountUpdate = { viewModel.setAmount(it.toDouble() * 100) },
+        onAmountUpdate = { viewModel.setPayOutAmountCents(it) },
         onAmountClear = { viewModel.clearAmount() },
+        onSelectMaximumPayout = { viewModel.selectMaximumPayOut() },
+        usesMaximumPayout = payOutState.isMaximumPayoutAmountSelected(),
         onClear = { viewModel.clearDraft() },
         amountConfig = AmountConfig.Money(
             limit = payOutState.getMaxAmount(),

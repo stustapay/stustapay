@@ -65,6 +65,17 @@ data class PayOutState(
         return amountChanged
     }
 
+    /** When [currentAmount] is null, the API requests paying out the full account balance. */
+    fun isMaximumPayoutAmountSelected(): Boolean {
+        return currentAmount == null
+    }
+
+    /** Select paying out the full balance (clears any custom cent amount). */
+    fun selectMaximumPayout() {
+        currentAmount = null
+        amountChanged = true
+    }
+
     /** maximum amount - in cents */
     fun getMaxAmount(): UInt {
         return checkedPayOut?.getMaxAmount() ?: 30000u

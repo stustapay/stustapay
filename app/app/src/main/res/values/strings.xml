@@ -231,6 +231,7 @@
     <string name="payout_status_in_progress">Payout in progress...</string>
     <string name="payout_status_booked_successfully">Payout booked successfully</string>
     <string name="payout_status_booking_failed">Failed payout booking! %1$s</string>
+    <string name="payout_success_done_countdown">Done (%1$d)</string>
     <string name="postpayment_operator_subtitle">Collect outstanding balance from a scanned customer wristband.</string>
     <string name="postpayment_operator_summary_title">Settlement summary</string>
     <string name="postpayment_operator_collect_card">Collect by card</string>
@@ -307,6 +308,10 @@
     <string name="infallible_popup_transaction_pending">Transaction pending:</string>
     <string name="infallible_popup_restart">Try restarting the app.</string>
     <string name="payout_payout">🪙 Pay out...</string>
+    <string name="payout_operator_amount_title">Payout amount</string>
+    <string name="payout_operator_full_balance">Full balance</string>
+    <string name="payout_operator_full_balance_hint">Pay out entire credit</string>
+    <string name="payout_operator_chip_selected">Chip scanned</string>
     <string name="post_payment_pay">🪙 Pay ...</string>
     <string name="sale_check_your_order">Check your order</string>
     <string name="sale_compact_title">Sale</string>

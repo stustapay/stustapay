@@ -6,17 +6,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ionspin.kotlin.bignum.integer.toBigInteger
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.ui.theme.errorButtonColors
+import de.stustapay.stustapay.R
 
 
 @Preview
@@ -29,14 +32,23 @@ fun PreviewTagSelectedItem() {
 fun TagSelectedItem(
     tag: NfcTag,
     modifier: Modifier = Modifier,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    showChipId: Boolean = true,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TagItem(tag, modifier = Modifier.weight(1.0f))
+        if (showChipId) {
+            TagItem(tag, modifier = Modifier.weight(1.0f))
+        } else {
+            Text(
+                text = stringResource(R.string.payout_operator_chip_selected),
+                style = MaterialTheme.typography.h5,
+                modifier = Modifier.weight(1.0f),
+            )
+        }
         Button(
             onClick = onClear,
             colors = errorButtonColors(),

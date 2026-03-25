@@ -233,6 +233,22 @@ class PostPaymentViewModel @Inject constructor(
         }
     }
 
+    fun setPayOutAmountCents(cents: UInt) {
+        _payOutState.update {
+            val newState = it.copy()
+            newState.setAmount(cents)
+            newState
+        }
+    }
+
+    fun selectMaximumPayOut() {
+        _payOutState.update {
+            val newState = it.copy()
+            newState.selectMaximumPayout()
+            newState
+        }
+    }
+
     /** the big payout button was pressed */
     suspend fun requestPayOut() {
         var showConfirm = true

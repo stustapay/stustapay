@@ -75,7 +75,7 @@ fun NfcScanDialog(
     checkScan: (NfcTag) -> Boolean = { true },
     onScan: (NfcTag) -> Unit = {},
     showClarification: Boolean = false,
-    variant: NfcScanDialogVariant = NfcScanDialogVariant.Default,
+    variant: NfcScanDialogVariant = NfcScanDialogVariant.Operator,
     content: @Composable (status: String, compactLayout: Boolean) -> Unit = { status, compactLayout ->
         PencilOperatorScanContent(
             scanStatus = status,
@@ -166,7 +166,7 @@ fun NfcScanDialog(
                             shape = RoundedCornerShape(if (effectiveSmallScreen) 16.dp else 20.dp),
                             checkScan = checkScan,
                             showStatus = false,
-                            showCloseButton = false,
+                            showCloseButton = true,
                             onScan = { tag ->
                                 state.close()
                                 onScan(tag)
@@ -199,7 +199,7 @@ fun NfcScanDialog(
                         NfcScanCard(
                             modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
                             viewModel = viewModel,
-                            showCloseButton = false,
+                            showCloseButton = true,
                             border = if (variant != NfcScanDialogVariant.Sale) {
                                 border ?: BorderStroke(
                                     2.dp,
@@ -284,7 +284,7 @@ fun NfcScanDialog(
                             shape = RoundedCornerShape(if (effectiveSmallScreen) 16.dp else 20.dp),
                             checkScan = checkScan,
                             showStatus = false,
-                            showCloseButton = false,
+                            showCloseButton = true,
                             onScan = { tag ->
                                 state.close()
                                 onScan(tag)
@@ -322,7 +322,7 @@ fun NfcScanDialog(
                                     y = deviceConfig.nfcScanDialogOffset.y
                                 ),
                             viewModel = viewModel,
-                            showCloseButton = false,
+                            showCloseButton = true,
                             border = if (variant != NfcScanDialogVariant.Sale) {
                                 border ?: BorderStroke(
                                     2.dp,

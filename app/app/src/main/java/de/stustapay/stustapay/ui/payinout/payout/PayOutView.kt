@@ -1,12 +1,17 @@
 package de.stustapay.stustapay.ui.payinout.payout
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import de.stustapay.stustapay.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.ui.common.StatusText
@@ -61,28 +66,60 @@ fun PayOutView(
     }
 
     val checkedPayOut = payOutState.getCheckedPayout()
-    if (checkedPayOut == null) {
-        PayOutScan(
-            onScan = { tag ->
-                scope.launch {
-                    viewModel.tagScanned(tag)
-                }
-            },
-            status = status,
-        )
-    } else {
-        PayOutSelection(
-            status = status,
-            payout = checkedPayOut,
-            amount = payOutState.getAmount(),
-            onAmountUpdate = { viewModel.setAmount(it) },
-            onAmountClear = { viewModel.clearAmount() },
-            onClear = { viewModel.clearDraft() },
-            amountConfig = AmountConfig.Money(
-                limit = payOutState.getMaxAmount(),
-            ),
-            ready = config.hasConfig(),
-            onPayout = { scope.launch { viewModel.requestPayOut() } },
-        )
+    val scannedTag = payOutState.tag
+    val checkingStatus = stringResource(R.string.payout_status_checking)
+
+    when {
+        // Do not compose PayOutScan while success is shown — its LaunchedEffect would reopen
+        // the NFC dialog in parallel with PayOutSuccessDialog. After "Fertig", draft stays empty
+        // and PayOutScan mounts again to start the next scan.
+        completedPayOutV != null -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+            ) {
+                StatusText(
+                    status,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(vertical = 8.dp),
+                )
+            }
+        }
+        checkedPayOut != null -> {
+            PayOutSelection(
+                status = status,
+                payout = checkedPayOut,
+                amount = payOutState.getAmount(),
+                onAmountUpdate = { viewModel.setAmount(it) },
+                onAmountClear = { viewModel.clearAmount() },
+                onSelectMaximumPayout = { viewModel.selectMaximumPayout() },
+                usesMaximumPayout = payOutState.isMaximumPayoutAmountSelected(),
+                onClear = { viewModel.clearDraft() },
+                amountConfig = AmountConfig.Money(
+                    limit = payOutState.getMaxAmount(),
+                ),
+                ready = config.hasConfig(),
+                onPayout = { scope.launch { viewModel.requestPayOut() } },
+            )
+        }
+        scannedTag != null && status != checkingStatus -> {
+            PayOutBlockedAfterScan(
+                tag = scannedTag,
+                status = status,
+                onClearTag = { viewModel.clearDraft() },
+            )
+        }
+        else -> {
+            PayOutScan(
+                onScan = { tag ->
+                    scope.launch {
+                        viewModel.tagScanned(tag)
+                    }
+                },
+                status = status,
+            )
+        }
     }
 }

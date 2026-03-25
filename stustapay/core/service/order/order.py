@@ -80,7 +80,6 @@ from stustapay.core.service.order.pending_order import (
 )
 from stustapay.core.service.order.sumup import SumupService
 from stustapay.core.service.order.stats import build_selected_date_condition, get_selected_date_ranges
-from stustapay.core.service.tree.common import fetch_event_for_node
 from stustapay.core.service.product import (
     fetch_discount_product,
     fetch_pay_out_product,
@@ -89,7 +88,11 @@ from stustapay.core.service.product import (
 )
 from stustapay.core.service.till.common import fetch_till, fetch_virtual_till
 from stustapay.core.service.transaction import book_transaction
-from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
+from stustapay.core.service.tree.common import (
+    fetch_event_for_node,
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 
 from ..till.common import get_cash_register_account_id
 from .booking import BookingIdentifier, NewLineItem, book_order
@@ -1180,7 +1183,13 @@ class OrderService(Service[Config]):
             conn=conn, node=node, customer_tag_uid=new_pay_out.customer_tag_uid
         )
 
-        if node.event.post_payment_allowed:
+        event_settings = node.event
+        if event_settings is None:
+            if node.event_node_id is None:
+                raise InvalidArgument("Cannot process payout: till node has no associated event")
+            event_settings = await fetch_event_for_node(conn=conn, node=node)
+
+        if event_settings.post_payment_allowed:
             # Post-payment is allowed; customers can only pay in to reduce their debt
 
             if new_pay_out.amount is None:
@@ -1190,7 +1199,9 @@ class OrderService(Service[Config]):
             new_balance = customer_account.balance + new_pay_out.amount
 
             # Get the appropriate balance limit based on VIP status
-            max_negative_balance = -1 * (node.event.vip_max_account_balance if customer_account.is_vip else node.event.max_account_balance)  # Should be negative
+            max_negative_balance = -1 * (
+                event_settings.vip_max_account_balance if customer_account.is_vip else event_settings.max_account_balance
+            )  # Should be negative
             if new_balance < max_negative_balance:
                 too_much = max_negative_balance - new_balance
                 raise InvalidArgument(
@@ -1233,7 +1244,9 @@ class OrderService(Service[Config]):
             new_balance = customer_account.balance - abs(payout_amount)
 
             # Get the appropriate balance limit based on VIP status
-            max_positive_balance = node.event.vip_max_account_balance if customer_account.is_vip else node.event.max_account_balance
+            max_positive_balance = (
+                event_settings.vip_max_account_balance if customer_account.is_vip else event_settings.max_account_balance
+            )
 
             # Ensure the payout does not violate any constraints
             if new_balance > max_positive_balance:
@@ -1248,7 +1261,7 @@ class OrderService(Service[Config]):
         # For post-payment: payout_amount can be negative (customer paying into debt)
         return PendingPayOut(
             uuid=new_pay_out.uuid,
-            amount=abs(payout_amount) if not node.event.post_payment_allowed else payout_amount,
+            amount=abs(payout_amount) if not event_settings.post_payment_allowed else payout_amount,
             customer_tag_uid=new_pay_out.customer_tag_uid,
             customer_account_id=customer_account.id,
             old_balance=customer_account.balance,

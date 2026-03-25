@@ -226,6 +226,7 @@
     <string name="payout_status_in_progress">Uitbetaling bezig...</string>
     <string name="payout_status_booked_successfully">Uitbetaling succesvol geboekt</string>
     <string name="payout_status_booking_failed">Boeken van uitbetaling mislukt! %1$s</string>
+    <string name="payout_success_done_countdown">Klaar (%1$d)</string>
     <string name="postpayment_operator_subtitle">Openstaand saldo innen van een gescand klantenbandje.</string>
     <string name="postpayment_operator_summary_title">Afrekeningsoverzicht</string>
     <string name="postpayment_operator_collect_card">Met kaart innen</string>
@@ -299,6 +300,10 @@
     <string name="infallible_popup_transaction_pending">Transaction pending:</string>
     <string name="infallible_popup_restart">Try restarting the app.</string>
     <string name="payout_payout">🪙 Pay out...</string>
+    <string name="payout_operator_amount_title">Uitbetalingsbedrag</string>
+    <string name="payout_operator_full_balance">Volledig saldo</string>
+    <string name="payout_operator_full_balance_hint">Hele tegoed uitbetalen</string>
+    <string name="payout_operator_chip_selected">Chip gescand</string>
     <string name="post_payment_pay">🪙 Pay ...</string>
     <string name="sale_check_your_order">Check your order</string>
     <string name="sale_compact_title">Sale</string>

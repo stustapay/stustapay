@@ -124,20 +124,30 @@ fun OperatorTopUpSelection(
         )
     }
 
-    OperatorBackground {
+    val showOwnFlowHeader = onBack != null
+    @Composable
+    fun TopUpBody() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .then(
+                    if (showOwnFlowHeader) {
+                        Modifier.padding(12.dp)
+                    } else {
+                        Modifier
+                    },
+                ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                OperatorCompactFlowHeader(
-                    flowTitle = stringResource(R.string.topup),
-                    tillLabel = terminalTitle.takeIf { it.isNotBlank() },
-                    onBack = onBack,
-                    compactHandheld = maxWidth < 760.dp,
-                )
+            if (showOwnFlowHeader) {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    OperatorCompactFlowHeader(
+                        flowTitle = stringResource(R.string.topup),
+                        tillLabel = terminalTitle.takeIf { it.isNotBlank() },
+                        onBack = onBack,
+                        compactHandheld = maxWidth < 760.dp,
+                    )
+                }
             }
 
             OperatorAdaptivePaymentLayout(
@@ -191,6 +201,14 @@ fun OperatorTopUpSelection(
                 },
             )
         }
+    }
+
+    if (showOwnFlowHeader) {
+        OperatorBackground {
+            TopUpBody()
+        }
+    } else {
+        TopUpBody()
     }
 }
 

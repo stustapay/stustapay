@@ -57,6 +57,8 @@ class PayOutViewModel @Inject constructor(
     )
 
     suspend fun tagScanned(tag: NfcTag) {
+        // Set immediately so the UI never briefly treats (tag set, no checked payout) as a failed check.
+        _status.update { context.getString(R.string.payout_status_checking) }
         _payOutState.update {
             PayOutState(tag = tag)
         }
@@ -75,6 +77,14 @@ class PayOutViewModel @Inject constructor(
         _payOutState.update {
             val newState = it.copy()
             newState.setAmount(0u)
+            newState
+        }
+    }
+
+    fun selectMaximumPayout() {
+        _payOutState.update {
+            val newState = it.copy()
+            newState.selectMaximumPayout()
             newState
         }
     }

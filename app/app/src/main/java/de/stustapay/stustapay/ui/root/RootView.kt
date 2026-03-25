@@ -12,8 +12,8 @@ import de.stustapay.stustapay.ui.entry.EntryView
 import de.stustapay.stustapay.ui.history.SaleHistoryView
 import de.stustapay.stustapay.ui.nav.NavChangeHandler
 import de.stustapay.stustapay.ui.nav.navigateDestination
+import de.stustapay.stustapay.ui.payinout.CashInOutView
 import de.stustapay.stustapay.ui.payinout.postpayment.PostPaymentView
-import de.stustapay.stustapay.ui.payinout.topup.TopUpView
 import de.stustapay.stustapay.ui.reward.RewardView
 import de.stustapay.stustapay.ui.sale.SaleView
 import de.stustapay.stustapay.ui.settings.SettingsView
@@ -64,7 +64,7 @@ fun RootView(uictrl: SysUiController? = null) {
             SaleView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.topup.route) {
-            TopUpView(onFinished = { navController.navigateUp() })
+            CashInOutView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.postpayment.route) {
             PostPaymentView(leaveView = { navController.navigateUp() })

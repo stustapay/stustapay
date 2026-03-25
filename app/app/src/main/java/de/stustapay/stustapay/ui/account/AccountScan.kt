@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,8 +39,10 @@ import dagger.hilt.android.EntryPointAccessors
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
-import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
-import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.NfcScanDialogVariant
+import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
+import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
@@ -54,7 +56,6 @@ fun AccountScan(
     onBack: () -> Unit = {},
     onScan: (NfcTag) -> Unit
 ) {
-    // Get DeviceConfigProvider using Hilt EntryPoint
     val context = LocalContext.current
     val deviceConfigProvider = remember {
         EntryPointAccessors.fromApplication(
@@ -62,18 +63,17 @@ fun AccountScan(
             DeviceConfigEntryPoint::class.java
         ).deviceConfigProvider()
     }
-    
-    val deviceConfig = deviceConfigProvider.getDeviceConfig()
-    
-    val profile = rememberSelfServiceDeviceProfile()
 
-    // Calculate adjusted size based on device config scale factor
-    val baseWidth = if (isSelfService) 620 else 350
-    val baseHeight = if (isSelfService) 300 else 350
-    val adjustedWidth = (baseWidth * deviceConfig.nfcScanDialogScale).dp
-    val adjustedHeight = (baseHeight * deviceConfig.nfcScanDialogScale).dp
+    val deviceConfig = deviceConfigProvider.getDeviceConfig()
+    val profile = rememberSelfServiceDeviceProfile()
+    val operatorScanState = rememberNfcScanDialogState()
 
     if (isSelfService) {
+        val baseWidth = 620
+        val baseHeight = 300
+        val adjustedWidth = (baseWidth * deviceConfig.nfcScanDialogScale).dp
+        val adjustedHeight = (baseHeight * deviceConfig.nfcScanDialogScale).dp
+
         SelfServiceBackground {
             Column(
                 modifier = Modifier
@@ -118,7 +118,26 @@ fun AccountScan(
         }
         return
     }
-    
+
+    LaunchedEffect(Unit) {
+        operatorScanState.open()
+    }
+
+    NfcScanDialog(
+        state = operatorScanState,
+        variant = NfcScanDialogVariant.Operator,
+        onDismiss = onBack,
+        onScan = onScan,
+    ) { status, compactLayout ->
+        PencilOperatorScanContent(
+            title = stringResource(R.string.account_scan_balance_check_title),
+            subtitle = stringResource(R.string.account_scan_subtitle),
+            scanStatus = status,
+            isSmallScreen = compactLayout,
+            showStatusPanel = false,
+        )
+    }
+
     OperatorScaffold(
         title = stringResource(R.string.customer_title),
         subtitle = stringResource(R.string.account_scan_subtitle),
@@ -129,81 +148,7 @@ fun AccountScan(
         footerStatus = stringResource(R.string.account_scan_waiting_tag),
         onBack = onBack,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OperatorInfoCard(
-                title = stringResource(R.string.account_scan_balance_check_title),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = stringResource(R.string.account_scan_balance_check_desc),
-                    color = OperatorPalette.subtitle,
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (deviceConfig.useCenteredDialog) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        NfcScanCard(
-                            modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
-                            onScan = onScan,
-                            keepScanning = true,
-                            showStatus = false,
-                            border = BorderStroke(2.dp, OperatorPalette.panelBorder),
-                            backgroundColor = OperatorPalette.panelMuted,
-                            shape = RoundedCornerShape(if (deviceConfig.isSmallScreen) 18.dp else 22.dp),
-                            content = { status ->
-                                PencilOperatorBalanceScanContent(
-                                    scanStatus = status,
-                                    isSmallScreen = deviceConfig.isSmallScreen
-                                )
-                            }
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(1000.dp, 800.dp)
-                            .padding(
-                                start = if (deviceConfig.isSmallScreen) 150.dp else 350.dp
-                            ),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        NfcScanCard(
-                            modifier = Modifier
-                                .size(width = adjustedWidth, height = adjustedHeight)
-                                .offset(
-                                    x = deviceConfig.nfcScanDialogOffset.x,
-                                    y = deviceConfig.nfcScanDialogOffset.y
-                                ),
-                            onScan = onScan,
-                            keepScanning = true,
-                            showStatus = false,
-                            border = BorderStroke(2.dp, OperatorPalette.panelBorder),
-                            backgroundColor = OperatorPalette.panelMuted,
-                            shape = RoundedCornerShape(if (deviceConfig.isSmallScreen) 18.dp else 22.dp),
-                            content = { status ->
-                                PencilOperatorBalanceScanContent(
-                                    scanStatus = status,
-                                    isSmallScreen = deviceConfig.isSmallScreen
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-        }
+        Box(modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -283,88 +228,6 @@ private fun PencilCheckBalancePanelContent(
             color = SelfServicePalette.subtitle,
             fontWeight = FontWeight.Medium,
             fontSize = if (isSmallScreen) 12.sp else 14.sp,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun PencilOperatorBalanceScanContent(
-    isSmallScreen: Boolean,
-    scanStatus: String,
-) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(900),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-
-    val outerSize = if (isSmallScreen) 120.dp else 168.dp
-    val midPadding = if (isSmallScreen) 18.dp else 22.dp
-    val innerPadding = if (isSmallScreen) 16.dp else 20.dp
-    val iconSize = if (isSmallScreen) 24.dp else 30.dp
-    val statusText = scanStatus.ifBlank { stringResource(R.string.nfc_scan_ready) }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 14.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.selfservice_check_balance),
-            color = OperatorPalette.title,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = if (isSmallScreen) 28.sp else 34.sp,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = stringResource(R.string.selfservice_scan_balance_subtitle),
-            color = OperatorPalette.subtitle,
-            fontWeight = FontWeight.Medium,
-            fontSize = if (isSmallScreen) 12.sp else 15.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Box(
-            modifier = Modifier
-                .size(outerSize)
-                .background(Color(0xFF203659), CircleShape)
-                .padding(midPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF2A4A78), CircleShape)
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(SelfServicePalette.accent, CircleShape)
-                        .scale(pulseScale),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.NearMe,
-                        contentDescription = null,
-                        tint = SelfServicePalette.backgroundTop,
-                        modifier = Modifier.size(iconSize)
-                    )
-                }
-            }
-        }
-
-        Text(
-            text = statusText,
-            color = OperatorPalette.subtitle,
-            fontWeight = FontWeight.Medium,
-            fontSize = if (isSmallScreen) 13.sp else 16.sp,
             textAlign = TextAlign.Center
         )
     }
