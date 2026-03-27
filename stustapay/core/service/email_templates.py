@@ -1,4 +1,4 @@
-import jinja2
+from jinja2.sandbox import SandboxedEnvironment
 from markupsafe import Markup
 
 DEFAULT_INVITATION_SUBJECT = "Invitation to manage {{ node_name }}"
@@ -63,17 +63,21 @@ BASE_EMAIL_HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
+def _sandbox(autoescape: bool) -> SandboxedEnvironment:
+    return SandboxedEnvironment(autoescape=autoescape)
+
+
 def validate_template_string(template: str) -> None:
-    jinja2.Environment().parse(template)
+    _sandbox(False).parse(template)
 
 
 def render_template_string(template: str, context: dict[str, object], *, autoescape: bool = False) -> str:
-    environment = jinja2.Environment(autoescape=autoescape)
+    environment = _sandbox(autoescape)
     compiled = environment.from_string(template)
     return compiled.render(**context)
 
 
 def render_invitation_html(template: str, context: dict[str, object], subject: str) -> str:
     rendered_body = render_template_string(template, context, autoescape=True)
-    shell = jinja2.Environment(autoescape=True).from_string(BASE_EMAIL_HTML_TEMPLATE)
+    shell = _sandbox(True).from_string(BASE_EMAIL_HTML_TEMPLATE)
     return shell.render(subject=subject, content=Markup(rendered_body))

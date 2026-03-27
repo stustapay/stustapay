@@ -10,6 +10,7 @@ from schwifty import IBAN
 from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
+from stustapay.core.banner_image import http_response_for_stored_banner
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import (
     Customer,
@@ -375,7 +376,6 @@ class CustomerService(Service[Config]):
         )
         if result is None:
             return None
-        return {
-            "image": result["banner_image"],
-            "mime_type": result["banner_image_mime_type"] or "image/png"
-        }
+        payload = http_response_for_stored_banner(result["banner_image"])
+        assert payload is not None
+        return payload

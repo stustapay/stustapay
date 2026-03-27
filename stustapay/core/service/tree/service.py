@@ -4,6 +4,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import BonJson, generate_dummy_bon_json
 from stustapay.bon.revenue_report import generate_dummy_report, generate_report
+from stustapay.core.banner_image import http_response_for_stored_banner, validate_and_prepare_banner_upload
 from stustapay.core.config import Config
 from stustapay.core.schema.tree import (
     CopyEventOptions,
@@ -491,9 +492,10 @@ class TreeService(Service[Config]):
     @with_db_transaction
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
-    async def upload_event_banner(self, *, conn: Connection, node: Node, image_data: bytes, mime_type: str):
+    async def upload_event_banner(self, *, conn: Connection, node: Node, image_data: bytes):
         """Upload a banner image for an event."""
         assert node.event is not None
+        image_data, mime_type = validate_and_prepare_banner_upload(image_data)
         await conn.execute(
             "update event set banner_image = $1, banner_image_mime_type = $2 where id = $3",
             image_data,
@@ -523,10 +525,9 @@ class TreeService(Service[Config]):
         )
         if result is None:
             return None
-        return {
-            "image": result["banner_image"],
-            "mime_type": result["banner_image_mime_type"] or "image/png"
-        }
+        payload = http_response_for_stored_banner(result["banner_image"])
+        assert payload is not None
+        return payload
 
 
     async def _copy_user_tags(self, conn: Connection, source_node_id: int, target_node_id: int):

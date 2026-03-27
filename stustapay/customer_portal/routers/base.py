@@ -2,7 +2,8 @@
 some basic api endpoints.
 """
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import Response
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_customer import CurrentAuthToken
@@ -111,9 +112,6 @@ async def get_bon(order_service: ContextOrderService, order_uuid: str):
 
 @router.get("/banner/{node_id}", summary="Retrieve event banner image")
 async def get_banner(customer_service: ContextCustomerService, node_id: int):
-    from fastapi import HTTPException
-    from fastapi.responses import Response
-    
     banner_data = await customer_service.get_event_banner(node_id=node_id)
     if banner_data is None:
         raise HTTPException(status_code=404, detail="Banner not found")
@@ -121,6 +119,6 @@ async def get_banner(customer_service: ContextCustomerService, node_id: int):
     return Response(
         content=banner_data["image"],
         media_type=banner_data["mime_type"],
-        headers={"Cache-Control": "public, max-age=3600"}
+        headers=banner_data["headers"],
     )
 

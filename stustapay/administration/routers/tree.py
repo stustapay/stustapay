@@ -132,8 +132,7 @@ async def upload_event_banner(
 ):
     """Upload a banner image for an event."""
     contents = await file.read()
-    mime_type = file.content_type or "image/png"
-    await tree_service.upload_event_banner(token=token, node_id=node_id, image_data=contents, mime_type=mime_type)
+    await tree_service.upload_event_banner(token=token, node_id=node_id, image_data=contents)
     return {"status": "ok"}
 
 
@@ -153,6 +152,6 @@ async def get_event_banner(tree_service: ContextTreeService, node_id: int):
     return Response(
         content=banner_data["image"],
         media_type=banner_data["mime_type"],
-        headers={"Cache-Control": "public, max-age=3600"}
+        headers=banner_data["headers"],
     )
 
