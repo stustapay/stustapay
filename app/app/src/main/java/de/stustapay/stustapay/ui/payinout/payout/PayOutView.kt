@@ -52,7 +52,7 @@ fun PayOutView(
         onConfirm = { scope.launch { viewModel.confirmPayOut() } },
         onAbort = { viewModel.dismissPayOutConfirm() },
         getAmount = { payOutState.getAmount() },
-        status = { StatusText(status) }
+        status = {}
     )
 
     val completedPayOutV = completedPayOut

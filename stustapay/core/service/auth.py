@@ -140,6 +140,7 @@ class AuthService(Service[Config]):
             description=terminal.description,
             mode=terminal.mode,
             entry_area_id=terminal.entry_area_id,
+            self_service=terminal.self_service,
             active_user_id=terminal.active_user_id,
             active_user_role_id=terminal.active_user_role_id,
             till=till,

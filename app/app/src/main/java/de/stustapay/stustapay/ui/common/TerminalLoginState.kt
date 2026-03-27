@@ -1,10 +1,8 @@
 package de.stustapay.stustapay.ui.common
 
 import de.stustapay.api.models.CurrentUser
-import de.stustapay.api.models.Privilege
 import de.stustapay.api.models.TerminalConfig
 import de.stustapay.api.models.TerminalMode
-import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.repository.TerminalConfigState
 
@@ -13,6 +11,15 @@ class TerminalLoginState(
     private val user: UserState = UserState.NoLogin,
     private val terminal: TerminalConfigState = TerminalConfigState.NoConfig
 ) {
+    data class SelfServiceAccess(
+        val isSelfServiceProfile: Boolean = false,
+        val canSelfServiceTopUp: Boolean = false,
+        val canSelfServiceBalance: Boolean = false,
+    ) {
+        val hasVisibleActions: Boolean
+            get() = canSelfServiceTopUp || canSelfServiceBalance
+    }
+
     data class TillName(val title: String, val subtitle: String? = null)
 
     fun title(): TillName {
@@ -44,16 +51,56 @@ class TerminalLoginState(
         return terminal is TerminalConfigState.Success
     }
 
+    fun currentUser(): CurrentUser? {
+        if (user !is UserState.LoggedIn) {
+            return null
+        }
+
+        if (terminal !is TerminalConfigState.Success) {
+            return user.user
+        }
+
+        val effectivePrivileges = terminal.config.till?.userPrivileges ?: terminal.config.userPrivileges
+        if (effectivePrivileges == null) {
+            return user.user
+        }
+
+        return user.user.copy(privileges = effectivePrivileges)
+    }
+
     fun checkAccess(access: (CurrentUser, TerminalConfig) -> Boolean): Boolean {
-        return if (user is UserState.LoggedIn && terminal is TerminalConfigState.Success) {
-            access(user.user, terminal.config)
+        val currentUser = currentUser()
+        return if (currentUser != null && terminal is TerminalConfigState.Success) {
+            access(currentUser, terminal.config)
         } else {
             false
         }
     }
 
+    fun checkUserAccess(access: (CurrentUser) -> Boolean): Boolean {
+        val currentUser = currentUser() ?: return false
+        return access(currentUser)
+    }
+
     fun hasConfig(): Boolean {
         return terminal is TerminalConfigState.Success
+    }
+
+    fun isSelfServiceTerminal(): Boolean {
+        return terminal is TerminalConfigState.Success && terminal.config.selfService
+    }
+
+    fun selfServiceAccess(): SelfServiceAccess {
+        if (currentUser() == null || terminal !is TerminalConfigState.Success || !terminal.config.selfService) {
+            return SelfServiceAccess()
+        }
+
+        return SelfServiceAccess(
+            isSelfServiceProfile = true,
+            canSelfServiceTopUp =
+                terminal.config.till?.allowTopUp == true && terminal.config.till?.postPaymentAllowed == false,
+            canSelfServiceBalance = true,
+        )
     }
 
     fun canHandleCash(): Boolean {
@@ -83,15 +130,7 @@ class TerminalLoginState(
             return terminal.config.maxAccountBalance ?: 200.0f
         }
     
-    /**
-     * Check if the user has only the can_topup privilege but not the can_book_orders privilege.
-     * Such users should have restricted UI access (no back button, auto-navigate to topup)
-     */
     fun hasOnlyTopUpPrivilege(): Boolean {
-        if (user !is UserState.LoggedIn) {
-            return false
-        }
-        
-        return Access.hasOnlyTopUpPrivilege(user.user)
+        return isSelfServiceTerminal()
     }
 }

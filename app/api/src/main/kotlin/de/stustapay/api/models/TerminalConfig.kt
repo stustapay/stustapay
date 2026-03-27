@@ -34,6 +34,7 @@ import kotlinx.serialization.Contextual
  * @param description 
  * @param mode 
  * @param entryArea 
+ * @param selfService 
  * @param eventName 
  * @param activeUserId 
  * @param availableRoles 
@@ -61,6 +62,9 @@ data class TerminalConfig (
 
     @SerialName(value = "entry_area")
     val entryArea: EntryAreaConfig?,
+
+    @SerialName(value = "self_service")
+    val selfService: kotlin.Boolean,
 
     @SerialName(value = "event_name")
     val eventName: kotlin.String,

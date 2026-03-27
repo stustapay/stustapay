@@ -12,6 +12,7 @@ import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.libssp.nfc.NfcHandler
@@ -50,6 +51,8 @@ class MainActivity : ComponentActivity(), SysUiController {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         // Set default orientation based on device type
         setDefaultOrientation();
 
@@ -77,6 +80,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         super.onResume()
 
         nfcHandler.onResume(this)
+        hideSystemUI()
     }
 
     public override fun onNewIntent(intent: Intent) {
@@ -118,18 +122,23 @@ class MainActivity : ComponentActivity(), SysUiController {
         this.hideSystemUI()
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemUI()
+        }
+    }
+
     private var sysUiHidden = false
 
     @SuppressLint("ObsoleteSdkInt")
     @Suppress("DEPRECATION")
     override fun hideSystemUI() {
-        if (sysUiHidden) {
-            return
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let {
                 it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                window.navigationBarColor = getColor(R.color.black_semitransparent)
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 it.hide(WindowInsets.Type.systemBars())
             }
         } else {
@@ -148,9 +157,6 @@ class MainActivity : ComponentActivity(), SysUiController {
     @SuppressLint("ObsoleteSdkInt")
     @Suppress("DEPRECATION")
     override fun showSystemUI() {
-        if (!sysUiHidden) {
-            return
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.show(WindowInsets.Type.systemBars())
         } else {

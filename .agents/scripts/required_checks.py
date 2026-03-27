@@ -5,7 +5,7 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 
-from changed_surfaces import analyze_paths, load_paths_from_git
+from changed_surfaces import add_path_arguments, analyze_paths, resolve_paths
 
 
 @dataclass
@@ -55,21 +55,19 @@ def build_checks(paths: list[str]) -> ChecksReport:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Recommend StuStaPay verification commands for changed files.")
-    parser.add_argument("--files", nargs="*", help="Changed files to analyze.")
-    parser.add_argument("--from-git", action="store_true", help="Read changed files from `git diff --name-only`.")
-    parser.add_argument("--staged", action="store_true", help="Used with --from-git to read staged files.")
+    add_path_arguments(parser)
+    parser.add_argument(
+        "--from-git",
+        action="store_true",
+        help="Deprecated no-op. Current changes are read from git automatically when --files is omitted.",
+    )
     parser.add_argument("--output", choices=("text", "json"), default="text")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    if args.from_git:
-        files = load_paths_from_git(staged=args.staged)
-    elif args.files:
-        files = args.files
-    else:
-        raise SystemExit("Pass --files <paths...> or --from-git.")
+    files = resolve_paths(files=args.files, scope="staged" if args.staged else args.scope)
 
     report = build_checks(files)
 

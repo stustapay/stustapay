@@ -81,11 +81,20 @@ object Access {
     }
 
     /**
-     * Check if the user has only the can_topup privilege and no other significant privileges
+     * Check if the user has only the dedicated self-service topup privileges.
+     * The self-service role in the backend also carries terminal_login so the
+     * user can sign into the terminal, but it must still be treated as a
+     * restricted topup-only profile in the UI.
      * Users with this privilege profile should have restricted UI access
      */
     fun hasOnlyTopUpPrivilege(user: CurrentUser): Boolean {
-        return user.privileges.contains(Privilege.can_topup) && 
-               !user.privileges.contains(Privilege.can_book_orders)
+        val allowedPrivileges = setOf(
+            Privilege.can_topup,
+            Privilege.terminal_login,
+            Privilege.supervised_terminal_login,
+        )
+        return user.privileges.contains(Privilege.can_topup) &&
+               !user.privileges.contains(Privilege.can_book_orders) &&
+               user.privileges.all { it in allowedPrivileges }
     }
 }

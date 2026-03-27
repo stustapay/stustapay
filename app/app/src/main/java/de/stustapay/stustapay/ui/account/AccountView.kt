@@ -29,6 +29,8 @@ fun AccountView(
     val nav = rememberNavController()
     val scope = rememberCoroutineScope()
     val isSelfService = viewModel.isSelfServiceMode.collectAsStateWithLifecycle()
+    val canSelfServiceBalance = viewModel.canSelfServiceBalance.collectAsStateWithLifecycle()
+    val useSelfServiceUi = isSelfService.value && canSelfServiceBalance.value
 
     BackHandler {
         leaveView()
@@ -37,7 +39,7 @@ fun AccountView(
     NavHost(navController = nav, startDestination = CustomerStatusNavDests.scan.route) {
         composable(CustomerStatusNavDests.scan.route) {
             AccountScan(
-                isSelfService = isSelfService.value,
+                isSelfService = useSelfServiceUi,
                 onBack = leaveView,
                 onScan = {
                     scope.launch {
@@ -52,7 +54,7 @@ fun AccountView(
             AccountStatus(
                 viewModel = viewModel,
                 navigateTo = { dest -> nav.navigateTo(dest.route) },
-                isSelfService = isSelfService.value,
+                isSelfService = useSelfServiceUi,
                 onFinished = leaveView
             )
         }
@@ -61,7 +63,7 @@ fun AccountView(
             AccountDetails(
                 viewModel = viewModel,
                 navigateTo = { dest -> nav.navigateTo(dest.route) },
-                isSelfService = isSelfService.value,
+                isSelfService = useSelfServiceUi,
                 onFinished = leaveView
             )
         }

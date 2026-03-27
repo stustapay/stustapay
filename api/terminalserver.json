@@ -3872,6 +3872,11 @@
             ],
             "title": "Entry Area Id"
           },
+          "self_service": {
+            "type": "boolean",
+            "title": "Self Service",
+            "default": false
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -4056,6 +4061,10 @@
               }
             ]
           },
+          "self_service": {
+            "type": "boolean",
+            "title": "Self Service"
+          },
           "event_name": {
             "type": "string",
             "title": "Event Name"
@@ -4128,6 +4137,7 @@
           "description",
           "mode",
           "entry_area",
+          "self_service",
           "event_name",
           "active_user_id",
           "available_roles",
@@ -4652,6 +4662,20 @@
               }
             ],
             "title": "Subnode Id"
+          },
+          "selected_dates": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Dates"
           }
         },
         "type": "object",

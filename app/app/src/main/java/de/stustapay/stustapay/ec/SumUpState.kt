@@ -23,7 +23,7 @@ sealed interface SumUpState {
         val msg: String
     ) : SumUpState {
         override fun msg(): String {
-            return "sumup transaction failed: $msg"
+            return msg
         }
     }
 

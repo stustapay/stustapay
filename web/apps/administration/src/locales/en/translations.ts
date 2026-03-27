@@ -1022,6 +1022,7 @@ export const translations = {
       entry: "Entry",
       exit: "Exit",
     },
+    selfService: "Self-service terminal",
     till: "Till",
     switchTill: "Switch Till",
     removeTill: "Remove Till",

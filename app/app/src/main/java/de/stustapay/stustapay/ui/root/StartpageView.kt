@@ -3,6 +3,7 @@ package de.stustapay.stustapay.ui.root
 import android.content.pm.ActivityInfo
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -82,7 +84,8 @@ fun StartpageView(
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
     val terminalStatusMessage by viewModel.terminalStatusMessage.collectAsStateWithLifecycle()
     val activity = LocalActivity.current!!
-    val isSelfServiceMode = loginState.hasOnlyTopUpPrivilege() && loginState.hasConfig() && !configLoading
+    val selfServiceAccess = loginState.selfServiceAccess()
+    val isSelfServiceMode = loginState.isSelfServiceTerminal() && loginState.hasConfig() && !configLoading
     val isEntryMode = loginState.isEntryMode() && loginState.hasConfig() && !configLoading
     val gradientColors = if (isSelfServiceMode) {
         listOf(SelfServicePalette.backgroundTop, SelfServicePalette.backgroundBottom)
@@ -159,8 +162,12 @@ fun StartpageView(
         ) {
             if (isSelfServiceMode) {
                 SelfServiceLanding(
+                    canCheckBalance = selfServiceAccess.canSelfServiceBalance,
+                    canTopUp = selfServiceAccess.canSelfServiceTopUp,
                     onCheckBalance = { navigateToHook(RootNavDests.status) },
                     onTopUp = { navigateToHook(RootNavDests.topup) },
+                    onShowTerminalInfo = { showInfoDialog = true },
+                    fallbackMessage = terminalStatusMessage ?: stringResource(R.string.payinout_no_action_available),
                     modifier = Modifier.weight(1f)
                 )
             } else {
@@ -172,24 +179,6 @@ fun StartpageView(
                     onNavigate = navigateToHook,
                     onRefreshConfig = { terminalConfigViewModel.refreshAccessData() },
                     onRestart = { restartApp(activity) },
-                )
-            }
-        }
-
-        if (isSelfServiceMode) {
-            IconButton(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 12.dp, end = 16.dp)
-                    .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(18.dp))
-                    .padding(16.dp)
-                    .size(36.dp),
-                onClick = { showInfoDialog = true }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = stringResource(R.string.content_desc_terminal_info),
-                    tint = SelfServicePalette.subtitle
                 )
             }
         }
@@ -450,13 +439,44 @@ private fun operatorCardDescription(route: String?): String {
 
 @Composable
 private fun SelfServiceLanding(
+    canCheckBalance: Boolean,
+    canTopUp: Boolean,
     onCheckBalance: () -> Unit,
     onTopUp: () -> Unit,
+    onShowTerminalInfo: () -> Unit,
+    fallbackMessage: String,
     modifier: Modifier = Modifier
 ) {
     val profile = rememberSelfServiceDeviceProfile()
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val actionCards = buildList {
+            if (canCheckBalance) {
+                add(
+                    SelfServiceActionCardState(
+                        icon = Icons.Outlined.AccountBalanceWallet,
+                        title = stringResource(R.string.selfservice_check_balance),
+                        description = stringResource(R.string.selfservice_check_balance_hint),
+                        ctaText = stringResource(R.string.selfservice_action_open),
+                        onClick = onCheckBalance,
+                        highlighted = false,
+                    )
+                )
+            }
+            if (canTopUp) {
+                add(
+                    SelfServiceActionCardState(
+                        icon = Icons.Outlined.AddCircle,
+                        title = stringResource(R.string.selfservice_topup),
+                        description = stringResource(R.string.selfservice_topup_hint),
+                        ctaText = stringResource(R.string.selfservice_action_start),
+                        onClick = onTopUp,
+                        highlighted = true,
+                    )
+                )
+            }
+        }
         val compactLayout = profile.isSmallScreen || maxWidth < 740.dp
+        val compactFooterLayout = compactLayout || maxWidth < 900.dp
         val headerSize = if (compactLayout) profile.headlineTitleSize else 48.sp
         val subSize = if (compactLayout) profile.headlineSubtitleSize else 20.sp
         val cardHeight = if (profile.isSmallScreen) 156.dp else 190.dp
@@ -477,60 +497,44 @@ private fun SelfServiceLanding(
                 subtitleFontSize = subSize
             )
 
-            if (compactLayout) {
+            if (actionCards.isEmpty()) {
+                SelfServiceEmptyStateCard(
+                    message = fallbackMessage,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else if (compactLayout || actionCards.size == 1) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SelfServiceActionCard(
-                        icon = Icons.Outlined.AccountBalanceWallet,
-                        title = stringResource(R.string.selfservice_check_balance),
-                        description = stringResource(R.string.selfservice_check_balance_hint),
-                        ctaText = stringResource(R.string.selfservice_action_open),
-                        onClick = onCheckBalance,
-                        highlighted = false,
-                        modifier = Modifier.fillMaxWidth(),
-                        titleSize = profile.actionCardTitleSize,
-                        descriptionSize = profile.actionCardDescriptionSize,
-                        cardHeight = cardHeight
-                    )
-
-                    SelfServiceActionCard(
-                        icon = Icons.Outlined.AddCircle,
-                        title = stringResource(R.string.selfservice_topup),
-                        description = stringResource(R.string.selfservice_topup_hint),
-                        ctaText = stringResource(R.string.selfservice_action_start),
-                        onClick = onTopUp,
-                        highlighted = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        titleSize = profile.actionCardTitleSize,
-                        descriptionSize = profile.actionCardDescriptionSize,
-                        cardHeight = cardHeight
-                    )
+                    actionCards.forEach { action ->
+                        SelfServiceActionCard(
+                            icon = action.icon,
+                            title = action.title,
+                            description = action.description,
+                            ctaText = action.ctaText,
+                            onClick = action.onClick,
+                            highlighted = action.highlighted,
+                            modifier = Modifier.fillMaxWidth(),
+                            titleSize = profile.actionCardTitleSize,
+                            descriptionSize = profile.actionCardDescriptionSize,
+                            cardHeight = cardHeight
+                        )
+                    }
                 }
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    SelfServiceActionCard(
-                        icon = Icons.Outlined.AccountBalanceWallet,
-                        title = stringResource(R.string.selfservice_check_balance),
-                        description = stringResource(R.string.selfservice_check_balance_hint),
-                        ctaText = stringResource(R.string.selfservice_action_open),
-                        onClick = onCheckBalance,
-                        highlighted = false,
-                        modifier = Modifier.weight(1f),
-                        titleSize = profile.actionCardTitleSize,
-                        descriptionSize = profile.actionCardDescriptionSize,
-                        cardHeight = cardHeight
-                    )
-                    SelfServiceActionCard(
-                        icon = Icons.Outlined.AddCircle,
-                        title = stringResource(R.string.selfservice_topup),
-                        description = stringResource(R.string.selfservice_topup_hint),
-                        ctaText = stringResource(R.string.selfservice_action_start),
-                        onClick = onTopUp,
-                        highlighted = true,
-                        modifier = Modifier.weight(1f),
-                        titleSize = profile.actionCardTitleSize,
-                        descriptionSize = profile.actionCardDescriptionSize,
-                        cardHeight = cardHeight
-                    )
+                    actionCards.forEach { action ->
+                        SelfServiceActionCard(
+                            icon = action.icon,
+                            title = action.title,
+                            description = action.description,
+                            ctaText = action.ctaText,
+                            onClick = action.onClick,
+                            highlighted = action.highlighted,
+                            modifier = Modifier.weight(1f),
+                            titleSize = profile.actionCardTitleSize,
+                            descriptionSize = profile.actionCardDescriptionSize,
+                            cardHeight = cardHeight
+                        )
+                    }
                 }
             }
 
@@ -542,21 +546,117 @@ private fun SelfServiceLanding(
                 shape = RoundedCornerShape(12.dp),
                 elevation = 0.dp
             ) {
-                Text(
-                    text = stringResource(R.string.selfservice_hint_payment),
-                    color = SelfServicePalette.subtitle,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Start,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
-                        .fillMaxWidth()
-                )
+                if (compactFooterLayout) {
+                    Column(
+                        modifier = Modifier
+                            .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.selfservice_hint_payment),
+                            color = SelfServicePalette.subtitle,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Start,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        FooterTerminalInfoButton(onClick = onShowTerminalInfo)
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.selfservice_hint_payment),
+                            color = SelfServicePalette.subtitle,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Start,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        FooterTerminalInfoButton(
+                            onClick = onShowTerminalInfo,
+                            modifier = Modifier.widthIn(min = 170.dp)
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun FooterTerminalInfoButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.5.dp, SelfServicePalette.panelBorder),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = SelfServicePalette.panel,
+            contentColor = SelfServicePalette.title,
+            disabledBackgroundColor = SelfServicePalette.panelBorder,
+            disabledContentColor = SelfServicePalette.subtitle
+        ),
+        elevation = ButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = SelfServicePalette.subtitle
+        )
+        Text(
+            text = stringResource(R.string.selfservice_action_terminal_info),
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
+
+private data class SelfServiceActionCardState(
+    val icon: ImageVector,
+    val title: String,
+    val description: String,
+    val ctaText: String,
+    val onClick: () -> Unit,
+    val highlighted: Boolean,
+)
+
+@Composable
+private fun SelfServiceEmptyStateCard(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier,
+        backgroundColor = SelfServicePalette.panelMuted,
+        shape = RoundedCornerShape(16.dp),
+        elevation = 0.dp,
+    ) {
+        Text(
+            text = message,
+            color = SelfServicePalette.subtitle,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+            modifier = Modifier
+                .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(16.dp))
+                .padding(horizontal = 18.dp, vertical = 16.dp)
+                .fillMaxWidth()
+        )
     }
 }
 

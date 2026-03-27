@@ -21,6 +21,7 @@ class NewTerminal(BaseModel):
     description: str | None = None
     mode: TerminalMode = TerminalMode.till
     entry_area_id: int | None = None
+    self_service: bool = False
 
 
 class Terminal(NewTerminal):
@@ -102,6 +103,7 @@ class TerminalConfig(BaseModel):
     description: str | None
     mode: TerminalMode
     entry_area: EntryAreaConfig | None
+    self_service: bool
 
     event_name: str
     active_user_id: Optional[int]
@@ -127,6 +129,7 @@ class CurrentTerminal(BaseModel):
     description: str | None
     mode: TerminalMode
     entry_area_id: int | None
+    self_service: bool
     active_user_id: int | None
     active_user_role_id: int | None
     till: Till | None

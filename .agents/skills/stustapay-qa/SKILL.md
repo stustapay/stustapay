@@ -7,6 +7,11 @@ description: Use when validating StuStaPay changes before shipping. Covers repo-
 
 Use this skill after implementation and before `stustapay-ship`.
 
+## Start
+
+- Prefer the stage bootstrap to generate the QA scaffold when you need a durable handoff:
+  - `python3 .agents/scripts/workflow_bootstrap.py --stage qa --output markdown --write-state`
+
 ## Validation order
 
 1. Run the recommended repo commands for the touched surfaces.

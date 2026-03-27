@@ -25,6 +25,9 @@ import kotlinx.serialization.Contextual
  *
  * @param fromTime 
  * @param toTime 
+ * @param tillId 
+ * @param subnodeId 
+ * @param selectedDates 
  */
 @Serializable
 
@@ -34,7 +37,16 @@ data class TimeseriesStatsQuery (
     val fromTime: java.time.OffsetDateTime?,
 
     @Contextual @SerialName(value = "to_time")
-    val toTime: java.time.OffsetDateTime?
+    val toTime: java.time.OffsetDateTime?,
+
+    @SerialName(value = "till_id")
+    val tillId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+
+    @SerialName(value = "subnode_id")
+    val subnodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+
+    @SerialName(value = "selected_dates")
+    val selectedDates: kotlin.collections.List<kotlin.String>? = null
 
 ) {
 

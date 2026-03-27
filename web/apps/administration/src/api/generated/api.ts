@@ -3646,7 +3646,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: Account;
+    [key: string]: AccountRead;
   };
 };
 export type FindAccountPayload = {
@@ -4572,6 +4572,7 @@ export type Terminal = {
   description?: string | null;
   mode?: TerminalMode;
   entry_area_id?: number | null;
+  self_service?: boolean;
   id: number;
   node_id: number;
   till_id: number | null;
@@ -4591,6 +4592,7 @@ export type NewTerminal = {
   description?: string | null;
   mode?: TerminalMode;
   entry_area_id?: number | null;
+  self_service?: boolean;
 };
 export type SwitchTillPayload = {
   new_till_id: number;

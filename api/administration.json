@@ -16370,6 +16370,11 @@
               }
             ],
             "title": "Entry Area Id"
+          },
+          "self_service": {
+            "type": "boolean",
+            "title": "Self Service",
+            "default": false
           }
         },
         "type": "object",
@@ -20033,6 +20038,11 @@
               }
             ],
             "title": "Entry Area Id"
+          },
+          "self_service": {
+            "type": "boolean",
+            "title": "Self Service",
+            "default": false
           },
           "id": {
             "type": "integer",

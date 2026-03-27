@@ -74,12 +74,10 @@ fun AccountStatus(
 ) {
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val commentVisible by viewModel.commentVisible.collectAsStateWithLifecycle()
 
     if (isSelfService) {
         SelfServiceAccountStatus(
             uiState = uiState,
-            showComment = commentVisible,
             onRetry = {
                 viewModel.idleState()
                 navigateTo(CustomerStatusNavDests.scan)
@@ -291,7 +289,6 @@ private fun operatorCustomerStatusBadge(state: CustomerStatusRequestState): Stri
 @Composable
 private fun SelfServiceAccountStatus(
     uiState: CustomerStatusUiState,
-    showComment: Boolean,
     onRetry: () -> Unit,
     onBackHome: () -> Unit,
 ) {
@@ -350,17 +347,13 @@ private fun SelfServiceAccountStatus(
                 subtitleColor = subtitleColor,
                 titleFontSize = profile.headlineTitleSize,
                 subtitleFontSize = profile.headlineSubtitleSize,
-                showLanguageSelector = uiState.customer !is CustomerStatusRequestState.Fetching
+                showLanguageSelector = false
             )
 
             when (val customer = uiState.customer) {
                 is CustomerStatusRequestState.Done -> {
                     SelfServiceBalanceResult(
                         amount = customer.account.balance,
-                        customerName = customer.account.name,
-                        vouchers = customer.account.vouchers.toString(),
-                        restriction = customer.account.restriction?.toString(),
-                        comment = if (showComment) customer.account.comment else null,
                         amountFontSize = profile.amountValueSize
                     )
                 }
@@ -368,10 +361,6 @@ private fun SelfServiceAccountStatus(
                 is CustomerStatusRequestState.DoneDetails -> {
                     SelfServiceBalanceResult(
                         amount = customer.account.balance,
-                        customerName = customer.account.name,
-                        vouchers = customer.account.vouchers.toString(),
-                        restriction = customer.account.restriction?.toString(),
-                        comment = if (showComment) customer.account.comment else null,
                         amountFontSize = profile.amountValueSize
                     )
                 }
@@ -460,10 +449,6 @@ private fun SelfServiceAccountStatus(
 @Composable
 private fun SelfServiceBalanceResult(
     amount: Double,
-    customerName: String?,
-    vouchers: String,
-    restriction: String?,
-    comment: String?,
     amountFontSize: androidx.compose.ui.unit.TextUnit
 ) {
     Text(
@@ -472,39 +457,6 @@ private fun SelfServiceBalanceResult(
         fontSize = amountFontSize,
         fontWeight = FontWeight.ExtraBold
     )
-
-    SelfServicePanel(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = "${stringResource(R.string.customer_name)}: ${customerName ?: "-"}",
-                color = SelfServicePalette.title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "${stringResource(R.string.customer_vouchers)}: $vouchers",
-                color = SelfServicePalette.subtitle,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-            if (!restriction.isNullOrBlank()) {
-                Text(
-                    text = "${stringResource(R.string.customer_restriction)}: $restriction",
-                    color = SelfServicePalette.subtitle,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            if (!comment.isNullOrBlank()) {
-                Text(
-                    text = "${stringResource(R.string.customer_comment)}: $comment",
-                    color = SelfServicePalette.subtitle,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-    }
 }
 
 @Composable

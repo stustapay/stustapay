@@ -6,17 +6,6 @@ const injectedRtkApi = api
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      loginWithQr: build.query<LoginWithQrApiResponse, LoginWithQrApiArg>({
-        query: (queryArg) => ({
-          url: `/auth/login/qr`,
-          params: {
-            username: queryArg.username,
-            pin: queryArg.pin,
-            node_id: queryArg.nodeId,
-          },
-        }),
-        providesTags: ["auth"],
-      }),
       login: build.mutation<LoginApiResponse, LoginApiArg>({
         query: (queryArg) => ({ url: `/auth/login`, method: "POST", body: queryArg.loginPayload }),
         invalidatesTags: ["auth"],
@@ -81,12 +70,6 @@ const injectedRtkApi = api
     overrideExisting: false,
   });
 export { injectedRtkApi as api };
-export type LoginWithQrApiResponse = /** status 200 Successful Response */ any;
-export type LoginWithQrApiArg = {
-  username: string;
-  pin: string;
-  nodeId: number;
-};
 export type LoginApiResponse = /** status 200 Successful Response */ LoginResponseRead;
 export type LoginApiArg = {
   loginPayload: LoginPayload;
@@ -126,14 +109,6 @@ export type CreateCheckoutApiArg = {
 export type CheckCheckoutApiResponse = /** status 200 Successful Response */ CheckCheckoutResponse;
 export type CheckCheckoutApiArg = {
   checkCheckoutPayload: CheckCheckoutPayload;
-};
-export type ValidationError = {
-  loc: (string | number)[];
-  msg: string;
-  type: string;
-};
-export type HttpValidationError = {
-  detail?: ValidationError[];
 };
 export type AccountType =
   | "private"
@@ -254,6 +229,14 @@ export type LoginResponseRead = {
   access_token: string;
   grant_type?: string;
 };
+export type ValidationError = {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+};
+export type HttpValidationError = {
+  detail?: ValidationError[];
+};
 export type LoginPayload = {
   username: string;
   pin: string;
@@ -285,6 +268,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
+  has_bookings?: boolean;
   type: ProductType;
   price_per_voucher?: number | null;
 };
@@ -490,8 +474,6 @@ export type CheckCheckoutPayload = {
   order_uuid: string;
 };
 export const {
-  useLoginWithQrQuery,
-  useLazyLoginWithQrQuery,
   useLoginMutation,
   useLogoutMutation,
   useGetCustomerQuery,

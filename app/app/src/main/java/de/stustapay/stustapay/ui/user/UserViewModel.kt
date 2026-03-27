@@ -13,17 +13,18 @@ import de.stustapay.libssp.util.Result
 import de.stustapay.libssp.util.asResult
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.model.UserCreateState
-import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.model.UserUpdateState
 import de.stustapay.stustapay.repository.CashierRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.stustapay.repository.UserRepository
+import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -60,8 +61,15 @@ class UserViewModel @Inject constructor(
     private val cashierRepository: CashierRepository,
     terminalConfigRepository: TerminalConfigRepository
 ) : ViewModel() {
+    private val terminalLoginState = combine(
+        userRepository.userState,
+        terminalConfigRepository.terminalConfigState,
+    ) { user, terminal ->
+        TerminalLoginState(user, terminal)
+    }
+
     val userUIState: StateFlow<UserUIState> = userUiState(
-        userRepo = userRepository
+        terminalLoginState = terminalLoginState
     ).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -180,45 +188,32 @@ class UserViewModel @Inject constructor(
 }
 
 private fun userUiState(
-    userRepo: UserRepository,
+    terminalLoginState: Flow<TerminalLoginState>,
 ): Flow<UserUIState> {
-    // observe if we're logged in, i.e. if the flow element != null
-    val regState: Flow<UserState> = userRepo.userState
-
-    // convert the registration state to a ui registration state
-    return regState.asResult().map { userStateResult ->
+    return terminalLoginState.asResult().map { userStateResult ->
         when (userStateResult) {
             is Result.Loading -> {
                 UserUIState.Error("waiting...")
             }
 
             is Result.Success -> {
-                when (val userState = userStateResult.data) {
-                    is UserState.LoggedIn -> {
-                        if (userState.user.activeRoleName != null) {
+                val loginState = userStateResult.data
+                val currentUser = loginState.currentUser()
+                if (currentUser != null) {
+                    if (currentUser.activeRoleName != null) {
                             UserUIState.LoggedIn(
-                                username = userState.user.login,
-                                activeRole = userState.user.activeRoleName!!,
-                                showCreateUser = Access.canCreateUser(userState.user),
-                                showLoginUser = Access.canLogInOtherUsers(userState.user),
+                                username = currentUser.login,
+                                activeRole = currentUser.activeRoleName!!,
+                                showCreateUser = Access.canCreateUser(currentUser),
+                                showLoginUser = Access.canLogInOtherUsers(currentUser),
                             )
-                        } else {
-                            UserUIState.Error(
-                                message = "no active role provided",
-                            )
-                        }
-
-                    }
-
-                    is UserState.NoLogin -> {
-                        UserUIState.NotLoggedIn
-                    }
-
-                    is UserState.Error -> {
+                    } else {
                         UserUIState.Error(
-                            message = userState.msg,
+                            message = "no active role provided",
                         )
                     }
+                } else {
+                    UserUIState.NotLoggedIn
                 }
             }
 
@@ -230,4 +225,3 @@ private fun userUiState(
         }
     }
 }
-

@@ -33,6 +33,7 @@ import kotlinx.serialization.Contextual
  * @param description 
  * @param mode 
  * @param entryAreaId 
+ * @param selfService 
  * @param activeUserId 
  * @param activeUserRoleId 
  */
@@ -66,6 +67,9 @@ data class Terminal (
 
     @SerialName(value = "entry_area_id")
     val entryAreaId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+
+    @SerialName(value = "self_service")
+    val selfService: kotlin.Boolean? = false,
 
     @SerialName(value = "active_user_id")
     val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,

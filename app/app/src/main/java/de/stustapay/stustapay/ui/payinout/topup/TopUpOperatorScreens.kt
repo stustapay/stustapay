@@ -103,7 +103,7 @@ fun OperatorTopUpSelection(
         },
     )
 
-    OperatorTopUpAmountDialog(
+    TopUpAmountDialog(
         state = amountDialogState,
         maxAmount = maxAmount,
         amount = amount,
@@ -224,6 +224,7 @@ private fun OperatorTopUpMainContent(
 ) {
     val quickAmounts = listOf(1000u, 2000u, 5000u)
     val customSelected = amount > 0u && amount !in quickAmounts
+    val quickAmountFontSize = if (profile.counterLayout) 32.sp else 28.sp
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(profile.gap),
@@ -257,11 +258,12 @@ private fun OperatorTopUpMainContent(
                 ) {
                     quickAmounts.take(2).forEach { quickAmount ->
                         OperatorAmountOptionCard(
-                            title = stringResource(R.string.topup),
                             amount = formatEuroAmount(quickAmount),
-                            description = stringResource(R.string.topup_quick_amounts),
+                            amountFontSize = quickAmountFontSize,
                             selected = amount == quickAmount,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(profile.cardHeight),
                             onClick = { onAmountSelected(quickAmount) },
                         )
                     }
@@ -271,11 +273,12 @@ private fun OperatorTopUpMainContent(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     OperatorAmountOptionCard(
-                        title = stringResource(R.string.topup),
                         amount = formatEuroAmount(quickAmounts[2]),
-                        description = stringResource(R.string.topup_quick_amounts),
+                        amountFontSize = quickAmountFontSize,
                         selected = amount == quickAmounts[2],
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(profile.cardHeight),
                         onClick = { onAmountSelected(quickAmounts[2]) },
                     )
                     OperatorAmountOptionCard(
@@ -283,7 +286,9 @@ private fun OperatorTopUpMainContent(
                         amount = if (customSelected && amount > 0u) formatEuroAmount(amount) else "",
                         description = stringResource(R.string.topup_operator_custom_amount_hint),
                         selected = customSelected,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(profile.cardHeight),
                         onClick = onCustomAmount,
                     )
                 }
@@ -426,7 +431,7 @@ private fun OperatorTopUpSummaryRail(
 }
 
 @Composable
-private fun OperatorTopUpAmountDialog(
+fun TopUpAmountDialog(
     state: de.stustapay.libssp.ui.common.DialogDisplayState,
     maxAmount: UInt,
     amount: UInt,

@@ -9,9 +9,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -69,10 +71,7 @@ fun AccountScan(
     val operatorScanState = rememberNfcScanDialogState()
 
     if (isSelfService) {
-        val baseWidth = 620
-        val baseHeight = 300
-        val adjustedWidth = (baseWidth * deviceConfig.nfcScanDialogScale).dp
-        val adjustedHeight = (baseHeight * deviceConfig.nfcScanDialogScale).dp
+        val useIminDialogGeometry = deviceConfig.isIminFalcons2
 
         SelfServiceBackground {
             Column(
@@ -91,14 +90,38 @@ fun AccountScan(
                     subtitleFontSize = profile.headlineSubtitleSize
                 )
 
-                Box(
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    val scanCardModifier = if (useIminDialogGeometry) {
+                        val preferredWidth = if (profile.isSmallScreen) 380.dp else 430.dp
+                        val preferredHeight = if (profile.isSmallScreen) 380.dp else 440.dp
+                        val clampedWidth = preferredWidth.coerceAtMost(maxWidth)
+                        val clampedHeight = preferredHeight.coerceAtMost(maxHeight)
+                        val maxHorizontalOffset = ((maxWidth - clampedWidth) / 2).coerceAtLeast(0.dp)
+                        val maxVerticalOffset = ((maxHeight - clampedHeight) / 2).coerceAtLeast(0.dp)
+
+                        Modifier
+                            .size(width = clampedWidth, height = clampedHeight)
+                            .offset(
+                                x = deviceConfig.nfcScanDialogOffset.x.coerceIn(
+                                    minimumValue = -maxHorizontalOffset,
+                                    maximumValue = maxHorizontalOffset,
+                                ),
+                                y = deviceConfig.nfcScanDialogOffset.y.coerceIn(
+                                    minimumValue = -maxVerticalOffset,
+                                    maximumValue = maxVerticalOffset,
+                                ),
+                            )
+                    } else {
+                        Modifier.fillMaxWidth()
+                    }
+
                     NfcScanCard(
-                        modifier = Modifier.size(width = adjustedWidth, height = adjustedHeight),
+                        modifier = scanCardModifier,
                         onScan = onScan,
                         keepScanning = true,
                         showStatus = false,

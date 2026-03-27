@@ -10,7 +10,8 @@ Use this skill for day-to-day production work after `stustapay-intake`.
 ## Start
 
 - Read `.agents/state/plan.md` if it exists.
-- Recompute impacted checks from the changed paths before deciding what to run.
+- Refresh the current surface and check picture before deciding what to run:
+  - `python3 .agents/scripts/workflow_bootstrap.py --stage intake --output text`
 - Prefer the stable repo entrypoints over ad hoc commands:
   - `make verify-backend`
   - `make verify-web-administration`
@@ -28,5 +29,6 @@ Use this skill for day-to-day production work after `stustapay-intake`.
 ## When to branch into other skills
 
 - Switch to `stustapay-contract-sync` if endpoint or schema changes affect OpenAPI or generated clients.
-- Switch to `stustapay-review` for a review-only request.
-- Switch to `stustapay-qa` once code is ready for browser, API, or device validation.
+- Switch to `stustapay-android-screen-capture` when Android implementation work depends on the current rendered UI, emulator/device screenshots, or Pencil-ready captures of live screens.
+- Switch to `stustapay-review` for a review-only request; this path can stop at `.agents/state/review.md` without going through build, QA, and ship.
+- Switch to `stustapay-qa` once code is ready for browser, API, or device validation, and write `.agents/state/qa.md` when the validation record should persist across turns.

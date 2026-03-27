@@ -76,7 +76,8 @@ fun TopUpError(
                     subtitle = status,
                     subtitleColor = SelfServicePalette.errorMuted,
                     titleFontSize = profile.headlineTitleSize,
-                    subtitleFontSize = profile.headlineSubtitleSize
+                    subtitleFontSize = profile.headlineSubtitleSize,
+                    showLanguageSelector = false
                 )
 
                 SelfServicePanel(

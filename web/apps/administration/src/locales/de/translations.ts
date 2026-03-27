@@ -996,6 +996,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       entry: "Einlass",
       exit: "Auslass",
     },
+    selfService: "Self-Service-Terminal",
     till: "Kasse",
     switchTill: "Kasse wechseln",
     removeTill: "Kasse entfernen",

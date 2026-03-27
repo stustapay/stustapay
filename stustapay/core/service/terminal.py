@@ -80,6 +80,10 @@ async def _ensure_entry_area(conn: Connection, node: Node, entry_area_id: int) -
     return entry_area
 
 
+def _normalize_self_service(terminal: NewTerminal) -> bool:
+    return terminal.mode == TerminalMode.till and terminal.self_service
+
+
 class TerminalService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -100,13 +104,14 @@ class TerminalService(Service[Config]):
             await _ensure_entry_area(conn=conn, node=node, entry_area_id=terminal.entry_area_id)
 
         terminal_id = await conn.fetchval(
-            "insert into terminal (node_id, name, description, mode, entry_area_id) "
-            "values ($1, $2, $3, $4, $5) returning id",
+            "insert into terminal (node_id, name, description, mode, entry_area_id, self_service) "
+            "values ($1, $2, $3, $4, $5, $6) returning id",
             node.id,
             terminal.name,
             terminal.description,
             terminal.mode.value,
             terminal.entry_area_id,
+            _normalize_self_service(terminal),
         )
         t = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert t is not None
@@ -150,12 +155,13 @@ class TerminalService(Service[Config]):
                 await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=existing_terminal.till_id)
 
         term_id = await conn.fetchval(
-            "update terminal set name = $1, description = $2, mode = $3, entry_area_id = $4 "
-            "where id = $5 and node_id = $6 returning id",
+            "update terminal set name = $1, description = $2, mode = $3, entry_area_id = $4, self_service = $5 "
+            "where id = $6 and node_id = $7 returning id",
             terminal.name,
             terminal.description,
             terminal.mode.value,
             terminal.entry_area_id,
+            _normalize_self_service(terminal),
             terminal_id,
             node.id,
         )
@@ -522,6 +528,7 @@ class TerminalService(Service[Config]):
             description=current_terminal.description,
             mode=current_terminal.mode,
             entry_area=entry_area,
+            self_service=current_terminal.self_service,
             user_privileges=user_privileges,
             available_roles=available_roles,
             active_user_id=current_terminal.active_user_id,

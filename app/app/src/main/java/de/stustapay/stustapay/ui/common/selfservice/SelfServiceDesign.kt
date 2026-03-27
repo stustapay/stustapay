@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.locale.AppLanguage
@@ -262,12 +263,13 @@ fun SelfServiceActionButton(
     modifier: Modifier = Modifier,
     primary: Boolean = true,
     enabled: Boolean = true,
-    fontSize: androidx.compose.ui.unit.TextUnit = 18.sp
+    fontSize: androidx.compose.ui.unit.TextUnit = 18.sp,
+    height: Dp = 56.dp,
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(56.dp),
+        modifier = modifier.height(height),
         shape = RoundedCornerShape(14.dp),
         colors = if (primary) selfServicePrimaryButtonColors() else selfServiceSecondaryButtonColors()
     ) {

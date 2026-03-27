@@ -9,7 +9,6 @@ import de.stustapay.api.models.OrderType
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.model.Access
-import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.repository.CustomerRepository
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -49,16 +48,6 @@ class SaleHistoryViewModel @Inject constructor(
     private val _historyFilter = MutableStateFlow<SaleHistoryFilter>(SaleHistoryFilter.RecentOrders)
     val historyFilter = _historyFilter.asStateFlow()
 
-    val canScanCustomerHistory: StateFlow<Boolean> = userRepository.userState
-        .map { userState ->
-            userState is UserState.LoggedIn && Access.canViewCustomerOrders(userState.user)
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = false
-        )
-
     val terminalLoginState = combine(
         userRepository.userState,
         terminalConfigRepository.terminalConfigState
@@ -69,6 +58,14 @@ class SaleHistoryViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TerminalLoginState(),
     )
+
+    val canScanCustomerHistory: StateFlow<Boolean> = terminalLoginState
+        .map { loginState -> loginState.checkUserAccess(Access::canViewCustomerOrders) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = false
+        )
 
     private val activeTillId = terminalConfigRepository.terminalConfigState
         .map { configState ->

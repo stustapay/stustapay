@@ -197,6 +197,7 @@ export const TerminalDetail: React.FC = () => {
         <DetailField label={t("common.name")} value={terminal.name} />
         <DetailField label={t("common.description")} value={terminal.description} />
         <DetailField label={t("terminal.mode.label")} value={t(`terminal.mode.${terminal.mode}`)} />
+        <DetailBoolField label={t("terminal.selfService")} value={terminal.self_service ?? false} />
         {entryArea != null && <DetailField label={t("entry.area")} value={entryArea.name} />}
         {till != null && (
           <DetailField linkTo={TillRoutes.detail(till.id, till.node_id)} label={t("terminal.till")} value={till.name} />

@@ -1,6 +1,6 @@
 import { NewTerminal, selectEntryAreaAll, useListEntryAreasQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import { FormSelect, FormTextField } from "@stustapay/form-components";
+import { FormCheckbox, FormSelect, FormTextField } from "@stustapay/form-components";
 import { Select } from "@stustapay/components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,10 @@ export function TerminalForm<T extends NewTerminal>(props: TerminalFormProps<T>)
     if (values.mode === "till" && values.entry_area_id != null) {
       setFieldValue("entry_area_id", null);
     }
-  }, [values.mode, values.entry_area_id, setFieldValue]);
+    if (values.mode !== "till" && values.self_service) {
+      setFieldValue("self_service", false);
+    }
+  }, [values.mode, values.entry_area_id, values.self_service, setFieldValue]);
 
   return (
     <>
@@ -48,6 +51,12 @@ export function TerminalForm<T extends NewTerminal>(props: TerminalFormProps<T>)
         label={t("entry.area")}
         disabled={values.mode === "till"}
         onChange={(area) => setFieldValue("entry_area_id", area?.id ?? null)}
+      />
+      <FormCheckbox
+        name="self_service"
+        label={t("terminal.selfService")}
+        formik={props}
+        disabled={values.mode !== "till"}
       />
     </>
   );

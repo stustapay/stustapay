@@ -10,11 +10,15 @@ Use this skill first for non-trivial StuStaPay work.
 ## Workflow
 
 1. Inspect the request and current repo state.
-2. Summarize affected surfaces with:
-   - `python3 .agents/scripts/changed_surfaces.py --files <paths...> --output json`
-3. Turn the surface report into required checks with:
-   - `python3 .agents/scripts/required_checks.py --files <paths...> --output json`
-4. Write or update `.agents/state/plan.md` from `.agents/templates/plan.md` when the task is large enough to benefit from a persistent handoff.
+2. Prefer the stage bootstrap as the default entrypoint:
+   - `python3 .agents/scripts/workflow_bootstrap.py --stage intake --output markdown`
+3. Before edits exist, pass candidate paths with `--files <paths...>` to plan against likely touch points.
+4. After edits start, rerun intake from git without `--files` so the current working tree drives surfaces and checks.
+5. Use `--scope staged` or `--scope unstaged` when you intentionally want a narrower git view.
+6. Add `--write-state` when the task is large enough to benefit from a durable `.agents/state/plan.md` handoff.
+7. Use the low-level helpers directly only when you need machine-readable building blocks:
+   - `python3 .agents/scripts/changed_surfaces.py --output json`
+   - `python3 .agents/scripts/required_checks.py --output json`
 
 ## What to lock down
 
@@ -27,4 +31,5 @@ Use this skill first for non-trivial StuStaPay work.
 
 - If the task touches `stustapay/administration`, `stustapay/customer_portal`, `stustapay/terminalserver`, `api/`, `web/.../generated`, or `app/api/`, treat contract propagation as a first-class concern.
 - If a diff touches `web/libs/`, verify both web applications.
+- If shared web config such as `web/tsconfig.base.json` or `web/.eslintrc.json` changes, verify both web applications.
 - If Android touches NFC, SumUp, or terminal flows, call out manual device validation explicitly.

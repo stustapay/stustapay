@@ -29,6 +29,7 @@ import kotlinx.serialization.Contextual
  * @param userTagPin 
  * @param userTagUid 
  * @param description 
+ * @param email 
  */
 @Serializable
 
@@ -50,7 +51,10 @@ data class CreateUserPayload (
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "description")
-    val description: kotlin.String? = null
+    val description: kotlin.String? = null,
+
+    @SerialName(value = "email")
+    val email: kotlin.String? = null
 
 ) {
 

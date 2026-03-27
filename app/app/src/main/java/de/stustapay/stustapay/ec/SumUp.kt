@@ -17,6 +17,41 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.sumup.merchant.reader.api.SumUpState as SumUpReaderState
 
+internal fun toUserFacingSumUpConfigError(message: String): String {
+    val detail = when {
+        message == "no terminal ec secrets in config" ->
+            "No SumUp credentials are configured for this terminal."
+        message.startsWith("invalid affiliate key") ->
+            "The configured SumUp affiliate key is invalid."
+        message == "no terminal configuration for ec" ->
+            "No terminal configuration is available for SumUp payments."
+
+        else -> message.toSentence()
+    }
+
+    return "Failed to load SumUp configuration. $detail"
+}
+
+private fun String.toSentence(): String {
+    val trimmed = trim()
+    if (trimmed.isEmpty()) {
+        return "Unknown error."
+    }
+
+    val capitalized = trimmed.replaceFirstChar { first ->
+        if (first.isLowerCase()) {
+            first.titlecase()
+        } else {
+            first.toString()
+        }
+    }
+
+    return if (capitalized.endsWith('.') || capitalized.endsWith('!') || capitalized.endsWith('?')) {
+        capitalized
+    } else {
+        "$capitalized."
+    }
+}
 
 data class ECTerminalConfig(
     val name: String,
@@ -239,7 +274,7 @@ class SumUp @Inject constructor(
     private suspend fun setState(target: SumUpAction, payment: ECPayment? = null): Boolean {
         return when (val sumUpConfig = fetchConfig()) {
             is SumUpConfigState.Error -> {
-                _paymentStatus.update { SumUpState.Failed("failed fetching sumup configuration: ${sumUpConfig.msg}") }
+                _paymentStatus.update { SumUpState.Failed(toUserFacingSumUpConfigError(sumUpConfig.msg)) }
                 false
             }
 

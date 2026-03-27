@@ -102,7 +102,8 @@ fun TopUpSuccess(
                     subtitle = stringResource(R.string.topup_success_subtitle),
                     subtitleColor = SelfServicePalette.successMuted,
                     titleFontSize = profile.headlineTitleSize,
-                    subtitleFontSize = profile.headlineSubtitleSize
+                    subtitleFontSize = profile.headlineSubtitleSize,
+                    showLanguageSelector = false
                 )
 
                 SelfServicePanel(

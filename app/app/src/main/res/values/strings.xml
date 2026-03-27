@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">TeamFestlichPay</string>
-    <string name="welcome_to_stustapay">Welcome to TeamFestlichPay!</string>
-    <string name="credit_amount">Credit: %.2f€</string>
-    <string name="debit_amount">Debit: %.2f€</string>
     <string name="payout">Payout</string>
     <string name="credit_left">Credit left</string>
     <string name="success">Success!</string>
     <string name="done">Done</string>
-    <string name="payed_to_user_q">Payed to user?</string>
+    <string name="payed_to_user_q">Paid to user?</string>
     <string name="back">Back</string>
     <string name="received_q">Received?</string>
     <string name="remaining_vouchers">Remaining vouchers</string>
@@ -18,7 +15,6 @@
     <string name="voucher">Voucher</string>
     <string name="edit">↢ Edit</string>
     <string name="no_balance_for_payout">No balance for payout</string>
-    <string name="no_expenses">No expenses</string>
 
     <string name="common_status_fetching">Fetching</string>
     <string name="common_status_idle">Idle</string>
@@ -38,14 +34,12 @@
     <string name="selfservice_topup_hint">Add credit and pay at the card terminal.</string>
     <string name="selfservice_hint_scan">Hold your wristband on the reader when prompted.</string>
     <string name="selfservice_hint_payment">Use the card terminal to confirm top-ups.</string>
-    <string name="selfservice_hint_done">Done. You will return to this screen automatically.</string>
     <string name="selfservice_action_open">Open</string>
     <string name="selfservice_action_start">Start</string>
-    <string name="selfservice_how_it_works">How it works</string>
+    <string name="selfservice_action_terminal_info">Terminal info</string>
     <string name="selfservice_scan_balance_title">Hold your wristband here</string>
     <string name="selfservice_scan_balance_title_compact">Hold chip here</string>
     <string name="selfservice_scan_balance_subtitle">Scan to view your balance</string>
-    <string name="selfservice_chip_label">Wristband / Tag</string>
     <string name="selfservice_balance_loading">Reading your wristband...</string>
     <string name="selfservice_auto_return">Done. Returning to start screen...</string>
     <string name="customer_display_welcome_event">Welcome to %1$s</string>
@@ -78,11 +72,6 @@
     <string name="root_item_restart_app">Restart App</string>
     <string name="root_item_stats">Statistics</string>
 
-    <string name="cashier_title">Cashier Status</string>
-    <string name="cashier_drawer">Drawer Name</string>
-    <string name="cashier_drawer_cash">Cash in Drawer</string>
-    <string name="cashier_bag">Bag</string>
-
     <string name="history_title">Order History</string>
     <string name="history_sum">Sum</string>
     <string name="history_cancel">Cancel Sale</string>
@@ -101,19 +90,15 @@
 
     <string name="customer_title">Account Status</string>
     <string name="customer_name">Name</string>
-    <string name="customer_cash">Cash</string>
     <string name="customer_vouchers">Vouchers</string>
     <string name="customer_comment">Comment</string>
     <string name="customer_swap">Swap Tag</string>
     <string name="customer_oldtag">Old Tag</string>
-    <string name="customer_newtag">New Tag</string>
     <string name="customer_scanoldtag">Scan Old Tag</string>
     <string name="customer_details">Transaction History</string>
 
     <string name="management_title">Cashier Management</string>
-    <string name="management_equip_title">Equip Cashier</string>
     <string name="management_equip_equip">Equip</string>
-    <string name="management_transport_title">Transport</string>
     <string name="management_transport_withdraw">Withdraw\nCashier -> Bag</string>
     <string name="management_transport_deposit">Deposit\nBag -> Cashier</string>
 
@@ -152,7 +137,6 @@
     <string name="user_title">User</string>
     <string name="user_login">Login</string>
     <string name="user_logout">Logout</string>
-    <string name="user_id">ID</string>
     <string name="user_username">Username</string>
     <string name="user_displayname">Name</string>
     <string name="user_firstname">First Name</string>
@@ -171,7 +155,6 @@
     <string name="error">Error</string>
     <string name="pay_cash">🪙\nCash</string>
     <string name="pay_card">💳\nCard</string>
-    <string name="pay_card_topup">💳\nScan &amp; Pay</string>
     <string name="selfservice_scan_pay">Scan &amp; Pay</string>
     <string name="topup_scan_instruction">Place your chip on the reader</string>
     <string name="topup_payment_instruction">Payment will be processed via card terminal</string>
@@ -180,10 +163,8 @@
     <string name="topup_step_payment">Step 3: Card Payment</string>
     <string name="topup_ready_to_scan">Ready to scan your chip</string>
     <string name="topup_please_wait">Please wait while payment is processing...</string>
-    <string name="topup_enter_amount">Enter the desired top-up amount</string>
     <string name="topup_press_scan_pay">Now press Scan &amp; Pay</string>
     <string name="selfservice_custom_amount">Custom amount</string>
-    <string name="topup_quick_amounts">Quick amounts</string>
     <string name="topup_success_title">Top-up successful</string>
     <string name="topup_success_subtitle">Your new balance is ready to use.</string>
     <string name="topup_missing_success_data">No completed top-up information available</string>
@@ -193,10 +174,8 @@
     <string name="topup_error_auto_return_countdown">Returning to start screen in %1$d s</string>
     <string name="topup_try_again">Try again</string>
     <string name="topup_back_to_start">Back to start</string>
-    <string name="topup_operator_subtitle">Load credit onto a customer wristband and confirm payment.</string>
     <string name="topup_operator_amount_title">Select top-up amount</string>
     <string name="topup_operator_summary_title">Top-up summary</string>
-    <string name="topup_operator_customer_scan_hint">The customer wristband is scanned when payment starts.</string>
     <string name="topup_operator_custom_amount_hint">Open the keypad to enter a custom amount.</string>
     <string name="topup_operator_max_balance">Max account balance</string>
     <string name="topup_operator_scan_pay">Scan &amp; pay</string>
@@ -204,7 +183,6 @@
     <string name="topup_operator_start_next">Start next top-up</string>
     <string name="topup_operator_back_to_amount">Back to amount</string>
     <string name="topup_operator_cash_confirm_title">Confirm cash top-up</string>
-    <string name="topup_operator_cash_confirm_message">Collect the selected amount in cash, then scan the wristband to book the top-up.</string>
     <string name="topup_operator_no_payment_method_help">No top-up payment method is available on this terminal. Assign a cash register for cash top-ups or enable card payment (SumUp) in the till profile.</string>
     <string name="topup_payment_type_card">Card</string>
     <string name="topup_payment_type_cash">Cash</string>
@@ -239,7 +217,6 @@
     <string name="postpayment_operator_scan_another">Scan another wristband</string>
     <string name="postpayment_operator_open_next">Open next customer</string>
     <string name="postpayment_operator_cash_confirm_title">Confirm cash collection</string>
-    <string name="postpayment_operator_cash_confirm_message">Collect the outstanding amount in cash, then confirm the settlement for this wristband.</string>
     <string name="ticket_operator_subtitle">Scan ticket wristbands, validate the batch, and complete payment.</string>
     <string name="ticket_operator_summary_title">Ticket summary</string>
     <string name="ticket_operator_validate">Validate batch</string>
@@ -264,7 +241,6 @@
     <string name="tickets">Tickets</string>
     <string name="deposit_handout">Deposit handout</string>
     <string name="deposit_returned">Deposit returned</string>
-    <string name="ticket_error_preambel">Error buying ticket:</string>
     <string name="vouchers_granted">%s Vouchers granted</string>
     <string name="with_n_vouchers">with %s vouchers</string>
     <string name="free_ticket_activated">Free ticket activated</string>
@@ -283,18 +259,9 @@
     <string name="under_18_years">Under 18</string>
     <string name="under_16_years">Under 16</string>
     <string name="failed_fetching">Failed getting information</string>
-    <string name="hand_over_cash_register">Hand over cash register</string>
     <string name="nfc_scan_login">📡 Scan Chip for Login</string>
     <string name="not_logged_in">Not logged in</string>
-    <string name="scan_transfer_cashregister_current">📡 Scan current cash register owner</string>
-    <string name="scan_transfer_cashregister_new">📡 Scan new cash register owner</string>
-    <string name="cash_register_transfer_success">Cash register transferred successfully!</string>
-    <string name="cash_register_transfer_error">Error when transferring cash register:</string>
     <string name="transfer_cash_register">Transfer Cash Register</string>
-    <string name="cash_register_transferring">performing transfer...</string>
-    <string name="cash_register_notassigned">cash register is no longer assigned to a cashier.</string>
-    <string name="cash_register_unexpected_assign">cash register is now assigned to %s, while we expected it to be assigned to %s</string>
-    <string name="cash_register_same_source_target">Source and target tag are the same.</string>
     <string name="no_cash_register">No cash register</string>
     <string name="sale_check_error">Error in sale check:</string>
     <string name="tag_uid">Chip ID</string>
@@ -312,23 +279,15 @@
     <string name="payout_operator_full_balance">Full balance</string>
     <string name="payout_operator_full_balance_hint">Pay out entire credit</string>
     <string name="payout_operator_chip_selected">Chip scanned</string>
-    <string name="post_payment_pay">🪙 Pay ...</string>
     <string name="sale_check_your_order">Check your order</string>
     <string name="sale_compact_title">Sale</string>
     <string name="book_order">Book ✓</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Review \u0026 pay</string>
     <string name="pay_no_payment_method_configured">No payment method configured</string>
-    <string name="user_role_none">No user active</string>
     <string name="nfc_scan_description">Hold your NFC wristband or NFC card to the reader.\nNot your credit card!</string>
-    <string name="nfc_clarification_step1">Hold your wristband</string>
-    <string name="nfc_clarification_step2">Then pay at EC terminal</string>
     <string name="content_desc_rotate_screen">Rotate screen</string>
     <string name="content_desc_terminal_info">Terminal info</string>
-    <string name="content_desc_refresh">Refresh</string>
-    <string name="content_desc_touch">Touch</string>
-    <string name="content_desc_arrow">Arrow</string>
-    <string name="content_desc_nfc_chip">NFC chip</string>
     <string name="content_desc_receipt_qr">Receipt QR code</string>
     <string name="account_terminal_label">Account</string>
     <string name="account_footer_section_status">Status</string>
@@ -337,13 +296,11 @@
     <string name="account_scan_ready_nfc">Ready for NFC scan.</string>
     <string name="account_scan_waiting_tag">Awaiting tag</string>
     <string name="account_scan_balance_check_title">Balance Check</string>
-    <string name="account_scan_balance_check_desc">Present a customer card or wristband to open the account overview and drill down into recent orders.</string>
     <string name="account_status_subtitle">Balance, vouchers, and customer restrictions after NFC scan.</string>
     <string name="account_lookup_failed">Lookup failed</string>
     <string name="account_waiting_customer_tag_title">Awaiting customer tag</string>
     <string name="account_waiting_customer_tag_desc">Return to the scan screen and present a customer card or wristband to load the balance.</string>
     <string name="account_current_balance_label">Current balance</string>
-    <string name="account_customer_overview">Customer Overview</string>
     <string name="account_badge_loading">Loading</string>
     <string name="account_badge_loaded">Loaded</string>
     <string name="account_badge_error">Error</string>
@@ -360,14 +317,6 @@
     <string name="qr_scan_scanning">scanning...</string>
     <string name="qr_scan_status">Status:</string>
     <string name="tag_textfield_placeholder">Tag UID in Hex</string>
-    <string name="entry_terminal_entry">Entry</string>
-    <string name="entry_terminal_exit">Exit</string>
-    <string name="entry_terminal_access">Access</string>
-    <string name="entry_footer_hint_default">Hold a wristband near the reader to resolve access for this terminal mode.</string>
-    <string name="entry_footer_section">Entry</string>
-    <string name="entry_footer_checking">Checking</string>
-    <string name="entry_footer_ready">Ready</string>
-    <string name="entry_scan_status_title">Scan status</string>
     <string name="payinout_no_action_available">No action available</string>
     <string name="payinout_tab_topup">Top up</string>
     <string name="payinout_tab_payout">Pay out</string>
@@ -538,8 +487,6 @@
     <string name="swap_successful">Swap successful</string>
     <string name="cashier_withdraw_success">Withdrawal successful</string>
     <string name="cashier_deposit_success">Deposit successful</string>
-    <string name="vault_withdraw_success">Withdrawal successful</string>
-    <string name="vault_deposit_success">Deposit successful</string>
     <string name="user_roles_loading">Loading roles...</string>
     <string name="user_role_lookup_failed">Role lookup failed</string>
     <string name="user_current_session">Current session</string>

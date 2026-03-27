@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -135,14 +136,16 @@ fun OperatorMetricCard(
 
 @Composable
 fun OperatorAmountOptionCard(
-    title: String,
     amount: String,
     modifier: Modifier = Modifier,
+    title: String = "",
     description: String? = null,
+    amountFontSize: TextUnit = 24.sp,
     trailingLabel: String? = null,
     selected: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val hasHeader = title.isNotBlank() || description != null
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -156,27 +159,38 @@ fun OperatorAmountOptionCard(
         elevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .padding(14.dp)
+                .fillMaxWidth()
+                .then(if (!hasHeader) Modifier.fillMaxHeight() else Modifier),
+            verticalArrangement = if (hasHeader) {
+                Arrangement.spacedBy(10.dp)
+            } else {
+                Arrangement.Center
+            },
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = title,
-                    color = OperatorPalette.title,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (description != null) {
-                    Text(
-                        text = description,
-                        color = OperatorPalette.subtitle,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+            if (hasHeader) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (title.isNotBlank()) {
+                        Text(
+                            text = title,
+                            color = OperatorPalette.title,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (description != null) {
+                        Text(
+                            text = description,
+                            color = OperatorPalette.subtitle,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
             Row(
@@ -187,7 +201,7 @@ fun OperatorAmountOptionCard(
                 Text(
                     text = amount,
                     color = OperatorPalette.title,
-                    fontSize = 24.sp,
+                    fontSize = amountFontSize,
                     fontWeight = FontWeight.ExtraBold,
                 )
                 if (!trailingLabel.isNullOrBlank()) {

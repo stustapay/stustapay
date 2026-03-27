@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -29,17 +31,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.LocalActivity
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.common.ErrorDialog
-import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
-import de.stustapay.stustapay.ui.common.amountselect.AmountSelectionDialog
+import de.stustapay.stustapay.ui.common.pay.CashECSelectionViewModel
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
+import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,13 +75,51 @@ fun TopUpSelection(
     }
 
     if (topUpConfig.hasOnlyTopUpPrivilege()) {
+        val activity = LocalActivity.current as? Activity
+        val paymentSelectionViewModel: CashECSelectionViewModel = hiltViewModel()
+        val scanState = rememberNfcScanDialogState()
+
+        NfcScanDialog(
+            state = scanState,
+            showClarification = true,
+            onDismiss = {
+                paymentSelectionViewModel.resetCustomerDisplay()
+            },
+            onScan = { tag ->
+                paymentSelectionViewModel.resetCustomerDisplay()
+                activity?.let { currentActivity ->
+                    scope.launch {
+                        viewModel.topUpWithCard(currentActivity, tag)
+                    }
+                }
+            },
+        )
+
         SelfServiceTopUpContent(
+            status = status,
             currentStep = currentStep,
             amount = topUpState.currentAmount,
             maxAmount = maxAmount,
             requestActive = requestActive,
+            uiLocked = uiLocked,
             onAmountUpdate = { viewModel.setAmount(it) },
             onClear = { viewModel.clearDraft() },
+            onScanPay = {
+                activity?.let { currentActivity ->
+                    if (!viewModel.checkAmountLocal(topUpState.currentAmount.toDouble() / 100.0)) {
+                        return@let
+                    }
+                    if (!viewModel.isCardReaderReady()) {
+                        scope.launch {
+                            viewModel.startCardReaderSetup(currentActivity)
+                        }
+                        return@let
+                    }
+                    paymentSelectionViewModel.showScanChipOnCustomerDisplay()
+                    scanState.open()
+                }
+            },
+            onBack = onBack,
             bottomPadding = 0.dp,
         )
     } else {
@@ -96,30 +140,29 @@ fun TopUpSelection(
 
 @Composable
 private fun SelfServiceTopUpContent(
+    status: String,
     currentStep: Int,
     amount: UInt,
     maxAmount: UInt,
     requestActive: Boolean,
+    uiLocked: Boolean,
     onAmountUpdate: (UInt) -> Unit,
     onClear: () -> Unit,
+    onScanPay: () -> Unit,
+    onBack: (() -> Unit)?,
     bottomPadding: androidx.compose.ui.unit.Dp
 ) {
     val profile = rememberSelfServiceDeviceProfile()
     val amountEuro = amount.toDouble() / 100
     val customAmountDialog = rememberDialogDisplayState()
 
-    AmountSelectionDialog(
+    TopUpAmountDialog(
         state = customAmountDialog,
-        config = AmountConfig.Money(limit = maxAmount, cents = false),
-        initialAmount = { amount },
-        onEnter = onAmountUpdate,
-        onClear = onClear
-    ) {
-        Text(
-            text = stringResource(R.string.selfservice_custom_amount),
-            fontSize = if (profile.isSmallScreen) 22.sp else 28.sp
-        )
-    }
+        maxAmount = maxAmount,
+        amount = amount,
+        onAmountUpdate = onAmountUpdate,
+        onClear = onClear,
+    )
 
     SelfServiceBackground(
         modifier = Modifier
@@ -146,7 +189,7 @@ private fun SelfServiceTopUpContent(
                 subtitle = subtitle,
                 titleFontSize = profile.headlineTitleSize,
                 subtitleFontSize = profile.headlineSubtitleSize,
-                showLanguageSelector = currentStep == 1 && !requestActive
+                showLanguageSelector = false
             )
 
             SelfServiceTopUpStepper(
@@ -196,7 +239,37 @@ private fun SelfServiceTopUpContent(
                         fontWeight = FontWeight.Medium,
                         fontSize = if (profile.isSmallScreen) 12.sp else 14.sp
                     )
+                    if (status.isNotBlank() && status != stringResource(R.string.operator_status_ready)) {
+                        Text(
+                            text = status,
+                            color = SelfServicePalette.subtitle,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = if (profile.isSmallScreen) 11.sp else 13.sp
+                        )
+                    }
                 }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SelfServiceActionButton(
+                    text = stringResource(R.string.selfservice_scan_pay),
+                    onClick = onScanPay,
+                    modifier = Modifier.weight(1f),
+                    enabled = amount > 0u && !requestActive && !uiLocked,
+                    fontSize = profile.buttonTextSize
+                )
+                SelfServiceActionButton(
+                    text = stringResource(R.string.topup_back_to_start),
+                    onClick = { onBack?.invoke() },
+                    modifier = Modifier.weight(1f),
+                    primary = false,
+                    enabled = onBack != null && !requestActive && !uiLocked,
+                    fontSize = profile.buttonTextSize
+                )
             }
         }
     }
@@ -269,8 +342,10 @@ private fun SelfServiceAmountEditor(
                     modifier = Modifier.weight(1f),
                     isSmallScreen = isSmallScreen
                 )
-                SelfServiceCustomAmountChip(
-                    onClick = onCustomAmount,
+                SelfServiceQuickAmountChip(
+                    amountEuro = 100u,
+                    selected = amount == 100u * 100u,
+                    onClick = { onAmountUpdate(100u * 100u) },
                     modifier = Modifier.weight(1f),
                     isSmallScreen = isSmallScreen
                 )
@@ -280,7 +355,7 @@ private fun SelfServiceAmountEditor(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf(10u, 20u, 30u, 50u).forEach { euro ->
+                listOf(10u, 20u, 30u).forEach { euro ->
                     SelfServiceQuickAmountChip(
                         amountEuro = euro,
                         selected = amount == euro * 100u,
@@ -289,48 +364,31 @@ private fun SelfServiceAmountEditor(
                         isSmallScreen = isSmallScreen
                     )
                 }
-                SelfServiceCustomAmountChip(
-                    onClick = onCustomAmount,
-                    modifier = Modifier.weight(1.2f),
-                    isSmallScreen = isSmallScreen
-                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(50u, 100u).forEach { euro ->
+                    SelfServiceQuickAmountChip(
+                        amountEuro = euro,
+                        selected = amount == euro * 100u,
+                        onClick = { onAmountUpdate(euro * 100u) },
+                        modifier = Modifier.weight(1f),
+                        isSmallScreen = isSmallScreen
+                    )
+                }
             }
         }
-    }
-}
 
-@Composable
-private fun SelfServiceCustomAmountChip(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isSmallScreen: Boolean,
-) {
-    Card(
-        modifier = modifier,
-        backgroundColor = SelfServicePalette.panelMuted,
-        shape = RoundedCornerShape(24.dp),
-        elevation = 0.dp
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    1.5.dp,
-                    SelfServicePalette.accent,
-                    RoundedCornerShape(24.dp)
-                )
-                .clickable { onClick() }
-                .padding(vertical = if (isSmallScreen) 6.dp else 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.selfservice_custom_amount),
-                color = SelfServicePalette.accent,
-                fontWeight = FontWeight.Bold,
-                fontSize = if (isSmallScreen) 13.sp else 15.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+        SelfServiceActionButton(
+            text = stringResource(R.string.selfservice_custom_amount),
+            onClick = onCustomAmount,
+            modifier = Modifier.fillMaxWidth(),
+            primary = false,
+            fontSize = if (isSmallScreen) 16.sp else 18.sp,
+            height = if (isSmallScreen) 60.dp else 64.dp
+        )
     }
 }
 
@@ -453,29 +511,33 @@ private fun SelfServiceQuickAmountChip(
     modifier: Modifier = Modifier,
     isSmallScreen: Boolean
 ) {
+    val chipHeight = if (isSmallScreen) 64.dp else 68.dp
+    val borderColor = if (selected) SelfServicePalette.accent else SelfServicePalette.title.copy(alpha = 0.32f)
     Card(
-        modifier = modifier,
+        modifier = modifier.height(chipHeight),
         backgroundColor = if (selected) SelfServicePalette.accent else SelfServicePalette.panelMuted,
         shape = RoundedCornerShape(24.dp),
         elevation = 0.dp,
     ) {
         Box(
             modifier = Modifier
+                .fillMaxSize()
                 .fillMaxWidth()
                 .border(
-                    1.5.dp,
-                    if (selected) SelfServicePalette.accent else SelfServicePalette.panelBorder,
+                    if (selected) 2.dp else 1.5.dp,
+                    borderColor,
                     RoundedCornerShape(24.dp)
                 )
                 .clickable { onClick() }
-                .padding(vertical = if (isSmallScreen) 6.dp else 8.dp),
+                .padding(horizontal = if (isSmallScreen) 8.dp else 10.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "€$amountEuro",
                 color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
                 fontWeight = FontWeight.Bold,
-                fontSize = if (isSmallScreen) 14.sp else 16.sp,
+                fontSize = if (isSmallScreen) 16.sp else 18.sp,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 6.dp)
             )
         }

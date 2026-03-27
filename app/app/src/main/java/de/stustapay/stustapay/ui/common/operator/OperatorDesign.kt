@@ -504,8 +504,8 @@ fun OperatorActionCard(
     title: String,
     description: String,
     icon: ImageVector,
-    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     emphasized: Boolean = false,
 ) {
     OperatorPanel(

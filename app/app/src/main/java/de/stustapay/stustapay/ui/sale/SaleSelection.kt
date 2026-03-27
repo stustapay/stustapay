@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -286,6 +289,7 @@ private fun CompactSaleBasketPanel(
                     stringResource(R.string.sale_review_and_pay),
                     ready,
                     onSubmitSsp,
+                    large = true,
                 )
             )
         }
@@ -432,6 +436,8 @@ private fun CompactSaleBasketPanel(
                                 enabled = action.enabled,
                                 emphasized = true,
                                 modifier = Modifier.weight(1f),
+                                minHeight = if (action.large) 56.dp else 46.dp,
+                                textFontSize = if (action.large) 17.sp else 15.sp,
                                 onClick = action.onClick,
                             )
                         }
@@ -515,6 +521,7 @@ private data class CompactPaymentAction(
     val label: String,
     val enabled: Boolean,
     val onClick: () -> Unit,
+    val large: Boolean = false,
 )
 
 @Composable
@@ -523,12 +530,14 @@ private fun CompactActionButton(
     enabled: Boolean,
     emphasized: Boolean,
     modifier: Modifier = Modifier,
+    minHeight: Dp = 46.dp,
+    textFontSize: TextUnit = 15.sp,
     onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(46.dp),
+        modifier = modifier.heightIn(min = minHeight),
         colors = ButtonDefaults.buttonColors(
             backgroundColor = if (emphasized) OperatorPalette.accent else OperatorPalette.pill,
             contentColor = if (emphasized) OperatorPalette.accentText else Color.White,
@@ -538,7 +547,7 @@ private fun CompactActionButton(
     ) {
         Text(
             text = text,
-            fontSize = 15.sp,
+            fontSize = textFontSize,
             fontWeight = FontWeight.SemiBold,
         )
     }

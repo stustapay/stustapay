@@ -144,6 +144,12 @@ export const TerminalList: React.FC = () => {
       renderCell: (params) => t(`terminal.mode.${params.row.mode}`),
     },
     {
+      field: "self_service",
+      headerName: t("terminal.selfService"),
+      type: "boolean",
+      flex: 0.4,
+    },
+    {
       field: "entry_area_id",
       headerName: t("entry.area"),
       flex: 0.5,

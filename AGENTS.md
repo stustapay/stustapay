@@ -45,6 +45,9 @@
 - This repo now includes Codex-oriented skills under `.agents/skills/`. Use them for non-trivial work instead of inventing a fresh workflow each time.
 - Start with `stustapay-intake` for feature work, refactors, or debugging that spans more than one file or surface.
 - Use `stustapay-build` for normal implementation, `stustapay-contract-sync` when API contracts or generated clients may have changed, `stustapay-review` for review-only tasks, `stustapay-qa` before handing work back, and `stustapay-ship` for the final readiness pass.
+- Prefer `python3 .agents/scripts/workflow_bootstrap.py --stage <intake|review|qa|ship>` as the default repo-local entrypoint for scaffolding stage-specific guidance and optional `.agents/state/*.md` handoff files.
+- Use `--files <paths...>` before edits exist and rerun without `--files` once the working tree reflects the actual task; narrow with `--scope staged` or `--scope unstaged` only when you intentionally want a partial view.
+- For Android UI work that depends on the current implemented screens, also use `stustapay-android-screen-capture`; it standardizes Android SDK CLI usage (`emulator`/`adb`) to launch the app, navigate live routes, and pull screenshots into `.agents/state/android-captures/` for Pencil or QA.
 - Use `.agents/scripts/changed_surfaces.py` and `.agents/scripts/required_checks.py` to map diffs to required validation commands.
 - Keep persistent handoff artifacts in `.agents/state/*.md` when the task spans multiple turns. These files are gitignored except for the tracked `.gitkeep`.
 - Treat generated artifacts in `api/`, `web/apps/*/src/api/generated/`, and `app/api/` as downstream of handwritten contract changes and review them separately.

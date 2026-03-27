@@ -1,9 +1,9 @@
 # Review
 
-## Summary
+## Findings
 - 
 
-## Findings
+## Generated Artifact Notes
 - 
 
 ## Risk Areas

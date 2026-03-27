@@ -67,7 +67,7 @@ enum class NfcScanDialogVariant {
 
 @Composable
 fun NfcScanDialog(
-    modifier: Modifier = Modifier.size(350.dp, 350.dp),
+    modifier: Modifier = Modifier,
     state: DialogDisplayState,
     viewModel: NfcScanDialogViewModel = hiltViewModel(),
     border: BorderStroke? = null,
@@ -103,26 +103,26 @@ fun NfcScanDialog(
         val maxDialogHeight = (configuration.screenHeightDp * 0.90f).dp
 
         val adjustedWidth = when {
+            showClarification && effectiveSmallScreen -> 500.dp
+            showClarification -> 640.dp
             variant == NfcScanDialogVariant.Default && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Default -> 430.dp
             variant == NfcScanDialogVariant.Sale && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Sale -> 430.dp
             variant == NfcScanDialogVariant.Operator && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Operator -> 430.dp
-            showClarification && effectiveSmallScreen -> 500.dp
-            showClarification -> 640.dp
             else -> (350 * deviceConfig.nfcScanDialogScale).dp
         }.coerceAtMost(maxDialogWidth)
 
         val adjustedHeight = when {
+            showClarification && effectiveSmallScreen -> 360.dp
+            showClarification -> 560.dp
             variant == NfcScanDialogVariant.Default && effectiveSmallScreen -> 300.dp
             variant == NfcScanDialogVariant.Default -> 360.dp
             variant == NfcScanDialogVariant.Sale && effectiveSmallScreen -> 300.dp
             variant == NfcScanDialogVariant.Sale -> 360.dp
             variant == NfcScanDialogVariant.Operator && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Operator -> 440.dp
-            showClarification && effectiveSmallScreen -> 360.dp
-            showClarification -> 560.dp
             else -> (350 * deviceConfig.nfcScanDialogScale).dp
         }.coerceAtMost(maxDialogHeight)
 
@@ -160,19 +160,8 @@ fun NfcScanDialog(
                     NfcScanCard(
                         modifier = scanCardModifier,
                         viewModel = viewModel,
-                        border = border ?: BorderStroke(
-                            2.dp,
-                            if (variant == NfcScanDialogVariant.Operator) {
-                                OperatorPalette.panelBorder
-                            } else {
-                                SelfServicePalette.panelBorder
-                            }
-                        ),
-                        backgroundColor = if (variant == NfcScanDialogVariant.Operator) {
-                            OperatorPalette.panel
-                        } else {
-                            SelfServicePalette.panel
-                        },
+                        border = border ?: BorderStroke(2.dp, SelfServicePalette.panelBorder),
+                        backgroundColor = SelfServicePalette.panel,
                         shape = RoundedCornerShape(if (effectiveSmallScreen) 16.dp else 20.dp),
                         checkScan = checkScan,
                         showStatus = false,
@@ -187,21 +176,17 @@ fun NfcScanDialog(
                             onDismiss()
                         },
                         content = { status ->
-                            when {
-                                variant == NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
+                            if (deviceConfig.isIminFalcons2) {
+                                EnhancedNfcScanContent(
+                                    isIminFalcons2 = true,
                                     isSmallScreen = effectiveSmallScreen,
                                     scanStatus = status,
-                                    showStatusPanel = false,
                                 )
-                                showClarification -> PencilScanChipContent(
+                            } else {
+                                PencilScanChipContent(
                                     isSmallScreen = effectiveSmallScreen,
                                     scanStatus = status
                                 )
-                                variant == NfcScanDialogVariant.Sale -> PencilSaleScanContent(
-                                    isSmallScreen = effectiveSmallScreen,
-                                    scanStatus = status
-                                )
-                                else -> content(status, effectiveSmallScreen)
                             }
                         },
                     )

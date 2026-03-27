@@ -80,9 +80,9 @@ fun CashInOutView(
         }
     }
 
-    // Disable back button functionality for users with only can_topup privilege
     val loginState by viewModel.terminalLoginState.collectAsStateWithLifecycle()
-    val isSelfServiceMode = loginState.hasOnlyTopUpPrivilege()
+    val selfServiceAccess = loginState.selfServiceAccess()
+    val isSelfServiceMode = loginState.isSelfServiceTerminal()
     BackHandler {
         leaveView()
     }
@@ -91,6 +91,12 @@ fun CashInOutView(
     val tabList by viewModel.tabList.collectAsStateWithLifecycle()
 
     val navController = rememberNavController()
+
+    LaunchedEffect(isSelfServiceMode, selfServiceAccess.canSelfServiceTopUp) {
+        if (isSelfServiceMode && !selfServiceAccess.canSelfServiceTopUp) {
+            leaveView()
+        }
+    }
 
     LaunchedEffect(activeTab, tabList) {
         if (tabList.isEmpty()) {

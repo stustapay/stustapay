@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: node_administration,customer_management,payout_management,create_user,allow_privileged_role_assignment,user_management,view_node_stats,cash_transport,terminal_login,supervised_terminal_login,can_book_orders,can_topup,grant_free_tickets,grant_vouchers
+ * Values: node_administration,global_email_management,customer_management,payout_management,entry_management,create_user,allow_privileged_role_assignment,user_management,view_node_stats,cash_transport,terminal_login,supervised_terminal_login,can_book_orders,can_topup,grant_free_tickets,grant_vouchers
  */
 @Serializable
 enum class Privilege(val value: kotlin.String) {
@@ -30,11 +30,17 @@ enum class Privilege(val value: kotlin.String) {
     @SerialName(value = "node_administration")
     node_administration("node_administration"),
 
+    @SerialName(value = "global_email_management")
+    global_email_management("global_email_management"),
+
     @SerialName(value = "customer_management")
     customer_management("customer_management"),
 
     @SerialName(value = "payout_management")
     payout_management("payout_management"),
+
+    @SerialName(value = "entry_management")
+    entry_management("entry_management"),
 
     @SerialName(value = "create_user")
     create_user("create_user"),

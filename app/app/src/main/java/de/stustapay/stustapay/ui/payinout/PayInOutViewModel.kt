@@ -28,13 +28,25 @@ enum class CashInOutTab(
 ) {
     TopUp(
         titleRes = R.string.payinout_tab_topup,
-        access = { state -> state.checkAccess { u, t -> Access.canTopUp(t, u) } },
+        access = { state ->
+            if (state.isSelfServiceTerminal()) {
+                state.selfServiceAccess().canSelfServiceTopUp
+            } else {
+                state.checkAccess { u, t -> Access.canTopUp(t, u) }
+            }
+        },
         route = "topup",
     ),
 
     PayOut(
         titleRes = R.string.payinout_tab_payout,
-        access = { state -> state.checkAccess { u, t -> Access.canPayOut(t, u) } },
+        access = { state ->
+            if (state.isSelfServiceTerminal()) {
+                false
+            } else {
+                state.checkAccess { u, t -> Access.canPayOut(t, u) }
+            }
+        },
         route = "payout",
     ),
 }

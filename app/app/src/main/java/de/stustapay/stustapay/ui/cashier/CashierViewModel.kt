@@ -11,12 +11,14 @@ import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.util.combine
 import de.stustapay.stustapay.model.Access
-import de.stustapay.stustapay.model.UserState
 import de.stustapay.stustapay.repository.CashierRepository
+import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.UserRepository
+import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine as flowCombine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -24,7 +26,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CashierViewModel @Inject constructor(
-    private val cashierRepository: CashierRepository, private val userRepository: UserRepository
+    private val cashierRepository: CashierRepository,
+    private val userRepository: UserRepository,
+    terminalConfigRepository: TerminalConfigRepository,
 ) : ViewModel() {
     private val _requestState = MutableStateFlow<CashierRequestState>(CashierRequestState.Done)
     private val _navState = MutableStateFlow<CashierNavState>(CashierNavState.Scan)
@@ -34,19 +38,22 @@ class CashierViewModel @Inject constructor(
     private val _selectedRegister = MutableStateFlow(0)
     private val _stockings = MutableStateFlow<List<CashRegisterStocking>>(listOf())
     private val _registers = MutableStateFlow<List<CashRegister>>(listOf())
-    private val _canManageCashiers = userRepository.userState.map {
-        when (it) {
-            is UserState.Error -> false
-            is UserState.LoggedIn -> Access.canManageCashiers(it.user)
-            UserState.NoLogin -> false
-        }
+    private val terminalLoginState = flowCombine(
+        userRepository.userState,
+        terminalConfigRepository.terminalConfigState,
+    ) { user, terminal ->
+        TerminalLoginState(user, terminal)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = TerminalLoginState(),
+    )
+
+    private val _canManageCashiers = terminalLoginState.map {
+        it.checkUserAccess(Access::canManageCashiers)
     }
-    private val _canViewCashier = userRepository.userState.map {
-        when (it) {
-            is UserState.Error -> false
-            is UserState.LoggedIn -> Access.canViewCashier(it.user)
-            UserState.NoLogin -> false
-        }
+    private val _canViewCashier = terminalLoginState.map {
+        it.checkUserAccess(Access::canViewCashier)
     }
     private val _scanState = MutableStateFlow(DialogDisplayState())
 
@@ -113,9 +120,9 @@ class CashierViewModel @Inject constructor(
         _userInfo.update { null }
         _amount.update { 0u }
 
-        val userState = userRepository.userState.value
-        if (userState is UserState.LoggedIn && !(Access.canViewCashier(userState.user) || Access.canManageCashiers(userState.user))) {
-            val tagUid = userState.user.userTagUid
+        val currentUser = terminalLoginState.value.currentUser()
+        if (currentUser != null && !(Access.canViewCashier(currentUser) || Access.canManageCashiers(currentUser))) {
+            val tagUid = currentUser.userTagUid
             if (tagUid != null) {
                 fetchTag(NfcTag(tagUid, null))
                 _scanState.update {

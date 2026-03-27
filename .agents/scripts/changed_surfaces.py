@@ -18,6 +18,9 @@ class SurfaceReport:
     notes: list[str]
 
 
+GIT_SCOPES = ("all", "staged", "unstaged")
+
+
 def _normalize(path: str) -> str:
     normalized = PurePosixPath(path.strip()).as_posix()
     while normalized.startswith("./"):
@@ -35,23 +38,52 @@ def _run_git_paths(cmd: list[str]) -> list[str]:
     return [line for line in proc.stdout.splitlines() if line.strip()]
 
 
-def load_paths_from_git(staged: bool = False) -> list[str]:
-    cmd = ["git", "diff", "--name-only"]
-    if staged:
-        cmd.append("--cached")
+def add_path_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    parser.add_argument("--files", nargs="*", help="Explicit files to analyze.")
+    parser.add_argument(
+        "--scope",
+        choices=GIT_SCOPES,
+        default="all",
+        help="Git change scope to analyze when --files is omitted. 'unstaged' includes untracked files.",
+    )
+    parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="Deprecated alias for --scope staged.",
+    )
+    return parser
 
-    paths = set(_run_git_paths(cmd))
 
-    if not staged:
+def _resolve_scope(args: argparse.Namespace) -> str:
+    return "staged" if getattr(args, "staged", False) else getattr(args, "scope", "all")
+
+
+def load_paths_from_git(scope: str = "all") -> list[str]:
+    if scope not in GIT_SCOPES:
+        raise ValueError(f"Unsupported git scope: {scope}")
+
+    paths: set[str] = set()
+
+    if scope in {"all", "staged"}:
+        paths.update(_run_git_paths(["git", "diff", "--cached", "--name-only"]))
+
+    if scope in {"all", "unstaged"}:
+        paths.update(_run_git_paths(["git", "diff", "--name-only"]))
         paths.update(_run_git_paths(["git", "ls-files", "--others", "--exclude-standard"]))
 
     return sorted(paths)
 
 
+def resolve_paths(files: list[str] | None = None, scope: str = "all") -> list[str]:
+    if files:
+        return [_normalize(path) for path in files]
+    return [_normalize(path) for path in load_paths_from_git(scope=scope)]
+
+
 def _load_paths(args: argparse.Namespace) -> list[str]:
     if args.files:
         return [_normalize(path) for path in args.files]
-    return [_normalize(path) for path in load_paths_from_git(staged=args.staged)]
+    return resolve_paths(scope=_resolve_scope(args))
 
 
 def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
@@ -78,7 +110,13 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
             surfaces.add("web")
             web_targets.add("customerportal")
 
-        if path.startswith("web/libs/") or path in {"web/package.json", "web/package-lock.json", "web/nx.json"}:
+        if path.startswith("web/libs/") or path in {
+            "web/.eslintrc.json",
+            "web/nx.json",
+            "web/package-lock.json",
+            "web/package.json",
+            "web/tsconfig.base.json",
+        }:
             surfaces.add("web")
             web_targets.update({"administration", "customerportal"})
 
@@ -121,8 +159,7 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Summarize impacted StuStaPay surfaces from changed files.")
-    parser.add_argument("--files", nargs="*", help="Explicit files to analyze. When omitted, uses `git diff --name-only`.")
-    parser.add_argument("--staged", action="store_true", help="Read staged files with `git diff --cached --name-only`.")
+    add_path_arguments(parser)
     parser.add_argument("--output", choices=("text", "json"), default="text")
     return parser.parse_args()
 
