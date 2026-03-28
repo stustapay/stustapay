@@ -74,6 +74,29 @@ class HeadwindDevice(BaseModel):
     manufacturer: str | None = None
 
 
+class HeadwindManagedConfigPayload(BaseModel):
+    terminal_name: str
+    wifi_ssid: str | None = None
+    wifi_passphrase: str | None = None
+
+
+def build_headwind_custom3(
+    *,
+    terminal_name: str,
+    wifi_ssid: str | None = None,
+    wifi_passphrase: str | None = None,
+) -> str:
+    if not wifi_ssid or not wifi_passphrase:
+        return terminal_name
+
+    payload = HeadwindManagedConfigPayload(
+        terminal_name=terminal_name,
+        wifi_ssid=wifi_ssid,
+        wifi_passphrase=wifi_passphrase,
+    )
+    return payload.model_dump_json(exclude_none=True)
+
+
 class HeadwindClient:
     """
     Minimal async client around the Headwind REST API.

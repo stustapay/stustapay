@@ -29,6 +29,7 @@ class ManagedConfigWatcher @Inject constructor(
     @ApplicationContext private val context: Context,
     private val registrationRepositoryInner: RegistrationRepositoryInner,
     private val terminalConfigRepository: TerminalConfigRepository,
+    private val managedWifiSuggestionRepository: ManagedWifiSuggestionRepository,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val headwindMDM: HeadwindMDM = HeadwindMDM.getInstance()
@@ -77,6 +78,16 @@ class ManagedConfigWatcher @Inject constructor(
                 return@launch
             }
 
+            managedWifiSuggestionRepository.syncManagedConfig(managedConfig.wifiConfig)
+
+            if (managedConfig.token.isNullOrBlank() || managedConfig.baseUrl.isNullOrBlank()) {
+                Log.d(
+                    TAG,
+                    "HeadwindMDM returned empty token/baseUrl (token=${managedConfig.token != null}, baseUrl=${managedConfig.baseUrl != null})",
+                )
+                return@launch
+            }
+
             val currentState = registrationRepositoryInner.registrationState.firstOrNull()
             if (currentState is RegistrationState.Registered &&
                 currentState.token == managedConfig.token &&
@@ -85,9 +96,9 @@ class ManagedConfigWatcher @Inject constructor(
                 return@launch
             }
 
-            Log.i(
-                TAG,
-                "Applying Headwind managed registration for ${managedConfig.baseUrl} (terminal=${managedConfig.terminalName ?: "n/a"})",
+                Log.i(
+                    TAG,
+                    "Applying Headwind managed registration for ${managedConfig.baseUrl} (terminal=${managedConfig.terminalName ?: "n/a"})",
             )
             registrationRepositoryInner.storeState(
                 RegistrationState.Registered(
@@ -106,25 +117,22 @@ class ManagedConfigWatcher @Inject constructor(
             // By convention in Headwind docs, CUSTOM1 is index 1, CUSTOM2 index 2, etc.
             val token = headwindMDM.getCustom(1)?.takeIf { it.isNotBlank() }
             val baseUrl = headwindMDM.getCustom(2)?.takeIf { it.isNotBlank() }
-            val terminalName = headwindMDM.getCustom(3)?.takeIf { it.isNotBlank() }
+            val custom3 = headwindMDM.getCustom(3)?.takeIf { it.isNotBlank() }
+            val custom3Payload = parseHeadwindCustom3(custom3)
 
-            Log.d(TAG, "HeadwindMDM custom values: custom1=${token?.take(8)}…, custom2=$baseUrl, custom3=$terminalName")
+            Log.d(
+                TAG,
+                "HeadwindMDM custom values: custom1=${token?.take(8)}…, custom2=$baseUrl, terminal=${custom3Payload.terminalName}, wifi=${custom3Payload.wifiConfig != null}",
+            )
 
-            if (token.isNullOrBlank() || baseUrl.isNullOrBlank()) {
-                Log.d(
-                    TAG,
-                    "HeadwindMDM returned empty token/baseUrl (token=${token != null}, baseUrl=${baseUrl != null})",
-                )
-                null
-            } else {
-                HeadwindManagedConfig(
-                    token = token,
-                    baseUrl = baseUrl,
-                    terminalId = null,
-                    terminalName = terminalName,
-                    terminalDescription = null,
-                )
-            }
+            HeadwindManagedConfig(
+                token = token,
+                baseUrl = baseUrl,
+                terminalId = null,
+                terminalName = custom3Payload.terminalName,
+                terminalDescription = null,
+                wifiConfig = custom3Payload.wifiConfig,
+            )
         } catch (e: Exception) {
             Log.w(TAG, "Unable to load Headwind MDM managed config via HeadwindMDM", e)
             null
@@ -132,15 +140,15 @@ class ManagedConfigWatcher @Inject constructor(
     }
 
     private data class HeadwindManagedConfig(
-        val token: String,
-        val baseUrl: String,
+        val token: String?,
+        val baseUrl: String?,
         val terminalId: Int?,
         val terminalName: String?,
         val terminalDescription: String?,
+        val wifiConfig: ManagedWifiConfig?,
     )
 
     companion object {
         private const val TAG = "ManagedConfigWatcher"
     }
 }
-

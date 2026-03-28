@@ -227,9 +227,10 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
         "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_sender, "
         "sumup_oauth_client_id, sumup_oauth_client_secret,pretix_presale_enabled, pretix_shop_url, pretix_api_key, "
-        "pretix_organizer, pretix_event, pretix_ticket_ids, post_payment_allowed, donation_enabled) "
+        "pretix_organizer, pretix_event, pretix_ticket_ids, post_payment_allowed, donation_enabled, wifi_ssid, "
+        "wifi_passphrase) "
         "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, "
-        "$25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41)"
+        "$25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43)"
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
@@ -272,6 +273,8 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
         event.pretix_ticket_ids,
         event.post_payment_allowed,
         event.donation_enabled,
+        event.wifi_ssid,
+        event.wifi_passphrase,
     )
     await _sync_optional_event_metadata(conn, event_id, event)
 
@@ -341,7 +344,7 @@ class TreeService(Service[Config]):
             "   pretix_presale_enabled = $35, pretix_shop_url = $36, pretix_api_key = $37, pretix_organizer = $38, "
             "   pretix_event = $39, pretix_ticket_ids = $40, post_payment_allowed = $41, donation_enabled = $42, "
             "   customer_portal_primary_color = $43, customer_portal_secondary_color = $44, "
-            "   customer_portal_background_color = $45 "
+            "   customer_portal_background_color = $45, wifi_ssid = $46, wifi_passphrase = $47 "
             "where id = $1",
             event_id,
             event.currency_identifier,
@@ -388,6 +391,8 @@ class TreeService(Service[Config]):
             event.customer_portal_primary_color,
             event.customer_portal_secondary_color,
             event.customer_portal_background_color,
+            event.wifi_ssid,
+            event.wifi_passphrase,
         )
         await conn.execute("delete from translation_text where event_id = $1", event_id)
         await _sync_optional_event_metadata(conn, event_id, event)
@@ -1075,6 +1080,8 @@ class TreeService(Service[Config]):
             sumup_oauth_client_id="" if request.options.copy_event_settings else "",
             sumup_oauth_client_secret="" if request.options.copy_event_settings else "",
             pretix_api_key=source_event.pretix_api_key if request.options.copy_event_settings else None,
+            wifi_ssid=source_event.wifi_ssid if request.options.copy_event_settings else None,
+            wifi_passphrase=source_event.wifi_passphrase if request.options.copy_event_settings else None,
         )
 
         # Create the new event node

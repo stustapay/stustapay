@@ -3,6 +3,8 @@ package de.stustapay.stustapay.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.stustapay.device.ManagedWifiSuggestionRepository
+import de.stustapay.stustapay.device.ManagedWifiSuggestionState
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.repository.RegistrationRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -32,6 +34,7 @@ sealed interface RegistrationUiState {
 class RegistrationViewModel @Inject constructor(
     private val registrationRepo: RegistrationRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
+    private val managedWifiSuggestionRepository: ManagedWifiSuggestionRepository,
 ) : ViewModel() {
 
     // convert the information flow from the repo to a stateflow (where we only want the latest element)
@@ -46,6 +49,7 @@ class RegistrationViewModel @Inject constructor(
         )
 
     val allowForceDeregister = registrationRepo.forceDeregisterState
+    val wifiSuggestionState: StateFlow<ManagedWifiSuggestionState> = managedWifiSuggestionRepository.state
 
     suspend fun register(qrcodeB64: String) {
         val ok = registrationRepo.register(qrcodeB64)
@@ -59,6 +63,10 @@ class RegistrationViewModel @Inject constructor(
         if (ok) {
             terminalConfigRepository.clearConfig()
         }
+    }
+
+    suspend fun retryWifiSuggestion() {
+        managedWifiSuggestionRepository.retrySuggestion()
     }
 }
 

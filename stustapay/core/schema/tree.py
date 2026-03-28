@@ -2,7 +2,7 @@ import enum
 from datetime import datetime, time
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
 from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig, SMTPConfig
@@ -109,6 +109,21 @@ class _RestrictedEventMetadata(BaseModel):
     pretix_api_key: str | None
 
     email_smtp_password: str | None = None
+    wifi_ssid: str | None = None
+    wifi_passphrase: str | None = None
+
+    @field_validator("wifi_ssid", "wifi_passphrase", mode="before")
+    @classmethod
+    def _normalize_empty_wifi_value(cls, value: str | None):
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @model_validator(mode="after")
+    def _validate_wifi_settings(self):
+        if (self.wifi_ssid is None) != (self.wifi_passphrase is None):
+            raise ValueError("wifi_ssid and wifi_passphrase must either both be set or both be empty")
+        return self
 
 
 class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):

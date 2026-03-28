@@ -39,6 +39,7 @@ import kotlinx.serialization.Contextual
  * @param type 
  * @param priceInVouchers 
  * @param targetAccountId 
+ * @param hasBookings 
  * @param pricePerVoucher 
  */
 @Serializable
@@ -86,6 +87,9 @@ data class Product (
 
     @SerialName(value = "target_account_id")
     val targetAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+
+    @SerialName(value = "has_bookings")
+    val hasBookings: kotlin.Boolean? = false,
 
     @Contextual @SerialName(value = "price_per_voucher")
     val pricePerVoucher: kotlin.Double? = null

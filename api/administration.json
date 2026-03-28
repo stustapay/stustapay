@@ -15343,6 +15343,40 @@
             ],
             "title": "Last Push Error"
           },
+          "last_wifi_pushed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Wifi Pushed At"
+          },
+          "last_wifi_push_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Wifi Push Status"
+          },
+          "last_wifi_push_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Wifi Push Error"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -15775,6 +15809,28 @@
               }
             ],
             "title": "Email Smtp Password"
+          },
+          "wifi_ssid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wifi Ssid"
+          },
+          "wifi_passphrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wifi Passphrase"
           },
           "currency_identifier": {
             "type": "string",
@@ -19111,6 +19167,28 @@
             ],
             "title": "Email Smtp Password"
           },
+          "wifi_ssid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wifi Ssid"
+          },
+          "wifi_passphrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wifi Passphrase"
+          },
           "currency_identifier": {
             "type": "string",
             "title": "Currency Identifier"
@@ -20939,6 +21017,28 @@
               }
             ],
             "title": "Email Smtp Password"
+          },
+          "wifi_ssid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wifi Ssid"
+          },
+          "wifi_passphrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wifi Passphrase"
           },
           "currency_identifier": {
             "type": "string",

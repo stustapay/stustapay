@@ -1,9 +1,19 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,no-value-for-parameter
 import pytest
 from asyncpg import RaiseError
+from pydantic import ValidationError
 from sftkit.database import Connection
 
-from stustapay.core.schema.tree import ROOT_NODE_ID, CopyEventRequest, CopyEventOptions, NewEvent, NewNode, Node, ObjectType
+from stustapay.core.schema.tree import (
+    ROOT_NODE_ID,
+    CopyEventRequest,
+    CopyEventOptions,
+    NewEvent,
+    NewNode,
+    Node,
+    ObjectType,
+    UpdateEvent,
+)
 from stustapay.core.service.tree.common import fetch_node, fetch_restricted_event_settings_for_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.tests.common import list_equals
@@ -81,6 +91,8 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
             pretix_organizer=None,
             pretix_shop_url=None,
             pretix_ticket_ids=None,
+            wifi_ssid="festival-wifi",
+            wifi_passphrase="secret1234",
         ),
     )
     assert event_node.event is not None
@@ -233,6 +245,8 @@ async def test_object_rules(tree_service: TreeService, global_admin_token: str):
             pretix_organizer=None,
             pretix_shop_url=None,
             pretix_ticket_ids=None,
+            wifi_ssid="festival-wifi",
+            wifi_passphrase="secret1234",
         ),
     )
     assert len(event_node.forbidden_objects_at_node) == 0
@@ -334,6 +348,8 @@ async def test_copy_event(tree_service: TreeService, global_admin_token: str):
             pretix_organizer=None,
             pretix_shop_url=None,
             pretix_ticket_ids=None,
+            wifi_ssid="festival-wifi",
+            wifi_passphrase="secret1234",
         ),
     )
 
@@ -369,6 +385,11 @@ async def test_copy_event(tree_service: TreeService, global_admin_token: str):
     assert copied_event.event.max_account_balance == original_event.event.max_account_balance
     # When copy_event_settings=True, bon_title is copied from source event
     assert copied_event.event.bon_title == "Title"  # Copied from original event
+    copied_settings = await tree_service.get_restricted_event_settings(
+        token=global_admin_token,
+        node_id=copied_event.id,
+    )
+    assert copied_settings.wifi_ssid == "festival-wifi"
 
     # Test copying with no options enabled
     minimal_copy: Node = await tree_service.copy_event(
@@ -394,3 +415,43 @@ async def test_copy_event(tree_service: TreeService, global_admin_token: str):
     assert minimal_copy.name == "Minimal Copy"
     assert minimal_copy.event is not None
     assert minimal_copy.event.currency_identifier == "EUR"  # Default when not copying settings
+    minimal_settings = await tree_service.get_restricted_event_settings(
+        token=global_admin_token,
+        node_id=minimal_copy.id,
+    )
+    assert minimal_settings.wifi_ssid is None
+
+
+def test_update_event_wifi_requires_both_fields():
+    with pytest.raises(ValidationError):
+        UpdateEvent(
+            currency_identifier="EUR",
+            max_account_balance=100,
+            vip_max_account_balance=300,
+            sumup_topup_enabled=False,
+            sumup_payment_enabled=False,
+            customer_portal_url="https://pay.stustapay.de",
+            customer_portal_about_page_url="https://pay.stustapay.de/about",
+            customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
+            customer_portal_contact_email="test@test.com",
+            pretix_presale_enabled=False,
+            pretix_shop_url=None,
+            pretix_organizer=None,
+            pretix_event=None,
+            pretix_ticket_ids=None,
+            ust_id="UST ID",
+            bon_issuer="Issuer",
+            bon_address="Address",
+            bon_title="Title",
+            sepa_enabled=False,
+            sepa_sender_name="",
+            sepa_sender_iban="",
+            sepa_description="",
+            sepa_max_num_payouts_in_run=100,
+            sepa_allowed_country_codes=[],
+            email_enabled=False,
+            payout_sender=None,
+            donation_enabled=True,
+            pretix_api_key=None,
+            wifi_ssid="festival-wifi",
+        )

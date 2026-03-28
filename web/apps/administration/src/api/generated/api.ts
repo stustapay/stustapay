@@ -3646,7 +3646,7 @@ export type AccountRead = {
 export type NormalizedListAccountInt = {
   ids: number[];
   entities: {
-    [key: string]: Account;
+    [key: string]: AccountRead;
   };
 };
 export type FindAccountPayload = {
@@ -4265,6 +4265,8 @@ export type NewEvent = {
   sumup_oauth_client_secret?: string;
   pretix_api_key: string | null;
   email_smtp_password?: string | null;
+  wifi_ssid?: string | null;
+  wifi_passphrase?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   vip_max_account_balance?: number;
@@ -4343,6 +4345,8 @@ export type UpdateEvent = {
   sumup_oauth_client_secret?: string;
   pretix_api_key: string | null;
   email_smtp_password?: string | null;
+  wifi_ssid?: string | null;
+  wifi_passphrase?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   vip_max_account_balance?: number;
@@ -4401,6 +4405,8 @@ export type RestrictedEventSettings = {
   sumup_oauth_client_secret?: string;
   pretix_api_key: string | null;
   email_smtp_password?: string | null;
+  wifi_ssid?: string | null;
+  wifi_passphrase?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   vip_max_account_balance?: number;
@@ -4612,6 +4618,9 @@ export type HeadwindDeviceMappingWithTerminal = {
   last_token_pushed_at?: string | null;
   last_push_status?: string | null;
   last_push_error?: string | null;
+  last_wifi_pushed_at?: string | null;
+  last_wifi_push_status?: string | null;
+  last_wifi_push_error?: string | null;
   created_at: string;
   updated_at: string;
   terminal_name: string;

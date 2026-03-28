@@ -212,4 +212,14 @@
     <string name="nfc_scan_description">Hold your NFC wristband or NFC card to the reader.\nNot your credit card!</string>
     <string name="nfc_clarification_step1">Hold your wristband</string>
     <string name="nfc_clarification_step2">Then pay at EC terminal</string>
+    <string name="settings_wifi_title">Managed Wi-Fi</string>
+    <string name="settings_wifi_none">No managed Wi-Fi suggestion is currently configured.</string>
+    <string name="settings_wifi_ssid">SSID: %1$s</string>
+    <string name="settings_wifi_passphrase">Passphrase: %1$s</string>
+    <string name="settings_wifi_show_passphrase">Show passphrase</string>
+    <string name="settings_wifi_hide_passphrase">Hide passphrase</string>
+    <string name="settings_wifi_retry">Suggest Wi-Fi Again</string>
+    <string name="settings_wifi_open_setup">Open Wi-Fi Setup</string>
+    <string name="settings_wifi_error">Wi-Fi suggestion failed: %1$s</string>
+    <string name="settings_wifi_success">The latest managed Wi-Fi suggestion was applied.</string>
 </resources>

@@ -150,6 +150,29 @@ export const HeadwindDevicesPage: React.FC = () => {
   });
 
   const columns = React.useMemo<GridColDef<DeviceRow>[]>(() => {
+    const renderStatusChip = (
+      pushedAt: string | null | undefined,
+      status: string | null | undefined,
+      errorMessage: string | null | undefined,
+      neverLabel: string
+    ) => {
+      if (!pushedAt) {
+        return <Chip size="small" label={neverLabel} />;
+      }
+      const color = status === "success" ? "success" : status === "error" ? "error" : "default";
+      const label =
+        status === "success"
+          ? t("mdm.pushStatusSuccess")
+          : status === "error"
+            ? t("mdm.pushStatusError")
+            : status ?? "";
+      return (
+        <Tooltip title={errorMessage ?? ""}>
+          <Chip size="small" color={color} label={label} />
+        </Tooltip>
+      );
+    };
+
     const cols: GridColDef<DeviceRow>[] = [
       {
         field: "device",
@@ -200,30 +223,36 @@ export const HeadwindDevicesPage: React.FC = () => {
         },
       },
       {
-        field: "pushStatus",
-        headerName: t("mdm.pushStatus"),
+        field: "tokenPushStatus",
+        headerName: t("mdm.tokenPushStatus"),
         flex: 0.6,
         renderCell: (params) => {
           const mapping = params.row.mapping;
           if (!mapping || !mapping.last_token_pushed_at) {
             return <Chip size="small" label={t("mdm.neverPushed")} />;
           }
-          const color =
-            mapping.last_push_status === "success"
-              ? "success"
-              : mapping.last_push_status === "error"
-                ? "error"
-                : "default";
-          const label =
-            mapping.last_push_status === "success"
-              ? t("mdm.pushStatusSuccess")
-              : mapping.last_push_status === "error"
-                ? t("mdm.pushStatusError")
-                : mapping.last_push_status ?? "";
-          return (
-            <Tooltip title={mapping.last_push_error ?? ""}>
-              <Chip size="small" color={color} label={label} />
-            </Tooltip>
+          return renderStatusChip(
+            mapping.last_token_pushed_at,
+            mapping.last_push_status,
+            mapping.last_push_error,
+            t("mdm.neverPushed")
+          );
+        },
+      },
+      {
+        field: "wifiPushStatus",
+        headerName: t("mdm.wifiPushStatus"),
+        flex: 0.6,
+        renderCell: (params) => {
+          const mapping = params.row.mapping;
+          if (!mapping) {
+            return <Typography variant="body2">{t("mdm.notMapped")}</Typography>;
+          }
+          return renderStatusChip(
+            mapping.last_wifi_pushed_at,
+            mapping.last_wifi_push_status,
+            mapping.last_wifi_push_error,
+            t("mdm.wifiNotConfigured")
           );
         },
       },

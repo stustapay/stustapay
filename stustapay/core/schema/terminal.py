@@ -145,6 +145,9 @@ class HeadwindDeviceMapping(BaseModel):
     last_token_pushed_at: datetime | None = None
     last_push_status: str | None = None
     last_push_error: str | None = None
+    last_wifi_pushed_at: datetime | None = None
+    last_wifi_push_status: str | None = None
+    last_wifi_push_error: str | None = None
     created_at: datetime
     updated_at: datetime
 

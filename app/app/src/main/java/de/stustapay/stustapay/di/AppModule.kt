@@ -6,6 +6,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import de.stustapay.stustapay.device.AndroidWifiSuggestionClient
+import de.stustapay.stustapay.device.ManagedWifiSuggestionStateStore
+import de.stustapay.stustapay.device.SharedPrefsManagedWifiSuggestionStateStore
+import de.stustapay.stustapay.device.WifiSuggestionClient
 import javax.inject.Singleton
 
 /**
@@ -24,4 +28,18 @@ object AppModule {
     fun provideContext(@ApplicationContext context: Context): Context {
         return context
     }
-} 
+
+    @Provides
+    @Singleton
+    fun provideWifiSuggestionClient(client: AndroidWifiSuggestionClient): WifiSuggestionClient {
+        return client
+    }
+
+    @Provides
+    @Singleton
+    fun provideManagedWifiSuggestionStateStore(
+        store: SharedPrefsManagedWifiSuggestionStateStore
+    ): ManagedWifiSuggestionStateStore {
+        return store
+    }
+}

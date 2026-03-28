@@ -27,6 +27,9 @@ export interface HeadwindDeviceMapping {
   last_token_pushed_at?: string | null;
   last_push_status?: string | null;
   last_push_error?: string | null;
+  last_wifi_pushed_at?: string | null;
+  last_wifi_push_status?: string | null;
+  last_wifi_push_error?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -148,4 +151,3 @@ export const {
   useRefreshHeadwindMappingTokenMutation,
   useDeleteHeadwindMappingMutation,
 } = mdmApi;
-

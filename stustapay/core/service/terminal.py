@@ -1006,6 +1006,9 @@ class TerminalService(Service[Config]):
                 "    last_token_pushed_at = null, "
                 "    last_push_status = null, "
                 "    last_push_error = null, "
+                "    last_wifi_pushed_at = null, "
+                "    last_wifi_push_status = null, "
+                "    last_wifi_push_error = null, "
                 "    updated_at = now() "
                 "where id = $6 "
                 "returning *",
@@ -1081,6 +1084,34 @@ class TerminalService(Service[Config]):
             "set last_token_pushed_at = now(), "
             "    last_push_status = $2, "
             "    last_push_error = $3, "
+            "    updated_at = now() "
+            "where id = $1 and node_id = any($4) "
+            "returning *",
+            mapping_id,
+            status,
+            error_message,
+            node.ids_to_root,
+        )
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def record_headwind_wifi_push_result(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        mapping_id: int,
+        success: bool,
+        error_message: str | None,
+    ) -> HeadwindDeviceMapping:
+        status = "success" if success else "error"
+        return await conn.fetch_one(
+            HeadwindDeviceMapping,
+            "update terminal_device_mapping "
+            "set last_wifi_pushed_at = now(), "
+            "    last_wifi_push_status = $2, "
+            "    last_wifi_push_error = $3, "
             "    updated_at = now() "
             "where id = $1 and node_id = any($4) "
             "returning *",

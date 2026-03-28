@@ -188,4 +188,14 @@
     <string name="nfc_scan_description">Halte Dein Bändchen / Cash-Karte an das Lesegerät.\nNicht die EC-Karte!</string>
     <string name="nfc_clarification_step1">Bändchen vorhalten</string>
     <string name="nfc_clarification_step2">Dann am EC-Terminal bezahlen</string>
+    <string name="settings_wifi_title">Verwaltetes WLAN</string>
+    <string name="settings_wifi_none">Derzeit ist kein verwalteter WLAN-Vorschlag konfiguriert.</string>
+    <string name="settings_wifi_ssid">SSID: %1$s</string>
+    <string name="settings_wifi_passphrase">Passphrase: %1$s</string>
+    <string name="settings_wifi_show_passphrase">Passphrase anzeigen</string>
+    <string name="settings_wifi_hide_passphrase">Passphrase verbergen</string>
+    <string name="settings_wifi_retry">WLAN erneut vorschlagen</string>
+    <string name="settings_wifi_open_setup">WLAN-Einrichtung öffnen</string>
+    <string name="settings_wifi_error">WLAN-Vorschlag fehlgeschlagen: %1$s</string>
+    <string name="settings_wifi_success">Der letzte verwaltete WLAN-Vorschlag wurde angewendet.</string>
 </resources>

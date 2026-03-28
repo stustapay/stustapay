@@ -4652,6 +4652,20 @@
               }
             ],
             "title": "Subnode Id"
+          },
+          "selected_dates": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Dates"
           }
         },
         "type": "object",
