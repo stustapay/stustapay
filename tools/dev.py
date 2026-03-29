@@ -76,6 +76,14 @@ def build_processes(
                 file=sys.stderr,
             )
         else:
+            web_nx_bin = web_dir / "node_modules" / ".bin" / "nx"
+            if not web_nx_bin.is_file():
+                print(
+                    "[dev] Web install is incomplete (missing node_modules/.bin/nx). "
+                    "Fix: run `cd web && npm ci` from the repo root, then retry.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
             processes.append(
                 ProcessSpec(
                     name="web-admin",
