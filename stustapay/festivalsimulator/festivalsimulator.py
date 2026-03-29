@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import random
-import sys
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -15,7 +14,9 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
+from stustapay.core.schema.user import ADMIN_ROLE_ID
 from stustapay.core.schema.user import Privilege
+from stustapay.festivalsimulator.common import SimulatorEvent, fetch_simulator_events
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -49,9 +50,12 @@ class Terminal:
 
 
 class Simulator:
-    def __init__(self, config: Config, bookings_per_second: float = 100.0):
+    def __init__(self, config: Config, event: SimulatorEvent, bookings_per_second: float = 100.0):
         self.logger = logging.getLogger(__name__)
         self.config = config
+        self.event = event
+        self.event_node_id = event.node_id
+        self.event_name = event.name
 
         self.terminal_api_base_url = self.config.terminalserver.base_url
         self.admin_api_base_url = self.config.administration.base_url
@@ -100,7 +104,7 @@ class Simulator:
         self.locked_customers.remove(uid)
 
     async def get_unused_cashiers(self):
-        return self.unused_cashiers.pop()
+        return self.unused_cashiers.pop() if self.unused_cashiers else None
 
     async def update_unused_cashiers(self):
         self.unused_cashiers = [
@@ -119,7 +123,11 @@ class Simulator:
         return [
             int(row["id"])
             for row in await self.db_pool.fetch(
-                "select cr.id from cash_register cr left join usr u on u.cash_register_id = cr.id where u.id is null"
+                "select cr.id "
+                "from cash_register cr "
+                "left join usr u on u.cash_register_id = cr.id "
+                "where cr.node_id = $1 and u.id is null",
+                self.event_node_id,
             )
         ]
 
@@ -129,8 +137,9 @@ class Simulator:
             for row in await self.db_pool.fetch(
                 "select pin from user_tag "
                 "left join account a on user_tag.id = a.user_tag_id "
-                "where a.id is null limit $1",
+                "where a.id is null and user_tag.node_id = $2 limit $1",
                 limit,
+                self.event_node_id,
             )
         ]
 
@@ -138,7 +147,8 @@ class Simulator:
         return [
             int(row["uid"])
             for row in await self.db_pool.fetch(
-                "select uid from user_tag join account a on user_tag.id = a.user_tag_id"
+                "select uid from user_tag join account a on user_tag.id = a.user_tag_id where user_tag.node_id = $1",
+                self.event_node_id,
             )
         ]
 
@@ -185,7 +195,10 @@ class Simulator:
     async def voucher_granting(self):
         async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
             while True:
-                rows = await self.db_pool.fetch("select * from account where user_tag_id is not null")
+                rows = await self.db_pool.fetch(
+                    "select * from account where user_tag_id is not null and node_id = $1",
+                    self.event_node_id,
+                )
                 if len(rows) == 0:  # no tickets were sold yet
                     await asyncio.sleep(1)
                     continue
@@ -209,7 +222,9 @@ class Simulator:
                 # TODO: future: test if the user has not already locked in
                 # get random user that has uid and pin
                 rows = await self.db_pool.fetch(
-                    "select user_tag_uid, user_tag_pin from account_with_history where user_tag_uid is not null and user_tag_pin is not null"
+                    "select user_tag_uid, user_tag_pin from account_with_history "
+                    "where user_tag_uid is not null and user_tag_pin is not null and node_id = $1",
+                    self.event_node_id,
                 )
                 if len(rows) == 0:  # no tickets were sold yet
                     await asyncio.sleep(1)
@@ -243,8 +258,12 @@ class Simulator:
                             self.logger.warning(f"Error while setting payout {resp.status = }")
                 else:  # partial donation
                     balance = await self.db_pool.fetchval(
-                        "select balance from customer c join user_tag ut on ut.id = c.user_tag_id where ut.uid = $1",
+                        "select balance "
+                        "from customer c "
+                        "join user_tag ut on ut.id = c.user_tag_id "
+                        "where ut.uid = $1 and c.node_id = $2",
                         uid,
+                        self.event_node_id,
                     )
                     async with client.post(
                         "/customer_info",
@@ -274,16 +293,26 @@ class Simulator:
 
     async def _stock_up_cashier(self, cashier_tag_uid: int):
         terminal_id = await self.db_pool.fetchval(
-            "select t.id from terminal t join user_with_tag u on t.active_user_id = u.id where u.user_tag_uid = $1",
+            "select t.id "
+            "from terminal t "
+            "join user_with_tag u on t.active_user_id = u.id "
+            "where u.user_tag_uid = $1 and u.node_id = $2",
             cashier_tag_uid,
+            self.event_node_id,
         )
         await self.db_pool.execute(
             "update terminal set active_user_id = null, active_user_role_id = null where id = $1", terminal_id
         )
-        stocking_id = await self.db_pool.fetchval("select id from cash_register_stocking limit 1")
+        stocking_id = await self.db_pool.fetchval(
+            "select id from cash_register_stocking where node_id = $1 limit 1",
+            self.event_node_id,
+        )
         has_cash_register = await self.db_pool.fetchval(
-            "select exists (select from user_with_tag where user_tag_uid = $1 and cash_register_id is not null)",
+            "select exists ("
+            "    select from user_with_tag where user_tag_uid = $1 and node_id = $2 and cash_register_id is not null"
+            ")",
             cashier_tag_uid,
+            self.event_node_id,
         )
         terminal = random.choice(self.admin_terminals)
         async with aiohttp.ClientSession(base_url=self.terminal_api_base_url, headers=terminal.get_headers()) as client:
@@ -370,11 +399,24 @@ class Simulator:
                     self.logger.info(f"Skipping cashier close out ({cashier_id = }) since drawer balance is zero")
                     return True
 
+            closing_out_user_id = await self.db_pool.fetchval(
+                "select u.id "
+                "from user_with_tag u "
+                "join user_to_role utr on utr.user_id = u.id and utr.node_id = $1 "
+                "join user_role r on r.id = utr.role_id "
+                "where u.node_id = $1 and r.name = 'finanzorga' "
+                "order by random() limit 1",
+                self.event_node_id,
+            )
+            if closing_out_user_id is None:
+                self.logger.warning("Skipping cashier close out because no finanzorga user was found")
+                return False
+
             payload = {
                 "comment": "some shift this was",
                 "actual_cash_drawer_balance": drawer_balance
                 + round(random.uniform(-drawer_balance * 0.1, drawer_balance * 0.1)),
-                "closing_out_user_id": random.randint(1, 5),  # one of 5 finanzorgas
+                "closing_out_user_id": closing_out_user_id,
             }
             async with client.post(
                 f"/cashiers/{cashier_id}/close-out?node_id={self.event_node_id}",
@@ -414,7 +456,10 @@ class Simulator:
             await self._login_cashier(terminal=terminal, cashier_tag_uid=cashier_tag_uid, stock_up=perform_close_out)
 
     async def entry_till(self, worker_idx: int):
-        rows = await self.db_pool.fetch("select id from till where name like '%Eintrittskasse%'")
+        rows = await self.db_pool.fetch(
+            "select id from till where node_id = $1 and name like '%Eintrittskasse%'",
+            self.event_node_id,
+        )
         till_ids = ith_chunk([row["id"] for row in rows], self.n_entry_till_workers, worker_idx)
         terminals = await self._register_terminals(till_ids=till_ids, stock_up=True)
 
@@ -463,7 +508,10 @@ class Simulator:
                     await self.perform_cashier_shift_change(terminal=terminal, perform_close_out=True)
 
     async def topup_till(self, worker_idx: int):
-        rows = await self.db_pool.fetch("select id from till where name like '%Aufladekasse%'")
+        rows = await self.db_pool.fetch(
+            "select id from till where node_id = $1 and name like '%Aufladekasse%'",
+            self.event_node_id,
+        )
         till_ids = ith_chunk([row["id"] for row in rows], self.n_topup_till_workers, worker_idx)
         terminals = await self._register_terminals(till_ids=till_ids, stock_up=True)
 
@@ -508,7 +556,10 @@ class Simulator:
     async def sale_till(self, worker_idx: int):
         rows = await self.db_pool.fetch(
             "select id from till "
-            "where name like '%Weißbierinsel%' or name like '%Cocktailkasse%' or name like '%Weißbierkarussel%'",
+            "where node_id = $1 and ("
+            "name like '%Weißbierinsel%' or name like '%Cocktailkasse%' or name like '%Weißbierkarussel%'"
+            ")",
+            self.event_node_id,
         )
         till_ids = ith_chunk([row["id"] for row in rows], self.n_sale_till_workers, worker_idx)
         terminals = await self._register_terminals(till_ids=till_ids)
@@ -554,7 +605,10 @@ class Simulator:
 
     async def login_admin(self) -> str:
         async with aiohttp.ClientSession(base_url=self.admin_api_base_url) as client:
-            async with client.post("/auth/login", json={"username": "admin", "password": "admin"}) as resp:
+            async with client.post(
+                "/auth/login",
+                json={"username": "admin", "password": "admin", "node_id": self.event_node_id},
+            ) as resp:
                 if resp.status != 200:
                     raise RuntimeError("Error trying to log in admin user")
                 payload = await resp.json()
@@ -591,7 +645,10 @@ class Simulator:
                     raise RuntimeError(f"Error trying to log out customer with uid {uid} pin {pin}")
 
     async def _prepare_admin_terminals(self):
-        rows = await self.db_pool.fetch("select id from till where name like '%Admin%'")
+        rows = await self.db_pool.fetch(
+            "select id from till where node_id = $1 and name like '%Admin%'",
+            self.event_node_id,
+        )
         terminals = []
         for row in rows:
             terminal = await self._register_terminal(till_id=row["id"])
@@ -618,10 +675,6 @@ class Simulator:
             n_connections=(self.n_entry_till_workers + self.n_sale_till_workers + self.n_topup_till_workers),
         )
 
-        self.event_node_id = await self.db_pool.fetchval(
-            "select id from node where event_id is not null and name = $1", "SSC-Test"
-        )
-
         self.admin_tag_uid = int(
             await self.db_pool.fetchval(
                 "select user_tag_uid from user_with_tag where login = 'admin' and node_id = $1 limit 1",
@@ -629,9 +682,7 @@ class Simulator:
             )
         )
 
-        self.admin_role_id = await self.db_pool.fetchval(
-            "select id from user_role where name = 'admin'",
-        )
+        self.admin_role_id = ADMIN_ROLE_ID
         self.finanzorga_role_id = await self.db_pool.fetchval(
             "select id from user_role where name = 'finanzorga' and node_id = $1",
             self.event_node_id,
@@ -641,32 +692,69 @@ class Simulator:
         )
         self.admin_token = await self.login_admin()
         self.admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
-        self.n_tills_total = await self.db_pool.fetchval("select count(*) from till")
+        self.n_tills_total = await self.db_pool.fetchval("select count(*) from till where node_id = $1", self.event_node_id)
         self.admin_terminals = await self._prepare_admin_terminals()
 
         await self.update_unused_cashiers()
 
     async def run(self):
-        await self.initialize()
-        tasks = (
-            [asyncio.create_task(self.entry_till(i)) for i in range(self.n_entry_till_workers)]
-            + [asyncio.create_task(self.sale_till(i)) for i in range(self.n_sale_till_workers)]
-            + [asyncio.create_task(self.topup_till(i)) for i in range(self.n_topup_till_workers)]
-            + [
-                asyncio.create_task(self.voucher_granting()),
-                asyncio.create_task(self.reporter()),
-                asyncio.create_task(self.payout_registration()),
-            ]
-        )
-
+        tasks: list[asyncio.Task] = []
         try:
+            await self.initialize()
+            tasks = (
+                [
+                    asyncio.create_task(self.entry_till(i), name=f"{self.event_name}-entry-{i}")
+                    for i in range(self.n_entry_till_workers)
+                ]
+                + [
+                    asyncio.create_task(self.sale_till(i), name=f"{self.event_name}-sale-{i}")
+                    for i in range(self.n_sale_till_workers)
+                ]
+                + [
+                    asyncio.create_task(self.topup_till(i), name=f"{self.event_name}-topup-{i}")
+                    for i in range(self.n_topup_till_workers)
+                ]
+                + [
+                    asyncio.create_task(self.voucher_granting(), name=f"{self.event_name}-voucher"),
+                    asyncio.create_task(self.reporter(), name=f"{self.event_name}-reporter"),
+                    asyncio.create_task(self.payout_registration(), name=f"{self.event_name}-payout"),
+                ]
+            )
             await asyncio.gather(*tasks)
         except KeyboardInterrupt:
-            self.logger.info("Shutting down simulator ...")
+            self.logger.info("Shutting down simulator for %s ...", self.event_name)
+        except Exception:
+            self.logger.exception("An unknown error occurred while simulating %s", self.event_name)
+            raise
+        finally:
             for task in tasks:
                 task.cancel()
-        except Exception:  # pylint: disable=bare-except
-            self.logger.exception("An unknown error occurred while simulating")
-            sys.exit(1)
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
+            if hasattr(self, "db_pool") and self.db_pool is not None:
+                await self.db_pool.close()
 
-        await self.db_pool.close()
+
+async def run_all_simulators(config: Config, bookings_per_second: float):
+    db = get_database(config.database)
+    db_pool = await db.create_pool(n_connections=1)
+    try:
+        async with db_pool.acquire() as conn:
+            events = await fetch_simulator_events(conn)
+    finally:
+        await db_pool.close()
+
+    if not events:
+        raise RuntimeError("No simulator events found. Run `stustapay simulate setup` first.")
+
+    tasks = [
+        asyncio.create_task(Simulator(config=config, event=event, bookings_per_second=bookings_per_second).run())
+        for event in events
+    ]
+    try:
+        await asyncio.gather(*tasks)
+    finally:
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)

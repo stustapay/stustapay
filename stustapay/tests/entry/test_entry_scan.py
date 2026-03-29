@@ -10,9 +10,10 @@ from stustapay.core.schema.entry import (
     NewEntryGroup,
 )
 from stustapay.core.schema.terminal import NewTerminal, TerminalMode
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import NewNode, Node
 from stustapay.core.service.entry import EntryService
 from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.tree.service import TreeService
 from stustapay.core.service.user_tag import UserTagService
 from stustapay.tests.conftest import CreateRandomUserTag
 
@@ -102,6 +103,43 @@ async def test_entry_scan_flow(
     denied_other = await entry_service.scan_entry(token=entry_token, tag_uid=other_tag.uid)
     assert denied_other.allowed is False
     assert denied_other.reason == "not_in_group"
+
+
+async def test_parent_terminal_can_use_child_entry_area(
+    entry_service: EntryService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    event_admin_token: str,
+    event_node: Node,
+):
+    child_node = await tree_service.create_node(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_node=NewNode(name="Entry Sub Event", description=""),
+    )
+    area = await entry_service.create_entry_area(
+        token=event_admin_token,
+        node_id=child_node.id,
+        area=NewEntryArea(name="Child Entry", description="Gate B"),
+    )
+
+    terminal = await terminal_service.create_terminal(
+        token=event_admin_token,
+        node_id=event_node.id,
+        terminal=NewTerminal(
+            name="Shared Entry Terminal",
+            description="Shared scanner",
+            mode=TerminalMode.entry,
+            entry_area_id=area.id,
+        ),
+    )
+
+    registration = await terminal_service.register_terminal(registration_uuid=str(terminal.registration_uuid))
+    config = await terminal_service.get_terminal_config(token=registration.token)
+
+    assert config.entry_area is not None
+    assert config.entry_area.id == area.id
+    assert config.entry_area.name == area.name
 
 
 async def test_add_entry_group_members_by_group_tag(

@@ -5,7 +5,7 @@ import typer
 
 from stustapay.festivalsimulator.database_setup import DatabaseSetup
 from stustapay.festivalsimulator.festivalsetup import FestivalSetup
-from stustapay.festivalsimulator.festivalsimulator import Simulator
+from stustapay.festivalsimulator.festivalsimulator import run_all_simulators
 
 simulate_cli = typer.Typer()
 
@@ -21,6 +21,7 @@ def setup(
     n_topup_tills: Annotated[int, typer.Option(help="number of topup tills to create")] = 8,
     n_beer_tills: Annotated[int, typer.Option(help="number of beer tills to create")] = 20,
     n_cocktail_tills: Annotated[int, typer.Option(help="number of cocktail tills to create")] = 3,
+    n_events: Annotated[int, typer.Option(help="number of simulated events to create", min=1)] = 1,
 ):
     """Prepare the database for a future stustapay simulation."""
     config = ctx.obj.config
@@ -32,6 +33,7 @@ def setup(
         n_entry_tills=n_entry_tills,
         n_cashiers=n_cashiers,
         n_tags=n_tags,
+        n_events=n_events,
     )
     asyncio.run(database_setup.run())
 
@@ -55,5 +57,4 @@ def start(
 ):
     """Simulate an actual load on a stustapay instance."""
     config = ctx.obj.config
-    simulator = Simulator(config=config, bookings_per_second=bookings_per_second)
-    asyncio.run(simulator.run())
+    asyncio.run(run_all_simulators(config=config, bookings_per_second=bookings_per_second))
