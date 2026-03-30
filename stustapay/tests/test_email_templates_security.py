@@ -28,7 +28,8 @@ def test_invitation_html_wraps_sandboxed_body() -> None:
     assert "<p>Ada</p>" in html
     assert "<!DOCTYPE html>" in html
     assert "teamfestlichPay" in html
-    assert "#176B67" in html
+    assert "#2AD2C9" in html
+    assert 'src="https://www.teamfestlichpay.de/fileadmin/user_upload/images/logos/logo_teamfestlichpay_tfpay.png"' in html
 
 
 def test_invitation_html_inner_body_is_sandboxed() -> None:

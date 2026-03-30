@@ -7,6 +7,7 @@ from stustapay.core.schema.language import Language
 
 SUPPORTED_EMAIL_LANGUAGES = (Language.de_DE, Language.en_US)
 INVITATION_TEMPLATE_FIELDS = ("subject", "text_body", "html_body")
+TEAMFESTLICHPAY_LOGO_URL = "https://www.teamfestlichpay.de/fileadmin/user_upload/images/logos/logo_teamfestlichpay_tfpay.png"
 INVITATION_SECTION_LABELS = {
     Language.de_DE: "Deutsch",
     Language.en_US: "English",
@@ -59,7 +60,6 @@ DEFAULT_INVITATION_HTML_BODIES = {
       text-decoration:none;font-weight:700;border-radius:999px;"
   >Einladung annehmen</a>
 </p>
-<p style="word-break:break-all;"><a href="{{ invitation_url }}" style="color:#176B67;">{{ invitation_url }}</a></p>
 <p>Diese Einladung ist gueltig bis {{ expires_at }}.</p>
 <p>Falls Sie diese Einladung nicht erwartet haben, ignorieren Sie bitte diese E-Mail.</p>
 <p>Viele Gruesse<br />Ihr teamfestlichPay-Team</p>
@@ -74,7 +74,6 @@ DEFAULT_INVITATION_HTML_BODIES = {
       text-decoration:none;font-weight:700;border-radius:999px;"
   >Accept invitation</a>
 </p>
-<p style="word-break:break-all;"><a href="{{ invitation_url }}" style="color:#176B67;">{{ invitation_url }}</a></p>
 <p>This invitation will expire on {{ expires_at }}.</p>
 <p>If you did not expect this invitation, please ignore this email.</p>
 <p>Best regards,<br />The teamfestlichPay Team</p>
@@ -86,39 +85,53 @@ BASE_EMAIL_HTML_TEMPLATE = """<!DOCTYPE html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <title>{{ subject }}</title>
   </head>
-  <body style="margin:0;padding:0;background:#E6E6E6;font-family:Arial,sans-serif;color:#000000;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+  <body
+    bgcolor="#E6E6E6"
+    style="margin:0;padding:0;background:#E6E6E6;font-family:Arial,sans-serif;color:#000000;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#E6E6E6"
       style="width:100%;background:#E6E6E6;padding:32px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF"
             style="width:100%;max-width:640px;background:#FFFFFF;border-radius:24px;overflow:hidden;">
             <tr>
-              <td style="padding:0;background:#176B67;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;">
+              <td bgcolor="#FFFFFF" style="padding:0;background:#FFFFFF;border-bottom:1px solid #DDEDEC;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF"
+                  style="width:100%;background:#FFFFFF;">
                   <tr>
                     <td style="height:6px;background:#2AD2C9;font-size:0;line-height:0;">&nbsp;</td>
                   </tr>
                   <tr>
-                    <td style="padding:28px 32px;color:#FFFFFF;">
-                      <div style="font-size:28px;line-height:1.1;font-weight:700;">teamfestlichPay</div>
-                      <div style="margin-top:8px;font-size:14px;line-height:1.5;color:#FFFFFF;">
-                        Cashless payment administration
-                      </div>
+                    <td
+                      align="center"
+                      bgcolor="#FFFFFF"
+                      style="padding:32px;background:#FFFFFF;color:#000000;">
+                      <img
+                        src="{{ logo_url }}"
+                        alt="teamfestlichPay"
+                        width="340"
+                        style="display:block;width:100%;max-width:340px;height:auto;border:0;"
+                      />
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:32px;font-size:16px;line-height:1.7;color:#000000;">
+              <td
+                bgcolor="#FFFFFF"
+                style="padding:32px;background:#FFFFFF;font-size:16px;line-height:1.7;color:#000000;">
                 {{ content }}
               </td>
             </tr>
             <tr>
-              <td style="padding:24px 32px;background:#E6E6E6;color:#000000;font-size:12px;
+              <td
+                bgcolor="#F5FFFE"
+                style="padding:24px 32px;background:#F5FFFE;color:#000000;font-size:12px;
                 line-height:1.6;border-top:2px solid #2AD2C9;">
                 This invitation email was sent by teamfestlichPay.
               </td>
@@ -148,7 +161,7 @@ def render_template_string(template: str, context: dict[str, object], *, autoesc
 
 def render_email_html(content: str, subject: str) -> str:
     shell = _sandbox(True).from_string(BASE_EMAIL_HTML_TEMPLATE)
-    return shell.render(subject=subject, content=Markup(content))
+    return shell.render(subject=subject, content=Markup(content), logo_url=TEAMFESTLICHPAY_LOGO_URL)
 
 
 def render_invitation_html(template: str, context: dict[str, object], subject: str) -> str:
