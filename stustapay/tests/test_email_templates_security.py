@@ -27,6 +27,8 @@ def test_invitation_html_wraps_sandboxed_body() -> None:
     html = render_invitation_html("<p>{{ display_name }}</p>", {"display_name": "Ada"}, subject="Subj")
     assert "<p>Ada</p>" in html
     assert "<!DOCTYPE html>" in html
+    assert "teamfestlichPay" in html
+    assert "#176B67" in html
 
 
 def test_invitation_html_inner_body_is_sandboxed() -> None:

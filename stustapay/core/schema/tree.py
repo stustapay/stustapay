@@ -6,15 +6,11 @@ from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
 from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig, SMTPConfig
+from stustapay.core.schema.language import Language
 from stustapay.core.schema.user import Privilege
 
 ROOT_NODE_ID = 0
 INITIAL_EVENT_NODE_ID = 1
-
-
-class Language(enum.Enum):
-    en_US = "en-US"
-    de_DE = "de-DE"
 
 
 class _BaseEvent(BaseModel):

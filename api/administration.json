@@ -15058,38 +15058,19 @@
             ],
             "title": "Email Smtp Password"
           },
-          "invitation_subject": {
-            "anyOf": [
-              {
+          "invitation_texts": {
+            "additionalProperties": {
+              "additionalProperties": {
                 "type": "string"
               },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invitation Subject"
-          },
-          "invitation_text_body": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invitation Text Body"
-          },
-          "invitation_html_body": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invitation Html Body"
+              "type": "object"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/Language"
+            },
+            "type": "object",
+            "title": "Invitation Texts",
+            "default": {}
           }
         },
         "type": "object",

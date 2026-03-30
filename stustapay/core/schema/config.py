@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from stustapay.core.schema.language import Language
+
 
 class ConfigEntry(BaseModel):
     key: str
@@ -15,9 +17,7 @@ class GlobalEmailConfig(BaseModel):
     email_smtp_port: int | None = None
     email_smtp_username: str | None = None
     email_smtp_password: str | None = None
-    invitation_subject: str | None = None
-    invitation_text_body: str | None = None
-    invitation_html_body: str | None = None
+    invitation_texts: dict[Language, dict[str, str]] = {}
 
 
 class PublicConfig(BaseModel):

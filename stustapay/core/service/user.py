@@ -3,7 +3,6 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional
-from urllib.parse import urlsplit, urlunsplit
 
 import asyncpg
 from passlib.context import CryptContext
@@ -30,17 +29,19 @@ from stustapay.core.schema.user import (
     format_user_tag_uid,
 )
 from stustapay.core.service.auth import AuthService, UserTokenMetadata
-from stustapay.core.service.config import fetch_global_email_config
+from stustapay.core.service.config import (
+    fetch_global_email_config,
+    render_bilingual_invitation_html,
+    render_bilingual_invitation_subject,
+    render_bilingual_invitation_text,
+)
 from stustapay.core.service.common.decorators import (
     requires_node,
     requires_terminal,
     requires_user,
 )
 from stustapay.core.service.email_templates import (
-    DEFAULT_INVITATION_SUBJECT,
-    DEFAULT_INVITATION_TEXT_BODY,
-    render_invitation_html,
-    render_template_string,
+    derive_invitation_base_url,
 )
 from stustapay.core.service.mail import MailService
 from sftkit.error import AccessDenied, InvalidArgument, NotFound
@@ -227,15 +228,6 @@ class UserService(Service[Config]):
     def _hash_invitation_token(cls, token: str) -> str:
         digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
         return f"{cls.INVITATION_TOKEN_HASH_PREFIX}{digest}"
-
-    @staticmethod
-    def _invitation_base_url(api_base_url: str) -> str:
-        parsed = urlsplit(api_base_url)
-        path = parsed.path.rstrip("/")
-        if path.endswith("/api"):
-            path = path[: -len("/api")]
-
-        return urlunsplit((parsed.scheme, parsed.netloc, path, "", "")).rstrip("/")
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -735,10 +727,8 @@ class UserService(Service[Config]):
         node_info = await conn.fetchrow("select name, description from node where id = $1", node.id)
         node_name = node_info["name"] if node_info else "Node"
 
-        # Construct invitation URL from the configured administration API base URL.
-        # We only remove a trailing '/api' path segment to avoid modifying the host
-        # (e.g. https://api.example.com/api -> https://api.example.com).
-        base_url = self._invitation_base_url(self.config.administration.base_url)
+        # Construct the administration frontend URL from the configured API base URL.
+        base_url = derive_invitation_base_url(self.config.administration.base_url)
         invitation_url = f"{base_url}/accept-invitation?token={token}"
         context = self._get_invitation_template_context(
             user=user,
@@ -748,13 +738,9 @@ class UserService(Service[Config]):
         )
         email_config = await fetch_global_email_config(conn=conn)
 
-        subject = render_template_string(email_config.invitation_subject or DEFAULT_INVITATION_SUBJECT, context)
-        message = render_template_string(email_config.invitation_text_body or DEFAULT_INVITATION_TEXT_BODY, context)
-        html_message = (
-            render_invitation_html(email_config.invitation_html_body, context, subject)
-            if email_config.invitation_html_body
-            else None
-        )
+        subject = render_bilingual_invitation_subject(email_config, context)
+        message = render_bilingual_invitation_text(email_config, context)
+        html_message = render_bilingual_invitation_html(email_config, context, subject)
 
         # Invitations must always be sent via the global mail configuration,
         # independent of the node the invited user will manage.

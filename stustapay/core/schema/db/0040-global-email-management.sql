@@ -11,13 +11,6 @@ from privilege
 where name = 'global_email_management'
 on conflict do nothing;
 
-insert into config (key, value, node_id)
-values
-    ('mail.invitation.subject', 'Invitation to manage {{ node_name }}', 0),
-    ('mail.invitation.text_body', E'Hello {{ display_name }},\n\nYou have been invited to manage {{ node_name }} in the StuStaPay administration portal.\n\nTo activate your account, please click the following link and set your password:\n{{ invitation_url }}\n\nThis invitation will expire on {{ expires_at }}.\n\nIf you did not expect this invitation, please ignore this email.\n\nBest regards,\nThe StuStaPay Team\n', 0),
-    ('mail.invitation.html_body', '<p>Hello {{ display_name }},</p><p>You have been invited to manage <strong>{{ node_name }}</strong> in the StuStaPay administration portal.</p><p>To activate your account, please click the following link and set your password:</p><p><a href="{{ invitation_url }}">{{ invitation_url }}</a></p><p>This invitation will expire on {{ expires_at }}.</p><p>If you did not expect this invitation, please ignore this email.</p><p>Best regards,<br />The StuStaPay Team</p>', 0)
-on conflict do nothing;
-
 do $$
 begin
     if exists (

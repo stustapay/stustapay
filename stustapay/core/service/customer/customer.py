@@ -18,7 +18,7 @@ from stustapay.core.schema.customer import (
     PayoutInfo,
     PayoutTransaction,
 )
-from stustapay.core.schema.tree import Language
+from stustapay.core.schema.language import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.decorators import requires_customer
 from sftkit.error import AccessDenied, InvalidArgument

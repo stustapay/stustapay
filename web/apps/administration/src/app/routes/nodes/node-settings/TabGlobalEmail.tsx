@@ -1,11 +1,13 @@
 import {
   GlobalEmailConfig,
+  Language,
   useGetGlobalEmailConfigQuery,
   useSendGlobalEmailTestMutation,
   useUpdateGlobalEmailConfigMutation,
 } from "@/api";
 import { LoadingButton } from "@mui/lab";
-import { Alert, AlertTitle, Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, LinearProgress, Stack, TextField, Typography } from "@mui/material";
+import { Select, Loading } from "@stustapay/components";
 import { FormSwitch, FormTextField, FormNumericInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
@@ -13,12 +15,13 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
-import { Loading } from "@stustapay/components";
 
 const requiredIssue = {
   code: z.ZodIssueCode.custom,
   message: "Required if email sending is enabled",
 };
+
+const supportedInvitationLanguages: Language[] = ["de-DE", "en-US"];
 
 const GlobalEmailSettingsSchema = z
   .object({
@@ -28,9 +31,7 @@ const GlobalEmailSettingsSchema = z
     email_smtp_port: z.number().int().optional().nullable(),
     email_smtp_username: z.string().optional().nullable(),
     email_smtp_password: z.string().optional().nullable(),
-    invitation_subject: z.string().optional().nullable(),
-    invitation_text_body: z.string().optional().nullable(),
-    invitation_html_body: z.string().optional().nullable(),
+    invitation_texts: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
   .superRefine((data, ctx) => {
     if (!data.email_enabled) {
@@ -49,8 +50,40 @@ const GlobalEmailSettingsSchema = z
 
 type GlobalEmailSettings = z.infer<typeof GlobalEmailSettingsSchema>;
 
+const updateInvitationTexts = (
+  texts: GlobalEmailSettings["invitation_texts"],
+  language: Language,
+  field: "subject" | "text_body" | "html_body",
+  value: string
+) => {
+  const nextTexts = JSON.parse(JSON.stringify(texts ?? {}));
+  if (nextTexts[language] === undefined) {
+    nextTexts[language] = {};
+  }
+  nextTexts[language][field] = value;
+  return nextTexts;
+};
+
+const normalizeInvitationTexts = (texts: GlobalEmailSettings["invitation_texts"]) => {
+  const normalized: GlobalEmailSettings["invitation_texts"] = {};
+  for (const [language, templates] of Object.entries(texts ?? {})) {
+    const nextTemplates: Record<string, string> = {};
+    for (const [field, value] of Object.entries(templates ?? {})) {
+      if (value.trim() !== "") {
+        nextTemplates[field] = value;
+      }
+    }
+    if (Object.keys(nextTemplates).length > 0) {
+      normalized[language] = nextTemplates;
+    }
+  }
+  return normalized;
+};
+
 const GlobalEmailSettingsForm: React.FC<FormikProps<GlobalEmailSettings>> = (formik) => {
   const { t } = useTranslation();
+  const [language, setLanguage] = React.useState<Language>("de-DE");
+  const templates = formik.values.invitation_texts[language] ?? {};
 
   return (
     <>
@@ -60,20 +93,60 @@ const GlobalEmailSettingsForm: React.FC<FormikProps<GlobalEmailSettings>> = (for
       <FormNumericInput label={t("settings.email.smtp_port")} name="email_smtp_port" formik={formik} />
       <FormTextField label={t("settings.email.smtp_username")} name="email_smtp_username" formik={formik} />
       <FormTextField label={t("settings.email.smtp_password")} name="email_smtp_password" formik={formik} />
-      <FormTextField label={t("settings.email.invitation_subject")} name="invitation_subject" formik={formik} />
-      <FormTextField
+      <Typography variant="subtitle2">{t("settings.email.invitationTemplates")}</Typography>
+      <Select
+        label={t("settings.language")}
+        multiple={false}
+        value={language}
+        onChange={(value) => (value != null ? setLanguage(value as Language) : null)}
+        options={supportedInvitationLanguages}
+        formatOption={(option: Language) => option}
+      />
+      <TextField
+        label={t("settings.email.invitation_subject")}
+        name={`invitation_texts.${language}.subject`}
+        value={templates["subject"] ?? ""}
+        onChange={(event) => {
+          formik.setFieldValue(
+            "invitation_texts",
+            updateInvitationTexts(formik.values.invitation_texts, language, "subject", event.target.value)
+          );
+          formik.setFieldTouched("invitation_texts");
+        }}
+        variant="standard"
+        fullWidth
+      />
+      <TextField
         label={t("settings.email.invitation_text_body")}
-        name="invitation_text_body"
-        formik={formik}
+        name={`invitation_texts.${language}.text_body`}
+        value={templates["text_body"] ?? ""}
+        onChange={(event) => {
+          formik.setFieldValue(
+            "invitation_texts",
+            updateInvitationTexts(formik.values.invitation_texts, language, "text_body", event.target.value)
+          );
+          formik.setFieldTouched("invitation_texts");
+        }}
         multiline
         minRows={8}
+        variant="standard"
+        fullWidth
       />
-      <FormTextField
+      <TextField
         label={t("settings.email.invitation_html_body")}
-        name="invitation_html_body"
-        formik={formik}
+        name={`invitation_texts.${language}.html_body`}
+        value={templates["html_body"] ?? ""}
+        onChange={(event) => {
+          formik.setFieldValue(
+            "invitation_texts",
+            updateInvitationTexts(formik.values.invitation_texts, language, "html_body", event.target.value)
+          );
+          formik.setFieldTouched("invitation_texts");
+        }}
         multiline
         minRows={10}
+        variant="standard"
+        fullWidth
       />
       <Box>
         <Typography variant="subtitle2">{t("settings.email.templateVariables")}</Typography>
@@ -93,7 +166,12 @@ export const TabGlobalEmail: React.FC = () => {
 
   const handleSubmit = (values: GlobalEmailSettings, { setSubmitting }: FormikHelpers<GlobalEmailSettings>) => {
     setSubmitting(true);
-    updateGlobalEmailConfig({ globalEmailConfig: values as GlobalEmailConfig })
+    updateGlobalEmailConfig({
+      globalEmailConfig: {
+        ...values,
+        invitation_texts: normalizeInvitationTexts(values.invitation_texts),
+      } as GlobalEmailConfig,
+    })
       .unwrap()
       .then(() => {
         setSubmitting(false);

@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from sftkit.database import Connection
 
+from stustapay.core.schema.language import Language
 from stustapay.core.schema.tree import (
-    Language,
     Node,
     NodeSeenByUser,
     PublicEventSettings,

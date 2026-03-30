@@ -3574,9 +3574,11 @@ export type GlobalEmailConfig = {
   email_smtp_port?: number | null;
   email_smtp_username?: string | null;
   email_smtp_password?: string | null;
-  invitation_subject?: string | null;
-  invitation_text_body?: string | null;
-  invitation_html_body?: string | null;
+  invitation_texts?: {
+    [key: string]: {
+      [key: string]: string;
+    };
+  };
 };
 export type AccountType =
   | "private"
