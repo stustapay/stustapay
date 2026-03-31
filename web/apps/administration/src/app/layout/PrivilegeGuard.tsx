@@ -1,10 +1,10 @@
-import { Privilege } from "@/api";
+import { PrivilegeRequirement } from "@/core/privileges";
 import { useCurrentUserHasPrivilege } from "@/hooks";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 export interface PrivilegeGuardProps {
-  privilege: Privilege;
+  privilege: PrivilegeRequirement;
   /*
    * whether to hide children instead of redirecting to the root route
    * default is redirect

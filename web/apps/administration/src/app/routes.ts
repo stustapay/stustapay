@@ -1,7 +1,8 @@
 import { ObjectType, Privilege } from "@/api";
+import { PrivilegeRequirement } from "@/core/privileges";
 
 export interface IRouteBuilder {
-  readonly privilege: Privilege;
+  readonly privilege: PrivilegeRequirement;
   readonly objectType?: ObjectType;
   list: (nodeId?: number) => string;
   add: (nodeId?: number) => string;
@@ -29,7 +30,7 @@ export const getNodeIdFromPath = (path?: string | null): number | null => {
 class RouteBuilder implements IRouteBuilder {
   constructor(
     private resourceUrl: string,
-    public privilege: Privilege,
+    public privilege: PrivilegeRequirement,
     public objectType?: ObjectType
   ) {}
 
@@ -83,7 +84,7 @@ export const UserTagRoutes = new RouteBuilder("user-tags", "node_administration"
 export const OrderRoutes = new RouteBuilder("orders", "node_administration", "account");
 export const TransactionRoutes = new RouteBuilder("transactions", "node_administration", "account");
 export const TseRoutes = new RouteBuilder("tses", "node_administration", "tse");
-export const PayoutRunRoutes = new RouteBuilder("payout-runs", "node_administration", "account");
+export const PayoutRunRoutes = new RouteBuilder("payout-runs", ["node_administration", "payout_management"], "account");
 export const SumUpTransactionRoutes = new RouteBuilder("sumup", "node_administration");
 export const SumUpCheckoutRoutes = new RouteBuilder("sumup/checkouts", "node_administration");
 export const CustomerRoutes = new RouteBuilder("customers", "node_administration", "account");

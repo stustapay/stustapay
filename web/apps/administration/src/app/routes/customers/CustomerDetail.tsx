@@ -103,7 +103,10 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
 
   const [disableAccount] = useDisableAccountMutation();
   const [updateComment] = useUpdateAccountCommentMutation();
-  const canManagePayoutsAtNode = useCurrentUserHasPrivilegeAtNode(PayoutRunRoutes.privilege);
+  const canManageCustomerPayoutsAtNode = useCurrentUserHasPrivilegeAtNode([
+    Privilege.payout_management,
+    Privilege.customer_management,
+  ]);
 
   const [allowPayout] = useAllowCustomerPayoutMutation();
   const [preventPayout] = usePreventCustomerPayoutMutation();
@@ -182,7 +185,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
     { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
   ];
 
-  if (canManagePayoutsAtNode(currentNode.id) && customer.payout == null) {
+  if (canManageCustomerPayoutsAtNode(currentNode.id) && customer.payout == null) {
     if (customer.payout_export !== false) {
       actions.splice(0, 0, {
         label: t("customer.preventPayout"),
