@@ -1,17 +1,20 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,disable=protected-access,redefined-outer-name
 
 import secrets
+import uuid
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from dateutil.parser import parse
 from sftkit.database import Connection
 
 from stustapay.core.schema.customer import Customer, OrderWithBon
-from stustapay.core.schema.order import Order, OrderType, PaymentMethod
+from stustapay.core.schema.order import Order, OrderType, PaymentMethod, PendingOrderStatus
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
+from stustapay.payment.sumup.api import SumUpCheckout, SumUpCheckoutStatus
 from sftkit.error import (
     AccessDenied,
     InvalidArgument,
@@ -24,6 +27,33 @@ from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.core.service.product import ProductService
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
+
+
+class OnlineTopUpSumUpApiMock:
+    def __init__(self, api_key: str, merchant_code: str):
+        del api_key
+        self.merchant_code = merchant_code
+        self.create_calls = 0
+        self.checkouts: dict[uuid.UUID, SumUpCheckout] = {}
+
+    async def create_sumup_checkout(self, checkout) -> SumUpCheckout:
+        self.create_calls += 1
+        created_checkout = SumUpCheckout(
+            checkout_reference=checkout.checkout_reference,
+            amount=checkout.amount,
+            currency=checkout.currency,
+            merchant_code=checkout.merchant_code,
+            description=checkout.description,
+            redirect_url=checkout.redirect_url,
+            id=f"checkout-{self.create_calls}",
+            status=SumUpCheckoutStatus.PENDING,
+            date=datetime.now(timezone.utc),
+        )
+        self.checkouts[checkout.checkout_reference] = created_checkout
+        return created_checkout
+
+    async def find_checkout(self, order_uuid: uuid.UUID) -> SumUpCheckout | None:
+        return self.checkouts.get(order_uuid)
 
 
 @pytest.fixture
@@ -170,6 +200,75 @@ async def test_get_api_config_includes_theme_colors(
     assert config.primary_color == "#112233"
     assert config.secondary_color == "#445566"
     assert config.background_color == "#778899"
+
+
+async def test_create_online_topup_checkout_reuses_pending_checkout(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    first_checkout, first_order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+    second_checkout, second_order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+
+    assert first_order_uuid == second_order_uuid
+    assert first_checkout.id == second_checkout.id
+    assert sumup_api.create_calls == 1
+    assert await db_connection.fetchval(
+        "select count(*) from pending_sumup_order "
+        "where status = 'pending' "
+        "  and order_type = 'topup' "
+        "  and cashier_id is null",
+    ) == 1
+
+
+async def test_create_online_topup_checkout_replaces_timed_out_pending_checkout(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, old_order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+
+    timed_out_at = datetime.now(timezone.utc) - timedelta(minutes=10)
+    await db_connection.execute(
+        "update pending_sumup_order set created_at = $1 where uuid = $2",
+        timed_out_at,
+        old_order_uuid,
+    )
+
+    _, new_order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+
+    assert new_order_uuid != old_order_uuid
+    assert sumup_api.create_calls == 2
+    assert await db_connection.fetchval(
+        "select status from pending_sumup_order where uuid = $1",
+        old_order_uuid,
+    ) == PendingOrderStatus.cancelled.value
 
 
 async def test_get_orders_with_bon(
