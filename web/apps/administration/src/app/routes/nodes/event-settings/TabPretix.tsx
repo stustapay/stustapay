@@ -53,7 +53,7 @@ export const PretixSettingsForm: React.FC<FormikProps<PretixSettings>> = (formik
     <>
       <FormSwitch label={t("settings.pretix.presaleEnabled")} name="pretix_presale_enabled" formik={formik} />
       <FormTextField label={t("settings.pretix.baseUrl")} name="pretix_shop_url" formik={formik} />
-      <FormTextField label={t("settings.pretix.apiKey")} name="pretix_api_key" formik={formik} />
+      <FormTextField label={t("settings.pretix.apiKey")} name="pretix_api_key" type="password" formik={formik} />
       <FormTextField label={t("settings.pretix.organizer")} name="pretix_organizer" formik={formik} />
       <FormTextField label={t("settings.pretix.event")} name="pretix_event" formik={formik} />
       <ArrayTextInput

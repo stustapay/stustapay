@@ -92,7 +92,7 @@ const GlobalEmailSettingsForm: React.FC<FormikProps<GlobalEmailSettings>> = (for
       <FormTextField label={t("settings.email.smtp_host")} name="email_smtp_host" formik={formik} />
       <FormNumericInput label={t("settings.email.smtp_port")} name="email_smtp_port" formik={formik} />
       <FormTextField label={t("settings.email.smtp_username")} name="email_smtp_username" formik={formik} />
-      <FormTextField label={t("settings.email.smtp_password")} name="email_smtp_password" formik={formik} />
+      <FormTextField label={t("settings.email.smtp_password")} name="email_smtp_password" type="password" formik={formik} />
       <Typography variant="subtitle2">{t("settings.email.invitationTemplates")}</Typography>
       <Select
         label={t("settings.language")}

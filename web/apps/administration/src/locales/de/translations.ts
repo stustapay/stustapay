@@ -591,6 +591,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
       sumup_oauth_client_secret: "SumUp OAuth Client Secret",
       sumup_redirect_url: "Dies ist die Sumup-Redirect-URL: {{redirectUrl}}",
       login_with_sumup: "Login mit SumUp",
+      refreshToken: "SumUp-Refresh-Token",
+      secretConfigured: "Konfiguriert",
+      secretNotConfigured: "Nicht konfiguriert",
     },
     mdm: {
       tabLabel: "MDM / Konnektivität",

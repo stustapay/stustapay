@@ -47,8 +47,8 @@ const SecretForm: React.FC<FormikProps<NewUserTagSecret>> = (props) => {
       <Typography variant="body2" color="text.secondary">
         {t("userTagSecret.generateHint")}
       </Typography>
-      <FormTextField name="key0" label={t("userTagSecret.key0")} formik={props} />
-      <FormTextField name="key1" label={t("userTagSecret.key1")} formik={props} />
+      <FormTextField name="key0" label={t("userTagSecret.key0")} type="password" formik={props} />
+      <FormTextField name="key1" label={t("userTagSecret.key1")} type="password" formik={props} />
     </Stack>
   );
 };

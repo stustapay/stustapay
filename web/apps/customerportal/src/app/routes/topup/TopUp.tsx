@@ -3,7 +3,7 @@ import { PageContainer } from "@/components";
 import { usePublicConfig } from "@/hooks";
 import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
-import { Alert, AlertTitle, Box, Button, Grid, LinearProgress, Link, Stack, Typography } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, LinearProgress, Link, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { FormCurrencyInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -81,12 +81,12 @@ const reducer = (state: TopUpState, action: TopUpStateAction): TopUpState => {
 // Remove local Container definition
 
 
-type SumUpCardRespHandler = (type: SumUpResponseType, body: object) => void;
+type SumUpCardRespHandler = (type: SumUpResponseType, body?: unknown) => void;
 type SumUpCardLoadHandler = () => void;
 
 export const TopUp: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { search, state: locationState } = useLocation();
+  const { state: locationState } = useLocation();
 
   const config = usePublicConfig();
 
@@ -97,8 +97,13 @@ export const TopUp: React.FC = () => {
   const sumupCard = React.useRef<SumUpCardInstance | undefined>(undefined);
   const handleSumupCardResp = React.useRef<SumUpCardRespHandler | undefined>(undefined);
   const handleSumupCardLoad = React.useRef<SumUpCardLoadHandler | undefined>(undefined);
+  const checkoutPollTimeout = React.useRef<number | null>(null);
+  const checkoutPollRun = React.useRef(0);
+  const hasSeenAuthScreen = React.useRef(false);
+  const hasShownPendingWarning = React.useRef(false);
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
+  const [sumupMessage, setSumupMessage] = React.useState<string | null>(null);
 
   // Handle APM redirect navigation state
   React.useEffect(() => {
@@ -113,136 +118,168 @@ export const TopUp: React.FC = () => {
     dispatch({ type: "reset" });
   };
 
+  const clearCheckoutPoll = () => {
+    if (checkoutPollTimeout.current !== null) {
+      window.clearTimeout(checkoutPollTimeout.current);
+      checkoutPollTimeout.current = null;
+    }
+  };
+
+  const unmountSumupCard = () => {
+    if (sumupCard.current) {
+      sumupCard.current.unmount();
+      sumupCard.current = undefined;
+    }
+  };
+
   React.useEffect(() => {
-    handleSumupCardResp.current = (type: SumUpResponseType, body: object) => {
+    return () => {
+      clearCheckoutPoll();
+      unmountSumupCard();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (state.stage === "sumup") {
+      return;
+    }
+
+    clearCheckoutPoll();
+    checkoutPollRun.current += 1;
+    hasSeenAuthScreen.current = false;
+    hasShownPendingWarning.current = false;
+    setSumupMessage(null);
+    unmountSumupCard();
+  }, [state.stage]);
+
+  React.useEffect(() => {
+    const startCheckoutStatusPolling = (reason: Exclude<SumUpResponseType, "invalid">) => {
       if (state.stage !== "sumup") {
         return;
       }
-      if (type === "invalid" && "message" in body && typeof body.message === "string") {
+
+      clearCheckoutPoll();
+      const pollRun = ++checkoutPollRun.current;
+      let attempt = 0;
+      const maxAttempts = reason === "success" ? 8 : 20;
+
+      const scheduleNextPoll = (delayMs: number) => {
+        clearCheckoutPoll();
+        checkoutPollTimeout.current = window.setTimeout(() => {
+          void pollCheckoutStatus();
+        }, delayMs);
+      };
+
+      const pollCheckoutStatus = async () => {
+        if (checkoutPollRun.current !== pollRun || state.stage !== "sumup") {
+          return;
+        }
+
+        try {
+          const resp = await checkCheckout({ checkCheckoutPayload: { order_uuid: state.orderUUID } }).unwrap();
+          if (checkoutPollRun.current !== pollRun || state.stage !== "sumup") {
+            return;
+          }
+
+          if (resp.status === "PAID") {
+            clearCheckoutPoll();
+            unmountSumupCard();
+            dispatch({ type: "sumup-success" });
+            return;
+          }
+
+          if (resp.status === "FAILED") {
+            clearCheckoutPoll();
+            unmountSumupCard();
+            dispatch({ type: "sumup-cancelled", message: t("topup.cancelled.message") });
+            return;
+          }
+
+          attempt += 1;
+          setSumupMessage(
+            hasSeenAuthScreen.current ? t("topup.awaiting3ds") : t("topup.processingPayment")
+          );
+
+          if (attempt >= maxAttempts) {
+            clearCheckoutPoll();
+            setSumupMessage(t("topup.paymentTakingTooLong"));
+            if (!hasShownPendingWarning.current) {
+              hasShownPendingWarning.current = true;
+              toast.warning(t("topup.paymentTakingTooLong"));
+            }
+            return;
+          }
+
+          scheduleNextPoll(reason === "success" ? Math.min(8000, 1000 * 2 ** (attempt - 1)) : 2000);
+        } catch {
+          if (checkoutPollRun.current !== pollRun || state.stage !== "sumup") {
+            return;
+          }
+
+          attempt += 1;
+          if (attempt >= 5) {
+            clearCheckoutPoll();
+            setSumupMessage(t("topup.paymentTakingTooLong"));
+            if (!hasShownPendingWarning.current) {
+              hasShownPendingWarning.current = true;
+              toast.warning(t("topup.paymentTakingTooLong"));
+            }
+            return;
+          }
+
+          scheduleNextPoll(2000);
+        }
+      };
+
+      void pollCheckoutStatus();
+    };
+
+    handleSumupCardResp.current = (type: SumUpResponseType, body?: unknown) => {
+      if (state.stage !== "sumup") {
+        return;
+      }
+
+      if (
+        type === "invalid" &&
+        body !== null &&
+        typeof body === "object" &&
+        "message" in body &&
+        typeof body.message === "string"
+      ) {
         toast.error(body.message);
+        return;
       }
 
-      if (type === "error" || type === "success") {
-        // If SumUp reports success, we should trust it and retry a few times if our backend has issues
-        // For success, we'll check up to 5 times with a longer total wait time
-        const maxRetries = type === "success" ? 5 : 1;
-        let retryCount = 0;
-        let sumupReportedSuccess = type === "success";
-
-        const checkPaymentStatus = () => {
-          console.log(`Checking payment status for order ${state.orderUUID}, attempt ${retryCount + 1}/${maxRetries}`);
-
-          checkCheckout({ checkCheckoutPayload: { order_uuid: state.orderUUID } })
-            .unwrap()
-            .then((resp) => {
-              if (sumupCard.current) {
-                sumupCard.current.unmount();
-                sumupCard.current = undefined;
-              }
-
-              // If the status is PAID, it was successful
-              if (resp.status === "PAID") {
-                console.log(`Payment confirmed as PAID for order ${state.orderUUID}`);
-                dispatch({ type: "sumup-success" });
-                return;
-              }
-
-              // If SumUp reported success but our backend still shows PENDING or FAILED,
-              // we need to handle this carefully
-              if (sumupReportedSuccess) {
-                const status = resp.status as string; // Type assertion to avoid TypeScript narrowing
-                if (status === "FAILED") {
-                  console.log(`SumUp reported success but backend reports FAILED for order ${state.orderUUID}. Showing failure to user.`);
-                  dispatch({ type: "sumup-error", message: t("topup.error.message") });
-                  return;
-                }
-
-                if (retryCount < maxRetries) {
-                  // Exponential backoff for retries: 1s, 2s, 4s, 8s, 16s
-                  retryCount++;
-                  const delay = 1000 * Math.pow(2, retryCount - 1);
-                  console.log(`SumUp reports success but backend shows ${resp.status}. Retrying in ${delay / 1000}s (attempt ${retryCount}/${maxRetries})`);
-                  setTimeout(checkPaymentStatus, delay);
-                } else {
-                  // After maximum retries, decide based on current status
-                  console.log(`Reached maximum retries. Status from backend: ${resp.status}`);
-
-                  // Use simple if/else with string comparisons
-                  if (status === "PAID") {
-                    console.log(`Payment confirmed as PAID after retries`);
-                    dispatch({ type: "sumup-success" });
-                  } else if (status === "FAILED") {
-                    console.log(`Backend reports FAILED despite SumUp reporting success`);
-                    dispatch({ type: "sumup-error", message: t("topup.error.message") });
-                  } else {
-                    // For PENDING or other unknown states after all retries
-                    console.log(`Payment still in state ${status} after all retries`);
-                    dispatch({ type: "sumup-success" });
-                  }
-                }
-              } else {
-                // SumUp didn't report success and backend says FAILED
-                const status = resp.status as string; // Type assertion
-                if (status === "FAILED") {
-                  console.log(`Payment confirmed as FAILED for order ${state.orderUUID}`);
-                  dispatch({ type: "sumup-cancelled", message: t("topup.cancelled.message") });
-                  return;
-                } else {
-                  // Status is still pending and we're out of retries
-                  console.log(`Payment status is still ${resp.status} after ${retryCount} retries`);
-                  if (retryCount < maxRetries) {
-                    retryCount++;
-                    const delay = 1000 * retryCount;
-                    setTimeout(checkPaymentStatus, delay);
-                  } else {
-                    dispatch({ type: "sumup-error", message: t("topup.unexpectedError") });
-                  }
-                }
-              }
-            })
-            .catch((error) => {
-              console.log(`Error checking payment status for order ${state.orderUUID}:`, error);
-
-              // If SumUp reported success, we'll retry or eventually trust SumUp
-              if (sumupReportedSuccess) {
-                if (retryCount < maxRetries) {
-                  retryCount++;
-                  // Exponential backoff
-                  const delay = 1000 * Math.pow(2, retryCount - 1);
-                  console.log(`SumUp reports success but API check failed. Retrying in ${delay / 1000}s (attempt ${retryCount}/${maxRetries})`);
-                  setTimeout(checkPaymentStatus, delay);
-                } else {
-                  // After maximum retries, if backend API request failed but SumUp reported success
-                  // Trust SumUp's success response since the payment is likely processed correctly
-                  console.log(`Reached maximum retries. API checks failed. Trusting SumUp success response.`);
-                  dispatch({ type: "sumup-success" });
-                }
-              } else {
-                // SumUp didn't report success and we got an error from our API
-                if (error?.status === 404 || (error?.data && error?.data.detail === "Order not found")) {
-                  console.log(`Order not found, marking as cancelled`);
-                  dispatch({ type: "sumup-cancelled", message: t("topup.cancelled.message") });
-                } else {
-                  console.error("Unexpected error checking payment status:", error);
-                  toast.error(t("topup.unexpectedError"));
-                  dispatch({ type: "sumup-error" });
-                }
-              }
-            });
-        };
-
-        // Start the payment status check process
-        checkPaymentStatus();
+      if (type === "sent") {
+        setSumupMessage(t("topup.processingPayment"));
+        startCheckoutStatusPolling(type);
+        return;
       }
 
-      // Handle 3D Secure authentication - just wait for completion
       if (type === "auth-screen") {
+        hasSeenAuthScreen.current = true;
+        setSumupMessage(t("topup.awaiting3ds"));
+        startCheckoutStatusPolling(type);
+        return;
+      }
+
+      if (type === "success") {
+        setSumupMessage(t("topup.processingPayment"));
+        startCheckoutStatusPolling(type);
+        return;
+      }
+
+      if (type === "error") {
+        setSumupMessage(
+          hasSeenAuthScreen.current ? t("topup.awaiting3ds") : t("topup.processingPayment")
+        );
+        startCheckoutStatusPolling(type);
         return;
       }
     };
 
     handleSumupCardLoad.current = () => {
-      // SumUp widget loaded successfully
+      setSumupMessage(t("topup.processingPayment"));
     };
   }, [checkCheckout, dispatch, state, t]);
 
@@ -250,6 +287,11 @@ export const TopUp: React.FC = () => {
     if (state.stage !== "sumup") {
       return;
     }
+
+    hasSeenAuthScreen.current = false;
+    hasShownPendingWarning.current = false;
+    setSumupMessage(t("topup.processingPayment"));
+
     const config = {
       id: "sumup-card",
       checkoutId: state.checkoutId,
@@ -266,10 +308,11 @@ export const TopUp: React.FC = () => {
         sumupCard.current = SumUpCard.mount(config);
         // sumupCard.current = SumUpCardMock.mount(config);
       } catch (e) {
-        // Handle widget mounting error silently
+        console.error("Error mounting SumUp card", e);
+        dispatch({ type: "sumup-error", message: t("topup.error.message") });
       }
     }
-  }, [config, state, i18n, checkCheckout, dispatch]);
+  }, [state, i18n.language, dispatch, t]);
 
   // Add an effect to check for stalled payments
   React.useEffect(() => {
@@ -284,6 +327,7 @@ export const TopUp: React.FC = () => {
         .then((resp) => {
           if (resp.status === "PENDING") {
             // Still pending after 2 minutes, offer to restart
+            setSumupMessage(t("topup.paymentTakingTooLong"));
             toast.warning(t("topup.paymentTakingTooLong"));
           }
         })
@@ -327,6 +371,7 @@ export const TopUp: React.FC = () => {
       })
       .catch((error) => {
         console.error(error);
+        toast.error(t("topup.errorWhileCreatingCheckout"));
         setSubmitting(false);
       });
   };
@@ -360,7 +405,17 @@ export const TopUp: React.FC = () => {
     case "sumup":
       return (
         <PageContainer title={t("topup.onlineTopUp")}>
-          <div id="sumup-card"></div>
+          <Stack spacing={2}>
+            <Alert severity="info" variant="outlined">
+              {sumupMessage || t("topup.processingPayment")}
+            </Alert>
+            <div id="sumup-card"></div>
+            <Box>
+              <Button onClick={reset} color="inherit" size="small">
+                {t("topup.tryAgain")}
+              </Button>
+            </Box>
+          </Stack>
         </PageContainer>
       );
     case "success":
@@ -393,7 +448,7 @@ export const TopUp: React.FC = () => {
         <PageContainer title={t("topup.onlineTopUp")}>
           <Alert severity="error" action={<Button onClick={reset} color="inherit" size="small">{t("topup.tryAgain")}</Button>}>
             <AlertTitle>{t("topup.error.title")}</AlertTitle>
-            {t("topup.error.message")}
+            {state.message || t("topup.error.message")}
           </Alert>
           <Box
             sx={{

@@ -105,6 +105,8 @@ export const translations = {
     errorAmountMustBeIntegral: "Cent amounts are not allowed",
     sumupTopupDisabled: "Online top-up is disabled.",
     tryAgain: "Try again",
+    processingPayment: "Complete the payment below. If your bank opens a 3-D Secure step, finish it there.",
+    awaiting3ds: "Please complete the 3-D Secure confirmation in the opened window or redirect.",
     paymentTakingTooLong: "Payment is taking longer than expected. You can wait or try again.",
     unexpectedError: "An unexpected error occurred. Please try again later.",
     next: "Next",

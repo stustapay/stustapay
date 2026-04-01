@@ -608,6 +608,9 @@ export const translations = {
       sumup_oauth_client_secret: "SumUp OAuth Client Secret",
       sumup_redirect_url: "This is the sumup redirect url: {{redirectUrl}}",
       login_with_sumup: "Login with sumup",
+      refreshToken: "SumUp refresh token",
+      secretConfigured: "Configured",
+      secretNotConfigured: "Not configured",
     },
     mdm: {
       tabLabel: "MDM / Connectivity",

@@ -108,6 +108,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     errorAmountMustBeIntegral: "Centbeträge sind nicht erlaubt.",
     sumupTopupDisabled: "Online-Aufladung ist deaktiviert.",
     tryAgain: "Versuche es noch einmal",
+    processingPayment: "Schließe die Zahlung unten ab. Wenn deine Bank einen 3-D-Secure-Schritt öffnet, bestätige ihn dort.",
+    awaiting3ds: "Bitte bestätige jetzt 3-D Secure im geöffneten Fenster oder in der Weiterleitung.",
     paymentTakingTooLong: "Die Zahlung dauert länger als erwartet. Du kannst warten oder es noch einmal versuchen.",
     unexpectedError: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später noch einmal.",
     success: {
