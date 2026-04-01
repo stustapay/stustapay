@@ -655,7 +655,7 @@ class TreeService(Service[Config]):
             new_tag_id = await conn.fetchval(
                 "INSERT INTO user_tag (uid, pin, restriction, comment, secret_id, node_id, is_vip, group_tag, account_creation_blocked) "
                 "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
-                None,
+                tag["uid"],
                 tag["pin"],
                 tag["restriction"],
                 tag["comment"],

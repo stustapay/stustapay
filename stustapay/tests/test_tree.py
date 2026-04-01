@@ -681,14 +681,14 @@ async def test_copy_event(
         "blocked tag",
     )
     assert copied_tag is not None
-    assert copied_tag["uid"] is None
+    assert copied_tag["uid"] == 1_000_000 + original_event.id
     assert copied_tag["pin"] == "tag-pin"
     assert copied_tag["comment"] == "source tag"
     assert copied_tag["is_vip"] is True
     assert copied_tag["group_tag"] == "crew"
     assert copied_tag["account_creation_blocked"] is False
     assert blocked_copied_tag is not None
-    assert blocked_copied_tag["uid"] is None
+    assert blocked_copied_tag["uid"] == 1_100_000 + original_event.id
     assert blocked_copied_tag["pin"] == "blocked-pin"
     assert blocked_copied_tag["group_tag"] == "blocked-group"
     assert blocked_copied_tag["account_creation_blocked"] is True
@@ -1309,7 +1309,7 @@ async def test_copy_event_sub_nodes_preserve_internal_mappings(
     )
 
     assert copied_child_tag is not None
-    assert copied_child_tag["uid"] is None
+    assert copied_child_tag["uid"] == 2_000_000 + child_node.id
     assert copied_transport_account_id is not None
     assert copied_customer_account_id is not None
     assert copied_user is not None
