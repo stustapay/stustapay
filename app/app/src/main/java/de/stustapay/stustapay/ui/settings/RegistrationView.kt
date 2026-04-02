@@ -3,6 +3,8 @@ package de.stustapay.stustapay.ui.settings
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -123,112 +125,118 @@ fun RegistrationOverview(
 ) {
     val context = LocalContext.current
 
-    PrefGroup(title = { Text("Server Connection") }) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        PrefGroup(title = { Text("Server Connection") }) {
 
-        var endpointUrl: String? = null
-        var message: String? = null
-        when (registrationUiState) {
-            Idle -> {
-                message = "waiting for input"
-            }
-            is Message -> {
-                message = registrationUiState.msg
-            }
-            is HasEndpoint -> {
-                endpointUrl = registrationUiState.endpointUrl
-                message = registrationUiState.msg
-            }
-        }
-
-        Column {
-            Text(
-                text = message!!,
-                modifier = Modifier.padding(start = 15.dp, end = 10.dp)
-            )
-            Text(
-                text = "endpoint: ${endpointUrl ?: "not connected"}",
-                modifier = Modifier.padding(start = 15.dp, end = 10.dp),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Row {
-            if (registrationUiState is HasEndpoint) {
-                Registered(
-                    onDeregister = onDeregister,
-                    allowForceDeregister = allowForceDeregister,
-                    onForceDeregister = onForceDeregister,
-                )
-            } else {
-                Button(modifier = Modifier.padding(start = 10.dp, end = 10.dp), onClick = {
-                    scope.launch {
-                        navController.navigate("scan")
-                    }
-                }) {
-                    Text(text = "Scan Registration QR Code")
+            var endpointUrl: String? = null
+            var message: String? = null
+            when (registrationUiState) {
+                Idle -> {
+                    message = "waiting for input"
+                }
+                is Message -> {
+                    message = registrationUiState.msg
+                }
+                is HasEndpoint -> {
+                    endpointUrl = registrationUiState.endpointUrl
+                    message = registrationUiState.msg
                 }
             }
-        }
-    }
 
-    PrefGroup(title = { Text(stringResource(R.string.settings_wifi_title)) }) {
-        val wifiConfig = wifiSuggestionState.desiredConfig
-        var revealPassphrase by remember { mutableStateOf(false) }
-
-        if (wifiConfig == null) {
-            Text(
-                text = stringResource(R.string.settings_wifi_none),
-                modifier = Modifier.padding(start = 15.dp, end = 10.dp)
-            )
-        } else {
-            Column(
-                modifier = Modifier.padding(start = 15.dp, end = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(text = stringResource(R.string.settings_wifi_ssid, wifiConfig.ssid))
+            Column {
                 Text(
-                    text = stringResource(
-                        R.string.settings_wifi_passphrase,
-                        if (revealPassphrase) wifiConfig.passphrase else "••••••••"
-                    )
+                    text = message!!,
+                    modifier = Modifier.padding(start = 15.dp, end = 10.dp)
                 )
-                TextButton(onClick = { revealPassphrase = !revealPassphrase }) {
-                    Text(
-                        text = stringResource(
-                            if (revealPassphrase) {
-                                R.string.settings_wifi_hide_passphrase
-                            } else {
-                                R.string.settings_wifi_show_passphrase
-                            }
-                        )
-                    )
-                }
-                val errorMessage = wifiSuggestionState.lastErrorMessage
-                if (errorMessage != null) {
-                    Text(
-                        text = stringResource(R.string.settings_wifi_error, errorMessage),
-                        color = MaterialTheme.colors.error,
-                    )
-                } else {
-                    Text(text = stringResource(R.string.settings_wifi_success))
-                }
+                Text(
+                    text = "endpoint: ${endpointUrl ?: "not connected"}",
+                    modifier = Modifier.padding(start = 15.dp, end = 10.dp),
+                )
             }
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    modifier = Modifier.padding(start = 10.dp),
-                    onClick = onRetryWifiSuggestion,
-                ) {
-                    Text(text = stringResource(R.string.settings_wifi_retry))
+            Row {
+                if (registrationUiState is HasEndpoint) {
+                    Registered(
+                        onDeregister = onDeregister,
+                        allowForceDeregister = allowForceDeregister,
+                        onForceDeregister = onForceDeregister,
+                    )
+                } else {
+                    Button(modifier = Modifier.padding(start = 10.dp, end = 10.dp), onClick = {
+                        scope.launch {
+                            navController.navigate("scan")
+                        }
+                    }) {
+                        Text(text = "Scan Registration QR Code")
+                    }
                 }
-                OutlinedButton(
-                    modifier = Modifier.padding(end = 10.dp),
-                    onClick = { openWifiSetup(context, wifiConfig) },
+            }
+        }
+
+        PrefGroup(title = { Text(stringResource(R.string.settings_wifi_title)) }) {
+            val wifiConfig = wifiSuggestionState.desiredConfig
+            var revealPassphrase by remember { mutableStateOf(false) }
+
+            if (wifiConfig == null) {
+                Text(
+                    text = stringResource(R.string.settings_wifi_none),
+                    modifier = Modifier.padding(start = 15.dp, end = 10.dp)
+                )
+            } else {
+                Column(
+                    modifier = Modifier.padding(start = 15.dp, end = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(text = stringResource(R.string.settings_wifi_open_setup))
+                    Text(text = stringResource(R.string.settings_wifi_ssid, wifiConfig.ssid))
+                    Text(
+                        text = stringResource(
+                            R.string.settings_wifi_passphrase,
+                            if (revealPassphrase) wifiConfig.passphrase else "••••••••"
+                        )
+                    )
+                    TextButton(onClick = { revealPassphrase = !revealPassphrase }) {
+                        Text(
+                            text = stringResource(
+                                if (revealPassphrase) {
+                                    R.string.settings_wifi_hide_passphrase
+                                } else {
+                                    R.string.settings_wifi_show_passphrase
+                                }
+                            )
+                        )
+                    }
+                    val errorMessage = wifiSuggestionState.lastErrorMessage
+                    if (errorMessage != null) {
+                        Text(
+                            text = stringResource(R.string.settings_wifi_error, errorMessage),
+                            color = MaterialTheme.colors.error,
+                        )
+                    } else {
+                        Text(text = stringResource(R.string.settings_wifi_success))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        modifier = Modifier.padding(start = 10.dp),
+                        onClick = onRetryWifiSuggestion,
+                    ) {
+                        Text(text = stringResource(R.string.settings_wifi_retry))
+                    }
+                    OutlinedButton(
+                        modifier = Modifier.padding(end = 10.dp),
+                        onClick = { openWifiSetup(context, wifiConfig) },
+                    ) {
+                        Text(text = stringResource(R.string.settings_wifi_open_setup))
+                    }
                 }
             }
         }

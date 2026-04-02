@@ -814,7 +814,7 @@ async def test_copy_event(
     assert copied_user is not None
     assert copied_customer_account_id is not None
     assert copied_role_id is not None
-    assert copied_user["login"].startswith(f"source-user-{original_event.id}")
+    assert copied_user["login"] == f"source-user-{original_event.id}"
     assert copied_user["user_tag_id"] == copied_tag["id"]
     assert copied_user["transport_account_id"] is not None
     assert copied_user["cashier_account_id"] is not None
@@ -1280,7 +1280,7 @@ async def test_copy_event_sub_nodes_preserve_internal_mappings(
     )
     copied_creator_id = await _fetch_user_id_by_description(db_connection, copied_child_id, "child creator")
     copied_user = await db_connection.fetchrow(
-        "select id, user_tag_id, transport_account_id, cashier_account_id, customer_account_id, created_by "
+        "select id, login, user_tag_id, transport_account_id, cashier_account_id, customer_account_id, created_by "
         "from usr where node_id = $1 and description = $2",
         copied_child_id,
         "child user",
@@ -1317,6 +1317,7 @@ async def test_copy_event_sub_nodes_preserve_internal_mappings(
     assert copied_layout_id is not None
     assert copied_terminal_id is not None
     assert copied_till is not None
+    assert copied_user["login"] == f"child-user-{child_node.id}"
     assert copied_user["user_tag_id"] == copied_child_tag["id"]
     assert copied_user["transport_account_id"] == copied_transport_account_id
     assert copied_user["cashier_account_id"] == copied_transport_account_id

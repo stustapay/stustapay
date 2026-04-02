@@ -727,8 +727,6 @@ class TreeService(Service[Config]):
         elif table_name == "terminal":
             # Terminals should be unique per-node
             scope_column = "node_id"
-        elif table_name == "usr":
-            scope_column = None
         elif table_name == "tse":
             # TSE devices appear to have global uniqueness
             scope_column = None  # Check globally
@@ -1141,8 +1139,6 @@ class TreeService(Service[Config]):
         )
         user_mapping: dict[int, int] = {}
         for user in users:
-            unique_login = await self._generate_unique_name(conn, "usr", "login", user["login"], target_node_id)
-            assert unique_login is not None
             new_user_tag_id = None
             if user['user_tag_id'] is not None and user_tag_mapping:
                 new_user_tag_id = user_tag_mapping.get(user['user_tag_id'])
@@ -1169,7 +1165,7 @@ class TreeService(Service[Config]):
             new_user_id = await conn.fetchval(
                 "INSERT INTO usr (login, password, display_name, description, user_tag_id, transport_account_id, cashier_account_id, customer_account_id, cash_register_id, node_id, created_by, email) "
                 "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, null, $9, null, $10) RETURNING id",
-                unique_login,
+                user["login"],
                 user['password'],
                 user['display_name'],
                 user['description'],

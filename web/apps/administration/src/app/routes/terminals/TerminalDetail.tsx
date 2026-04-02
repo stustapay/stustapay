@@ -86,14 +86,27 @@ export const TerminalDetail: React.FC = () => {
     return getUserName(user);
   };
 
+  if (terminal === undefined || tills === undefined || isHeadwindMappingsLoading) {
+    return <Loading />;
+  }
+
+  if (terminal.node_id !== currentNode.id) {
+    return <Navigate to={TerminalRoutes.detail(terminal.id, terminal.node_id)} replace />;
+  }
+
+  const till = terminal.till_id != null ? selectTillById(tills, terminal.till_id) : undefined;
+  const entryArea =
+    terminal.entry_area_id != null && entryAreas ? selectEntryAreaById(entryAreas, terminal.entry_area_id) : undefined;
+  const headwindMapping = headwindMappings?.find((entry) => entry.terminal_id === terminal.id);
+
   const openConfirmDeleteDialog = () => {
     openModal({
       type: "confirm",
       title: t("terminal.delete"),
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
-        deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-          navigate(TerminalRoutes.list())
+        deleteTerminal({ nodeId: terminal.node_id, terminalId: Number(terminalId) }).then(() =>
+          navigate(TerminalRoutes.list(terminal.node_id))
         );
         return true;
       },
@@ -106,19 +119,11 @@ export const TerminalDetail: React.FC = () => {
       title: t("terminal.unregisterTerminal"),
       content: t("terminal.unregisterTerminalDescription"),
       onConfirm: () => {
-        logoutTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) });
+        logoutTerminal({ nodeId: terminal.node_id, terminalId: Number(terminalId) });
         return true;
       },
     });
   };
-
-  if (terminal === undefined || tills === undefined || isHeadwindMappingsLoading) {
-    return <Loading />;
-  }
-  const till = terminal.till_id != null ? selectTillById(tills, terminal.till_id) : undefined;
-  const entryArea =
-    terminal.entry_area_id != null && entryAreas ? selectEntryAreaById(entryAreas, terminal.entry_area_id) : undefined;
-  const headwindMapping = headwindMappings?.find((entry) => entry.terminal_id === terminal.id);
 
   const openConfirmRemoveTillDialog = () => {
     if (!till) {
@@ -140,7 +145,7 @@ export const TerminalDetail: React.FC = () => {
       title: t("till.forceLogoutUser"),
       content: t("till.forceLogoutUserDescription"),
       onConfirm: () => {
-        forceLogoutUser({ nodeId: currentNode.id, terminalId: Number(terminalId) });
+        forceLogoutUser({ nodeId: terminal.node_id, terminalId: Number(terminalId) });
       },
     });
   };
@@ -153,7 +158,7 @@ export const TerminalDetail: React.FC = () => {
       actions={[
         {
           label: t("edit"),
-          onClick: () => navigate(TerminalRoutes.edit(terminalId)),
+          onClick: () => navigate(TerminalRoutes.edit(terminalId, terminal.node_id)),
           color: "primary",
           icon: <EditIcon />,
         },
@@ -256,7 +261,12 @@ export const TerminalDetail: React.FC = () => {
           </Box>
         </Paper>
       )}
-      <TerminalSwitchTill open={switchTillOpen} terminalId={terminal.id} onClose={() => setSwitchTillOpen(false)} />
+      <TerminalSwitchTill
+        open={switchTillOpen}
+        terminalId={terminal.id}
+        nodeId={terminal.node_id}
+        onClose={() => setSwitchTillOpen(false)}
+      />
       {users && (
         <TerminalUserLogin
           open={loginUserOpen}

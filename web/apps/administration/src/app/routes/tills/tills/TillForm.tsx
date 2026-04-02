@@ -26,7 +26,9 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        terminals: data ? selectTerminalAll(data).filter((t) => t.till_id == null) : [],
+        terminals: data
+          ? selectTerminalAll(data).filter((terminal) => terminal.node_id === currentNode.id)
+          : [],
       }),
     }
   );
@@ -50,7 +52,7 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
         multiple={false}
         formatOption={(terminal: Terminal) => terminal.name}
         value={terminals.find((p) => p.id === values.terminal_id) ?? null}
-        options={terminals}
+        options={terminals.filter((terminal) => terminal.till_id == null || terminal.id === values.terminal_id)}
         label={t("till.terminal")}
         error={touched.terminal_id && !!errors.terminal_id}
         helperText={(touched.terminal_id && errors.terminal_id) as string}

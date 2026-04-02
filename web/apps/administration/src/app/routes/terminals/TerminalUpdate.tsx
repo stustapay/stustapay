@@ -29,15 +29,19 @@ export const TerminalUpdate: React.FC = withPrivilegeGuard("node_administration"
     return <Loading />;
   }
 
+  if (terminal.node_id !== currentNode.id) {
+    return <Navigate to={TerminalRoutes.edit(terminal.id, terminal.node_id)} replace />;
+  }
+
   return (
     <EditLayout
       title={t("terminal.update")}
       submitLabel={t("update")}
-      successRoute={TerminalRoutes.detail(terminal.id)}
+      successRoute={TerminalRoutes.detail(terminal.id, terminal.node_id)}
       initialValues={terminal}
       form={TerminalForm}
       validationSchema={UpdateTerminalSchema}
-      onSubmit={(t) => updateTerminal({ nodeId: currentNode.id, terminalId: terminal.id, newTerminal: t })}
+      onSubmit={(t) => updateTerminal({ nodeId: terminal.node_id, terminalId: terminal.id, newTerminal: t })}
     />
   );
 });

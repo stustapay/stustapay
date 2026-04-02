@@ -180,16 +180,14 @@ fun StartpageView(
                         )
                     }
 
-                    if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
-                        StartpageEntry(
-                            item = StartpageItem(
-                                icon = Icons.Filled.Settings,
-                                label = R.string.root_item_settings,
-                                navDestination = RootNavDests.settings,
-                            ),
-                            navigateTo = navigateToHook
-                        )
-                    }
+                    StartpageEntry(
+                        item = StartpageItem(
+                            icon = Icons.Filled.Settings,
+                            label = R.string.root_item_settings,
+                            navDestination = RootNavDests.settings,
+                        ),
+                        navigateTo = navigateToHook
+                    )
 
                     if (loginState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
                         StartpageEntry(
@@ -217,14 +215,28 @@ fun StartpageView(
         }
 
         if (isSelfServiceMode) {
-            IconButton(
+            Row(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .size(36.dp),
-                onClick = { showInfoDialog = true }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(Icons.Filled.Info, contentDescription = "Terminal info")
+                IconButton(
+                    modifier = Modifier.size(36.dp),
+                    onClick = { navigateToHook(RootNavDests.settings) }
+                ) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = stringResource(R.string.root_item_settings)
+                    )
+                }
+
+                IconButton(
+                    modifier = Modifier.size(36.dp),
+                    onClick = { showInfoDialog = true }
+                ) {
+                    Icon(Icons.Filled.Info, contentDescription = "Terminal info")
+                }
             }
         }
 

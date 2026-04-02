@@ -49,19 +49,12 @@ export const TillDetail: React.FC = () => {
     return <Navigate to={TillRoutes.list()} />;
   }
 
-  const openConfirmDeleteDialog = () => {
-    openModal({
-      type: "confirm",
-      title: t("till.delete"),
-      content: t("till.deleteDescription"),
-      onConfirm: () => {
-        deleteTill({ nodeId: currentNode.id, tillId: Number(tillId) }).then(() => navigate(TillRoutes.list()));
-      },
-    });
-  };
-
   if (till === undefined || terminals === undefined) {
     return <Loading />;
+  }
+
+  if (till.node_id !== currentNode.id) {
+    return <Navigate to={TillRoutes.detail(till.id, till.node_id)} replace />;
   }
 
   const renderProfile = (id: number) => {
@@ -79,6 +72,17 @@ export const TillDetail: React.FC = () => {
 
   const terminal = till.terminal_id != null ? selectTerminalById(terminals, till.terminal_id) : undefined;
 
+  const openConfirmDeleteDialog = () => {
+    openModal({
+      type: "confirm",
+      title: t("till.delete"),
+      content: t("till.deleteDescription"),
+      onConfirm: () => {
+        deleteTill({ nodeId: till.node_id, tillId: Number(tillId) }).then(() => navigate(TillRoutes.list(till.node_id)));
+      },
+    });
+  };
+
   const openConfirmRemoveFromTerminalDialog = () => {
     if (!terminal) {
       return;
@@ -88,7 +92,7 @@ export const TillDetail: React.FC = () => {
       title: t("till.removeFromTerminal"),
       content: t("till.removeFromTerminalDescription", { terminalName: terminal.name }),
       onConfirm: () => {
-        removeFromTerminal({ nodeId: currentNode.id, tillId: Number(tillId) });
+        removeFromTerminal({ nodeId: till.node_id, tillId: Number(tillId) });
       },
     });
   };
@@ -99,7 +103,12 @@ export const TillDetail: React.FC = () => {
       routes={TillRoutes}
       elementNodeId={till.node_id}
       actions={[
-        { label: t("edit"), onClick: () => navigate(TillRoutes.edit(tillId)), color: "primary", icon: <EditIcon /> },
+        {
+          label: t("edit"),
+          onClick: () => navigate(TillRoutes.edit(tillId, till.node_id)),
+          color: "primary",
+          icon: <EditIcon />,
+        },
         {
           label: t("till.switchTerminal"),
           onClick: () => setSwitchTerminalOpen(true),
@@ -152,7 +161,12 @@ export const TillDetail: React.FC = () => {
         )}
       </DetailView>
       <OrderTable orders={orders ?? []} showCashierColumn />
-      <TillSwitchTerminal open={switchTerminalOpen} tillId={till.id} onClose={() => setSwitchTerminalOpen(false)} />
+      <TillSwitchTerminal
+        open={switchTerminalOpen}
+        tillId={till.id}
+        nodeId={till.node_id}
+        onClose={() => setSwitchTerminalOpen(false)}
+      />
     </DetailLayout>
   );
 };

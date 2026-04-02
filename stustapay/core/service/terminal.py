@@ -169,7 +169,7 @@ class TerminalService(Service[Config]):
                 raise InvalidArgument("Entry terminals must be assigned to an entry area")
             await _ensure_entry_area(conn=conn, node=node, entry_area_id=terminal.entry_area_id)
             if existing_terminal.till_id is not None:
-                await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=existing_terminal.till_id)
+                await remove_terminal_from_till(conn=conn, till_id=existing_terminal.till_id)
 
         term_id = await conn.fetchval(
             "update terminal set name = $1, description = $2, mode = $3, entry_area_id = $4 "
@@ -240,8 +240,7 @@ class TerminalService(Service[Config]):
 
         till_id = await conn.fetchval("select id from till where terminal_id = $1", terminal_id)
         if till_id is not None:
-            till_node_id = await conn.fetchval("select node_id from till where id = $1", till_id)
-            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=till_id)
+            await remove_terminal_from_till(conn=conn, till_id=till_id)
 
         return True
 
@@ -253,8 +252,7 @@ class TerminalService(Service[Config]):
         if terminal is None:
             raise NotFound(element_type="terminal", element_id=terminal_id)
         if terminal.till_id is not None:
-            till_node_id = await conn.fetchval("select node_id from till where id = $1", terminal.till_id)
-            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)
+            await remove_terminal_from_till(conn=conn, till_id=terminal.till_id)
 
         await assign_till_to_terminal(conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id)
 
@@ -266,9 +264,7 @@ class TerminalService(Service[Config]):
             current_terminal.id,
         )
         if current_terminal.till is not None:
-            await remove_terminal_from_till(
-                conn=conn, node_id=current_terminal.till.node_id, till_id=current_terminal.till.id
-            )
+            await remove_terminal_from_till(conn=conn, till_id=current_terminal.till.id)
 
     async def _get_terminal_sumup_oauth_token(
         self, terminal_id: int, node: Node, event_settings: RestrictedEventSettings
