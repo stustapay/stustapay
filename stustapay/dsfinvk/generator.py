@@ -296,7 +296,8 @@ class Generator:
                 e.P_STORNO = False  # nicht vorgesehen
                 e.AGENTUR_ID = 0  # Agenturen noch nicht implementiert
 
-                # finde den Geschäftsvorfalltyp dieses "Artikels" heraus...
+                # finde den Geschäftsvorfalltyp dieses "Artikels" heraus..
+                gvtyp = "Umsatz"  # alles andere.
                 if row["order_type"] == "top_up" or row["order_type"] == "pay_out":
                     gvtyp = "MehrzweckgutscheinKauf"
                 elif row["order_type"] == "money_transfer":
@@ -323,9 +324,6 @@ class Generator:
                         item["product"]["name"] == "Aufladen"
                     ):  # TODO besser noch, alle Aufladeoperationen bekommen ein bestimmtes Flag
                         gvtyp = "MehrzweckgutscheinKauf"
-
-                else:
-                    gvtyp = "Umsatz"  # alles andere
 
                 self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].Brutto += Decimal(
                     item["total_price"]
