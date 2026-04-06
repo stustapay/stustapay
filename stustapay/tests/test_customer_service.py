@@ -15,6 +15,7 @@ from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
 from stustapay.payment.sumup.api import SumUpCheckout, SumUpCheckoutStatus
+from stustapay.payment.sumup.api import SumUpError
 from sftkit.error import (
     AccessDenied,
     InvalidArgument,
@@ -54,6 +55,9 @@ class OnlineTopUpSumUpApiMock:
 
     async def find_checkout(self, order_uuid: uuid.UUID) -> SumUpCheckout | None:
         return self.checkouts.get(order_uuid)
+
+    async def list_available_payment_methods(self) -> list[str]:
+        return ["card", "apple_pay"]
 
 
 @pytest.fixture
@@ -200,6 +204,82 @@ async def test_get_api_config_includes_theme_colors(
     assert config.primary_color == "#112233"
     assert config.secondary_color == "#445566"
     assert config.background_color == "#778899"
+
+
+async def test_get_api_config_includes_sumup_payment_methods(
+    customer_service: CustomerService, db_connection: Connection, event_node: Node
+):
+    assert event_node.event is not None
+    base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
+    await db_connection.execute(
+        "update event set customer_portal_url = $1, sumup_topup_enabled = true, sumup_api_key = $2, sumup_merchant_code = $3 "
+        "where id = $4",
+        base_url,
+        "test-api-key",
+        "MERCHANT123",
+        event_node.event.id,
+    )
+    customer_service.sumup.config.core.sumup_enabled = True
+
+    async def fake_get_available_payment_methods_for_node(conn: Connection, node_id: int) -> list[str]:
+        del conn
+        assert node_id == event_node.id
+        return ["card", "apple_pay", "ideal"]
+
+    customer_service.sumup.get_available_payment_methods_for_node = fake_get_available_payment_methods_for_node  # type: ignore[method-assign]
+
+    config = await customer_service.get_api_config(base_url=base_url)
+
+    assert config.sumup_topup_enabled is True
+    assert config.sumup_topup_payment_methods == ["card", "apple_pay", "ideal"]
+
+
+async def test_get_api_config_returns_empty_payment_methods_on_sumup_error(
+    customer_service: CustomerService, db_connection: Connection, event_node: Node
+):
+    assert event_node.event is not None
+    base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
+    await db_connection.execute(
+        "update event set customer_portal_url = $1, sumup_topup_enabled = true where id = $2",
+        base_url,
+        event_node.event.id,
+    )
+    customer_service.sumup.config.core.sumup_enabled = True
+
+    async def fake_get_available_payment_methods_for_node(conn: Connection, node_id: int) -> list[str]:
+        del conn, node_id
+        raise SumUpError("unreachable")
+
+    customer_service.sumup.get_available_payment_methods_for_node = fake_get_available_payment_methods_for_node  # type: ignore[method-assign]
+
+    config = await customer_service.get_api_config(base_url=base_url)
+
+    assert config.sumup_topup_enabled is True
+    assert config.sumup_topup_payment_methods == []
+
+
+async def test_get_api_config_skips_payment_methods_when_sumup_topup_disabled(
+    customer_service: CustomerService, db_connection: Connection, event_node: Node
+):
+    assert event_node.event is not None
+    base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
+    await db_connection.execute(
+        "update event set customer_portal_url = $1, sumup_topup_enabled = false where id = $2",
+        base_url,
+        event_node.event.id,
+    )
+    customer_service.sumup.config.core.sumup_enabled = True
+
+    async def fake_get_available_payment_methods_for_node(conn: Connection, node_id: int) -> list[str]:
+        del conn, node_id
+        raise AssertionError("payment methods should not be fetched when top-up is disabled")
+
+    customer_service.sumup.get_available_payment_methods_for_node = fake_get_available_payment_methods_for_node  # type: ignore[method-assign]
+
+    config = await customer_service.get_api_config(base_url=base_url)
+
+    assert config.sumup_topup_enabled is False
+    assert config.sumup_topup_payment_methods == []
 
 
 async def test_create_online_topup_checkout_reuses_pending_checkout(

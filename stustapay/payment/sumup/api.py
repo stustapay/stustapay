@@ -94,6 +94,14 @@ class SumUpCheckout(SumUpCreateCheckout):
     transactions: list[SumUpTransaction] = []
 
 
+class SumUpAvailablePaymentMethod(BaseModel):
+    id: str
+
+
+class SumUpAvailablePaymentMethodsResponse(BaseModel):
+    available_payment_methods: list[SumUpAvailablePaymentMethod]
+
+
 standard_headers = {
     "Accept": "application/json",
 }
@@ -252,12 +260,30 @@ class SumUpApi:
                 raise SumUpError(f"SumUp API returned an unknown error: {str(e)}") from e
 
     async def check_sumup_auth(self) -> bool:
-        url = f"{SUMUP_API_URL}/merchants/{self.merchant_code}/payment-methods"
         try:
-            await self._get(url)
+            await self.list_available_payment_methods()
             return True
         except Exception:  # pylint: disable=bare-except
             return False
+
+    async def list_available_payment_methods(self, amount: float | None = None, currency: str | None = None) -> list[str]:
+        url = f"{SUMUP_API_URL}/merchants/{self.merchant_code}/payment-methods"
+        query: dict[str, str | float] = {}
+        if amount is not None:
+            query["amount"] = amount
+        if currency is not None:
+            query["currency"] = currency
+
+        response = await self._get(url, query or None)
+        validated_response = SumUpAvailablePaymentMethodsResponse.model_validate(response)
+
+        payment_methods: list[str] = []
+        for method in validated_response.available_payment_methods:
+            method_id = method.id.strip().lower()
+            if method_id and method_id not in payment_methods:
+                payment_methods.append(method_id)
+
+        return payment_methods
 
     async def create_sumup_checkout(self, checkout: SumUpCreateCheckout) -> SumUpCheckout:
         resp = await self._post(SUMUP_CHECKOUT_URL, checkout)

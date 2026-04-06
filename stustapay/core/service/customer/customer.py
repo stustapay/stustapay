@@ -5,7 +5,7 @@ import re
 from typing import Optional
 
 import asyncpg
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from schwifty import IBAN
 from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
@@ -47,6 +47,7 @@ class CustomerPortalApiConfig(BaseModel):
     donation_enabled: bool
     currency_identifier: str
     sumup_topup_enabled: bool
+    sumup_topup_payment_methods: list[str] = Field(default_factory=list)
     allowed_country_codes: Optional[list[str]]
     translation_texts: dict[Language, dict[str, str]]
     event_name: str
@@ -344,6 +345,16 @@ class CustomerService(Service[Config]):
             node_id
         )
         banner_image_url = f"/api/banner/{node_id}" if has_banner else None
+        sumup_topup_enabled = self.config.core.sumup_enabled and node.event.sumup_topup_enabled
+        sumup_topup_payment_methods: list[str] = []
+        if sumup_topup_enabled:
+            try:
+                sumup_topup_payment_methods = await self.sumup.get_available_payment_methods_for_node(
+                    conn=conn, node_id=node_id
+                )
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("Unexpected error while loading SumUp payment methods for node %s", node_id)
+                sumup_topup_payment_methods = []
         
         return CustomerPortalApiConfig(
             test_mode=self.config.core.test_mode,
@@ -354,7 +365,8 @@ class CustomerService(Service[Config]):
             data_privacy_url=node.event.customer_portal_data_privacy_url,
             payout_enabled=node.event.sepa_enabled,
             donation_enabled=node.event.donation_enabled,
-            sumup_topup_enabled=self.config.core.sumup_enabled and node.event.sumup_topup_enabled,
+            sumup_topup_enabled=sumup_topup_enabled,
+            sumup_topup_payment_methods=sumup_topup_payment_methods,
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,
             event_name=node.name,

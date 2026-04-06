@@ -996,6 +996,13 @@
             "type": "boolean",
             "title": "Sumup Topup Enabled"
           },
+          "sumup_topup_payment_methods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sumup Topup Payment Methods"
+          },
           "allowed_country_codes": {
             "anyOf": [
               {

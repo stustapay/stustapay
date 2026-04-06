@@ -1,5 +1,5 @@
 import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
-import { PageContainer } from "@/components";
+import { PageContainer, SumupPaymentMethods } from "@/components";
 import { usePublicConfig } from "@/hooks";
 import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
@@ -381,7 +381,7 @@ export const TopUp: React.FC = () => {
       return (
         <PageContainer title={t("topup.onlineTopUp")}>
           <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
-            {t("topup.description")}
+            <SumupPaymentMethods paymentMethods={config.sumup_topup_payment_methods} />
           </Alert>
           <Formik
             initialValues={initialValues}

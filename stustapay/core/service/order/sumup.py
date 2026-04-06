@@ -86,6 +86,28 @@ class SumupService(Service[Config]):
     def _create_sumup_api(self, merchant_code: str, api_key: str) -> SumUpApi:
         return SumUpApi(merchant_code=merchant_code, api_key=api_key)
 
+    async def get_available_payment_methods_for_node(self, conn: Connection, node_id: int) -> list[str]:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
+        if not event_settings.is_sumup_topup_enabled(self.config.core):
+            return []
+
+        if not event_settings.sumup_api_key or not event_settings.sumup_merchant_code:
+            self.logger.warning("SumUp top-up is enabled for node %s but merchant credentials are incomplete", node_id)
+            return []
+
+        sumup_api = self._create_sumup_api(
+            merchant_code=event_settings.sumup_merchant_code,
+            api_key=event_settings.sumup_api_key,
+        )
+        try:
+            return await sumup_api.list_available_payment_methods()
+        except SumUpError as exc:
+            self.logger.warning("Unable to fetch SumUp payment methods for node %s: %s", node_id, exc)
+            return []
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Unexpected error while fetching SumUp payment methods for node %s", node_id)
+            return []
+
     async def _process_topup(
         self, conn: Connection, node: Node, till: Till, pending_order: PendingOrder, topup: CompletedTopUp
     ) -> CompletedTopUp:

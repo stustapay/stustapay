@@ -91,6 +91,13 @@ def build_processes(
                     cwd=web_dir,
                 )
             )
+            processes.append(
+                ProcessSpec(
+                    name="web-customerportal",
+                    cmd=["npx", "nx", "serve", "customerportal"],
+                    cwd=web_dir,
+                )
+            )
 
     return processes
 
@@ -172,7 +179,10 @@ def run_processes(processes: List[ProcessSpec]) -> int:
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Start StuStaPay backend services and web admin for local development.",
+        description=(
+            "Start StuStaPay backend services and web frontends (administration, customer portal) "
+            "for local development."
+        ),
     )
     parser.add_argument(
         "--config-path",
@@ -189,7 +199,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--web-only",
         action="store_true",
-        help="Start only the web admin frontend.",
+        help="Start only the web frontends (administration and customer portal), no backend.",
     )
     parser.add_argument(
         "--include-workers",

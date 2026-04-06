@@ -1,4 +1,5 @@
 import { useGetCustomerQuery, usePayoutInfoQuery } from "@/api";
+import { SumupPaymentMethods } from "@/components";
 import { useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Alert, AlertTitle, Grid, Link, Paper, Stack, Typography } from "@mui/material";
@@ -63,7 +64,7 @@ export const Index: React.FC = () => {
         <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="info" onClick={() => navigate("/topup")} className="glass-alert" sx={{ cursor: "pointer" }}>
             <AlertTitle>{t("topup.onlineTopUp")}</AlertTitle>
-            {t("topup.description")}
+            <SumupPaymentMethods paymentMethods={config.sumup_topup_payment_methods} />
           </Alert>
         </Grid>
       )}
