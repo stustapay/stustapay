@@ -17,7 +17,7 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        profiles: data ? selectTillProfileAll(data) : [],
+        profiles: data ? selectTillProfileAll(data).filter((profile) => profile.node_id === currentNode.id) : [],
       }),
     }
   );

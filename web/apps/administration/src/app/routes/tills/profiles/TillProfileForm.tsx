@@ -17,7 +17,7 @@ export function TillProfileForm<T extends NewTillProfile>(props: TillProfileForm
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        layouts: data ? selectTillLayoutAll(data) : [],
+        layouts: data ? selectTillLayoutAll(data).filter((layout) => layout.node_id === currentNode.id) : [],
       }),
     }
   );
