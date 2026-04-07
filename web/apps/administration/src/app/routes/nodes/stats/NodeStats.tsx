@@ -33,6 +33,7 @@ import {
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Navigate } from "react-router-dom";
+import { OrderRoutes } from "@/app/routes";
 import {
   useAppDispatch,
   useAppSelector,
@@ -67,6 +68,7 @@ export const NodeStats: React.FC = () => {
   const { t } = useTranslation();
   const canViewNodeStats = useCurrentUserHasPrivilege(Privilege.view_node_stats);
   const canAdminNode = useCurrentUserHasPrivilege(Privilege.node_administration);
+  const canViewOrders = useCurrentUserHasPrivilege(OrderRoutes.privilege);
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();
   const dispatch = useAppDispatch();
@@ -753,7 +755,7 @@ export const NodeStats: React.FC = () => {
           </Accordion>
         </Grid>
       )}
-      {canAdminNode && (
+      {canViewOrders && (
         <Grid size={12}>
           <Accordion
             expanded={expandedSections.orders}
