@@ -1,5 +1,6 @@
 import { AccountRead } from "@/api";
 import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { useCurrentUserHasPrivilege } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
@@ -17,6 +18,8 @@ export interface AccountTagHistoryTableProps {
 
 export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ history }) => {
   const { t } = useTranslation();
+  const canViewAccounts = useCurrentUserHasPrivilege(AccountRoutes.privilege);
+  const canViewUserTags = useCurrentUserHasPrivilege(UserTagRoutes.privilege);
 
   const columns: GridColDef<HistoryEntry>[] = [
     {
@@ -24,9 +27,13 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </Link>
+        canViewUserTags ? (
+          <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
+            {formatUserTagUid(params.row.user_tag_uid_hex)}
+          </Link>
+        ) : (
+          formatUserTagUid(params.row.user_tag_uid_hex)
+        )
       ),
       width: 100,
     },
@@ -34,9 +41,13 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       field: "account_id",
       headerName: t("account.history.account"),
       renderCell: (params) => (
-        <Link component={RouterLink} to={AccountRoutes.detail(params.row.account_id)}>
-          {params.row.account_id}
-        </Link>
+        canViewAccounts ? (
+          <Link component={RouterLink} to={AccountRoutes.detail(params.row.account_id)}>
+            {params.row.account_id}
+          </Link>
+        ) : (
+          params.row.account_id
+        )
       ),
       width: 100,
     },

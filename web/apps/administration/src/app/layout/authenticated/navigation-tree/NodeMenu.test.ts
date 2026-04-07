@@ -72,4 +72,10 @@ describe("isMenuEntryValidAtNode", () => {
 
     expect(isMenuEntryValidAtNode(findEntryByRoute("/node/7/entry/areas"), node)).toBe(true);
   });
+
+  test("shows customers entry when customer management is granted", () => {
+    const node = createNode(["customer_management"]);
+
+    expect(isMenuEntryValidAtNode(findEntryByRoute("/node/7/customers"), node)).toBe(true);
+  });
 });
