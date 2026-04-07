@@ -1,5 +1,7 @@
 from fastapi import Request
 
+CUSTOMER_PORTAL_BASE_URL_HEADER = "x-customer-portal-base-url"
+
 
 def _get_first_forwarded_value(value: str | None) -> str | None:
     if value is None:
@@ -44,6 +46,10 @@ def _should_append_port(host: str, port: str, scheme: str) -> bool:
 
 
 def get_customer_portal_base_url(request: Request) -> str:
+    explicit_portal_base_url = request.headers.get(CUSTOMER_PORTAL_BASE_URL_HEADER)
+    if explicit_portal_base_url:
+        return explicit_portal_base_url.rstrip("/")
+
     forwarded = _parse_forwarded_header(request.headers.get("forwarded"))
 
     scheme = (

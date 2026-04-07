@@ -25,6 +25,19 @@ def test_get_customer_portal_base_url_falls_back_to_request_base_url():
     assert get_customer_portal_base_url(request) == "http://internal:8080"
 
 
+def test_get_customer_portal_base_url_prefers_explicit_header_from_browser():
+    request = _build_request(
+        headers=[
+            (b"host", b"internal:8080"),
+            (b"x-customer-portal-base-url", b"https://portal.example.com"),
+            (b"x-forwarded-proto", b"http"),
+            (b"x-forwarded-host", b"wrong.example.com"),
+        ]
+    )
+
+    assert get_customer_portal_base_url(request) == "https://portal.example.com"
+
+
 def test_get_customer_portal_base_url_uses_x_forwarded_proto_and_host():
     request = _build_request(
         headers=[

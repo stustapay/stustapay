@@ -6,12 +6,14 @@ import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const siteHost = window.location.host;
 const siteProtocol = window.location.protocol;
 const customerApiBaseUrl = `${siteProtocol}//${siteHost}/api`;
+const customerPortalBaseUrl = window.location.origin;
 
 const prepareAuthHeaders = (
   headers: Headers,
   { getState }: Pick<BaseQueryApi, "getState" | "extra" | "endpoint" | "type" | "forced">
 ) => {
   const token = selectAuthToken(getState() as RootState);
+  headers.set("X-Customer-Portal-Base-Url", customerPortalBaseUrl);
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
