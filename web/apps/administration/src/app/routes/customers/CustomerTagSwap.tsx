@@ -20,7 +20,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Privilege, formatUserTagUid } from "@stustapay/models";
+import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -68,7 +68,7 @@ const isSelectableTarget = (candidate: UserTagSwapCandidate | null) => {
   return candidate != null && candidate.target_mode !== "unavailable";
 };
 
-export const CustomerTagSwap = withPrivilegeGuard(Privilege.node_administration, () => {
+export const CustomerTagSwap = withPrivilegeGuard(CustomerRoutes.privilege, () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();

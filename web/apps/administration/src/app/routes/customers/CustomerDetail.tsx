@@ -10,7 +10,7 @@ import {
   usePreventCustomerPayoutMutation,
   useUpdateAccountCommentMutation,
 } from "@/api";
-import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
+import { AccountRoutes, CustomerRoutes, OrderRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import {
   DetailBoolField,
   DetailField,
@@ -20,7 +20,7 @@ import {
   EditableListItem,
 } from "@/components";
 import { OrderTable } from "@/components/features";
-import { useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -33,17 +33,21 @@ import { EditAccountVoucherAmountModal } from "../accounts/components/EditAccoun
 import { TransferAccountBalanceModal } from "../accounts/components/TransferAccountBalanceModal";
 import { LayoutAction } from "@/components/layouts/types";
 
-const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
+const printMaybeNull = (value: string | null | undefined, fallback: string) => {
+  if (value == null || value === "") {
+    return fallback;
+  }
+  return value;
+};
+
+const PayoutDetails: React.FC<{
+  canManageCustomerPayouts: boolean;
+  canViewPayoutRuns: boolean;
+  customer: Customer;
+}> = ({ canManageCustomerPayouts, canViewPayoutRuns, customer }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [allowPayout] = useAllowCustomerPayoutMutation();
-
-  const printMaybeNull = (value?: string | null) => {
-    if (value == null || value === "") {
-      return t("common.notSet");
-    }
-    return value;
-  };
 
   const onClickAllowPayout = () => {
     allowPayout({ customerId: customer.id, nodeId: currentNode.id }).catch(() => {
@@ -56,14 +60,22 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
       <Stack spacing={2}>
         <DetailView sx={{ height: "100%" }}>
           {customer.payout_export === false && (
-            <Alert severity="info" action={<Button onClick={onClickAllowPayout}>{t("customer.allowPayout")}</Button>}>
+            <Alert
+              severity="info"
+              action={
+                canManageCustomerPayouts ? <Button onClick={onClickAllowPayout}>{t("customer.allowPayout")}</Button> : undefined
+              }
+            >
               {t("customer.payoutExportPrevented")}
             </Alert>
           )}
           <DetailBoolField label={t("customer.hasEnteredInfo")} value={customer.has_entered_info} />
-          <DetailField label={t("customer.bankAccountHolder")} value={printMaybeNull(customer.account_name)} />
-          <DetailField label={t("customer.iban")} value={printMaybeNull(customer.iban)} />
-          <DetailField label={t("common.email")} value={printMaybeNull(customer.email)} />
+          <DetailField
+            label={t("customer.bankAccountHolder")}
+            value={printMaybeNull(customer.account_name, t("common.notSet"))}
+          />
+          <DetailField label={t("customer.iban")} value={printMaybeNull(customer.iban, t("common.notSet"))} />
+          <DetailField label={t("common.email")} value={printMaybeNull(customer.email, t("common.notSet"))} />
           <DetailBoolField label={t("customer.donateAll")} value={customer.donate_all} />
           <DetailNumberField label={t("customer.donation")} type="currency" value={customer.donation} />
         </DetailView>
@@ -74,10 +86,10 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
               <DetailField
                 label={t("customer.payoutRun")}
                 value={customer.payout.payout_run_id}
-                linkTo={PayoutRunRoutes.detail(customer.payout.payout_run_id)}
+                linkTo={canViewPayoutRuns ? PayoutRunRoutes.detail(customer.payout.payout_run_id) : undefined}
               />
-              <DetailField label={t("customer.iban")} value={printMaybeNull(customer.payout.iban)} />
-              <DetailField label={t("common.email")} value={printMaybeNull(customer.payout.email)} />
+              <DetailField label={t("customer.iban")} value={printMaybeNull(customer.payout.iban, t("common.notSet"))} />
+              <DetailField label={t("common.email")} value={printMaybeNull(customer.payout.email, t("common.notSet"))} />
               <DetailNumberField label={t("customer.donation")} type="currency" value={customer.payout.donation} />
               <DetailNumberField label={t("customer.payoutAmount")} type="currency" value={customer.payout.amount} />
             </>
@@ -90,11 +102,19 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
   );
 };
 
-export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, () => {
+export const CustomerDetail = withPrivilegeGuard(CustomerRoutes.privilege, () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { customerId } = useParams();
   const { currentNode } = useCurrentNode();
+  const canManageAccounts = useCurrentUserHasPrivilege(AccountRoutes.privilege);
+  const canManageCustomerPayouts = useCurrentUserHasPrivilege([
+    Privilege.payout_management,
+    Privilege.customer_management,
+  ]);
+  const canViewOrders = useCurrentUserHasPrivilege(OrderRoutes.privilege);
+  const canViewPayoutRuns = useCurrentUserHasPrivilege(PayoutRunRoutes.privilege);
+  const canViewUserTags = useCurrentUserHasPrivilege(UserTagRoutes.privilege);
   const {
     data: customer,
     error,
@@ -103,10 +123,6 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
 
   const [disableAccount] = useDisableAccountMutation();
   const [updateComment] = useUpdateAccountCommentMutation();
-  const canManageCustomerPayoutsAtNode = useCurrentUserHasPrivilegeAtNode([
-    Privilege.payout_management,
-    Privilege.customer_management,
-  ]);
 
   const [allowPayout] = useAllowCustomerPayoutMutation();
   const [preventPayout] = usePreventCustomerPayoutMutation();
@@ -121,6 +137,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   } = useListOrdersQuery(
     { nodeId: currentNode.id, customerAccountId: Number(customerId) },
     {
+      skip: !canViewOrders,
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
         orders: data ? selectOrderAll(data) : undefined,
@@ -134,15 +151,15 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
 
   if (error || !customer) {
     toast.error("Error loading account");
-    navigate(AccountRoutes.list());
+    navigate(CustomerRoutes.list());
     return null;
   }
 
-  if (isOrdersLoading || (!orders && !orderError)) {
+  if (canViewOrders && (isOrdersLoading || (!orders && !orderError))) {
     return <Loading />;
   }
 
-  if (orderError || !orders) {
+  if (canViewOrders && (orderError || !orders)) {
     toast.error("Error loading account");
     navigate(-1);
     return null;
@@ -180,12 +197,16 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
     });
   };
 
-  const actions: LayoutAction[] = [
-    { label: t("account.transferBalance"), onClick: () => setTransferModalOpen(true), icon: <SwapHorizIcon /> },
-    { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
-  ];
+  const actions: LayoutAction[] = [];
 
-  if (canManageCustomerPayoutsAtNode(currentNode.id) && customer.payout == null) {
+  if (canManageAccounts) {
+    actions.push(
+      { label: t("account.transferBalance"), onClick: () => setTransferModalOpen(true), icon: <SwapHorizIcon /> },
+      { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> }
+    );
+  }
+
+  if (canManageCustomerPayouts && customer.payout == null) {
     if (customer.payout_export !== false) {
       actions.splice(0, 0, {
         label: t("customer.preventPayout"),
@@ -202,7 +223,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   }
 
   return (
-    <DetailLayout title={`Customer Account ${customer.id}`} routes={AccountRoutes} actions={actions}>
+    <DetailLayout title={`Customer Account ${customer.id}`} routes={CustomerRoutes} actions={actions}>
       <Grid container spacing={1} display="grid" alignItems="stretch" gridTemplateColumns="1fr 1fr">
         <Grid>
           <DetailView sx={{ height: "100%" }}>
@@ -211,40 +232,48 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
             <DetailField
               label={t("account.user_tag_uid")}
               value={formatUserTagUid(customer.user_tag_uid_hex)}
-              linkTo={UserTagRoutes.detail(customer.user_tag_id)}
+              linkTo={canViewUserTags ? UserTagRoutes.detail(customer.user_tag_id) : undefined}
             />
             <DetailField label={t("account.name")} value={customer.name} />
-            <EditableListItem
-              label={t("account.comment")}
-              value={customer.comment ?? ""}
-              onChange={handleUpdateComment}
-            />
+            {canManageAccounts ? (
+              <EditableListItem label={t("account.comment")} value={customer.comment ?? ""} onChange={handleUpdateComment} />
+            ) : (
+              <DetailField label={t("account.comment")} value={customer.comment ?? ""} />
+            )}
             <DetailNumberField label={t("account.balance")} type="currency" value={customer.balance} />
             <DetailField
               label={t("account.vouchers")}
               value={customer.vouchers}
-              secondaryAction={
+              secondaryAction={canManageAccounts ? (
                 <IconButton color="secondary" onClick={() => setVoucherModalOpen(true)}>
                   <EditIcon />
                 </IconButton>
-              }
+              ) : undefined}
             />
           </DetailView>
         </Grid>
-        <PayoutDetails customer={customer} />
+        <PayoutDetails
+          canManageCustomerPayouts={canManageCustomerPayouts}
+          canViewPayoutRuns={canViewPayoutRuns}
+          customer={customer}
+        />
       </Grid>
       {customer.tag_history.length > 0 && <AccountTagHistoryTable history={customer.tag_history} />}
-      <TransferAccountBalanceModal
-        sourceAccount={customer}
-        open={transferModalOpen}
-        handleClose={() => setTransferModalOpen(false)}
-      />
-      <EditAccountVoucherAmountModal
-        account={customer}
-        open={voucherModalOpen}
-        handleClose={() => setVoucherModalOpen(false)}
-      />
-      <OrderTable orders={orders} showCashierColumn showTillColumn />
+      {canManageAccounts && (
+        <TransferAccountBalanceModal
+          sourceAccount={customer}
+          open={transferModalOpen}
+          handleClose={() => setTransferModalOpen(false)}
+        />
+      )}
+      {canManageAccounts && (
+        <EditAccountVoucherAmountModal
+          account={customer}
+          open={voucherModalOpen}
+          handleClose={() => setVoucherModalOpen(false)}
+        />
+      )}
+      {canViewOrders && orders && <OrderTable orders={orders} showCashierColumn showTillColumn />}
     </DetailLayout>
   );
 });

@@ -141,7 +141,7 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     label: i18n.t("customer.customers"),
     icon: AccountBalanceIcon,
     requiresEvent: true,
-    requiredPrivileges: ["node_administration"],
+    requiredAnyPrivileges: normalizePrivilegeRequirement(CustomerRoutes.privilege),
   },
   {
     route: (node) => PayoutRunRoutes.list(node.id),

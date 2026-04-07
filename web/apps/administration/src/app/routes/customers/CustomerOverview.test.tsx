@@ -9,6 +9,7 @@ import { TextDecoder, TextEncoder } from "util";
 
 const mockUseGetDashboardOverviewQuery = jest.fn();
 const mockUsePendingPayoutDetailQuery = jest.fn();
+const mockUseCurrentUserHasPrivilege = jest.fn();
 
 jest.mock("@/api", () => ({
   useGetDashboardOverviewQuery: (...args: unknown[]) => mockUseGetDashboardOverviewQuery(...args),
@@ -26,6 +27,7 @@ jest.mock("@/hooks", () => ({
   useCurrentNode: () => ({
     currentNode: { id: 5 },
   }),
+  useCurrentUserHasPrivilege: (...args: unknown[]) => mockUseCurrentUserHasPrivilege(...args),
   useCurrencyFormatter:
     () =>
     (value?: number | null) =>
@@ -62,6 +64,14 @@ describe("CustomerOverview", () => {
   beforeEach(() => {
     mockUseGetDashboardOverviewQuery.mockReset();
     mockUsePendingPayoutDetailQuery.mockReset();
+    mockUseCurrentUserHasPrivilege.mockReset();
+    mockUseCurrentUserHasPrivilege.mockImplementation((privilege: unknown) => {
+      if (Array.isArray(privilege)) {
+        return privilege.includes("node_administration");
+      }
+
+      return privilege === "node_administration" || privilege === "payout_management";
+    });
   });
 
   test("renders metrics, payout summary, and quick action links", () => {
@@ -154,5 +164,45 @@ describe("CustomerOverview", () => {
     expect(screen.getByText("overview.totalGuestCredit")).toBeTruthy();
     expect(screen.getByText("overview.noDataAvailable")).toBeTruthy();
     expect(screen.getByText("customer.openSearch")).toBeTruthy();
+  });
+
+  test("reduces the overview for customer management without admin-only target privileges", () => {
+    mockUseCurrentUserHasPrivilege.mockImplementation((privilege: unknown) => {
+      if (Array.isArray(privilege)) {
+        return false;
+      }
+
+      return false;
+    });
+    mockUseGetDashboardOverviewQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+    mockUsePendingPayoutDetailQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/node/5/customers"]}>
+        <CustomerOverview />
+      </MemoryRouter>
+    );
+
+    expect(mockUseGetDashboardOverviewQuery).toHaveBeenCalledWith(
+      { nodeId: 5 },
+      expect.objectContaining({ skip: true })
+    );
+    expect(mockUsePendingPayoutDetailQuery).toHaveBeenCalledWith(
+      { nodeId: 5 },
+      expect.objectContaining({ skip: true })
+    );
+    expect(screen.queryByText("customer.openPayoutRuns")).toBeNull();
+    expect(screen.queryByText("customer.openAccounts")).toBeNull();
+    expect(screen.queryByText("customer.openUserTags")).toBeNull();
+    expect(screen.getByText("customer.openSearch")).toBeTruthy();
+    expect(screen.getByText("customer.tagSwap.open")).toBeTruthy();
   });
 });

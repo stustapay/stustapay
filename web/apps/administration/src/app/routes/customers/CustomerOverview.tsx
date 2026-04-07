@@ -2,7 +2,7 @@ import { DashboardOverview, PendingPayoutDetail, useGetDashboardOverviewQuery, u
 import { withPrivilegeGuard } from "@/app/layout";
 import { AccountRoutes, CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailNumberField, DetailView } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import {
   AccountBalanceWallet as AccountBalanceWalletIcon,
   CreditCard as CreditCardIcon,
@@ -211,31 +211,97 @@ const PendingPayoutCard: React.FC<{
   );
 };
 
-export const CustomerOverview = withPrivilegeGuard(Privilege.node_administration, () => {
+export const CustomerOverview = withPrivilegeGuard(CustomerRoutes.privilege, () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const canViewDashboardOverview = useCurrentUserHasPrivilege([Privilege.node_administration, Privilege.view_node_stats]);
+  const canViewPendingPayouts = useCurrentUserHasPrivilege(PayoutRunRoutes.privilege);
+  const canViewAccounts = useCurrentUserHasPrivilege(AccountRoutes.privilege);
+  const canViewUserTags = useCurrentUserHasPrivilege(UserTagRoutes.privilege);
   const {
     data: overview,
     isLoading: isOverviewLoading,
     isError: isOverviewError,
-  } = useGetDashboardOverviewQuery({ nodeId: currentNode.id });
+  } = useGetDashboardOverviewQuery(
+    { nodeId: currentNode.id },
+    {
+      skip: !canViewDashboardOverview,
+    }
+  );
   const {
     data: pendingPayoutDetail,
     isLoading: isPendingPayoutLoading,
     isError: isPendingPayoutError,
-  } = usePendingPayoutDetailQuery({ nodeId: currentNode.id });
+  } = usePendingPayoutDetailQuery(
+    { nodeId: currentNode.id },
+    {
+      skip: !canViewPendingPayouts,
+    }
+  );
+
+  const quickActions = [
+    {
+      icon: SearchIcon,
+      title: t("common.search"),
+      description: t("customer.searchCustomersDescription"),
+      cta: t("customer.openSearch"),
+      to: CustomerRoutes.action("search", currentNode.id),
+    },
+    {
+      icon: SwapHorizIcon,
+      title: t("customer.tagSwap.title"),
+      description: t("customer.tagSwap.quickActionDescription"),
+      cta: t("customer.tagSwap.open"),
+      to: CustomerRoutes.action("tag-swap", currentNode.id),
+    },
+    ...(canViewPendingPayouts
+      ? [
+          {
+            icon: PaymentsIcon,
+            title: t("payoutRun.payoutRuns"),
+            description: t("customer.payoutRunsDescription"),
+            cta: t("customer.openPayoutRuns"),
+            to: PayoutRunRoutes.list(currentNode.id),
+          },
+        ]
+      : []),
+    ...(canViewAccounts
+      ? [
+          {
+            icon: AccountBalanceWalletIcon,
+            title: t("accounts"),
+            description: t("customer.accountsDescription"),
+            cta: t("customer.openAccounts"),
+            to: AccountRoutes.list(currentNode.id),
+          },
+        ]
+      : []),
+    ...(canViewUserTags
+      ? [
+          {
+            icon: NfcIcon,
+            title: t("userTag.userTags"),
+            description: t("customer.userTagsDescription"),
+            cta: t("customer.openUserTags"),
+            to: UserTagRoutes.list(currentNode.id),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h5" sx={{ mb: 1 }}>
-          {t("customer.overviewTitle")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("customer.overviewIntro")}
-        </Typography>
-        <OverviewMetricsSection isLoading={isOverviewLoading} isError={isOverviewError} overview={overview} />
-      </Box>
+      {canViewDashboardOverview && (
+        <Box>
+          <Typography variant="h5" sx={{ mb: 1 }}>
+            {t("customer.overviewTitle")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("customer.overviewIntro")}
+          </Typography>
+          <OverviewMetricsSection isLoading={isOverviewLoading} isError={isOverviewError} overview={overview} />
+        </Box>
+      )}
 
       <Box
         sx={{
@@ -247,11 +313,13 @@ export const CustomerOverview = withPrivilegeGuard(Privilege.node_administration
           },
         }}
       >
-        <PendingPayoutCard
-          isLoading={isPendingPayoutLoading}
-          isError={isPendingPayoutError}
-          detail={pendingPayoutDetail}
-        />
+        {canViewPendingPayouts && (
+          <PendingPayoutCard
+            isLoading={isPendingPayoutLoading}
+            isError={isPendingPayoutError}
+            detail={pendingPayoutDetail}
+          />
+        )}
         <DetailView sx={{ p: 2, height: "100%" }}>
           <Typography variant="h6" sx={{ px: 2, pt: 1, pb: 1 }}>
             {t("customer.supportGuide")}
@@ -277,41 +345,9 @@ export const CustomerOverview = withPrivilegeGuard(Privilege.node_administration
             },
           }}
         >
-          <ActionCard
-            icon={SearchIcon}
-            title={t("common.search")}
-            description={t("customer.searchCustomersDescription")}
-            cta={t("customer.openSearch")}
-            to={CustomerRoutes.action("search", currentNode.id)}
-          />
-          <ActionCard
-            icon={SwapHorizIcon}
-            title={t("customer.tagSwap.title")}
-            description={t("customer.tagSwap.quickActionDescription")}
-            cta={t("customer.tagSwap.open")}
-            to={CustomerRoutes.action("tag-swap", currentNode.id)}
-          />
-          <ActionCard
-            icon={PaymentsIcon}
-            title={t("payoutRun.payoutRuns")}
-            description={t("customer.payoutRunsDescription")}
-            cta={t("customer.openPayoutRuns")}
-            to={PayoutRunRoutes.list(currentNode.id)}
-          />
-          <ActionCard
-            icon={AccountBalanceWalletIcon}
-            title={t("accounts")}
-            description={t("customer.accountsDescription")}
-            cta={t("customer.openAccounts")}
-            to={AccountRoutes.list(currentNode.id)}
-          />
-          <ActionCard
-            icon={NfcIcon}
-            title={t("userTag.userTags")}
-            description={t("customer.userTagsDescription")}
-            cta={t("customer.openUserTags")}
-            to={UserTagRoutes.list(currentNode.id)}
-          />
+          {quickActions.map((action) => (
+            <ActionCard key={action.to} {...action} />
+          ))}
         </Box>
       </Box>
     </Stack>

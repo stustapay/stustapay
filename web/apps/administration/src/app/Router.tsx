@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { PayoutRunRoutes } from "@/app/routes";
+import { CustomerRoutes, PayoutRunRoutes } from "@/app/routes";
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
@@ -221,7 +221,11 @@ const router = createBrowserRouter([
           },
           {
             path: "customers",
-            element: <CustomerPageLayout />,
+            element: (
+              <PrivilegeGuard privilege={CustomerRoutes.privilege}>
+                <CustomerPageLayout />
+              </PrivilegeGuard>
+            ),
             children: [
               {
                 index: true,
