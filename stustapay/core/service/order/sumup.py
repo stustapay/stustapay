@@ -239,8 +239,14 @@ class SumupService(Service[Config]):
     @requires_customer
     @requires_sumup_online_topup_enabled
     async def check_online_topup_checkout(
-        self, *, conn: Connection, current_customer: Customer, order_uuid: uuid.UUID
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        order_uuid: uuid.UUID,
+        customer_portal_base_url: str | None = None,
     ) -> SumUpCheckoutStatus:
+        del customer_portal_base_url
         try:
             # Use fetch_order_by_uuid to get the order regardless of status
             pending_order = await fetch_order_by_uuid(conn=conn, uuid=order_uuid)
@@ -313,8 +319,14 @@ class SumupService(Service[Config]):
     @requires_customer
     @requires_sumup_online_topup_enabled
     async def create_online_topup_checkout(
-        self, *, conn: Connection, current_customer: Customer, amount: float
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        amount: float,
+        customer_portal_base_url: str | None = None,
     ) -> tuple[SumUpCheckout, uuid.UUID]:
+        del customer_portal_base_url
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)

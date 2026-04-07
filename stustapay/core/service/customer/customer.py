@@ -23,6 +23,7 @@ from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.decorators import requires_customer
 from sftkit.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.customer.common import fetch_customer_portal_event_node_id
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.sumup import SumupService
@@ -84,7 +85,24 @@ class CustomerService(Service[Config]):
         )
 
     @with_db_transaction
-    async def login_customer(self, *, conn: Connection, uid: int, pin: str, node_id: int) -> CustomerLoginSuccess:
+    async def login_customer(
+        self,
+        *,
+        conn: Connection,
+        uid: int,
+        pin: str,
+        node_id: int,
+        customer_portal_base_url: str | None = None,
+    ) -> CustomerLoginSuccess:
+        if customer_portal_base_url is not None:
+            portal_event_node_id = await fetch_customer_portal_event_node_id(
+                conn=conn,
+                base_url=customer_portal_base_url,
+            )
+            requested_event_node = await fetch_event_node_for_node(conn=conn, node_id=node_id)
+            requested_event_node_id = requested_event_node.id if requested_event_node is not None else None
+            if portal_event_node_id is None or requested_event_node_id != portal_event_node_id:
+                raise AccessDenied("Login does not match current customer portal")
 
         customer = await conn.fetch_maybe_one(
             Customer,
@@ -115,7 +133,14 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction
     @requires_customer
-    async def logout_customer(self, *, conn: Connection, current_customer: Customer, token: str) -> bool:
+    async def logout_customer(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        token: str,
+        customer_portal_base_url: str | None = None,
+    ) -> bool:
         token_payload = self.auth_service.decode_customer_jwt_payload(token)
         assert token_payload is not None
         assert current_customer.id == token_payload.customer_id
@@ -129,12 +154,23 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def get_customer(self, *, current_customer: Customer) -> Optional[Customer]:
+    async def get_customer(
+        self,
+        *,
+        current_customer: Customer,
+        customer_portal_base_url: str | None = None,
+    ) -> Optional[Customer]:
         return current_customer
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def payout_info(self, *, conn: Connection, current_customer: Customer) -> PayoutInfo:
+    async def payout_info(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        customer_portal_base_url: str | None = None,
+    ) -> PayoutInfo:
         # is customer registered for payout
         return await conn.fetch_one(
             PayoutInfo,
@@ -150,7 +186,13 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
+    async def get_orders_with_bon(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        customer_portal_base_url: str | None = None,
+    ) -> list[OrderWithBon]:
         return await conn.fetch_many(
             OrderWithBon,
             "select o.*, case when b.bon_json is null then false else true end as bon_generated from order_value_prefiltered("
@@ -162,7 +204,13 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def get_payout_transactions(self, *, conn: Connection, current_customer: Customer) -> list[PayoutTransaction]:
+    async def get_payout_transactions(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        customer_portal_base_url: str | None = None,
+    ) -> list[PayoutTransaction]:
         return await conn.fetch_many(
             PayoutTransaction,
             "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type, t.id as transaction_id "
@@ -174,7 +222,13 @@ class CustomerService(Service[Config]):
     @with_db_transaction
     @requires_customer
     async def update_customer_info(
-        self, *, conn: Connection, current_customer: Customer, customer_bank: CustomerBank, mail_service: MailService
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        customer_bank: CustomerBank,
+        mail_service: MailService,
+        customer_portal_base_url: str | None = None,
     ) -> None:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         if event_node.event is None:
@@ -311,7 +365,12 @@ class CustomerService(Service[Config]):
     @with_db_transaction
     @requires_customer
     async def update_customer_info_donate_all(
-        self, *, conn: Connection, current_customer: Customer, mail_service: MailService
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        mail_service: MailService,
+        customer_portal_base_url: str | None = None,
     ) -> None:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         if event_node.event is None:
@@ -330,9 +389,7 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     async def get_api_config(self, *, conn: Connection, base_url: str) -> CustomerPortalApiConfig:
-        node_id = await conn.fetchval(
-            "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1", base_url
-        )
+        node_id = await fetch_customer_portal_event_node_id(conn=conn, base_url=base_url)
         if node_id is None:
             raise InvalidArgument("Invalid customer portal configuration")
         node = await fetch_event_node_for_node(conn=conn, node_id=node_id)

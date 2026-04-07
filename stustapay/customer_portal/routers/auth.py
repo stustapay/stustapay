@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import Customer
 from stustapay.core.service.common.error import AccessDenied
+from stustapay.customer_portal.routers.common import get_customer_portal_base_url
 
 router = APIRouter(
     prefix="/auth",
@@ -28,6 +29,7 @@ class LoginResponse(BaseModel):
 @router.post("/login", summary="customer login with wristband hardware tag and pin", response_model=LoginResponse)
 async def login(
     payload: LoginPayload,
+    request: Request,
     customer_service: ContextCustomerService,
 ):
     try:
@@ -35,7 +37,12 @@ async def login(
     except Exception as e:  # pylint: disable=broad-except
         raise AccessDenied("Invalid user tag") from e
 
-    response = await customer_service.login_customer(uid=user_tag_uid, pin=payload.pin, node_id=payload.node_id)
+    response = await customer_service.login_customer(
+        uid=user_tag_uid,
+        pin=payload.pin,
+        node_id=payload.node_id,
+        customer_portal_base_url=get_customer_portal_base_url(request),
+    )
     return {"customer": response.customer, "access_token": response.token, "grant_type": "bearer"}
 
 
@@ -46,6 +53,10 @@ async def login(
 )
 async def logout(
     token: CurrentAuthToken,
+    request: Request,
     customer_service: ContextCustomerService,
 ):
-    await customer_service.logout_customer(token=token)
+    await customer_service.logout_customer(
+        token=token,
+        customer_portal_base_url=get_customer_portal_base_url(request),
+    )

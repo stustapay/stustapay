@@ -9,6 +9,7 @@ from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, ObjectType, ROOT_NODE_ID
 from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.service.customer.common import is_customer_bound_to_customer_portal_base_url
 from stustapay.core.service.common.error import EventRequired, NodeIsReadOnly
 from sftkit.error import (
     AccessDenied,
@@ -281,6 +282,16 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
         if customer is None:
             raise Unauthorized("invalid customer token")
 
+        customer_portal_base_url = kwargs.get("customer_portal_base_url")
+        if customer_portal_base_url is not None:
+            is_valid_customer_portal_customer = await is_customer_bound_to_customer_portal_base_url(
+                conn=conn,
+                customer=customer,
+                base_url=customer_portal_base_url,
+            )
+            if not is_valid_customer_portal_customer:
+                raise Unauthorized("invalid customer token")
+
         node_is_readonly = await conn.fetchval(
             "select read_only from node n join account a on a.node_id = n.id where a.id = $1", customer.id
         )
@@ -298,6 +309,9 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
 
         if "conn" not in signature(func).parameters:
             kwargs.pop("conn")
+
+        if "customer_portal_base_url" not in signature(func).parameters and "customer_portal_base_url" in kwargs:
+            kwargs.pop("customer_portal_base_url")
 
         return await func(self, **kwargs)
 

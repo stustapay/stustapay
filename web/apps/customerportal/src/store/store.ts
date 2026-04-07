@@ -3,15 +3,23 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer, persistStore } from "redux-persist";
+import type { PersistedState } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { authSlice } from "./authSlice";
+import { AuthState, authSlice, migrateAuthState } from "./authSlice";
 import { errorMiddleware } from "./errorMiddleware";
 import { uiSlice } from "./uiSlice";
 
+const migrateAuthPersistState = async (state: PersistedState | null): Promise<PersistedState> =>
+  ({
+    ...migrateAuthState(state as Partial<AuthState> | undefined),
+    _persist: state?._persist,
+  }) as PersistedState;
+
 const authPersistConfig = {
   key: "auth",
-  version: 1,
+  version: 2,
   storage,
+  migrate: migrateAuthPersistState,
 };
 
 const uiPersistConfig = {

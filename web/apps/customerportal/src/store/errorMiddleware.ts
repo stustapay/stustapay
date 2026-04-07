@@ -1,3 +1,4 @@
+import { api as customerApi } from "@/api";
 import { isRejectedWithValue } from "@reduxjs/toolkit";
 import type { MiddlewareAPI, Middleware } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -9,7 +10,7 @@ const ErrorSchema = z.object({
   data: z.object({ id: z.string(), type: z.string(), message: z.string() }),
 });
 
-export const errorMiddleware: Middleware = (api: MiddlewareAPI) => (next) => (action) => {
+export const errorMiddleware: Middleware = (middlewareApi: MiddlewareAPI) => (next) => (action) => {
   // RTK Query uses `createAsyncThunk` from redux-toolkit under the hood, so we"re able to utilize these matchers!
   if (isRejectedWithValue(action)) {
     const parsed = ErrorSchema.safeParse(action.payload);
@@ -18,7 +19,8 @@ export const errorMiddleware: Middleware = (api: MiddlewareAPI) => (next) => (ac
       console.error(msg);
       toast.error(msg);
       if (parsed.data.status === 401) {
-        api.dispatch(forceLogout());
+        middlewareApi.dispatch(forceLogout());
+        middlewareApi.dispatch(customerApi.util.resetApiState());
       }
     } else {
       console.error("unable to parse error payload", action);

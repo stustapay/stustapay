@@ -13,7 +13,7 @@ from stustapay.core.schema.order import Order, OrderType, PaymentMethod, Pending
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, Node
 from stustapay.payment.sumup.api import SumUpCheckout, SumUpCheckoutStatus
 from stustapay.payment.sumup.api import SumUpError
 from sftkit.error import (
@@ -27,6 +27,7 @@ from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.tree.service import create_event
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
 
 
@@ -58,6 +59,50 @@ class OnlineTopUpSumUpApiMock:
 
     async def list_available_payment_methods(self) -> list[str]:
         return ["card", "apple_pay"]
+
+
+def _new_customer_portal_event(name: str, customer_portal_url: str, merchant_code: str) -> NewEvent:
+    return NewEvent(
+        name=name,
+        description="",
+        customer_portal_url=customer_portal_url,
+        customer_portal_contact_email="test@test.support.test.com",
+        customer_portal_about_page_url="",
+        customer_portal_data_privacy_url="",
+        currency_identifier="EUR",
+        sepa_enabled=True,
+        sepa_sender_name="Event Foobar",
+        sepa_description="foobar {user_tag_uid}",
+        sepa_sender_iban="DE89370400440532013000",
+        sepa_allowed_country_codes=["DE"],
+        bon_title="",
+        bon_issuer="",
+        bon_address="",
+        max_account_balance=150,
+        sumup_topup_enabled=True,
+        sumup_payment_enabled=True,
+        sumup_affiliate_key="test_affiliate",
+        sumup_api_key=f"test_api_key_{merchant_code}",
+        sumup_merchant_code=merchant_code,
+        ust_id="",
+        email_enabled=False,
+        email_default_sender=None,
+        email_smtp_host=None,
+        email_smtp_port=None,
+        email_smtp_username=None,
+        email_smtp_password=None,
+        payout_done_subject="[StuStaPay] Payout Completed",
+        payout_done_message="done",
+        payout_registered_subject="[StuStaPay] Registered for Payout",
+        payout_registered_message="registered",
+        payout_sender=None,
+        pretix_presale_enabled=False,
+        pretix_api_key=None,
+        pretix_event=None,
+        pretix_organizer=None,
+        pretix_shop_url=None,
+        pretix_ticket_ids=None,
+    )
 
 
 @pytest.fixture
@@ -183,6 +228,95 @@ async def test_auth_customer(
     # test wrong pin
     with pytest.raises(AccessDenied):
         await customer_service.login_customer(uid=test_customer.user_tag_uid, pin="wrong", node_id=event_node.id)
+
+
+async def test_customer_portal_session_is_bound_to_matching_base_url(
+    customer_service: CustomerService,
+    db_connection: Connection,
+    test_customer: Customer,
+    event_node: Node,
+):
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid,
+        pin=test_customer.user_tag_pin,
+        node_id=event_node.id,
+    )
+
+    matching_customer = await customer_service.get_customer(
+        token=auth.token,
+        customer_portal_base_url="http://localhost:4300",
+    )
+    assert matching_customer is not None
+    assert matching_customer.id == test_customer.id
+
+    other_event = await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=_new_customer_portal_event("Other portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+    )
+    assert other_event.id != event_node.id
+
+    with pytest.raises(Unauthorized):
+        await customer_service.get_customer(
+            token=auth.token,
+            customer_portal_base_url="http://localhost:4400",
+        )
+
+
+async def test_customer_portal_login_rejects_node_id_from_other_portal(
+    customer_service: CustomerService,
+    db_connection: Connection,
+    test_customer: Customer,
+):
+    other_event = await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=_new_customer_portal_event("Other portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+    )
+
+    with pytest.raises(AccessDenied, match="Login does not match current customer portal"):
+        await customer_service.login_customer(
+            uid=test_customer.user_tag_uid,
+            pin=test_customer.user_tag_pin,
+            node_id=other_event.id,
+            customer_portal_base_url="http://localhost:4300",
+        )
+
+
+async def test_customer_portal_sumup_session_is_bound_to_matching_base_url(
+    customer_service: CustomerService,
+    db_connection: Connection,
+    test_customer: Customer,
+    event_node: Node,
+):
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid,
+        pin=test_customer.user_tag_pin,
+        node_id=event_node.id,
+    )
+    customer_service.sumup.config.core.sumup_enabled = True
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=10,
+        customer_portal_base_url="http://localhost:4300",
+    )
+    await db_connection.execute("delete from pending_sumup_order where uuid = $1", order_uuid)
+
+    await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=_new_customer_portal_event("Other sumup portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+    )
+
+    with pytest.raises(Unauthorized):
+        await customer_service.sumup.create_online_topup_checkout(
+            token=auth.token,
+            amount=10,
+            customer_portal_base_url="http://localhost:4400",
+        )
 
 
 async def test_get_api_config_includes_theme_colors(

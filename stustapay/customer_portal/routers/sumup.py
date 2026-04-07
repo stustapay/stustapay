@@ -1,11 +1,12 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 from pydantic import BaseModel
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
 from stustapay.core.schema.customer import SumUpCheckoutStatus
+from stustapay.customer_portal.routers.common import get_customer_portal_base_url
 
 router = APIRouter(
     prefix="/sumup",
@@ -38,20 +39,28 @@ class CheckCheckoutResponse(BaseModel):
 @router.post("/create-checkout", summary="initiate customer checkout", response_model=CreateCheckoutResponse)
 async def create_checkout(
     token: CurrentAuthToken,
+    request: Request,
     customer_service: ContextCustomerService,
     payload: CreateCheckoutPayload,
 ):
-    checkout, order_uuid = await customer_service.sumup.create_online_topup_checkout(token=token, amount=payload.amount)
+    checkout, order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=token,
+        amount=payload.amount,
+        customer_portal_base_url=get_customer_portal_base_url(request),
+    )
     return CreateCheckoutResponse(checkout_id=checkout.id, order_uuid=order_uuid)
 
 
 @router.post("/check-checkout", summary="after payment check checkout state", response_model=CheckCheckoutResponse)
 async def check_checkout(
     token: CurrentAuthToken,
+    request: Request,
     customer_service: ContextCustomerService,
     payload: CheckCheckoutPayload,
 ):
     checkout_status = await customer_service.sumup.check_online_topup_checkout(
-        token=token, order_uuid=payload.order_uuid
+        token=token,
+        order_uuid=payload.order_uuid,
+        customer_portal_base_url=get_customer_portal_base_url(request),
     )
     return CheckCheckoutResponse(status=checkout_status)
