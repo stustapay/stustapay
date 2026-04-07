@@ -1646,7 +1646,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def list_orders(self, *, conn: Connection, node: Node, customer_account_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
@@ -1657,7 +1657,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def list_orders_by_till(self, *, conn: Connection, node: Node, till_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
@@ -1668,7 +1668,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def list_orders_filtered(
         self,
         *,
@@ -1777,7 +1777,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)
 

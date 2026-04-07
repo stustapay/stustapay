@@ -1,20 +1,66 @@
 # pylint: disable=redefined-outer-name
+import secrets
 from datetime import UTC, datetime
+
+import pytest
 from sftkit.database import Connection
+from sftkit.error import AccessDenied
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.tree import Node
+from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
 from stustapay.core.service.order.order import get_source_account, get_target_account
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.user import UserService
 
 from .conftest import Cashier, CreateRandomUserTag
+
+
+async def _create_event_token_with_privileges(
+    *,
+    create_random_user_tag: CreateRandomUserTag,
+    event_node: Node,
+    global_admin_token: str,
+    privileges: list[Privilege],
+    user_service: UserService,
+) -> str:
+    user_tag = await create_random_user_tag()
+    role = await user_service.create_user_role(
+        token=global_admin_token,
+        node_id=event_node.id,
+        new_role=NewUserRole(
+            name=f"order-service-test-role-{secrets.token_hex(8)}",
+            is_privileged=False,
+            privileges=privileges,
+        ),
+    )
+    user = await user_service.create_user(
+        node_id=event_node.id,
+        token=global_admin_token,
+        new_user=NewUser(
+            login=f"order-service-user-{secrets.token_hex(8)}",
+            description="",
+            display_name="Order Service Test User",
+            user_tag_uid=user_tag.uid,
+            user_tag_pin=user_tag.pin,
+        ),
+        password="rolf",
+    )
+    await user_service.update_user_to_roles(
+        token=global_admin_token,
+        node_id=event_node.id,
+        user_to_roles=NewUserToRoles(user_id=user.id, role_ids=[role.id]),
+    )
+    login_result = await user_service.login_user(username=user.login, password="rolf")
+    assert login_result.success is not None
+    return login_result.success.token
 
 
 async def _create_customer_account(
@@ -304,3 +350,138 @@ async def test_list_orders_filtered_excludes_money_transfers(
     )
     assert money_transfer_count == 1
     assert all(order.order_type != OrderType.money_transfer for order in filtered_orders)
+
+
+async def test_can_book_orders_can_read_orders_in_admin_context(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+    tax_rate_ust: TaxRate,
+    cashier: Cashier,
+    till,
+    create_random_user_tag: CreateRandomUserTag,
+    user_service: UserService,
+):
+    product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(
+            name="Privilege Read Product",
+            price=5.0,
+            tax_rate_id=tax_rate_ust.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+    customer_account_id = await _create_customer_account(db_connection, event_node, create_random_user_tag)
+    order_id = await _create_sale_order(
+        db_connection=db_connection,
+        event_node=event_node,
+        cashier=cashier,
+        till_id=till.id,
+        customer_account_id=customer_account_id,
+        product=product,
+    )
+    can_book_orders_token = await _create_event_token_with_privileges(
+        create_random_user_tag=create_random_user_tag,
+        event_node=event_node,
+        global_admin_token=global_admin_token,
+        privileges=[Privilege.can_book_orders],
+        user_service=user_service,
+    )
+
+    filtered_orders = await order_service.list_orders_filtered(token=can_book_orders_token, node_id=event_node.id)
+    customer_orders = await order_service.list_orders(
+        token=can_book_orders_token,
+        node_id=event_node.id,
+        customer_account_id=customer_account_id,
+    )
+    till_orders = await order_service.list_orders_by_till(
+        token=can_book_orders_token,
+        node_id=event_node.id,
+        till_id=till.id,
+    )
+    order = await order_service.get_order(
+        token=can_book_orders_token,
+        node_id=event_node.id,
+        order_id=order_id,
+    )
+
+    assert [entry.id for entry in filtered_orders] == [order_id]
+    assert [entry.id for entry in customer_orders] == [order_id]
+    assert [entry.id for entry in till_orders] == [order_id]
+    assert order is not None
+    assert order.id == order_id
+
+
+async def test_order_admin_reads_require_node_administration_or_can_book_orders(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+    tax_rate_ust: TaxRate,
+    cashier: Cashier,
+    till,
+    create_random_user_tag: CreateRandomUserTag,
+    user_service: UserService,
+):
+    product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(
+            name="Privilege Deny Product",
+            price=5.0,
+            tax_rate_id=tax_rate_ust.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+    customer_account_id = await _create_customer_account(db_connection, event_node, create_random_user_tag)
+    order_id = await _create_sale_order(
+        db_connection=db_connection,
+        event_node=event_node,
+        cashier=cashier,
+        till_id=till.id,
+        customer_account_id=customer_account_id,
+        product=product,
+    )
+    no_order_privilege_token = await _create_event_token_with_privileges(
+        create_random_user_tag=create_random_user_tag,
+        event_node=event_node,
+        global_admin_token=global_admin_token,
+        privileges=[Privilege.customer_management],
+        user_service=user_service,
+    )
+
+    with pytest.raises(AccessDenied):
+        await order_service.list_orders_filtered(token=no_order_privilege_token, node_id=event_node.id)
+
+    with pytest.raises(AccessDenied):
+        await order_service.list_orders(
+            token=no_order_privilege_token,
+            node_id=event_node.id,
+            customer_account_id=customer_account_id,
+        )
+
+    with pytest.raises(AccessDenied):
+        await order_service.list_orders_by_till(
+            token=no_order_privilege_token,
+            node_id=event_node.id,
+            till_id=till.id,
+        )
+
+    with pytest.raises(AccessDenied):
+        await order_service.get_order(
+            token=no_order_privilege_token,
+            node_id=event_node.id,
+            order_id=order_id,
+        )

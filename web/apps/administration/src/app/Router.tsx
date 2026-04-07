@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { CustomerRoutes, PayoutRunRoutes } from "@/app/routes";
+import { CustomerRoutes, OrderRoutes, PayoutRunRoutes } from "@/app/routes";
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
@@ -544,7 +544,7 @@ const router = createBrowserRouter([
           },
           {
             path: "orders",
-            element: <PrivilegeGuard privilege="node_administration" />,
+            element: <PrivilegeGuard privilege={OrderRoutes.privilege} />,
             children: [
               {
                 path: ":orderId/edit",

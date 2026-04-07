@@ -1,4 +1,6 @@
 import { useGetOrderQuery } from "@/api";
+import { OrderRoutes } from "@/app/routes";
+import { withPrivilegeGuard } from "@/app/layout";
 import { ListItemLink } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Alert, List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
@@ -8,9 +10,8 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { LineItemEdit } from "./LineItemEdit";
-import { withPrivilegeGuard } from "@/app/layout";
 
-export const SaleEdit: React.FC = withPrivilegeGuard("node_administration", () => {
+export const SaleEdit: React.FC = withPrivilegeGuard(OrderRoutes.privilege, () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { orderId } = useParams();
