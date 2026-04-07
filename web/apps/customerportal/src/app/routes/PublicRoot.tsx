@@ -7,11 +7,10 @@ import { Box, CircularProgress, Container, CssBaseline } from "@mui/material";
 import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 export const PublicRoot: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const publicConfig = usePublicConfig();
   const authenticated = useAppSelector(selectIsAuthenticated);
   const [logout] = useLogoutMutation();
@@ -21,9 +20,6 @@ export const PublicRoot: React.FC = () => {
   const handleLogout = () => {
     logout()
       .unwrap()
-      .then(() => {
-        navigate("/login");
-      })
       .catch((err: any) => console.error("error during logout", err));
   };
 

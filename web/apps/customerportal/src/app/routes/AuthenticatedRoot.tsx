@@ -3,7 +3,7 @@ import { config } from "@/api/common";
 import { AppHeader, Layout } from "@/components";
 import { usePublicConfig, useThemeColors } from "@/hooks";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
-import { Box, CircularProgress, Container, CssBaseline, Toolbar } from "@mui/material";
+import { Box, CircularProgress, Container, CssBaseline } from "@mui/material";
 import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -16,17 +16,14 @@ export const AuthenticatedRoot: React.FC = () => {
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
   const [checkCheckout] = useCheckCheckoutMutation();
-  const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery(undefined, {
+    skip: !isAuthenticated,
+  });
 
   useThemeColors();
 
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const processedAPMRedirect = React.useRef<string | null>(null);
-
-  if (!isAuthenticated) {
-    const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
-    return <Navigate to={`/login${next}`} />;
-  }
 
   // Handle APM redirect back from payment provider
   React.useEffect(() => {
@@ -74,11 +71,13 @@ export const AuthenticatedRoot: React.FC = () => {
   const handleLogout = () => {
     logout()
       .unwrap()
-      .then(() => {
-        navigate("/login");
-      })
       .catch((err: any) => console.error("error during logout", err));
   };
+
+  if (!isAuthenticated) {
+    const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
+    return <Navigate to={`/login${next}`} />;
+  }
 
   const navbarLinks = [];
   if (publicConfig.payout_enabled) {
