@@ -1687,6 +1687,8 @@ class OrderService(Service[Config]):
         params: list = [scope_node.id]
 
         conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
+        params.append(OrderType.money_transfer.name)
+        conditions.append(f"o.order_type != ${len(params)}")
 
         if from_timestamp is not None:
             params.append(from_timestamp)

@@ -14,6 +14,8 @@ const paymentMethodTranslationKeys = {
   sofort: "topup.paymentMethods.sofort",
 } as const;
 
+const hiddenPaymentMethods = new Set(["apple_pay", "google_pay"]);
+
 const normalizePaymentMethods = (paymentMethods: string[] | undefined) => {
   const normalized: string[] = [];
   if (!paymentMethods) {
@@ -21,7 +23,7 @@ const normalizePaymentMethods = (paymentMethods: string[] | undefined) => {
   }
   for (const paymentMethod of paymentMethods) {
     const normalizedId = paymentMethod.trim().toLowerCase();
-    if (normalizedId && !normalized.includes(normalizedId)) {
+    if (normalizedId && !hiddenPaymentMethods.has(normalizedId) && !normalized.includes(normalizedId)) {
       normalized.push(normalizedId);
     }
   }

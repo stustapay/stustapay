@@ -1,6 +1,5 @@
 # pylint: disable=redefined-outer-name
 from datetime import UTC, datetime
-
 from sftkit.database import Connection
 
 from stustapay.core.schema.account import AccountType
@@ -9,6 +8,7 @@ from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.account import get_system_account_for_node
+from stustapay.core.service.account import AccountService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
 from stustapay.core.service.order.order import get_source_account, get_target_account
@@ -259,3 +259,48 @@ async def test_list_orders_filtered_accepts_comma_separated_selected_dates(
     )
 
     assert [order.id for order in filtered_orders] == [order_ids[3], order_ids[2], order_ids[1], order_ids[0]]
+
+
+async def test_list_orders_filtered_excludes_money_transfers(
+    account_service: AccountService,
+    order_service: OrderService,
+    event_admin_token: str,
+    db_connection: Connection,
+    event_node: Node,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+
+    source_account_id = await db_connection.fetchval(
+        "insert into account(node_id, user_tag_id, type, name, balance) "
+        "values ($1, $2, 'private', 'source-account', 10.00) returning id",
+        event_node.id,
+        source_tag.id,
+    )
+    target_account_id = await db_connection.fetchval(
+        "insert into account(node_id, user_tag_id, type, name, balance) "
+        "values ($1, $2, 'private', 'target-account', 0.00) returning id",
+        event_node.id,
+        target_tag.id,
+    )
+
+    await account_service.transfer_account_balance(
+        token=event_admin_token,
+        node_id=event_node.id,
+        source_account_id=source_account_id,
+        target_account_id=target_account_id,
+        amount=2.25,
+    )
+
+    filtered_orders = await order_service.list_orders_filtered(
+        token=event_admin_token,
+        node_id=event_node.id,
+    )
+
+    money_transfer_count = await db_connection.fetchval(
+        "select count(*) from ordr where order_type = $1",
+        OrderType.money_transfer.name,
+    )
+    assert money_transfer_count == 1
+    assert all(order.order_type != OrderType.money_transfer for order in filtered_orders)
