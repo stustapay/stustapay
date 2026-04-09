@@ -23,6 +23,8 @@ DEFAULT_INVITATION_TEXT_BODIES = {
 
 Sie wurden eingeladen, {{ node_name }} im teamfestlichPay-Administrationsportal zu verwalten.
 
+Ihr Benutzername ist: {{ username }}
+
 Um Ihr Konto zu aktivieren, klicken Sie bitte auf den folgenden Link und setzen Sie Ihr Passwort:
 {{ invitation_url }}
 
@@ -36,6 +38,8 @@ Ihr teamfestlichPay-Team
     Language.en_US: """Hello {{ display_name }},
 
 You have been invited to manage {{ node_name }} in the teamfestlichPay administration portal.
+
+Your username is: {{ username }}
 
 To activate your account, please click the following link and set your password:
 {{ invitation_url }}
@@ -52,6 +56,7 @@ The teamfestlichPay Team
 DEFAULT_INVITATION_HTML_BODIES = {
     Language.de_DE: """<p>Hallo {{ display_name }},</p>
 <p>Sie wurden eingeladen, <strong>{{ node_name }}</strong> im teamfestlichPay-Administrationsportal zu verwalten.</p>
+<p>Ihr Benutzername ist: <strong>{{ username }}</strong></p>
 <p>Um Ihr Konto zu aktivieren, klicken Sie bitte auf den folgenden Link und setzen Sie Ihr Passwort:</p>
 <p style="margin:24px 0;">
   <a
@@ -66,6 +71,7 @@ DEFAULT_INVITATION_HTML_BODIES = {
 """,
     Language.en_US: """<p>Hello {{ display_name }},</p>
 <p>You have been invited to manage <strong>{{ node_name }}</strong> in the teamfestlichPay administration portal.</p>
+<p>Your username is: <strong>{{ username }}</strong></p>
 <p>To activate your account, please click the following link and set your password:</p>
 <p style="margin:24px 0;">
   <a

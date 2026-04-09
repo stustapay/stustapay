@@ -632,7 +632,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       invitation_html_body: "HTML-Inhalt der Einladungs-E-Mail",
       templateVariables: "Template-Variablen",
       templateVariablesHelp:
-        "Verwenden Sie Jinja-Variablen wie display_name, node_name, invitation_url und expires_at mit der ueblichen Double-Curly-Brace-Syntax.",
+        "Verwenden Sie Jinja-Variablen wie display_name, username, login, node_name, invitation_url und expires_at mit der ueblichen Double-Curly-Brace-Syntax.",
       sendPreviewTestMail: "Vorschau-Testmail senden",
       testMailQueued: "Vorschau-Testmail wurde in die Warteschlange gestellt",
       testMailFailed: "Senden der Vorschau-Testmail fehlgeschlagen: {{reason}}",

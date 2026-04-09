@@ -213,6 +213,8 @@ class UserService(Service[Config]):
     ) -> dict[str, object]:
         return {
             "display_name": user.display_name,
+            "login": user.login,
+            "username": user.login,
             "node_name": node_name,
             "invitation_url": invitation_url,
             "expires_at": expires_at.strftime("%Y-%m-%d %H:%M"),

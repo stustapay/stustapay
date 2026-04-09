@@ -172,13 +172,13 @@ async def test_invitation_uses_global_email_templates(
             invitation_texts={
                 Language.de_DE: {
                     "subject": "Einladung fuer {{ display_name }} zu {{ node_name }}",
-                    "text_body": "Bitte besuchen Sie {{ invitation_url }} vor {{ expires_at }}.",
-                    "html_body": "<p>Hallo {{ display_name }}</p><p><a href='{{ invitation_url }}'>Einladung</a></p>",
+                    "text_body": "Benutzername {{ username }}. Bitte besuchen Sie {{ invitation_url }} vor {{ expires_at }}.",
+                    "html_body": "<p>Hallo {{ display_name }}</p><p>Benutzername {{ login }}</p><p><a href='{{ invitation_url }}'>Einladung</a></p>",
                 },
                 Language.en_US: {
                     "subject": "Invitation for {{ display_name }} to {{ node_name }}",
-                    "text_body": "Visit {{ invitation_url }} before {{ expires_at }}.",
-                    "html_body": "<p>Hello {{ display_name }}</p><p><a href='{{ invitation_url }}'>Invite</a></p>",
+                    "text_body": "Username {{ username }}. Visit {{ invitation_url }} before {{ expires_at }}.",
+                    "html_body": "<p>Hello {{ display_name }}</p><p>Username {{ login }}</p><p><a href='{{ invitation_url }}'>Invite</a></p>",
                 },
             },
         ),
@@ -202,11 +202,13 @@ async def test_invitation_uses_global_email_templates(
     assert "Invitation for Templated User" in mail["subject"]
     assert "Deutsch" in mail["text_message"]
     assert "English" in mail["text_message"]
+    assert user.login in mail["text_message"]
     assert "accept-invitation?token=" in mail["text_message"]
     assert "<html" in mail["html_message"]
     assert "Deutsch" in mail["html_message"]
     assert "English" in mail["html_message"]
     assert "Templated User" in mail["html_message"]
+    assert user.login in mail["html_message"]
     assert "teamfestlichPay" in mail["html_message"]
     assert "#176B67" in mail["html_message"]
 
@@ -262,9 +264,11 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
     assert "Deutsch" in mail["text_message"]
     assert "English" in mail["text_message"]
     assert "Fallback User" in mail["text_message"]
+    assert user.login in mail["text_message"]
     assert "teamfestlichPay administration portal" in mail["text_message"]
     assert "Hallo Fallback User" in mail["html_message"]
     assert "Hello Fallback User" in mail["html_message"]
+    assert user.login in mail["html_message"]
     assert "teamfestlichPay" in mail["html_message"]
     assert "Accept invitation" in mail["html_message"]
 

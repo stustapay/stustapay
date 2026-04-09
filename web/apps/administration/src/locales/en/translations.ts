@@ -649,7 +649,7 @@ export const translations = {
       invitation_html_body: "Invitation HTML body",
       templateVariables: "Template variables",
       templateVariablesHelp:
-        "Use Jinja variables such as display_name, node_name, invitation_url, and expires_at with the usual double-curly-brace syntax.",
+        "Use Jinja variables such as display_name, username, login, node_name, invitation_url, and expires_at with the usual double-curly-brace syntax.",
       sendPreviewTestMail: "Send Preview Test Mail",
       testMailQueued: "Preview test mail queued",
       testMailFailed: "Sending preview test mail failed: {{reason}}",

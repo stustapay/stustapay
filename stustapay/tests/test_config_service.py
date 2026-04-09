@@ -105,13 +105,13 @@ async def test_global_email_test_queues_preview_mail(
             invitation_texts={
                 Language.de_DE: {
                     "subject": "Einladung fuer {{ display_name }}",
-                    "text_body": "Hallo {{ display_name }} {{ invitation_url }}",
-                    "html_body": "<p>Hallo {{ display_name }}</p>",
+                    "text_body": "Hallo {{ display_name }} Benutzername {{ username }} {{ invitation_url }}",
+                    "html_body": "<p>Hallo {{ display_name }}</p><p>Benutzername {{ login }}</p>",
                 },
                 Language.en_US: {
                     "subject": "Invite {{ display_name }}",
-                    "text_body": "Hello {{ display_name }} {{ invitation_url }}",
-                    "html_body": "<p>Hello {{ display_name }}</p>",
+                    "text_body": "Hello {{ display_name }} Username {{ username }} {{ invitation_url }}",
+                    "html_body": "<p>Hello {{ display_name }}</p><p>Username {{ login }}</p>",
                 },
             },
         ),
@@ -132,7 +132,9 @@ async def test_global_email_test_queues_preview_mail(
     assert mail is not None
     assert str(mail["subject"]).startswith("[Preview] ")
     assert mail["to_addr"] == "global-admin@example.test"
+    assert "global-admin" in mail["text_message"]
     assert "https://admin.teamfestlichpay.de/accept-invitation?token=preview-token" in mail["text_message"]
+    assert "global-admin" in mail["html_message"]
     assert "teamfestlichPay" in mail["html_message"]
     assert "#176B67" in mail["html_message"]
 

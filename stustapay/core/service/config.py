@@ -240,6 +240,8 @@ class ConfigService(Service[Config]):
 
         context = {
             "display_name": current_user.display_name,
+            "login": current_user.login,
+            "username": current_user.login,
             "node_name": "teamfestlichPay Administration",
             "invitation_url": (
                 f"{derive_invitation_base_url(self.config.administration.base_url)}"
