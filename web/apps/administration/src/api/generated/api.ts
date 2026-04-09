@@ -106,6 +106,14 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      acceptInvitation: build.mutation<AcceptInvitationApiResponse, AcceptInvitationApiArg>({
+        query: (queryArg) => ({
+          url: `/users/accept-invitation`,
+          method: "POST",
+          body: queryArg.acceptInvitationPayload,
+        }),
+        invalidatesTags: ["users"],
+      }),
       getUser: build.query<GetUserApiResponse, GetUserApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}`,
@@ -154,14 +162,6 @@ const injectedRtkApi = api
           params: {
             node_id: queryArg.nodeId,
           },
-        }),
-        invalidatesTags: ["users"],
-      }),
-      acceptInvitation: build.mutation<AcceptInvitationApiResponse, AcceptInvitationApiArg>({
-        query: (queryArg) => ({
-          url: `/users/accept-invitation`,
-          method: "POST",
-          body: queryArg.acceptInvitationPayload,
         }),
         invalidatesTags: ["users"],
       }),
@@ -1651,17 +1651,60 @@ const injectedRtkApi = api
         query: () => ({ url: `/llm/tools` }),
         providesTags: ["llm"],
       }),
+      listNodesLlm: build.query<ListNodesLlmApiResponse, ListNodesLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/nodes`,
+          params: {
+            parent_node_id: queryArg.parentNodeId,
+            name_query: queryArg.nameQuery,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
+      createNodeLlm: build.mutation<CreateNodeLlmApiResponse, CreateNodeLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/nodes`, method: "POST", body: queryArg.createNodePayload }),
+        invalidatesTags: ["llm"],
+      }),
       createProductLlm: build.mutation<CreateProductLlmApiResponse, CreateProductLlmApiArg>({
         query: (queryArg) => ({ url: `/llm/products`, method: "POST", body: queryArg.createProductPayload }),
         invalidatesTags: ["llm"],
+      }),
+      listProductsLlm: build.query<ListProductsLlmApiResponse, ListProductsLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/products`,
+          params: {
+            node_id: queryArg.nodeId,
+            include_subtree: queryArg.includeSubtree,
+          },
+        }),
+        providesTags: ["llm"],
       }),
       createCashRegisterLlm: build.mutation<CreateCashRegisterLlmApiResponse, CreateCashRegisterLlmApiArg>({
         query: (queryArg) => ({ url: `/llm/cash-registers`, method: "POST", body: queryArg.createCashRegisterPayload }),
         invalidatesTags: ["llm"],
       }),
+      listCashRegistersLlm: build.query<ListCashRegistersLlmApiResponse, ListCashRegistersLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/cash-registers`,
+          params: {
+            node_id: queryArg.nodeId,
+            include_subtree: queryArg.includeSubtree,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
       createTillLlm: build.mutation<CreateTillLlmApiResponse, CreateTillLlmApiArg>({
         query: (queryArg) => ({ url: `/llm/tills`, method: "POST", body: queryArg.createTillPayload }),
         invalidatesTags: ["llm"],
+      }),
+      listTillsLlm: build.query<ListTillsLlmApiResponse, ListTillsLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/tills`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
       }),
       createTillButtonLlm: build.mutation<CreateTillButtonLlmApiResponse, CreateTillButtonLlmApiArg>({
         query: (queryArg) => ({ url: `/llm/till-buttons`, method: "POST", body: queryArg.createTillButtonPayload }),
@@ -1689,8 +1732,34 @@ const injectedRtkApi = api
         }),
         providesTags: ["llm"],
       }),
+      createTillProfileLlm: build.mutation<CreateTillProfileLlmApiResponse, CreateTillProfileLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/till-profiles`, method: "POST", body: queryArg.createTillProfilePayload }),
+        invalidatesTags: ["llm"],
+      }),
+      listTillProfilesLlm: build.query<ListTillProfilesLlmApiResponse, ListTillProfilesLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/till-profiles`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
       createTerminalLlm: build.mutation<CreateTerminalLlmApiResponse, CreateTerminalLlmApiArg>({
         query: (queryArg) => ({ url: `/llm/terminals`, method: "POST", body: queryArg.createTerminalPayload }),
+        invalidatesTags: ["llm"],
+      }),
+      listTerminalsLlm: build.query<ListTerminalsLlmApiResponse, ListTerminalsLlmApiArg>({
+        query: (queryArg) => ({
+          url: `/llm/terminals`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["llm"],
+      }),
+      createTaxRateLlm: build.mutation<CreateTaxRateLlmApiResponse, CreateTaxRateLlmApiArg>({
+        query: (queryArg) => ({ url: `/llm/tax-rates`, method: "POST", body: queryArg.createTaxRatePayload }),
         invalidatesTags: ["llm"],
       }),
       listTaxRatesLlm: build.query<ListTaxRatesLlmApiResponse, ListTaxRatesLlmApiArg>({
@@ -1707,15 +1776,6 @@ const injectedRtkApi = api
           url: `/llm/events`,
           params: {
             name_query: queryArg.nameQuery,
-          },
-        }),
-        providesTags: ["llm"],
-      }),
-      listTillProfilesLlm: build.query<ListTillProfilesLlmApiResponse, ListTillProfilesLlmApiArg>({
-        query: (queryArg) => ({
-          url: `/llm/till-profiles`,
-          params: {
-            node_id: queryArg.nodeId,
           },
         }),
         providesTags: ["llm"],
@@ -2021,6 +2081,12 @@ export type CreateUserApiArg = {
   nodeId: number;
   createUserPayload: CreateUserPayload;
 };
+export type AcceptInvitationApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string;
+};
+export type AcceptInvitationApiArg = {
+  acceptInvitationPayload: AcceptInvitationPayload;
+};
 export type GetUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type GetUserApiArg = {
   userId: number;
@@ -2047,12 +2113,6 @@ export type InviteUserApiResponse = /** status 200 Successful Response */ UserIn
 export type InviteUserApiArg = {
   userId: number;
   nodeId: number;
-};
-export type AcceptInvitationApiResponse = /** status 200 Successful Response */ {
-  [key: string]: string;
-};
-export type AcceptInvitationApiArg = {
-  acceptInvitationPayload: AcceptInvitationPayload;
 };
 export type ListUserRolesApiResponse = /** status 200 Successful Response */ NormalizedListUserRoleInt;
 export type ListUserRolesApiArg = {
@@ -2853,17 +2913,40 @@ export type RefreshMappingTokenApiArg = {
 };
 export type ListLlmToolsApiResponse = /** status 200 Successful Response */ ToolDescription[];
 export type ListLlmToolsApiArg = void;
+export type ListNodesLlmApiResponse = /** status 200 Successful Response */ NodeSeenByUser[];
+export type ListNodesLlmApiArg = {
+  parentNodeId: number;
+  nameQuery?: string | null;
+};
+export type CreateNodeLlmApiResponse = /** status 200 Successful Response */ Node;
+export type CreateNodeLlmApiArg = {
+  createNodePayload: CreateNodePayload;
+};
 export type CreateProductLlmApiResponse = /** status 200 Successful Response */ Product;
 export type CreateProductLlmApiArg = {
   createProductPayload: CreateProductPayload;
+};
+export type ListProductsLlmApiResponse = /** status 200 Successful Response */ Product[];
+export type ListProductsLlmApiArg = {
+  nodeId: number;
+  includeSubtree?: boolean;
 };
 export type CreateCashRegisterLlmApiResponse = /** status 200 Successful Response */ CashRegister;
 export type CreateCashRegisterLlmApiArg = {
   createCashRegisterPayload: CreateCashRegisterPayload;
 };
+export type ListCashRegistersLlmApiResponse = /** status 200 Successful Response */ CashRegister[];
+export type ListCashRegistersLlmApiArg = {
+  nodeId: number;
+  includeSubtree?: boolean;
+};
 export type CreateTillLlmApiResponse = /** status 200 Successful Response */ Till;
 export type CreateTillLlmApiArg = {
   createTillPayload: CreateTillPayload;
+};
+export type ListTillsLlmApiResponse = /** status 200 Successful Response */ Till[];
+export type ListTillsLlmApiArg = {
+  nodeId: number;
 };
 export type CreateTillButtonLlmApiResponse = /** status 200 Successful Response */ TillButton;
 export type CreateTillButtonLlmApiArg = {
@@ -2881,9 +2964,25 @@ export type ListTillLayoutsLlmApiResponse = /** status 200 Successful Response *
 export type ListTillLayoutsLlmApiArg = {
   nodeId: number;
 };
+export type CreateTillProfileLlmApiResponse = /** status 200 Successful Response */ TillProfile;
+export type CreateTillProfileLlmApiArg = {
+  createTillProfilePayload: CreateTillProfilePayload;
+};
+export type ListTillProfilesLlmApiResponse = /** status 200 Successful Response */ TillProfile[];
+export type ListTillProfilesLlmApiArg = {
+  nodeId: number;
+};
 export type CreateTerminalLlmApiResponse = /** status 200 Successful Response */ Terminal;
 export type CreateTerminalLlmApiArg = {
   createTerminalPayload: CreateTerminalPayload;
+};
+export type ListTerminalsLlmApiResponse = /** status 200 Successful Response */ Terminal[];
+export type ListTerminalsLlmApiArg = {
+  nodeId: number;
+};
+export type CreateTaxRateLlmApiResponse = /** status 200 Successful Response */ TaxRate;
+export type CreateTaxRateLlmApiArg = {
+  createTaxRatePayload: CreateTaxRatePayload;
 };
 export type ListTaxRatesLlmApiResponse = /** status 200 Successful Response */ TaxRate[];
 export type ListTaxRatesLlmApiArg = {
@@ -2892,10 +2991,6 @@ export type ListTaxRatesLlmApiArg = {
 export type ListEventsLlmApiResponse = /** status 200 Successful Response */ EventSummary[];
 export type ListEventsLlmApiArg = {
   nameQuery?: string | null;
-};
-export type ListTillProfilesLlmApiResponse = /** status 200 Successful Response */ TillProfile[];
-export type ListTillProfilesLlmApiArg = {
-  nodeId: number;
 };
 export type ListEntryAreasApiResponse = /** status 200 Successful Response */ NormalizedListEntryAreaInt;
 export type ListEntryAreasApiArg = {
@@ -3145,6 +3240,10 @@ export type CreateUserPayload = {
   email?: string | null;
   password?: string | null;
 };
+export type AcceptInvitationPayload = {
+  token: string;
+  password: string;
+};
 export type UpdateUserPayload = {
   login: string;
   display_name: string;
@@ -3165,10 +3264,6 @@ export type UserInvitation = {
   expires_at: string;
   accepted_at?: string | null;
   created_by?: number | null;
-};
-export type AcceptInvitationPayload = {
-  token: string;
-  password: string;
 };
 export type UserRole = {
   name: string;
@@ -4662,6 +4757,11 @@ export type ToolDescription = {
     [key: string]: any;
   } | null;
 };
+export type CreateNodePayload = {
+  /** ID of the parent node below which the child node will be created. */
+  parent_node_id: number;
+  node: NewNode;
+};
 export type CreateProductPayload = {
   /** ID of the node/event the product belongs to. */
   node_id: number;
@@ -4687,10 +4787,20 @@ export type CreateTillLayoutPayload = {
   node_id: number;
   layout: NewTillLayout;
 };
+export type CreateTillProfilePayload = {
+  /** ID of the node/event the till profile belongs to. */
+  node_id: number;
+  till_profile: NewTillProfile;
+};
 export type CreateTerminalPayload = {
   /** ID of the node/event the terminal belongs to. */
   node_id: number;
   terminal: NewTerminal;
+};
+export type CreateTaxRatePayload = {
+  /** ID of the node/event the tax rate belongs to. */
+  node_id: number;
+  tax_rate: NewTaxRate;
 };
 export type EventSummary = {
   node_id: number;
@@ -4801,13 +4911,13 @@ export const {
   useListUsersQuery,
   useLazyListUsersQuery,
   useCreateUserMutation,
+  useAcceptInvitationMutation,
   useGetUserQuery,
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
   useChangeUserPasswordMutation,
   useInviteUserMutation,
-  useAcceptInvitationMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,
   useCreateUserRoleMutation,
@@ -5029,22 +5139,35 @@ export const {
   useRefreshMappingTokenMutation,
   useListLlmToolsQuery,
   useLazyListLlmToolsQuery,
+  useListNodesLlmQuery,
+  useLazyListNodesLlmQuery,
+  useCreateNodeLlmMutation,
   useCreateProductLlmMutation,
+  useListProductsLlmQuery,
+  useLazyListProductsLlmQuery,
   useCreateCashRegisterLlmMutation,
+  useListCashRegistersLlmQuery,
+  useLazyListCashRegistersLlmQuery,
   useCreateTillLlmMutation,
+  useListTillsLlmQuery,
+  useLazyListTillsLlmQuery,
   useCreateTillButtonLlmMutation,
   useListTillButtonsLlmQuery,
   useLazyListTillButtonsLlmQuery,
   useCreateTillLayoutLlmMutation,
   useListTillLayoutsLlmQuery,
   useLazyListTillLayoutsLlmQuery,
+  useCreateTillProfileLlmMutation,
+  useListTillProfilesLlmQuery,
+  useLazyListTillProfilesLlmQuery,
   useCreateTerminalLlmMutation,
+  useListTerminalsLlmQuery,
+  useLazyListTerminalsLlmQuery,
+  useCreateTaxRateLlmMutation,
   useListTaxRatesLlmQuery,
   useLazyListTaxRatesLlmQuery,
   useListEventsLlmQuery,
   useLazyListEventsLlmQuery,
-  useListTillProfilesLlmQuery,
-  useLazyListTillProfilesLlmQuery,
   useListEntryAreasQuery,
   useLazyListEntryAreasQuery,
   useCreateEntryAreaMutation,
