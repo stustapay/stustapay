@@ -223,13 +223,13 @@ fun SaleSelectionItem(
                             Box(
                                 modifier = Modifier
                                     .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
-                                    .padding(horizontal = 9.dp, vertical = 4.dp),
+                                    .padding(horizontal = 10.dp, vertical = 5.dp),
                             ) {
                                 Text(
                                     text = quantityLabel,
-                                    color = OperatorPalette.subtitle,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    color = OperatorPalette.title,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
                                 )
                             }
                         }
@@ -317,13 +317,13 @@ fun SaleSelectionItem(
                     Box(
                         modifier = Modifier
                             .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
                     ) {
                         Text(
                             text = quantityLabel,
-                            color = OperatorPalette.subtitle,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            color = OperatorPalette.title,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                 }

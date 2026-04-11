@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,11 +51,6 @@ fun SaleSuccess(
     val vibrator = LocalContext.current.getSystemService(Vibrator::class.java)
 
     val completedSale = saleCompleted ?: return
-    val paymentLabel = when (completedSale.paymentMethod) {
-        PaymentMethod.cash -> stringResource(R.string.pay_cash).substringAfter('\n')
-        PaymentMethod.sumup, PaymentMethod.sumup_online -> stringResource(R.string.pay_card).substringAfter('\n')
-        PaymentMethod.tag -> stringResource(R.string.wristband)
-    }
     val returnableCount = completedSale.lineItems.sumOf { lineItem ->
         if (lineItem.product.isReturnable) lineItem.quantity.intValue() else 0
     }
@@ -105,11 +101,7 @@ fun SaleSuccess(
                             modifier = Modifier.weight(1f),
                         )
                     } else {
-                        OperatorMetricCard(
-                            label = stringResource(R.string.operator_payment_method),
-                            value = paymentLabel,
-                            modifier = Modifier.weight(1f),
-                        )
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
                 if (completedSale.usedVouchers > 0 || completedSale.newVoucherBalance > 0 || returnableCount != 0) {
@@ -144,15 +136,12 @@ fun SaleSuccess(
             railContent = {
                 OperatorPanel(backgroundColor = OperatorPalette.panelMuted) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OperatorRailSummaryRow(
-                            label = stringResource(R.string.operator_payment_method),
-                            value = paymentLabel,
-                        )
                         if (completedSale.paymentMethod == PaymentMethod.tag) {
-                            OperatorRailSummaryRow(
+                            OperatorMetricCard(
                                 label = stringResource(R.string.new_balance),
                                 value = formatCurrencyValue(completedSale.newBalance),
                                 accent = true,
+                                modifier = Modifier.fillMaxWidth(),
                             )
                         }
                         OperatorActionButton(
