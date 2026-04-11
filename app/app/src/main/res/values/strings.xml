@@ -460,10 +460,16 @@
     <string name="registration_status_title">Current terminal association</string>
     <string name="registration_status_message">Message: %1$s</string>
     <string name="registration_status_endpoint">Endpoint: %1$s</string>
+    <string name="registration_status_source">Source: %1$s</string>
     <string name="registration_status_not_connected">not connected</string>
+    <string name="registration_source_unknown">Unknown</string>
+    <string name="registration_source_manual">Manual QR registration</string>
+    <string name="registration_source_managed">Headwind managed configuration</string>
     <string name="registration_status_scanner">Scanner</string>
     <string name="registration_waiting_input">Waiting for input</string>
     <string name="registration_status_force_hint">Force deregister follows only if the backend cannot remove the association.</string>
+    <string name="registration_managed_override_active">Manual override active. Headwind managed server configuration is currently ignored.</string>
+    <string name="registration_allow_managed_config">Allow Headwind managed config</string>
     <string name="registration_scan_qr">Scan registration QR code</string>
     <string name="registration_deregister">Deregister Terminal</string>
     <string name="registration_deregister_confirm">Do you really want do remove the terminal\'s server association?</string>
@@ -528,4 +534,16 @@
     <string name="infallible_retry_sending">Sending again...</string>
     <string name="continue_label">Continue</string>
     <string name="infallible_popup_initializing">Initializing popup...</string>
+    <string name="nfc_clarification_step1">Hold your wristband</string>
+    <string name="nfc_clarification_step2">Then pay at EC terminal</string>
+    <string name="settings_wifi_title">Managed Wi-Fi (optional)</string>
+    <string name="settings_wifi_none">No managed Wi-Fi is configured. Core connection setup still works without it.</string>
+    <string name="settings_wifi_ssid">SSID: %1$s</string>
+    <string name="settings_wifi_passphrase">Passphrase: %1$s</string>
+    <string name="settings_wifi_show_passphrase">Show passphrase</string>
+    <string name="settings_wifi_hide_passphrase">Hide passphrase</string>
+    <string name="settings_wifi_retry">Suggest Wi-Fi Again</string>
+    <string name="settings_wifi_open_setup">Open Wi-Fi Setup</string>
+    <string name="settings_wifi_error">Wi-Fi suggestion failed: %1$s</string>
+    <string name="settings_wifi_success">The latest managed Wi-Fi suggestion was applied.</string>
 </resources>

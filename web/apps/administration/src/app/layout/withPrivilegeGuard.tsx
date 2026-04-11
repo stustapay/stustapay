@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Privilege } from "@/api";
+import { PrivilegeRequirement } from "@/core/privileges";
 import { PrivilegeGuard } from "./PrivilegeGuard";
 
-export function withPrivilegeGuard<P>(privilege: Privilege, Component: React.FC<P>): React.FC<P> {
+export function withPrivilegeGuard<P>(privilege: PrivilegeRequirement, Component: React.FC<P>): React.FC<P> {
   const Wrapper: React.FC<P> = (props) => {
     return (
       <PrivilegeGuard privilege={privilege}>

@@ -1,5 +1,4 @@
 import { Terminal, selectTerminalAll, useListTerminalsQuery, useSwitchTerminalMutation } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { Loading, Select } from "@stustapay/components";
 import * as React from "react";
@@ -7,19 +6,21 @@ import { useTranslation } from "react-i18next";
 
 export type TillSwitchTerminalProps = {
   tillId: number;
+  nodeId: number;
   open: boolean;
   onClose: () => void;
 };
 
-export const TillSwitchTerminal: React.FC<TillSwitchTerminalProps> = ({ tillId, open, onClose }) => {
+export const TillSwitchTerminal: React.FC<TillSwitchTerminalProps> = ({ tillId, nodeId, open, onClose }) => {
   const { t } = useTranslation();
-  const { currentNode } = useCurrentNode();
   const { terminals } = useListTerminalsQuery(
-    { nodeId: currentNode.id },
+    { nodeId },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        terminals: data ? selectTerminalAll(data).filter((t) => t.till_id == null) : [],
+        terminals: data
+          ? selectTerminalAll(data).filter((terminal) => terminal.node_id === nodeId && terminal.till_id == null)
+          : [],
       }),
     }
   );
@@ -35,7 +36,7 @@ export const TillSwitchTerminal: React.FC<TillSwitchTerminalProps> = ({ tillId, 
       return;
     }
     switchTerminal({
-      nodeId: currentNode.id,
+      nodeId,
       tillId,
       switchTerminalPayload: { new_terminal_id: selectedTerminal.id },
     }).then(onClose);

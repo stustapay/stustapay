@@ -26,6 +26,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.order.pending_order import (
     fetch_pending_order,
+    fetch_pending_online_topup_for_customer,
     fetch_order_by_uuid,
     fetch_pending_orders,
     load_pending_ticket_sale,
@@ -84,6 +85,28 @@ class SumupService(Service[Config]):
 
     def _create_sumup_api(self, merchant_code: str, api_key: str) -> SumUpApi:
         return SumUpApi(merchant_code=merchant_code, api_key=api_key)
+
+    async def get_available_payment_methods_for_node(self, conn: Connection, node_id: int) -> list[str]:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
+        if not event_settings.is_sumup_topup_enabled(self.config.core):
+            return []
+
+        if not event_settings.sumup_api_key or not event_settings.sumup_merchant_code:
+            self.logger.warning("SumUp top-up is enabled for node %s but merchant credentials are incomplete", node_id)
+            return []
+
+        sumup_api = self._create_sumup_api(
+            merchant_code=event_settings.sumup_merchant_code,
+            api_key=event_settings.sumup_api_key,
+        )
+        try:
+            return await sumup_api.list_available_payment_methods()
+        except SumUpError as exc:
+            self.logger.warning("Unable to fetch SumUp payment methods for node %s: %s", node_id, exc)
+            return []
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Unexpected error while fetching SumUp payment methods for node %s", node_id)
+            return []
 
     async def _process_topup(
         self, conn: Connection, node: Node, till: Till, pending_order: PendingOrder, topup: CompletedTopUp
@@ -216,8 +239,14 @@ class SumupService(Service[Config]):
     @requires_customer
     @requires_sumup_online_topup_enabled
     async def check_online_topup_checkout(
-        self, *, conn: Connection, current_customer: Customer, order_uuid: uuid.UUID
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        order_uuid: uuid.UUID,
+        customer_portal_base_url: str | None = None,
     ) -> SumUpCheckoutStatus:
+        del customer_portal_base_url
         try:
             # Use fetch_order_by_uuid to get the order regardless of status
             pending_order = await fetch_order_by_uuid(conn=conn, uuid=order_uuid)
@@ -290,8 +319,14 @@ class SumupService(Service[Config]):
     @requires_customer
     @requires_sumup_online_topup_enabled
     async def create_online_topup_checkout(
-        self, *, conn: Connection, current_customer: Customer, amount: float
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        amount: float,
+        customer_portal_base_url: str | None = None,
     ) -> tuple[SumUpCheckout, uuid.UUID]:
+        del customer_portal_base_url
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
@@ -309,6 +344,57 @@ class SumupService(Service[Config]):
         if new_balance > max_limit:
             raise InvalidArgument(f"Resulting balance would be more than {max_limit}€")
 
+        # Serialize online topup creation per customer to avoid duplicate pending orders.
+        await conn.fetchval("select id from account where id = $1 for update", current_customer.id)
+
+        existing_pending_order = await fetch_pending_online_topup_for_customer(
+            conn=conn, customer_account_id=current_customer.id
+        )
+        if existing_pending_order is not None:
+            order_creation_time = existing_pending_order.created_at
+            current_time = datetime.now(timezone.utc)
+
+            if order_creation_time is not None and (current_time - order_creation_time) > SUMUP_PENDING_ORDER_TIMEOUT:
+                self.logger.warning(
+                    f"Existing online topup order {existing_pending_order.uuid} for customer {current_customer.id} "
+                    f"timed out, marking as cancelled before creating a new checkout"
+                )
+                await conn.execute(
+                    "UPDATE pending_sumup_order SET status = $1 WHERE uuid = $2",
+                    PendingOrderStatus.cancelled.value,
+                    existing_pending_order.uuid,
+                )
+            else:
+                existing_api = self._create_sumup_api(
+                    merchant_code=event_settings.sumup_merchant_code, api_key=event_settings.sumup_api_key
+                )
+                existing_checkout = await existing_api.find_checkout(existing_pending_order.uuid)
+
+                if existing_checkout is not None:
+                    if existing_checkout.status == SumUpCheckoutStatus.PENDING:
+                        self.logger.info(
+                            f"Reusing existing pending online checkout {existing_checkout.id} "
+                            f"for customer {current_customer.id} and order {existing_pending_order.uuid}"
+                        )
+                        return existing_checkout, existing_pending_order.uuid
+
+                    if existing_checkout.status == SumUpCheckoutStatus.PAID:
+                        self.logger.info(
+                            f"Customer {current_customer.id} already has a paid online checkout "
+                            f"{existing_pending_order.uuid} awaiting booking"
+                        )
+                        raise InvalidArgument("A previous online top up payment is still being processed")
+
+                self.logger.info(
+                    f"Cancelling stale or missing online checkout for customer {current_customer.id} "
+                    f"and order {existing_pending_order.uuid}"
+                )
+                await conn.execute(
+                    "UPDATE pending_sumup_order SET status = $1 WHERE uuid = $2",
+                    PendingOrderStatus.cancelled.value,
+                    existing_pending_order.uuid,
+                )
+
         order_uuid = uuid.uuid4()
 
         create_checkout = SumUpCreateCheckout(
@@ -319,7 +405,9 @@ class SumupService(Service[Config]):
             description=f"{event_node.name} Online TopUp {current_customer.user_tag_uid_hex} {order_uuid}",
             redirect_url=f"{event_settings.customer_portal_url}/topup?order_uuid={order_uuid}",
         )
-        api = SumUpApi(merchant_code=event_settings.sumup_merchant_code, api_key=event_settings.sumup_api_key)
+        api = self._create_sumup_api(
+            merchant_code=event_settings.sumup_merchant_code, api_key=event_settings.sumup_api_key
+        )
         self.logger.info(f"Creating SumUp checkout for amount {amount} {event_settings.currency_identifier} with redirect_url: {create_checkout.redirect_url}")
         checkout_response = await api.create_sumup_checkout(create_checkout)
         virtual_till = await fetch_virtual_till(conn=conn, node=event_node)

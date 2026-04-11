@@ -8,8 +8,17 @@ from sftkit.error import AccessDenied, InvalidArgument
 from sftkit.database import Connection
 from stustapay.core.schema.tree import ROOT_NODE_ID, Node
 from stustapay.core.schema.config import GlobalEmailConfig
-from stustapay.core.schema.user import AcceptInvitationPayload, NewUser, NewUserRole, Privilege, UpdateCurrentUserProfilePayload, User
+from stustapay.core.schema.language import Language
+from stustapay.core.schema.user import (
+    AcceptInvitationPayload,
+    NewUser,
+    NewUserRole,
+    Privilege,
+    UpdateCurrentUserProfilePayload,
+    User,
+)
 from stustapay.core.service.config import ConfigService
+from stustapay.core.service.email_templates import derive_invitation_base_url
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.user import UserService
 
@@ -119,14 +128,16 @@ async def test_invitation_token_is_stored_hashed_and_raw_token_is_required_for_a
     ("api_base_url", "expected_invitation_base_url"),
     [
         ("http://localhost:8081/api", "http://localhost:8081"),
+        ("http://localhost:8081/api/admin", "http://localhost:8081"),
         ("http://localhost:8081", "http://localhost:8081"),
         ("https://admin.example.com/api", "https://admin.example.com"),
+        ("https://admin.example.com/api/admin", "https://admin.example.com"),
         ("https://api.example.com/api", "https://api.example.com"),
         ("https://api.example.com/stustapay/api", "https://api.example.com/stustapay"),
     ],
 )
 def test_invitation_base_url_derivation(api_base_url: str, expected_invitation_base_url: str):
-    assert UserService._invitation_base_url(api_base_url) == expected_invitation_base_url
+    assert derive_invitation_base_url(api_base_url) == expected_invitation_base_url
 
 
 async def test_invitation_uses_global_email_templates(
@@ -158,9 +169,18 @@ async def test_invitation_uses_global_email_templates(
             email_smtp_port=587,
             email_smtp_username="mailer",
             email_smtp_password="secret",
-            invitation_subject="Invitation for {{ display_name }} to {{ node_name }}",
-            invitation_text_body="Visit {{ invitation_url }} before {{ expires_at }}.",
-            invitation_html_body="<p>Hello {{ display_name }}</p><p><a href='{{ invitation_url }}'>Invite</a></p>",
+            invitation_texts={
+                Language.de_DE: {
+                    "subject": "Einladung fuer {{ display_name }} zu {{ node_name }}",
+                    "text_body": "Benutzername {{ username }}. Bitte besuchen Sie {{ invitation_url }} vor {{ expires_at }}.",
+                    "html_body": "<p>Hallo {{ display_name }}</p><p>Benutzername {{ login }}</p><p><a href='{{ invitation_url }}'>Einladung</a></p>",
+                },
+                Language.en_US: {
+                    "subject": "Invitation for {{ display_name }} to {{ node_name }}",
+                    "text_body": "Username {{ username }}. Visit {{ invitation_url }} before {{ expires_at }}.",
+                    "html_body": "<p>Hello {{ display_name }}</p><p>Username {{ login }}</p><p><a href='{{ invitation_url }}'>Invite</a></p>",
+                },
+            },
         ),
     )
 
@@ -178,9 +198,19 @@ async def test_invitation_uses_global_email_templates(
     assert mail["node_id"] == ROOT_NODE_ID
     assert mail["from_addr"] == "noreply@example.test"
     assert "Templated User" in mail["subject"]
+    assert "Einladung fuer Templated User" in mail["subject"]
+    assert "Invitation for Templated User" in mail["subject"]
+    assert "Deutsch" in mail["text_message"]
+    assert "English" in mail["text_message"]
+    assert user.login in mail["text_message"]
     assert "accept-invitation?token=" in mail["text_message"]
     assert "<html" in mail["html_message"]
+    assert "Deutsch" in mail["html_message"]
+    assert "English" in mail["html_message"]
     assert "Templated User" in mail["html_message"]
+    assert user.login in mail["html_message"]
+    assert "teamfestlichPay" in mail["html_message"]
+    assert "#176B67" in mail["html_message"]
 
 
 async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
@@ -212,9 +242,7 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
             email_smtp_port=587,
             email_smtp_username="mailer",
             email_smtp_password="secret",
-            invitation_subject=None,
-            invitation_text_body=None,
-            invitation_html_body="<p>ignored</p>",
+            invitation_texts={},
         ),
     )
 
@@ -231,9 +259,18 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
     assert mail is not None
     assert mail["node_id"] == ROOT_NODE_ID
     assert mail["from_addr"] == "noreply@example.test"
-    assert mail["subject"] == f"Invitation to manage {event_node.name}"
+    assert f"Einladung zur Verwaltung von {event_node.name}" in mail["subject"]
+    assert f"Invitation to manage {event_node.name}" in mail["subject"]
+    assert "Deutsch" in mail["text_message"]
+    assert "English" in mail["text_message"]
     assert "Fallback User" in mail["text_message"]
-    assert "ignored" in mail["html_message"]
+    assert user.login in mail["text_message"]
+    assert "teamfestlichPay administration portal" in mail["text_message"]
+    assert "Hallo Fallback User" in mail["html_message"]
+    assert "Hello Fallback User" in mail["html_message"]
+    assert user.login in mail["html_message"]
+    assert "teamfestlichPay" in mail["html_message"]
+    assert "Accept invitation" in mail["html_message"]
 
 
 async def test_invitation_uses_partial_template_overrides(
@@ -265,9 +302,12 @@ async def test_invitation_uses_partial_template_overrides(
             email_smtp_port=587,
             email_smtp_username="mailer",
             email_smtp_password="secret",
-            invitation_subject="Custom subject for {{ display_name }}",
-            invitation_text_body=None,
-            invitation_html_body="<p>Custom HTML for {{ display_name }}</p>",
+            invitation_texts={
+                Language.de_DE: {
+                    "subject": "Benutzerdefinierter Betreff fuer {{ display_name }}",
+                    "html_body": "<p>Benutzerdefiniertes HTML fuer {{ display_name }}</p>",
+                },
+            },
         ),
     )
 
@@ -284,9 +324,12 @@ async def test_invitation_uses_partial_template_overrides(
     assert mail is not None
     assert mail["node_id"] == ROOT_NODE_ID
     assert mail["from_addr"] == "noreply@example.test"
-    assert mail["subject"] == "Custom subject for Partial Template User"
+    assert "Benutzerdefinierter Betreff fuer Partial Template User" in mail["subject"]
+    assert "Invitation to manage" in mail["subject"]
     assert "accept-invitation?token=" in mail["text_message"]
-    assert "Custom HTML for Partial Template User" in mail["html_message"]
+    assert "Benutzerdefiniertes HTML fuer Partial Template User" in mail["html_message"]
+    assert "Hello Partial Template User" in mail["html_message"]
+    assert "teamfestlichPay" in mail["html_message"]
 
 
 async def test_global_email_management_privilege_is_root_only_for_role_definitions(

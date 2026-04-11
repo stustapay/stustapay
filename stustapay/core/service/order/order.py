@@ -1659,7 +1659,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def list_orders(self, *, conn: Connection, node: Node, customer_account_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
@@ -1670,7 +1670,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def list_orders_by_till(self, *, conn: Connection, node: Node, till_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
@@ -1681,7 +1681,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def list_orders_filtered(
         self,
         *,
@@ -1700,6 +1700,8 @@ class OrderService(Service[Config]):
         params: list = [scope_node.id]
 
         conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
+        params.append(OrderType.money_transfer.name)
+        conditions.append(f"o.order_type != ${len(params)}")
 
         if from_timestamp is not None:
             params.append(from_timestamp)
@@ -1788,7 +1790,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.can_book_orders])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)
 

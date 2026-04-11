@@ -1,13 +1,10 @@
 import * as React from "react";
-import { Privilege } from "@/api";
+import { PrivilegeRequirement, hasAnyPrivilege } from "@/core/privileges";
 import { useCurrentNode } from "./useCurrentNode";
 
-export const useCurrentUserHasPrivilege = (privilege?: Privilege): boolean => {
+export const useCurrentUserHasPrivilege = (privilege?: PrivilegeRequirement): boolean => {
   const { currentNode } = useCurrentNode();
   return React.useMemo(() => {
-    if (privilege == null) {
-      return true;
-    }
-    return currentNode.privileges_at_node.includes(privilege);
+    return hasAnyPrivilege(currentNode.privileges_at_node, privilege);
   }, [currentNode, privilege]);
 };

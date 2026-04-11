@@ -19,10 +19,7 @@ jest.mock("@/api", () => ({
 
 jest.mock("@/hooks", () => ({
   useCurrentNode: () => ({ currentNode: { id: 5 } }),
-  useCurrencyFormatter:
-    () =>
-    (value?: number | null) =>
-      value == null ? "-" : `EUR ${value.toFixed(2)}`,
+  useCurrencyFormatter: () => (value?: number | null) => (value == null ? "-" : `EUR ${value.toFixed(2)}`),
   useCurrentUserHasPrivilege: (...args: unknown[]) => mockUseCurrentUserHasPrivilege(...args),
 }));
 
@@ -85,7 +82,7 @@ const { OrdersTable } = require("./OrdersTable");
 const makeOrder = (id: number, tillId = 11) => ({
   id,
   order_type: "sale",
-  booked_at: `2026-01-01T${String((id % 24)).padStart(2, "0")}:00:00.000Z`,
+  booked_at: `2026-01-01T${String(id % 24).padStart(2, "0")}:00:00.000Z`,
   till_id: tillId,
   total_price: 5,
   line_items: [
@@ -124,7 +121,7 @@ describe("OrdersTable", () => {
     });
   });
 
-  test("renders order ids without links when the user lacks order permissions", async () => {
+  test("does not query or render orders when the user lacks order permissions", async () => {
     mockUseCurrentUserHasPrivilege.mockReturnValue(false);
     mockUseListOrdersFilteredQuery.mockReturnValue({
       data: makeNormalizedOrders(1, 1),
@@ -138,8 +135,12 @@ describe("OrdersTable", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getAllByText("1").length).toBeGreaterThan(0);
+    expect(mockUseListOrdersFilteredQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 50, offset: 0 }),
+      expect.objectContaining({ skip: true })
+    );
     expect(screen.queryByRole("link", { name: "1" })).toBeNull();
+    expect(screen.queryByText("1")).toBeNull();
   });
 
   test("loads orders in 50-item pages and resets to the first page when filters change", async () => {

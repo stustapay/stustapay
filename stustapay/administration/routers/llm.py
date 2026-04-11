@@ -2,6 +2,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
+from sftkit.error import NotFound
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import (
@@ -12,7 +13,7 @@ from stustapay.core.http.context import (
     ContextTreeService,
 )
 from stustapay.core.schema.product import NewProduct, Product
-from stustapay.core.schema.tax_rate import TaxRate
+from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.terminal import NewTerminal, Terminal
 from stustapay.core.schema.till import (
     CashRegister,
@@ -23,9 +24,10 @@ from stustapay.core.schema.till import (
     Till,
     TillButton,
     TillLayout,
+    NewTillProfile,
     TillProfile,
 )
-from stustapay.core.schema.tree import EventSummary
+from stustapay.core.schema.tree import EventSummary, NewNode, Node, NodeSeenByUser
 
 
 class ToolDescription(BaseModel):
@@ -64,6 +66,66 @@ class CreateTillLayoutPayload(BaseModel):
 class CreateTerminalPayload(BaseModel):
     node_id: int = Field(..., description="ID of the node/event the terminal belongs to.")
     terminal: NewTerminal
+
+
+class CreateNodePayload(BaseModel):
+    parent_node_id: int = Field(..., description="ID of the parent node below which the child node will be created.")
+    node: NewNode
+
+
+class CreateTaxRatePayload(BaseModel):
+    node_id: int = Field(..., description="ID of the node/event the tax rate belongs to.")
+    tax_rate: NewTaxRate
+
+
+class CreateTillProfilePayload(BaseModel):
+    node_id: int = Field(..., description="ID of the node/event the till profile belongs to.")
+    till_profile: NewTillProfile
+
+
+class NodeQuery(BaseModel):
+    node_id: int = Field(..., description="ID of the node/event to list resources for.")
+
+
+class SubtreeNodeQuery(BaseModel):
+    node_id: int = Field(..., description="ID of the node/event to list resources for.")
+    include_subtree: bool = Field(
+        default=False,
+        description="When true, aggregate resources from the node and all visible descendant nodes.",
+    )
+
+
+class EventQuery(BaseModel):
+    name_query: str | None = Field(default=None, description="Optional case-insensitive substring filter for event names.")
+
+
+class NodeChildrenQuery(BaseModel):
+    parent_node_id: int = Field(..., description="ID of the parent node whose direct children should be listed.")
+    name_query: str | None = Field(default=None, description="Optional case-insensitive substring filter for child node names.")
+
+
+def _find_node_in_tree(root: NodeSeenByUser, node_id: int) -> NodeSeenByUser | None:
+    if root.id == node_id:
+        return root
+    for child in root.children:
+        result = _find_node_in_tree(child, node_id)
+        if result is not None:
+            return result
+    return None
+
+
+def _filter_nodes_by_name(nodes: list[NodeSeenByUser], name_query: str | None) -> list[NodeSeenByUser]:
+    if not name_query:
+        return nodes
+    lowered_query = name_query.lower()
+    return [node for node in nodes if lowered_query in node.name.lower()]
+
+
+def _flatten_subtree(node: NodeSeenByUser) -> list[NodeSeenByUser]:
+    nodes = [node]
+    for child in node.children:
+        nodes.extend(_flatten_subtree(child))
+    return nodes
 
 
 
@@ -121,36 +183,120 @@ async def list_llm_tools():
             input_schema=CreateTerminalPayload.model_json_schema(),
         ),
         ToolDescription(
+            name="list_nodes",
+            description="List direct child nodes below a given parent node. Optionally filter by child node name.",
+            method="GET",
+            path="/llm/nodes?parent_node_id=<id>&name_query=<substring>",
+            input_schema=NodeChildrenQuery.model_json_schema(),
+        ),
+        ToolDescription(
+            name="create_node",
+            description="Create a child node below an existing event or subnode.",
+            method="POST",
+            path="/llm/nodes",
+            input_schema=CreateNodePayload.model_json_schema(),
+        ),
+        ToolDescription(
+            name="create_tax_rate",
+            description="Create a tax rate for a node so imported products can reference it.",
+            method="POST",
+            path="/llm/tax-rates",
+            input_schema=CreateTaxRatePayload.model_json_schema(),
+        ),
+        ToolDescription(
             name="list_tax_rates",
             description="List tax rates for a node to supply tax_rate_id when creating products.",
             method="GET",
             path="/llm/tax-rates?node_id=<id>",
+            input_schema=NodeQuery.model_json_schema(),
         ),
         ToolDescription(
             name="list_events",
             description="List accessible events with their node IDs; optionally filter by event name.",
             method="GET",
             path="/llm/events?name_query=<substring>",
+            input_schema=EventQuery.model_json_schema(),
+        ),
+        ToolDescription(
+            name="list_products",
+            description="List existing products for a node. Pass include_subtree=true to aggregate child nodes for event-root imports.",
+            method="GET",
+            path="/llm/products?node_id=<id>&include_subtree=<bool>",
+            input_schema=SubtreeNodeQuery.model_json_schema(),
+        ),
+        ToolDescription(
+            name="list_terminals",
+            description="List existing terminals for a node to support duplicate detection and relinking.",
+            method="GET",
+            path="/llm/terminals?node_id=<id>",
+            input_schema=NodeQuery.model_json_schema(),
+        ),
+        ToolDescription(
+            name="list_tills",
+            description="List existing tills for a node to support duplicate detection and relinking.",
+            method="GET",
+            path="/llm/tills?node_id=<id>",
+            input_schema=NodeQuery.model_json_schema(),
+        ),
+        ToolDescription(
+            name="list_cash_registers",
+            description="List existing cash registers for a node. Pass include_subtree=true to aggregate child nodes for event-root imports.",
+            method="GET",
+            path="/llm/cash-registers?node_id=<id>&include_subtree=<bool>",
+            input_schema=SubtreeNodeQuery.model_json_schema(),
+        ),
+        ToolDescription(
+            name="create_till_profile",
+            description="Create a till profile that can be assigned to imported tills.",
+            method="POST",
+            path="/llm/till-profiles",
+            input_schema=CreateTillProfilePayload.model_json_schema(),
         ),
         ToolDescription(
             name="list_till_profiles",
             description="List till profiles for a node to supply active_profile_id when creating tills.",
             method="GET",
             path="/llm/till-profiles?node_id=<id>",
+            input_schema=NodeQuery.model_json_schema(),
         ),
         ToolDescription(
             name="list_till_buttons",
             description="List till buttons for a node to supply button_ids when creating layouts.",
             method="GET",
             path="/llm/till-buttons?node_id=<id>",
+            input_schema=NodeQuery.model_json_schema(),
         ),
         ToolDescription(
             name="list_till_layouts",
             description="List till layouts for a node.",
             method="GET",
             path="/llm/till-layouts?node_id=<id>",
+            input_schema=NodeQuery.model_json_schema(),
         ),
     ]
+
+
+@router.get("/nodes", response_model=list[NodeSeenByUser])
+async def list_nodes_llm(
+    token: CurrentAuthToken,
+    tree_service: ContextTreeService,
+    parent_node_id: int,
+    name_query: str | None = None,
+):
+    tree = await tree_service.get_tree_for_current_user(token=token)
+    parent_node = _find_node_in_tree(tree, parent_node_id)
+    if parent_node is None:
+        raise NotFound(element_type="node", element_id=parent_node_id)
+    return _filter_nodes_by_name(parent_node.children, name_query)
+
+
+@router.post("/nodes", response_model=Node)
+async def create_node_llm(
+    payload: CreateNodePayload,
+    token: CurrentAuthToken,
+    tree_service: ContextTreeService,
+):
+    return await tree_service.create_node(token=token, new_node=payload.node, node_id=payload.parent_node_id)
 
 
 @router.post("/products", response_model=Product)
@@ -175,6 +321,29 @@ async def create_cash_register_llm(
     )
 
 
+@router.get("/cash-registers", response_model=list[CashRegister])
+async def list_cash_registers_llm(
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+    tree_service: ContextTreeService,
+    node_id: int,
+    include_subtree: bool = False,
+):
+    if not include_subtree:
+        return await till_service.register.list_cash_registers_admin(token=token, node_id=node_id)
+
+    tree = await tree_service.get_tree_for_current_user(token=token)
+    root_node = _find_node_in_tree(tree, node_id)
+    if root_node is None:
+        raise NotFound(element_type="node", element_id=node_id)
+
+    registers_by_id: dict[int, CashRegister] = {}
+    for subtree_node in _flatten_subtree(root_node):
+        for register in await till_service.register.list_cash_registers_admin(token=token, node_id=subtree_node.id):
+            registers_by_id[register.id] = register
+    return sorted(registers_by_id.values(), key=lambda register: register.name)
+
+
 @router.post("/tills", response_model=Till)
 async def create_till_llm(
     payload: CreateTillPayload,
@@ -182,6 +351,11 @@ async def create_till_llm(
     till_service: ContextTillService,
 ):
     return await till_service.create_till(token=token, till=payload.till, node_id=payload.node_id)
+
+
+@router.get("/tills", response_model=list[Till])
+async def list_tills_llm(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
+    return await till_service.list_tills(token=token, node_id=node_id)
 
 
 @router.post("/till-buttons", response_model=TillButton)
@@ -202,6 +376,17 @@ async def create_till_layout_llm(
     return await till_service.layout.create_layout(token=token, layout=payload.layout, node_id=payload.node_id)
 
 
+@router.post("/till-profiles", response_model=TillProfile)
+async def create_till_profile_llm(
+    payload: CreateTillProfilePayload,
+    token: CurrentAuthToken,
+    till_service: ContextTillService,
+):
+    return await till_service.profile.create_profile(
+        token=token, profile=payload.till_profile, node_id=payload.node_id
+    )
+
+
 @router.post("/terminals", response_model=Terminal)
 async def create_terminal_llm(
     payload: CreateTerminalPayload,
@@ -209,6 +394,43 @@ async def create_terminal_llm(
     terminal_service: ContextTerminalService,
 ):
     return await terminal_service.create_terminal(token=token, terminal=payload.terminal, node_id=payload.node_id)
+
+
+@router.get("/terminals", response_model=list[Terminal])
+async def list_terminals_llm(token: CurrentAuthToken, terminal_service: ContextTerminalService, node_id: int):
+    return await terminal_service.list_terminals(token=token, node_id=node_id)
+
+
+@router.get("/products", response_model=list[Product])
+async def list_products_llm(
+    token: CurrentAuthToken,
+    product_service: ContextProductService,
+    tree_service: ContextTreeService,
+    node_id: int,
+    include_subtree: bool = False,
+):
+    if not include_subtree:
+        return await product_service.list_products(token=token, node_id=node_id)
+
+    tree = await tree_service.get_tree_for_current_user(token=token)
+    root_node = _find_node_in_tree(tree, node_id)
+    if root_node is None:
+        raise NotFound(element_type="node", element_id=node_id)
+
+    products_by_id: dict[int, Product] = {}
+    for subtree_node in _flatten_subtree(root_node):
+        for product in await product_service.list_products(token=token, node_id=subtree_node.id):
+            products_by_id[product.id] = product
+    return sorted(products_by_id.values(), key=lambda product: product.name)
+
+
+@router.post("/tax-rates", response_model=TaxRate)
+async def create_tax_rate_llm(
+    payload: CreateTaxRatePayload,
+    token: CurrentAuthToken,
+    tax_service: ContextTaxRateService,
+):
+    return await tax_service.create_tax_rate(token=token, tax_rate=payload.tax_rate, node_id=payload.node_id)
 
 
 @router.get("/tax-rates", response_model=list[TaxRate])

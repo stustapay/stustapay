@@ -1,6 +1,6 @@
 import { CustomerRead } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
-import { useRenderNode } from "@/hooks";
+import { useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
@@ -15,6 +15,8 @@ export interface CustomerTableProps {
 export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
   const { t } = useTranslation();
   const { dataGridNodeColumn } = useRenderNode();
+  const canViewUserTags = useCurrentUserHasPrivilege(UserTagRoutes.privilege);
+  const canViewPayoutRuns = useCurrentUserHasPrivilege(PayoutRunRoutes.privilege);
 
   const columns: GridColDef<CustomerRead>[] = [
     {
@@ -31,9 +33,13 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       headerName: t("account.user_tag_uid") as string,
       align: "right",
       renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </Link>
+        canViewUserTags ? (
+          <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
+            {formatUserTagUid(params.row.user_tag_uid_hex)}
+          </Link>
+        ) : (
+          formatUserTagUid(params.row.user_tag_uid_hex)
+        )
       ),
       width: 100,
     },
@@ -73,10 +79,12 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
       field: "payout",
       headerName: t("customer.payoutRun"),
       renderCell: (params) =>
-        params.row.payout && (
+        params.row.payout && canViewPayoutRuns ? (
           <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.payout.payout_run_id)}>
             {params.row.payout.payout_run_id}
           </Link>
+        ) : (
+          params.row.payout?.payout_run_id
         ),
       minWidth: 80,
     },

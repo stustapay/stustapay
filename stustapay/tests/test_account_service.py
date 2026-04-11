@@ -1,15 +1,59 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
+import secrets
+
 import pytest
 from sftkit.database import Connection
-from sftkit.error import InvalidArgument
+from sftkit.error import AccessDenied, InvalidArgument
 
+from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege
 from stustapay.core.schema.tree import NewEvent, ROOT_NODE_ID
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.tree.service import create_event
+from stustapay.core.service.user import UserService
 
 from .conftest import CreateRandomUserTag
+
+
+async def _create_event_token_with_privileges(
+    *,
+    create_random_user_tag: CreateRandomUserTag,
+    event_node: Node,
+    global_admin_token: str,
+    privileges: list[Privilege],
+    user_service: UserService,
+) -> str:
+    user_tag = await create_random_user_tag()
+    role = await user_service.create_user_role(
+        token=global_admin_token,
+        node_id=event_node.id,
+        new_role=NewUserRole(
+            name=f"account-service-test-role-{secrets.token_hex(8)}",
+            is_privileged=False,
+            privileges=privileges,
+        ),
+    )
+    user = await user_service.create_user(
+        node_id=event_node.id,
+        token=global_admin_token,
+        new_user=NewUser(
+            login=f"account-service-user-{secrets.token_hex(8)}",
+            description="",
+            display_name="Account Service Test User",
+            user_tag_uid=user_tag.uid,
+            user_tag_pin=user_tag.pin,
+        ),
+        password="rolf",
+    )
+    await user_service.update_user_to_roles(
+        token=global_admin_token,
+        node_id=event_node.id,
+        user_to_roles=NewUserToRoles(user_id=user.id, role_ids=[role.id]),
+    )
+    login_result = await user_service.login_user(username=user.login, password="rolf")
+    assert login_result.success is not None
+    return login_result.success.token
 
 
 async def test_account_comment_updates(
@@ -230,6 +274,124 @@ async def test_swap_customer_tag_rejects_in_use_target_account(
     with pytest.raises(InvalidArgument, match="in-use account"):
         await account_service.swap_customer_tag(
             token=event_admin_token,
+            node_id=event_node.id,
+            source_user_tag_id=source_tag.id,
+            target_user_tag_id=target_tag.id,
+            comment="defekt",
+            block_source_tag=True,
+        )
+
+
+async def test_find_customer_tag_swap_candidates_allows_customer_management(
+    account_service: AccountService,
+    create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
+    event_node: Node,
+    global_admin_token: str,
+    user_service: UserService,
+):
+    customer_management_token = await _create_event_token_with_privileges(
+        create_random_user_tag=create_random_user_tag,
+        event_node=event_node,
+        global_admin_token=global_admin_token,
+        privileges=[Privilege.customer_management],
+        user_service=user_service,
+    )
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+    await db_connection.execute(
+        "insert into account(node_id, user_tag_id, type, name) values ($1, $2, 'private', 'source-account')",
+        event_node.id,
+        source_tag.id,
+    )
+
+    source_candidates = await account_service.find_customer_tag_swap_candidates(
+        token=customer_management_token,
+        node_id=event_node.id,
+        search_term=source_tag.pin,
+        mode="source",
+    )
+    target_candidates = await account_service.find_customer_tag_swap_candidates(
+        token=customer_management_token,
+        node_id=event_node.id,
+        search_term=target_tag.pin,
+        mode="target",
+    )
+
+    assert any(candidate.user_tag_id == source_tag.id for candidate in source_candidates)
+    assert any(candidate.user_tag_id == target_tag.id for candidate in target_candidates)
+
+
+async def test_swap_customer_tag_allows_customer_management(
+    account_service: AccountService,
+    create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
+    event_node: Node,
+    global_admin_token: str,
+    user_service: UserService,
+):
+    customer_management_token = await _create_event_token_with_privileges(
+        create_random_user_tag=create_random_user_tag,
+        event_node=event_node,
+        global_admin_token=global_admin_token,
+        privileges=[Privilege.customer_management],
+        user_service=user_service,
+    )
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+    source_account_id = await db_connection.fetchval(
+        "insert into account(node_id, user_tag_id, type, name, balance, vouchers) "
+        "values ($1, $2, 'private', 'source-account', 4.50, 2) returning id",
+        event_node.id,
+        source_tag.id,
+    )
+
+    result = await account_service.swap_customer_tag(
+        token=customer_management_token,
+        node_id=event_node.id,
+        source_user_tag_id=source_tag.id,
+        target_user_tag_id=target_tag.id,
+        comment="defekt",
+        block_source_tag=True,
+    )
+
+    account = await account_service.get_customer(
+        token=customer_management_token,
+        node_id=event_node.id,
+        customer_id=source_account_id,
+    )
+
+    assert result.customer_account_id == source_account_id
+    assert result.used_existing_target_account is False
+    assert account.user_tag_id == target_tag.id
+
+
+async def test_customer_management_swap_customer_tag_denies_users_without_privilege(
+    account_service: AccountService,
+    cashier,
+    create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
+    event_node: Node,
+):
+    source_tag = await create_random_user_tag()
+    target_tag = await create_random_user_tag()
+    await db_connection.execute(
+        "insert into account(node_id, user_tag_id, type, name) values ($1, $2, 'private', 'source-account')",
+        event_node.id,
+        source_tag.id,
+    )
+
+    with pytest.raises(AccessDenied):
+        await account_service.find_customer_tag_swap_candidates(
+            token=cashier.token,
+            node_id=event_node.id,
+            search_term=source_tag.pin,
+            mode="source",
+        )
+
+    with pytest.raises(AccessDenied):
+        await account_service.swap_customer_tag(
+            token=cashier.token,
             node_id=event_node.id,
             source_user_tag_id=source_tag.id,
             target_user_tag_id=target_tag.id,

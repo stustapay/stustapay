@@ -1,8 +1,10 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
 import pytest
+from sftkit.error import InvalidArgument
 
 from stustapay.core.schema.product import NewProduct
+from stustapay.core.schema.terminal import NewTerminal, Terminal, TerminalMode
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import (
     NewCashRegisterStocking,
@@ -11,12 +13,61 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import NewNode, Node
 from sftkit.error import AccessDenied
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.till.till import TillService
+from stustapay.core.service.tree.service import TreeService
 
 from .conftest import Cashier
+
+
+async def _create_node_local_till_setup(
+    *,
+    tree_service: TreeService,
+    terminal_service: TerminalService,
+    till_service: TillService,
+    event_admin_token: str,
+    event_node: Node,
+) -> tuple[Node, Terminal, Terminal, int]:
+    child_node = await tree_service.create_node(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_node=NewNode(name="Till Child Node", description=""),
+    )
+    first_terminal = await terminal_service.create_terminal(
+        token=event_admin_token,
+        node_id=child_node.id,
+        terminal=NewTerminal(name="Child Terminal 1", description="", mode=TerminalMode.till),
+    )
+    second_terminal = await terminal_service.create_terminal(
+        token=event_admin_token,
+        node_id=child_node.id,
+        terminal=NewTerminal(name="Child Terminal 2", description="", mode=TerminalMode.till),
+    )
+    layout = await till_service.layout.create_layout(
+        token=event_admin_token,
+        node_id=child_node.id,
+        layout=NewTillLayout(name="child-layout", description="", button_ids=[]),
+    )
+    profile = await till_service.profile.create_profile(
+        token=event_admin_token,
+        node_id=child_node.id,
+        profile=NewTillProfile(
+            name="child-profile",
+            description="",
+            layout_id=layout.id,
+            allow_top_up=True,
+            allow_cash_out=True,
+            allow_ticket_sale=True,
+            allow_ticket_vouchers=False,
+            enable_ssp_payment=True,
+            enable_cash_payment=True,
+            enable_card_payment=False,
+        ),
+    )
+    return child_node, first_terminal, second_terminal, profile.id
 
 
 async def test_basic_till_register_stocking(till_service: TillService, event_node: Node, event_admin_token: str):
@@ -186,6 +237,186 @@ async def test_basic_till_workflow(
 
     deleted = await till_service.delete_till(token=event_admin_token, node_id=event_node.id, till_id=till.id)
     assert deleted
+
+
+async def test_child_node_till_create_and_update_keep_terminal_assignment_local(
+    till_service: TillService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    event_admin_token: str,
+    event_node: Node,
+):
+    child_node, first_terminal, second_terminal, profile_id = await _create_node_local_till_setup(
+        tree_service=tree_service,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        event_admin_token=event_admin_token,
+        event_node=event_node,
+    )
+
+    till = await till_service.create_till(
+        token=event_admin_token,
+        node_id=child_node.id,
+        till=NewTill(name="Child Till", description="", active_profile_id=profile_id, terminal_id=first_terminal.id),
+    )
+    assert till.node_id == child_node.id
+    assert till.terminal_id == first_terminal.id
+
+    updated_till = await till_service.update_till(
+        token=event_admin_token,
+        node_id=child_node.id,
+        till_id=till.id,
+        till=NewTill(name="Child Till Updated", description="", active_profile_id=profile_id, terminal_id=second_terminal.id),
+    )
+    assert updated_till.terminal_id == second_terminal.id
+
+
+async def test_create_till_rejects_cross_node_terminal_assignment(
+    till_service: TillService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    till_profile,
+    event_admin_token: str,
+    event_node: Node,
+):
+    child_node, first_terminal, _, _ = await _create_node_local_till_setup(
+        tree_service=tree_service,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        event_admin_token=event_admin_token,
+        event_node=event_node,
+    )
+
+    with pytest.raises(InvalidArgument, match="same node"):
+        await till_service.create_till(
+            token=event_admin_token,
+            node_id=event_node.id,
+            till=NewTill(
+                name="Cross Node Till",
+                description="",
+                active_profile_id=till_profile.id,
+                terminal_id=first_terminal.id,
+            ),
+        )
+
+
+async def test_update_till_rejects_cross_node_terminal_assignment(
+    till_service: TillService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    till,
+    till_profile,
+    event_admin_token: str,
+    event_node: Node,
+):
+    _, first_terminal, _, _ = await _create_node_local_till_setup(
+        tree_service=tree_service,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        event_admin_token=event_admin_token,
+        event_node=event_node,
+    )
+
+    with pytest.raises(InvalidArgument, match="same node"):
+        await till_service.update_till(
+            token=event_admin_token,
+            node_id=event_node.id,
+            till_id=till.id,
+            till=NewTill(
+                name=till.name,
+                description=till.description,
+                active_shift=till.active_shift,
+                active_profile_id=till_profile.id,
+                terminal_id=first_terminal.id,
+            ),
+        )
+
+
+async def test_switch_terminal_rejects_cross_node_terminal_assignment(
+    till_service: TillService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    till,
+    event_admin_token: str,
+    event_node: Node,
+):
+    _, first_terminal, _, _ = await _create_node_local_till_setup(
+        tree_service=tree_service,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        event_admin_token=event_admin_token,
+        event_node=event_node,
+    )
+
+    with pytest.raises(InvalidArgument, match="same node"):
+        await till_service.switch_terminal(
+            token=event_admin_token,
+            node_id=event_node.id,
+            till_id=till.id,
+            new_terminal_id=first_terminal.id,
+        )
+
+
+async def test_switch_till_rejects_cross_node_till_assignment(
+    till_service: TillService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    terminal: Terminal,
+    event_admin_token: str,
+    event_node: Node,
+):
+    child_node, first_terminal, _, profile_id = await _create_node_local_till_setup(
+        tree_service=tree_service,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        event_admin_token=event_admin_token,
+        event_node=event_node,
+    )
+    del first_terminal
+    child_till = await till_service.create_till(
+        token=event_admin_token,
+        node_id=child_node.id,
+        till=NewTill(name="Child Till", description="", active_profile_id=profile_id),
+    )
+
+    with pytest.raises(InvalidArgument, match="same node"):
+        await terminal_service.switch_till(
+            token=event_admin_token,
+            node_id=event_node.id,
+            terminal_id=terminal.id,
+            new_till_id=child_till.id,
+        )
+
+
+async def test_remove_from_terminal_clears_legacy_cross_node_assignment(
+    db_connection,
+    till_service: TillService,
+    terminal_service: TerminalService,
+    tree_service: TreeService,
+    terminal: Terminal,
+    event_admin_token: str,
+    event_node: Node,
+):
+    child_node, _, _, profile_id = await _create_node_local_till_setup(
+        tree_service=tree_service,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        event_admin_token=event_admin_token,
+        event_node=event_node,
+    )
+    child_till = await till_service.create_till(
+        token=event_admin_token,
+        node_id=child_node.id,
+        till=NewTill(name="Child Till", description="", active_profile_id=profile_id),
+    )
+
+    await db_connection.execute("update till set terminal_id = $1 where id = $2", terminal.id, child_till.id)
+
+    await till_service.remove_from_terminal(token=event_admin_token, node_id=event_node.id, till_id=child_till.id)
+
+    detached_till = await till_service.get_till(token=event_admin_token, node_id=event_node.id, till_id=child_till.id)
+    assert detached_till is not None
+    assert detached_till.terminal_id is None
 
 
 async def test_button_references_max_one_voucher_product(

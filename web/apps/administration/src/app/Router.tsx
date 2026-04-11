@@ -1,5 +1,6 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { CustomerRoutes, OrderRoutes, PayoutRunRoutes } from "@/app/routes";
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
@@ -65,7 +66,13 @@ import {
 } from "./routes/users";
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
-import { CustomerDetail, CustomerOverview, CustomerPageLayout, CustomerSearch, CustomerTagSwap } from "./routes/customers";
+import {
+  CustomerDetail,
+  CustomerOverview,
+  CustomerPageLayout,
+  CustomerSearch,
+  CustomerTagSwap,
+} from "./routes/customers";
 import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
@@ -113,39 +120,69 @@ const router = createBrowserRouter([
               },
               {
                 path: "settings",
-                element: <NodeSettings />,
+                element: (
+                  <PrivilegeGuard privilege="node_administration">
+                    <NodeSettings />
+                  </PrivilegeGuard>
+                ),
               },
               {
                 path: "system-accounts",
-                element: <SystemAccountList />,
+                element: (
+                  <PrivilegeGuard privilege="node_administration">
+                    <SystemAccountList />
+                  </PrivilegeGuard>
+                ),
               },
               {
                 path: "payout-runs",
-                element: <PayoutRunList />,
-              },
-              {
-                path: "payout-runs/new",
-                element: <PayoutRunCreate />,
-              },
-              {
-                path: "payout-runs/:payoutRunId",
-                element: <PayoutRunDetail />,
+                element: <PrivilegeGuard privilege={PayoutRunRoutes.privilege} />,
+                children: [
+                  {
+                    index: true,
+                    element: <PayoutRunList />,
+                  },
+                  {
+                    path: "new",
+                    element: <PayoutRunCreate />,
+                  },
+                  {
+                    path: ":payoutRunId",
+                    element: <PayoutRunDetail />,
+                  },
+                ],
               },
               {
                 path: "tax-rates",
-                element: <TaxRateList />,
+                element: (
+                  <PrivilegeGuard privilege="node_administration">
+                    <TaxRateList />
+                  </PrivilegeGuard>
+                ),
               },
               {
                 path: "tax-rates/new",
-                element: <TaxRateCreate />,
+                element: (
+                  <PrivilegeGuard privilege="node_administration">
+                    <TaxRateCreate />
+                  </PrivilegeGuard>
+                ),
               },
               {
                 path: "tax-rates/:taxRateId/edit",
-                element: <TaxRateUpdate />,
+                element: (
+                  <PrivilegeGuard privilege="node_administration">
+                    <TaxRateUpdate />
+                  </PrivilegeGuard>
+                ),
               },
               {
                 path: "dsfinvk",
-                element: <DsfinvkExport />,
+                element: (
+                  <PrivilegeGuard privilege="node_administration">
+                    <DsfinvkExport />
+                  </PrivilegeGuard>
+                ),
               },
             ],
           },
@@ -184,7 +221,11 @@ const router = createBrowserRouter([
           },
           {
             path: "customers",
-            element: <CustomerPageLayout />,
+            element: (
+              <PrivilegeGuard privilege={CustomerRoutes.privilege}>
+                <CustomerPageLayout />
+              </PrivilegeGuard>
+            ),
             children: [
               {
                 index: true,
@@ -503,7 +544,7 @@ const router = createBrowserRouter([
           },
           {
             path: "orders",
-            element: <PrivilegeGuard privilege="node_administration" />,
+            element: <PrivilegeGuard privilege={OrderRoutes.privilege} />,
             children: [
               {
                 path: ":orderId/edit",

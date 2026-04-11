@@ -20,7 +20,7 @@ export function TseForm<T extends NewTse>(props: TseFormProps<T>) {
         slotProps={{ input: { endAdornment: <InputAdornment position="end">s</InputAdornment> } }}
         formik={props}
       />
-      <FormTextField name="password" label={t("tse.password")} formik={props} />
+      <FormTextField name="password" label={t("tse.password")} type="password" formik={props} />
     </>
   );
 }

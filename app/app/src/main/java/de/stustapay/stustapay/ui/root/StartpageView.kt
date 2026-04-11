@@ -183,6 +183,21 @@ fun StartpageView(
             }
         }
 
+        if (isSelfServiceMode) {
+            IconButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .size(36.dp),
+                onClick = { navigateToHook(RootNavDests.settings) }
+            ) {
+                Icon(
+                    Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.root_item_settings)
+                )
+            }
+        }
+
         if (isSelfServiceMode && showInfoDialog) {
             Dialog(onDismissRequest = { showInfoDialog = false }) {
                 Surface(

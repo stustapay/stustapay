@@ -359,6 +359,7 @@ export type CustomerPortalApiConfig = {
   donation_enabled: boolean;
   currency_identifier: string;
   sumup_topup_enabled: boolean;
+  sumup_topup_payment_methods?: string[];
   allowed_country_codes: string[] | null;
   translation_texts: {
     [key: string]: {

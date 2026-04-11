@@ -1,3 +1,4 @@
+import { useAcceptInvitationMutation } from "@/api";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import {
   Stack,
@@ -17,15 +18,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-const validationSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type FormSchema = z.infer<typeof validationSchema>;
+type FormSchema = {
+  password: string;
+  confirmPassword: string;
+};
 
 const initialValues: FormSchema = {
   password: "",
@@ -38,6 +34,20 @@ export const AcceptInvitation: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptInvitation] = useAcceptInvitationMutation();
+  const validationSchema = React.useMemo(
+    () =>
+      z
+        .object({
+          password: z.string().min(8, t("user.passwordTooShort")),
+          confirmPassword: z.string(),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t("user.passwordsDontMatch"),
+          path: ["confirmPassword"],
+        }),
+    [t]
+  );
 
   if (!token) {
     return (
@@ -58,27 +68,17 @@ export const AcceptInvitation: React.FC = () => {
   const handleSubmit = async (values: FormSchema, helpers: FormikHelpers<FormSchema>) => {
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/users/accept-invitation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      await acceptInvitation({
+        acceptInvitationPayload: {
           token,
           password: values.password,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success(t("user.invitationAccepted"));
-        navigate("/login");
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || t("user.invitationAcceptFailed"));
-        helpers.setSubmitting(false);
-      }
+        },
+      }).unwrap();
+      toast.success(t("user.invitationAccepted"));
+      navigate("/login");
     } catch (err) {
-      toast.error(t("user.invitationAcceptFailed"));
+      const error = err as { data?: { detail?: string } };
+      toast.error(error.data?.detail || t("user.invitationAcceptFailed"));
       helpers.setSubmitting(false);
     } finally {
       setIsSubmitting(false);
@@ -134,4 +134,3 @@ export const AcceptInvitation: React.FC = () => {
     </Container>
   );
 };
-

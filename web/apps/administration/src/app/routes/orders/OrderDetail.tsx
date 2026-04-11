@@ -18,7 +18,7 @@ import {
 } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -33,6 +33,9 @@ export const OrderDetail: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
+  const canViewAdminMetadata = useCurrentUserHasPrivilege(TillRoutes.privilege);
+  const canViewCustomers = useCurrentUserHasPrivilege(CustomerRoutes.privilege);
+  const canViewUserTags = useCurrentUserHasPrivilege(UserTagRoutes.privilege);
   const openModal = useOpenModal();
 
   const [cancelSale] = useCancelOrderMutation();
@@ -42,15 +45,24 @@ export const OrderDetail: React.FC = () => {
     error,
     isLoading: isOrderLoading,
   } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery(
+    { nodeId: currentNode.id },
+    { skip: !canViewAdminMetadata }
+  );
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery(
+    { nodeId: currentNode.id },
+    { skip: !canViewAdminMetadata }
+  );
+  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery(
+    { nodeId: currentNode.id },
+    { skip: !canViewAdminMetadata }
+  );
 
-  if (isOrderLoading || isTillsLoading || isUsersLoading || isRegistersLoading) {
+  if (isOrderLoading || (canViewAdminMetadata && (isTillsLoading || isUsersLoading || isRegistersLoading))) {
     return <Loading />;
   }
 
-  if (error || !order || !users || !tills || !registers) {
+  if (error || !order) {
     navigate(-1);
     return null;
   }
@@ -70,10 +82,16 @@ export const OrderDetail: React.FC = () => {
     });
   };
 
-  const till = order.till_id != null ? selectTillById(tills, order.till_id) : undefined;
-  const cashier = order.cashier_id != null ? selectUserById(users, order.cashier_id) : undefined;
+  const till = tills && order.till_id != null ? selectTillById(tills, order.till_id) : undefined;
+  const cashier = users && order.cashier_id != null ? selectUserById(users, order.cashier_id) : undefined;
   const register =
-    order.cash_register_id != null ? selectCashRegisterById(registers, order.cash_register_id) : undefined;
+    registers && order.cash_register_id != null ? selectCashRegisterById(registers, order.cash_register_id) : undefined;
+
+  const cashierValue =
+    cashier != null ? getUserName(cashier) : order.cashier_id != null ? `ID: ${order.cashier_id}` : t("order.noCashier");
+  const tillValue = till != null ? till.name : order.till_id != null ? `ID: ${order.till_id}` : t("order.noTill");
+  const registerValue =
+    register != null ? register.name : order.cash_register_id != null ? `ID: ${order.cash_register_id}` : undefined;
 
   return (
     <DetailLayout
@@ -108,44 +126,37 @@ export const OrderDetail: React.FC = () => {
         <DetailField label={t("order.paymentMethod")} value={order.payment_method} />
         <DetailField label={t("order.type")} value={order.order_type} />
         <DetailField label={t("order.bookedAt")} value={order.booked_at} />
-        {cashier ? (
-          <DetailField
-            label={t("common.cashier")}
-            value={getUserName(cashier)}
-            linkTo={CashierRoutes.detail(cashier.id, cashier.node_id)}
-          />
-        ) : (
-          <DetailField label={t("common.cashier")} value={t("order.noCashier")} />
-        )}
-        {till ? (
-          <DetailField label={t("common.till")} value={till.name} linkTo={TillRoutes.detail(till.id, till.node_id)} />
-        ) : order.till_id != null ? (
-          <DetailField
-            label={t("common.till")}
-            value={`${t("order.noTill")} (ID: ${order.till_id})`}
-          />
-        ) : (
-          <DetailField label={t("common.till")} value={t("order.noTill")} />
-        )}
+        <DetailField
+          label={t("common.cashier")}
+          value={cashierValue}
+          linkTo={cashier ? CashierRoutes.detail(cashier.id, cashier.node_id) : undefined}
+        />
+        <DetailField
+          label={t("common.till")}
+          value={tillValue}
+          linkTo={till ? TillRoutes.detail(till.id, till.node_id) : undefined}
+        />
         {order.customer_account_id != null && (
           <DetailField
             label={t("order.customerAccountId")}
             value={order.customer_account_id}
-            linkTo={CustomerRoutes.detail(order.customer_account_id, currentNode.event_node_id)}
+            linkTo={
+              canViewCustomers ? CustomerRoutes.detail(order.customer_account_id, currentNode.event_node_id) : undefined
+            }
           />
         )}
         {order.customer_tag_uid_hex != null && (
           <DetailField
             label={t("order.customerTagUid")}
             value={formatUserTagUid(order.customer_tag_uid_hex)}
-            linkTo={UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id)}
+            linkTo={canViewUserTags ? UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id) : undefined}
           />
         )}
-        {register != null && (
+        {registerValue != null && (
           <DetailField
             label={t("order.cashRegister")}
-            value={register.name}
-            linkTo={CashRegistersRoutes.detail(order.cash_register_id, register.node_id)}
+            value={registerValue}
+            linkTo={register ? CashRegistersRoutes.detail(order.cash_register_id, register.node_id) : undefined}
           />
         )}
         <DetailNumberField label={t("order.totalNoTax")} value={order.total_no_tax} type="currency" />

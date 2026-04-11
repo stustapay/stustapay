@@ -8,6 +8,7 @@ from stustapay.administration.service import (
     HeadwindClient,
     HeadwindDevice,
     HeadwindError,
+    build_headwind_custom3,
     get_headwind_client,
 )
 from stustapay.core.http.auth_user import CurrentAuthToken
@@ -52,6 +53,63 @@ def _require_headwind_enabled(client: HeadwindClient):
 
 def _normalize_device_id(value: int | str) -> str:
     return str(value)
+
+
+async def _build_custom3_for_terminal(
+    *,
+    context: Context,
+    token: CurrentAuthToken,
+    node_id: int,
+    terminal_name: str,
+) -> str:
+    event_settings = await context.tree_service.get_restricted_event_settings(token=token, node_id=node_id)
+    return build_headwind_custom3(
+        terminal_name=terminal_name,
+        wifi_ssid=event_settings.wifi_ssid,
+        wifi_passphrase=event_settings.wifi_passphrase,
+    )
+
+
+async def _record_push_results(
+    *,
+    terminal_service: ContextTerminalService,
+    token: CurrentAuthToken,
+    node_id: int,
+    mapping: HeadwindDeviceMappingWithTerminal,
+    custom3_payload: str,
+    push_error: str | None,
+) -> HeadwindDeviceMappingWithTerminal:
+    push_result = await terminal_service.record_headwind_push_result(
+        token=token,
+        node_id=node_id,
+        mapping_id=mapping.id,
+        success=push_error is None,
+        error_message=push_error,
+    )
+
+    update_data = {
+        "last_token_pushed_at": push_result.last_token_pushed_at,
+        "last_push_status": push_result.last_push_status,
+        "last_push_error": push_result.last_push_error,
+    }
+
+    if custom3_payload != mapping.terminal_name:
+        wifi_result = await terminal_service.record_headwind_wifi_push_result(
+            token=token,
+            node_id=node_id,
+            mapping_id=mapping.id,
+            success=push_error is None,
+            error_message=push_error,
+        )
+        update_data.update(
+            {
+                "last_wifi_pushed_at": wifi_result.last_wifi_pushed_at,
+                "last_wifi_push_status": wifi_result.last_wifi_push_status,
+                "last_wifi_push_error": wifi_result.last_wifi_push_error,
+            }
+        )
+
+    return mapping.model_copy(update=update_data)
 
 
 @router.get("/mappings", response_model=list[HeadwindDeviceMappingWithTerminal])
@@ -119,6 +177,12 @@ async def create_or_update_mapping(
     token_value, terminal = await terminal_service.issue_headwind_terminal_token(
         token=token, node_id=node_id, terminal_id=payload.terminal_id
     )
+    custom3_payload = await _build_custom3_for_terminal(
+        context=context,
+        token=token,
+        node_id=node_id,
+        terminal_name=terminal.name,
+    )
 
     # Use Headwind custom device attributes (CUSTOM1, CUSTOM2, CUSTOM3)
     # These can be used as %CUSTOM1%, %CUSTOM2%, %CUSTOM3% in the app's application settings in Headwind UI
@@ -128,7 +192,7 @@ async def create_or_update_mapping(
             device_id=mapping.headwind_device_id,
             custom1=token_value,  # MDM_TERMINAL_TOKEN
             custom2=context.config.terminalserver.base_url,  # TERMINAL_BASE_URL
-            custom3=terminal.name,  # TERMINAL_NAME (optional)
+            custom3=custom3_payload,
         )
     except HeadwindError as exc:
         logger.warning(
@@ -138,23 +202,14 @@ async def create_or_update_mapping(
             exc,
         )
         push_error = str(exc)
-    finally:
-        push_result = await terminal_service.record_headwind_push_result(
-            token=token,
-            node_id=node_id,
-            mapping_id=mapping.id,
-            success=push_error is None,
-            error_message=push_error,
-        )
-        mapping = mapping.model_copy(
-            update={
-                "last_token_pushed_at": push_result.last_token_pushed_at,
-                "last_push_status": push_result.last_push_status,
-                "last_push_error": push_result.last_push_error,
-            }
-        )
-
-    return mapping
+    return await _record_push_results(
+        terminal_service=terminal_service,
+        token=token,
+        node_id=node_id,
+        mapping=mapping,
+        custom3_payload=custom3_payload,
+        push_error=push_error,
+    )
 
 
 @router.delete("/mappings/{terminal_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -192,6 +247,12 @@ async def refresh_mapping_token(
     token_value, terminal = await terminal_service.issue_headwind_terminal_token(
         token=token, node_id=node_id, terminal_id=terminal_id
     )
+    custom3_payload = await _build_custom3_for_terminal(
+        context=context,
+        token=token,
+        node_id=node_id,
+        terminal_name=terminal.name,
+    )
 
     # Use Headwind custom device attributes (CUSTOM1, CUSTOM2, CUSTOM3)
     push_error: str | None = None
@@ -200,7 +261,7 @@ async def refresh_mapping_token(
             device_id=mapping.headwind_device_id,
             custom1=token_value,  # MDM_TERMINAL_TOKEN
             custom2=context.config.terminalserver.base_url,  # TERMINAL_BASE_URL
-            custom3=terminal.name,  # TERMINAL_NAME (optional)
+            custom3=custom3_payload,
         )
     except HeadwindError as exc:
         logger.warning(
@@ -210,19 +271,11 @@ async def refresh_mapping_token(
         )
         push_error = str(exc)
 
-    push_result = await terminal_service.record_headwind_push_result(
+    return await _record_push_results(
+        terminal_service=terminal_service,
         token=token,
         node_id=node_id,
-        mapping_id=mapping.id,
-        success=push_error is None,
-        error_message=push_error,
+        mapping=mapping,
+        custom3_payload=custom3_payload,
+        push_error=push_error,
     )
-
-    return mapping.model_copy(
-        update={
-            "last_token_pushed_at": push_result.last_token_pushed_at,
-            "last_push_status": push_result.last_push_status,
-            "last_push_error": push_result.last_push_error,
-        }
-    )
-

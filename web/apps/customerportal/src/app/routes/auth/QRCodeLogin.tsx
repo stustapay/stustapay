@@ -2,12 +2,14 @@ import * as React from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useLoginMutation } from "@/api";
 import { config } from "@/api/common"; // Import directly from common
+import { setAuthenticatedSession, useAppDispatch } from "@/store";
 import { toast } from "react-toastify";
 
 export const QRCodeLogin: React.FC = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [login] = useLoginMutation();
   const [credentials] = React.useState(() => ({
     pin: searchParams.get("pin"),
@@ -36,7 +38,13 @@ export const QRCodeLogin: React.FC = () => {
       },
     })
       .unwrap()
-      .then(() => {
+      .then((response) => {
+        dispatch(
+          setAuthenticatedSession({
+            token: response.access_token,
+            portalNodeId: config.apiConfig.node_id,
+          })
+        );
         navigate("/", { replace: true });
       })
       .catch((err) => {
@@ -44,7 +52,7 @@ export const QRCodeLogin: React.FC = () => {
         toast.error("QR code login failed");
         navigate("/login", { replace: true });
       });
-  }, [credentials, login, navigate]);
+  }, [credentials, dispatch, login, navigate]);
 
   return <div>Logging in with QR code...</div>;
 };

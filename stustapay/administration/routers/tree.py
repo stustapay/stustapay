@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Response, UploadFile, File, HTTPException
+import logging
+
+from fastapi import APIRouter, Response, UploadFile, File, HTTPException, Depends
 from pydantic import BaseModel
 
+from stustapay.administration.service import HeadwindError, build_headwind_custom3, get_headwind_client
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextTreeService
+from stustapay.core.http.context import Context, ContextTreeService, get_context
 from stustapay.core.schema.tree import (
     CopyEventRequest,
     NewEvent,
@@ -13,6 +16,8 @@ from stustapay.core.schema.tree import (
     RestrictedEventSettings,
     UpdateEvent,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/tree",
@@ -61,9 +66,53 @@ async def copy_event(
 
 @router.post("/events/{node_id}/event-settings")
 async def update_event(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: UpdateEvent
+    token: CurrentAuthToken,
+    tree_service: ContextTreeService,
+    node_id: int,
+    payload: UpdateEvent,
+    context: Context = Depends(get_context),
 ) -> Node:
-    return await tree_service.update_event(token=token, node_id=node_id, event=payload)
+    previous_settings = await tree_service.get_restricted_event_settings(token=token, node_id=node_id)
+    updated_node = await tree_service.update_event(token=token, node_id=node_id, event=payload)
+
+    wifi_changed = (
+        previous_settings.wifi_ssid != payload.wifi_ssid
+        or previous_settings.wifi_passphrase != payload.wifi_passphrase
+    )
+    if not wifi_changed or not context.config.headwind.enabled:
+        return updated_node
+
+    headwind_client = get_headwind_client(context.config)
+    mappings = await context.terminal_service.list_headwind_mappings(token=token, node_id=node_id)
+
+    for mapping in mappings:
+        push_error: str | None = None
+        try:
+            await headwind_client.update_device_custom_attributes(
+                device_id=mapping.headwind_device_id,
+                custom3=build_headwind_custom3(
+                    terminal_name=mapping.terminal_name,
+                    wifi_ssid=payload.wifi_ssid,
+                    wifi_passphrase=payload.wifi_passphrase,
+                ),
+            )
+        except HeadwindError as exc:
+            push_error = str(exc)
+            logger.warning(
+                "Failed to sync Headwind Wi-Fi settings for mapping %s on device %s: %s",
+                mapping.id,
+                mapping.headwind_device_id,
+                exc,
+            )
+        await context.terminal_service.record_headwind_wifi_push_result(
+            token=token,
+            node_id=node_id,
+            mapping_id=mapping.id,
+            success=push_error is None,
+            error_message=push_error,
+        )
+
+    return updated_node
 
 
 @router.get("/events/{node_id}/settings")
@@ -132,8 +181,7 @@ async def upload_event_banner(
 ):
     """Upload a banner image for an event."""
     contents = await file.read()
-    mime_type = file.content_type or "image/png"
-    await tree_service.upload_event_banner(token=token, node_id=node_id, image_data=contents, mime_type=mime_type)
+    await tree_service.upload_event_banner(token=token, node_id=node_id, image_data=contents)
     return {"status": "ok"}
 
 
@@ -153,6 +201,5 @@ async def get_event_banner(tree_service: ContextTreeService, node_id: int):
     return Response(
         content=banner_data["image"],
         media_type=banner_data["mime_type"],
-        headers={"Cache-Control": "public, max-age=3600"}
+        headers=banner_data["headers"],
     )
-

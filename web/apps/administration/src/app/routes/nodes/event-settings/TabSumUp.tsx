@@ -9,6 +9,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { hasSecretValue } from "./secretVisibility";
 
 const requiredIssue = {
   code: z.ZodIssueCode.custom,
@@ -83,12 +84,14 @@ export const SumupSettingsForm: React.FC<FormikProps<SumUpSettings>> = (formik) 
         disabled={!config.sumupTopupEnabledGlobally}
         label={t("settings.sumup.sumup_affiliate_key")}
         name="sumup_affiliate_key"
+        type="password"
         formik={formik}
       />
       <FormTextField
         disabled={!config.sumupTopupEnabledGlobally}
         label={t("settings.sumup.sumup_api_key")}
         name="sumup_api_key"
+        type="password"
         formik={formik}
       />
       <FormTextField
@@ -107,6 +110,7 @@ export const SumupSettingsForm: React.FC<FormikProps<SumUpSettings>> = (formik) 
         disabled={!config.sumupTopupEnabledGlobally}
         label={t("settings.sumup.sumup_oauth_client_secret")}
         name="sumup_oauth_client_secret"
+        type="password"
         formik={formik}
       />
     </>
@@ -164,7 +168,14 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
             <Stack spacing={2}>
               <SumupSettingsForm {...formik} />
               <ListItem>
-                <ListItemText primary="Sumup refresh token" secondary={eventSettings.sumup_oauth_refresh_token} />
+                <ListItemText
+                  primary={t("settings.sumup.refreshToken")}
+                  secondary={
+                    hasSecretValue(eventSettings.sumup_oauth_refresh_token)
+                      ? t("settings.sumup.secretConfigured")
+                      : t("settings.sumup.secretNotConfigured")
+                  }
+                />
               </ListItem>
               {formik.isSubmitting && <LinearProgress />}
               <Button

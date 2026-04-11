@@ -12,6 +12,7 @@ import { TabCustomerPortal } from "./TabCustomerPortal";
 import { TabFaq } from "./TabFaq";
 import { TabGeneral } from "./TabGeneral";
 import { TabMail } from "./TabMail";
+import { TabMdm } from "./TabMdm";
 import { TabPayout } from "./TabPayout";
 import { TabSumUp } from "./TabSumUp";
 import { TabImpressum } from "./TabImpressum";
@@ -47,6 +48,7 @@ export const Settings: React.FC = () => {
             <Tab label={t("settings.impressum.tabLabel")} value="impressum" />
             <Tab label={t("settings.privacyPolicy.tabLabel")} value="privacyPolicy" />
             <Tab label={t("settings.sumup.tabLabel")} value="sumup" />
+            <Tab label={t("settings.mdm.tabLabel")} value="mdm" />
             <Tab label={t("settings.payout.tabLabel")} value="payout" />
             <Tab label={t("settings.bon.tabLabel")} value="bon" />
             <Tab label={t("settings.email.tabLabel")} value="email" />
@@ -72,6 +74,9 @@ export const Settings: React.FC = () => {
         </TabPanel>
         <TabPanel value="sumup">
           <TabSumUp nodeId={currentNode.id} eventSettings={eventSettings} />
+        </TabPanel>
+        <TabPanel value="mdm">
+          <TabMdm nodeId={currentNode.id} eventSettings={eventSettings} />
         </TabPanel>
         <TabPanel value="payout">
           <TabPayout nodeId={currentNode.id} eventSettings={eventSettings} />

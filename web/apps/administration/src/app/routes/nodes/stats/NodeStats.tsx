@@ -1,5 +1,12 @@
 import * as React from "react";
-import { NodeSeenByUser, useGetAvailableDatesQuery, useListTillsQuery, useListProductsQuery, useGetRevenuePredictionQuery, api } from "@/api";
+import {
+  NodeSeenByUser,
+  useGetAvailableDatesQuery,
+  useListTillsQuery,
+  useListProductsQuery,
+  useGetRevenuePredictionQuery,
+  api,
+} from "@/api";
 import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
 import { useTranslation } from "react-i18next";
@@ -26,6 +33,7 @@ import {
 import type { Theme } from "@mui/material/styles";
 import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Navigate } from "react-router-dom";
+import { OrderRoutes } from "@/app/routes";
 import {
   useAppDispatch,
   useAppSelector,
@@ -60,6 +68,7 @@ export const NodeStats: React.FC = () => {
   const { t } = useTranslation();
   const canViewNodeStats = useCurrentUserHasPrivilege(Privilege.view_node_stats);
   const canAdminNode = useCurrentUserHasPrivilege(Privilege.node_administration);
+  const canViewOrders = useCurrentUserHasPrivilege(OrderRoutes.privilege);
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();
   const dispatch = useAppDispatch();
@@ -113,7 +122,10 @@ export const NodeStats: React.FC = () => {
     statsQueryOptions(pollingIntervalMs)
   );
   const { data: tills } = useListTillsQuery({ nodeId: effectiveFilterNodeId }, statsQueryOptions(pollingIntervalMs));
-  const { data: products } = useListProductsQuery({ nodeId: effectiveFilterNodeId }, statsQueryOptions(pollingIntervalMs));
+  const { data: products } = useListProductsQuery(
+    { nodeId: effectiveFilterNodeId },
+    statsQueryOptions(pollingIntervalMs)
+  );
   const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery(
     {
       nodeId: currentNode.id,
@@ -139,8 +151,10 @@ export const NodeStats: React.FC = () => {
   }, []);
 
   const sectionSx = {
-    backgroundColor: (theme: Theme) => (theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)"),
-    border: (theme: Theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+    backgroundColor: (theme: Theme) =>
+      theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+    border: (theme: Theme) =>
+      `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
     boxShadow: "none",
     "&::before": { display: "none" },
   };
@@ -425,11 +439,15 @@ export const NodeStats: React.FC = () => {
                         <MenuItem value={1800000}>30min</MenuItem>
                       </Select>
                     </FormControl>
-                    <Tooltip title={isPredictionEnabled ? t("overview.disablePrediction") : t("overview.enablePrediction")}>
+                    <Tooltip
+                      title={isPredictionEnabled ? t("overview.disablePrediction") : t("overview.enablePrediction")}
+                    >
                       <IconButton
                         size="small"
                         onClick={() => setIsPredictionEnabled((prev) => !prev)}
-                        aria-label={isPredictionEnabled ? t("overview.disablePrediction") : t("overview.enablePrediction")}
+                        aria-label={
+                          isPredictionEnabled ? t("overview.disablePrediction") : t("overview.enablePrediction")
+                        }
                         sx={{
                           width: 40,
                           height: 40,
@@ -545,18 +563,11 @@ export const NodeStats: React.FC = () => {
                       </Select>
                     </FormControl>
                   </Grid>
-
                 </Grid>
               )}
 
               {hasActiveFilters && (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  useFlexGap
-                  flexWrap="wrap"
-                  alignItems="center"
-                >
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
                   {dateFilterLabel && (
                     <Chip
                       size="small"
@@ -602,7 +613,12 @@ export const NodeStats: React.FC = () => {
         </Accordion>
       </Grid>
       <Grid size={12}>
-        <Accordion expanded={expandedSections.kpis} onChange={handleSectionToggle("kpis")} disableGutters sx={sectionSx}>
+        <Accordion
+          expanded={expandedSections.kpis}
+          onChange={handleSectionToggle("kpis")}
+          disableGutters
+          sx={sectionSx}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography sx={summaryTextSx}>{t("overview.overviewMetrics")}</Typography>
           </AccordionSummary>
@@ -624,7 +640,12 @@ export const NodeStats: React.FC = () => {
       {/* Revenue prediction chart - only show when no product filter is active */}
       {isPredictionEnabled && selectedProductId === undefined && prediction && (
         <Grid size={12}>
-          <Accordion expanded={expandedSections.prediction} onChange={handleSectionToggle("prediction")} disableGutters sx={sectionSx}>
+          <Accordion
+            expanded={expandedSections.prediction}
+            onChange={handleSectionToggle("prediction")}
+            disableGutters
+            sx={sectionSx}
+          >
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
               <Typography sx={summaryTextSx}>{t("overview.revenuePredictionChart")}</Typography>
             </AccordionSummary>
@@ -637,7 +658,12 @@ export const NodeStats: React.FC = () => {
       {/* Only show revenue by counter when no product is selected (not filterable by product) */}
       {selectedProductId === undefined && (
         <Grid size={12}>
-          <Accordion expanded={expandedSections.counterChart} onChange={handleSectionToggle("counterChart")} disableGutters sx={sectionSx}>
+          <Accordion
+            expanded={expandedSections.counterChart}
+            onChange={handleSectionToggle("counterChart")}
+            disableGutters
+            sx={sectionSx}
+          >
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
               <Typography sx={summaryTextSx}>{t("overview.revenuePerCounterChart")}</Typography>
             </AccordionSummary>
@@ -657,7 +683,12 @@ export const NodeStats: React.FC = () => {
         </Grid>
       )}
       <Grid size={12}>
-        <Accordion expanded={expandedSections.productChart} onChange={handleSectionToggle("productChart")} disableGutters sx={sectionSx}>
+        <Accordion
+          expanded={expandedSections.productChart}
+          onChange={handleSectionToggle("productChart")}
+          disableGutters
+          sx={sectionSx}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography sx={summaryTextSx}>{t("overview.revenuePerProduct")}</Typography>
           </AccordionSummary>
@@ -677,7 +708,12 @@ export const NodeStats: React.FC = () => {
         </Accordion>
       </Grid>
       <Grid size={12}>
-        <Accordion expanded={expandedSections.quantityTable} onChange={handleSectionToggle("quantityTable")} disableGutters sx={sectionSx}>
+        <Accordion
+          expanded={expandedSections.quantityTable}
+          onChange={handleSectionToggle("quantityTable")}
+          disableGutters
+          sx={sectionSx}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography sx={summaryTextSx}>{t("overview.quantitiesPerProduct")}</Typography>
           </AccordionSummary>
@@ -697,7 +733,12 @@ export const NodeStats: React.FC = () => {
       {/* Only show revenue by counter table when no product is selected (not filterable by product) */}
       {selectedProductId === undefined && (
         <Grid size={12}>
-          <Accordion expanded={expandedSections.counterTable} onChange={handleSectionToggle("counterTable")} disableGutters sx={sectionSx}>
+          <Accordion
+            expanded={expandedSections.counterTable}
+            onChange={handleSectionToggle("counterTable")}
+            disableGutters
+            sx={sectionSx}
+          >
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
               <Typography sx={summaryTextSx}>{t("overview.revenuePerCounterTable")}</Typography>
             </AccordionSummary>
@@ -714,24 +755,31 @@ export const NodeStats: React.FC = () => {
           </Accordion>
         </Grid>
       )}
-      <Grid size={12}>
-        <Accordion expanded={expandedSections.orders} onChange={handleSectionToggle("orders")} disableGutters sx={sectionSx}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
-            <Typography sx={summaryTextSx}>{t("overview.orders")}</Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
-            <OrdersTable
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              selectedDates={selectedDatesForQuery}
-              tillId={selectedTillId}
-              subnodeId={selectedSubnodeId}
-              productId={selectedProductId}
-              pollingIntervalMs={pollingIntervalMs}
-            />
-          </AccordionDetails>
-        </Accordion>
-      </Grid>
+      {canViewOrders && (
+        <Grid size={12}>
+          <Accordion
+            expanded={expandedSections.orders}
+            onChange={handleSectionToggle("orders")}
+            disableGutters
+            sx={sectionSx}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
+              <Typography sx={summaryTextSx}>{t("overview.orders")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
+              <OrdersTable
+                fromTimestamp={fromTimestamp}
+                toTimestamp={toTimestamp}
+                selectedDates={selectedDatesForQuery}
+                tillId={selectedTillId}
+                subnodeId={selectedSubnodeId}
+                productId={selectedProductId}
+                pollingIntervalMs={pollingIntervalMs}
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
+      )}
     </Grid>
   );
 };

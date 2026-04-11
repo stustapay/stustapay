@@ -1,5 +1,4 @@
 import { Till, selectTillAll, useListTillsQuery, useSwitchTillMutation } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { Loading, Select } from "@stustapay/components";
 import * as React from "react";
@@ -7,19 +6,19 @@ import { useTranslation } from "react-i18next";
 
 export type TerminalSwitchTillProps = {
   terminalId: number;
+  nodeId: number;
   open: boolean;
   onClose: () => void;
 };
 
-export const TerminalSwitchTill: React.FC<TerminalSwitchTillProps> = ({ terminalId, open, onClose }) => {
+export const TerminalSwitchTill: React.FC<TerminalSwitchTillProps> = ({ terminalId, nodeId, open, onClose }) => {
   const { t } = useTranslation();
-  const { currentNode } = useCurrentNode();
   const { tills } = useListTillsQuery(
-    { nodeId: currentNode.id },
+    { nodeId },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        tills: data ? selectTillAll(data).filter((t) => t.terminal_id == null) : [],
+        tills: data ? selectTillAll(data).filter((till) => till.node_id === nodeId && till.terminal_id == null) : [],
       }),
     }
   );
@@ -34,9 +33,7 @@ export const TerminalSwitchTill: React.FC<TerminalSwitchTillProps> = ({ terminal
     if (!selectedTill) {
       return;
     }
-    switchTill({ nodeId: currentNode.id, terminalId, switchTillPayload: { new_till_id: selectedTill.id } }).then(() =>
-      onClose()
-    );
+    switchTill({ nodeId, terminalId, switchTillPayload: { new_till_id: selectedTill.id } }).then(() => onClose());
   };
 
   return (

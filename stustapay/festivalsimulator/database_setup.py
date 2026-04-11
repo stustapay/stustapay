@@ -45,6 +45,7 @@ from stustapay.core.service.tree.service import create_event, create_node
 from stustapay.core.service.tse import TseService
 from stustapay.core.service.user import UserService, associate_user_to_role
 from stustapay.core.service.user_tag import create_user_tag_secret, create_user_tags
+from stustapay.festivalsimulator.common import SIMULATOR_ROOT_NODE_NAME, get_simulator_event_name
 
 CASHIER_TAG_START = 1000
 CUSTOMER_TAG_START = 100000
@@ -551,6 +552,7 @@ class DatabaseSetup:
         n_topup_tills: int,
         n_beer_tills: int,
         n_cocktail_tills: int,
+        n_events: int,
     ):
         self.config = config
         self.n_cashiers = n_cashiers or int((n_topup_tills + n_beer_tills + n_cocktail_tills + n_entry_tills) * 1.5)
@@ -559,6 +561,9 @@ class DatabaseSetup:
         self.n_topup_tills = n_topup_tills
         self.n_beer_tills = n_beer_tills
         self.n_cocktail_tills = n_cocktail_tills
+        if n_events < 1:
+            raise ValueError("n_events must be positive")
+        self.n_events = n_events
 
         self.event_node_id: int = None  # type: ignore # initialized at the start of run()
         self.event_node: Node = None  # type: ignore # initialized at the start of run()
@@ -710,124 +715,130 @@ class DatabaseSetup:
                 conn=conn,
                 parent_id=ROOT_NODE_ID,
                 new_node=NewNode(
-                    name="SIMULATOR",
+                    name=SIMULATOR_ROOT_NODE_NAME,
                     description="",
                     forbidden_objects_at_node=[
                         ObjectType.user,
                     ],
                 ),
             )
-            event_node = await create_event(
-                conn=conn,
-                parent_id=simulated_folder_node.id,
-                event=NewEvent(
-                    name="SSC-Test",
-                    description="",
-                    currency_identifier="EUR",
-                    max_account_balance=150,
-                    customer_portal_url="http://localhost:4300",
-                    customer_portal_about_page_url="http://localhost:4300/about",
-                    customer_portal_data_privacy_url="http://localhost:4300/privacy",
-                    customer_portal_contact_email="test@test.com",
-                    forbidden_objects_in_subtree=[
-                        ObjectType.ticket,
-                        ObjectType.terminal,
-                        ObjectType.product,
-                        ObjectType.tax_rate,
-                    ],
-                    ust_id="UST ID",
-                    bon_issuer="Issuer",
-                    bon_address="Street 12\n81321 City",
-                    bon_title="Title",
-                    sepa_enabled=True,
-                    sepa_sender_name="Organizer",
-                    sepa_sender_iban="DE89370400440532013000",
-                    sepa_description="FestivalName, TagID: {user_tag_uid}",
-                    sepa_allowed_country_codes=["DE"],
-                    sumup_topup_enabled=False,
-                    sumup_payment_enabled=False,
-                    email_enabled=False,
-                    email_default_sender=None,
-                    email_smtp_host=None,
-                    email_smtp_port=None,
-                    email_smtp_username=None,
-                    email_smtp_password=None,
-                    payout_done_subject="[StuStaPay] Payout Completed",
-                    payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
-                    payout_registered_subject="[StuStaPay] Registered for Payout",
-                    payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
-                    payout_sender=None,
-                    pretix_presale_enabled=False,
-                    pretix_api_key=None,
-                    pretix_event=None,
-                    pretix_organizer=None,
-                    pretix_shop_url=None,
-                    pretix_ticket_ids=None,
-                ),
-            )
-            beer_team_node = await create_node(
-                conn=conn,
-                parent_id=event_node.id,
-                new_node=NewNode(
-                    name="Bierteam",
-                    description="",
-                ),
-            )
-            insel_node = await create_node(
-                conn=conn,
-                parent_id=beer_team_node.id,
-                new_node=NewNode(
-                    name="Weißbierinsel",
-                    description="",
-                ),
-            )
-            karussel_node = await create_node(
-                conn=conn,
-                parent_id=beer_team_node.id,
-                new_node=NewNode(
-                    name="Weißbierkarussel",
-                    description="",
-                ),
-            )
-            cocktail_node = await create_node(
-                conn=conn,
-                parent_id=event_node.id,
-                new_node=NewNode(
-                    name="Cocktailstand",
-                    description="",
-                ),
-            )
-            topup_ticket_node = await create_node(
-                conn=conn,
-                parent_id=event_node.id,
-                new_node=NewNode(
-                    name="Eintrittskassen",
-                    description="",
-                ),
-            )
-            self.event_node_id = event_node.id
-            self.event_node = event_node
+            for event_idx in range(self.n_events):
+                event_name = get_simulator_event_name(event_idx, self.n_events)
+                event_node = await create_event(
+                    conn=conn,
+                    parent_id=simulated_folder_node.id,
+                    event=NewEvent(
+                        name=event_name,
+                        description="",
+                        currency_identifier="EUR",
+                        max_account_balance=150,
+                        customer_portal_url="http://localhost:4300",
+                        customer_portal_about_page_url="http://localhost:4300/about",
+                        customer_portal_data_privacy_url="http://localhost:4300/privacy",
+                        customer_portal_contact_email="test@test.com",
+                        forbidden_objects_in_subtree=[
+                            ObjectType.ticket,
+                            ObjectType.terminal,
+                            ObjectType.product,
+                            ObjectType.tax_rate,
+                        ],
+                        ust_id="UST ID",
+                        bon_issuer="Issuer",
+                        bon_address="Street 12\n81321 City",
+                        bon_title="Title",
+                        sepa_enabled=True,
+                        sepa_sender_name="Organizer",
+                        sepa_sender_iban="DE89370400440532013000",
+                        sepa_description="FestivalName, TagID: {user_tag_uid}",
+                        sepa_allowed_country_codes=["DE"],
+                        sumup_topup_enabled=False,
+                        sumup_payment_enabled=False,
+                        email_enabled=False,
+                        email_default_sender=None,
+                        email_smtp_host=None,
+                        email_smtp_port=None,
+                        email_smtp_username=None,
+                        email_smtp_password=None,
+                        payout_done_subject="[StuStaPay] Payout Completed",
+                        payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
+                        payout_registered_subject="[StuStaPay] Registered for Payout",
+                        payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
+                        payout_sender=None,
+                        pretix_presale_enabled=False,
+                        pretix_api_key=None,
+                        pretix_event=None,
+                        pretix_organizer=None,
+                        pretix_shop_url=None,
+                        pretix_ticket_ids=None,
+                    ),
+                )
+                beer_team_node = await create_node(
+                    conn=conn,
+                    parent_id=event_node.id,
+                    new_node=NewNode(
+                        name="Bierteam",
+                        description="",
+                    ),
+                )
+                insel_node = await create_node(
+                    conn=conn,
+                    parent_id=beer_team_node.id,
+                    new_node=NewNode(
+                        name="Weißbierinsel",
+                        description="",
+                    ),
+                )
+                karussel_node = await create_node(
+                    conn=conn,
+                    parent_id=beer_team_node.id,
+                    new_node=NewNode(
+                        name="Weißbierkarussel",
+                        description="",
+                    ),
+                )
+                cocktail_node = await create_node(
+                    conn=conn,
+                    parent_id=event_node.id,
+                    new_node=NewNode(
+                        name="Cocktailstand",
+                        description="",
+                    ),
+                )
+                topup_ticket_node = await create_node(
+                    conn=conn,
+                    parent_id=event_node.id,
+                    new_node=NewNode(
+                        name="Eintrittskassen",
+                        description="",
+                    ),
+                )
+                self.event_node_id = event_node.id
+                self.event_node = event_node
 
-            admin, admin_token = await _create_tags_and_users(
-                conn=conn, user_service=user_service, event_node=self.event_node, n_customer_tags=self.n_tags
-            )
-            tax_rate_ust = await tax_service.create_tax_rate(
-                conn=conn,
-                token=admin_token,
-                node_id=self.event_node_id,
-                tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19),
-            )
-            await self._create_tills(
-                conn=conn,
-                admin_token=admin_token,
-                n_tills=n_tills,
-                tax_rate_ust=tax_rate_ust,
-                cocktail_node=cocktail_node,
-                karussel_node=karussel_node,
-                insel_node=insel_node,
-                topup_ticket_node=topup_ticket_node,
-            )
-            await self._create_cashiers(
-                conn=conn, user_service=user_service, admin_user=admin, admin_token=admin_token, n_cashiers=n_cashiers
-            )
-            await self._create_tse(conn=conn, admin_token=admin_token)
+                admin, admin_token = await _create_tags_and_users(
+                    conn=conn, user_service=user_service, event_node=self.event_node, n_customer_tags=self.n_tags
+                )
+                tax_rate_ust = await tax_service.create_tax_rate(
+                    conn=conn,
+                    token=admin_token,
+                    node_id=self.event_node_id,
+                    tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19),
+                )
+                await self._create_tills(
+                    conn=conn,
+                    admin_token=admin_token,
+                    n_tills=n_tills,
+                    tax_rate_ust=tax_rate_ust,
+                    cocktail_node=cocktail_node,
+                    karussel_node=karussel_node,
+                    insel_node=insel_node,
+                    topup_ticket_node=topup_ticket_node,
+                )
+                await self._create_cashiers(
+                    conn=conn,
+                    user_service=user_service,
+                    admin_user=admin,
+                    admin_token=admin_token,
+                    n_cashiers=n_cashiers,
+                )
+                await self._create_tse(conn=conn, admin_token=admin_token)

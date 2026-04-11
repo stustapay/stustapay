@@ -32,7 +32,7 @@ export const TillProfileList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        profiles: data ? selectTillProfileAll(data) : undefined,
+        profiles: data ? selectTillProfileAll(data).filter((profile) => profile.node_id === currentNode.id) : undefined,
       }),
     }
   );

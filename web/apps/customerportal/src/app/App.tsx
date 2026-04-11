@@ -2,8 +2,15 @@ import * as React from "react";
 import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { Router } from "./Router";
 import { ToastContainer } from "react-toastify";
-import { useAppSelector, selectTheme } from "@/store";
+import {
+  forceLogout,
+  selectTheme,
+  shouldResetPersistedPortalAuth,
+  store,
+  useAppSelector,
+} from "@/store";
 import { Loading } from "@stustapay/components";
+import { api } from "@/api";
 import { config, fetchConfig } from "@/api/common";
 import { CurrencyProvider } from "@stustapay/framework";
 import { ConfigLoadErrorPage } from "./ConfigLoadErrorPage";
@@ -29,6 +36,17 @@ export function App() {
   React.useEffect(() => {
     const init = async () => {
       await fetchConfig();
+      const currentState = store.getState();
+      if (
+        shouldResetPersistedPortalAuth(
+          currentState.auth.token,
+          currentState.auth.portalNodeId,
+          config.apiConfig.node_id
+        )
+      ) {
+        store.dispatch(forceLogout());
+        store.dispatch(api.util.resetApiState());
+      }
     };
     init()
       .then(() => {

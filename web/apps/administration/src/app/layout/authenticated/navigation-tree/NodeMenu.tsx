@@ -5,6 +5,7 @@ import {
   ConfirmationNumber as ConfirmationNumberIcon,
   Leaderboard as LeaderboardIcon,
   MeetingRoom as MeetingRoomIcon,
+  Money as MoneyIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
   PointOfSale as PointOfSaleIcon,
@@ -20,6 +21,7 @@ import {
   CustomerRoutes,
   EntryAreaRoutes,
   MdmRoutes,
+  PayoutRunRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
   TerminalRoutes,
@@ -30,6 +32,12 @@ import {
   UserTagRoutes,
   UserToRoleRoutes,
 } from "@/app/routes";
+import {
+  PrivilegeRequirement,
+  hasAllPrivileges,
+  hasAnyPrivilege,
+  normalizePrivilegeRequirement,
+} from "@/core/privileges";
 import { i18n } from "@/i18n";
 
 type NodeMenuItem = {
@@ -38,9 +46,12 @@ type NodeMenuItem = {
   label: string;
   requiresEvent?: boolean;
   requiredPrivileges?: Privilege[];
+  requiredAnyPrivileges?: Privilege[];
   requiresOneOfObjectType?: ObjectType[];
   additionalRequirements?: (node: NodeSeenByUser) => boolean;
 };
+
+const privilegeOf = (privileges: PrivilegeRequirement): Privilege[] => normalizePrivilegeRequirement(privileges);
 
 export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
   {
@@ -55,12 +66,14 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => UserRoutes.list(node.id),
     label: i18n.t("users"),
     icon: PersonIcon,
+    requiredPrivileges: privilegeOf(UserRoutes.privilege),
     requiresOneOfObjectType: ["user", "user_role"],
   },
   {
     route: (node) => CashierRoutes.list(node.id),
     label: i18n.t("cashiers"),
     icon: PersonIcon,
+    requiredPrivileges: privilegeOf(CashierRoutes.privilege),
     requiresOneOfObjectType: ["user", "user_role"],
     requiresEvent: true,
   },
@@ -68,17 +81,20 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => UserToRoleRoutes.list(node.id),
     label: i18n.t("userToRoles"),
     icon: PersonIcon,
+    requiredPrivileges: privilegeOf(UserToRoleRoutes.privilege),
   },
   {
     route: (node) => ProductRoutes.list(node.id),
     label: i18n.t("products"),
     icon: ShoppingCartIcon,
+    requiredPrivileges: privilegeOf(ProductRoutes.privilege),
     requiresOneOfObjectType: ["product"],
   },
   {
     route: (node) => TicketRoutes.list(node.id),
     label: i18n.t("tickets"),
     icon: ConfirmationNumberIcon,
+    requiredPrivileges: privilegeOf(TicketRoutes.privilege),
     requiresOneOfObjectType: ["ticket"],
   },
   {
@@ -93,6 +109,7 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => TerminalRoutes.list(node.id),
     label: i18n.t("terminal.terminals"),
     icon: SmartphoneIcon,
+    requiredPrivileges: privilegeOf(TerminalRoutes.privilege),
     requiresOneOfObjectType: ["terminal"],
   },
   {
@@ -107,6 +124,7 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => TillRoutes.list(node.id),
     label: i18n.t("tills"),
     icon: PointOfSaleIcon,
+    requiredPrivileges: privilegeOf(TillRoutes.privilege),
     requiresOneOfObjectType: ["till"],
   },
   {
@@ -123,7 +141,15 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     label: i18n.t("customer.customers"),
     icon: AccountBalanceIcon,
     requiresEvent: true,
-    requiredPrivileges: ["node_administration"],
+    requiredAnyPrivileges: normalizePrivilegeRequirement(CustomerRoutes.privilege),
+  },
+  {
+    route: (node) => PayoutRunRoutes.list(node.id),
+    label: i18n.t("payoutRun.payoutRuns"),
+    icon: MoneyIcon,
+    requiresEvent: true,
+    requiresOneOfObjectType: ["account"],
+    requiredAnyPrivileges: normalizePrivilegeRequirement(PayoutRunRoutes.privilege),
   },
   {
     route: (node) => UserTagRoutes.list(node.id),
@@ -165,7 +191,15 @@ export const isMenuEntryValidAtNode = (entry: NodeMenuItem, node: NodeSeenByUser
   if (
     entry.requiredPrivileges != null &&
     entry.requiredPrivileges.length > 0 &&
-    !entry.requiredPrivileges.every((privilege) => node.privileges_at_node.includes(privilege))
+    !hasAllPrivileges(node.privileges_at_node, entry.requiredPrivileges)
+  ) {
+    return false;
+  }
+
+  if (
+    entry.requiredAnyPrivileges != null &&
+    entry.requiredAnyPrivileges.length > 0 &&
+    !hasAnyPrivilege(node.privileges_at_node, entry.requiredAnyPrivileges)
   ) {
     return false;
   }

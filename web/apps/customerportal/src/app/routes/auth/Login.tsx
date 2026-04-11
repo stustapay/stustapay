@@ -1,7 +1,7 @@
 import { useLoginMutation } from "@/api";
 import { config } from "@/api/common";
 import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
+import { selectIsAuthenticated, setAuthenticatedSession, useAppDispatch, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Paper, Stack, Typography, useTheme } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
@@ -31,6 +31,7 @@ export const Login: React.FC = () => {
   const isDarkMode = theme.palette.mode === "dark";
   const { t } = useTranslation();
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
+  const dispatch = useAppDispatch();
   const [query] = useSearchParams();
   const [login] = useLoginMutation();
 
@@ -47,11 +48,17 @@ export const Login: React.FC = () => {
       loginPayload: {
         username: values.userTagUid,
         pin: values.userTagPin,
-        node_id: config.apiConfig.node_id
+        node_id: config.apiConfig.node_id,
       }
     })
       .unwrap()
-      .then(() => {
+      .then((response) => {
+        dispatch(
+          setAuthenticatedSession({
+            token: response.access_token,
+            portalNodeId: config.apiConfig.node_id,
+          })
+        );
         setSubmitting(false);
       })
       .catch((err: any) => {

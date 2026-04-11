@@ -1,5 +1,6 @@
 import { Node } from "@/api";
 import { PayoutRunRoutes, TaxRateRoutes } from "@/app/routes";
+import { useCurrentNodeAllowsObject, useCurrentUserHasPrivilege } from "@/hooks";
 import {
   Dashboard as DashboardIcon,
   Money as MoneyIcon,
@@ -35,6 +36,11 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
   const { t } = useTranslation();
   const location = useLocation();
   const nodeUrl = `/node/${node.id}`;
+  const canManageNode = useCurrentUserHasPrivilege("node_administration");
+  const nodeAllowsAccounts = useCurrentNodeAllowsObject("account");
+  const nodeAllowsTaxRates = useCurrentNodeAllowsObject(TaxRateRoutes.objectType);
+  const canViewPayoutRuns = useCurrentUserHasPrivilege(PayoutRunRoutes.privilege);
+  const canViewPayoutRunsAtNode = canViewPayoutRuns && nodeAllowsAccounts;
 
   return (
     <Box>
@@ -51,45 +57,55 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
           iconPosition="start"
           to={nodeUrl}
         />
-        <Tab
-          label={t("systemAccounts")}
-          component={RouterLink}
-          value={`${nodeUrl}/system-accounts`}
-          iconPosition="start"
-          to={`${nodeUrl}/system-accounts`}
-        />
-        <Tab
-          label="Tax Rates"
-          component={RouterLink}
-          value={TaxRateRoutes.list()}
-          icon={<PercentIcon />}
-          iconPosition="start"
-          to={TaxRateRoutes.list()}
-        />
-        <Tab
-          label="Payouts"
-          component={RouterLink}
-          value={`${nodeUrl}/payout-runs`}
-          icon={<MoneyIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/payout-runs`}
-        />
-        <Tab
-          label={t("dsfinvk")}
-          component={RouterLink}
-          value={`${nodeUrl}/dsfinvk`}
-          icon={<HistoryEduIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/dsfinvk`}
-        />
-        <Tab
-          label={t("nodes.settings")}
-          component={RouterLink}
-          value={`${nodeUrl}/settings`}
-          icon={<SettingsIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/settings`}
-        />
+        {canManageNode && nodeAllowsAccounts && (
+          <Tab
+            label={t("systemAccounts")}
+            component={RouterLink}
+            value={`${nodeUrl}/system-accounts`}
+            iconPosition="start"
+            to={`${nodeUrl}/system-accounts`}
+          />
+        )}
+        {canManageNode && nodeAllowsTaxRates && (
+          <Tab
+            label="Tax Rates"
+            component={RouterLink}
+            value={TaxRateRoutes.list()}
+            icon={<PercentIcon />}
+            iconPosition="start"
+            to={TaxRateRoutes.list()}
+          />
+        )}
+        {canViewPayoutRunsAtNode && (
+          <Tab
+            label="Payouts"
+            component={RouterLink}
+            value={`${nodeUrl}/payout-runs`}
+            icon={<MoneyIcon />}
+            iconPosition="start"
+            to={`${nodeUrl}/payout-runs`}
+          />
+        )}
+        {canManageNode && (
+          <Tab
+            label={t("dsfinvk")}
+            component={RouterLink}
+            value={`${nodeUrl}/dsfinvk`}
+            icon={<HistoryEduIcon />}
+            iconPosition="start"
+            to={`${nodeUrl}/dsfinvk`}
+          />
+        )}
+        {canManageNode && (
+          <Tab
+            label={t("nodes.settings")}
+            component={RouterLink}
+            value={`${nodeUrl}/settings`}
+            icon={<SettingsIcon />}
+            iconPosition="start"
+            to={`${nodeUrl}/settings`}
+          />
+        )}
       </Tabs>
       <Box sx={{ mt: 2 }}>
         <Outlet />

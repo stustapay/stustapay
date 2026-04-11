@@ -334,7 +334,7 @@ class AccountService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def find_customer_tag_swap_candidates(
         self, *, conn: Connection, node: Node, search_term: str, mode: str
     ) -> list[UserTagSwapCandidate]:
@@ -407,7 +407,7 @@ class AccountService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user([Privilege.node_administration, Privilege.customer_management])
     async def swap_customer_tag(
         self,
         *,

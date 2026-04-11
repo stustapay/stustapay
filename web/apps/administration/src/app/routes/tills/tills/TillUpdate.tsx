@@ -25,15 +25,19 @@ export const TillUpdate: React.FC = withPrivilegeGuard("node_administration", ()
     return <Loading />;
   }
 
+  if (till.node_id !== currentNode.id) {
+    return <Navigate to={TillRoutes.edit(till.id, till.node_id)} replace />;
+  }
+
   return (
     <EditLayout
       title={t("till.update")}
       submitLabel={t("update")}
-      successRoute={TillRoutes.detail(till.id)}
+      successRoute={TillRoutes.detail(till.id, till.node_id)}
       initialValues={till}
       form={TillForm}
       validationSchema={UpdateTillSchema}
-      onSubmit={(t) => updateTill({ nodeId: currentNode.id, tillId: till.id, newTill: t })}
+      onSubmit={(t) => updateTill({ nodeId: till.node_id, tillId: till.id, newTill: t })}
     />
   );
 });

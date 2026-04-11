@@ -70,6 +70,9 @@ def decode(token: str, key: str, algorithms: Iterable[str]) -> dict:
     except (json.JSONDecodeError, ValueError) as exc:
         raise InvalidTokenError("Malformed JWT payload") from exc
 
+    if not isinstance(header, dict):
+        raise InvalidTokenError("Malformed JWT header")
+
     algorithm = header.get("alg")
     if algorithm not in algorithms:
         raise InvalidTokenError("JWT algorithm not allowed")

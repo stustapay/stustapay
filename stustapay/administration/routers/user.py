@@ -80,6 +80,14 @@ async def create_user(
     )
 
 
+@user_router.post("/accept-invitation", response_model=dict[str, str])
+async def accept_invitation(
+    payload: AcceptInvitationPayload,
+    user_service: ContextUserService,
+):
+    return await user_service.accept_invitation(payload=payload)
+
+
 @user_router.get("/{user_id}", response_model=User)
 async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
     user = await user_service.get_user(token=token, user_id=user_id, node_id=node_id)
@@ -157,14 +165,6 @@ async def invite_user(
     return await user_service.invite_user(
         token=token, user_id=user_id, node_id=node_id, mail_service=mail_service
     )
-
-
-@user_router.post("/accept-invitation", response_model=dict[str, str])
-async def accept_invitation(
-    payload: AcceptInvitationPayload,
-    user_service: ContextUserService,
-):
-    return await user_service.accept_invitation(payload=payload)
 
 
 @user_role_router.get("", response_model=NormalizedList[UserRole, int])

@@ -1,19 +1,17 @@
 import * as React from "react";
-import { Privilege, useNodeTree, findNode } from "@/api";
+import { useNodeTree, findNode } from "@/api";
+import { PrivilegeRequirement, hasAnyPrivilege } from "@/core/privileges";
 
-export const useCurrentUserHasPrivilegeAtNode = (privilege?: Privilege): ((nodeId: number) => boolean) => {
+export const useCurrentUserHasPrivilegeAtNode = (privilege?: PrivilegeRequirement): ((nodeId: number) => boolean) => {
   const { root } = useNodeTree();
   return React.useCallback(
     (nodeId: number) => {
-      if (privilege == null) {
-        return true;
-      }
       const node = findNode(nodeId, root);
       if (node == null) {
         return false;
       }
 
-      return node.privileges_at_node.includes(privilege);
+      return hasAnyPrivilege(node.privileges_at_node, privilege);
     },
     [root, privilege]
   );

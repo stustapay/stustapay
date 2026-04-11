@@ -31,6 +31,19 @@ def _safe_json_keys(payload: Any) -> list[str]:
     return []
 
 
+def _redacted_http_body_preview(text: str, *, max_len: int = 256) -> str:
+    """
+    Truncate and sanitize HTTP body text for logs (no full tokens or error payloads).
+    """
+    cleaned = "".join(ch if ch.isprintable() and ch not in "\r\n\t" else " " for ch in text)
+    cleaned = " ".join(cleaned.split())
+    if len(cleaned) <= max_len:
+        preview = cleaned
+    else:
+        preview = f"{cleaned[:max_len]}…"
+    return f"len={len(text)} preview={preview!r}"
+
+
 class HeadwindError(ServiceException):
     """Raised when the Headwind API returns an error."""
 
@@ -59,6 +72,29 @@ class HeadwindDevice(BaseModel):
     last_ip: str | None = Field(default=None, alias="lastIp")
     model: str | None = None
     manufacturer: str | None = None
+
+
+class HeadwindManagedConfigPayload(BaseModel):
+    terminal_name: str
+    wifi_ssid: str | None = None
+    wifi_passphrase: str | None = None
+
+
+def build_headwind_custom3(
+    *,
+    terminal_name: str,
+    wifi_ssid: str | None = None,
+    wifi_passphrase: str | None = None,
+) -> str:
+    if not wifi_ssid or not wifi_passphrase:
+        return terminal_name
+
+    payload = HeadwindManagedConfigPayload(
+        terminal_name=terminal_name,
+        wifi_ssid=wifi_ssid,
+        wifi_passphrase=wifi_passphrase,
+    )
+    return payload.model_dump_json(exclude_none=True)
 
 
 class HeadwindClient:
@@ -252,7 +288,7 @@ class HeadwindClient:
                             "Headwind API error status=%s url=%s body=%s",
                             response.status,
                             url,
-                            text,
+                            _redacted_http_body_preview(text),
                         )
                         raise HeadwindError(
                             f"Headwind API returned HTTP {response.status}",
@@ -263,7 +299,10 @@ class HeadwindClient:
                     try:
                         return json.loads(text)
                     except json.JSONDecodeError as exc:
-                        logger.error("Headwind API returned non-JSON response: %s", text)
+                        logger.error(
+                            "Headwind API returned non-JSON response: %s",
+                            _redacted_http_body_preview(text),
+                        )
                         raise HeadwindError("Headwind API returned a non-JSON payload") from exc
         except asyncio.TimeoutError as exc:
             logger.error("Headwind API request to %s timed out: %s", url, exc)

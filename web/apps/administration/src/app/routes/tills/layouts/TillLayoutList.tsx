@@ -24,7 +24,7 @@ export const TillLayoutList: React.FC = () => {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        layouts: data ? selectTillLayoutAll(data) : undefined,
+        layouts: data ? selectTillLayoutAll(data).filter((layout) => layout.node_id === currentNode.id) : undefined,
       }),
     }
   );
