@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.hmdm.HeadwindMDM
 import dagger.hilt.android.qualifiers.ApplicationContext
+import de.stustapay.stustapay.model.asManagedRegistration
 import de.stustapay.stustapay.model.RegistrationState
+import de.stustapay.stustapay.model.isManagedConfigDisabled
 import de.stustapay.stustapay.repository.RegistrationRepositoryInner
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import kotlinx.coroutines.CoroutineScope
@@ -65,6 +67,10 @@ class ManagedConfigWatcher @Inject constructor(
         scope.cancel()
     }
 
+    fun refreshNow() {
+        refreshManagedConfig()
+    }
+
     private fun refreshManagedConfig() {
         scope.launch {
             if (!headwindMDM.isConnected) {
@@ -89,23 +95,23 @@ class ManagedConfigWatcher @Inject constructor(
             }
 
             val currentState = registrationRepositoryInner.registrationState.firstOrNull()
-            if (currentState is RegistrationState.Registered &&
-                currentState.token == managedConfig.token &&
-                currentState.apiUrl == managedConfig.baseUrl
-            ) {
+            if (!shouldApplyManagedRegistration(currentState, managedConfig.token, managedConfig.baseUrl)) {
+                if (currentState?.isManagedConfigDisabled() == true) {
+                    Log.i(TAG, "Skipping Headwind managed registration because manual override is active")
+                }
                 return@launch
             }
 
-                Log.i(
-                    TAG,
-                    "Applying Headwind managed registration for ${managedConfig.baseUrl} (terminal=${managedConfig.terminalName ?: "n/a"})",
+            Log.i(
+                TAG,
+                "Applying Headwind managed registration for ${managedConfig.baseUrl} (terminal=${managedConfig.terminalName ?: "n/a"})",
             )
             registrationRepositoryInner.storeState(
                 RegistrationState.Registered(
                     token = managedConfig.token,
                     apiUrl = managedConfig.baseUrl,
                     message = "Headwind managed configuration",
-                ),
+                ).asManagedRegistration(message = "Headwind managed configuration"),
             )
             terminalConfigRepository.fetchConfig(keepTrying = false)
         }
@@ -150,5 +156,22 @@ class ManagedConfigWatcher @Inject constructor(
 
     companion object {
         private const val TAG = "ManagedConfigWatcher"
+    }
+}
+
+internal fun shouldApplyManagedRegistration(
+    currentState: RegistrationState?,
+    managedToken: String,
+    managedBaseUrl: String,
+): Boolean {
+    if (currentState?.isManagedConfigDisabled() == true) {
+        return false
+    }
+
+    return when (currentState) {
+        is RegistrationState.Registered -> {
+            currentState.token != managedToken || currentState.apiUrl != managedBaseUrl
+        }
+        else -> true
     }
 }

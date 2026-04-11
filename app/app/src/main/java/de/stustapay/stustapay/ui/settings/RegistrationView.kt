@@ -11,9 +11,10 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -24,6 +25,7 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.device.ManagedWifiConfig
 import de.stustapay.stustapay.device.ManagedWifiSuggestionState
 import de.stustapay.stustapay.device.buildWifiNetworkSuggestion
+import de.stustapay.stustapay.model.RegistrationSource
 import de.stustapay.stustapay.repository.ForceDeregisterState
 import de.stustapay.stustapay.ui.barcode.QRScanView
 import de.stustapay.stustapay.ui.common.PrefGroup
@@ -117,11 +119,13 @@ fun RegistrationOverview(
     scope: CoroutineScope,
     navController: NavController,
     registrationUiState: RegistrationUiState,
+    managedConfigOverrideActive: Boolean,
     wifiSuggestionState: ManagedWifiSuggestionState,
     onRetryWifiSuggestion: () -> Unit,
     onDeregister: () -> Unit,
     allowForceDeregister: ForceDeregisterState,
     onForceDeregister: () -> Unit,
+    onReenableManagedConfig: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -134,6 +138,7 @@ fun RegistrationOverview(
 
             var endpointUrl: String? = null
             var message: String? = null
+            var source: RegistrationSource? = null
             when (registrationUiState) {
                 Idle -> {
                     message = "waiting for input"
@@ -144,6 +149,7 @@ fun RegistrationOverview(
                 is HasEndpoint -> {
                     endpointUrl = registrationUiState.endpointUrl
                     message = registrationUiState.msg
+                    source = registrationUiState.source
                 }
             }
 
@@ -156,11 +162,24 @@ fun RegistrationOverview(
                     text = "endpoint: ${endpointUrl ?: "not connected"}",
                     modifier = Modifier.padding(start = 15.dp, end = 10.dp),
                 )
+                if (source != null) {
+                    Text(
+                        text = "source: ${sourceLabel(source)}",
+                        modifier = Modifier.padding(start = 15.dp, end = 10.dp),
+                    )
+                }
+                if (managedConfigOverrideActive) {
+                    Text(
+                        text = "Manual override active. Headwind managed server configuration is currently ignored.",
+                        modifier = Modifier.padding(start = 15.dp, end = 10.dp, top = 8.dp),
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            Row {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (registrationUiState is HasEndpoint) {
                     Registered(
                         onDeregister = onDeregister,
@@ -174,6 +193,14 @@ fun RegistrationOverview(
                         }
                     }) {
                         Text(text = "Scan Registration QR Code")
+                    }
+                }
+                if (managedConfigOverrideActive) {
+                    OutlinedButton(
+                        modifier = Modifier.padding(end = 10.dp),
+                        onClick = onReenableManagedConfig,
+                    ) {
+                        Text(text = "Allow Headwind Managed Config")
                     }
                 }
             }
@@ -271,6 +298,7 @@ fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
 
     val allowForceDeregister: ForceDeregisterState by viewModel.allowForceDeregister.collectAsStateWithLifecycle()
     val wifiSuggestionState by viewModel.wifiSuggestionState.collectAsStateWithLifecycle()
+    val managedConfigOverrideActive by viewModel.managedConfigOverrideActive.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
@@ -286,11 +314,13 @@ fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
                 scope = scope,
                 navController = navController,
                 registrationUiState = registrationUiState,
+                managedConfigOverrideActive = managedConfigOverrideActive,
                 wifiSuggestionState = wifiSuggestionState,
                 onRetryWifiSuggestion = { scope.launch { viewModel.retryWifiSuggestion() } },
                 onDeregister = { scope.launch { viewModel.deregister() } },
                 allowForceDeregister = allowForceDeregister,
                 onForceDeregister = { scope.launch { viewModel.deregister(force = true) } },
+                onReenableManagedConfig = { scope.launch { viewModel.reenableManagedConfig() } },
             )
         }
         composable("scan") {
@@ -301,5 +331,13 @@ fun RegistrationView(viewModel: RegistrationViewModel = hiltViewModel()) {
                 navController.navigate("register")
             }
         }
+    }
+}
+
+private fun sourceLabel(source: RegistrationSource): String {
+    return when (source) {
+        RegistrationSource.UNKNOWN -> "Unknown"
+        RegistrationSource.MANUAL -> "Manual QR registration"
+        RegistrationSource.MANAGED -> "Headwind managed configuration"
     }
 }

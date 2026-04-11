@@ -10,7 +10,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import de.stustapay.stustapay.model.RegistrationSource
 import de.stustapay.stustapay.model.RegistrationState
+import de.stustapay.stustapay.proto.RegistrationSourceProto
 import de.stustapay.stustapay.proto.RegistrationStateProto
 import java.io.File
 import java.io.InputStream
@@ -23,16 +25,19 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
 
     override suspend fun readFrom(input: InputStream): RegistrationState {
         return try {
-            val regState = RegistrationStateProto.parseFrom(input);
+            val regState = RegistrationStateProto.parseFrom(input)
             if (regState.registered) {
                 RegistrationState.Registered(
                     regState.authToken,
                     regState.apiEndpoint,
-                    "in local storage"
+                    "in local storage",
+                    source = regState.source.toRegistrationSource(),
+                    managedConfigDisabled = regState.managedConfigDisabled,
                 )
             } else {
                 RegistrationState.NotRegistered(
-                    "not registered"
+                    "not registered",
+                    managedConfigDisabled = regState.managedConfigDisabled,
                 )
             }
         } catch (exception: InvalidProtocolBufferException) {
@@ -47,20 +52,42 @@ object RegistrationStateSerializer : Serializer<RegistrationState> {
                     .setRegistered(true)
                     .setApiEndpoint(t.apiUrl)
                     .setAuthToken(t.token)
+                    .setSource(t.source.toProto())
+                    .setManagedConfigDisabled(t.managedConfigDisabled)
                     .build()
-                regState.writeTo(output);
+                regState.writeTo(output)
             }
 
             is RegistrationState.NotRegistered -> {
-                val regState =
-                    RegistrationStateProto.newBuilder().clear().setRegistered(false).build()
-                regState.writeTo(output);
+                val regState = RegistrationStateProto.newBuilder()
+                    .clear()
+                    .setRegistered(false)
+                    .setManagedConfigDisabled(t.managedConfigDisabled)
+                    .build()
+                regState.writeTo(output)
             }
 
             else -> {
                 error("Tried to serialize invalid RegistrationState: $t")
             }
         }
+    }
+}
+
+private fun RegistrationSourceProto.toRegistrationSource(): RegistrationSource {
+    return when (this) {
+        RegistrationSourceProto.REGISTRATION_SOURCE_MANUAL -> RegistrationSource.MANUAL
+        RegistrationSourceProto.REGISTRATION_SOURCE_MANAGED -> RegistrationSource.MANAGED
+        RegistrationSourceProto.UNRECOGNIZED,
+        RegistrationSourceProto.REGISTRATION_SOURCE_UNKNOWN -> RegistrationSource.UNKNOWN
+    }
+}
+
+private fun RegistrationSource.toProto(): RegistrationSourceProto {
+    return when (this) {
+        RegistrationSource.UNKNOWN -> RegistrationSourceProto.REGISTRATION_SOURCE_UNKNOWN
+        RegistrationSource.MANUAL -> RegistrationSourceProto.REGISTRATION_SOURCE_MANUAL
+        RegistrationSource.MANAGED -> RegistrationSourceProto.REGISTRATION_SOURCE_MANAGED
     }
 }
 

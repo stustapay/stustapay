@@ -12,13 +12,7 @@ class RegistrationLocalDataSource @Inject constructor(
 ) {
     val registrationState: Flow<RegistrationState> = regStateStore.data
 
-    suspend fun setState(registrationState: RegistrationState.Registered) {
+    suspend fun setState(registrationState: RegistrationState) {
         regStateStore.updateData { registrationState }
-    }
-
-    suspend fun delete() {
-        regStateStore.updateData {
-            RegistrationState.NotRegistered("deregistered")
-        }
     }
 }

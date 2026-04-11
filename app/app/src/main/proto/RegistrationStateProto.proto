@@ -3,8 +3,16 @@ syntax = "proto3";
 option java_package = "de.stustapay.stustapay.proto";
 option java_multiple_files = true;
 
+enum RegistrationSourceProto {
+  REGISTRATION_SOURCE_UNKNOWN = 0;
+  REGISTRATION_SOURCE_MANUAL = 1;
+  REGISTRATION_SOURCE_MANAGED = 2;
+}
+
 message RegistrationStateProto {
   bool registered = 1;
   string apiEndpoint = 2;
   string authToken = 3;
+  RegistrationSourceProto source = 4;
+  bool managedConfigDisabled = 5;
 }

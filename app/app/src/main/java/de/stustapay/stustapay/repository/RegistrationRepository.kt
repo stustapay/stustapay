@@ -7,6 +7,8 @@ import de.stustapay.libssp.util.merge
 import de.stustapay.stustapay.model.DeregistrationState
 import de.stustapay.stustapay.model.RegisterQRCodeContent
 import de.stustapay.stustapay.model.RegistrationState
+import de.stustapay.stustapay.model.asManualRegistration
+import de.stustapay.stustapay.model.isManagedConfigDisabled
 import de.stustapay.stustapay.netsource.RegistrationRemoteDataSource
 import de.stustapay.stustapay.storage.RegistrationLocalDataSource
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +47,7 @@ class RegistrationRepository @Inject constructor(
 
         // only persist if registration was successful
         return if (state is RegistrationState.Registered) {
-            registrationRepositoryInner.storeState(state)
+            registrationRepositoryInner.storeState(state.asManualRegistration())
             true
         } else {
             registrationRepositoryInner.tryEmit(state)
@@ -59,7 +61,7 @@ class RegistrationRepository @Inject constructor(
                 // remote deregistration failed
                 if (force) {
                     // delete the local state anyway
-                    registrationRepositoryInner.delete()
+                    registrationRepositoryInner.clearRegistration()
                     forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
                     true
                 } else {
@@ -70,11 +72,15 @@ class RegistrationRepository @Inject constructor(
             }
 
             is DeregistrationState.Deregistered -> {
-                registrationRepositoryInner.delete()
+                registrationRepositoryInner.clearRegistration()
                 forceDeregisterState.tryEmit(ForceDeregisterState.Disallow)
                 true
             }
         }
+    }
+
+    suspend fun reenableManagedConfig() {
+        registrationRepositoryInner.setManagedConfigDisabled(false)
     }
 
     private suspend fun registerAtCore(qrcodeB64: String): RegistrationState {
@@ -141,7 +147,38 @@ class RegistrationRepositoryInner @Inject constructor(
         registrationLocalDataSource.setState(s)
     }
 
-    suspend fun delete() {
-        registrationLocalDataSource.delete()
+    suspend fun clearRegistration(message: String = "deregistered") {
+        val currentState = readPersistedState()
+        registrationLocalDataSource.setState(
+            RegistrationState.NotRegistered(
+                message = message,
+                managedConfigDisabled = currentState.isManagedConfigDisabled(),
+            )
+        )
+    }
+
+    suspend fun setManagedConfigDisabled(disabled: Boolean) {
+        val currentState = readPersistedState()
+        val nextState = when (currentState) {
+            is RegistrationState.Registered -> currentState.copy(managedConfigDisabled = disabled)
+            is RegistrationState.NotRegistered -> currentState.copy(managedConfigDisabled = disabled)
+            is RegistrationState.Registering -> RegistrationState.NotRegistered(
+                message = "not registered",
+                managedConfigDisabled = disabled,
+            )
+            is RegistrationState.Error -> RegistrationState.NotRegistered(
+                message = currentState.message,
+                managedConfigDisabled = disabled,
+            )
+        }
+        registrationLocalDataSource.setState(nextState)
+    }
+
+    private suspend fun readPersistedState(): RegistrationState {
+        return try {
+            registrationLocalDataSource.registrationState.first()
+        } catch (e: NoSuchElementException) {
+            RegistrationState.NotRegistered("not registered")
+        }
     }
 }

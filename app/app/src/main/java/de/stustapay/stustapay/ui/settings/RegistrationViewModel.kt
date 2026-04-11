@@ -3,9 +3,12 @@ package de.stustapay.stustapay.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.stustapay.device.ManagedConfigWatcher
 import de.stustapay.stustapay.device.ManagedWifiSuggestionRepository
 import de.stustapay.stustapay.device.ManagedWifiSuggestionState
+import de.stustapay.stustapay.model.RegistrationSource
 import de.stustapay.stustapay.model.RegistrationState
+import de.stustapay.stustapay.model.isManagedConfigDisabled
 import de.stustapay.stustapay.repository.RegistrationRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import kotlinx.coroutines.flow.Flow
@@ -20,10 +23,13 @@ sealed interface RegistrationUiState {
     data class HasEndpoint(
         val msg: String? = null,
         val endpointUrl: String? = null,
+        val source: RegistrationSource = RegistrationSource.UNKNOWN,
+        val managedConfigDisabled: Boolean = false,
     ) : RegistrationUiState
 
     data class Message(
-        val msg: String
+        val msg: String,
+        val managedConfigDisabled: Boolean = false,
     ) : RegistrationUiState
 
     object Idle : RegistrationUiState
@@ -35,6 +41,7 @@ class RegistrationViewModel @Inject constructor(
     private val registrationRepo: RegistrationRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val managedWifiSuggestionRepository: ManagedWifiSuggestionRepository,
+    private val managedConfigWatcher: ManagedConfigWatcher,
 ) : ViewModel() {
 
     // convert the information flow from the repo to a stateflow (where we only want the latest element)
@@ -50,6 +57,13 @@ class RegistrationViewModel @Inject constructor(
 
     val allowForceDeregister = registrationRepo.forceDeregisterState
     val wifiSuggestionState: StateFlow<ManagedWifiSuggestionState> = managedWifiSuggestionRepository.state
+    val managedConfigOverrideActive: StateFlow<Boolean> = registrationRepo.registrationState
+        .map { it.isManagedConfigDisabled() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false,
+        )
 
     suspend fun register(qrcodeB64: String) {
         val ok = registrationRepo.register(qrcodeB64)
@@ -68,6 +82,11 @@ class RegistrationViewModel @Inject constructor(
     suspend fun retryWifiSuggestion() {
         managedWifiSuggestionRepository.retrySuggestion()
     }
+
+    suspend fun reenableManagedConfig() {
+        registrationRepo.reenableManagedConfig()
+        managedConfigWatcher.refreshNow()
+    }
 }
 
 
@@ -84,6 +103,8 @@ private fun registrationUiState(
                 RegistrationUiState.HasEndpoint(
                     endpointUrl = registerState.apiUrl,
                     msg = registerState.message,
+                    source = registerState.source,
+                    managedConfigDisabled = registerState.managedConfigDisabled,
                 )
             }
 
@@ -96,6 +117,7 @@ private fun registrationUiState(
             is RegistrationState.NotRegistered -> {
                 RegistrationUiState.Message(
                     msg = registerState.message,
+                    managedConfigDisabled = registerState.managedConfigDisabled,
                 )
             }
 
