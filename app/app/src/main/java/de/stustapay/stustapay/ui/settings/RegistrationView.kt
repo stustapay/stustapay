@@ -1,20 +1,19 @@
 package de.stustapay.stustapay.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.QrCode2
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -144,51 +143,113 @@ fun RegistrationOverview(
         }
     }
 
-    Row(
-        modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-        OperatorInfoCard(
-            title = stringResource(R.string.registration_status_title),
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(
-                text = stringResource(R.string.registration_status_message, message),
-                color = OperatorPalette.title,
-            )
-            Text(
-                text = stringResource(
-                    R.string.registration_status_endpoint,
-                    endpointUrl ?: stringResource(R.string.registration_status_not_connected),
-                ),
-                color = OperatorPalette.subtitle,
-            )
-            Text(
-                text = stringResource(R.string.registration_status_force_hint),
-                color = OperatorPalette.subtitle,
-            )
-        }
-        Column(
-            modifier = Modifier.weight(0.45f),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            if (registrationUiState is HasEndpoint) {
-                Registered(
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val compactLayout = maxWidth < 760.dp
+
+        if (compactLayout) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                OperatorInfoCard(
+                    title = stringResource(R.string.registration_status_title),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.registration_status_message, message),
+                        color = OperatorPalette.title,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.registration_status_endpoint,
+                            endpointUrl ?: stringResource(R.string.registration_status_not_connected),
+                        ),
+                        color = OperatorPalette.subtitle,
+                    )
+                    Text(
+                        text = stringResource(R.string.registration_status_force_hint),
+                        color = OperatorPalette.subtitle,
+                    )
+                }
+                RegistrationActionArea(
+                    scope = scope,
+                    navController = navController,
+                    registrationUiState = registrationUiState,
                     onDeregister = onDeregister,
                     allowForceDeregister = allowForceDeregister,
                     onForceDeregister = onForceDeregister,
                 )
-            } else {
-                OperatorPrimaryButton(
-                    text = stringResource(R.string.registration_scan_qr),
-                    icon = Icons.Filled.QrCode2,
-                    onClick = {
-                        scope.launch {
-                            navController.navigate("scan")
-                        }
-                    },
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                OperatorInfoCard(
+                    title = stringResource(R.string.registration_status_title),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = stringResource(R.string.registration_status_message, message),
+                        color = OperatorPalette.title,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.registration_status_endpoint,
+                            endpointUrl ?: stringResource(R.string.registration_status_not_connected),
+                        ),
+                        color = OperatorPalette.subtitle,
+                    )
+                    Text(
+                        text = stringResource(R.string.registration_status_force_hint),
+                        color = OperatorPalette.subtitle,
+                    )
+                }
+                RegistrationActionArea(
+                    scope = scope,
+                    navController = navController,
+                    registrationUiState = registrationUiState,
+                    onDeregister = onDeregister,
+                    allowForceDeregister = allowForceDeregister,
+                    onForceDeregister = onForceDeregister,
+                    modifier = Modifier.weight(0.45f),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun RegistrationActionArea(
+    scope: CoroutineScope,
+    navController: NavController,
+    registrationUiState: RegistrationUiState,
+    onDeregister: () -> Unit,
+    allowForceDeregister: ForceDeregisterState,
+    onForceDeregister: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        if (registrationUiState is HasEndpoint) {
+            Registered(
+                onDeregister = onDeregister,
+                allowForceDeregister = allowForceDeregister,
+                onForceDeregister = onForceDeregister,
+            )
+        } else {
+            OperatorPrimaryButton(
+                text = stringResource(R.string.registration_scan_qr),
+                icon = Icons.Filled.QrCode2,
+                onClick = {
+                    scope.launch {
+                        navController.navigate("scan")
+                    }
+                },
+            )
         }
     }
 }

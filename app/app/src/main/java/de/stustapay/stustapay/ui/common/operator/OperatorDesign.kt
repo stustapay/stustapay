@@ -517,7 +517,7 @@ fun OperatorActionCard(
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val compactLayout = maxWidth < 420.dp
-            val stackedLayout = maxWidth < 320.dp
+            val stackedLayout = maxWidth < 380.dp
             val titleSize = if (compactLayout) 22.sp else 26.sp
             val bodySize = if (compactLayout) 15.sp else 16.sp
             val bodyLineHeight = if (compactLayout) 20.sp else 22.sp

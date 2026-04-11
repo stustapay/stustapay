@@ -319,10 +319,10 @@ private fun OperatorLanding(
             loginState.hasConfig() -> stringResource(R.string.operator_console_configured)
             else -> stringResource(R.string.operator_console_no_config)
         },
-        footerHint = if (configLoading) {
-            stringResource(R.string.operator_console_footer_loading)
-        } else {
-            stringResource(R.string.operator_console_footer_workflows_visible, primaryCards.size)
+        footerHint = when {
+            !loginState.hasConfig() -> stringResource(R.string.operator_settings_desc)
+            configLoading -> stringResource(R.string.operator_console_footer_loading)
+            else -> stringResource(R.string.operator_console_footer_workflows_visible, primaryCards.size)
         },
         footerSection = stringResource(R.string.operator_console_footer_section),
         footerStatus = if (loginState.hasConfig()) {
@@ -358,10 +358,29 @@ private fun OperatorLanding(
                             lineHeight = 24.sp,
                             fontWeight = FontWeight.Medium,
                         )
+                        if (!terminalStatusMessage.isNullOrBlank()) {
+                            Divider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = OperatorPalette.panelBorder,
+                                thickness = 1.dp,
+                            )
+                            Text(
+                                text = stringResource(R.string.operator_configuration_status),
+                                color = OperatorPalette.title,
+                                fontSize = 18.sp,
+                                lineHeight = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = terminalStatusMessage,
+                                color = OperatorPalette.subtitle,
+                                fontSize = 18.sp,
+                                lineHeight = 24.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
-                }
-
-                if (!terminalStatusMessage.isNullOrBlank()) {
+                } else if (!terminalStatusMessage.isNullOrBlank()) {
                     OperatorInfoCard(
                         title = stringResource(R.string.operator_configuration_status),
                         modifier = Modifier.fillMaxWidth(),

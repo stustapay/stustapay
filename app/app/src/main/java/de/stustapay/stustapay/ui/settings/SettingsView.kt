@@ -1,10 +1,14 @@
 package de.stustapay.stustapay.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
@@ -48,37 +52,66 @@ fun SettingsRootView(
         footerStatus = stringResource(R.string.settings_footer_status),
         onBack = navigateBack,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val compactLayout = maxWidth < 760.dp
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                if (compactLayout) {
+                    OperatorActionCard(
+                        title = stringResource(R.string.settings_core_connection),
+                        description = stringResource(R.string.settings_core_connection_desc),
+                        icon = Icons.Filled.Link,
+                        onClick = { navController.navigate(SettingsNavDest.connection.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        emphasized = true,
+                    )
+                    OperatorActionCard(
+                        title = stringResource(R.string.settings_ec_reader),
+                        description = stringResource(R.string.settings_ec_reader_desc),
+                        icon = Icons.Filled.ShoppingCart,
+                        onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        OperatorActionCard(
+                            title = stringResource(R.string.settings_core_connection),
+                            description = stringResource(R.string.settings_core_connection_desc),
+                            icon = Icons.Filled.Link,
+                            onClick = { navController.navigate(SettingsNavDest.connection.route) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            emphasized = true,
+                        )
+                        OperatorActionCard(
+                            title = stringResource(R.string.settings_ec_reader),
+                            description = stringResource(R.string.settings_ec_reader_desc),
+                            icon = Icons.Filled.ShoppingCart,
+                            onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                    }
+                }
+
                 OperatorActionCard(
-                    title = stringResource(R.string.settings_core_connection),
-                    description = stringResource(R.string.settings_core_connection_desc),
-                    icon = Icons.Filled.Link,
-                    onClick = { navController.navigate(SettingsNavDest.connection.route) },
-                    modifier = Modifier.weight(1f),
-                    emphasized = true,
-                )
-                OperatorActionCard(
-                    title = stringResource(R.string.settings_ec_reader),
-                    description = stringResource(R.string.settings_ec_reader_desc),
-                    icon = Icons.Filled.ShoppingCart,
-                    onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
-                    modifier = Modifier.weight(1f),
+                    title = stringResource(R.string.settings_about_app),
+                    description = stringResource(R.string.settings_about_app_desc),
+                    icon = Icons.Filled.Info,
+                    onClick = { navController.navigate(SettingsNavDest.about.route) },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            OperatorActionCard(
-                title = stringResource(R.string.settings_about_app),
-                description = stringResource(R.string.settings_about_app_desc),
-                icon = Icons.Filled.Info,
-                onClick = { navController.navigate(SettingsNavDest.about.route) },
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 }
