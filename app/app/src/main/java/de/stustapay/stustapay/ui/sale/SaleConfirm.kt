@@ -187,8 +187,6 @@ private fun ColumnScope.SaleConfirmRail(
     onEdit: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    val itemCount = checkedSale.lineItems.size
-
     OperatorPanel(
         modifier = if (profile.counterLayout) Modifier.fillMaxHeight() else Modifier.fillMaxWidth(),
         backgroundColor = OperatorPalette.panelMuted,
@@ -201,24 +199,6 @@ private fun ColumnScope.SaleConfirmRail(
                 lineHeight = 21.sp,
                 fontWeight = FontWeight.Medium,
             )
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                color = OperatorPalette.panel,
-                border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
-                elevation = 0.dp,
-            ) {
-                Column(
-                    modifier = Modifier.padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    OperatorRailSummaryRow(
-                        label = stringResource(R.string.operator_items),
-                        value = itemCount.toString(),
-                    )
-                }
-            }
 
             OperatorActionButton(
                 text = stringResource(R.string.book_order),
@@ -270,25 +250,12 @@ private fun SaleConfirmLineItemCard(
                     fontWeight = FontWeight.ExtraBold,
                 )
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = "${lineItem.quantity.intValue()} × ${formatCurrencyValue(lineItem.productPrice)}",
-                    color = OperatorPalette.title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = lineItem.taxName,
-                    color = OperatorPalette.subtitle,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                text = "${lineItem.quantity.intValue()} × ${formatCurrencyValue(lineItem.productPrice)}",
+                color = OperatorPalette.title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }

@@ -1,11 +1,16 @@
 package de.stustapay.stustapay.ui.root
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustapay.libssp.util.SysUiController
 import de.stustapay.stustapay.ui.account.AccountView
+import de.stustapay.stustapay.ui.account.AccountViewModel
 import de.stustapay.stustapay.ui.cashier.CashierView
 import de.stustapay.stustapay.ui.debug.DebugView
 import de.stustapay.stustapay.ui.entry.EntryView
@@ -28,10 +33,16 @@ import de.stustapay.stustapay.ui.vault.VaultView
 fun RootView(uictrl: SysUiController? = null) {
     val navController = rememberNavController()
 
-    if (uictrl != null) {
-        navController.addOnDestinationChangedListener(
-            NavChangeHandler(RootNavDests, uictrl)
-        )
+    DisposableEffect(navController, uictrl) {
+        if (uictrl == null) {
+            onDispose {}
+        } else {
+            val listener = NavChangeHandler(RootNavDests, uictrl)
+            navController.addOnDestinationChangedListener(listener)
+            onDispose {
+                navController.removeOnDestinationChangedListener(listener)
+            }
+        }
     }
 
     NavHost(
@@ -39,7 +50,19 @@ fun RootView(uictrl: SysUiController? = null) {
         startDestination = RootNavDests.startpage.route,
     ) {
         composable(RootNavDests.startpage.route) {
-            StartpageView(navigateTo = { navTo ->
+            val viewModel: StartpageViewModel = hiltViewModel()
+            val terminalConfigViewModel: TerminalConfigViewModel = hiltViewModel()
+            val loginState = viewModel.uiState.collectAsStateWithLifecycle()
+            val configLoading = viewModel.configLoading.collectAsStateWithLifecycle()
+            DynamicSystemUiEffect(
+                uictrl = uictrl,
+                hidden = loginState.value.isSelfServiceTerminal() &&
+                    loginState.value.hasConfig() &&
+                    !configLoading.value,
+            )
+
+            StartpageView(
+                navigateTo = { navTo ->
                 if (navTo == RootNavDests.entry) {
                     navController.navigate(navTo.route) {
                         popUpTo(RootNavDests.startpage.route) {
@@ -52,7 +75,10 @@ fun RootView(uictrl: SysUiController? = null) {
                         navTo
                     )
                 }
-            })
+            },
+                viewModel = viewModel,
+                terminalConfigViewModel = terminalConfigViewModel,
+            )
         }
         composable(RootNavDests.entry.route) {
             EntryView(leaveView = { navController.navigateUp() })
@@ -70,7 +96,18 @@ fun RootView(uictrl: SysUiController? = null) {
             PostPaymentView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.status.route) {
-            AccountView(leaveView = { navController.navigateUp() })
+            val viewModel: AccountViewModel = hiltViewModel()
+            val isSelfService = viewModel.isSelfServiceMode.collectAsStateWithLifecycle()
+            val canSelfServiceBalance = viewModel.canSelfServiceBalance.collectAsStateWithLifecycle()
+            DynamicSystemUiEffect(
+                uictrl = uictrl,
+                hidden = isSelfService.value && canSelfServiceBalance.value,
+            )
+
+            AccountView(
+                leaveView = { navController.navigateUp() },
+                viewModel = viewModel,
+            )
         }
         composable(RootNavDests.user.route) {
             UserView(leaveView = { navController.navigateUp() })
@@ -98,6 +135,20 @@ fun RootView(uictrl: SysUiController? = null) {
         }
         composable(RootNavDests.vault.route) {
             VaultView(leaveView = { navController.navigateUp() })
+        }
+    }
+}
+
+@Composable
+private fun DynamicSystemUiEffect(
+    uictrl: SysUiController?,
+    hidden: Boolean,
+) {
+    LaunchedEffect(uictrl, hidden) {
+        if (hidden) {
+            uictrl?.hideSystemUI()
+        } else {
+            uictrl?.showSystemUI()
         }
     }
 }

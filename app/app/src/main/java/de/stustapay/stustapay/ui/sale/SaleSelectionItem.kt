@@ -197,8 +197,8 @@ fun SaleSelectionItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
@@ -212,7 +212,7 @@ fun SaleSelectionItem(
                         Text(
                             text = caption,
                             color = OperatorPalette.title,
-                            fontSize = 18.sp,
+                            fontSize = 21.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -223,12 +223,12 @@ fun SaleSelectionItem(
                             Box(
                                 modifier = Modifier
                                     .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
-                                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) {
                                 Text(
                                     text = quantityLabel,
                                     color = OperatorPalette.title,
-                                    fontSize = 14.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
                             }
@@ -239,7 +239,7 @@ fun SaleSelectionItem(
                 Text(
                     text = itemPrice,
                     color = OperatorPalette.title,
-                    fontSize = 20.sp,
+                    fontSize = 23.sp,
                     fontWeight = FontWeight.ExtraBold,
                 )
 
@@ -251,8 +251,8 @@ fun SaleSelectionItem(
                         Button(
                             onClick = secondaryAction,
                             modifier = Modifier
-                                .height(40.dp)
-                                .widthIn(min = if (secondaryText.length > 1) 68.dp else 44.dp),
+                                .height(46.dp)
+                                .widthIn(min = if (secondaryText.length > 1) 72.dp else 50.dp),
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = secondaryButtonColor,
                                 contentColor = secondaryButtonTextColor,
@@ -260,7 +260,7 @@ fun SaleSelectionItem(
                         ) {
                             Text(
                                 text = secondaryText,
-                                fontSize = 12.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                             )
                         }
@@ -269,8 +269,8 @@ fun SaleSelectionItem(
                     Button(
                         onClick = primaryAction,
                         modifier = Modifier
-                            .height(40.dp)
-                            .widthIn(min = if (primaryIsSymbol) 52.dp else if (isReturnable || primaryText.length > 4) 88.dp else 72.dp),
+                            .height(46.dp)
+                            .widthIn(min = if (primaryIsSymbol) 58.dp else if (isReturnable || primaryText.length > 4) 94.dp else 78.dp),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = primaryButtonColor,
                             contentColor = primaryButtonTextColor,
@@ -278,7 +278,7 @@ fun SaleSelectionItem(
                     ) {
                         Text(
                             text = primaryText,
-                            fontSize = if (primaryIsSymbol) 24.sp else 12.sp,
+                            fontSize = if (primaryIsSymbol) 27.sp else 14.sp,
                             fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
                             maxLines = 1,
                         )
@@ -317,12 +317,12 @@ fun SaleSelectionItem(
                     Box(
                         modifier = Modifier
                             .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
-                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Text(
                             text = quantityLabel,
                             color = OperatorPalette.title,
-                            fontSize = 13.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                         )
                     }

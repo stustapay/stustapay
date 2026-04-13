@@ -53,6 +53,8 @@ object OperatorPalette {
     val success = SelfServicePalette.success
     val successPanel = Color(0xFF16342A)
     val danger = Color(0xFFFF6B6B)
+    val dangerPanel = Color(0xFF3A1D25)
+    val dangerMuted = Color(0xFFFFB6B6)
     val pill = Color(0xFF1C2B46)
 }
 
@@ -192,6 +194,7 @@ fun OperatorScaffold(
     languageLabel: String = "DE | EN | NL",
     showFooter: Boolean = true,
     onBack: (() -> Unit)? = null,
+    headerAction: (@Composable () -> Unit)? = null,
     /** When set with [onBack], shows the same compact header as sale (flow title + till). */
     headerFlowTitle: String? = null,
     headerTillLabel: String? = null,
@@ -217,6 +220,7 @@ fun OperatorScaffold(
                     terminalLabel = terminalLabel,
                     languageLabel = languageLabel,
                     onBack = onBack,
+                    headerAction = headerAction,
                     compactRouteHeader = routeHeader,
                     headerFlowTitle = headerFlowTitle,
                     headerTillLabel = headerTillLabel,
@@ -248,6 +252,7 @@ fun OperatorHeader(
     modifier: Modifier = Modifier,
     languageLabel: String = "DE | EN | NL",
     onBack: (() -> Unit)? = null,
+    headerAction: (@Composable () -> Unit)? = null,
     compactRouteHeader: Boolean = false,
     headerFlowTitle: String? = null,
     headerTillLabel: String? = null,
@@ -292,6 +297,7 @@ fun OperatorHeader(
         }
 
         val compactLayout = maxWidth < 720.dp
+        val headerPills = listOf(languageLabel, terminalLabel).filter { it.isNotBlank() }
         val horizontalPadding = if (compactLayout) 12.dp else 16.dp
         val verticalPadding = if (compactLayout) 14.dp else 18.dp
         val titleSize = if (compactLayout) 22.sp else 30.sp
@@ -310,50 +316,61 @@ fun OperatorHeader(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (onBack != null) {
-                            OperatorCircleIcon(
-                                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                                backgroundColor = OperatorPalette.pill,
-                                tint = OperatorPalette.title,
-                                modifier = Modifier.clickable(onClick = onBack),
-                            )
-                        }
-                        OperatorCircleIcon(
-                            icon = icon,
-                            backgroundColor = OperatorPalette.success,
-                            tint = OperatorPalette.backgroundTop,
-                        )
-                        Column(
+                        Row(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(
-                                text = title,
-                                color = OperatorPalette.title,
-                                fontSize = titleSize,
-                                fontWeight = FontWeight.ExtraBold,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
+                            if (onBack != null) {
+                                OperatorCircleIcon(
+                                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                                    backgroundColor = OperatorPalette.pill,
+                                    tint = OperatorPalette.title,
+                                    modifier = Modifier.clickable(onClick = onBack),
+                                )
+                            }
+                            OperatorCircleIcon(
+                                icon = icon,
+                                backgroundColor = OperatorPalette.success,
+                                tint = OperatorPalette.backgroundTop,
                             )
-                            Text(
-                                text = subtitle,
-                                color = OperatorPalette.subtitle,
-                                fontSize = subtitleSize,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 4,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(
+                                    text = title,
+                                    color = OperatorPalette.title,
+                                    fontSize = titleSize,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = subtitle,
+                                    color = OperatorPalette.subtitle,
+                                    fontSize = subtitleSize,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 4,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
+                        headerAction?.invoke()
                     }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        OperatorHeaderPill(text = languageLabel)
-                        OperatorHeaderPill(text = terminalLabel)
+                    if (headerPills.isNotEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            headerPills.forEach { pillText ->
+                                OperatorHeaderPill(text = pillText)
+                            }
+                        }
                     }
                 }
             } else {
@@ -399,13 +416,17 @@ fun OperatorHeader(
                             )
                         }
                     }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        OperatorHeaderPill(text = languageLabel)
-                        OperatorHeaderPill(text = terminalLabel)
+                    if (headerPills.isNotEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            headerPills.forEach { pillText ->
+                                OperatorHeaderPill(text = pillText)
+                            }
+                        }
                     }
+                    headerAction?.invoke()
                 }
             }
         }

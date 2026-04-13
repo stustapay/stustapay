@@ -263,6 +263,7 @@
     <string name="transfer_cash_register">Barkasse übergeben</string>
     <string name="no_cash_register">Keine Kassenschublade</string>
     <string name="sale_check_error">Fehler bei Bestellprüfung:</string>
+    <string name="sale_status_insufficient_funds">Nicht genug Guthaben verfügbar.\nBenötigt: %1$s €\nVerfügbar: %2$s €</string>
     <string name="tag_uid">Chip ID</string>
     <string name="ticket_order_booked">Bestellung gebucht!</string>
     <string name="ticket_order_validated">Ticketbestellung gültig!</string>
@@ -310,6 +311,7 @@
     <string name="account_details_unavailable">Verlauf nicht verfügbar</string>
     <string name="account_details_no_data">Keine Detaildaten geladen</string>
     <string name="account_details_no_data_desc">Laden Sie zuerst ein Kundenkonto und öffnen Sie dann die Details, um letzte Bestellungen zu prüfen.</string>
+    <string name="account_order_line_item_quantity_price">×%1$d  %2$s</string>
     <string name="account_badge_orders">%1$d Bestellungen</string>
     <string name="account_badge_no_orders">Keine Bestellungen</string>
     <string name="no_camera_permission">Keine Kameraberechtigung</string>

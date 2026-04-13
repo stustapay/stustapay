@@ -148,7 +148,7 @@ class RegistrationRepositoryInner @Inject constructor(
     }
 
     suspend fun clearRegistration(message: String = "deregistered") {
-        val currentState = readPersistedState()
+        val currentState = currentStoredState()
         registrationLocalDataSource.setState(
             RegistrationState.NotRegistered(
                 message = message,
@@ -158,7 +158,7 @@ class RegistrationRepositoryInner @Inject constructor(
     }
 
     suspend fun setManagedConfigDisabled(disabled: Boolean) {
-        val currentState = readPersistedState()
+        val currentState = currentStoredState()
         val nextState = when (currentState) {
             is RegistrationState.Registered -> currentState.copy(managedConfigDisabled = disabled)
             is RegistrationState.NotRegistered -> currentState.copy(managedConfigDisabled = disabled)
@@ -174,7 +174,7 @@ class RegistrationRepositoryInner @Inject constructor(
         registrationLocalDataSource.setState(nextState)
     }
 
-    private suspend fun readPersistedState(): RegistrationState {
+    suspend fun currentStoredState(): RegistrationState {
         return try {
             registrationLocalDataSource.registrationState.first()
         } catch (e: NoSuchElementException) {

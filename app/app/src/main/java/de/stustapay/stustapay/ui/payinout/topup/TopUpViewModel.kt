@@ -45,6 +45,7 @@ enum class TopUpPage(val route: String) {
 data class TopUpState(
     /** desired deposit amount in cents */
     var currentAmount: UInt = 0u,
+    var amountSelected: Boolean = false,
 )
 
 
@@ -127,7 +128,7 @@ class TopUpViewModel @Inject constructor(
 
     fun setAmount(amount: UInt) {
         _topUpState.update {
-            it.copy(currentAmount = amount)
+            it.copy(currentAmount = amount, amountSelected = amount > 0u)
         }
     }
 

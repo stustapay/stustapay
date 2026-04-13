@@ -350,38 +350,43 @@ private fun SelfServiceAccountStatus(
                 showLanguageSelector = false
             )
 
-            when (val customer = uiState.customer) {
-                is CustomerStatusRequestState.Done -> {
-                    SelfServiceBalanceResult(
-                        amount = customer.account.balance,
-                        amountFontSize = profile.amountValueSize
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                when (val customer = uiState.customer) {
+                    is CustomerStatusRequestState.Done -> {
+                        SelfServiceBalanceResult(
+                            amount = customer.account.balance,
+                            amountFontSize = profile.amountValueSize
+                        )
+                    }
 
-                is CustomerStatusRequestState.DoneDetails -> {
-                    SelfServiceBalanceResult(
-                        amount = customer.account.balance,
-                        amountFontSize = profile.amountValueSize
-                    )
-                }
+                    is CustomerStatusRequestState.DoneDetails -> {
+                        SelfServiceBalanceResult(
+                            amount = customer.account.balance,
+                            amountFontSize = profile.amountValueSize
+                        )
+                    }
 
-                is CustomerStatusRequestState.Fetching -> {
-                    SelfServiceScanLoading(isSmallScreen = profile.isSmallScreen)
-                }
+                    is CustomerStatusRequestState.Fetching -> {
+                        SelfServiceScanLoading(isSmallScreen = profile.isSmallScreen)
+                    }
 
-                is CustomerStatusRequestState.Failed -> {
-                    SelfServiceScanError(
-                        message = customer.msg,
-                        isSmallScreen = profile.isSmallScreen
-                    )
-                }
+                    is CustomerStatusRequestState.Failed -> {
+                        SelfServiceScanError(
+                            message = customer.msg,
+                            isSmallScreen = profile.isSmallScreen
+                        )
+                    }
 
-                is CustomerStatusRequestState.Idle -> {
-                    SelfServiceScanIdle(isSmallScreen = profile.isSmallScreen)
+                    is CustomerStatusRequestState.Idle -> {
+                        SelfServiceScanIdle(isSmallScreen = profile.isSmallScreen)
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             when (uiState.customer) {
                 is CustomerStatusRequestState.Done,
@@ -451,12 +456,30 @@ private fun SelfServiceBalanceResult(
     amount: Double,
     amountFontSize: androidx.compose.ui.unit.TextUnit
 ) {
-    Text(
-        text = "€ ${"%.2f".format(amount)}",
-        color = SelfServicePalette.title,
-        fontSize = amountFontSize,
-        fontWeight = FontWeight.ExtraBold
-    )
+    SelfServicePanel(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.account_current_balance_label),
+                color = SelfServicePalette.subtitle,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "€ ${"%.2f".format(amount)}",
+                color = SelfServicePalette.title,
+                fontSize = amountFontSize,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
 
 @Composable

@@ -82,6 +82,21 @@ class TerminalLoginState(
         return access(currentUser)
     }
 
+    fun checkTerminalAccess(access: (CurrentUser) -> Boolean): Boolean {
+        val currentUser = if (user is UserState.LoggedIn) {
+            user.user
+        } else {
+            return false
+        }
+
+        val terminalPrivileges = when (terminal) {
+            is TerminalConfigState.Success -> terminal.config.userPrivileges
+            else -> null
+        } ?: currentUser.privileges
+
+        return access(currentUser.copy(privileges = terminalPrivileges))
+    }
+
     fun hasConfig(): Boolean {
         return terminal is TerminalConfigState.Success
     }

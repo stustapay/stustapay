@@ -161,7 +161,7 @@ private fun OperatorPayOutMainContent(
                         amount = if (!usesMaximumPayout) {
                             formatEuroAmountCents(displayAmount)
                         } else {
-                            stringResource(R.string.operator_pending)
+                            ""
                         },
                         description = stringResource(R.string.topup_operator_custom_amount_hint),
                         selected = !usesMaximumPayout,

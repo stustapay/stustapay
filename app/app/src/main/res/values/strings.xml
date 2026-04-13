@@ -264,6 +264,7 @@
     <string name="transfer_cash_register">Transfer Cash Register</string>
     <string name="no_cash_register">No cash register</string>
     <string name="sale_check_error">Error in sale check:</string>
+    <string name="sale_status_insufficient_funds">Not enough balance available.\nNeeded: %1$s €\nAvailable: %2$s €</string>
     <string name="tag_uid">Chip ID</string>
     <string name="ticket_order_booked">Order booked!</string>
     <string name="ticket_order_validated">Ticket order validated!</string>
@@ -311,6 +312,7 @@
     <string name="account_details_unavailable">History unavailable</string>
     <string name="account_details_no_data">No detail data loaded</string>
     <string name="account_details_no_data_desc">Fetch a customer account first, then open details to inspect recent orders.</string>
+    <string name="account_order_line_item_quantity_price">×%1$d  %2$s</string>
     <string name="account_badge_orders">%1$d orders</string>
     <string name="account_badge_no_orders">No orders</string>
     <string name="no_camera_permission">No camera permission</string>

@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        applyFullscreenWindowFlags(enabled = true)
 
         // Set default orientation based on device type
         setDefaultOrientation();
@@ -80,7 +82,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         super.onResume()
 
         nfcHandler.onResume(this)
-        hideSystemUI()
+        reapplyDesiredSystemUI()
     }
 
     public override fun onNewIntent(intent: Intent) {
@@ -119,55 +121,93 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        this.hideSystemUI()
+        reapplyDesiredSystemUI()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            hideSystemUI()
+            reapplyDesiredSystemUI()
         }
     }
 
     private var sysUiHidden = false
+    private var desiredSysUiHidden = true
+
+    private fun reapplyDesiredSystemUI() {
+        applySystemUIVisibility(hidden = desiredSysUiHidden, force = true)
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    private fun applyFullscreenWindowFlags(enabled: Boolean) {
+        if (enabled) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            @Suppress("DEPRECATION")
+            window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = if (enabled) {
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                } else {
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+                }
+            }
+        }
+    }
 
     @SuppressLint("ObsoleteSdkInt")
     @Suppress("DEPRECATION")
-    override fun hideSystemUI() {
+    private fun applySystemUIVisibility(hidden: Boolean, force: Boolean = false) {
+        if (!force && sysUiHidden == hidden) {
+            return
+        }
+
+        applyFullscreenWindowFlags(enabled = hidden)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let {
-                it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                window.statusBarColor = android.graphics.Color.TRANSPARENT
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                it.hide(WindowInsets.Type.systemBars())
+                if (hidden) {
+                    it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    window.statusBarColor = android.graphics.Color.TRANSPARENT
+                    window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                    it.hide(WindowInsets.Type.systemBars())
+                } else {
+                    it.show(WindowInsets.Type.systemBars())
+                }
             }
         } else {
             var uiVisibility = window.decorView.systemUiVisibility
 
-            uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_FULLSCREEN
-            // don't draw essential navigation controls (home, back, ...)
-            uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            if (hidden) {
+                uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_FULLSCREEN
+                // don't draw essential navigation controls (home, back, ...)
+                uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                uiVisibility = uiVisibility or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            } else {
+                uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
+                uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.inv()
+                uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY.inv()
+            }
 
             window.decorView.systemUiVisibility = uiVisibility
         }
-        sysUiHidden = true
+        sysUiHidden = hidden
+    }
+
+    override fun hideSystemUI() {
+        desiredSysUiHidden = true
+        applySystemUIVisibility(hidden = true)
     }
 
     @SuppressLint("ObsoleteSdkInt")
     @Suppress("DEPRECATION")
     override fun showSystemUI() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.show(WindowInsets.Type.systemBars())
-        } else {
-            var uiVisibility: Int = window.decorView.systemUiVisibility
-
-            uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
-            uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.inv()
-            uiVisibility = uiVisibility and View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY.inv()
-
-            window.decorView.systemUiVisibility = uiVisibility
-        }
-        sysUiHidden = false
+        desiredSysUiHidden = false
+        applySystemUIVisibility(hidden = false)
     }
 }

@@ -13,7 +13,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -94,7 +93,7 @@ class ManagedConfigWatcher @Inject constructor(
                 return@launch
             }
 
-            val currentState = registrationRepositoryInner.registrationState.firstOrNull()
+            val currentState = registrationRepositoryInner.currentStoredState()
             if (!shouldApplyManagedRegistration(currentState, managedConfig.token, managedConfig.baseUrl)) {
                 if (currentState?.isManagedConfigDisabled() == true) {
                     Log.i(TAG, "Skipping Headwind managed registration because manual override is active")

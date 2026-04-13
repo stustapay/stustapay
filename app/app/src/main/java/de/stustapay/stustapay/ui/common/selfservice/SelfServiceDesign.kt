@@ -49,6 +49,7 @@ object SelfServicePalette {
     val success = Color(0xFF1FC892)
     val successMuted = Color(0xFFD8FFF2)
     val error = Color(0xFFFF6B6B)
+    val errorPanel = Color(0xFF4B1F2C)
     val errorMuted = Color(0xFFFFC8C8)
 }
 

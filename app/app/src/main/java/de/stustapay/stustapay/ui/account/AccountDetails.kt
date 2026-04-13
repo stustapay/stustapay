@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.automirrored.filled.List
@@ -47,7 +48,6 @@ import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
-import de.stustapay.stustapay.ui.common.pay.ProductConfirmItem
 import de.stustapay.stustapay.ui.nav.NavDest
 import de.stustapay.libssp.util.formatCurrencyValue
 import java.time.format.DateTimeFormatter
@@ -104,17 +104,22 @@ fun AccountDetails(
                         )
                     }
 
+                    Divider(color = OperatorPalette.panelBorder)
+
                     for (item in sale.lineItems) {
-                        ProductConfirmItem(
+                        AccountOrderLineItemRow(
                             name = item.product.name,
                             price = item.productPrice,
-                            quantity = item.quantity.intValue()
+                            quantity = item.quantity.intValue(),
+                            totalPrice = item.totalPrice,
                         )
                     }
 
-                    ProductConfirmItem(
-                        name = stringResource(R.string.history_sum),
-                        price = sale.totalPrice,
+                    Divider(color = OperatorPalette.panelBorder)
+
+                    AccountOrderTotalRow(
+                        label = stringResource(R.string.history_sum),
+                        totalPrice = sale.totalPrice,
                     )
                 }
             }
@@ -259,6 +264,73 @@ fun AccountDetails(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AccountOrderLineItemRow(
+    name: String,
+    quantity: Int,
+    price: Double,
+    totalPrice: Double,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = name,
+                color = OperatorPalette.title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = stringResource(
+                    R.string.account_order_line_item_quantity_price,
+                    quantity,
+                    formatCurrencyValue(price),
+                ),
+                color = OperatorPalette.subtitle,
+                fontSize = 14.sp,
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = formatCurrencyValue(totalPrice),
+            color = OperatorPalette.title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun AccountOrderTotalRow(
+    label: String,
+    totalPrice: Double,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = OperatorPalette.subtitle,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = formatCurrencyValue(totalPrice),
+            color = OperatorPalette.success,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+        )
     }
 }
 

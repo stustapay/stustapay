@@ -20,8 +20,9 @@ class NavChangeHandler(
         arguments: Bundle?
     ) {
         val dest = destinations.routes[destination.route]
-        if (dest != null) {
-            if (dest.showSystemUI) {
+        val showSystemUI = dest?.showSystemUI
+        if (showSystemUI != null) {
+            if (showSystemUI) {
                 uictrl.showSystemUI()
             } else {
                 uictrl.hideSystemUI()

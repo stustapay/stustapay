@@ -287,7 +287,7 @@ private fun CompactSaleBasketPanel(
             add(
                 CompactPaymentAction(
                     stringResource(R.string.sale_review_and_pay),
-                    ready,
+                    ready && basketCount > 0,
                     onSubmitSsp,
                     large = true,
                 )
@@ -374,13 +374,6 @@ private fun CompactSaleBasketPanel(
                 )
             }
 
-            Text(
-                text = stringResource(R.string.sale_items_count, basketCount),
-                color = if (basketCount > 0) OperatorPalette.accent else OperatorPalette.subtitle,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-
             if (paymentActions.isEmpty()) {
                 if (compactHandheld) {
                     Row(
@@ -423,28 +416,25 @@ private fun CompactSaleBasketPanel(
                     }
                 }
             } else {
-                val rows = paymentActions.chunked(if (paymentActions.size > 2) 2 else paymentActions.size)
-                rows.forEachIndexed { index, actionRow ->
+                val primaryAction = paymentActions.firstOrNull { it.large }
+                val secondaryActions = paymentActions.filterNot { it.large }
+
+                if (primaryAction != null) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        actionRow.forEach { action ->
-                            CompactActionButton(
-                                text = action.label,
-                                enabled = action.enabled,
-                                emphasized = true,
-                                modifier = Modifier.weight(1f),
-                                minHeight = if (action.large) 56.dp else 46.dp,
-                                textFontSize = if (action.large) 17.sp else 15.sp,
-                                onClick = action.onClick,
-                            )
-                        }
-                        repeat(2 - actionRow.size) {
-                            Box(modifier = Modifier.weight(1f))
-                        }
-                        if (compactHandheld && index == 0 && basketCount > 0) {
+                        CompactActionButton(
+                            text = primaryAction.label,
+                            enabled = primaryAction.enabled,
+                            emphasized = true,
+                            modifier = Modifier.weight(1f),
+                            minHeight = 58.dp,
+                            textFontSize = 18.sp,
+                            onClick = primaryAction.onClick,
+                        )
+                        if (compactHandheld && basketCount > 0) {
                             CompactCircleButton(
                                 icon = Icons.Filled.Delete,
                                 backgroundColor = Color(0xFF3A1D25),
@@ -455,6 +445,30 @@ private fun CompactSaleBasketPanel(
                         }
                     }
                 }
+
+                secondaryActions.chunked(if (secondaryActions.size > 2) 2 else secondaryActions.size.coerceAtLeast(1))
+                    .forEach { actionRow ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            actionRow.forEach { action ->
+                                CompactActionButton(
+                                    text = action.label,
+                                    enabled = action.enabled,
+                                    emphasized = true,
+                                    modifier = Modifier.weight(1f),
+                                    minHeight = 46.dp,
+                                    textFontSize = 15.sp,
+                                    onClick = action.onClick,
+                                )
+                            }
+                            repeat(2 - actionRow.size) {
+                                Box(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
                 if (!compactHandheld && basketCount > 0) {
                     Text(
                         text = stringResource(R.string.sale_clear_basket),

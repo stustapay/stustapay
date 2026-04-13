@@ -104,6 +104,28 @@ class RegistrationStateStorageTest {
         assertFalse(parsed.managedConfigDisabled)
     }
 
+    @Test
+    fun `current stored state reads persisted override metadata`() = runBlocking {
+        val dataStore = createDataStore()
+        val localDataSource = RegistrationLocalDataSource(dataStore)
+        val repositoryInner = RegistrationRepositoryInner(localDataSource)
+
+        repositoryInner.storeState(
+            RegistrationState.Registered(
+                token = "manual-token",
+                apiUrl = "https://manual.example",
+            ).asManualRegistration()
+        )
+        repositoryInner.tryEmit(RegistrationState.NotRegistered("initialization"))
+
+        val parsed = repositoryInner.currentStoredState()
+
+        assertTrue(parsed is RegistrationState.Registered)
+        parsed as RegistrationState.Registered
+        assertEquals(RegistrationSource.MANUAL, parsed.source)
+        assertTrue(parsed.managedConfigDisabled)
+    }
+
     private fun createDataStore() = DataStoreFactory.create(
         serializer = RegistrationStateSerializer,
         produceFile = {

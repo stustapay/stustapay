@@ -78,7 +78,7 @@ import de.stustapay.stustapay.ui.nav.NavDest
 fun StartpageView(
     navigateTo: (NavDest) -> Unit = {},
     viewModel: StartpageViewModel = hiltViewModel(),
-    terminalConfigViewModel: TerminalConfigViewModel = hiltViewModel()
+    terminalConfigViewModel: TerminalConfigViewModel = hiltViewModel(),
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
@@ -122,38 +122,6 @@ fun StartpageView(
             .fillMaxSize()
             .background(brush = Brush.verticalGradient(colors = gradientColors))
     ) {
-        IconButton(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 15.dp, start = 20.dp)
-                .size(30.dp),
-            onClick = {
-                when (activity.requestedOrientation) {
-                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-                    }
-                    ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE -> {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    }
-                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
-                    }
-                    ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT -> {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    }
-                    else -> {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    }
-                }
-            },
-        ) {
-            Icon(
-                imageVector = Icons.Filled.ScreenRotation,
-                contentDescription = stringResource(R.string.content_desc_rotate_screen),
-                tint = if (isSelfServiceMode) SelfServicePalette.subtitle else MaterialTheme.colors.onSurface
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -167,6 +135,7 @@ fun StartpageView(
                     onCheckBalance = { navigateToHook(RootNavDests.status) },
                     onTopUp = { navigateToHook(RootNavDests.topup) },
                     onShowTerminalInfo = { showInfoDialog = true },
+                    onOpenSettings = { navigateToHook(RootNavDests.settings) },
                     fallbackMessage = terminalStatusMessage ?: stringResource(R.string.payinout_no_action_available),
                     modifier = Modifier.weight(1f)
                 )
@@ -179,21 +148,25 @@ fun StartpageView(
                     onNavigate = navigateToHook,
                     onRefreshConfig = { terminalConfigViewModel.refreshAccessData() },
                     onRestart = { restartApp(activity) },
-                )
-            }
-        }
-
-        if (isSelfServiceMode) {
-            IconButton(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .size(36.dp),
-                onClick = { navigateToHook(RootNavDests.settings) }
-            ) {
-                Icon(
-                    Icons.Filled.Settings,
-                    contentDescription = stringResource(R.string.root_item_settings)
+                    onRotateScreen = {
+                        when (activity.requestedOrientation) {
+                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                            }
+                            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE -> {
+                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            }
+                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> {
+                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+                            }
+                            ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT -> {
+                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            }
+                            else -> {
+                                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            }
+                        }
+                    },
                 )
             }
         }
@@ -242,21 +215,11 @@ private fun OperatorLanding(
     onNavigate: (NavDest) -> Unit,
     onRefreshConfig: () -> Unit,
     onRestart: () -> Unit,
+    onRotateScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val terminalName = loginState.title()
     val primaryCards = buildList {
-        if (loginState.hasConfig()) {
-            add(
-                OperatorMenuCard(
-                    icon = Icons.Filled.Person,
-                    title = stringResource(R.string.user_title),
-                    description = stringResource(R.string.operator_user_desc),
-                    onClick = { onNavigate(RootNavDests.user) },
-                )
-            )
-        }
-
         val entryItem = if (loginState.isEntryMode()) {
             StartpageItem(
                 icon = Icons.Filled.MeetingRoom,
@@ -277,7 +240,7 @@ private fun OperatorLanding(
             }
         }
 
-        if (loginState.checkAccess { user, _ -> Access.canChangeConfig(user) } || !loginState.hasConfig()) {
+        if (loginState.checkTerminalAccess(Access::canChangeConfig) || !loginState.hasConfig()) {
             add(
                 OperatorMenuCard(
                     icon = Icons.Filled.Settings,
@@ -310,6 +273,16 @@ private fun OperatorLanding(
                 )
             )
         }
+        if (loginState.hasConfig()) {
+            add(
+                OperatorMenuCard(
+                    icon = Icons.Filled.Person,
+                    title = stringResource(R.string.user_title),
+                    description = stringResource(R.string.operator_user_desc),
+                    onClick = { onNavigate(RootNavDests.user) },
+                )
+            )
+        }
         add(
             OperatorMenuCard(
                 icon = Icons.Filled.Refresh,
@@ -329,11 +302,8 @@ private fun OperatorLanding(
             stringResource(R.string.operator_console_subtitle_setup)
         },
         icon = Icons.Filled.Settings,
-        terminalLabel = when {
-            configLoading -> stringResource(R.string.operator_console_loading)
-            loginState.hasConfig() -> stringResource(R.string.operator_console_configured)
-            else -> stringResource(R.string.operator_console_no_config)
-        },
+        terminalLabel = "",
+        languageLabel = "",
         footerHint = when {
             !loginState.hasConfig() -> stringResource(R.string.operator_settings_desc)
             configLoading -> stringResource(R.string.operator_console_footer_loading)
@@ -344,6 +314,30 @@ private fun OperatorLanding(
             stringResource(R.string.operator_console_footer_ready)
         } else {
             stringResource(R.string.operator_console_footer_setup)
+        },
+        showFooter = false,
+        headerAction = {
+            IconButton(
+                onClick = onRotateScreen,
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = OperatorPalette.accent,
+                        shape = RoundedCornerShape(14.dp),
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        color = Color.White.copy(alpha = 0.18f),
+                        shape = RoundedCornerShape(14.dp),
+                    ),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ScreenRotation,
+                    contentDescription = stringResource(R.string.content_desc_rotate_screen),
+                    tint = OperatorPalette.backgroundTop,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
         },
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -478,6 +472,7 @@ private fun SelfServiceLanding(
     onCheckBalance: () -> Unit,
     onTopUp: () -> Unit,
     onShowTerminalInfo: () -> Unit,
+    onOpenSettings: () -> Unit,
     fallbackMessage: String,
     modifier: Modifier = Modifier
 ) {
@@ -510,10 +505,14 @@ private fun SelfServiceLanding(
             }
         }
         val compactLayout = profile.isSmallScreen || maxWidth < 740.dp
-        val compactFooterLayout = compactLayout || maxWidth < 900.dp
-        val headerSize = if (compactLayout) profile.headlineTitleSize else 48.sp
-        val subSize = if (compactLayout) profile.headlineSubtitleSize else 20.sp
-        val cardHeight = if (profile.isSmallScreen) 156.dp else 190.dp
+        val stackedFooterActions = maxWidth < 640.dp
+        val actionTitleSize = if (compactLayout) profile.actionCardTitleSize else 36.sp
+        val actionDescriptionSize = if (compactLayout) profile.actionCardDescriptionSize else 22.sp
+        val cardHeight = if (compactLayout) {
+            if (profile.isSmallScreen) 156.dp else 190.dp
+        } else {
+            320.dp
+        }
 
         Column(
             modifier = Modifier
@@ -524,55 +523,59 @@ private fun SelfServiceLanding(
                 ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            SelfServiceSectionHeader(
-                title = stringResource(R.string.selfservice_title),
-                subtitle = stringResource(R.string.selfservice_description),
-                titleFontSize = headerSize,
-                subtitleFontSize = subSize
-            )
-
-            if (actionCards.isEmpty()) {
-                SelfServiceEmptyStateCard(
-                    message = fallbackMessage,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else if (compactLayout || actionCards.size == 1) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    actionCards.forEach { action ->
-                        SelfServiceActionCard(
-                            icon = action.icon,
-                            title = action.title,
-                            description = action.description,
-                            ctaText = action.ctaText,
-                            onClick = action.onClick,
-                            highlighted = action.highlighted,
-                            modifier = Modifier.fillMaxWidth(),
-                            titleSize = profile.actionCardTitleSize,
-                            descriptionSize = profile.actionCardDescriptionSize,
-                            cardHeight = cardHeight
-                        )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (actionCards.isEmpty()) {
+                    SelfServiceEmptyStateCard(
+                        message = fallbackMessage,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else if (compactLayout || actionCards.size == 1) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        actionCards.forEach { action ->
+                            SelfServiceActionCard(
+                                icon = action.icon,
+                                title = action.title,
+                                description = action.description,
+                                ctaText = action.ctaText,
+                                onClick = action.onClick,
+                                highlighted = action.highlighted,
+                                modifier = Modifier.fillMaxWidth(),
+                                titleSize = actionTitleSize,
+                                descriptionSize = actionDescriptionSize,
+                                cardHeight = cardHeight
+                            )
+                        }
                     }
-                }
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    actionCards.forEach { action ->
-                        SelfServiceActionCard(
-                            icon = action.icon,
-                            title = action.title,
-                            description = action.description,
-                            ctaText = action.ctaText,
-                            onClick = action.onClick,
-                            highlighted = action.highlighted,
-                            modifier = Modifier.weight(1f),
-                            titleSize = profile.actionCardTitleSize,
-                            descriptionSize = profile.actionCardDescriptionSize,
-                            cardHeight = cardHeight
-                        )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        actionCards.forEach { action ->
+                            SelfServiceActionCard(
+                                icon = action.icon,
+                                title = action.title,
+                                description = action.description,
+                                ctaText = action.ctaText,
+                                onClick = action.onClick,
+                                highlighted = action.highlighted,
+                                modifier = Modifier.weight(1f),
+                                titleSize = actionTitleSize,
+                                descriptionSize = actionDescriptionSize,
+                                cardHeight = cardHeight
+                            )
+                        }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -580,47 +583,46 @@ private fun SelfServiceLanding(
                 shape = RoundedCornerShape(12.dp),
                 elevation = 0.dp
             ) {
-                if (compactFooterLayout) {
+                val footerModifier = Modifier
+                    .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+
+                if (stackedFooterActions) {
                     Column(
-                        modifier = Modifier
-                            .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = footerModifier,
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Text(
-                            text = stringResource(R.string.selfservice_hint_payment),
-                            color = SelfServicePalette.subtitle,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Start,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
+                        SelfServiceFooterActionButton(
+                            onClick = onShowTerminalInfo,
+                            icon = Icons.Filled.Info,
+                            text = stringResource(R.string.selfservice_action_terminal_info),
+                            modifier = Modifier.fillMaxWidth(),
                         )
-                        FooterTerminalInfoButton(onClick = onShowTerminalInfo)
+                        SelfServiceFooterActionButton(
+                            onClick = onOpenSettings,
+                            icon = Icons.Filled.Settings,
+                            text = stringResource(R.string.root_item_settings),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 } else {
                     Row(
-                        modifier = Modifier
-                            .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(12.dp))
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = footerModifier,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.selfservice_hint_payment),
-                            color = SelfServicePalette.subtitle,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Start,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                        FooterTerminalInfoButton(
+                        SelfServiceFooterActionButton(
                             onClick = onShowTerminalInfo,
+                            icon = Icons.Filled.Info,
+                            text = stringResource(R.string.selfservice_action_terminal_info),
                             modifier = Modifier.widthIn(min = 170.dp)
+                        )
+                        SelfServiceFooterActionButton(
+                            onClick = onOpenSettings,
+                            icon = Icons.Filled.Settings,
+                            text = stringResource(R.string.root_item_settings),
+                            modifier = Modifier.widthIn(min = 140.dp)
                         )
                     }
                 }
@@ -630,8 +632,10 @@ private fun SelfServiceLanding(
 }
 
 @Composable
-private fun FooterTerminalInfoButton(
+private fun SelfServiceFooterActionButton(
     onClick: () -> Unit,
+    icon: ImageVector,
+    text: String,
     modifier: Modifier = Modifier,
 ) {
     Button(
@@ -648,12 +652,12 @@ private fun FooterTerminalInfoButton(
         modifier = modifier
     ) {
         Icon(
-            imageVector = Icons.Filled.Info,
+            imageVector = icon,
             contentDescription = null,
             tint = SelfServicePalette.subtitle
         )
         Text(
-            text = stringResource(R.string.selfservice_action_terminal_info),
+            text = text,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(start = 8.dp)
         )
@@ -723,13 +727,13 @@ private fun SelfServiceActionCard(
                     color = if (highlighted) SelfServicePalette.accent else SelfServicePalette.panelBorder,
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(18.dp),
+                .padding(if (cardHeight >= 220.dp) 24.dp else 18.dp),
             verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (cardHeight >= 220.dp) 18.dp else 12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(if (cardHeight >= 220.dp) 68.dp else 52.dp)
                     .background(SelfServicePalette.accent, shape = RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -737,12 +741,12 @@ private fun SelfServiceActionCard(
                     imageVector = icon,
                     contentDescription = title,
                     tint = SelfServicePalette.backgroundTop,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(if (cardHeight >= 220.dp) 34.dp else 26.dp)
                 )
             }
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(if (cardHeight >= 220.dp) 6.dp else 2.dp)
             ) {
                 Text(
                     text = title,
@@ -765,7 +769,7 @@ private fun SelfServiceActionCard(
                 Text(
                     text = ctaText,
                     color = SelfServicePalette.accent,
-                    fontSize = if (descriptionSize <= 13.sp) 15.sp else 18.sp,
+                    fontSize = if (cardHeight >= 220.dp) 22.sp else if (descriptionSize <= 13.sp) 15.sp else 18.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -773,7 +777,7 @@ private fun SelfServiceActionCard(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = SelfServicePalette.accent,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(if (cardHeight >= 220.dp) 36.dp else 28.dp)
             )
         }
     }

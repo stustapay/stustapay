@@ -101,7 +101,18 @@ class RegistrationStateDataStoreModule {
         DataStoreFactory.create(
             serializer = RegistrationStateSerializer,
             produceFile = {
-                File("${context.cacheDir.path}/registration_state.pb")
+                registrationStateFile(context)
             }
         )
+}
+
+private fun registrationStateFile(context: Context): File {
+    val target = File(context.filesDir, "registration_state.pb")
+    val legacy = File(context.cacheDir, "registration_state.pb")
+
+    if (!target.exists() && legacy.exists()) {
+        legacy.copyTo(target, overwrite = true)
+    }
+
+    return target
 }

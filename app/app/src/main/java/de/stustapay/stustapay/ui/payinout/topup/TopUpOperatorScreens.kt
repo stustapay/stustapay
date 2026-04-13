@@ -76,6 +76,7 @@ fun OperatorTopUpSelection(
     requestActive: Boolean,
     uiLocked: Boolean,
     amount: UInt,
+    amountSelected: Boolean,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalActivity.current as Activity
@@ -169,6 +170,7 @@ fun OperatorTopUpSelection(
                     OperatorTopUpSummaryRail(
                         profile = profile,
                         amount = amount,
+                        amountSelected = amountSelected,
                         canHandleCard = canHandleCard,
                         canHandleCash = canHandleCash,
                         footerHint = footerHint,
@@ -331,6 +333,7 @@ private fun OperatorTopUpMainContent(
 private fun OperatorTopUpSummaryRail(
     profile: OperatorPaymentLayoutProfile,
     amount: UInt,
+    amountSelected: Boolean,
     canHandleCard: Boolean,
     canHandleCash: Boolean,
     footerHint: String,
@@ -387,14 +390,14 @@ private fun OperatorTopUpSummaryRail(
                     OperatorActionButton(
                         text = stringResource(R.string.topup_operator_scan_pay),
                         onClick = onCard,
-                        enabled = amount > 0u && !requestActive && !uiLocked,
+                        enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
                     )
                 }
                 if (canHandleCash) {
                     OperatorActionButton(
                         text = stringResource(R.string.topup_operator_take_cash),
                         onClick = onCash,
-                        enabled = amount > 0u && !requestActive && !uiLocked,
+                        enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
                         primary = false,
                     )
                 }
@@ -414,14 +417,14 @@ private fun OperatorTopUpSummaryRail(
                     OperatorActionButton(
                         text = stringResource(R.string.topup_operator_scan_pay),
                         onClick = onCard,
-                        enabled = amount > 0u && !requestActive && !uiLocked,
+                        enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
                     )
                 }
                 if (canHandleCash) {
                     OperatorActionButton(
                         text = stringResource(R.string.topup_operator_take_cash),
                         onClick = onCash,
-                        enabled = amount > 0u && !requestActive && !uiLocked,
+                        enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
                         primary = false,
                     )
                 }

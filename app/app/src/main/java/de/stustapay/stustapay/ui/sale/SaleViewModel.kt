@@ -2,6 +2,7 @@ package de.stustapay.stustapay.ui.sale
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.integer.BigInteger
@@ -28,7 +29,36 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.text.NumberFormat
+import java.util.Locale
 import javax.inject.Inject
+
+internal data class InsufficientFundsDetails(
+    val neededAmount: Double,
+    val availableAmount: Double,
+)
+
+private val insufficientFundsPrefix = Regex("Not enough funds available", RegexOption.IGNORE_CASE)
+private val neededAmountRegex = Regex("Needed: ([0-9.]+)")
+private val availableAmountRegex = Regex("Available: ([0-9.]+)")
+
+internal fun parseInsufficientFundsDetails(message: String): InsufficientFundsDetails? {
+    if (!insufficientFundsPrefix.containsMatchIn(message)) {
+        return null
+    }
+
+    val neededAmount = neededAmountRegex.find(message)?.groupValues?.getOrNull(1)?.toDoubleOrNull()
+    val availableAmount = availableAmountRegex.find(message)?.groupValues?.getOrNull(1)?.toDoubleOrNull()
+
+    return if (neededAmount != null && availableAmount != null) {
+        InsufficientFundsDetails(
+            neededAmount = neededAmount,
+            availableAmount = availableAmount,
+        )
+    } else {
+        null
+    }
+}
 
 
 enum class SalePage(val route: String) {
@@ -54,6 +84,21 @@ class SaleViewModel @Inject constructor(
     private val ecPaymentRepository: ECPaymentRepository,
     private val customerDisplayManager: CustomerDisplayManager,
 ) : ViewModel() {
+    private val saleAmountLocale: Locale by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            context.resources.configuration.locales[0]
+        } else {
+            @Suppress("DEPRECATION")
+            context.resources.configuration.locale
+        }
+    }
+
+    private val saleAmountNumberFormat: NumberFormat by lazy {
+        NumberFormat.getNumberInstance(saleAmountLocale).apply {
+            minimumFractionDigits = 2
+            maximumFractionDigits = 2
+        }
+    }
 
     // navigation in views
     private val _navState = MutableStateFlow(SalePage.ProductSelect)
@@ -285,40 +330,27 @@ class SaleViewModel @Inject constructor(
             }
 
             is Response.Error.Service -> {
-                // Check if the error is related to insufficient funds
-                val isInsufficientFunds = response.msg().contains("Not enough funds available", ignoreCase = true)
-                
-                if (isInsufficientFunds) {
-                    // Parse the specific error message format from the backend
-                    // Format: "Not enough funds available:\nNeeded: X\nAvailable: Y"
-                    val neededRegex = "Needed: ([0-9.]+)".toRegex()
-                    val availableRegex = "Available: ([0-9.]+)".toRegex()
-                    
-                    val neededAmount = neededRegex.find(response.msg())?.groupValues?.get(1) ?: 
-                        _saleStatus.value.getRoughTotalPrice(saleConfig.value).toString()
-                    
-                    val availableAmount = availableRegex.find(response.msg())?.groupValues?.get(1) ?: "0"
-                    
-                    // Show insufficient funds message on customer display
+                val insufficientFundsDetails = parseInsufficientFundsDetails(response.msg())
+
+                if (insufficientFundsDetails != null) {
                     customerDisplayManager.updateState(
                         CustomerDisplayState.InsufficientFunds(
-                            totalPrice = neededAmount,
-                            currentBalance = availableAmount
+                            totalPrice = insufficientFundsDetails.neededAmount.toString(),
+                            currentBalance = insufficientFundsDetails.availableAmount.toString(),
                         )
                     )
                 } else {
-                    // Reset customer display to welcome state for other errors
                     customerDisplayManager.updateState(CustomerDisplayState.Welcome)
                 }
-                
-                // maybe only clear tag for some errors.
+
                 clearScannedTag()
-                _error.update { response.msg() }
-                _status.update { response.msg() }
+                val localizedMessage = localizeSaleErrorMessage(response.msg())
+                _error.update { localizedMessage }
+                _status.update { localizedMessage }
             }
 
             is Response.Error -> {
-                _status.update { response.msg() }
+                _status.update { localizeSaleErrorMessage(response.msg()) }
             }
         }
     }
@@ -349,12 +381,13 @@ class SaleViewModel @Inject constructor(
             is Response.Error.Service -> {
                 // maybe only clear tag for some errors.
                 clearScannedTag()
-                _error.update { response.msg() }
-                _status.update { response.msg() }
+                val localizedMessage = localizeSaleErrorMessage(response.msg())
+                _error.update { localizedMessage }
+                _status.update { localizedMessage }
             }
 
             is Response.Error -> {
-                _status.update { response.msg() }
+                _status.update { localizeSaleErrorMessage(response.msg()) }
             }
         }
     }
@@ -385,13 +418,30 @@ class SaleViewModel @Inject constructor(
             is Response.Error.Service -> {
                 // maybe only clear tag for some errors.
                 clearScannedTag()
-                _error.update { response.msg() }
-                _status.update { response.msg() }
+                val localizedMessage = localizeSaleErrorMessage(response.msg())
+                _error.update { localizedMessage }
+                _status.update { localizedMessage }
             }
 
             is Response.Error -> {
-                _status.update { response.msg() }
+                _status.update { localizeSaleErrorMessage(response.msg()) }
             }
+        }
+    }
+
+    private fun localizeSaleErrorMessage(message: String): String {
+        val insufficientFundsDetails = parseInsufficientFundsDetails(message) ?: return message
+
+        return context.getString(
+            R.string.sale_status_insufficient_funds,
+            formatSaleAmountForLocale(insufficientFundsDetails.neededAmount),
+            formatSaleAmountForLocale(insufficientFundsDetails.availableAmount),
+        )
+    }
+
+    private fun formatSaleAmountForLocale(value: Double): String {
+        return synchronized(saleAmountNumberFormat) {
+            saleAmountNumberFormat.format(value)
         }
     }
 

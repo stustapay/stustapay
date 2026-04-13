@@ -86,6 +86,24 @@ class TerminalLoginStateTest {
         assertFalse(state.checkUserAccess(Access::canViewCustomerOrders))
     }
 
+    @Test
+    fun terminalAccessUsesTerminalPrivilegesForSettings() {
+        val state = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders))),
+            terminal = TerminalConfigState.Success(
+                terminalConfig(
+                    selfService = false,
+                    allowTopUp = true,
+                    userPrivileges = listOf(Privilege.node_administration),
+                    tillUserPrivileges = listOf(Privilege.can_book_orders),
+                )
+            ),
+        )
+
+        assertFalse(state.checkUserAccess(Access::canChangeConfig))
+        assertTrue(state.checkTerminalAccess(Access::canChangeConfig))
+    }
+
     private fun currentUser(privileges: List<Privilege>): CurrentUser {
         return CurrentUser(
             nodeId = 1.toBigInteger(),

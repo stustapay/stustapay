@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
@@ -47,6 +49,8 @@ import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.window.Dialog
 
 @Composable
 fun TopUpSelection(
@@ -69,8 +73,19 @@ fun TopUpSelection(
     }
 
     if (errorMessage != null) {
-        ErrorDialog(onDismiss = { scope.launch { viewModel.dismissError() } }) {
-            Text(errorMessage ?: "", style = MaterialTheme.typography.h4)
+        if (topUpConfig.hasOnlyTopUpPrivilege()) {
+            SelfServiceTopUpErrorDialog(
+                message = errorMessage.orEmpty(),
+                onDismiss = {
+                    scope.launch {
+                        viewModel.dismissError()
+                    }
+                }
+            )
+        } else {
+            ErrorDialog(onDismiss = { scope.launch { viewModel.dismissError() } }) {
+                Text(errorMessage ?: "", style = MaterialTheme.typography.h4)
+            }
         }
     }
 
@@ -134,7 +149,57 @@ fun TopUpSelection(
             requestActive = requestActive,
             uiLocked = uiLocked,
             amount = topUpState.currentAmount,
+            amountSelected = topUpState.amountSelected,
         )
+    }
+}
+
+@Composable
+private fun SelfServiceTopUpErrorDialog(
+    message: String,
+    onDismiss: () -> Unit,
+) {
+    val profile = rememberSelfServiceDeviceProfile()
+
+    Dialog(onDismissRequest = onDismiss) {
+        SelfServicePanel(
+            modifier = Modifier.widthIn(min = 320.dp, max = 560.dp),
+            borderColor = SelfServicePalette.error,
+            backgroundColor = SelfServicePalette.errorPanel
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ErrorOutline,
+                    contentDescription = null,
+                    tint = SelfServicePalette.error,
+                    modifier = Modifier.size(if (profile.isSmallScreen) 34.dp else 42.dp)
+                )
+                Text(
+                    text = stringResource(R.string.topup_error_title),
+                    color = SelfServicePalette.errorMuted,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = if (profile.isSmallScreen) 22.sp else 28.sp,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = message,
+                    color = SelfServicePalette.errorMuted,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = if (profile.isSmallScreen) 16.sp else 18.sp,
+                    textAlign = TextAlign.Center
+                )
+                SelfServiceActionButton(
+                    text = stringResource(R.string.back),
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    primary = false,
+                    fontSize = profile.buttonTextSize
+                )
+            }
+        }
     }
 }
 
@@ -153,7 +218,6 @@ private fun SelfServiceTopUpContent(
     bottomPadding: androidx.compose.ui.unit.Dp
 ) {
     val profile = rememberSelfServiceDeviceProfile()
-    val amountEuro = amount.toDouble() / 100
     val customAmountDialog = rememberDialogDisplayState()
 
     TopUpAmountDialog(
@@ -212,62 +276,24 @@ private fun SelfServiceTopUpContent(
                 )
             }
 
-            SelfServicePanel(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = SelfServicePalette.panelMuted
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = stringResource(R.string.topup),
-                        color = SelfServicePalette.title,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = if (profile.isSmallScreen) 15.sp else 18.sp
-                    )
-                    Text(
-                        text = "${stringResource(R.string.topup)}: €${"%.2f".format(amountEuro)}",
-                        color = SelfServicePalette.accent,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = if (profile.isSmallScreen) 15.sp else 18.sp
-                    )
-                    Text(
-                        text = if (requestActive) {
-                            stringResource(R.string.topup_please_wait)
-                        } else {
-                            stringResource(R.string.topup_press_scan_pay)
-                        },
-                        color = SelfServicePalette.subtitle,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = if (profile.isSmallScreen) 12.sp else 14.sp
-                    )
-                    if (status.isNotBlank() && status != stringResource(R.string.operator_status_ready)) {
-                        Text(
-                            text = status,
-                            color = SelfServicePalette.subtitle,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = if (profile.isSmallScreen) 11.sp else 13.sp
-                        )
-                    }
-                }
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SelfServiceActionButton(
-                    text = stringResource(R.string.selfservice_scan_pay),
-                    onClick = onScanPay,
-                    modifier = Modifier.weight(1f),
-                    enabled = amount > 0u && !requestActive && !uiLocked,
+                    text = stringResource(R.string.topup_back_to_start),
+                    onClick = { onBack?.invoke() },
+                    modifier = Modifier.weight(0.85f),
+                    primary = false,
+                    enabled = onBack != null && !requestActive && !uiLocked,
                     fontSize = profile.buttonTextSize
                 )
                 SelfServiceActionButton(
-                    text = stringResource(R.string.topup_back_to_start),
-                    onClick = { onBack?.invoke() },
-                    modifier = Modifier.weight(1f),
-                    primary = false,
-                    enabled = onBack != null && !requestActive && !uiLocked,
+                    text = stringResource(R.string.selfservice_scan_pay),
+                    onClick = onScanPay,
+                    modifier = Modifier.weight(1.15f),
+                    enabled = amount > 0u && !requestActive && !uiLocked,
                     fontSize = profile.buttonTextSize
                 )
             }
@@ -511,7 +537,7 @@ private fun SelfServiceQuickAmountChip(
     modifier: Modifier = Modifier,
     isSmallScreen: Boolean
 ) {
-    val chipHeight = if (isSmallScreen) 64.dp else 68.dp
+    val chipHeight = if (isSmallScreen) 72.dp else 88.dp
     val borderColor = if (selected) SelfServicePalette.accent else SelfServicePalette.title.copy(alpha = 0.32f)
     Card(
         modifier = modifier.height(chipHeight),
@@ -536,7 +562,7 @@ private fun SelfServiceQuickAmountChip(
                 text = "€$amountEuro",
                 color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
                 fontWeight = FontWeight.Bold,
-                fontSize = if (isSmallScreen) 16.sp else 18.sp,
+                fontSize = if (isSmallScreen) 20.sp else 24.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 6.dp)
             )

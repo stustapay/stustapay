@@ -30,6 +30,12 @@ sealed interface SaleHistoryFilter {
     data class CustomerOrders(val customerTagUid: BigInteger) : SaleHistoryFilter
 }
 
+internal fun filterVisibleHistoryOrders(orders: List<Order>): List<Order> {
+    return orders.filterNot {
+        it.orderType == OrderType.money_transfer || it.orderType == OrderType.money_transfer_imbalance
+    }
+}
+
 @HiltViewModel
 class SaleHistoryViewModel @Inject constructor(
     private val saleRepository: SaleRepository,
@@ -95,7 +101,7 @@ class SaleHistoryViewModel @Inject constructor(
         when (val sales = saleRepository.listSales()) {
             is Response.OK -> {
                 _sales.update {
-                    sortOrders(sales.data)
+                    sortOrders(filterVisibleHistoryOrders(sales.data))
                 }
                 _status.update { SaleHistoryStatus.Done }
             }
@@ -117,7 +123,7 @@ class SaleHistoryViewModel @Inject constructor(
                     } else {
                         sales.data
                     }
-                    sortOrders(filteredOrders)
+                    sortOrders(filterVisibleHistoryOrders(filteredOrders))
                 }
                 _historyFilter.update { SaleHistoryFilter.CustomerOrders(customerTagUid) }
                 _status.update { SaleHistoryStatus.Done }
