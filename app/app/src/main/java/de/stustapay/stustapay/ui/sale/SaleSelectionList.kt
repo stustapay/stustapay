@@ -40,6 +40,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 private data class SaleSelectionEntry(
+    /** Stable key for LazyColumn/LazyVerticalGrid item identity. */
+    val stableKey: Any,
     val caption: String,
     val type: SaleSelectionItemType,
 )
@@ -77,6 +79,7 @@ fun SaleSelectionList(
         if (vouchers != null && (saleStatus.checkedSale?.oldVoucherBalance?.intValue() ?: 0) > 0) {
             add(
                 SaleSelectionEntry(
+                    stableKey = "sale_selection_vouchers",
                     caption = stringResource(R.string.voucher),
                     type = SaleSelectionItemType.Vouchers(
                         amount = vouchers,
@@ -102,6 +105,7 @@ fun SaleSelectionList(
 
             add(
                 SaleSelectionEntry(
+                    stableKey = button.id,
                     caption = saleCaption,
                     type = when (val price = button.price) {
                         is SaleItemPrice.FixedPrice -> {
@@ -159,7 +163,7 @@ fun SaleSelectionList(
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
             ) {
-                items(entries) { entry ->
+                items(entries, key = { it.stableKey }) { entry ->
                     SaleSelectionItem(
                         caption = entry.caption,
                         type = entry.type,
@@ -172,7 +176,7 @@ fun SaleSelectionList(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
             ) {
-                items(entries) { entry ->
+                items(entries, key = { it.stableKey }) { entry ->
                     SaleSelectionItem(
                         caption = entry.caption,
                         type = entry.type,
@@ -210,7 +214,7 @@ private fun SaleAmountSelectionDialog(
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)
             ) {
                 Text(
-                    text = "Set custom price",
+                    text = stringResource(R.string.sale_custom_price_dialog_title),
                     color = OperatorPalette.title,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,

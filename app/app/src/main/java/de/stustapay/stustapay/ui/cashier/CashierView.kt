@@ -68,15 +68,14 @@ fun CashierView(
         leaveView()
     }
 
-    LaunchedEffect(null) {
+    LaunchedEffect(Unit) {
         viewModel.reset()
     }
 
     NavScaffold(navigateBack = leaveView,
         title = { Text(stringResource(R.string.management_title)) }) {
-        Box(modifier = Modifier.padding(it)) {
-            Scaffold(content = {
-                Box(modifier = Modifier.padding(it)) {
+            Scaffold(content = { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
                     if (uiState.nav is CashierNavState.Scan) {
                         NfcScanDialog(state = uiState.scanState,
                             onDismiss = leaveView,
@@ -552,6 +551,5 @@ fun CashierView(
                     }
                 }
             })
-        }
     }
 }

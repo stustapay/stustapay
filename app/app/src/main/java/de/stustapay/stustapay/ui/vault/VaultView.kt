@@ -56,15 +56,14 @@ fun VaultView(
         leaveView()
     }
 
-    LaunchedEffect(null) {
+    LaunchedEffect(Unit) {
         viewModel.initialReset()
     }
 
     NavScaffold(navigateBack = leaveView,
         title = { Text(stringResource(R.string.management_vault_title)) }) {
-        Box(modifier = Modifier.padding(it)) {
-            Scaffold(content = {
-                Box(modifier = Modifier.padding(it)) {
+            Scaffold(content = { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
                     if (uiState.nav is VaultNavState.Scan) {
                         NfcScanDialog(state = uiState.scanState,
                             onDismiss = leaveView,
@@ -347,6 +346,5 @@ fun VaultView(
                     }
                 }
             })
-        }
     }
 }

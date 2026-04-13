@@ -64,7 +64,7 @@ fun RewardView(
     NavScaffold(
         title = { Text(config.title().title) },
         navigateBack = leaveView,
-    ) { _ ->
+    ) {
         Scaffold(
             content = { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {

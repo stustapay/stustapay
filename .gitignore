@@ -27,6 +27,10 @@ app/chip_debug/release/
 /test
 /build
 
+# macOS / design exports
+.DS_Store
+/android-current-screens.pen
+
 # ides
 .idea
 *~

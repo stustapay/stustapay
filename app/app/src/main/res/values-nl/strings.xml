@@ -372,6 +372,7 @@
     <string name="sale_receipt_qr">Receipt QR</string>
     <string name="sale_action_add_symbol">+</string>
     <string name="sale_set_price">Set price</string>
+    <string name="sale_custom_price_dialog_title">Aangepaste prijs instellen</string>
     <string name="sale_edit_price">Edit price</string>
     <string name="sale_clear_price">Clear</string>
     <string name="sale_voucher_singular">voucher</string>

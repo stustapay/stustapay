@@ -1,7 +1,6 @@
 package de.stustapay.chip_debug.ui.nav
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
@@ -19,7 +18,7 @@ fun NavScaffold(
     title: @Composable () -> Unit,
     state: ScaffoldState = rememberScaffoldState(),
     bottomBar: @Composable () -> Unit = {},
-    content: @Composable (PaddingValues) -> Unit,
+    content: @Composable () -> Unit,
 ) {
     Scaffold(
         scaffoldState = state,
@@ -38,7 +37,7 @@ fun NavScaffold(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                content(innerPadding)
+                content()
             }
         },
         

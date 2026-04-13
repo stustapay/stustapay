@@ -141,8 +141,11 @@ fun AccountDetails(
                         )
                     }
 
+                    val ordersNewestFirst = remember(customer.orders) {
+                        customer.orders.asReversed()
+                    }
                     LazyColumn {
-                        items(customer.orders.reversed()) { order ->
+                        items(ordersNewestFirst, key = { it.uuid }) { order ->
                             OrderListEntry(order, onClick = {
                                 detailOrder = order
                             })
@@ -167,6 +170,9 @@ fun AccountDetails(
         val customer = uiState.customer
         when (customer) {
             is CustomerStatusRequestState.DoneDetails -> {
+                val ordersNewestFirst = remember(customer.orders) {
+                    customer.orders.asReversed()
+                }
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -216,7 +222,7 @@ fun AccountDetails(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            items(customer.orders.reversed()) { order ->
+                            items(ordersNewestFirst, key = { it.uuid }) { order ->
                                 OperatorOrderListEntry(
                                     order = order,
                                     onClick = { detailOrder = order }

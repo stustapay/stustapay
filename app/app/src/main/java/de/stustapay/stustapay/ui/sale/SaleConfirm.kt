@@ -170,7 +170,17 @@ private fun ColumnScope.SaleConfirmMainContent(
                         )
                     }
                 }
-                items(checkedSale.lineItems) { lineItem ->
+                items(
+                    checkedSale.lineItems,
+                    key = { lineItem ->
+                        listOf(
+                            lineItem.product.id,
+                            lineItem.taxRateId,
+                            lineItem.productPrice,
+                            lineItem.quantity,
+                        )
+                    },
+                ) { lineItem ->
                     SaleConfirmLineItemCard(lineItem = lineItem)
                 }
             }

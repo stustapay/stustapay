@@ -80,9 +80,8 @@ fun SwapView(
     NavScaffold(
         title = { Text(stringResource(R.string.customer_swap)) }, navigateBack = leaveView
     ) {
-        Box(modifier = Modifier.padding(it)) {
-            Scaffold(content = {
-                Box(modifier = Modifier.padding(it)) {
+            Scaffold(content = { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
                     when (uiState.nav) {
                         is SwapNavState.Root, SwapNavState.ScanNew, SwapNavState.ScanOld -> {
                             Column(
@@ -194,6 +193,5 @@ fun SwapView(
                     }
                 }
             })
-        }
     }
 }

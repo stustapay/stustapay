@@ -382,6 +382,7 @@
     <string name="sale_receipt_qr">Bon-QR</string>
     <string name="sale_action_add_symbol">+</string>
     <string name="sale_set_price">Preis setzen</string>
+    <string name="sale_custom_price_dialog_title">Freien Preis festlegen</string>
     <string name="sale_edit_price">Preis ändern</string>
     <string name="sale_clear_price">Löschen</string>
     <string name="sale_voucher_singular">Gutschein</string>

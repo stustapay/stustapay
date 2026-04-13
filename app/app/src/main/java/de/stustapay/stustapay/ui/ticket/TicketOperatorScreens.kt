@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -118,7 +119,7 @@ fun OperatorTicketScan(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        items(ticketStatus.scans) { scannedTicket ->
+                        items(ticketStatus.scans, key = { listOf(it.tag.uid, it.ticket.id) }) { scannedTicket ->
                             OperatorTicketScanItem(scannedTicket)
                         }
                     }
@@ -227,7 +228,12 @@ fun OperatorTicketConfirm(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            items(checkedSale.lineItems) { lineItem ->
+                            itemsIndexed(
+                                checkedSale.lineItems,
+                                key = { index, lineItem ->
+                                    "${lineItem.product.id}-${lineItem.taxRateId}-${lineItem.productPrice}-${lineItem.quantity}-$index"
+                                },
+                            ) { _, lineItem ->
                                 ProductConfirmLineItem(lineItem = lineItem)
                             }
                         }
