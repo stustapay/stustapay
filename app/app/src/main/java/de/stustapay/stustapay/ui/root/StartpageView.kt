@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
@@ -77,12 +76,11 @@ import de.stustapay.stustapay.ui.nav.NavDest
 @Composable
 fun StartpageView(
     navigateTo: (NavDest) -> Unit = {},
-    viewModel: StartpageViewModel = hiltViewModel(),
+    loginState: TerminalLoginState,
+    configLoading: Boolean,
+    terminalStatusMessage: String?,
     terminalConfigViewModel: TerminalConfigViewModel = hiltViewModel(),
 ) {
-    val loginState by viewModel.uiState.collectAsStateWithLifecycle()
-    val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
-    val terminalStatusMessage by viewModel.terminalStatusMessage.collectAsStateWithLifecycle()
     val activity = LocalActivity.current!!
     val selfServiceAccess = loginState.selfServiceAccess()
     val isSelfServiceMode = loginState.isSelfServiceTerminal() && loginState.hasConfig() && !configLoading
@@ -219,78 +217,86 @@ private fun OperatorLanding(
     modifier: Modifier = Modifier,
 ) {
     val terminalName = loginState.title()
-    val primaryCards = buildList {
-        val entryItem = if (loginState.isEntryMode()) {
-            StartpageItem(
-                icon = Icons.Filled.MeetingRoom,
-                label = R.string.root_item_entry,
-                navDestination = RootNavDests.entry,
-            )
-        } else {
-            null
-        }
-
-        if (entryItem != null) {
-            add(entryItem.toOperatorCard(onNavigate))
-        }
-
-        startpageItems.forEach { item ->
-            if (loginState.checkAccess(item.canAccess)) {
-                add(item.toOperatorCard(onNavigate))
-            }
-        }
-
-        if (loginState.checkTerminalAccess(Access::canChangeConfig) || !loginState.hasConfig()) {
-            add(
-                OperatorMenuCard(
-                    icon = Icons.Filled.Settings,
-                    title = stringResource(R.string.root_item_settings),
-                    description = stringResource(R.string.operator_settings_desc),
-                    onClick = { onNavigate(RootNavDests.settings) },
+    val operatorStrings = rememberOperatorMenuStrings()
+    val primaryCards = remember(
+        loginState,
+        configLoading,
+        terminalStatusMessage,
+        operatorStrings,
+        onNavigate,
+        onRefreshConfig,
+        onRestart,
+    ) {
+        buildList {
+            if (loginState.isEntryMode()) {
+                add(
+                    OperatorMenuCard(
+                        icon = Icons.Filled.MeetingRoom,
+                        title = operatorStrings.entryTitle,
+                        description = operatorStrings.descriptionByRoute.getValue(RootNavDests.entry.route),
+                        onClick = { onNavigate(RootNavDests.entry) },
+                    )
                 )
-            )
-        }
+            }
 
-        if (!loginState.hasConfig() || configLoading || !terminalStatusMessage.isNullOrBlank()) {
+            startpageItems.forEach { item ->
+                if (loginState.checkAccess(item.canAccess)) {
+                    add(item.toOperatorCard(operatorStrings, onNavigate))
+                }
+            }
+
+            if (loginState.checkTerminalAccess(Access::canChangeConfig) || !loginState.hasConfig()) {
+                add(
+                    OperatorMenuCard(
+                        icon = Icons.Filled.Settings,
+                        title = operatorStrings.settingsTitle,
+                        description = operatorStrings.settingsDescription,
+                        onClick = { onNavigate(RootNavDests.settings) },
+                    )
+                )
+            }
+
+            if (!loginState.hasConfig() || configLoading || !terminalStatusMessage.isNullOrBlank()) {
+                add(
+                    OperatorMenuCard(
+                        icon = Icons.Filled.Refresh,
+                        title = operatorStrings.refreshTitle,
+                        description = operatorStrings.refreshDescription,
+                        emphasized = true,
+                        onClick = onRefreshConfig,
+                    )
+                )
+            }
+
+            if (loginState.checkAccess { user, _ -> Access.canHackTheSystem(user) }) {
+                add(
+                    OperatorMenuCard(
+                        icon = Icons.Filled.DeveloperMode,
+                        title = operatorStrings.developmentTitle,
+                        description = operatorStrings.developmentDescription,
+                        onClick = { onNavigate(RootNavDests.development) },
+                    )
+                )
+            }
+            if (loginState.hasConfig()) {
+                add(
+                    OperatorMenuCard(
+                        icon = Icons.Filled.Person,
+                        title = operatorStrings.userTitle,
+                        description = operatorStrings.userDescription,
+                        onClick = { onNavigate(RootNavDests.user) },
+                    )
+                )
+            }
             add(
                 OperatorMenuCard(
                     icon = Icons.Filled.Refresh,
-                    title = stringResource(R.string.operator_refresh_setup_title),
-                    description = stringResource(R.string.operator_refresh_setup_desc),
-                    emphasized = true,
-                    onClick = onRefreshConfig,
+                    title = operatorStrings.restartTitle,
+                    description = operatorStrings.restartDescription,
+                    onClick = onRestart,
                 )
             )
         }
-
-        if (loginState.checkAccess { user, _ -> Access.canHackTheSystem(user) }) {
-            add(
-                OperatorMenuCard(
-                    icon = Icons.Filled.DeveloperMode,
-                    title = stringResource(R.string.root_item_development),
-                    description = stringResource(R.string.operator_development_desc),
-                    onClick = { onNavigate(RootNavDests.development) },
-                )
-            )
-        }
-        if (loginState.hasConfig()) {
-            add(
-                OperatorMenuCard(
-                    icon = Icons.Filled.Person,
-                    title = stringResource(R.string.user_title),
-                    description = stringResource(R.string.operator_user_desc),
-                    onClick = { onNavigate(RootNavDests.user) },
-                )
-            )
-        }
-        add(
-            OperatorMenuCard(
-                icon = Icons.Filled.Refresh,
-                title = stringResource(R.string.root_item_restart_app),
-                description = stringResource(R.string.operator_restart_desc),
-                onClick = onRestart,
-            )
-        )
     }
 
     OperatorScaffold(
@@ -346,7 +352,7 @@ private fun OperatorLanding(
                 maxWidth >= 860.dp -> 2
                 else -> 1
             }
-            val cardRows = primaryCards.chunked(columns)
+            val cardRows = remember(primaryCards, columns) { primaryCards.chunked(columns) }
             val scrollState = rememberScrollState()
 
             Column(
@@ -430,13 +436,32 @@ private fun OperatorLanding(
     }
 }
 
-@Composable
-private fun StartpageItem.toOperatorCard(onNavigate: (NavDest) -> Unit): OperatorMenuCard {
+private data class OperatorMenuStrings(
+    val entryTitle: String,
+    val settingsTitle: String,
+    val settingsDescription: String,
+    val refreshTitle: String,
+    val refreshDescription: String,
+    val developmentTitle: String,
+    val developmentDescription: String,
+    val userTitle: String,
+    val userDescription: String,
+    val restartTitle: String,
+    val restartDescription: String,
+    val labelByResource: Map<Int, String>,
+    val descriptionByRoute: Map<String, String>,
+    val defaultDescription: String,
+)
+
+private fun StartpageItem.toOperatorCard(
+    strings: OperatorMenuStrings,
+    onNavigate: (NavDest) -> Unit
+): OperatorMenuCard {
     val destination = navDestination
     return OperatorMenuCard(
         icon = icon,
-        title = stringResource(label),
-        description = operatorCardDescription(destination?.route),
+        title = strings.labelByResource.getValue(label),
+        description = destination?.route?.let(strings.descriptionByRoute::get) ?: strings.defaultDescription,
         emphasized = destination == RootNavDests.sale || destination == RootNavDests.topup,
         onClick = {
             if (destination != null) {
@@ -447,21 +472,133 @@ private fun StartpageItem.toOperatorCard(onNavigate: (NavDest) -> Unit): Operato
 }
 
 @Composable
-private fun operatorCardDescription(route: String?): String {
-    return when (route) {
-        RootNavDests.entry.route -> stringResource(R.string.operator_workflow_entry_desc)
-        RootNavDests.sale.route -> stringResource(R.string.operator_workflow_sale_desc)
-        RootNavDests.topup.route -> stringResource(R.string.operator_workflow_topup_desc)
-        RootNavDests.postpayment.route -> stringResource(R.string.operator_workflow_postpayment_desc)
-        RootNavDests.ticket.route -> stringResource(R.string.operator_workflow_ticket_desc)
-        RootNavDests.rewards.route -> stringResource(R.string.operator_workflow_rewards_desc)
-        RootNavDests.history.route -> stringResource(R.string.operator_workflow_history_desc)
-        RootNavDests.status.route -> stringResource(R.string.operator_workflow_status_desc)
-        RootNavDests.swap.route -> stringResource(R.string.operator_workflow_swap_desc)
-        RootNavDests.cashier.route -> stringResource(R.string.operator_workflow_cashier_desc)
-        RootNavDests.vault.route -> stringResource(R.string.operator_workflow_vault_desc)
-        RootNavDests.stats.route -> stringResource(R.string.operator_workflow_stats_desc)
-        else -> stringResource(R.string.operator_workflow_default_desc)
+private fun rememberOperatorMenuStrings(): OperatorMenuStrings {
+    val entryTitle = stringResource(R.string.root_item_entry)
+    val settingsTitle = stringResource(R.string.root_item_settings)
+    val settingsDescription = stringResource(R.string.operator_settings_desc)
+    val refreshTitle = stringResource(R.string.operator_refresh_setup_title)
+    val refreshDescription = stringResource(R.string.operator_refresh_setup_desc)
+    val developmentTitle = stringResource(R.string.root_item_development)
+    val developmentDescription = stringResource(R.string.operator_development_desc)
+    val userTitle = stringResource(R.string.user_title)
+    val userDescription = stringResource(R.string.operator_user_desc)
+    val restartTitle = stringResource(R.string.root_item_restart_app)
+    val restartDescription = stringResource(R.string.operator_restart_desc)
+    val defaultDescription = stringResource(R.string.operator_workflow_default_desc)
+    val saleTitle = stringResource(R.string.root_item_sale)
+    val topUpTitle = stringResource(R.string.root_item_topup)
+    val postPaymentTitle = stringResource(R.string.root_item_post_payment)
+    val ticketTitle = stringResource(R.string.root_item_ticket)
+    val rewardsTitle = stringResource(R.string.root_item_rewards)
+    val historyTitle = stringResource(R.string.history_title)
+    val customerTitle = stringResource(R.string.customer_title)
+    val swapTitle = stringResource(R.string.customer_swap)
+    val managementTitle = stringResource(R.string.management_title)
+    val vaultTitle = stringResource(R.string.management_vault_title)
+    val statsTitle = stringResource(R.string.root_item_stats)
+    val entryDescription = stringResource(R.string.operator_workflow_entry_desc)
+    val saleDescription = stringResource(R.string.operator_workflow_sale_desc)
+    val topUpDescription = stringResource(R.string.operator_workflow_topup_desc)
+    val postPaymentDescription = stringResource(R.string.operator_workflow_postpayment_desc)
+    val ticketDescription = stringResource(R.string.operator_workflow_ticket_desc)
+    val rewardsDescription = stringResource(R.string.operator_workflow_rewards_desc)
+    val historyDescription = stringResource(R.string.operator_workflow_history_desc)
+    val statusDescription = stringResource(R.string.operator_workflow_status_desc)
+    val swapDescription = stringResource(R.string.operator_workflow_swap_desc)
+    val cashierDescription = stringResource(R.string.operator_workflow_cashier_desc)
+    val vaultDescription = stringResource(R.string.operator_workflow_vault_desc)
+    val statsDescription = stringResource(R.string.operator_workflow_stats_desc)
+
+    val labelByResource = remember(
+        saleTitle,
+        topUpTitle,
+        postPaymentTitle,
+        ticketTitle,
+        rewardsTitle,
+        historyTitle,
+        customerTitle,
+        swapTitle,
+        managementTitle,
+        vaultTitle,
+        statsTitle,
+    ) {
+        mapOf(
+            R.string.root_item_sale to saleTitle,
+            R.string.root_item_topup to topUpTitle,
+            R.string.root_item_post_payment to postPaymentTitle,
+            R.string.root_item_ticket to ticketTitle,
+            R.string.root_item_rewards to rewardsTitle,
+            R.string.history_title to historyTitle,
+            R.string.customer_title to customerTitle,
+            R.string.customer_swap to swapTitle,
+            R.string.management_title to managementTitle,
+            R.string.management_vault_title to vaultTitle,
+            R.string.root_item_stats to statsTitle,
+        )
+    }
+
+    val descriptionByRoute = remember(
+        entryDescription,
+        saleDescription,
+        topUpDescription,
+        postPaymentDescription,
+        ticketDescription,
+        rewardsDescription,
+        historyDescription,
+        statusDescription,
+        swapDescription,
+        cashierDescription,
+        vaultDescription,
+        statsDescription,
+    ) {
+        mapOf(
+            RootNavDests.entry.route to entryDescription,
+            RootNavDests.sale.route to saleDescription,
+            RootNavDests.topup.route to topUpDescription,
+            RootNavDests.postpayment.route to postPaymentDescription,
+            RootNavDests.ticket.route to ticketDescription,
+            RootNavDests.rewards.route to rewardsDescription,
+            RootNavDests.history.route to historyDescription,
+            RootNavDests.status.route to statusDescription,
+            RootNavDests.swap.route to swapDescription,
+            RootNavDests.cashier.route to cashierDescription,
+            RootNavDests.vault.route to vaultDescription,
+            RootNavDests.stats.route to statsDescription,
+        )
+    }
+
+    return remember(
+        entryTitle,
+        settingsTitle,
+        settingsDescription,
+        refreshTitle,
+        refreshDescription,
+        developmentTitle,
+        developmentDescription,
+        userTitle,
+        userDescription,
+        restartTitle,
+        restartDescription,
+        labelByResource,
+        descriptionByRoute,
+        defaultDescription,
+    ) {
+        OperatorMenuStrings(
+            entryTitle = entryTitle,
+            settingsTitle = settingsTitle,
+            settingsDescription = settingsDescription,
+            refreshTitle = refreshTitle,
+            refreshDescription = refreshDescription,
+            developmentTitle = developmentTitle,
+            developmentDescription = developmentDescription,
+            userTitle = userTitle,
+            userDescription = userDescription,
+            restartTitle = restartTitle,
+            restartDescription = restartDescription,
+            labelByResource = labelByResource,
+            descriptionByRoute = descriptionByRoute,
+            defaultDescription = defaultDescription,
+        )
     }
 }
 
@@ -477,31 +614,50 @@ private fun SelfServiceLanding(
     modifier: Modifier = Modifier
 ) {
     val profile = rememberSelfServiceDeviceProfile()
+    val checkBalanceTitle = stringResource(R.string.selfservice_check_balance)
+    val checkBalanceDescription = stringResource(R.string.selfservice_check_balance_hint)
+    val topUpTitle = stringResource(R.string.selfservice_topup)
+    val topUpDescription = stringResource(R.string.selfservice_topup_hint)
+    val openAction = stringResource(R.string.selfservice_action_open)
+    val startAction = stringResource(R.string.selfservice_action_start)
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val actionCards = buildList {
-            if (canCheckBalance) {
-                add(
-                    SelfServiceActionCardState(
-                        icon = Icons.Outlined.AccountBalanceWallet,
-                        title = stringResource(R.string.selfservice_check_balance),
-                        description = stringResource(R.string.selfservice_check_balance_hint),
-                        ctaText = stringResource(R.string.selfservice_action_open),
-                        onClick = onCheckBalance,
-                        highlighted = false,
+        val actionCards = remember(
+            canCheckBalance,
+            canTopUp,
+            checkBalanceTitle,
+            checkBalanceDescription,
+            topUpTitle,
+            topUpDescription,
+            openAction,
+            startAction,
+            onCheckBalance,
+            onTopUp,
+        ) {
+            buildList {
+                if (canCheckBalance) {
+                    add(
+                        SelfServiceActionCardState(
+                            icon = Icons.Outlined.AccountBalanceWallet,
+                            title = checkBalanceTitle,
+                            description = checkBalanceDescription,
+                            ctaText = openAction,
+                            onClick = onCheckBalance,
+                            highlighted = false,
+                        )
                     )
-                )
-            }
-            if (canTopUp) {
-                add(
-                    SelfServiceActionCardState(
-                        icon = Icons.Outlined.AddCircle,
-                        title = stringResource(R.string.selfservice_topup),
-                        description = stringResource(R.string.selfservice_topup_hint),
-                        ctaText = stringResource(R.string.selfservice_action_start),
-                        onClick = onTopUp,
-                        highlighted = true,
+                }
+                if (canTopUp) {
+                    add(
+                        SelfServiceActionCardState(
+                            icon = Icons.Outlined.AddCircle,
+                            title = topUpTitle,
+                            description = topUpDescription,
+                            ctaText = startAction,
+                            onClick = onTopUp,
+                            highlighted = true,
+                        )
                     )
-                )
+                }
             }
         }
         val compactLayout = profile.isSmallScreen || maxWidth < 740.dp

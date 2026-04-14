@@ -3,6 +3,7 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
     id 'com.android.application'
+    id 'androidx.baselineprofile'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'org.jetbrains.kotlin.plugin.serialization'
@@ -42,6 +43,13 @@ android {
     }
 
     buildTypes {
+        benchmark {
+            initWith(release)
+            matchingFallbacks = ['release']
+            signingConfig signingConfigs.debug
+            debuggable false
+            profileable true
+        }
         release {
             minifyEnabled true
             shrinkResources true
@@ -80,6 +88,8 @@ android {
 }
 
 dependencies {
+    baselineProfile project(":baselineprofile")
+
     // Headwind MDM mobile API (AAR must be placed in app/libs/)
     // Download latest hmdm-<version>.aar from Headwind MDM and place it as libs/hmdm-1.1.7.aar
     implementation files('libs/hmdm-1.1.7.aar')
@@ -106,6 +116,7 @@ dependencies {
     implementation "io.ktor:ktor-client-content-negotiation:$ktor_version"
     implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
     implementation "io.ktor:ktor-client-logging:$ktor_version"
+    implementation "androidx.profileinstaller:profileinstaller:$profileinstaller_version"
     implementation 'androidx.databinding:databinding-runtime:8.8.2'
     implementation "androidx.datastore:datastore:1.1.3"
     implementation 'com.sumup:merchant-api:1.4.0'
@@ -132,6 +143,10 @@ dependencies {
 composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
     stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
+}
+
+baselineProfile {
+    automaticGenerationDuringBuild = false
 }
 
 protobuf {

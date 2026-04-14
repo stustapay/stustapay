@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.test'
+    id 'androidx.baselineprofile'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'de.stustapay.stustapay.baselineprofile'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 28
+        targetSdk 35
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        testInstrumentationRunnerArguments['androidx.benchmark.suppressErrors'] = 'EMULATOR'
+    }
+
+    targetProjectPath = ':app'
+
+    experimentalProperties['android.experimental.self-instrumenting'] = true
+
+    compileOptions {
+        sourceCompatibility = targetJavaVersion
+        targetCompatibility = targetJavaVersion
+    }
+
+    kotlinOptions {
+        jvmTarget = targetJavaVersion.toString()
+    }
+}
+
+baselineProfile {
+    useConnectedDevices = true
+}
+
+dependencies {
+    implementation "androidx.benchmark:benchmark-macro-junit4:$benchmark_version"
+    implementation "androidx.test.ext:junit:1.2.1"
+    implementation "androidx.test.uiautomator:uiautomator:2.3.0"
+}

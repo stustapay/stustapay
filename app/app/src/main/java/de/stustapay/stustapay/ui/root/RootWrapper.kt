@@ -1,6 +1,4 @@
 package de.stustapay.stustapay.ui.root
-
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,10 +17,8 @@ fun RootWrapper(
 @Composable
 fun RootWrapperContent(infallibleVisible: Boolean, content: @Composable () -> Unit) {
     if (infallibleVisible) {
-        Log.e("render", "render infallible")
         InfallibleError()
     } else {
-        Log.e("render", "render content")
         content()
     }
 }

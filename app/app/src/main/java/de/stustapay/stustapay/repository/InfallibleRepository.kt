@@ -68,6 +68,8 @@ class InfallibleRepository @Inject constructor(
     val active = _active.asStateFlow()
 
     private val informUser = MutableStateFlow(false)
+    @Volatile
+    private var launched = false
 
     val state: Flow<InfallibleState> =
         combine(
@@ -113,6 +115,10 @@ class InfallibleRepository @Inject constructor(
     }
 
     fun launch() {
+        if (launched) {
+            return
+        }
+        launched = true
         runner = scope.launch {
 
             Log.i("infallible", "launching request collector")

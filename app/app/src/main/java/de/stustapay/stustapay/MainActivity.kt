@@ -27,6 +27,11 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), SysUiController {
+    companion object {
+        const val EXTRA_BENCHMARK_START_ROUTE =
+            "de.stustapay.stustapay.extra.BENCHMARK_START_ROUTE"
+    }
+
     @Inject
     lateinit var activityCallback: ActivityCallback
 
@@ -60,15 +65,15 @@ class MainActivity : ComponentActivity(), SysUiController {
 
         // things that need the activity
         nfcHandler.onCreate(this, mapOf())
-        sumUp.init(activityCallback)
-
-        infallible.launch()
-        
-        // Initialize the customer display if a secondary screen is available
-        customerDisplayManager.initializeCustomerDisplay()
+        sumUp.attachActivityCallback(activityCallback)
 
         setContent {
             Main(this)
+        }
+
+        window.decorView.post {
+            infallible.launch()
+            customerDisplayManager.initializeCustomerDisplay()
         }
     }
 

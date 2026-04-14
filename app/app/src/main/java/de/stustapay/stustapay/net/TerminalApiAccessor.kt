@@ -36,7 +36,7 @@ object TerminalApiAccessorModule {
 open class TerminalApiAccessor(
     registrationRepository: RegistrationRepositoryInner
 ) : Closeable {
-    private val inner = TerminalApiAccessorInner(registrationRepository, retry = true)
+    private val inner = TerminalApiAccessorInner(registrationRepository.registrationState, retry = true)
 
     /**
      * Executes an API call and handles failures appropriately

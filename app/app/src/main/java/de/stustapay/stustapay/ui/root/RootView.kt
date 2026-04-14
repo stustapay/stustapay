@@ -1,14 +1,18 @@
 package de.stustapay.stustapay.ui.root
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.stustapay.libssp.util.SysUiController
+import de.stustapay.stustapay.MainActivity
 import de.stustapay.stustapay.ui.account.AccountView
 import de.stustapay.stustapay.ui.account.AccountViewModel
 import de.stustapay.stustapay.ui.cashier.CashierView
@@ -32,6 +36,10 @@ import de.stustapay.stustapay.ui.vault.VaultView
 @Composable
 fun RootView(uictrl: SysUiController? = null) {
     val navController = rememberNavController()
+    val activity = LocalActivity.current
+    val startDestination = remember(activity?.intent) {
+        benchmarkStartDestination(activity)
+    }
 
     DisposableEffect(navController, uictrl) {
         if (uictrl == null) {
@@ -47,18 +55,19 @@ fun RootView(uictrl: SysUiController? = null) {
 
     NavHost(
         navController = navController,
-        startDestination = RootNavDests.startpage.route,
+        startDestination = startDestination,
     ) {
         composable(RootNavDests.startpage.route) {
             val viewModel: StartpageViewModel = hiltViewModel()
             val terminalConfigViewModel: TerminalConfigViewModel = hiltViewModel()
-            val loginState = viewModel.uiState.collectAsStateWithLifecycle()
-            val configLoading = viewModel.configLoading.collectAsStateWithLifecycle()
+            val loginState by viewModel.uiState.collectAsStateWithLifecycle()
+            val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
+            val terminalStatusMessage by viewModel.terminalStatusMessage.collectAsStateWithLifecycle()
             DynamicSystemUiEffect(
                 uictrl = uictrl,
-                hidden = loginState.value.isSelfServiceTerminal() &&
-                    loginState.value.hasConfig() &&
-                    !configLoading.value,
+                hidden = loginState.isSelfServiceTerminal() &&
+                    loginState.hasConfig() &&
+                    !configLoading,
             )
 
             StartpageView(
@@ -76,7 +85,9 @@ fun RootView(uictrl: SysUiController? = null) {
                     )
                 }
             },
-                viewModel = viewModel,
+                loginState = loginState,
+                configLoading = configLoading,
+                terminalStatusMessage = terminalStatusMessage,
                 terminalConfigViewModel = terminalConfigViewModel,
             )
         }
@@ -152,3 +163,19 @@ private fun DynamicSystemUiEffect(
         }
     }
 }
+
+private fun benchmarkStartDestination(activity: android.app.Activity?): String {
+    val requestedRoute = activity?.intent?.getStringExtra(MainActivity.EXTRA_BENCHMARK_START_ROUTE)
+    return if (requestedRoute in benchmarkStartRoutes) {
+        requestedRoute ?: RootNavDests.startpage.route
+    } else {
+        RootNavDests.startpage.route
+    }
+}
+
+private val benchmarkStartRoutes = setOf(
+    RootNavDests.startpage.route,
+    RootNavDests.sale.route,
+    RootNavDests.topup.route,
+    RootNavDests.history.route,
+)

@@ -5,14 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -52,13 +52,18 @@ import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
+private data class SaleHistoryListEntry(
+    val order: Order,
+    val bookedAtLabel: String,
+    val totalPriceLabel: String,
+)
+
 @Composable
 fun SaleHistoryView(
     viewModel: SaleHistoryViewModel = hiltViewModel(),
     leaveView: () -> Unit
 ) {
     val sales by viewModel.sales.collectAsStateWithLifecycle()
-    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     var detailOrder by remember { mutableStateOf<Order?>(null) }
     var cancelOrder by remember { mutableStateOf(false) }
@@ -69,6 +74,21 @@ fun SaleHistoryView(
     val historyFilter by viewModel.historyFilter.collectAsStateWithLifecycle()
     val terminalLoginState by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
+    val timeZone = remember { TimeZone.getDefault().toZoneId() }
+    val listTimeFormatter = remember { DateTimeFormatter.ofPattern("E HH:mm:ss") }
+    val detailDateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+    val detailTimeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm:ss") }
+    val historyEntries = remember(sales, timeZone, listTimeFormatter) {
+        sales.map { sale ->
+            SaleHistoryListEntry(
+                order = sale,
+                bookedAtLabel = sale.bookedAt.toZonedDateTime()
+                    .withZoneSameInstant(timeZone)
+                    .format(listTimeFormatter),
+                totalPriceLabel = formatCurrencyValue(sale.totalPrice),
+            )
+        }
+    }
 
     BackHandler {
         leaveView()
@@ -145,27 +165,25 @@ fun SaleHistoryView(
             }
 
             OperatorPanel(backgroundColor = OperatorPalette.panelMuted) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(scrollState),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (sales.isEmpty() && status is SaleHistoryStatus.Done) {
-                        Text(
-                            text = stringResource(R.string.history_empty),
-                            color = OperatorPalette.subtitle,
-                            fontSize = 16.sp,
-                        )
-                    } else {
-                        for (sale in sales) {
+                if (sales.isEmpty() && status is SaleHistoryStatus.Done) {
+                    Text(
+                        text = stringResource(R.string.history_empty),
+                        color = OperatorPalette.subtitle,
+                        fontSize = 16.sp,
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        items(historyEntries, key = { it.order.uuid }) { entry ->
                             OperatorPanel(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         viewModel.idleStatus()
-                                        detailOrder = sale
+                                        detailOrder = entry.order
                                     },
                                 backgroundColor = OperatorPalette.panel,
                             ) {
@@ -175,14 +193,12 @@ fun SaleHistoryView(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = sale.bookedAt.toZonedDateTime()
-                                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                            .format(DateTimeFormatter.ofPattern("E HH:mm:ss")),
+                                        text = entry.bookedAtLabel,
                                         color = OperatorPalette.title,
                                         fontSize = 18.sp,
                                     )
                                     Text(
-                                        text = formatCurrencyValue(sale.totalPrice),
+                                        text = entry.totalPriceLabel,
                                         color = OperatorPalette.title,
                                         fontSize = 18.sp,
                                     )
@@ -224,15 +240,15 @@ fun SaleHistoryView(
                         ) {
                             Text(
                                 text = sale.bookedAt.toZonedDateTime()
-                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                                    .withZoneSameInstant(timeZone)
+                                    .format(detailDateFormatter),
                                 fontSize = 20.sp,
                                 color = OperatorPalette.title,
                             )
                             Text(
                                 text = sale.bookedAt.toZonedDateTime()
-                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                    .format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+                                    .withZoneSameInstant(timeZone)
+                                    .format(detailTimeFormatter),
                                 fontSize = 20.sp,
                                 color = OperatorPalette.subtitle,
                             )
