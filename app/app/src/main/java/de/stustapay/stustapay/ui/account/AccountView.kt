@@ -2,6 +2,8 @@ package de.stustapay.stustapay.ui.account
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,14 +35,27 @@ fun AccountView(
     val useSelfServiceUi = isSelfService.value && canSelfServiceBalance.value
 
     BackHandler {
+        viewModel.resetCustomerDisplay()
         leaveView()
+    }
+
+    DisposableEffect(viewModel) {
+        onDispose {
+            viewModel.resetCustomerDisplay()
+        }
     }
 
     NavHost(navController = nav, startDestination = CustomerStatusNavDests.scan.route) {
         composable(CustomerStatusNavDests.scan.route) {
+            LaunchedEffect(Unit) {
+                viewModel.showScanPromptOnCustomerDisplay()
+            }
             AccountScan(
                 isSelfService = useSelfServiceUi,
-                onBack = leaveView,
+                onBack = {
+                    viewModel.resetCustomerDisplay()
+                    leaveView()
+                },
                 onScan = {
                     scope.launch {
                         viewModel.fetchAccount(it)
@@ -55,7 +70,10 @@ fun AccountView(
                 viewModel = viewModel,
                 navigateTo = { dest -> nav.navigateTo(dest.route) },
                 isSelfService = useSelfServiceUi,
-                onFinished = leaveView
+                onFinished = {
+                    viewModel.resetCustomerDisplay()
+                    leaveView()
+                }
             )
         }
 
@@ -64,7 +82,10 @@ fun AccountView(
                 viewModel = viewModel,
                 navigateTo = { dest -> nav.navigateTo(dest.route) },
                 isSelfService = useSelfServiceUi,
-                onFinished = leaveView
+                onFinished = {
+                    viewModel.resetCustomerDisplay()
+                    leaveView()
+                }
             )
         }
     }

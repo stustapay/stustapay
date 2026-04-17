@@ -34,17 +34,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 import de.stustapay.stustapay.locale.AppLanguage
 import de.stustapay.stustapay.locale.AppLocaleManager
 
 object SelfServicePalette {
-    val backgroundTop = Color(0xFF0A1322)
-    val backgroundBottom = Color(0xFF101D34)
-    val panel = Color(0xFF182A46)
-    val panelMuted = Color(0xFF12213A)
-    val panelBorder = Color(0xFF2C3D5A)
-    val title = Color(0xFFF4F8FF)
-    val subtitle = Color(0xFFB4C2D8)
+    val backgroundTop = TfPayBluePalette.backgroundTop
+    val backgroundBottom = TfPayBluePalette.backgroundBottom
+    val panel = TfPayBluePalette.panel
+    val panelMuted = TfPayBluePalette.panelMuted
+    val panelBorder = TfPayBluePalette.panelBorder
+    val interactivePanel = TfPayBluePalette.interactivePanel
+    val title = TfPayBluePalette.title
+    val subtitle = TfPayBluePalette.subtitle
     val accent = Color(0xFFFFB547)
     val success = Color(0xFF1FC892)
     val successMuted = Color(0xFFD8FFF2)

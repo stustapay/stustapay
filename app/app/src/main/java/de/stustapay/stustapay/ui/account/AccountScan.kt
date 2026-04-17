@@ -49,6 +49,7 @@ import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceHeadline
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
 
@@ -218,14 +219,14 @@ private fun PencilCheckBalancePanelContent(
         Box(
             modifier = Modifier
                 .size(outerSize)
-                .background(Color(0xFF203659), CircleShape)
+                .background(TfPayBluePalette.elevated, CircleShape)
                 .padding(midPadding),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF2A4A78), CircleShape)
+                    .background(TfPayBluePalette.elevatedStrong, CircleShape)
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {

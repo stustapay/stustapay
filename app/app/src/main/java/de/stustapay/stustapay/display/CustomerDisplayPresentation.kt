@@ -78,6 +78,9 @@ class CustomerDisplayPresentation(
                 is CustomerDisplayState.ScanChip -> {
                     showScanChipView(rootView)
                 }
+                is CustomerDisplayState.AccountBalance -> {
+                    showAccountBalanceView(state, rootView)
+                }
                 is CustomerDisplayState.SaleCompleted -> {
                     showSaleCompletedView(state, rootView)
                 }
@@ -105,9 +108,9 @@ class CustomerDisplayPresentation(
         
         // Main container
         val container = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
@@ -196,96 +199,249 @@ class CustomerDisplayPresentation(
      * Shows a styled scan chip view
      */
     private fun showScanChipView(rootView: FrameLayout?) {
-        // Main container with a subtle gradient
         val container = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
-            setPadding(50, 50, 50, 50)
+            setPadding(40, 32, 40, 32)
             background = android.graphics.drawable.GradientDrawable().apply {
                 orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
                 colors = intArrayOf(
-                    android.graphics.Color.parseColor("#FFFFFF"),
-                    android.graphics.Color.parseColor("#F0F8FF")
+                    android.graphics.Color.parseColor("#F4F8FF"),
+                    android.graphics.Color.parseColor("#DFEAFF")
                 )
             }
         }
-        
-        // Animation indicator (pulsing circle)
-        val scanImage = android.widget.FrameLayout(context).apply {
+
+        val badge = android.widget.TextView(context).apply {
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 50)
-                gravity = android.view.Gravity.CENTER
+                setMargins(0, 0, 0, 24)
             }
-            
-            // Create circle background
             background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.OVAL
-                setColor(android.graphics.Color.parseColor("#4CAF50"))
-                setSize(200, 200)
+                setColor(android.graphics.Color.parseColor("#2D5FD3"))
+                cornerRadius = 18f
             }
-            
-            // Start animation
-            startAnimation(android.view.animation.AlphaAnimation(0.4f, 1.0f).apply {
-                duration = 1000
-                repeatMode = android.view.animation.Animation.REVERSE
-                repeatCount = android.view.animation.Animation.INFINITE
-                interpolator = android.view.animation.LinearInterpolator()
-            })
-        }
-        
-        // NFC icon
-        val nfcIcon = android.widget.TextView(context).apply {
-            text = "📱"  // Use emoji for NFC/phone
-            textSize = 40f
+            text = text(R.string.customer_title)
+            textSize = 24f
+            setTextColor(android.graphics.Color.WHITE)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
             gravity = android.view.Gravity.CENTER
-            layoutParams = android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-            )
+            setPadding(24, 12, 24, 12)
         }
-        
-        // Title text
+
         val titleText = android.widget.TextView(context).apply {
             text = text(R.string.customer_display_scan_title)
-            textSize = 36f
-            setTextColor(android.graphics.Color.parseColor("#333333"))
+            textSize = 34f
+            setTextColor(android.graphics.Color.parseColor("#18386F"))
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             gravity = android.view.Gravity.CENTER
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 30)
+                setMargins(0, 0, 0, 18)
             }
         }
-        
-        // Instructions text
+
         val instructionsText = android.widget.TextView(context).apply {
             text = text(R.string.customer_display_scan_instruction)
-            textSize = 30f
-            setTextColor(android.graphics.Color.parseColor("#666666"))
+            textSize = 24f
+            setTextColor(android.graphics.Color.parseColor("#5A6B85"))
             gravity = android.view.Gravity.CENTER
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 28)
+            }
+        }
+
+        val scanPanel = android.widget.LinearLayout(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(40, 0, 40, 0)
+            }
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#182238"))
+                cornerRadius = 28f
+                setStroke(3, android.graphics.Color.parseColor("#314A7A"))
+            }
+            setPadding(48, 42, 48, 42)
+        }
+
+        val scanIcon = android.widget.TextView(context).apply {
+            text = "◎"
+            textSize = 68f
+            setTextColor(android.graphics.Color.parseColor("#FFB74D"))
+            gravity = android.view.Gravity.CENTER
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 12)
+            }
+        }
+
+        val scanHint = android.widget.TextView(context).apply {
+            text = text(R.string.customer_display_scan_instruction)
+            textSize = 22f
+            setTextColor(android.graphics.Color.WHITE)
+            gravity = android.view.Gravity.CENTER
+        }
+
+        scanPanel.addView(scanIcon)
+        scanPanel.addView(scanHint)
+
+        container.addView(badge)
+        container.addView(titleText)
+        container.addView(instructionsText)
+        container.addView(scanPanel)
+        rootView?.addView(container)
+    }
+
+    private fun formatAmount(amount: Double): String {
+        val locale = context.resources.configuration.locales[0]
+        return String.format(locale, "%.2f €", amount)
+    }
+
+    /**
+     * Shows the current account balance after a successful balance check.
+     */
+    private fun showAccountBalanceView(state: CustomerDisplayState.AccountBalance, rootView: FrameLayout?) {
+        val container = android.widget.LinearLayout(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            setPadding(40, 40, 40, 40)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
+                colors = intArrayOf(
+                    android.graphics.Color.parseColor("#F3F8FF"),
+                    android.graphics.Color.parseColor("#D9E7FF")
+                )
+            }
+        }
+
+        val titleBadge = android.widget.TextView(context).apply {
+            text = text(R.string.customer_title)
+            textSize = 26f
+            setTextColor(android.graphics.Color.WHITE)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            gravity = android.view.Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#2D5FD3"))
+                cornerRadius = 18f
+            }
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 28)
+                gravity = android.view.Gravity.CENTER_HORIZONTAL
+            }
+            setPadding(28, 16, 28, 16)
+        }
+
+        val balanceCard = android.widget.LinearLayout(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.WHITE)
+                cornerRadius = 28f
+                setStroke(3, android.graphics.Color.parseColor("#C5D7FF"))
+            }
+            setPadding(36, 36, 36, 36)
+        }
+
+        val nameText = android.widget.TextView(context).apply {
+            text = state.accountName
+            textSize = 24f
+            setTextColor(android.graphics.Color.parseColor("#23407A"))
+            gravity = android.view.Gravity.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            visibility = if (state.accountName.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 18)
+            }
+        }
+
+        val labelText = android.widget.TextView(context).apply {
+            text = text(R.string.customer_display_current_balance)
+            textSize = 24f
+            setTextColor(android.graphics.Color.parseColor("#5A6B85"))
+            gravity = android.view.Gravity.CENTER
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 14)
+            }
+        }
+
+        val balanceText = android.widget.TextView(context).apply {
+            text = formatAmount(state.balance)
+            textSize = 54f
+            setTextColor(android.graphics.Color.parseColor("#102B63"))
+            gravity = android.view.Gravity.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        
-        // Add elements to containers
-        scanImage.addView(nfcIcon)
-        
-        container.addView(titleText)
-        container.addView(scanImage)
-        container.addView(instructionsText)
-        
-        // Add container to root view
+
+        balanceCard.addView(nameText)
+        balanceCard.addView(labelText)
+        balanceCard.addView(balanceText)
+
+        state.voucherCount?.let { voucherCount ->
+            val voucherText = android.widget.TextView(context).apply {
+                text = "${text(R.string.customer_vouchers)}: $voucherCount"
+                textSize = 22f
+                setTextColor(android.graphics.Color.parseColor("#2B5E1A"))
+                gravity = android.view.Gravity.CENTER
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(android.graphics.Color.parseColor("#E8F6DF"))
+                    cornerRadius = 18f
+                }
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 24, 0, 0)
+                    gravity = android.view.Gravity.CENTER_HORIZONTAL
+                }
+                setPadding(24, 14, 24, 14)
+            }
+            container.addView(titleBadge)
+            container.addView(balanceCard)
+            container.addView(voucherText)
+        } ?: run {
+            container.addView(titleBadge)
+            container.addView(balanceCard)
+        }
+
         rootView?.addView(container)
     }
 
@@ -299,11 +455,12 @@ class CustomerDisplayPresentation(
         
         // Create a box with red border for the error message
         val errorBox = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 setMargins(50, 50, 50, 50)
+                gravity = android.view.Gravity.CENTER
             }
             orientation = android.widget.LinearLayout.VERTICAL
             background = android.graphics.drawable.GradientDrawable().apply {
@@ -422,9 +579,9 @@ class CustomerDisplayPresentation(
     private fun showSaleCompletedView(state: CustomerDisplayState.SaleCompleted, rootView: FrameLayout?) {
         // Main container with a green success gradient
         val container = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
@@ -613,9 +770,9 @@ class CustomerDisplayPresentation(
     private fun showTopUpCompletedView(state: CustomerDisplayState.TopUpCompleted, rootView: FrameLayout?) {
         // Main container with a blue success gradient
         val container = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
@@ -802,9 +959,9 @@ class CustomerDisplayPresentation(
     private fun showValidatingSaleView(state: CustomerDisplayState.ValidatingSale, rootView: FrameLayout?) {
         // Main container with a light blue background
         val container = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_HORIZONTAL

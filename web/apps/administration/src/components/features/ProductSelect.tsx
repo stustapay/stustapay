@@ -3,9 +3,11 @@ import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
 
-export type ProductSelectProps = Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
+export type ProductSelectProps = Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple"> & {
+  includeInherited?: boolean;
+};
 
-export const ProductSelect: React.FC<ProductSelectProps> = ({ ...props }) => {
+export const ProductSelect: React.FC<ProductSelectProps> = ({ includeInherited = false, ...props }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { products } = useListProductsQuery(
@@ -15,7 +17,7 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({ ...props }) => {
         ...rest,
         products: data
           ? selectProductAll(data)
-              .filter((p) => p.node_id === currentNode.id)
+              .filter((p) => includeInherited || p.node_id === currentNode.id)
           : [],
       }),
     }

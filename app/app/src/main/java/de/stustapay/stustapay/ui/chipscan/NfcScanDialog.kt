@@ -52,6 +52,7 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
+import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 import de.stustapay.stustapay.ui.hilt.DeviceConfigEntryPoint
 
 @Composable
@@ -539,14 +540,14 @@ private fun PencilScanRadar(
     Box(
         modifier = Modifier
             .size(centerSize)
-            .background(Color(0xFF203659), CircleShape)
+            .background(TfPayBluePalette.elevated, CircleShape)
             .padding(outerPadding),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF2A4A78), CircleShape)
+                .background(TfPayBluePalette.elevatedStrong, CircleShape)
                 .padding(midPadding),
             contentAlignment = Alignment.Center
         ) {
@@ -585,7 +586,7 @@ private fun PencilScanStepper(isSmallScreen: Boolean) {
             val isActive = stepNumber == 2
             val background = when {
                 isDone -> Color(0xFF16342A)
-                isActive -> Color(0xFF203659)
+                isActive -> TfPayBluePalette.elevated
                 else -> SelfServicePalette.panelMuted
             }
             val textColor = when {

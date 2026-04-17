@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,11 +43,13 @@ object SettingsNavDest {
 fun SettingsRootView(
     navController: NavHostController,
     navigateBack: () -> Unit,
+    onOpenUserManagement: () -> Unit,
 ) {
     OperatorScaffold(
         title = stringResource(R.string.root_item_settings),
         subtitle = stringResource(R.string.settings_subtitle),
-        icon = Icons.Filled.Settings,
+        icon = Icons.Filled.Edit,
+        iconPainter = painterResource(id = R.drawable.tfpay_logo_mark),
         terminalLabel = stringResource(R.string.settings_terminal_label),
         footerHint = stringResource(R.string.settings_footer_hint),
         footerSection = stringResource(R.string.settings_footer_section),
@@ -105,6 +109,14 @@ fun SettingsRootView(
                 }
 
                 OperatorActionCard(
+                    title = stringResource(R.string.user_title),
+                    description = stringResource(R.string.operator_user_desc),
+                    icon = Icons.Filled.Person,
+                    onClick = onOpenUserManagement,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                OperatorActionCard(
                     title = stringResource(R.string.settings_about_app),
                     description = stringResource(R.string.settings_about_app_desc),
                     icon = Icons.Filled.Info,
@@ -119,7 +131,10 @@ fun SettingsRootView(
 
 @Preview
 @Composable
-fun SettingsView(leaveView: () -> Unit = {}) {
+fun SettingsView(
+    leaveView: () -> Unit = {},
+    onOpenUserManagement: () -> Unit = {},
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -131,6 +146,7 @@ fun SettingsView(leaveView: () -> Unit = {}) {
             SettingsRootView(
                 navController = navController,
                 navigateBack = leaveView,
+                onOpenUserManagement = onOpenUserManagement,
             )
         }
         composable(SettingsNavDest.connection.route) {

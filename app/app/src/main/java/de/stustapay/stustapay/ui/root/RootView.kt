@@ -124,7 +124,10 @@ fun RootView(uictrl: SysUiController? = null) {
             UserView(leaveView = { navController.navigateUp() })
         }
         composable(RootNavDests.settings.route) {
-            SettingsView(leaveView = { navController.navigateUp() })
+            SettingsView(
+                leaveView = { navController.navigateUp() },
+                onOpenUserManagement = { navController.navigateDestination(RootNavDests.user) },
+            )
         }
         composable(RootNavDests.development.route) {
             DebugView(leaveView = { navController.navigateUp() })

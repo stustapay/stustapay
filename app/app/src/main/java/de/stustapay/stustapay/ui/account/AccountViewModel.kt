@@ -8,6 +8,8 @@ import de.stustapay.api.models.Order
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.mapState
+import de.stustapay.stustapay.display.CustomerDisplayManager
+import de.stustapay.stustapay.display.CustomerDisplayState
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.repository.CustomerRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -43,6 +45,7 @@ sealed interface CustomerStatusRequestState {
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
+    private val customerDisplayManager: CustomerDisplayManager,
     userRepository: UserRepository,
     terminalConfigRepository: TerminalConfigRepository,
 ) : ViewModel() {
@@ -96,15 +99,25 @@ class AccountViewModel @Inject constructor(
         _requestState.update { CustomerStatusRequestState.Idle }
     }
 
+    fun showScanPromptOnCustomerDisplay() {
+        customerDisplayManager.updateState(CustomerDisplayState.ScanChip)
+    }
+
+    fun resetCustomerDisplay() {
+        customerDisplayManager.updateState(CustomerDisplayState.Welcome)
+    }
+
     suspend fun fetchAccount(tag: NfcTag) {
         _requestState.update { CustomerStatusRequestState.Fetching }
         when (val customer = customerRepository.getCustomer(tag.uid)) {
             is Response.OK -> {
                 _requestState.update { CustomerStatusRequestState.Done(customer.data) }
+                customerDisplayManager.updateState(customerDisplayStateForAccount(customer.data))
             }
 
             is Response.Error -> {
                 _requestState.update { CustomerStatusRequestState.Failed(customer.msg()) }
+                showScanPromptOnCustomerDisplay()
             }
         }
     }
@@ -132,4 +145,12 @@ class AccountViewModel @Inject constructor(
             }
         }
     }
+}
+
+internal fun customerDisplayStateForAccount(account: Account): CustomerDisplayState.AccountBalance {
+    return CustomerDisplayState.AccountBalance(
+        accountName = account.name?.takeIf { it.isNotBlank() },
+        balance = account.balance,
+        voucherCount = account.vouchers.toString().takeUnless { it == "0" },
+    )
 }

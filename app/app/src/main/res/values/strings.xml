@@ -285,6 +285,9 @@
     <string name="book_order">Book ✓</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Review \u0026 pay</string>
+    <string name="sale_empty_title">No sale items available</string>
+    <string name="sale_empty_desc">This terminal currently has no products or vouchers assigned for sale.</string>
+    <string name="sale_empty_hint">Return to the menu and review the till setup before taking payment.</string>
     <string name="pay_no_payment_method_configured">No payment method configured</string>
     <string name="nfc_scan_description">Hold your NFC wristband or NFC card to the reader.\nNot your credit card!</string>
     <string name="content_desc_rotate_screen">Rotate screen</string>
@@ -320,6 +323,7 @@
     <string name="qr_scan_status">Status:</string>
     <string name="tag_textfield_placeholder">Tag UID in Hex</string>
     <string name="payinout_no_action_available">No action available</string>
+    <string name="payinout_unavailable_desc">This terminal currently has no top-up or payout actions enabled. Return to the menu and review the terminal configuration.</string>
     <string name="payinout_tab_topup">Top up</string>
     <string name="payinout_tab_payout">Pay out</string>
     <string name="postpayment_guidance">Choose card or cash on the right and complete the settlement with one clear action.</string>
@@ -334,6 +338,9 @@
     <string name="operator_refresh_setup_desc">Retry terminal configuration and login sync with the backend.</string>
     <string name="operator_development_desc">Network, QR, and SumUp diagnostic tools.</string>
     <string name="operator_restart_desc">Restart the app and reload terminal state.</string>
+    <string name="operator_restart_confirm_title">Restart app now?</string>
+    <string name="operator_restart_confirm_desc">Active workflows will be interrupted and the terminal state will reload.</string>
+    <string name="operator_restart_confirm_action">Restart now</string>
     <string name="operator_console_title">Operator Console</string>
     <string name="operator_console_subtitle_ready">All available workflows for this terminal.</string>
     <string name="operator_console_subtitle_setup">Configure the terminal to unlock the full operator workflow.</string>
@@ -410,9 +417,9 @@
     <string name="ticket_status_order_announced">Ticket order announced!</string>
     <string name="settings_subtitle">Terminal configuration entry point with connection, reader, and about routes.</string>
     <string name="settings_terminal_label">Local Config</string>
-    <string name="settings_footer_hint">This screen routes into server registration, EC reader maintenance, and app information.</string>
+    <string name="settings_footer_hint">This screen routes into server registration, user management, EC reader maintenance, and app information.</string>
     <string name="settings_footer_section">Config</string>
-    <string name="settings_footer_status">3 routes</string>
+    <string name="settings_footer_status">4 routes</string>
     <string name="settings_core_connection">Core Connection</string>
     <string name="settings_core_connection_desc">Register or deregister the terminal and update the backend endpoint association.</string>
     <string name="settings_ec_reader">EC Card Reader</string>

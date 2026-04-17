@@ -41,8 +41,8 @@ from stustapay.core.service.common.decorators import (
     requires_user,
 )
 from sftkit.error import AccessDenied, NotFound
+from stustapay.core.service.till.common import assign_cash_register_to_active_user_till
 from stustapay.core.service.till.till import (
-    assign_cash_register_to_till_if_available,
     assign_till_to_terminal,
     logout_user_from_terminal,
     remove_terminal_from_till,
@@ -497,6 +497,7 @@ class TerminalService(Service[Config]):
 
         till_config = None
         if current_terminal.till is not None:
+            till = current_terminal.till
             # If the till doesn't have an active cash register, but the user does,
             # try to assign it now to fix the "no cash register" issue
             user_cash_register_id = None
@@ -516,22 +517,21 @@ class TerminalService(Service[Config]):
                     )
                     
                     if cash_register_exists:
-                        # Check if till already has an active cash register
                         till_cash_register = await conn.fetchval(
                             "select active_cash_register_id from till where id = $1", 
                             current_terminal.till.id
                         )
-                        
-                        # If till doesn't have a cash register, assign the user's
-                        if till_cash_register is None:
-                            await conn.execute(
-                                "update till set active_cash_register_id = $1 where id = $2", 
-                                user_cash_register_id, 
-                                current_terminal.till.id
+
+                        if till_cash_register != user_cash_register_id:
+                            await assign_cash_register_to_active_user_till(
+                                conn=conn,
+                                user_id=current_terminal.active_user_id,
+                                cash_register_id=user_cash_register_id,
                             )
-            
+
+            till = await conn.fetch_one(Till, "select * from till_with_cash_register where id = $1", current_terminal.till.id)
             till_config = await self._get_terminal_till_config(
-                conn=conn, terminal_id=current_terminal.id, till=current_terminal.till, event_node=event_node
+                conn=conn, terminal_id=current_terminal.id, till=till, event_node=event_node
             )
         available_roles = await self._get_assignable_roles_for_user_at_node(
             conn=conn, current_terminal=current_terminal
@@ -708,8 +708,10 @@ class TerminalService(Service[Config]):
             )
             
             if cash_register_exists:
-                await assign_cash_register_to_till_if_available(
-                    conn=conn, till_id=current_terminal.till.id, cash_register_id=cash_register_id
+                await assign_cash_register_to_active_user_till(
+                    conn=conn,
+                    user_id=user_id,
+                    cash_register_id=cash_register_id,
                 )
 
         # Directly query for the user information instead of using get_current_user
@@ -930,8 +932,10 @@ class TerminalService(Service[Config]):
         
         # If there's a till and cash register, assign it
         if till is not None and cash_register_id is not None:
-            await assign_cash_register_to_till_if_available(
-                conn=conn, till_id=till["id"], cash_register_id=cash_register_id
+            await assign_cash_register_to_active_user_till(
+                conn=conn,
+                user_id=user_id,
+                cash_register_id=cash_register_id,
             )
         
 

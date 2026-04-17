@@ -8,6 +8,11 @@ import de.stustapay.api.models.CompletedSale
 sealed class CustomerDisplayState {
     data object Welcome : CustomerDisplayState()
     data object ScanChip : CustomerDisplayState()
+    data class AccountBalance(
+        val accountName: String?,
+        val balance: Double,
+        val voucherCount: String? = null,
+    ) : CustomerDisplayState()
     data class SaleCompleted(val sale: CompletedSale) : CustomerDisplayState()
     data class TopUpCompleted(val newBalance: String, val topUpAmount: String) : CustomerDisplayState()
     data class ValidatingSale(

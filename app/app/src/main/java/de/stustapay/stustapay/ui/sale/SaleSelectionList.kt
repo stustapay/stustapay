@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.sale
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,6 +34,7 @@ import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import de.stustapay.stustapay.ui.common.operator.OperatorPrimaryButton
@@ -154,6 +157,36 @@ fun SaleSelectionList(
             .padding(horizontal = 2.dp)
             .fillMaxSize()
     ) {
+        if (entries.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                OperatorInfoCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 560.dp),
+                    title = stringResource(R.string.sale_empty_title),
+                ) {
+                    Text(
+                        text = stringResource(R.string.sale_empty_desc),
+                        color = OperatorPalette.subtitle,
+                        fontSize = 18.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        text = stringResource(R.string.sale_empty_hint),
+                        color = OperatorPalette.title,
+                        fontSize = 16.sp,
+                        lineHeight = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+            return@BoxWithConstraints
+        }
+
         val cardLayout = maxWidth >= 760.dp
 
         if (cardLayout) {

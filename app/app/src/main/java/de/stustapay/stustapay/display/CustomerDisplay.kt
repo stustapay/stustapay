@@ -51,8 +51,9 @@ class CustomerDisplayManager @Inject constructor(
         try {
             dismissPresentation()
 
+            val displayContext = context.createDisplayContext(display)
             val customerPresentation = CustomerDisplayPresentation(
-                AppLocaleManager.wrapContext(context),
+                AppLocaleManager.wrapContext(displayContext),
                 display,
                 ::resolveEventNameForDisplay,
             )

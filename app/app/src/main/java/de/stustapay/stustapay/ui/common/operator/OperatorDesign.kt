@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.common.operator
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,9 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,21 +34,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 
 object OperatorPalette {
-    val backgroundTop = SelfServicePalette.backgroundTop
-    val backgroundBottom = SelfServicePalette.backgroundBottom
-    val panel = Color(0xFF18253D)
-    val panelMuted = Color(0xFF12213A)
-    val panelBorder = SelfServicePalette.panelBorder
-    val title = SelfServicePalette.title
-    val subtitle = Color(0xFFA9B7CC)
+    val backgroundTop = TfPayBluePalette.backgroundTop
+    val backgroundBottom = TfPayBluePalette.backgroundBottom
+    val panel = TfPayBluePalette.panel
+    val panelMuted = TfPayBluePalette.panelMuted
+    val panelBorder = TfPayBluePalette.panelBorder
+    val interactivePanel = TfPayBluePalette.interactivePanel
+    val title = TfPayBluePalette.title
+    val subtitle = TfPayBluePalette.subtitle
     val accent = SelfServicePalette.accent
     val accentText = backgroundTop
     val success = SelfServicePalette.success
@@ -55,7 +59,7 @@ object OperatorPalette {
     val danger = Color(0xFFFF6B6B)
     val dangerPanel = Color(0xFF3A1D25)
     val dangerMuted = Color(0xFFFFB6B6)
-    val pill = Color(0xFF1C2B46)
+    val pill = TfPayBluePalette.elevated
 }
 
 /**
@@ -186,6 +190,7 @@ fun OperatorScaffold(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    iconPainter: Painter? = null,
     terminalLabel: String,
     footerHint: String,
     footerSection: String,
@@ -217,6 +222,7 @@ fun OperatorScaffold(
                     title = title,
                     subtitle = subtitle,
                     icon = icon,
+                    iconPainter = iconPainter,
                     terminalLabel = terminalLabel,
                     languageLabel = languageLabel,
                     onBack = onBack,
@@ -248,6 +254,7 @@ fun OperatorHeader(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    iconPainter: Painter? = null,
     terminalLabel: String,
     modifier: Modifier = Modifier,
     languageLabel: String = "DE | EN | NL",
@@ -280,7 +287,7 @@ fun OperatorHeader(
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.Start,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OperatorCircleIcon(
@@ -291,6 +298,30 @@ fun OperatorHeader(
                         containerSize = 40.dp,
                         iconSize = 20.dp,
                     )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(
+                            text = title,
+                            color = OperatorPalette.title,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (subtitle.isNotBlank()) {
+                            Text(
+                                text = subtitle,
+                                color = OperatorPalette.subtitle,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    headerAction?.invoke()
                 }
             }
             return@BoxWithConstraints
@@ -306,7 +337,7 @@ fun OperatorHeader(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            color = OperatorPalette.panelMuted,
+            color = OperatorPalette.backgroundTop,
             border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
             elevation = 0.dp,
         ) {
@@ -335,8 +366,11 @@ fun OperatorHeader(
                             }
                             OperatorCircleIcon(
                                 icon = icon,
-                                backgroundColor = OperatorPalette.success,
+                                painter = iconPainter,
+                                backgroundColor = if (iconPainter != null) Color.Transparent else OperatorPalette.success,
                                 tint = OperatorPalette.backgroundTop,
+                                containerSize = if (iconPainter != null) 56.dp else 48.dp,
+                                iconSize = if (iconPainter != null) 56.dp else 24.dp,
                             )
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -394,8 +428,11 @@ fun OperatorHeader(
                         }
                         OperatorCircleIcon(
                             icon = icon,
-                            backgroundColor = OperatorPalette.success,
+                            painter = iconPainter,
+                            backgroundColor = if (iconPainter != null) Color.Transparent else OperatorPalette.success,
                             tint = OperatorPalette.backgroundTop,
+                            containerSize = if (iconPainter != null) 56.dp else 48.dp,
+                            iconSize = if (iconPainter != null) 56.dp else 24.dp,
                         )
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
@@ -713,6 +750,7 @@ private fun OperatorHeaderPill(
 @Composable
 private fun OperatorCircleIcon(
     icon: ImageVector,
+    painter: Painter? = null,
     backgroundColor: Color,
     tint: Color,
     modifier: Modifier = Modifier,
@@ -726,11 +764,19 @@ private fun OperatorCircleIcon(
             .border(1.dp, backgroundColor, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(iconSize),
-        )
+        if (painter != null) {
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier.size(iconSize),
+            )
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(iconSize),
+            )
+        }
     }
 }

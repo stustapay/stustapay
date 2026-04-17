@@ -541,7 +541,7 @@ private fun SelfServiceQuickAmountChip(
     val borderColor = if (selected) SelfServicePalette.accent else SelfServicePalette.title.copy(alpha = 0.32f)
     Card(
         modifier = modifier.height(chipHeight),
-        backgroundColor = if (selected) SelfServicePalette.accent else SelfServicePalette.panelMuted,
+        backgroundColor = if (selected) SelfServicePalette.accent else SelfServicePalette.interactivePanel,
         shape = RoundedCornerShape(24.dp),
         elevation = 0.dp,
     ) {

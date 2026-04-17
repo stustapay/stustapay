@@ -78,3 +78,34 @@ async def get_cash_register_account_id(*, conn: Connection, node: Node, cash_reg
     if acc_id is None:
         raise InvalidArgument("Cash Register not found")
     return acc_id
+
+
+async def detach_cash_register_from_tills(conn: Connection, cash_register_id: int):
+    await conn.execute("update till set active_cash_register_id = null where active_cash_register_id = $1", cash_register_id)
+
+
+async def assign_cash_register_to_active_user_till(conn: Connection, user_id: int, cash_register_id: int) -> Optional[int]:
+    tills = await conn.fetch(
+        "select t.id, t.name from till t "
+        "join terminal tm on t.terminal_id = tm.id "
+        "join till_profile tp on t.active_profile_id = tp.id "
+        "where tm.active_user_id = $1 and tp.enable_cash_payment",
+        user_id,
+    )
+    if len(tills) == 0:
+        return None
+
+    if len(tills) > 1:
+        till_names = ", ".join([till["name"] for till in tills])
+        raise InvalidArgument(
+            f'Cannot assign cash register to cashier as it is not clear which till should be used for the cash register. User is logged in at the following tills: "{till_names}".'
+        )
+
+    target_till_id = tills[0]["id"]
+    current_till_id = await conn.fetchval("select id from till where active_cash_register_id = $1", cash_register_id)
+    if current_till_id == target_till_id:
+        return target_till_id
+
+    await detach_cash_register_from_tills(conn=conn, cash_register_id=cash_register_id)
+    await conn.execute("update till set active_cash_register_id = $1 where id = $2", cash_register_id, target_till_id)
+    return target_till_id

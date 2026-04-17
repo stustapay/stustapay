@@ -192,7 +192,7 @@ fun SaleSelectionItem(
     if (layout == SaleSelectionItemLayout.ListRow) {
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = OperatorPalette.panel,
+            color = OperatorPalette.interactivePanel,
         ) {
             Row(
                 modifier = Modifier
@@ -291,7 +291,7 @@ fun SaleSelectionItem(
 
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = OperatorPalette.panel,
+        color = OperatorPalette.interactivePanel,
     ) {
         Column(
             modifier = Modifier

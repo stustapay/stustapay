@@ -20,10 +20,8 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
 
   const allProducts = React.useMemo(() => {
     if (!products) return [];
-    return Object.values(products.entities)
-      .filter(Boolean)
-      .filter(product => product.node_id === currentNode.id);
-  }, [products, currentNode.id]);
+    return Object.values(products.entities).filter(Boolean);
+  }, [products]);
 
   const getProductById = (id: number) => (allProducts ? allProducts.find(p => p.id === id) : undefined);
   const mapped = productIds.map(id => getProductById(id)).filter(Boolean) as Product[];
@@ -55,6 +53,7 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
         variant="standard"
         value={null}
         onChange={addProduct}
+        includeInherited
       />
     </List>
   );

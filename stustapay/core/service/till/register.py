@@ -34,7 +34,13 @@ from stustapay.core.service.order.booking import (
     book_cashier_shift_start_order,
     book_money_transfer,
 )
-from stustapay.core.service.till.common import create_cash_register, get_cash_register, fetch_virtual_till
+from stustapay.core.service.till.common import (
+    assign_cash_register_to_active_user_till,
+    create_cash_register,
+    detach_cash_register_from_tills,
+    fetch_virtual_till,
+    get_cash_register,
+)
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_node
 
@@ -72,22 +78,6 @@ async def _list_cash_registers(*, conn: Connection, node: Node, hide_assigned_re
             "select * from cash_register_with_cashier where node_id = any($1) order by name",
             node.ids_to_event_node,
         )
-
-
-async def _select_till_for_cash_register_insertion(conn: Connection, user_id: int, cash_register_id: int):
-    tills = await conn.fetch(
-        "select t.id, t.name from till t join terminal tm on t.terminal_id = tm.id join till_profile tp on t.active_profile_id = tp.id "
-        "where tm.active_user_id = $1 and tp.enable_cash_payment",
-        user_id,
-    )
-    if len(tills) == 0:  # nothing to do
-        return
-    if len(tills) > 1:
-        till_names = ", ".join([till["name"] for till in tills])
-        raise InvalidArgument(
-            f'Cannot assign cash register to cashier as it is not clear which till should be used for the cash register. User is logged in at the following tills: "{till_names}".'
-        )
-    await conn.execute("update till set active_cash_register_id = $1 where id = $2", tills[0]["id"], cash_register_id)
 
 
 class TillRegisterService(Service[Config]):
@@ -308,7 +298,7 @@ class TillRegisterService(Service[Config]):
                 conducting_user_id=current_user.id,
             )
 
-        await _select_till_for_cash_register_insertion(conn, user_id=user_row["id"], cash_register_id=cash_register_id)
+        await assign_cash_register_to_active_user_till(conn=conn, user_id=user_row["id"], cash_register_id=cash_register_id)
         return True
 
     @with_db_transaction(read_only=False)
@@ -507,14 +497,10 @@ class TillRegisterService(Service[Config]):
         if target_cashier is None:
             raise InvalidArgument("The cashier to whom to transfer the cash register does not exist")
 
-        if target_cashier["terminal_id"] is not None:
-            await _select_till_for_cash_register_insertion(
-                conn=conn, user_id=target_cashier_id, cash_register_id=cash_register_id
-            )
-
         if target_cashier["cash_register_id"] is not None:
             raise InvalidArgument("The cashier to whom to transfer the cash register already has a cash register")
 
+        await detach_cash_register_from_tills(conn=conn, cash_register_id=cash_register_id)
         await conn.execute("update usr set cash_register_id = null where id = $1", source_cashier_id)
         await book_cashier_shift_end_order(
             conn=conn, cashier_id=source_cashier_id, cash_register_id=cash_register_id, node=node
@@ -527,8 +513,8 @@ class TillRegisterService(Service[Config]):
         await book_cashier_shift_start_order(
             conn=conn, cashier_id=target_cashier_id, cash_register_id=cash_register_id, node=node
         )
-        await _select_till_for_cash_register_insertion(
-            conn, user_id=target_cashier_id, cash_register_id=cash_register_id
+        await assign_cash_register_to_active_user_till(
+            conn=conn, user_id=target_cashier_id, cash_register_id=cash_register_id
         )
 
         reg = await get_cash_register(conn=conn, node=node, register_id=cash_register_id)
@@ -623,8 +609,8 @@ class TillRegisterService(Service[Config]):
         )
 
         # If the cashier is logged in at a till, select it for the cash register
-        await _select_till_for_cash_register_insertion(
-            conn, user_id=cashier_id, cash_register_id=cash_register_id
+        await assign_cash_register_to_active_user_till(
+            conn=conn, user_id=cashier_id, cash_register_id=cash_register_id
         )
 
         # Return the updated cash register

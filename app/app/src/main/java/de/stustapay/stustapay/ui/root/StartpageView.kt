@@ -33,12 +33,11 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MeetingRoom
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ScreenRotation
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.runtime.Composable
@@ -52,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,8 +65,10 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
+import de.stustapay.stustapay.ui.common.operator.OperatorActionButton
 import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
@@ -217,6 +219,7 @@ private fun OperatorLanding(
     modifier: Modifier = Modifier,
 ) {
     val terminalName = loginState.title()
+    var showRestartDialog by remember { mutableStateOf(false) }
     val operatorStrings = rememberOperatorMenuStrings()
     val primaryCards = remember(
         loginState,
@@ -248,7 +251,7 @@ private fun OperatorLanding(
             if (loginState.checkTerminalAccess(Access::canChangeConfig) || !loginState.hasConfig()) {
                 add(
                     OperatorMenuCard(
-                        icon = Icons.Filled.Settings,
+                        icon = Icons.Filled.Edit,
                         title = operatorStrings.settingsTitle,
                         description = operatorStrings.settingsDescription,
                         onClick = { onNavigate(RootNavDests.settings) },
@@ -278,22 +281,12 @@ private fun OperatorLanding(
                     )
                 )
             }
-            if (loginState.hasConfig()) {
-                add(
-                    OperatorMenuCard(
-                        icon = Icons.Filled.Person,
-                        title = operatorStrings.userTitle,
-                        description = operatorStrings.userDescription,
-                        onClick = { onNavigate(RootNavDests.user) },
-                    )
-                )
-            }
             add(
                 OperatorMenuCard(
                     icon = Icons.Filled.Refresh,
                     title = operatorStrings.restartTitle,
                     description = operatorStrings.restartDescription,
-                    onClick = onRestart,
+                    onClick = { showRestartDialog = true },
                 )
             )
         }
@@ -307,7 +300,8 @@ private fun OperatorLanding(
         } else {
             stringResource(R.string.operator_console_subtitle_setup)
         },
-        icon = Icons.Filled.Settings,
+        icon = Icons.Filled.Edit,
+        iconPainter = painterResource(id = R.drawable.tfpay_logo_mark),
         terminalLabel = "",
         languageLabel = "",
         footerHint = when {
@@ -434,6 +428,55 @@ private fun OperatorLanding(
             }
         }
     }
+
+    if (showRestartDialog) {
+        Dialog(onDismissRequest = { showRestartDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                OperatorPanel(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 560.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.operator_restart_confirm_title),
+                            color = OperatorPalette.title,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = stringResource(R.string.operator_restart_confirm_desc),
+                            color = OperatorPalette.subtitle,
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        OperatorActionButton(
+                            text = stringResource(R.string.operator_restart_confirm_action),
+                            destructive = true,
+                            onClick = {
+                                showRestartDialog = false
+                                onRestart()
+                            },
+                        )
+                        OperatorActionButton(
+                            text = stringResource(R.string.common_action_cancel),
+                            primary = false,
+                            onClick = { showRestartDialog = false },
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 private data class OperatorMenuStrings(
@@ -444,8 +487,6 @@ private data class OperatorMenuStrings(
     val refreshDescription: String,
     val developmentTitle: String,
     val developmentDescription: String,
-    val userTitle: String,
-    val userDescription: String,
     val restartTitle: String,
     val restartDescription: String,
     val labelByResource: Map<Int, String>,
@@ -480,8 +521,6 @@ private fun rememberOperatorMenuStrings(): OperatorMenuStrings {
     val refreshDescription = stringResource(R.string.operator_refresh_setup_desc)
     val developmentTitle = stringResource(R.string.root_item_development)
     val developmentDescription = stringResource(R.string.operator_development_desc)
-    val userTitle = stringResource(R.string.user_title)
-    val userDescription = stringResource(R.string.operator_user_desc)
     val restartTitle = stringResource(R.string.root_item_restart_app)
     val restartDescription = stringResource(R.string.operator_restart_desc)
     val defaultDescription = stringResource(R.string.operator_workflow_default_desc)
@@ -575,8 +614,6 @@ private fun rememberOperatorMenuStrings(): OperatorMenuStrings {
         refreshDescription,
         developmentTitle,
         developmentDescription,
-        userTitle,
-        userDescription,
         restartTitle,
         restartDescription,
         labelByResource,
@@ -591,8 +628,6 @@ private fun rememberOperatorMenuStrings(): OperatorMenuStrings {
             refreshDescription = refreshDescription,
             developmentTitle = developmentTitle,
             developmentDescription = developmentDescription,
-            userTitle = userTitle,
-            userDescription = userDescription,
             restartTitle = restartTitle,
             restartDescription = restartDescription,
             labelByResource = labelByResource,
@@ -757,7 +792,7 @@ private fun SelfServiceLanding(
                         )
                         SelfServiceFooterActionButton(
                             onClick = onOpenSettings,
-                            icon = Icons.Filled.Settings,
+                            icon = Icons.Filled.Edit,
                             text = stringResource(R.string.root_item_settings),
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -776,7 +811,7 @@ private fun SelfServiceLanding(
                         )
                         SelfServiceFooterActionButton(
                             onClick = onOpenSettings,
-                            icon = Icons.Filled.Settings,
+                            icon = Icons.Filled.Edit,
                             text = stringResource(R.string.root_item_settings),
                             modifier = Modifier.widthIn(min = 140.dp)
                         )

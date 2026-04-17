@@ -1,20 +1,5 @@
 package de.stustapay.stustapay.ui.payinout
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import de.stustapay.stustapay.ui.nav.navigateTo
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -23,20 +8,39 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.common.ErrorScreen
 import de.stustapay.stustapay.ui.common.operator.OperatorBackground
 import de.stustapay.stustapay.ui.common.operator.OperatorCompactFlowHeader
+import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import de.stustapay.stustapay.ui.common.operator.OperatorSecondaryButton
+import de.stustapay.stustapay.ui.nav.navigateTo
 import de.stustapay.stustapay.ui.payinout.payout.PayOutView
 import de.stustapay.stustapay.ui.payinout.topup.TopUpView
 import kotlinx.coroutines.delay
@@ -172,8 +176,30 @@ private fun ColumnScope.CashInOutNavHost(
     isSelfServiceMode: Boolean,
 ) {
     if (tabList.isEmpty()) {
-        ErrorScreen(onDismiss = leaveView) {
-            Text(stringResource(R.string.payinout_no_action_available), fontSize = 28.sp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true),
+            contentAlignment = Alignment.Center,
+        ) {
+            OperatorInfoCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 560.dp),
+                title = stringResource(R.string.payinout_no_action_available),
+            ) {
+                Text(
+                    text = stringResource(R.string.payinout_unavailable_desc),
+                    color = OperatorPalette.subtitle,
+                    fontSize = 18.sp,
+                    lineHeight = 24.sp,
+                )
+                OperatorSecondaryButton(
+                    text = stringResource(R.string.back),
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onClick = leaveView,
+                )
+            }
         }
         return
     }

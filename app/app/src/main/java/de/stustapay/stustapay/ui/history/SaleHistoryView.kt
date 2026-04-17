@@ -75,7 +75,7 @@ fun SaleHistoryView(
     val terminalLoginState by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val scanState = rememberNfcScanDialogState()
     val timeZone = remember { TimeZone.getDefault().toZoneId() }
-    val listTimeFormatter = remember { DateTimeFormatter.ofPattern("E HH:mm:ss") }
+    val listTimeFormatter = remember { DateTimeFormatter.ofPattern("dd.MM HH:mm:ss") }
     val detailDateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
     val detailTimeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm:ss") }
     val historyEntries = remember(sales, timeZone, listTimeFormatter) {

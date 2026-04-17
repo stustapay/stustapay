@@ -151,7 +151,7 @@ fun OperatorAmountOptionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (selected) Color(0xFF163A66) else OperatorPalette.panel,
+        color = if (selected) Color(0xFF163A66) else OperatorPalette.interactivePanel,
         border = BorderStroke(
             width = 1.5.dp,
             color = if (selected) OperatorPalette.accent else OperatorPalette.panelBorder,
