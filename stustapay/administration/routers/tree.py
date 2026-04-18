@@ -16,6 +16,7 @@ from stustapay.core.schema.tree import (
     RestrictedEventSettings,
     UpdateEvent,
 )
+from stustapay.core.schema.sumup import NodeSumUpConnectionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,11 @@ async def get_restricted_event_settings(
     return await tree_service.get_restricted_event_settings(token=token, node_id=node_id)
 
 
+@router.post("/events/{node_id}/clear-legacy-sumup-settings", response_model=RestrictedEventSettings)
+async def clear_legacy_sumup_settings(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.clear_legacy_sumup_settings(token=token, node_id=node_id)
+
+
 @router.delete("/nodes/{node_id}")
 async def delete_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.delete_node(token=token, node_id=node_id)
@@ -164,15 +170,29 @@ async def generate_revenue_report(token: CurrentAuthToken, tree_service: Context
 
 class SumUpTokenPayload(BaseModel):
     authorization_code: str
+    redirect_uri: str
 
 
-@router.post("/nodes/{node_id}/configure-sumup-token")
+@router.get("/nodes/{node_id}/sumup-link", response_model=NodeSumUpConnectionStatus)
+async def get_node_sumup_link_status(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.get_node_sumup_link_status(token=token, node_id=node_id)
+
+
+@router.post("/nodes/{node_id}/configure-sumup-token", response_model=NodeSumUpConnectionStatus)
 async def configure_sumup_token(
     token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int, payload: SumUpTokenPayload
 ):
     return await tree_service.sumup_auth_code_flow(
-        token=token, node_id=node_id, authorization_code=payload.authorization_code
+        token=token,
+        node_id=node_id,
+        authorization_code=payload.authorization_code,
+        redirect_uri=payload.redirect_uri,
     )
+
+
+@router.delete("/nodes/{node_id}/sumup-link", response_model=NodeSumUpConnectionStatus)
+async def delete_node_sumup_link(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    return await tree_service.delete_node_sumup_link(token=token, node_id=node_id)
 
 
 @router.post("/events/{node_id}/banner")

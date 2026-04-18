@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import Context, ContextConfigService, ContextMailService, get_context
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, PublicConfig
+from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, GlobalSumUpConfig, PublicConfig
 
 router = APIRouter(
     prefix="",
@@ -55,6 +55,20 @@ async def update_global_email_config(
     config_service: ContextConfigService,
 ):
     return await config_service.update_global_email_config(token=token, config=email_config)
+
+
+@router.get("/config/sumup", response_model=GlobalSumUpConfig)
+async def get_global_sumup_config(token: CurrentAuthToken, config_service: ContextConfigService):
+    return await config_service.get_global_sumup_config(token=token)
+
+
+@router.post("/config/sumup", response_model=GlobalSumUpConfig)
+async def update_global_sumup_config(
+    sumup_config: GlobalSumUpConfig,
+    token: CurrentAuthToken,
+    config_service: ContextConfigService,
+):
+    return await config_service.update_global_sumup_config(token=token, config=sumup_config)
 
 
 @router.post("/config/email/test", response_model=dict[str, str])

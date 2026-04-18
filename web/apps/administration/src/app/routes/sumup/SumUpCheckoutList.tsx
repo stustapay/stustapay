@@ -1,9 +1,9 @@
 import { SumUpCheckout, useListSumupCheckoutsQuery } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
-import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
+import { SumUpTransactionRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Link } from "@mui/material";
+import { Alert, Link, Stack } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Privilege } from "@stustapay/models";
 import * as React from "react";
@@ -14,7 +14,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_adm
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: checkouts } = useListSumupCheckoutsQuery({ nodeId: currentNode.id });
+  const { data: checkouts, isFetching, error } = useListSumupCheckoutsQuery({ nodeId: currentNode.id });
 
   const columns: GridColDef<SumUpCheckout>[] = [
     {
@@ -37,14 +37,19 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_adm
   ];
 
   return (
-    <ListLayout title={t("sumup.checkouts")} routes={ProductRoutes}>
-      <DataGrid
-        autoHeight
-        rows={checkouts ?? []}
-        columns={columns}
-        disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
+    <ListLayout title={t("sumup.checkouts")}>
+      <Stack spacing={2}>
+        {error && <Alert severity="error">{t("sumup.checkoutsLoadFailed", { reason: (error as any)?.data?.detail ?? (error as any)?.error ?? "unknown error" })}</Alert>}
+        {!error && !isFetching && (checkouts?.length ?? 0) === 0 && <Alert severity="info">{t("sumup.noCheckouts")}</Alert>}
+        <DataGrid
+          autoHeight
+          rows={checkouts ?? []}
+          columns={columns}
+          disableRowSelectionOnClick
+          loading={isFetching}
+          sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        />
+      </Stack>
     </ListLayout>
   );
 });

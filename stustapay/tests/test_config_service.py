@@ -3,7 +3,7 @@ import pytest
 
 from sftkit.error import AccessDenied, InvalidArgument
 
-from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig
+from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, GlobalSumUpConfig
 from stustapay.core.schema.language import Language
 from stustapay.core.service.config import ConfigService
 
@@ -81,6 +81,32 @@ async def test_global_email_config_requires_root_global_email_management(
             token=event_admin_token,
             config=updated,
         )
+
+
+async def test_global_sumup_config_requires_root_node_administration(
+    config_service: ConfigService,
+    global_admin_token: str,
+    event_admin_token: str,
+):
+    config = await config_service.get_global_sumup_config(token=global_admin_token)
+    assert config.sumup_affiliate_key == ""
+
+    updated = await config_service.update_global_sumup_config(
+        token=global_admin_token,
+        config=GlobalSumUpConfig(
+            sumup_affiliate_key="sup_afk_global",
+            sumup_oauth_client_id="client-id",
+            sumup_oauth_client_secret="client-secret",
+        ),
+    )
+    assert updated.sumup_affiliate_key == "sup_afk_global"
+    assert updated.sumup_oauth_client_id == "client-id"
+
+    with pytest.raises(AccessDenied):
+        await config_service.get_global_sumup_config(token=event_admin_token)
+
+    with pytest.raises(AccessDenied):
+        await config_service.update_global_sumup_config(token=event_admin_token, config=updated)
 
 
 async def test_global_email_test_queues_preview_mail(

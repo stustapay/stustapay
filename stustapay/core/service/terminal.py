@@ -52,6 +52,7 @@ from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
+from stustapay.core.service.sumup_link import resolve_terminal_sumup_access
 from stustapay.core.service.user import list_assignable_roles_for_user_at_node
 from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
 
@@ -267,26 +268,24 @@ class TerminalService(Service[Config]):
             await remove_terminal_from_till(conn=conn, till_id=current_terminal.till.id)
 
     async def _get_terminal_sumup_oauth_token(
-        self, terminal_id: int, node: Node, event_settings: RestrictedEventSettings
+        self, conn: Connection, terminal_id: int, node: Node, event_settings: RestrictedEventSettings
     ) -> SumUpOAuthToken | None:
         del terminal_id
         if not event_settings.sumup_payment_enabled:
             return None
-        if event_settings.sumup_oauth_client_id == "" or event_settings.sumup_oauth_client_secret == "":
+        access = await resolve_terminal_sumup_access(conn=conn, node_id=node.id, event_settings=event_settings)
+        if access is None or not access.is_oauth:
             return None
 
-        event_node_id = node.event_node_id
-        assert event_node_id is not None
-
-        current_token = self.sumup_oauth_cache.get(event_node_id, None)
+        current_token = self.sumup_oauth_cache.get(access.source_node_id, None)
         if current_token and current_token.is_valid():
             return current_token
 
-        logger.info(f"Refreshing SumUp Oauth token for event with ID {event_node_id}")
+        logger.info("Refreshing SumUp OAuth token for node %s via source %s", node.id, access.source_node_id)
         new_token = await fetch_new_oauth_token(
-            client_id=event_settings.sumup_oauth_client_id,
-            client_secret=event_settings.sumup_oauth_client_secret,
-            refresh_token=event_settings.sumup_oauth_refresh_token,
+            client_id=access.oauth_client_id,
+            client_secret=access.oauth_client_secret,
+            refresh_token=access.refresh_token,
         )
         if new_token is None and current_token is not None and current_token.is_valid(tolerance=timedelta(minutes=2)):
             return current_token
@@ -294,7 +293,7 @@ class TerminalService(Service[Config]):
         if new_token is None:
             return None
 
-        self.sumup_oauth_cache[node.id] = new_token
+        self.sumup_oauth_cache[access.source_node_id] = new_token
         return new_token
 
     async def _get_terminal_till_config(
@@ -355,9 +354,13 @@ class TerminalService(Service[Config]):
 
         sumup_secrets = None
         if event_settings.sumup_payment_enabled:
-            sumup_affiliate_key = event_settings.sumup_affiliate_key
+            access = await resolve_terminal_sumup_access(conn=conn, node_id=node.id, event_settings=event_settings)
+            sumup_affiliate_key = access.affiliate_key if access is not None else ""
             oauth_token = await self._get_terminal_sumup_oauth_token(
-                terminal_id=terminal_id, node=node, event_settings=event_settings
+                conn=conn,
+                terminal_id=terminal_id,
+                node=node,
+                event_settings=event_settings,
             )
             sumup_api_oauth_token = oauth_token.access_token if oauth_token is not None else ""
             sumup_api_oauth_valid_until = oauth_token.expires_at if oauth_token is not None else None
@@ -446,7 +449,8 @@ class TerminalService(Service[Config]):
         
         # If SumUp is enabled, set the affiliate key
         if event_settings and event_settings.sumup_payment_enabled:
-            sumup_affiliate_key = event_settings.sumup_affiliate_key or ""
+            access = await resolve_terminal_sumup_access(conn=conn, node_id=event_node.id, event_settings=event_settings)
+            sumup_affiliate_key = access.affiliate_key if access is not None else ""
         
         # Return the combined secrets in the format expected by the Android app
         return TerminalSecrets(

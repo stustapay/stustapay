@@ -122,7 +122,17 @@ const entryGroupAdapter = createEntityAdapter<EntryGroup>({
 });
 
 export const api = generatedApi.enhanceEndpoints({
-  addTagTypes: ["config", "tag", "headwind-devices", "headwind-mappings", "entry-areas", "entry-groups"],
+  addTagTypes: [
+    "config",
+    "sumup-config",
+    "node-sumup-link",
+    "event-settings",
+    "tag",
+    "headwind-devices",
+    "headwind-mappings",
+    "entry-areas",
+    "entry-groups",
+  ],
   endpoints: {
     listUsers: {
       providesTags: (result) => generateCacheKeys("users", result),
@@ -144,6 +154,30 @@ export const api = generatedApi.enhanceEndpoints({
     },
     listConfigEntries: {
       providesTags: (result) => generateCacheKeys("config", result),
+    },
+    getGlobalSumupConfig: {
+      providesTags: ["sumup-config"],
+    },
+    updateGlobalSumupConfig: {
+      invalidatesTags: ["sumup-config", "node-sumup-link"],
+    },
+    getNodeSumupLinkStatus: {
+      providesTags: (result, error, arg) => [{ type: "node-sumup-link", id: arg.nodeId }],
+    },
+    deleteNodeSumupLink: {
+      invalidatesTags: (result, error, arg) => [{ type: "node-sumup-link", id: arg.nodeId }],
+    },
+    configureSumupToken: {
+      invalidatesTags: (result, error, arg) => [{ type: "node-sumup-link", id: arg.nodeId }],
+    },
+    getRestrictedEventSettings: {
+      providesTags: (result, error, arg) => [{ type: "event-settings", id: arg.nodeId }],
+    },
+    updateEvent: {
+      invalidatesTags: (result, error, arg) => [{ type: "event-settings", id: arg.nodeId }],
+    },
+    clearLegacySumupSettings: {
+      invalidatesTags: (result, error, arg) => [{ type: "event-settings", id: arg.nodeId }],
     },
     listTaxRates: {
       providesTags: (result) => generateCacheKeys("tax-rates", result),

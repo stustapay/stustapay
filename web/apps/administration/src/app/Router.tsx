@@ -106,6 +106,10 @@ const router = createBrowserRouter([
         element: <Profile />,
       },
       {
+        path: "sumup/oauth/callback",
+        element: <SumupOauthCallback />,
+      },
+      {
         path: "node/:nodeId",
         element: <NodeProvider />,
         children: [
@@ -114,10 +118,6 @@ const router = createBrowserRouter([
             element: <NodePageLayout />,
             children: [
               { index: true, element: <NodeOverview /> },
-              {
-                path: "settings/sumup-redirect",
-                element: <SumupOauthCallback />,
-              },
               {
                 path: "settings",
                 element: (

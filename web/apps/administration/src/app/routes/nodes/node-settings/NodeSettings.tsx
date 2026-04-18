@@ -15,6 +15,8 @@ import { useOpenModal } from "@stustapay/modal-provider";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { useQueryVar } from "@stustapay/utils";
 import { TabGlobalEmail } from "./TabGlobalEmail";
+import { TabGlobalSumUp } from "./TabGlobalSumUp";
+import { TabNodeSumUp } from "./TabNodeSumUp";
 
 export const NodeConfiguration: React.FC = () => {
   const { t } = useTranslation();
@@ -99,6 +101,7 @@ export const NodeSettings: React.FC = () => {
   const [deleteNode] = useDeleteNodeMutation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useQueryVar("tab", "node");
+  const canConfigureSumupLink = currentNode.event_node_id == null;
 
   if (currentNode.event != null) {
     return <EventSettings />;
@@ -139,26 +142,36 @@ export const NodeSettings: React.FC = () => {
             {t("settings.deleteNode.button")}
           </Button>
         </Stack>
-        {currentNode.id === 0 && canManageGlobalEmail ? (
-          <TabContext value={activeTab}>
-            <Box display="grid" gridTemplateColumns="min-content auto">
-              <Box sx={{ borderRight: 1, borderColor: "divider" }}>
-                <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
-                  <Tab label={t("common.node")} value="node" />
-                  <Tab label={t("settings.email.tabLabel")} value="email" />
-                </TabList>
-              </Box>
-              <TabPanel value="node">
-                <NodeConfiguration />
+        <TabContext value={activeTab}>
+          <Box display="grid" gridTemplateColumns="min-content auto">
+            <Box sx={{ borderRight: 1, borderColor: "divider" }}>
+              <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
+                <Tab label={t("common.node")} value="node" />
+                {canConfigureSumupLink && <Tab label={t("settings.sumup.connectionTabLabel")} value="sumupConnection" />}
+                {currentNode.id === 0 && <Tab label={t("settings.sumup.globalTabLabel")} value="sumupGlobal" />}
+                {currentNode.id === 0 && canManageGlobalEmail && <Tab label={t("settings.email.tabLabel")} value="email" />}
+              </TabList>
+            </Box>
+            <TabPanel value="node">
+              <NodeConfiguration />
+            </TabPanel>
+            {canConfigureSumupLink && (
+              <TabPanel value="sumupConnection">
+                <TabNodeSumUp />
               </TabPanel>
+            )}
+            {currentNode.id === 0 && (
+              <TabPanel value="sumupGlobal">
+                <TabGlobalSumUp />
+              </TabPanel>
+            )}
+            {currentNode.id === 0 && canManageGlobalEmail && (
               <TabPanel value="email">
                 <TabGlobalEmail />
               </TabPanel>
-            </Box>
-          </TabContext>
-        ) : (
-          <NodeConfiguration />
-        )}
+            )}
+          </Box>
+        </TabContext>
       </Stack>
     </Container>
   );

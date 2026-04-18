@@ -1,6 +1,6 @@
 import pytest
 
-from stustapay.payment.sumup.api import SumUpApi, SumUpError
+from stustapay.payment.sumup.api import SumUpApi, SumUpError, fetch_merchant_profile
 
 
 @pytest.mark.asyncio
@@ -53,3 +53,40 @@ async def test_list_available_payment_methods_propagates_api_errors():
 
     with pytest.raises(SumUpError, match="boom"):
         await api.list_available_payment_methods()
+
+
+@pytest.mark.asyncio
+async def test_fetch_merchant_profile_preserves_api_error_details(monkeypatch):
+    class FakeResponse:
+        ok = False
+        content = b""
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def json(self, content_type=None):
+            del content_type
+            return {"code": "invalid_grant", "message": "bad auth"}
+
+    class FakeClientSession:
+        def __init__(self, *args, **kwargs):
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        def get(self, url: str, timeout: int):
+            assert url.endswith("/me/merchant-profile")
+            assert timeout == 10
+            return FakeResponse()
+
+    monkeypatch.setattr("stustapay.payment.sumup.api.aiohttp.ClientSession", FakeClientSession)
+
+    with pytest.raises(SumUpError, match="invalid_grant - bad auth"):
+        await fetch_merchant_profile("access-token")

@@ -102,12 +102,19 @@ class SumUpAvailablePaymentMethodsResponse(BaseModel):
     available_payment_methods: list[SumUpAvailablePaymentMethod]
 
 
+class SumUpMerchantProfile(BaseModel):
+    merchant_code: str
+    company_name: str | None = None
+
+
 standard_headers = {
     "Accept": "application/json",
 }
 
 
-async def fetch_refresh_token_from_auth_code(client_id: str, client_secret: str, authorization_code: str):
+async def fetch_refresh_token_from_auth_code(
+    client_id: str, client_secret: str, authorization_code: str, redirect_uri: str | None = None
+):
     url = f"{SUMUP_API_BASE_URL}/token"
 
     payload = {
@@ -116,6 +123,8 @@ async def fetch_refresh_token_from_auth_code(client_id: str, client_secret: str,
         "client_secret": client_secret,
         "code": authorization_code,
     }
+    if redirect_uri is not None:
+        payload["redirect_uri"] = redirect_uri
 
     async with aiohttp.ClientSession(trust_env=True) as session:
         try:
@@ -146,6 +155,38 @@ async def fetch_refresh_token_from_auth_code(client_id: str, client_secret: str,
             if isinstance(e, SumUpError):
                 raise e
             raise SumUpError(f"SumUp API returned an unknown error {e}") from e
+
+
+async def fetch_merchant_profile(access_token: str) -> SumUpMerchantProfile:
+    url = f"{SUMUP_API_URL}/me/merchant-profile"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    async with aiohttp.ClientSession(trust_env=True, headers=headers) as session:
+        try:
+            async with session.get(url, timeout=10) as response:
+                if not response.ok:
+                    try:
+                        resp = await response.json(content_type=None)
+                        err = _SumUpErrorFormat.model_validate(resp)
+                        error_message = err.message or ""
+                        error_code = err.code or err.error_code or err.error or "UNKNOWN"
+                        raise SumUpError(f"SumUp API returned an error: {error_code} - {error_message}")
+                    except SumUpError:
+                        raise
+                    except Exception as exc:
+                        logging.error(f"SumUp merchant profile API error {response.content}, {exc}")
+                        raise SumUpError("SumUp API returned an unknown error") from exc
+                resp = await response.json(content_type=None)
+                return SumUpMerchantProfile.model_validate(resp)
+        except asyncio.TimeoutError as exc:
+            raise SumUpError("SumUp API timeout") from exc
+        except Exception as exc:  # pylint: disable=bare-except
+            if isinstance(exc, SumUpError):
+                raise exc
+            raise SumUpError(f"SumUp API returned an unknown error {exc}") from exc
 
 
 async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_token):

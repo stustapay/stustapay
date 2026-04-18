@@ -658,7 +658,24 @@ async def test_copy_event(
         token=global_admin_token,
         node_id=original_event.id,
     )
-    assert copied_settings.model_dump(exclude={"id", "languages"}) == original_settings.model_dump(exclude={"id", "languages"})
+    sumup_enrichment_exclude = {
+        "id",
+        "languages",
+        "resolved_sumup_link",
+        "sumup_global_oauth_configured",
+        "sumup_global_affiliate_key_configured",
+        "sumup_legacy_api_key_configured",
+        "sumup_legacy_oauth_configured",
+    }
+    assert copied_settings.model_dump(exclude=sumup_enrichment_exclude) == original_settings.model_dump(
+        exclude=sumup_enrichment_exclude
+    )
+    assert copied_settings.resolved_sumup_link is not None
+    assert original_settings.resolved_sumup_link is not None
+    assert copied_settings.resolved_sumup_link.source == original_settings.resolved_sumup_link.source
+    assert copied_settings.resolved_sumup_link.merchant_code == original_settings.resolved_sumup_link.merchant_code
+    assert copied_settings.resolved_sumup_link.source_node_id == copied_event.id
+    assert original_settings.resolved_sumup_link.source_node_id == original_event.id
 
     copied_banner = await db_connection.fetchrow(
         "select e.banner_image, e.banner_image_mime_type from event e join node n on n.event_id = e.id where n.id = $1",

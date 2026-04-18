@@ -9,6 +9,7 @@ from stustapay.core import database
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
+from stustapay.core.http.openapi import ensure_agpl_license_url
 from stustapay.core.http.context import Context
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
@@ -60,13 +61,13 @@ from .routers import config as config_router
 
 
 def get_server(config: Config):
-    server = Server(
+    server = ensure_agpl_license_url(Server(
         title="TeamFestlichPay Administration API",
         config=config.administration,
         license_name="AGPL-3.0",
         version=__version__,
         cors=True,
-    )
+    ))
 
     server.add_router(product.router)
     server.add_router(user.router)
