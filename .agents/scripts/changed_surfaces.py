@@ -62,11 +62,15 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
     requires_contract_sync = False
 
     for path in normalized:
-        if path.startswith("stustapay/") or path == "pyproject.toml":
+        if path.startswith("stustapay/") or path in {"pyproject.toml", "setup.py"}:
             surfaces.add("backend")
 
-        if path.startswith("stustapay/administration/") or path.startswith("stustapay/customer_portal/") or path.startswith(
-            "stustapay/terminalserver/"
+        if path.startswith(
+            (
+                "stustapay/administration/",
+                "stustapay/customer_portal/",
+                "stustapay/terminalserver/",
+            )
         ):
             requires_contract_sync = True
 
@@ -78,7 +82,14 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
             surfaces.add("web")
             web_targets.add("customerportal")
 
-        if path.startswith("web/libs/") or path in {"web/package.json", "web/package-lock.json", "web/nx.json"}:
+        if path.startswith("web/libs/") or path in {
+            "web/eslint.config.mjs",
+            "web/jest.config.ts",
+            "web/nx.json",
+            "web/package-lock.json",
+            "web/package.json",
+            "web/tsconfig.base.json",
+        }:
             surfaces.add("web")
             web_targets.update({"administration", "customerportal"})
 
@@ -89,16 +100,29 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
             surfaces.add("openapi")
             requires_contract_sync = True
 
-        if path.startswith("app/api/") or path == "app/build.gradle":
+        if path.startswith("app/api/") or path in {
+            "app/api/build.gradle",
+            "app/build.gradle",
+            "app/settings.gradle",
+        }:
             requires_contract_sync = True
 
-        if path.startswith(("etc/", "docker/", "debian/", "pretix/")) or path in {"server_local.yaml", "config.yaml"}:
+        if path.startswith(("deploy/", "docker/", "etc/", "debian/", "pretix/")) or path in {
+            "server_azure.yaml",
+            "server_azure_teamfestlich.yaml",
+            "server_local.yaml",
+        }:
             surfaces.add("config")
 
-        if path.startswith("tools/") or path.startswith(".agents/") or path in {"AGENTS.md", "Makefile"}:
+        if path.startswith((".agents/", ".github/", "tools/")) or path in {
+            "AGENTS.md",
+            "Makefile",
+            "flake.lock",
+            "flake.nix",
+        }:
             surfaces.add("tooling")
 
-        if path.startswith("docs/") or path == "README.md":
+        if path.startswith("docs/") or path in {"README.md", "authors.md", "CHANGELOG.md"}:
             surfaces.add("docs")
 
     if requires_contract_sync:

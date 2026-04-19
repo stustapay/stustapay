@@ -13,7 +13,7 @@ Default to a bug-finding review, not a style pass.
 - If backend contract behavior changed, were backend specs and downstream clients regenerated where needed?
 - If `web/libs/` changed, were both web applications considered?
 - If Android flows changed, is there enough Gradle coverage and a manual device-test note for NFC, SumUp, or terminal flows?
-- If config, Docker, nginx, Debian, or release tooling changed, are operational follow-ups documented?
+- If config, deploy, Docker, Pretix, nginx, Debian, CI, or release tooling changed, are operational follow-ups documented?
 
 ## Output
 

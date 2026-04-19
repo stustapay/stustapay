@@ -56,3 +56,34 @@ def test_changed_surfaces_keeps_dot_paths_for_tooling() -> None:
     )
 
     assert report.surfaces == ["tooling"]
+
+
+def test_changed_surfaces_marks_current_repo_config_and_tooling_paths() -> None:
+    report = changed_surfaces.analyze_paths(
+        [
+            "deploy/environments/production.env",
+            ".github/workflows/web.yaml",
+            "server_azure.yaml",
+            "web/tsconfig.base.json",
+            "app/settings.gradle",
+        ]
+    )
+
+    assert report.surfaces == ["android", "config", "tooling", "web"]
+    assert report.web_targets == ["administration", "customerportal"]
+    assert report.requires_contract_sync is True
+
+
+def test_required_checks_calls_out_current_config_surfaces() -> None:
+    report = required_checks.build_checks(
+        [
+            "deploy/common.env.example",
+            "pretix/pretix.cfg",
+            "debian/stustapay.install",
+        ]
+    )
+
+    assert report.commands == []
+    assert report.manual_checks == [
+        "Inspect config, deploy, Docker, nginx, Pretix, and Debian diffs manually for environment and secret drift."
+    ]
