@@ -1,9 +1,9 @@
 import { SumUpTransaction, useListSumupTransactionsQuery } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
-import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
+import { SumUpTransactionRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Button, Link, Stack } from "@mui/material";
+import { Alert, Button, Link, Stack } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Privilege } from "@stustapay/models";
 import * as React from "react";
@@ -19,7 +19,7 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
   const [rows, setRows] = React.useState<SumUpTransaction[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
 
-  const { data: transactions, isFetching } = useListSumupTransactionsQuery({
+  const { data: transactions, isFetching, error } = useListSumupTransactionsQuery({
     nodeId: currentNode.id,
     limit: pageSize,
     newestTime: cursor,
@@ -79,8 +79,10 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(Privilege.node_
   ];
 
   return (
-    <ListLayout title={t("sumup.transactions")} routes={ProductRoutes}>
+    <ListLayout title={t("sumup.transactions")}>
       <Stack spacing={2}>
+        {error && <Alert severity="error">{t("sumup.transactionsLoadFailed", { reason: (error as any)?.data?.detail ?? (error as any)?.error ?? "unknown error" })}</Alert>}
+        {!error && !isFetching && rows.length === 0 && <Alert severity="info">{t("sumup.noTransactions")}</Alert>}
         <DataGrid
           autoHeight
           rows={rows}

@@ -12,7 +12,7 @@ import { FormikProps } from "formik";
 import { Container, InputAdornment, Stack, Typography, Switch, FormControlLabel } from "@mui/material";
 import { useCreateEventMutation } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import { SumUpSettings, SumUpSettingsSchema, SumupSettingsForm } from "./event-settings/TabSumUp";
+import { EventSumUpSettings, EventSumUpSettingsSchema, EventSumupSettingsForm } from "./event-settings/TabSumUp";
 import { useTranslation } from "react-i18next";
 import { BonSettingsForm, BonSettings, BonSettingsSchema } from "./event-settings/TabBon";
 import {
@@ -112,14 +112,11 @@ const generalFormStep: FormStep = {
 const sumupFormStep: FormStep = {
   title: "SumUp",
   initialValues: {
-    sumup_affiliate_key: "",
-    sumup_api_key: "",
-    sumup_merchant_code: "",
     sumup_payment_enabled: false,
     sumup_topup_enabled: false,
   },
-  schema: SumUpSettingsSchema,
-  form: SumupSettingsForm,
+  schema: EventSumUpSettingsSchema,
+  form: EventSumupSettingsForm,
 };
 
 const emailFormStep: FormStep = {
@@ -185,7 +182,7 @@ const steps = [
 ] as const;
 
 type FormValues = GeneralFormValues &
-  SumUpSettings &
+  EventSumUpSettings &
   BonSettings &
   CustomerPortalSettings &
   MailSettings &

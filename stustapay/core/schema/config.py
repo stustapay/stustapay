@@ -20,6 +20,12 @@ class GlobalEmailConfig(BaseModel):
     invitation_texts: dict[Language, dict[str, str]] = {}
 
 
+class GlobalSumUpConfig(BaseModel):
+    sumup_affiliate_key: str = ""
+    sumup_oauth_client_id: str = ""
+    sumup_oauth_client_secret: str = ""
+
+
 class PublicConfig(BaseModel):
     test_mode: bool
     test_mode_message: str

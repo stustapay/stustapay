@@ -13,6 +13,9 @@ Use this skill for day-to-day production work after `stustapay-intake`.
 - Refresh the current surface and check picture before deciding what to run:
   - `python3 .agents/scripts/workflow_bootstrap.py --stage intake --output text`
 - Prefer the stable repo entrypoints over ad hoc commands:
+  - `make dev`
+  - `make dev-backend`
+  - `make dev-web`
   - `make verify-backend`
   - `make verify-web-administration`
   - `make verify-web-customerportal`
@@ -24,6 +27,8 @@ Use this skill for day-to-day production work after `stustapay-intake`.
 - Backend source of truth lives under `stustapay/`.
 - Web source of truth lives under `web/apps/` and `web/libs/`; shared library changes imply both web apps.
 - Android source of truth lives under `app/app`, `app/libssp`, `app/chip_debug`, and generated client code under `app/api`.
+- Deployment and runtime config source of truth lives under `etc/`, `deploy/`, `docker/`, `pretix/`, `debian/`, and `server_*.yaml`.
+- CI and developer workflow source of truth lives under `.github/`, `.agents/`, `tools/`, `Makefile`, and the Nix files.
 - Treat generated code as downstream of handwritten backend contract changes; do not hand-edit generated clients as the primary fix.
 
 ## When to branch into other skills

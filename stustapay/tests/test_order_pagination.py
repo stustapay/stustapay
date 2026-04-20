@@ -345,8 +345,9 @@ async def test_list_orders_filtered_excludes_money_transfers(
     )
 
     money_transfer_count = await db_connection.fetchval(
-        "select count(*) from ordr where order_type = $1",
+        "select count(*) from ordr where order_type = $1 and customer_account_id = $2",
         OrderType.money_transfer.name,
+        source_account_id,
     )
     assert money_transfer_count == 1
     assert all(order.order_type != OrderType.money_transfer for order in filtered_orders)

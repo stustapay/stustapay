@@ -36,6 +36,7 @@ from stustapay.core.service.order.pending_order import (
     save_pending_topup,
 )
 from stustapay.core.service.till.common import fetch_till, fetch_virtual_till
+from stustapay.core.service.sumup_link import create_sumup_api_for_node
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_node,
@@ -91,14 +92,11 @@ class SumupService(Service[Config]):
         if not event_settings.is_sumup_topup_enabled(self.config.core):
             return []
 
-        if not event_settings.sumup_api_key or not event_settings.sumup_merchant_code:
+        resolved = await create_sumup_api_for_node(conn=conn, node_id=node_id, api_factory=self._create_sumup_api)
+        if resolved is None:
             self.logger.warning("SumUp top-up is enabled for node %s but merchant credentials are incomplete", node_id)
             return []
-
-        sumup_api = self._create_sumup_api(
-            merchant_code=event_settings.sumup_merchant_code,
-            api_key=event_settings.sumup_api_key,
-        )
+        sumup_api, _ = resolved
         try:
             return await sumup_api.list_available_payment_methods()
         except SumUpError as exc:
@@ -137,8 +135,12 @@ class SumupService(Service[Config]):
         return ticket_sale
 
     async def pending_order_exists_at_sumup(self, conn: Connection, pending_order: PendingOrder) -> bool:
-        event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
-        sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
+        resolved = await create_sumup_api_for_node(
+            conn=conn, node_id=pending_order.node_id, api_factory=self._create_sumup_api
+        )
+        if resolved is None:
+            return False
+        sumup_api, _ = resolved
         sumup_checkout = await sumup_api.find_checkout(pending_order.uuid)
         return sumup_checkout is not None
 
@@ -167,13 +169,13 @@ class SumupService(Service[Config]):
                     )
                     return None
                     
-                event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
-                
-                if not event.sumup_api_key or not event.sumup_merchant_code:
+                resolved = await create_sumup_api_for_node(
+                    conn=conn, node_id=pending_order.node_id, api_factory=self._create_sumup_api
+                )
+                if resolved is None:
                     self.logger.error(f"Missing SumUp API key or merchant code for order {pending_order.uuid}")
                     return None
-                    
-                sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
+                sumup_api, _ = resolved
                 
                 # For online payments, only check the checkout API
                 try:
@@ -278,12 +280,13 @@ class SumupService(Service[Config]):
                     )
                     return SumUpCheckoutStatus.FAILED
                 
-                event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=pending_order.node_id)
-                if not event.sumup_api_key or not event.sumup_merchant_code:
+                resolved = await create_sumup_api_for_node(
+                    conn=conn, node_id=pending_order.node_id, api_factory=self._create_sumup_api
+                )
+                if resolved is None:
                     self.logger.error(f"Missing SumUp API key or merchant code for order {pending_order.uuid}")
                     return SumUpCheckoutStatus.FAILED
-                    
-                sumup_api = self._create_sumup_api(merchant_code=event.sumup_merchant_code, api_key=event.sumup_api_key)
+                sumup_api, _ = resolved
                 
                 # Only check the checkout status, don't process the payment
                 try:
@@ -330,6 +333,12 @@ class SumupService(Service[Config]):
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
+        resolved = await create_sumup_api_for_node(
+            conn=conn, node_id=event_node.id, api_factory=self._create_sumup_api
+        )
+        if resolved is None:
+            raise InvalidArgument("SumUp is enabled but no merchant connection is configured")
+        api, access = resolved
 
         # check amount
         if amount <= 0:
@@ -365,10 +374,7 @@ class SumupService(Service[Config]):
                     existing_pending_order.uuid,
                 )
             else:
-                existing_api = self._create_sumup_api(
-                    merchant_code=event_settings.sumup_merchant_code, api_key=event_settings.sumup_api_key
-                )
-                existing_checkout = await existing_api.find_checkout(existing_pending_order.uuid)
+                existing_checkout = await api.find_checkout(existing_pending_order.uuid)
 
                 if existing_checkout is not None:
                     if existing_checkout.status == SumUpCheckoutStatus.PENDING:
@@ -401,12 +407,9 @@ class SumupService(Service[Config]):
             checkout_reference=order_uuid,
             amount=amount,
             currency=event_settings.currency_identifier,
-            merchant_code=event_settings.sumup_merchant_code,
+            merchant_code=access.merchant_code,
             description=f"{event_node.name} Online TopUp {current_customer.user_tag_uid_hex} {order_uuid}",
             redirect_url=f"{event_settings.customer_portal_url}/topup?order_uuid={order_uuid}",
-        )
-        api = self._create_sumup_api(
-            merchant_code=event_settings.sumup_merchant_code, api_key=event_settings.sumup_api_key
         )
         self.logger.info(f"Creating SumUp checkout for amount {amount} {event_settings.currency_identifier} with redirect_url: {create_checkout.redirect_url}")
         checkout_response = await api.create_sumup_checkout(create_checkout)

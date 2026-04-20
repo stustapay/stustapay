@@ -5,7 +5,7 @@ from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, PublicConfig
+from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, GlobalSumUpConfig, PublicConfig
 from stustapay.core.schema.language import Language
 from stustapay.core.schema.tree import ROOT_NODE_ID
 from stustapay.core.schema.user import CurrentUser, Privilege
@@ -28,6 +28,9 @@ GLOBAL_EMAIL_SMTP_HOST_KEY = "mail.smtp_host"
 GLOBAL_EMAIL_SMTP_PORT_KEY = "mail.smtp_port"
 GLOBAL_EMAIL_SMTP_USERNAME_KEY = "mail.smtp_username"
 GLOBAL_EMAIL_SMTP_PASSWORD_KEY = "mail.smtp_password"
+GLOBAL_SUMUP_AFFILIATE_KEY = "sumup.affiliate_key"
+GLOBAL_SUMUP_OAUTH_CLIENT_ID_KEY = "sumup.oauth_client_id"
+GLOBAL_SUMUP_OAUTH_CLIENT_SECRET_KEY = "sumup.oauth_client_secret"
 
 
 def _localized_invitation_key(language: Language, field: str) -> str:
@@ -45,6 +48,12 @@ GLOBAL_EMAIL_CONFIG_KEYS = [
         for language in SUPPORTED_EMAIL_LANGUAGES
         for field in INVITATION_TEMPLATE_FIELDS
     ],
+]
+
+GLOBAL_SUMUP_CONFIG_KEYS = [
+    GLOBAL_SUMUP_AFFILIATE_KEY,
+    GLOBAL_SUMUP_OAUTH_CLIENT_ID_KEY,
+    GLOBAL_SUMUP_OAUTH_CLIENT_SECRET_KEY,
 ]
 
 
@@ -97,6 +106,15 @@ async def fetch_global_email_config(*, conn: Connection) -> GlobalEmailConfig:
         email_smtp_username=config.get(GLOBAL_EMAIL_SMTP_USERNAME_KEY),
         email_smtp_password=config.get(GLOBAL_EMAIL_SMTP_PASSWORD_KEY),
         invitation_texts=invitation_texts,
+    )
+
+
+async def fetch_global_sumup_config(*, conn: Connection) -> GlobalSumUpConfig:
+    config = await fetch_config_entries_by_keys(conn=conn, keys=GLOBAL_SUMUP_CONFIG_KEYS)
+    return GlobalSumUpConfig(
+        sumup_affiliate_key=config.get(GLOBAL_SUMUP_AFFILIATE_KEY) or "",
+        sumup_oauth_client_id=config.get(GLOBAL_SUMUP_OAUTH_CLIENT_ID_KEY) or "",
+        sumup_oauth_client_secret=config.get(GLOBAL_SUMUP_OAUTH_CLIENT_SECRET_KEY) or "",
     )
 
 
@@ -188,6 +206,13 @@ class ConfigService(Service[Config]):
                 except TemplateSyntaxError as exc:
                     raise InvalidArgument(f"Invalid invitation template syntax for '{field}': {exc.message}") from exc
 
+    @staticmethod
+    def _validate_global_sumup_config(config: GlobalSumUpConfig) -> None:
+        has_client_id = config.sumup_oauth_client_id.strip() != ""
+        has_client_secret = config.sumup_oauth_client_secret.strip() != ""
+        if has_client_id != has_client_secret:
+            raise InvalidArgument("SumUp OAuth client ID and secret must either both be set or both be empty")
+
     @with_db_transaction(read_only=True)
     @requires_root_user(privileges=[Privilege.global_email_management])
     async def get_global_email_config(self, *, conn: Connection) -> GlobalEmailConfig:
@@ -220,6 +245,31 @@ class ConfigService(Service[Config]):
             )
 
         return await fetch_global_email_config(conn=conn)
+
+    @with_db_transaction(read_only=True)
+    @requires_root_user(privileges=[Privilege.node_administration])
+    async def get_global_sumup_config(self, *, conn: Connection) -> GlobalSumUpConfig:
+        return await fetch_global_sumup_config(conn=conn)
+
+    @with_db_transaction
+    @requires_root_user(privileges=[Privilege.node_administration])
+    async def update_global_sumup_config(self, *, conn: Connection, config: GlobalSumUpConfig) -> GlobalSumUpConfig:
+        self._validate_global_sumup_config(config)
+        values = {
+            GLOBAL_SUMUP_AFFILIATE_KEY: config.sumup_affiliate_key,
+            GLOBAL_SUMUP_OAUTH_CLIENT_ID_KEY: config.sumup_oauth_client_id,
+            GLOBAL_SUMUP_OAUTH_CLIENT_SECRET_KEY: config.sumup_oauth_client_secret,
+        }
+        for key, value in values.items():
+            await conn.execute(
+                "insert into config (key, value, node_id) values ($1, $2, $3) "
+                "on conflict (key) do update set value = excluded.value",
+                key,
+                value,
+                ROOT_NODE_ID,
+            )
+
+        return await fetch_global_sumup_config(conn=conn)
 
     @with_db_transaction
     @requires_root_user(privileges=[Privilege.global_email_management])

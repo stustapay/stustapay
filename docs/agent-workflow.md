@@ -28,11 +28,18 @@ This repository includes a small, repo-local workflow stack for Codex-style deve
 
 - `python3 .agents/scripts/changed_surfaces.py --files <paths...> --output json`
   - Summarizes which StuStaPay surfaces are affected.
+- `python3 .agents/scripts/changed_surfaces.py --staged --output json`
+  - Reads the staged diff directly when you already have a staged worktree.
 - `python3 .agents/scripts/required_checks.py --files <paths...> --output json`
   - Maps changed paths to the stable repo validation commands.
+- `python3 .agents/scripts/required_checks.py --from-git --output json`
+  - Maps the current working tree diff to the stable repo validation commands.
 
 ## Stable Commands
 
+- `make dev`
+- `make dev-backend`
+- `make dev-web`
 - `make verify-backend`
 - `make verify-web-administration`
 - `make verify-web-customerportal`
@@ -73,3 +80,11 @@ Start from the matching template in `.agents/templates/`.
 3. Keep findings first and generated-artifact notes separate from handwritten-code findings.
 
 Keep generated diffs separate from handwritten changes in your review summary whenever contract propagation is involved.
+
+The helper scripts and skills are expected to cover the current repo layout:
+
+- backend code under `stustapay/`
+- web applications under `web/apps/` and shared code under `web/libs/`
+- Android app modules and generated client code under `app/`
+- deployment and config under `etc/`, `deploy/`, `docker/`, `pretix/`, `debian/`, and `server_*.yaml`
+- developer and CI workflow files under `.agents/`, `.github/workflows/`, `tools/`, `Makefile`, and the Nix files

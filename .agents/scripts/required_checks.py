@@ -38,10 +38,10 @@ def build_checks(paths: list[str]) -> ChecksReport:
         manual_checks.append("If NFC, SumUp, or terminal flows changed, keep a manual device checklist in `.agents/state/qa.md`.")
 
     if "config" in surface_report.surfaces:
-        manual_checks.append("Inspect config, Docker, nginx, and Debian diffs manually for environment and secret drift.")
+        manual_checks.append("Inspect config, deploy, Docker, nginx, Pretix, and Debian diffs manually for environment and secret drift.")
 
     if "tooling" in surface_report.surfaces:
-        manual_checks.append("Review developer workflow changes for command breakage and update docs if behavior changed.")
+        manual_checks.append("Review developer and CI workflow changes for command breakage and update docs if behavior changed.")
 
     if "docs" in surface_report.surfaces:
         manual_checks.append("Confirm docs still match the shipped developer workflow.")

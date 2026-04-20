@@ -3,7 +3,8 @@
   "info": {
     "title": "TeamFestlichPay Administration API",
     "license": {
-      "name": "AGPL-3.0"
+      "name": "AGPL-3.0",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.html"
     },
     "version": "0.1.0"
   },
@@ -3846,6 +3847,82 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GlobalEmailConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/config/sumup": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Global Sumup Config",
+        "operationId": "get_global_sumup_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalSumUpConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Update Global Sumup Config",
+        "operationId": "update_global_sumup_config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlobalSumUpConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalSumUpConfig"
                 }
               }
             }
@@ -8546,6 +8623,56 @@
         }
       }
     },
+    "/tree/events/{node_id}/clear-legacy-sumup-settings": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Clear Legacy Sumup Settings",
+        "operationId": "clear_legacy_sumup_settings",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestrictedEventSettings"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/nodes/{node_id}": {
       "delete": {
         "tags": [
@@ -8742,6 +8869,104 @@
         }
       }
     },
+    "/tree/nodes/{node_id}/sumup-link": {
+      "get": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Get Node Sumup Link Status",
+        "operationId": "get_node_sumup_link_status",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeSumUpConnectionStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Delete Node Sumup Link",
+        "operationId": "delete_node_sumup_link",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeSumUpConnectionStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/nodes/{node_id}/configure-sumup-token": {
       "post": {
         "tags": [
@@ -8780,7 +9005,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/NodeSumUpConnectionStatus"
+                }
               }
             }
           },
@@ -15572,6 +15799,27 @@
         ],
         "title": "GlobalEmailConfig"
       },
+      "GlobalSumUpConfig": {
+        "properties": {
+          "sumup_affiliate_key": {
+            "type": "string",
+            "title": "Sumup Affiliate Key",
+            "default": ""
+          },
+          "sumup_oauth_client_id": {
+            "type": "string",
+            "title": "Sumup Oauth Client Id",
+            "default": ""
+          },
+          "sumup_oauth_client_secret": {
+            "type": "string",
+            "title": "Sumup Oauth Client Secret",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "GlobalSumUpConfig"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -17601,6 +17849,71 @@
         ],
         "title": "NodeSeenByUser"
       },
+      "NodeSumUpConnectionStatus": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
+          "connected": {
+            "type": "boolean",
+            "title": "Connected"
+          },
+          "merchant_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merchant Code"
+          },
+          "merchant_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merchant Name"
+          },
+          "linked_event_count": {
+            "type": "integer",
+            "title": "Linked Event Count",
+            "default": 0
+          },
+          "oauth_client_id": {
+            "type": "string",
+            "title": "Oauth Client Id",
+            "default": ""
+          },
+          "oauth_configured": {
+            "type": "boolean",
+            "title": "Oauth Configured",
+            "default": false
+          },
+          "affiliate_key_configured": {
+            "type": "boolean",
+            "title": "Affiliate Key Configured",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "node_name",
+          "connected"
+        ],
+        "title": "NodeSumUpConnectionStatus"
+      },
       "NormalizedList_Account__int_": {
         "properties": {
           "ids": {
@@ -19597,6 +19910,49 @@
         ],
         "title": "PublicEventSettings"
       },
+      "ResolvedSumUpLink": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/SumUpConnectionSource"
+          },
+          "source_node_id": {
+            "type": "integer",
+            "title": "Source Node Id"
+          },
+          "source_node_name": {
+            "type": "string",
+            "title": "Source Node Name"
+          },
+          "merchant_code": {
+            "type": "string",
+            "title": "Merchant Code"
+          },
+          "merchant_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merchant Name"
+          },
+          "inherited": {
+            "type": "boolean",
+            "title": "Inherited",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "source_node_id",
+          "source_node_name",
+          "merchant_code"
+        ],
+        "title": "ResolvedSumUpLink"
+      },
       "RestrictedEventSettings": {
         "properties": {
           "sumup_api_key": {
@@ -20032,6 +20388,36 @@
           "sumup_oauth_refresh_token": {
             "type": "string",
             "title": "Sumup Oauth Refresh Token"
+          },
+          "resolved_sumup_link": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedSumUpLink"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sumup_global_oauth_configured": {
+            "type": "boolean",
+            "title": "Sumup Global Oauth Configured",
+            "default": false
+          },
+          "sumup_global_affiliate_key_configured": {
+            "type": "boolean",
+            "title": "Sumup Global Affiliate Key Configured",
+            "default": false
+          },
+          "sumup_legacy_api_key_configured": {
+            "type": "boolean",
+            "title": "Sumup Legacy Api Key Configured",
+            "default": false
+          },
+          "sumup_legacy_oauth_configured": {
+            "type": "boolean",
+            "title": "Sumup Legacy Oauth Configured",
+            "default": false
           }
         },
         "type": "object",
@@ -20325,16 +20711,30 @@
         ],
         "title": "SumUpCheckoutStatus"
       },
+      "SumUpConnectionSource": {
+        "type": "string",
+        "enum": [
+          "node_link",
+          "legacy_event_oauth",
+          "legacy_event_api_key"
+        ],
+        "title": "SumUpConnectionSource"
+      },
       "SumUpTokenPayload": {
         "properties": {
           "authorization_code": {
             "type": "string",
             "title": "Authorization Code"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "title": "Redirect Uri"
           }
         },
         "type": "object",
         "required": [
-          "authorization_code"
+          "authorization_code",
+          "redirect_uri"
         ],
         "title": "SumUpTokenPayload"
       },

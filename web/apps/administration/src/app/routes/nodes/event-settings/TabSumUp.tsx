@@ -1,70 +1,25 @@
-import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
+import { RestrictedEventSettings, useClearLegacySumupSettingsMutation, useUpdateEventMutation } from "@/api";
 import { config } from "@/api/common";
 import { useCurrentNode } from "@/hooks";
-import { Button, LinearProgress, Stack, Typography, ListItem, ListItemText, Alert } from "@mui/material";
-import { FormSwitch, FormTextField } from "@stustapay/form-components";
+import { Alert, Button, LinearProgress, List, ListItem, ListItemText, Stack } from "@mui/material";
+import { FormSwitch } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
+import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
-import { hasSecretValue } from "./secretVisibility";
 
-const requiredIssue = {
-  code: z.ZodIssueCode.custom,
-  message: "Required if sumup payment is enabled",
-};
+export const EventSumUpSettingsSchema = z.object({
+  sumup_topup_enabled: z.boolean(),
+  sumup_payment_enabled: z.boolean(),
+});
 
-export const SumUpSettingsSchema = z
-  .object({
-    sumup_topup_enabled: z.boolean(),
-    sumup_payment_enabled: z.boolean(),
-    sumup_api_key: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
-    sumup_affiliate_key: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
-    sumup_merchant_code: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
-    sumup_oauth_client_id: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
-    sumup_oauth_client_secret: z
-      .string()
-      .optional()
-      .transform((val) => val ?? ""),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.sumup_topup_enabled && !data.sumup_payment_enabled) {
-      return;
-    }
-    if (data.sumup_api_key === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sumup_api_key"] });
-    }
-    if (data.sumup_affiliate_key === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sumup_affiliate_key"] });
-    }
-    if (data.sumup_merchant_code === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sumup_merchant_code"] });
-    }
-    if (data.sumup_oauth_client_id === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sumup_oauth_client_id"] });
-    }
-    if (data.sumup_oauth_client_secret === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sumup_oauth_client_secret"] });
-    }
-  });
+export type EventSumUpSettings = z.infer<typeof EventSumUpSettingsSchema>;
 
-export type SumUpSettings = z.infer<typeof SumUpSettingsSchema>;
-
-export const SumupSettingsForm: React.FC<FormikProps<SumUpSettings>> = (formik) => {
+export const EventSumupSettingsForm: React.FC<FormikProps<EventSumUpSettings>> = (formik) => {
   const { t } = useTranslation();
   return (
     <>
@@ -80,47 +35,22 @@ export const SumupSettingsForm: React.FC<FormikProps<SumUpSettings>> = (formik) 
         name="sumup_payment_enabled"
         formik={formik}
       />
-      <FormTextField
-        disabled={!config.sumupTopupEnabledGlobally}
-        label={t("settings.sumup.sumup_affiliate_key")}
-        name="sumup_affiliate_key"
-        type="password"
-        formik={formik}
-      />
-      <FormTextField
-        disabled={!config.sumupTopupEnabledGlobally}
-        label={t("settings.sumup.sumup_api_key")}
-        name="sumup_api_key"
-        type="password"
-        formik={formik}
-      />
-      <FormTextField
-        disabled={!config.sumupTopupEnabledGlobally}
-        label={t("settings.sumup.sumup_merchant_code")}
-        name="sumup_merchant_code"
-        formik={formik}
-      />
-      <FormTextField
-        disabled={!config.sumupTopupEnabledGlobally}
-        label={t("settings.sumup.sumup_oauth_client_id")}
-        name="sumup_oauth_client_id"
-        formik={formik}
-      />
-      <FormTextField
-        disabled={!config.sumupTopupEnabledGlobally}
-        label={t("settings.sumup.sumup_oauth_client_secret")}
-        name="sumup_oauth_client_secret"
-        type="password"
-        formik={formik}
-      />
     </>
   );
 };
 
-const getSumupOauthUrl = (eventSettings: RestrictedEventSettings, redirectUrl: string) => {
-  const nonce = "fsadffffnwefmvsnef";
-
-  return `https://api.sumup.com/authorize?response_type=code&client_id=${eventSettings.sumup_oauth_client_id}&redirect_uri=${redirectUrl}&state=${nonce}`;
+const formatConnectionSource = (eventSettings: RestrictedEventSettings, t: (key: string, options?: Record<string, unknown>) => string) => {
+  const source = eventSettings.resolved_sumup_link?.source;
+  if (source === "node_link") {
+    return t("settings.sumup.sourceNodeLink");
+  }
+  if (source === "legacy_event_oauth") {
+    return t("settings.sumup.sourceLegacyOauth");
+  }
+  if (source === "legacy_event_api_key") {
+    return t("settings.sumup.sourceLegacyApiKey");
+  }
+  return t("settings.sumup.sourceUnavailable");
 };
 
 export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
@@ -129,11 +59,16 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
 }) => {
   const { currentNode } = useCurrentNode();
   const { t } = useTranslation();
+  const openModal = useOpenModal();
   const [updateEvent] = useUpdateEventMutation();
+  const [clearLegacySumupSettings, clearLegacyState] = useClearLegacySumupSettingsMutation();
+  const hasLegacyCredentials =
+    eventSettings.sumup_legacy_api_key_configured || eventSettings.sumup_legacy_oauth_configured;
+  const usesLegacyCredentials =
+    eventSettings.resolved_sumup_link?.source === "legacy_event_api_key" ||
+    eventSettings.resolved_sumup_link?.source === "legacy_event_oauth";
 
-  const sumupRedirectUrl = `${config.adminBaseUrl}/node/${currentNode.id}/settings/sumup-redirect`;
-
-  const handleSubmit = (values: SumUpSettings, { setSubmitting }: FormikHelpers<SumUpSettings>) => {
+  const handleSubmit = (values: EventSumUpSettings, { setSubmitting }: FormikHelpers<EventSumUpSettings>) => {
     setSubmitting(true);
     updateEvent({ nodeId: nodeId, updateEvent: { ...eventSettings, ...values } })
       .unwrap()
@@ -147,36 +82,91 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
       });
   };
 
-  const handleLoginWithSumup = () => {
-    const sumupUrl = getSumupOauthUrl(eventSettings, sumupRedirectUrl);
-    window.location.href = sumupUrl;
+  const linkedNodeId = eventSettings.resolved_sumup_link?.source_node_id;
+  const linkedNodeSettingsUrl =
+    linkedNodeId != null ? `/node/${linkedNodeId}/settings?tab=sumupConnection` : `/node/${currentNode.parent}/settings?tab=sumupConnection`;
+  const handleClearLegacySettings = () => {
+    openModal({
+      type: "confirm",
+      title: t("settings.sumup.clearLegacyConfirmTitle"),
+      content: t("settings.sumup.clearLegacyConfirmContent"),
+      onConfirm: () => {
+        clearLegacySumupSettings({ nodeId })
+          .unwrap()
+          .then(() => {
+            toast.success(t("settings.sumup.clearLegacySuccess"));
+          })
+          .catch((err) => {
+            toast.error(t("settings.sumup.clearLegacyFailed", { reason: err?.data?.detail ?? err.error }));
+          });
+      },
+    });
   };
 
   return (
     <Stack spacing={2}>
       {!config.sumupTopupEnabledGlobally && (
-        <Alert severity="warning">Sumup Payment is disabled globally in this StuStayPay instances configuration</Alert>
+        <Alert severity="warning">SumUp payment is disabled globally in this StuStaPay instance configuration.</Alert>
+      )}
+      {eventSettings.resolved_sumup_link ? (
+        <Alert severity="success">
+          {t("settings.sumup.resolvedLinkSummary", {
+            merchantCode: eventSettings.resolved_sumup_link.merchant_code,
+            nodeName: eventSettings.resolved_sumup_link.source_node_name,
+          })}
+        </Alert>
+      ) : (
+        <Alert severity="warning">{t("settings.sumup.noResolvedLink")}</Alert>
+      )}
+      {!eventSettings.sumup_global_oauth_configured && <Alert severity="info">{t("settings.sumup.oauthConfigMissing")}</Alert>}
+      {!eventSettings.sumup_global_affiliate_key_configured && <Alert severity="info">{t("settings.sumup.affiliateKeyMissing")}</Alert>}
+      {hasLegacyCredentials && usesLegacyCredentials && (
+        <Alert severity="info">{t("settings.sumup.legacyFallbackNotice")}</Alert>
+      )}
+      {hasLegacyCredentials && !usesLegacyCredentials && (
+        <Alert severity="info">{t("settings.sumup.legacyStoredButUnusedNotice")}</Alert>
+      )}
+      <List>
+        <ListItem>
+          <ListItemText primary={t("settings.sumup.connectionSource")} secondary={formatConnectionSource(eventSettings, t)} />
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary={t("settings.sumup.sourceNode")}
+            secondary={eventSettings.resolved_sumup_link?.source_node_name ?? t("settings.sumup.sourceUnavailable")}
+          />
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary={t("settings.sumup.sumup_merchant_code")}
+            secondary={eventSettings.resolved_sumup_link?.merchant_code ?? t("settings.sumup.secretNotConfigured")}
+          />
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary={t("settings.sumup.merchantName")}
+            secondary={eventSettings.resolved_sumup_link?.merchant_name ?? t("settings.sumup.secretNotConfigured")}
+          />
+        </ListItem>
+      </List>
+      <Button variant="outlined" component={RouterLink} to={linkedNodeSettingsUrl}>
+        {t("settings.sumup.openConnectionSettings")}
+      </Button>
+      {hasLegacyCredentials && (
+        <Button variant="outlined" color="secondary" onClick={handleClearLegacySettings} disabled={clearLegacyState.isLoading}>
+          {t("settings.sumup.clearLegacyButton")}
+        </Button>
       )}
       <Formik
-        initialValues={eventSettings as SumUpSettings} // TODO: figure out a way of not needing to cast this
+        initialValues={eventSettings as EventSumUpSettings}
         onSubmit={handleSubmit}
-        validationSchema={toFormikValidationSchema(SumUpSettingsSchema)}
+        validationSchema={toFormikValidationSchema(EventSumUpSettingsSchema)}
         enableReinitialize={true}
       >
         {(formik) => (
           <Form onSubmit={formik.handleSubmit}>
             <Stack spacing={2}>
-              <SumupSettingsForm {...formik} />
-              <ListItem>
-                <ListItemText
-                  primary={t("settings.sumup.refreshToken")}
-                  secondary={
-                    hasSecretValue(eventSettings.sumup_oauth_refresh_token)
-                      ? t("settings.sumup.secretConfigured")
-                      : t("settings.sumup.secretNotConfigured")
-                  }
-                />
-              </ListItem>
+              <EventSumupSettingsForm {...formik} />
               {formik.isSubmitting && <LinearProgress />}
               <Button
                 type="submit"
@@ -190,8 +180,6 @@ export const TabSumUp: React.FC<{ nodeId: number; eventSettings: RestrictedEvent
           </Form>
         )}
       </Formik>
-      <Typography>{t("settings.sumup.sumup_redirect_url", { redirectUrl: sumupRedirectUrl })}</Typography>
-      <Button onClick={handleLoginWithSumup}>{t("settings.sumup.login_with_sumup")}</Button>
     </Stack>
   );
 };

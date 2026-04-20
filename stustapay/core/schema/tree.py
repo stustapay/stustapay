@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig, SMTPConfig
 from stustapay.core.schema.language import Language
+from stustapay.core.schema.sumup import ResolvedSumUpLink
 from stustapay.core.schema.user import Privilege
 
 ROOT_NODE_ID = 0
@@ -135,6 +136,11 @@ class RestrictedEventSettings(_BaseEvent, _RestrictedEventMetadata):
     id: int
     languages: list[Language]
     sumup_oauth_refresh_token: str
+    resolved_sumup_link: ResolvedSumUpLink | None = None
+    sumup_global_oauth_configured: bool = False
+    sumup_global_affiliate_key_configured: bool = False
+    sumup_legacy_api_key_configured: bool = False
+    sumup_legacy_oauth_configured: bool = False
 
     @property
     def smtp_config(self) -> SMTPConfig | None:

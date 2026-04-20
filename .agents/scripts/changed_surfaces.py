@@ -18,9 +18,6 @@ class SurfaceReport:
     notes: list[str]
 
 
-GIT_SCOPES = ("all", "staged", "unstaged")
-
-
 def _normalize(path: str) -> str:
     normalized = PurePosixPath(path.strip()).as_posix()
     while normalized.startswith("./"):
@@ -38,52 +35,23 @@ def _run_git_paths(cmd: list[str]) -> list[str]:
     return [line for line in proc.stdout.splitlines() if line.strip()]
 
 
-def add_path_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    parser.add_argument("--files", nargs="*", help="Explicit files to analyze.")
-    parser.add_argument(
-        "--scope",
-        choices=GIT_SCOPES,
-        default="all",
-        help="Git change scope to analyze when --files is omitted. 'unstaged' includes untracked files.",
-    )
-    parser.add_argument(
-        "--staged",
-        action="store_true",
-        help="Deprecated alias for --scope staged.",
-    )
-    return parser
+def load_paths_from_git(staged: bool = False) -> list[str]:
+    cmd = ["git", "diff", "--name-only"]
+    if staged:
+        cmd.append("--cached")
 
+    paths = set(_run_git_paths(cmd))
 
-def _resolve_scope(args: argparse.Namespace) -> str:
-    return "staged" if getattr(args, "staged", False) else getattr(args, "scope", "all")
-
-
-def load_paths_from_git(scope: str = "all") -> list[str]:
-    if scope not in GIT_SCOPES:
-        raise ValueError(f"Unsupported git scope: {scope}")
-
-    paths: set[str] = set()
-
-    if scope in {"all", "staged"}:
-        paths.update(_run_git_paths(["git", "diff", "--cached", "--name-only"]))
-
-    if scope in {"all", "unstaged"}:
-        paths.update(_run_git_paths(["git", "diff", "--name-only"]))
+    if not staged:
         paths.update(_run_git_paths(["git", "ls-files", "--others", "--exclude-standard"]))
 
     return sorted(paths)
 
 
-def resolve_paths(files: list[str] | None = None, scope: str = "all") -> list[str]:
-    if files:
-        return [_normalize(path) for path in files]
-    return [_normalize(path) for path in load_paths_from_git(scope=scope)]
-
-
 def _load_paths(args: argparse.Namespace) -> list[str]:
     if args.files:
         return [_normalize(path) for path in args.files]
-    return resolve_paths(scope=_resolve_scope(args))
+    return [_normalize(path) for path in load_paths_from_git(staged=args.staged)]
 
 
 def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
@@ -94,11 +62,15 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
     requires_contract_sync = False
 
     for path in normalized:
-        if path.startswith("stustapay/") or path == "pyproject.toml":
+        if path.startswith("stustapay/") or path in {"pyproject.toml", "setup.py"}:
             surfaces.add("backend")
 
-        if path.startswith("stustapay/administration/") or path.startswith("stustapay/customer_portal/") or path.startswith(
-            "stustapay/terminalserver/"
+        if path.startswith(
+            (
+                "stustapay/administration/",
+                "stustapay/customer_portal/",
+                "stustapay/terminalserver/",
+            )
         ):
             requires_contract_sync = True
 
@@ -111,7 +83,8 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
             web_targets.add("customerportal")
 
         if path.startswith("web/libs/") or path in {
-            "web/.eslintrc.json",
+            "web/eslint.config.mjs",
+            "web/jest.config.ts",
             "web/nx.json",
             "web/package-lock.json",
             "web/package.json",
@@ -127,16 +100,29 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
             surfaces.add("openapi")
             requires_contract_sync = True
 
-        if path.startswith("app/api/") or path == "app/build.gradle":
+        if path.startswith("app/api/") or path in {
+            "app/api/build.gradle",
+            "app/build.gradle",
+            "app/settings.gradle",
+        }:
             requires_contract_sync = True
 
-        if path.startswith(("etc/", "docker/", "debian/", "pretix/")) or path in {"server_local.yaml", "config.yaml"}:
+        if path.startswith(("deploy/", "docker/", "etc/", "debian/", "pretix/")) or path in {
+            "server_azure.yaml",
+            "server_azure_teamfestlich.yaml",
+            "server_local.yaml",
+        }:
             surfaces.add("config")
 
-        if path.startswith("tools/") or path.startswith(".agents/") or path in {"AGENTS.md", "Makefile"}:
+        if path.startswith((".agents/", ".github/", "tools/")) or path in {
+            "AGENTS.md",
+            "Makefile",
+            "flake.lock",
+            "flake.nix",
+        }:
             surfaces.add("tooling")
 
-        if path.startswith("docs/") or path == "README.md":
+        if path.startswith("docs/") or path in {"README.md", "authors.md", "CHANGELOG.md"}:
             surfaces.add("docs")
 
     if requires_contract_sync:
@@ -159,7 +145,8 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Summarize impacted StuStaPay surfaces from changed files.")
-    add_path_arguments(parser)
+    parser.add_argument("--files", nargs="*", help="Explicit files to analyze. When omitted, uses `git diff --name-only`.")
+    parser.add_argument("--staged", action="store_true", help="Read staged files with `git diff --cached --name-only`.")
     parser.add_argument("--output", choices=("text", "json"), default="text")
     return parser.parse_args()
 

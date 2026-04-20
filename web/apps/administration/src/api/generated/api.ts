@@ -682,6 +682,14 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/config/email`, method: "POST", body: queryArg.globalEmailConfig }),
         invalidatesTags: ["config"],
       }),
+      getGlobalSumupConfig: build.query<GetGlobalSumupConfigApiResponse, GetGlobalSumupConfigApiArg>({
+        query: () => ({ url: `/config/sumup` }),
+        providesTags: ["config"],
+      }),
+      updateGlobalSumupConfig: build.mutation<UpdateGlobalSumupConfigApiResponse, UpdateGlobalSumupConfigApiArg>({
+        query: (queryArg) => ({ url: `/config/sumup`, method: "POST", body: queryArg.globalSumUpConfig }),
+        invalidatesTags: ["config"],
+      }),
       sendGlobalEmailTest: build.mutation<SendGlobalEmailTestApiResponse, SendGlobalEmailTestApiArg>({
         query: () => ({ url: `/config/email/test`, method: "POST" }),
         invalidatesTags: ["config"],
@@ -1359,6 +1367,10 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/settings` }),
         providesTags: ["tree"],
       }),
+      clearLegacySumupSettings: build.mutation<ClearLegacySumupSettingsApiResponse, ClearLegacySumupSettingsApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/clear-legacy-sumup-settings`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
       deleteNode: build.mutation<DeleteNodeApiResponse, DeleteNodeApiArg>({
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}`, method: "DELETE" }),
         invalidatesTags: ["tree"],
@@ -1373,6 +1385,14 @@ const injectedRtkApi = api
       }),
       generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      getNodeSumupLinkStatus: build.query<GetNodeSumupLinkStatusApiResponse, GetNodeSumupLinkStatusApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/sumup-link` }),
+        providesTags: ["tree"],
+      }),
+      deleteNodeSumupLink: build.mutation<DeleteNodeSumupLinkApiResponse, DeleteNodeSumupLinkApiArg>({
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/sumup-link`, method: "DELETE" }),
         invalidatesTags: ["tree"],
       }),
       configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
@@ -2381,6 +2401,12 @@ export type UpdateGlobalEmailConfigApiResponse = /** status 200 Successful Respo
 export type UpdateGlobalEmailConfigApiArg = {
   globalEmailConfig: GlobalEmailConfig;
 };
+export type GetGlobalSumupConfigApiResponse = /** status 200 Successful Response */ GlobalSumUpConfig;
+export type GetGlobalSumupConfigApiArg = void;
+export type UpdateGlobalSumupConfigApiResponse = /** status 200 Successful Response */ GlobalSumUpConfig;
+export type UpdateGlobalSumupConfigApiArg = {
+  globalSumUpConfig: GlobalSumUpConfig;
+};
 export type SendGlobalEmailTestApiResponse = /** status 200 Successful Response */ {
   [key: string]: string;
 };
@@ -2753,6 +2779,10 @@ export type GetRestrictedEventSettingsApiResponse = /** status 200 Successful Re
 export type GetRestrictedEventSettingsApiArg = {
   nodeId: number;
 };
+export type ClearLegacySumupSettingsApiResponse = /** status 200 Successful Response */ RestrictedEventSettings;
+export type ClearLegacySumupSettingsApiArg = {
+  nodeId: number;
+};
 export type DeleteNodeApiResponse = /** status 200 Successful Response */ any;
 export type DeleteNodeApiArg = {
   nodeId: number;
@@ -2769,7 +2799,15 @@ export type GenerateRevenueReportApiResponse = /** status 200 Successful Respons
 export type GenerateRevenueReportApiArg = {
   nodeId: number;
 };
-export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ any;
+export type GetNodeSumupLinkStatusApiResponse = /** status 200 Successful Response */ NodeSumUpConnectionStatus;
+export type GetNodeSumupLinkStatusApiArg = {
+  nodeId: number;
+};
+export type DeleteNodeSumupLinkApiResponse = /** status 200 Successful Response */ NodeSumUpConnectionStatus;
+export type DeleteNodeSumupLinkApiArg = {
+  nodeId: number;
+};
+export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ NodeSumUpConnectionStatus;
 export type ConfigureSumupTokenApiArg = {
   nodeId: number;
   sumUpTokenPayload: SumUpTokenPayload;
@@ -3675,6 +3713,11 @@ export type GlobalEmailConfig = {
     };
   };
 };
+export type GlobalSumUpConfig = {
+  sumup_affiliate_key?: string;
+  sumup_oauth_client_id?: string;
+  sumup_oauth_client_secret?: string;
+};
 export type AccountType =
   | "private"
   | "sale_exit"
@@ -4494,6 +4537,15 @@ export type UpdateEvent = {
     };
   };
 };
+export type SumUpConnectionSource = "node_link" | "legacy_event_oauth" | "legacy_event_api_key";
+export type ResolvedSumUpLink = {
+  source: SumUpConnectionSource;
+  source_node_id: number;
+  source_node_name: string;
+  merchant_code: string;
+  merchant_name?: string | null;
+  inherited?: boolean;
+};
 export type RestrictedEventSettings = {
   sumup_api_key?: string;
   sumup_affiliate_key?: string;
@@ -4556,9 +4608,26 @@ export type RestrictedEventSettings = {
   id: number;
   languages: Language[];
   sumup_oauth_refresh_token: string;
+  resolved_sumup_link?: ResolvedSumUpLink | null;
+  sumup_global_oauth_configured?: boolean;
+  sumup_global_affiliate_key_configured?: boolean;
+  sumup_legacy_api_key_configured?: boolean;
+  sumup_legacy_oauth_configured?: boolean;
+};
+export type NodeSumUpConnectionStatus = {
+  node_id: number;
+  node_name: string;
+  connected: boolean;
+  merchant_code?: string | null;
+  merchant_name?: string | null;
+  linked_event_count?: number;
+  oauth_client_id?: string;
+  oauth_configured?: boolean;
+  affiliate_key_configured?: boolean;
 };
 export type SumUpTokenPayload = {
   authorization_code: string;
+  redirect_uri: string;
 };
 export type BodyUploadEventBannerTreeEventsNodeIdBannerPost = {
   file: Blob;
@@ -4998,6 +5067,9 @@ export const {
   useGetGlobalEmailConfigQuery,
   useLazyGetGlobalEmailConfigQuery,
   useUpdateGlobalEmailConfigMutation,
+  useGetGlobalSumupConfigQuery,
+  useLazyGetGlobalSumupConfigQuery,
+  useUpdateGlobalSumupConfigMutation,
   useSendGlobalEmailTestMutation,
   useListSystemAccountsQuery,
   useLazyListSystemAccountsQuery,
@@ -5097,10 +5169,14 @@ export const {
   useUpdateEventMutation,
   useGetRestrictedEventSettingsQuery,
   useLazyGetRestrictedEventSettingsQuery,
+  useClearLegacySumupSettingsMutation,
   useDeleteNodeMutation,
   useGenerateTestBonMutation,
   useGenerateTestReportMutation,
   useGenerateRevenueReportMutation,
+  useGetNodeSumupLinkStatusQuery,
+  useLazyGetNodeSumupLinkStatusQuery,
+  useDeleteNodeSumupLinkMutation,
   useConfigureSumupTokenMutation,
   useUploadEventBannerMutation,
   useDeleteEventBannerMutation,

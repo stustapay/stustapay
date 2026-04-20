@@ -8,11 +8,10 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build
+# Gradle outputs for root project and all included modules (e.g. app/, api/, baselineprofile/)
+build/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
 app/src/main/res/values/secrets.xml
-api/build
-baselineprofile/build

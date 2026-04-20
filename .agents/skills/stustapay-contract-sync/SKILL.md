@@ -34,5 +34,7 @@ Use this skill whenever HTTP contract behavior changes or generated artifacts ar
 - Changes under `stustapay/customer_portal/`
 - Changes under `stustapay/terminalserver/`
 - Changes under `api/`
+- Changes under `web/apps/*/openapi-config.js`
 - Changes under `web/apps/*/src/api/generated/`
 - Changes under `app/api/`
+- Changes under `app/api/build.gradle`, `app/build.gradle`, or `app/settings.gradle`

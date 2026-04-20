@@ -23,12 +23,19 @@ from stustapay.core.schema.tree import (
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
+from stustapay.core.service.sumup_link import (
+    delete_node_sumup_link,
+    enrich_event_sumup_settings,
+    get_node_sumup_connection_status,
+    upsert_node_sumup_link,
+)
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
     get_tree_for_current_user,
 )
-from stustapay.payment.sumup.api import fetch_refresh_token_from_auth_code
+from stustapay.payment.sumup.api import fetch_merchant_profile, fetch_refresh_token_from_auth_code
+from stustapay.core.service.config import fetch_global_sumup_config
 
 EVENT_SYSTEM_ACCOUNT_TYPES = {
     AccountType.cash_entry.value,
@@ -519,7 +526,31 @@ class TreeService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user(privileges=[Privilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
-        return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        return await enrich_event_sumup_settings(conn=conn, node_id=node.id, event_settings=settings)
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(privileges=[Privilege.node_administration])
+    async def clear_legacy_sumup_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
+        event_id = await conn.fetchval("select event_id from node where id = $1", node.id)
+        if event_id is None:
+            raise NotFound(element_type="event", element_id=node.id)
+
+        await conn.execute(
+            "update event set "
+            "sumup_api_key = '', "
+            "sumup_affiliate_key = '', "
+            "sumup_merchant_code = '', "
+            "sumup_oauth_client_id = '', "
+            "sumup_oauth_client_secret = '', "
+            "sumup_oauth_refresh_token = '' "
+            "where id = $1",
+            event_id,
+        )
+
+        settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        return await enrich_event_sumup_settings(conn=conn, node_id=node.id, event_settings=settings)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
@@ -570,20 +601,45 @@ class TreeService(Service[Config]):
         await conn.execute("delete from node where id = $1", node.id)
 
     @with_db_transaction
-    @requires_node(event_only=True)
+    @requires_node()
     @requires_user(privileges=[Privilege.node_administration])
-    async def sumup_auth_code_flow(self, *, conn: Connection, node: Node, authorization_code: str):
-        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+    async def sumup_auth_code_flow(self, *, conn: Connection, node: Node, authorization_code: str, redirect_uri: str):
+        if node.event is not None or node.event_node_id is not None:
+            raise InvalidArgument("SumUp merchant links can only be configured on nodes above events")
+        global_sumup = await fetch_global_sumup_config(conn=conn)
+        if not global_sumup.sumup_oauth_client_id or not global_sumup.sumup_oauth_client_secret:
+            raise InvalidArgument("Global SumUp OAuth credentials are not configured")
 
         token = await fetch_refresh_token_from_auth_code(
-            client_id=event_settings.sumup_oauth_client_id,
-            client_secret=event_settings.sumup_oauth_client_secret,
+            client_id=global_sumup.sumup_oauth_client_id,
+            client_secret=global_sumup.sumup_oauth_client_secret,
             authorization_code=authorization_code,
+            redirect_uri=redirect_uri,
         )
-        assert node.event is not None
-        await conn.execute(
-            "update event set sumup_oauth_refresh_token = $1 where id = $2", token.refresh_token, node.event.id
+        merchant_profile = await fetch_merchant_profile(token.access_token)
+        return await upsert_node_sumup_link(
+            conn=conn,
+            node=node,
+            merchant_code=merchant_profile.merchant_code,
+            merchant_name=merchant_profile.company_name,
+            refresh_token=token.refresh_token,
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def get_node_sumup_link_status(self, *, conn: Connection, node: Node):
+        if node.event is not None or node.event_node_id is not None:
+            raise InvalidArgument("SumUp merchant links can only be configured on nodes above events")
+        return await get_node_sumup_connection_status(conn=conn, node=node)
+
+    @with_db_transaction
+    @requires_node()
+    @requires_user(privileges=[Privilege.node_administration])
+    async def delete_node_sumup_link(self, *, conn: Connection, node: Node):
+        if node.event is not None or node.event_node_id is not None:
+            raise InvalidArgument("SumUp merchant links can only be configured on nodes above events")
+        return await delete_node_sumup_link(conn=conn, node=node)
 
     @with_db_transaction
     @requires_node(event_only=True)

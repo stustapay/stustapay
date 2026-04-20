@@ -27,10 +27,6 @@ app/chip_debug/release/
 /test
 /build
 
-# macOS / design exports
-.DS_Store
-/android-current-screens.pen
-
 # ides
 .idea
 *~
@@ -52,9 +48,10 @@ node_modules/
 # local
 TODO.md
 .agents/state/*.md
+.agents/state/android-captures/
 !.agents/state/.gitkeep
-.agents/state/android-captures/*
-!.agents/state/android-captures/.gitkeep
+# local design / scratch (e.g. Pencil exports)
+/*.pen
 
 # nix
 /.direnv
