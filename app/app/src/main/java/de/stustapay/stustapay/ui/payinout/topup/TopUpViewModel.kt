@@ -157,10 +157,15 @@ class TopUpViewModel @Inject constructor(
 
     suspend fun startCardReaderSetup(context: Activity) {
         _status.update { this.context.getString(R.string.topup_status_ec_reader_setup) }
-        val startError = ecPaymentRepository.startCardReaderSetup(context)
-        if (startError != null) {
-            _status.update { startError }
-            _errorMessage.update { startError }
+        val reactivationError = ecPaymentRepository.reactivateReader()
+        if (reactivationError == null) {
+            return
+        }
+
+        val setupError = ecPaymentRepository.startCardReaderSetup(context)
+        if (setupError != null) {
+            _status.update { setupError }
+            _errorMessage.update { setupError }
         }
     }
 
@@ -188,7 +193,9 @@ class TopUpViewModel @Inject constructor(
             }
 
             is Response.Error -> {
-                _status.update { response.msg() }
+                val msg = response.msg()
+                _status.update { msg }
+                _errorMessage.update { msg }
                 false
             }
         }
@@ -322,7 +329,9 @@ class TopUpViewModel @Inject constructor(
             }
 
             is Response.Error -> {
-                _status.update { response.msg() }
+                val msg = response.msg()
+                _status.update { msg }
+                _errorMessage.update { msg }
                 return false
             }
         }
@@ -342,7 +351,9 @@ class TopUpViewModel @Inject constructor(
             }
 
             is Response.Error -> {
-                _status.update { context.getString(R.string.topup_status_failed, topUpType, response.msg()) }
+                val msg = context.getString(R.string.topup_status_failed, topUpType, response.msg())
+                _status.update { msg }
+                _errorMessage.update { msg }
                 _navState.update { TopUpPage.Failure }
                 
                 // Reset customer display to welcome state on error

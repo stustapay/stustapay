@@ -17,6 +17,7 @@
     <string name="selfservice_scan_balance_title">Houd uw polsbandje hier</string>
     <string name="selfservice_scan_balance_title_compact">Houd chip hier</string>
     <string name="selfservice_scan_balance_subtitle">Scan om uw saldo te bekijken</string>
+    <string name="selfservice_scan_topup_subtitle">Scan om uw saldo op te laden</string>
     <string name="selfservice_balance_loading">Uw polsbandje wordt gelezen...</string>
     <string name="selfservice_auto_return">Klaar. Terug naar het startscherm...</string>
     <string name="customer_display_welcome_event">Welkom bij %1$s</string>

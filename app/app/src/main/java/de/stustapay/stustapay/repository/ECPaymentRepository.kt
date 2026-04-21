@@ -24,9 +24,11 @@ class ECPaymentRepository @Inject constructor(
         return sumUp.isLoggedIn()
     }
 
-    suspend fun startCardReaderSetup(context: Activity): String? {
+    suspend fun startCardReaderSetup(_context: Activity): String? {
         return try {
-            sumUp.cardReaderSettings(context)
+            if (!sumUp.reactivateConnectedReader()) {
+                return "Could not activate the connected card reader."
+            }
             when (val state = sumUp.paymentStatus.value) {
                 is SumUpState.Error -> state.msg
                 is SumUpState.Failed -> state.msg
@@ -34,6 +36,18 @@ class ECPaymentRepository @Inject constructor(
             }
         } catch (exc: Exception) {
             exc.message ?: "EC reader setup could not be started."
+        }
+    }
+
+    suspend fun reactivateReader(): String? {
+        return try {
+            if (sumUp.reactivateConnectedReader()) {
+                null
+            } else {
+                "Could not activate the connected card reader."
+            }
+        } catch (exc: Exception) {
+            exc.message ?: "EC reader could not be activated."
         }
     }
 

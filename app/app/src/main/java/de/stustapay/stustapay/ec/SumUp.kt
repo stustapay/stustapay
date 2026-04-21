@@ -468,6 +468,30 @@ class SumUp @Inject constructor(
         }
     }
 
+    /**
+     * Attempt to wake an already connected reader without opening the connection flow.
+     * Returns true when direct activation was attempted successfully.
+     */
+    suspend fun reactivateConnectedReader(): Boolean {
+        if (!ensureInitialized()) {
+            _paymentStatus.update { SumUpState.Error("sumup api not initialized") }
+            return false
+        }
+        if (!SumUpAPI.isLoggedIn()) {
+            return false
+        }
+
+        return try {
+            SumUpAPI.prepareForCheckout()
+            true
+        } catch (exc: Exception) {
+            _paymentStatus.update {
+                SumUpState.Error("failed to activate connected card reader: ${exc.message ?: "unknown error"}")
+            }
+            false
+        }
+    }
+
 
     /**
      * perform login at sumup api.

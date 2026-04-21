@@ -184,7 +184,11 @@ fun StartpageView(
                             .padding(16.dp)
                             .widthIn(min = 260.dp, max = 360.dp)
                     ) {
-                        TerminalConfig(viewModel = terminalConfigViewModel, fetchConfig = false)
+                        TerminalConfig(
+                            viewModel = terminalConfigViewModel,
+                            fetchConfig = false,
+                            selfServiceMode = true,
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
                             modifier = Modifier.align(Alignment.End),

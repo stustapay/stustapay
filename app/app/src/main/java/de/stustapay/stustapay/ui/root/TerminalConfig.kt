@@ -24,11 +24,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.api.models.TerminalMode
 import de.stustapay.libssp.ui.common.Spinner
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 
 @Composable
 fun TerminalConfig(
     viewModel: TerminalConfigViewModel = hiltViewModel(),
-    fetchConfig: Boolean = true
+    fetchConfig: Boolean = true,
+    selfServiceMode: Boolean = false,
 ) {
     val loginState by viewModel.uiState.collectAsStateWithLifecycle()
     val configLoading by viewModel.configLoading.collectAsStateWithLifecycle()
@@ -56,7 +58,11 @@ fun TerminalConfig(
             if (configLoading) {
                 Spinner()
             } else {
-                Icon(Icons.Filled.Refresh, "Aktualisieren")
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Aktualisieren",
+                    tint = if (selfServiceMode) SelfServicePalette.title else MaterialTheme.colors.onSurface
+                )
             }
         }
         Column(
@@ -76,17 +82,22 @@ fun TerminalConfig(
             Text(
                 text = title.title,
                 style = MaterialTheme.typography.h4,
+                color = if (selfServiceMode) SelfServicePalette.title else MaterialTheme.colors.onSurface,
                 modifier = Modifier.padding(top = 10.dp)
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.h5,
+                    color = if (selfServiceMode) SelfServicePalette.subtitle else MaterialTheme.colors.onSurface,
                     modifier = Modifier.padding(top = 10.dp)
                 )
             }
 
-            LoginProfile(viewModel)
+            LoginProfile(
+                viewModel = viewModel,
+                selfServiceMode = selfServiceMode,
+            )
         }
     }
 }

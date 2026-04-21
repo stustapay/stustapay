@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.ui.chipscan.SelfServiceScanPanelContent
 import de.stustapay.stustapay.ui.common.ErrorDialog
 import de.stustapay.stustapay.ui.common.pay.CashECSelectionViewModel
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceBackground
@@ -108,6 +109,14 @@ fun TopUpSelection(
                     }
                 }
             },
+            clarificationContent = { status, compactLayout ->
+                SelfServiceScanPanelContent(
+                    isSmallScreen = compactLayout,
+                    scanStatus = status,
+                    title = stringResource(R.string.selfservice_scan_balance_title),
+                    subtitle = stringResource(R.string.selfservice_scan_topup_subtitle),
+                )
+            },
         )
 
         SelfServiceTopUpContent(
@@ -120,14 +129,8 @@ fun TopUpSelection(
             onAmountUpdate = { viewModel.setAmount(it) },
             onClear = { viewModel.clearDraft() },
             onScanPay = {
-                activity?.let { currentActivity ->
+                activity?.let {
                     if (!viewModel.checkAmountLocal(topUpState.currentAmount.toDouble() / 100.0)) {
-                        return@let
-                    }
-                    if (!viewModel.isCardReaderReady()) {
-                        scope.launch {
-                            viewModel.startCardReaderSetup(currentActivity)
-                        }
                         return@let
                     }
                     paymentSelectionViewModel.showScanChipOnCustomerDisplay()

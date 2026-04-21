@@ -77,6 +77,14 @@ fun NfcScanDialog(
     onScan: (NfcTag) -> Unit = {},
     showClarification: Boolean = false,
     variant: NfcScanDialogVariant = NfcScanDialogVariant.Operator,
+    clarificationContent: @Composable (status: String, compactLayout: Boolean) -> Unit = { status, compactLayout ->
+        SelfServiceScanPanelContent(
+            isSmallScreen = compactLayout,
+            scanStatus = status,
+            title = stringResource(R.string.selfservice_scan_balance_title),
+            subtitle = stringResource(R.string.selfservice_scan_balance_subtitle),
+        )
+    },
     content: @Composable (status: String, compactLayout: Boolean) -> Unit = { status, compactLayout ->
         PencilOperatorScanContent(
             scanStatus = status,
@@ -104,8 +112,9 @@ fun NfcScanDialog(
         val maxDialogHeight = (configuration.screenHeightDp * 0.90f).dp
 
         val adjustedWidth = when {
-            showClarification && effectiveSmallScreen -> 500.dp
-            showClarification -> 640.dp
+            // Keep clarification dialogs aligned with the proven AccountScan card geometry.
+            showClarification && effectiveSmallScreen -> 380.dp
+            showClarification -> 430.dp
             variant == NfcScanDialogVariant.Default && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Default -> 430.dp
             variant == NfcScanDialogVariant.Sale && effectiveSmallScreen -> 380.dp
@@ -116,8 +125,9 @@ fun NfcScanDialog(
         }.coerceAtMost(maxDialogWidth)
 
         val adjustedHeight = when {
-            showClarification && effectiveSmallScreen -> 360.dp
-            showClarification -> 560.dp
+            // Match AccountScan dimensions so the self-service scan panel fits on handhelds.
+            showClarification && effectiveSmallScreen -> 380.dp
+            showClarification -> 440.dp
             variant == NfcScanDialogVariant.Default && effectiveSmallScreen -> 300.dp
             variant == NfcScanDialogVariant.Default -> 360.dp
             variant == NfcScanDialogVariant.Sale && effectiveSmallScreen -> 300.dp
@@ -168,8 +178,8 @@ fun NfcScanDialog(
                         showStatus = false,
                         showCloseButton = true,
                         onScan = { tag ->
-                            state.close()
                             onScan(tag)
+                            state.close()
                         },
                         onCancel = {
                             viewModel.stopScan()
@@ -177,18 +187,7 @@ fun NfcScanDialog(
                             onDismiss()
                         },
                         content = { status ->
-                            if (deviceConfig.isIminFalcons2) {
-                                EnhancedNfcScanContent(
-                                    isIminFalcons2 = true,
-                                    isSmallScreen = effectiveSmallScreen,
-                                    scanStatus = status,
-                                )
-                            } else {
-                                PencilScanChipContent(
-                                    isSmallScreen = effectiveSmallScreen,
-                                    scanStatus = status
-                                )
-                            }
+                            clarificationContent(status, effectiveSmallScreen)
                         },
                     )
                 } else {
@@ -221,8 +220,8 @@ fun NfcScanDialog(
                         checkScan = checkScan,
                         showStatus = false,
                         onScan = { tag ->
-                            state.close()
                             onScan(tag)
+                            state.close()
                         },
                         onCancel = {
                             viewModel.stopScan()
@@ -247,6 +246,89 @@ fun NfcScanDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SelfServiceScanPanelContent(
+    isSmallScreen: Boolean,
+    scanStatus: String,
+    title: String,
+    subtitle: String,
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    val outerSize = if (isSmallScreen) 132.dp else 180.dp
+    val midPadding = if (isSmallScreen) 18.dp else 24.dp
+    val innerPadding = if (isSmallScreen) 14.dp else 18.dp
+    val iconSize = if (isSmallScreen) 36.dp else 56.dp
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 8.dp else 12.dp)
+    ) {
+        Text(
+            text = title,
+            color = SelfServicePalette.title,
+            fontWeight = FontWeight.Bold,
+            fontSize = if (isSmallScreen) 24.sp else 34.sp,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = subtitle,
+            color = SelfServicePalette.subtitle,
+            fontWeight = FontWeight.Medium,
+            fontSize = if (isSmallScreen) 14.sp else 20.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Box(
+            modifier = Modifier
+                .size(outerSize)
+                .background(TfPayBluePalette.elevated, CircleShape)
+                .padding(midPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(TfPayBluePalette.elevatedStrong, CircleShape)
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(SelfServicePalette.accent, CircleShape)
+                        .scale(pulseScale),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.NearMe,
+                        contentDescription = null,
+                        tint = SelfServicePalette.backgroundTop,
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = scanStatus,
+            color = SelfServicePalette.subtitle,
+            fontWeight = FontWeight.Medium,
+            fontSize = if (isSmallScreen) 12.sp else 14.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

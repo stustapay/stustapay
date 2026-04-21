@@ -8,16 +8,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 
 @Composable
 fun LoginProfile(
-    viewModel: TerminalConfigViewModel
+    viewModel: TerminalConfigViewModel,
+    selfServiceMode: Boolean = false,
 ) {
     val loginProfileUiState: LoginProfileUIState by viewModel.loginProfileUIState.collectAsStateWithLifecycle()
+    val titleColor = if (selfServiceMode) SelfServicePalette.title else Color.Unspecified
+    val subtitleColor = if (selfServiceMode) SelfServicePalette.subtitle else Color.Unspecified
 
     /*
     var image: ImageVector = Icons.Filled.Person
@@ -45,11 +50,13 @@ fun LoginProfile(
                 text = login.username,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
+                color = titleColor,
             )
             Text(
                 modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
                 text = login.role,
                 fontSize = 18.sp,
+                color = subtitleColor,
             )
         }
 
@@ -59,6 +66,7 @@ fun LoginProfile(
                 textAlign = TextAlign.Center,
                 text = stringResource(R.string.not_logged_in),
                 fontSize = 18.sp,
+                color = subtitleColor,
             )
         }
 
@@ -72,6 +80,7 @@ fun LoginProfile(
                 ),
                 text = login.message,
                 fontSize = 18.sp,
+                color = subtitleColor,
             )
         }
     }

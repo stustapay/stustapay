@@ -39,6 +39,7 @@
     <string name="selfservice_scan_balance_title">Bändchen hier vorhalten</string>
     <string name="selfservice_scan_balance_title_compact">Chip hier vorhalten</string>
     <string name="selfservice_scan_balance_subtitle">Scannen, um Ihr Guthaben anzuzeigen</string>
+    <string name="selfservice_scan_topup_subtitle">Scannen, um Ihr Guthaben aufzuladen</string>
     <string name="selfservice_balance_loading">Ihr Bändchen wird gelesen...</string>
     <string name="selfservice_auto_return">Fertig. Zurück zum Startbildschirm...</string>
     <string name="customer_display_welcome_event">Willkommen bei %1$s</string>

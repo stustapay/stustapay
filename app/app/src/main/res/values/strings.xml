@@ -40,6 +40,7 @@
     <string name="selfservice_scan_balance_title">Hold your wristband here</string>
     <string name="selfservice_scan_balance_title_compact">Hold chip here</string>
     <string name="selfservice_scan_balance_subtitle">Scan to view your balance</string>
+    <string name="selfservice_scan_topup_subtitle">Scan to top up your balance</string>
     <string name="selfservice_balance_loading">Reading your wristband...</string>
     <string name="selfservice_auto_return">Done. Returning to start screen...</string>
     <string name="customer_display_welcome_event">Welcome to %1$s</string>

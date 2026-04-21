@@ -184,12 +184,6 @@ fun OperatorTopUpSelection(
                             if (!viewModel.checkAmountLocal(amount.toDouble() / 100.0)) {
                                 return@OperatorTopUpSummaryRail
                             }
-                            if (!viewModel.isCardReaderReady()) {
-                                scope.launch {
-                                    viewModel.startCardReaderSetup(context)
-                                }
-                                return@OperatorTopUpSummaryRail
-                            }
                             pendingMethod = TopUpPaymentMethod.Card
                             paymentSelectionViewModel.showScanChipOnCustomerDisplay()
                             scanState.open()
