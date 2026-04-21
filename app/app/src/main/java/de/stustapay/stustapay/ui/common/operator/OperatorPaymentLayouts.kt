@@ -253,6 +253,12 @@ fun OperatorRailSummaryRow(
     }
 }
 
+enum class OperatorActionButtonStyle {
+    Primary,
+    Secondary,
+    PeerPrimary,
+}
+
 @Composable
 fun OperatorActionButton(
     text: String,
@@ -261,15 +267,16 @@ fun OperatorActionButton(
     enabled: Boolean = true,
     primary: Boolean = true,
     destructive: Boolean = false,
+    style: OperatorActionButtonStyle = if (primary) OperatorActionButtonStyle.Primary else OperatorActionButtonStyle.Secondary,
 ) {
     val backgroundColor = when {
         destructive -> Color(0xFFC63E3E)
-        primary -> OperatorPalette.accent
+        style == OperatorActionButtonStyle.Primary || style == OperatorActionButtonStyle.PeerPrimary -> OperatorPalette.accent
         else -> OperatorPalette.pill
     }
     val contentColor = when {
         destructive -> Color.White
-        primary -> OperatorPalette.accentText
+        style == OperatorActionButtonStyle.Primary || style == OperatorActionButtonStyle.PeerPrimary -> OperatorPalette.accentText
         else -> OperatorPalette.title
     }
 

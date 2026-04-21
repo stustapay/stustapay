@@ -162,7 +162,7 @@
     <string name="topup_step_payment">Schritt 3: Kartenzahlung</string>
     <string name="topup_ready_to_scan">Bereit zum Scannen Ihres Chips</string>
     <string name="topup_please_wait">Bitte warten, Zahlung wird verarbeitet...</string>
-    <string name="topup_press_scan_pay">Nun Scannen und bezahlen drücken</string>
+    <string name="topup_press_scan_pay">Nun EC-Zahlung starten</string>
     <string name="selfservice_custom_amount">Eigener Betrag</string>
     <string name="topup_success_title">Aufladung erfolgreich</string>
     <string name="topup_success_subtitle">Ihr neues Guthaben ist jetzt verfügbar.</string>
@@ -177,7 +177,7 @@
     <string name="topup_operator_summary_title">Aufladeübersicht</string>
     <string name="topup_operator_custom_amount_hint">Öffnet das Tastenfeld für einen freien Betrag.</string>
     <string name="topup_operator_max_balance">Maximales Guthaben</string>
-    <string name="topup_operator_scan_pay">Scannen &amp; zahlen</string>
+    <string name="topup_operator_scan_pay">EC-Zahlung starten</string>
     <string name="topup_operator_take_cash">Bar annehmen</string>
     <string name="topup_operator_start_next">Nächste Aufladung</string>
     <string name="topup_operator_back_to_amount">Zurück zum Betrag</string>
@@ -284,6 +284,7 @@
     <string name="book_order">Buchen ✓</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Prüfen \u0026 zahlen</string>
+    <string name="sale_ec_payment">EC-Zahlung</string>
     <string name="sale_empty_title">Keine Verkaufsartikel verfügbar</string>
     <string name="sale_empty_desc">Diesem Terminal sind aktuell keine Produkte oder Gutscheine für den Verkauf zugeordnet.</string>
     <string name="sale_empty_hint">Gehen Sie zurück ins Menü und prüfen Sie die Kassenkonfiguration, bevor Sie Zahlungen annehmen.</string>
@@ -373,6 +374,7 @@
     <string name="sale_more_items">+%1$d weitere</string>
     <string name="sale_total_label">Gesamt</string>
     <string name="sale_items_count">%1$d Positionen</string>
+    <string name="sale_compact_empty_hint">Artikel antippen, um sie zum Warenkorb hinzuzufügen.</string>
     <string name="sale_no_payment_method_configured">Keine Zahlungsart konfiguriert</string>
     <string name="sale_clear_basket">Warenkorb leeren</string>
     <string name="sale_terminal_confirm">Bestätigen</string>
@@ -392,6 +394,10 @@
     <string name="sale_custom_price_dialog_title">Freien Preis festlegen</string>
     <string name="sale_edit_price">Preis ändern</string>
     <string name="sale_clear_price">Löschen</string>
+    <string name="sale_item_in_basket">Im Warenkorb</string>
+    <string name="sale_item_return_selected">Pfand aktiv</string>
+    <string name="sale_item_price_set">Preis gesetzt</string>
+    <string name="sale_item_selected">Ausgewählt</string>
     <string name="sale_voucher_singular">Gutschein</string>
     <string name="sale_voucher_plural">Gutscheine</string>
     <string name="sale_applied">Angerechnet</string>

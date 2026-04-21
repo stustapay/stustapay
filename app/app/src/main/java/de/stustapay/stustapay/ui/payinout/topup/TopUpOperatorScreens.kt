@@ -51,6 +51,7 @@ import de.stustapay.stustapay.ui.common.operator.OperatorAmountOptionCard
 import de.stustapay.stustapay.ui.common.operator.OperatorBackground
 import de.stustapay.stustapay.ui.common.operator.OperatorMetricCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPanel
+import de.stustapay.stustapay.ui.common.operator.OperatorActionButtonStyle
 import de.stustapay.stustapay.ui.common.operator.OperatorPaymentLayoutProfile
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorRailSummaryRow
@@ -391,6 +392,7 @@ private fun OperatorTopUpSummaryRail(
                         text = stringResource(R.string.topup_operator_scan_pay),
                         onClick = onCard,
                         enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
+                        style = OperatorActionButtonStyle.PeerPrimary,
                     )
                 }
                 if (canHandleCash) {
@@ -398,7 +400,7 @@ private fun OperatorTopUpSummaryRail(
                         text = stringResource(R.string.topup_operator_take_cash),
                         onClick = onCash,
                         enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
-                        primary = false,
+                        style = OperatorActionButtonStyle.PeerPrimary,
                     )
                 }
             }
@@ -418,6 +420,7 @@ private fun OperatorTopUpSummaryRail(
                         text = stringResource(R.string.topup_operator_scan_pay),
                         onClick = onCard,
                         enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
+                        style = OperatorActionButtonStyle.PeerPrimary,
                     )
                 }
                 if (canHandleCash) {
@@ -425,7 +428,7 @@ private fun OperatorTopUpSummaryRail(
                         text = stringResource(R.string.topup_operator_take_cash),
                         onClick = onCash,
                         enabled = amountSelected && amount > 0u && !requestActive && !uiLocked,
-                        primary = false,
+                        style = OperatorActionButtonStyle.PeerPrimary,
                     )
                 }
             }

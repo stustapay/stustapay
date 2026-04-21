@@ -55,7 +55,7 @@
     <string name="topup_step_payment">Stap 3: Kaartbetaling</string>
     <string name="topup_ready_to_scan">Klaar om uw chip te scannen</string>
     <string name="topup_please_wait">Even geduld, de betaling wordt verwerkt...</string>
-    <string name="topup_press_scan_pay">Druk nu op Scannen &amp; betalen</string>
+    <string name="topup_press_scan_pay">Start nu de kaartbetaling</string>
     <string name="selfservice_custom_amount">Eigen bedrag</string>
     <string name="topup_success_title">Opwaarderen gelukt</string>
     <string name="topup_success_subtitle">Uw nieuwe saldo is direct beschikbaar.</string>
@@ -173,7 +173,7 @@
     <string name="topup_operator_summary_title">Opwaardeeroverzicht</string>
     <string name="topup_operator_custom_amount_hint">Open het toetsenblok om een vrij bedrag in te voeren.</string>
     <string name="topup_operator_max_balance">Maximaal saldo</string>
-    <string name="topup_operator_scan_pay">Scannen &amp; betalen</string>
+    <string name="topup_operator_scan_pay">Kaartbetaling starten</string>
     <string name="topup_operator_take_cash">Contant aannemen</string>
     <string name="topup_operator_start_next">Volgende opwaardering starten</string>
     <string name="topup_operator_back_to_amount">Terug naar bedrag</string>
@@ -277,6 +277,7 @@
     <string name="book_order">Book ✓</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Review \u0026 pay</string>
+    <string name="sale_ec_payment">Kaartbetaling</string>
     <string name="sale_empty_title">Geen verkoopitems beschikbaar</string>
     <string name="sale_empty_desc">Aan deze terminal zijn momenteel geen producten of vouchers voor verkoop gekoppeld.</string>
     <string name="sale_empty_hint">Ga terug naar het menu en controleer de kassaconfiguratie voordat je betalingen aanneemt.</string>
@@ -365,6 +366,7 @@
     <string name="sale_more_items">+%1$d more</string>
     <string name="sale_total_label">Total</string>
     <string name="sale_items_count">%1$d items</string>
+    <string name="sale_compact_empty_hint">Tik op een item om het aan de mand toe te voegen.</string>
     <string name="sale_no_payment_method_configured">No payment method configured</string>
     <string name="sale_clear_basket">Clear basket</string>
     <string name="sale_terminal_confirm">Confirm</string>
@@ -384,6 +386,10 @@
     <string name="sale_custom_price_dialog_title">Aangepaste prijs instellen</string>
     <string name="sale_edit_price">Edit price</string>
     <string name="sale_clear_price">Clear</string>
+    <string name="sale_item_in_basket">In mand</string>
+    <string name="sale_item_return_selected">Statiegeld actief</string>
+    <string name="sale_item_price_set">Prijs ingesteld</string>
+    <string name="sale_item_selected">Geselecteerd</string>
     <string name="sale_voucher_singular">voucher</string>
     <string name="sale_voucher_plural">vouchers</string>
     <string name="sale_applied">Applied</string>

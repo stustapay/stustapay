@@ -15,16 +15,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -145,6 +142,7 @@ fun SaleSelection(
 
                     CompactSaleBasketPanel(
                         compactHandheld = true,
+                        stackPaymentActions = true,
                         basketCount = basketCount,
                         totalPrice = totalPrice,
                         basketLines = basketLines,
@@ -212,6 +210,7 @@ fun SaleSelection(
                                 .width(308.dp)
                                 .fillMaxSize(),
                             compactHandheld = false,
+                            stackPaymentActions = true,
                             basketCount = basketCount,
                             totalPrice = totalPrice,
                             basketLines = basketLines,
@@ -268,6 +267,7 @@ private fun CompactSaleHeader(
 private fun CompactSaleBasketPanel(
     modifier: Modifier = Modifier,
     compactHandheld: Boolean,
+    stackPaymentActions: Boolean,
     basketCount: Int,
     totalPrice: Double,
     basketLines: List<SaleBasketSummaryLine>,
@@ -293,21 +293,21 @@ private fun CompactSaleBasketPanel(
                 )
             )
         }
+        if (cardEnabled) {
+            add(
+                CompactPaymentAction(
+                    stringResource(R.string.sale_ec_payment),
+                    ready && amountIsPositive,
+                    onSubmitCard,
+                )
+            )
+        }
         if (cashEnabled) {
             add(
                 CompactPaymentAction(
                     stringResource(R.string.pay_cash).substringAfter('\n'),
                     ready && cashierHasRegister,
                     onSubmitCash,
-                )
-            )
-        }
-        if (cardEnabled) {
-            add(
-                CompactPaymentAction(
-                    stringResource(R.string.pay_card).substringAfter('\n'),
-                    ready && amountIsPositive,
-                    onSubmitCard,
                 )
             )
         }
@@ -355,6 +355,40 @@ private fun CompactSaleBasketPanel(
                 }
             }
 
+            if (compactHandheld) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (basketCount > 0) {
+                            stringResource(R.string.sale_items_count, basketCount)
+                        } else {
+                            stringResource(R.string.sale_compact_empty_hint)
+                        },
+                        color = OperatorPalette.subtitle,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (basketCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .background(OperatorPalette.panel, RoundedCornerShape(999.dp))
+                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                        ) {
+                            Text(
+                                text = basketCount.toString(),
+                                color = OperatorPalette.title,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -375,29 +409,14 @@ private fun CompactSaleBasketPanel(
             }
 
             if (paymentActions.isEmpty()) {
-                if (compactHandheld) {
-                    Row(
+                if (stackPaymentActions) {
+                    CompactActionButton(
+                        text = stringResource(R.string.sale_no_payment_method_configured),
+                        enabled = false,
+                        emphasized = false,
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        CompactActionButton(
-                            text = stringResource(R.string.sale_no_payment_method_configured),
-                            enabled = false,
-                            emphasized = false,
-                            modifier = Modifier.weight(1f),
-                            onClick = {},
-                        )
-                        if (basketCount > 0) {
-                            CompactCircleButton(
-                                icon = Icons.Filled.Delete,
-                                backgroundColor = Color(0xFF3A1D25),
-                                tint = OperatorPalette.danger,
-                                onClick = onAbort,
-                                size = 34.dp,
-                            )
-                        }
-                    }
+                        onClick = {},
+                    )
                 } else {
                     CompactActionButton(
                         text = stringResource(R.string.sale_no_payment_method_configured),
@@ -416,8 +435,13 @@ private fun CompactSaleBasketPanel(
                     }
                 }
             } else {
-                val primaryAction = paymentActions.firstOrNull { it.large }
-                val secondaryActions = paymentActions.filterNot { it.large }
+                val usePrimaryLayout = paymentActions.size == 1
+                val primaryAction = paymentActions.firstOrNull { it.large }?.takeIf { usePrimaryLayout }
+                val secondaryActions = if (usePrimaryLayout) {
+                    paymentActions.filterNot { it.large }
+                } else {
+                    paymentActions
+                }
 
                 if (primaryAction != null) {
                     Row(
@@ -429,47 +453,52 @@ private fun CompactSaleBasketPanel(
                             text = primaryAction.label,
                             enabled = primaryAction.enabled,
                             emphasized = true,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             minHeight = 58.dp,
                             textFontSize = 18.sp,
                             onClick = primaryAction.onClick,
                         )
-                        if (compactHandheld && basketCount > 0) {
-                            CompactCircleButton(
-                                icon = Icons.Filled.Delete,
-                                backgroundColor = Color(0xFF3A1D25),
-                                tint = OperatorPalette.danger,
-                                onClick = onAbort,
-                                size = 34.dp,
-                            )
-                        }
                     }
                 }
 
-                secondaryActions.chunked(if (secondaryActions.size > 2) 2 else secondaryActions.size.coerceAtLeast(1))
-                    .forEach { actionRow ->
-                        Row(
+                if (stackPaymentActions) {
+                    secondaryActions.forEach { action ->
+                        CompactActionButton(
+                            text = action.label,
+                            enabled = action.enabled,
+                            emphasized = true,
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            actionRow.forEach { action ->
-                                CompactActionButton(
-                                    text = action.label,
-                                    enabled = action.enabled,
-                                    emphasized = true,
-                                    modifier = Modifier.weight(1f),
-                                    minHeight = 46.dp,
-                                    textFontSize = 15.sp,
-                                    onClick = action.onClick,
-                                )
-                            }
-                            repeat(2 - actionRow.size) {
-                                Box(modifier = Modifier.weight(1f))
+                            minHeight = 46.dp,
+                            textFontSize = 15.sp,
+                            onClick = action.onClick,
+                        )
+                    }
+                } else {
+                    secondaryActions.chunked(if (secondaryActions.size > 2) 2 else secondaryActions.size.coerceAtLeast(1))
+                        .forEach { actionRow ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                actionRow.forEach { action ->
+                                    CompactActionButton(
+                                        text = action.label,
+                                        enabled = action.enabled,
+                                        emphasized = true,
+                                        modifier = Modifier.weight(1f),
+                                        minHeight = 46.dp,
+                                        textFontSize = 15.sp,
+                                        onClick = action.onClick,
+                                    )
+                                }
+                                repeat(2 - actionRow.size) {
+                                    Box(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
-                    }
-                if (!compactHandheld && basketCount > 0) {
+                }
+                if (!stackPaymentActions && basketCount > 0) {
                     Text(
                         text = stringResource(R.string.sale_clear_basket),
                         color = OperatorPalette.danger,
@@ -478,6 +507,18 @@ private fun CompactSaleBasketPanel(
                         modifier = Modifier.clickable(onClick = onAbort),
                     )
                 }
+            }
+            if (stackPaymentActions && basketCount > 0) {
+                CompactActionButton(
+                    text = stringResource(R.string.sale_clear_basket),
+                    enabled = ready,
+                    emphasized = false,
+                    destructive = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    minHeight = 34.dp,
+                    textFontSize = 13.sp,
+                    onClick = onAbort,
+                )
             }
         }
     }
@@ -544,6 +585,7 @@ private fun CompactActionButton(
     enabled: Boolean,
     emphasized: Boolean,
     modifier: Modifier = Modifier,
+    destructive: Boolean = false,
     minHeight: Dp = 46.dp,
     textFontSize: TextUnit = 15.sp,
     onClick: () -> Unit,
@@ -553,7 +595,11 @@ private fun CompactActionButton(
         enabled = enabled,
         modifier = modifier.heightIn(min = minHeight),
         colors = ButtonDefaults.buttonColors(
-            backgroundColor = if (emphasized) OperatorPalette.accent else OperatorPalette.pill,
+            backgroundColor = when {
+                destructive -> Color(0xFF3A1D25)
+                emphasized -> OperatorPalette.accent
+                else -> OperatorPalette.pill
+            },
             contentColor = if (emphasized) OperatorPalette.accentText else Color.White,
             disabledBackgroundColor = OperatorPalette.panel,
             disabledContentColor = OperatorPalette.subtitle,
@@ -563,29 +609,6 @@ private fun CompactActionButton(
             text = text,
             fontSize = textFontSize,
             fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
-@Composable
-private fun CompactCircleButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    backgroundColor: Color,
-    tint: Color = OperatorPalette.title,
-    onClick: () -> Unit,
-    size: androidx.compose.ui.unit.Dp = 44.dp,
-) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .background(backgroundColor, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
         )
     }
 }

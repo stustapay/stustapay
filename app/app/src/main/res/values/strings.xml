@@ -163,7 +163,7 @@
     <string name="topup_step_payment">Step 3: Card Payment</string>
     <string name="topup_ready_to_scan">Ready to scan your chip</string>
     <string name="topup_please_wait">Please wait while payment is processing...</string>
-    <string name="topup_press_scan_pay">Now press Scan &amp; Pay</string>
+    <string name="topup_press_scan_pay">Now start card payment</string>
     <string name="selfservice_custom_amount">Custom amount</string>
     <string name="topup_success_title">Top-up successful</string>
     <string name="topup_success_subtitle">Your new balance is ready to use.</string>
@@ -178,7 +178,7 @@
     <string name="topup_operator_summary_title">Top-up summary</string>
     <string name="topup_operator_custom_amount_hint">Open the keypad to enter a custom amount.</string>
     <string name="topup_operator_max_balance">Max account balance</string>
-    <string name="topup_operator_scan_pay">Scan &amp; pay</string>
+    <string name="topup_operator_scan_pay">Start card payment</string>
     <string name="topup_operator_take_cash">Take cash</string>
     <string name="topup_operator_start_next">Start next top-up</string>
     <string name="topup_operator_back_to_amount">Back to amount</string>
@@ -285,6 +285,7 @@
     <string name="book_order">Book ✓</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Review \u0026 pay</string>
+    <string name="sale_ec_payment">Card payment</string>
     <string name="sale_empty_title">No sale items available</string>
     <string name="sale_empty_desc">This terminal currently has no products or vouchers assigned for sale.</string>
     <string name="sale_empty_hint">Return to the menu and review the till setup before taking payment.</string>
@@ -374,6 +375,7 @@
     <string name="sale_more_items">+%1$d more</string>
     <string name="sale_total_label">Total</string>
     <string name="sale_items_count">%1$d items</string>
+    <string name="sale_compact_empty_hint">Tap an item to add it to the basket.</string>
     <string name="sale_no_payment_method_configured">No payment method configured</string>
     <string name="sale_clear_basket">Clear basket</string>
     <string name="sale_terminal_confirm">Confirm</string>
@@ -393,6 +395,10 @@
     <string name="sale_custom_price_dialog_title">Set custom price</string>
     <string name="sale_edit_price">Edit price</string>
     <string name="sale_clear_price">Clear</string>
+    <string name="sale_item_in_basket">In basket</string>
+    <string name="sale_item_return_selected">Deposit selected</string>
+    <string name="sale_item_price_set">Price set</string>
+    <string name="sale_item_selected">Selected</string>
     <string name="sale_voucher_singular">voucher</string>
     <string name="sale_voucher_plural">vouchers</string>
     <string name="sale_applied">Applied</string>

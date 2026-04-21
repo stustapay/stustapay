@@ -1090,7 +1090,17 @@ class TerminalService(Service[Config]):
     async def delete_headwind_mapping(
         self, *, conn: Connection, node: Node, terminal_id: int
     ) -> bool:
-        mapping = await self.get_headwind_mapping_for_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        scope_node_ids = _terminal_scope_node_ids(node)
+        mapping = await conn.fetch_maybe_one(
+            HeadwindDeviceMapping,
+            "select tdm.* "
+            "from terminal_device_mapping tdm "
+            "join node n on tdm.node_id = n.id "
+            "where tdm.terminal_id = $1 and (n.id = any($2) or $3 = any(n.parent_ids))",
+            terminal_id,
+            scope_node_ids,
+            node.id,
+        )
         if mapping is None:
             return False
         deleted = await conn.fetchrow(

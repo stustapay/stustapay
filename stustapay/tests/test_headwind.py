@@ -100,3 +100,43 @@ async def test_event_node_lists_and_updates_child_headwind_mappings(
     assert result.last_wifi_pushed_at is not None
     assert result.last_wifi_push_status == "success"
     assert result.last_wifi_push_error is None
+
+
+async def test_delete_headwind_mapping(
+    terminal_service: TerminalService,
+    event_admin_token: str,
+    event_node: Node,
+    terminal: Terminal,
+):
+    mapping = await terminal_service.upsert_headwind_mapping(
+        token=event_admin_token,
+        node_id=event_node.id,
+        terminal_id=terminal.id,
+        headwind_device_id="delete-device-1",
+        headwind_device_number="1",
+        headwind_device_name="Delete Device",
+        headwind_device_serial="delete-serial-1",
+        headwind_device_model="delete-model-1",
+    )
+
+    deleted = await terminal_service.delete_headwind_mapping(
+        token=event_admin_token,
+        node_id=event_node.id,
+        terminal_id=terminal.id,
+    )
+    assert deleted is True
+
+    deleted_again = await terminal_service.delete_headwind_mapping(
+        token=event_admin_token,
+        node_id=event_node.id,
+        terminal_id=terminal.id,
+    )
+    assert deleted_again is False
+
+    mapping_after_delete = await terminal_service.get_headwind_mapping_for_terminal(
+        token=event_admin_token,
+        node_id=event_node.id,
+        terminal_id=terminal.id,
+    )
+    assert mapping_after_delete is None
+    assert mapping.id is not None

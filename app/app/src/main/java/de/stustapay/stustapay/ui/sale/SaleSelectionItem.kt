@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.sale
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +62,11 @@ enum class SaleSelectionItemLayout {
     ListRow,
 }
 
+private data class SaleSelectionLabelParts(
+    val title: String,
+    val variantBadge: String?,
+)
+
 @Preview
 @Composable
 fun PreviewSaleSelectionItem() {
@@ -116,14 +122,17 @@ fun SaleSelectionItem(
     val itemPrice: String
     val quantityLabel: String?
     val primaryText: String
-    val secondaryText: String?
+    val secondaryText: String
     val primaryAction: () -> Unit
-    val secondaryAction: (() -> Unit)?
+    val secondaryAction: () -> Unit
+    val secondaryEnabled: Boolean
     val primaryButtonColor: Color
     val primaryButtonTextColor: Color
     val secondaryButtonColor: Color
     val secondaryButtonTextColor: Color
+    val selectionLabel: String?
     var primaryIsSymbol = false
+    val labelParts = caption.toSelectionLabelParts()
 
     when (type) {
         is SaleSelectionItemType.FixedPrice -> {
@@ -131,13 +140,15 @@ fun SaleSelectionItem(
             itemPrice = "%.02f€".format(type.price.price)
             quantityLabel = if (amount > 0) "×$amount" else null
             primaryText = stringResource(R.string.sale_action_add_symbol)
-            secondaryText = if (amount > 0) "−" else null
+            secondaryText = "−"
             primaryAction = type.onIncr
-            secondaryAction = if (amount > 0) type.onDecr else null
+            secondaryAction = type.onDecr
+            secondaryEnabled = amount > 0
             primaryButtonColor = OperatorPalette.accent
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
+            selectionLabel = if (amount > 0) stringResource(R.string.sale_item_in_basket) else null
             primaryIsSymbol = true
         }
 
@@ -149,10 +160,12 @@ fun SaleSelectionItem(
             secondaryText = "−"
             primaryAction = type.onDecr
             secondaryAction = type.onIncr
+            secondaryEnabled = true
             primaryButtonColor = Color(0xFFB91C1C)
             primaryButtonTextColor = Color.White
             secondaryButtonColor = Color(0xFFEAB308)
             secondaryButtonTextColor = Color(0xFF1A1200)
+            selectionLabel = if (amount != 0) stringResource(R.string.sale_item_return_selected) else null
             primaryIsSymbol = true
         }
 
@@ -165,70 +178,118 @@ fun SaleSelectionItem(
             } else {
                 stringResource(R.string.sale_edit_price)
             }
-            secondaryText = if (type.amount != null) stringResource(R.string.sale_clear_price) else null
+            secondaryText = stringResource(R.string.sale_clear_price)
             primaryAction = { type.onPriceEdit(false) }
-            secondaryAction = if (type.amount != null) ({ type.onPriceEdit(true) }) else null
+            secondaryAction = { type.onPriceEdit(true) }
+            secondaryEnabled = type.amount != null
             primaryButtonColor = OperatorPalette.accent
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
+            selectionLabel = if (type.amount != null) stringResource(R.string.sale_item_price_set) else null
         }
 
         is SaleSelectionItemType.Vouchers -> {
             itemPrice = "${type.amount}/${type.maxAmount}"
             quantityLabel = null
             primaryText = stringResource(R.string.sale_action_add_symbol)
-            secondaryText = if (type.amount > 0) "−" else null
+            secondaryText = "−"
             primaryAction = type.onIncr
-            secondaryAction = if (type.amount > 0) type.onDecr else null
+            secondaryAction = type.onDecr
+            secondaryEnabled = type.amount > 0
             primaryButtonColor = OperatorPalette.accent
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
+            selectionLabel = if (type.amount > 0) stringResource(R.string.sale_item_selected) else null
             primaryIsSymbol = true
         }
     }
 
     if (layout == SaleSelectionItemLayout.ListRow) {
         Surface(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(18.dp),
             color = OperatorPalette.interactivePanel,
+            border = BorderStroke(1.dp, OperatorPalette.panelBorder),
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center,
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = labelParts.title,
+                                color = OperatorPalette.title,
+                                fontSize = 23.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+
+                            labelParts.variantBadge?.let { badge ->
+                                Box(
+                                    modifier = Modifier
+                                        .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
+                                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                                ) {
+                                    Text(
+                                        text = badge,
+                                        color = OperatorPalette.title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+
+                        selectionLabel?.let { detail ->
+                            Text(
+                                text = detail,
+                                color = OperatorPalette.subtitle,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            text = caption,
+                            text = itemPrice,
                             color = OperatorPalette.title,
-                            fontSize = 21.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
                         )
 
                         if (quantityLabel != null) {
                             Box(
                                 modifier = Modifier
-                                    .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
+                                    .background(OperatorPalette.panel, RoundedCornerShape(999.dp))
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) {
                                 Text(
                                     text = quantityLabel,
                                     color = OperatorPalette.title,
-                                    fontSize = 18.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
                             }
@@ -236,41 +297,37 @@ fun SaleSelectionItem(
                     }
                 }
 
-                Text(
-                    text = itemPrice,
-                    color = OperatorPalette.title,
-                    fontSize = 23.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                )
-
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (secondaryText != null && secondaryAction != null) {
-                        Button(
-                            onClick = secondaryAction,
-                            modifier = Modifier
-                                .height(46.dp)
-                                .widthIn(min = if (secondaryText.length > 1) 72.dp else 50.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = secondaryButtonColor,
-                                contentColor = secondaryButtonTextColor,
-                            ),
-                        ) {
-                            Text(
-                                text = secondaryText,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
+                    Button(
+                        onClick = secondaryAction,
+                        enabled = secondaryEnabled,
+                        modifier = Modifier
+                            .height(46.dp)
+                            .widthIn(min = if (secondaryText.length > 1) 96.dp else 64.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = secondaryButtonColor,
+                            contentColor = secondaryButtonTextColor,
+                            disabledBackgroundColor = OperatorPalette.panel,
+                            disabledContentColor = OperatorPalette.subtitle,
+                        ),
+                    ) {
+                        Text(
+                            text = secondaryText,
+                            fontSize = if (secondaryText.length > 1) 13.sp else 21.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
 
                     Button(
                         onClick = primaryAction,
                         modifier = Modifier
                             .height(46.dp)
-                            .widthIn(min = if (primaryIsSymbol) 58.dp else if (isReturnable || primaryText.length > 4) 94.dp else 78.dp),
+                            .weight(1f)
+                            .widthIn(min = if (primaryIsSymbol) 92.dp else if (isReturnable || primaryText.length > 4) 132.dp else 104.dp),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = primaryButtonColor,
                             contentColor = primaryButtonTextColor,
@@ -278,7 +335,7 @@ fun SaleSelectionItem(
                     ) {
                         Text(
                             text = primaryText,
-                            fontSize = if (primaryIsSymbol) 27.sp else 14.sp,
+                            fontSize = if (primaryIsSymbol) 28.sp else 16.sp,
                             fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
                             maxLines = 1,
                         )
@@ -344,7 +401,7 @@ fun SaleSelectionItem(
                 Button(
                     onClick = primaryAction,
                     modifier = Modifier
-                        .weight(if (primaryIsSymbol) 0.32f else if (secondaryText != null) 0.72f else 1f)
+                        .weight(if (primaryIsSymbol) 0.32f else 0.72f)
                         .height(38.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = primaryButtonColor,
@@ -358,25 +415,41 @@ fun SaleSelectionItem(
                     )
                 }
 
-                if (secondaryText != null && secondaryAction != null) {
-                    Button(
-                        onClick = secondaryAction,
-                        modifier = Modifier
-                            .weight(0.28f)
-                            .height(38.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = secondaryButtonColor,
-                            contentColor = secondaryButtonTextColor,
-                        ),
-                    ) {
-                        Text(
-                            text = secondaryText,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                Button(
+                    onClick = secondaryAction,
+                    enabled = secondaryEnabled,
+                    modifier = Modifier
+                        .weight(0.28f)
+                        .height(38.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = secondaryButtonColor,
+                        contentColor = secondaryButtonTextColor,
+                        disabledBackgroundColor = OperatorPalette.panel,
+                        disabledContentColor = OperatorPalette.subtitle,
+                    ),
+                ) {
+                    Text(
+                        text = secondaryText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
         }
     }
+}
+
+private fun String.toSelectionLabelParts(): SaleSelectionLabelParts {
+    val match = Regex("""^(.+?)\s+(\d+(?:[.,]\d+)?l)$""", RegexOption.IGNORE_CASE).matchEntire(trim())
+    if (match == null) {
+        return SaleSelectionLabelParts(
+            title = this,
+            variantBadge = null,
+        )
+    }
+
+    return SaleSelectionLabelParts(
+        title = match.groupValues[1],
+        variantBadge = match.groupValues[2],
+    )
 }
