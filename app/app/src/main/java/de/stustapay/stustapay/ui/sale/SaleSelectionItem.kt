@@ -53,7 +53,6 @@ sealed interface SaleSelectionItemType {
         val onDecr: () -> Unit,
         val price: SaleItemPrice.Returnable,
         val amount: SaleItemAmount.FixedPrice?,
-        val incrementText: String,
     ) : SaleSelectionItemType
 }
 
@@ -92,11 +91,10 @@ fun PreviewSaleSelectionItem() {
             )
         )
         SaleSelectionItem(
-            caption = "Pfand zurück",
+            caption = "Pfand Becher",
             type = SaleSelectionItemType.Returnable(
                 price = SaleItemPrice.Returnable(2.0),
-                amount = SaleItemAmount.FixedPrice(2),
-                incrementText = "Extra Glas",
+                amount = SaleItemAmount.FixedPrice(-2),
                 onIncr = { },
                 onDecr = { },
             )
@@ -149,9 +147,13 @@ fun SaleSelectionItem(
         is SaleSelectionItemType.Returnable -> {
             val amount: Int = type.amount?.amount ?: 0
             itemPrice = "%.02f€".format(type.price.price ?: 0.0)
-            quantityLabel = if (amount != 0) amount.toString() else null
-            primaryText = stringResource(R.string.sale_action_add_symbol)
-            secondaryText = "−"
+            quantityLabel = when {
+                amount < 0 -> stringResource(R.string.sale_deposit_return_count, -amount)
+                amount > 0 -> stringResource(R.string.sale_deposit_extra_issue_count, amount)
+                else -> null
+            }
+            primaryText = stringResource(R.string.sale_deposit_return)
+            secondaryText = stringResource(R.string.sale_deposit_extra_issue)
             primaryAction = type.onDecr
             secondaryAction = type.onIncr
             secondaryEnabled = true
@@ -159,8 +161,11 @@ fun SaleSelectionItem(
             primaryButtonTextColor = Color.White
             secondaryButtonColor = Color(0xFFEAB308)
             secondaryButtonTextColor = Color(0xFF1A1200)
-            selectionLabel = if (amount != 0) stringResource(R.string.sale_item_return_selected) else null
-            primaryIsSymbol = true
+            selectionLabel = when {
+                amount < 0 -> stringResource(R.string.sale_deposit_return_selected)
+                amount > 0 -> stringResource(R.string.sale_deposit_extra_issue_selected)
+                else -> null
+            }
         }
 
         is SaleSelectionItemType.FreePrice -> {
@@ -300,7 +305,7 @@ fun SaleSelectionItem(
                     enabled = secondaryEnabled,
                     modifier = Modifier
                         .height(46.dp)
-                        .widthIn(min = if (secondaryText.length > 1) 96.dp else 64.dp),
+                        .widthIn(min = if (isReturnable) 132.dp else if (secondaryText.length > 1) 96.dp else 64.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = secondaryButtonColor,
                         contentColor = secondaryButtonTextColor,

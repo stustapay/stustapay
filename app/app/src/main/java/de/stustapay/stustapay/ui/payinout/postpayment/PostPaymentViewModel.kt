@@ -87,11 +87,6 @@ class PostPaymentViewModel @Inject constructor(
     private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
-    // dirty hack to make the error page an ok page for already-booked errors
-    // todo: remove :)
-    private val _actuallyOk = MutableStateFlow(false)
-    val actuallyOk = _actuallyOk.asStateFlow()
-
     private val _showPayOutConfirm = MutableStateFlow(false)
     val showPayOutConfirm = _showPayOutConfirm.asStateFlow()
 
@@ -147,7 +142,6 @@ class PostPaymentViewModel @Inject constructor(
                     state.updateWithPendingPayOut(response.data)
                     state
                 }
-                _status.update { context.getString(R.string.payout_status_valid) }
                 true
             }
 
@@ -202,18 +196,6 @@ class PostPaymentViewModel @Inject constructor(
         _status.update { context.getString(R.string.operator_status_ready) }
         clearPayOutState()
     }
-
-    fun checkAmountLocal(amount: Double): Boolean {
-        val minimum = 1.0
-        if (amount != 0.0) {
-            _status.update { context.getString(R.string.topup_status_minimum_amount, minimum) }
-            return false
-        }
-        return true
-    }
-
-
-
 
     /**
      * validates the amount so we can continue to checkout
@@ -413,14 +395,12 @@ class PostPaymentViewModel @Inject constructor(
                 clearPayOutState()
                 _status.update { context.getString(R.string.topup_status_successful, topUpType) }
                 _successMessage.update { context.getString(R.string.postpayment_status_already_processed, topUpType) }
-                _actuallyOk.update { true }
                 _navState.update { PostPaymentPage.Done }
             }
 
             is Response.Error -> {
                 _status.update { context.getString(R.string.topup_status_failed, topUpType, response.msg()) }
                 _successMessage.update { null }
-                _actuallyOk.update { false }
                 _navState.update { PostPaymentPage.Failure }
             }
         }

@@ -205,7 +205,6 @@
     <string name="payout_status_no_tag_known">No tag known</string>
     <string name="payout_status_amount_is_zero">Amount is zero</string>
     <string name="payout_status_checking">Checking payout</string>
-    <string name="payout_status_valid">Payout valid</string>
     <string name="payout_status_not_checked_before">Payout was not checked before</string>
     <string name="payout_status_in_progress">Payout in progress...</string>
     <string name="payout_status_booked_successfully">Payout booked successfully</string>
@@ -399,6 +398,15 @@
     <string name="sale_clear_price">Clear</string>
     <string name="sale_item_in_basket">In basket</string>
     <string name="sale_item_return_selected">Deposit selected</string>
+    <string name="sale_deposit_return">return</string>
+    <string name="sale_deposit_extra_issue">extra issue</string>
+    <string name="sale_deposit_return_count">%1$d return</string>
+    <string name="sale_deposit_extra_issue_count">%1$d extra issue</string>
+    <string name="sale_deposit_return_selected">Deposit return</string>
+    <string name="sale_deposit_extra_issue_selected">Deposit extra issue</string>
+    <string name="sale_book_credit">Book credit</string>
+    <string name="sale_cash_payout">Cash payout</string>
+    <string name="sale_credit_payout_total_label">Credit / payout</string>
     <string name="sale_item_price_set">Price set</string>
     <string name="sale_item_selected">Selected</string>
     <string name="sale_voucher_singular">voucher</string>

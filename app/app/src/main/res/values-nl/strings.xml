@@ -200,7 +200,6 @@
     <string name="payout_status_no_tag_known">Geen tag bekend</string>
     <string name="payout_status_amount_is_zero">Bedrag is nul</string>
     <string name="payout_status_checking">Uitbetaling controleren</string>
-    <string name="payout_status_valid">Uitbetaling geldig</string>
     <string name="payout_status_not_checked_before">Uitbetaling is niet vooraf gecontroleerd</string>
     <string name="payout_status_in_progress">Uitbetaling bezig...</string>
     <string name="payout_status_booked_successfully">Uitbetaling succesvol geboekt</string>
@@ -390,6 +389,15 @@
     <string name="sale_clear_price">Clear</string>
     <string name="sale_item_in_basket">In mand</string>
     <string name="sale_item_return_selected">Statiegeld actief</string>
+    <string name="sale_deposit_return">retour</string>
+    <string name="sale_deposit_extra_issue">extra uitgifte</string>
+    <string name="sale_deposit_return_count">%1$d retour</string>
+    <string name="sale_deposit_extra_issue_count">%1$d extra uitgifte</string>
+    <string name="sale_deposit_return_selected">Statiegeld retour</string>
+    <string name="sale_deposit_extra_issue_selected">Statiegeld extra uitgifte</string>
+    <string name="sale_book_credit">Tegoed boeken</string>
+    <string name="sale_cash_payout">Contant uitbetalen</string>
+    <string name="sale_credit_payout_total_label">Tegoed / uitbetaling</string>
     <string name="sale_item_price_set">Prijs ingesteld</string>
     <string name="sale_item_selected">Geselecteerd</string>
     <string name="sale_voucher_singular">voucher</string>

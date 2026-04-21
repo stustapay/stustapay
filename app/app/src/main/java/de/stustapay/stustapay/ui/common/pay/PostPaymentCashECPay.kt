@@ -63,11 +63,6 @@ fun PostpaymentCashECPay(
                         nav.navigateTo(PostPaymentCashECPage.CashConfirm.route)
                     }
                 },
-                goToEC = {
-                    if (checkAmount()) {
-                        nav.navigateTo(PostPaymentCashECPage.CashConfirm.route)
-                    }
-                },
                 onPayRequested = onPaymentRequested,
                 ready = ready,
                 status = status,
@@ -96,7 +91,6 @@ fun PostpaymentCashECPay(
 @Composable
 fun PostPaymentCashECSelection(
     goToCash: () -> Unit,
-    goToEC: () -> Unit,
     onPayRequested: CashECCallback,
     ready: Boolean,
     checkAmount: () -> Boolean = { true },

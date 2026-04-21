@@ -35,6 +35,7 @@ import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorRailSummaryRow
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.libssp.util.formatCurrencyValue
+import kotlin.math.abs
 
 /**
  * View for displaying available purchase items
@@ -102,7 +103,11 @@ private fun ColumnScope.SaleConfirmMainContent(
     val topCards = buildList {
         add(
             Triple(
-                stringResource(R.string.price),
+                if (checkedSale.totalPrice < 0.0) {
+                    stringResource(R.string.sale_credit_payout_total_label)
+                } else {
+                    stringResource(R.string.price)
+                },
                 formatSaleAmount(checkedSale.totalPrice),
                 true,
             )
@@ -229,6 +234,14 @@ private fun ColumnScope.SaleConfirmRail(
 private fun SaleConfirmLineItemCard(
     lineItem: PendingLineItem,
 ) {
+    val quantity = lineItem.quantity.intValue()
+    val isReturnable = lineItem.product.isReturnable
+    val direction = when {
+        isReturnable && quantity < 0 -> stringResource(R.string.sale_deposit_return)
+        isReturnable && quantity > 0 -> stringResource(R.string.sale_deposit_extra_issue)
+        else -> null
+    }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
@@ -261,7 +274,15 @@ private fun SaleConfirmLineItemCard(
                 )
             }
             Text(
-                text = "${lineItem.quantity.intValue()} × ${formatCurrencyValue(lineItem.productPrice)}",
+                text = buildString {
+                    append(abs(quantity))
+                    append(" × ")
+                    append(formatCurrencyValue(lineItem.productPrice))
+                    if (direction != null) {
+                        append(" · ")
+                        append(direction)
+                    }
+                },
                 color = OperatorPalette.title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,

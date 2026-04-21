@@ -204,7 +204,6 @@
     <string name="payout_status_no_tag_known">Kein Chip bekannt</string>
     <string name="payout_status_amount_is_zero">Betrag ist null</string>
     <string name="payout_status_checking">Auszahlung wird geprüft</string>
-    <string name="payout_status_valid">Auszahlung gültig</string>
     <string name="payout_status_not_checked_before">Auszahlung wurde vorher nicht geprüft</string>
     <string name="payout_status_in_progress">Auszahlung läuft...</string>
     <string name="payout_status_booked_successfully">Auszahlung erfolgreich gebucht</string>
@@ -398,6 +397,15 @@
     <string name="sale_clear_price">Löschen</string>
     <string name="sale_item_in_basket">Im Warenkorb</string>
     <string name="sale_item_return_selected">Pfand aktiv</string>
+    <string name="sale_deposit_return">zurück</string>
+    <string name="sale_deposit_extra_issue">extra Ausgabe</string>
+    <string name="sale_deposit_return_count">%1$d zurück</string>
+    <string name="sale_deposit_extra_issue_count">%1$d extra Ausgabe</string>
+    <string name="sale_deposit_return_selected">Pfand zurück</string>
+    <string name="sale_deposit_extra_issue_selected">Pfand extra Ausgabe</string>
+    <string name="sale_book_credit">Gutschrift buchen</string>
+    <string name="sale_cash_payout">Bar auszahlen</string>
+    <string name="sale_credit_payout_total_label">Gutschrift / Auszahlung</string>
     <string name="sale_item_price_set">Preis gesetzt</string>
     <string name="sale_item_selected">Ausgewählt</string>
     <string name="sale_voucher_singular">Gutschein</string>

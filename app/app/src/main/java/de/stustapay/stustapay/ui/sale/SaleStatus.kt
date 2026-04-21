@@ -148,10 +148,25 @@ data class SaleStatus(
         if (saleConfig !is SaleConfig.Ready) return
         val button = saleConfig.buttons[buttonId] ?: return
         when (button.price) {
-            is SaleItemPrice.FixedPrice,
-            is SaleItemPrice.Returnable -> {
+            is SaleItemPrice.FixedPrice -> {
                 if (current is SaleItemAmount.FixedPrice) {
                     buttonSelection[buttonId] = SaleItemAmount.FixedPrice(current.amount + 1)
+                } else {
+                    buttonSelection += Pair(
+                        buttonId,
+                        SaleItemAmount.FixedPrice(amount = 1)
+                    )
+                }
+            }
+
+            is SaleItemPrice.Returnable -> {
+                if (current is SaleItemAmount.FixedPrice) {
+                    val newAmount = current.amount + 1
+                    if (newAmount != 0) {
+                        buttonSelection[buttonId] = SaleItemAmount.FixedPrice(newAmount)
+                    } else {
+                        buttonSelection.remove(buttonId)
+                    }
                 } else {
                     buttonSelection += Pair(
                         buttonId,

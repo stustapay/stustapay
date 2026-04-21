@@ -152,7 +152,6 @@ class PayOutViewModel @Inject constructor(
                     state.updateWithPendingPayOut(response.data)
                     state
                 }
-                _status.update { context.getString(R.string.payout_status_valid) }
                 true
             }
 

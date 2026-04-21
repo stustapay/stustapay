@@ -108,16 +108,7 @@ fun SaleSelectionList(
         }
 
         buttons.forEach { button ->
-            var returnCaption = "Extra Glas"
-            val saleCaption = if (button.price is SaleItemPrice.Returnable) {
-                val captionSplit = button.caption.split("///", limit = 2)
-                if (captionSplit.size == 2) {
-                    returnCaption = captionSplit[1]
-                }
-                captionSplit[0]
-            } else {
-                button.caption
-            }
+            val saleCaption = button.caption.substringBefore("///")
 
             add(
                 SaleSelectionEntry(
@@ -139,7 +130,6 @@ fun SaleSelectionList(
                                 amount = (saleStatus.buttonSelection[button.id] as? SaleItemAmount.FixedPrice),
                                 onIncr = { viewModel.incrementButton(button.id) },
                                 onDecr = { viewModel.decrementButton(button.id) },
-                                incrementText = returnCaption,
                             )
                         }
 

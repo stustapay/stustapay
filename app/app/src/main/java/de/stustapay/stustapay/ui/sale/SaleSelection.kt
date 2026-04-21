@@ -286,7 +286,11 @@ private fun CompactSaleBasketPanel(
         if (sspEnabled) {
             add(
                 CompactPaymentAction(
-                    stringResource(R.string.sale_review_and_pay),
+                    if (totalPrice <= 0.0) {
+                        stringResource(R.string.sale_book_credit)
+                    } else {
+                        stringResource(R.string.sale_review_and_pay)
+                    },
                     ready && basketCount > 0,
                     onSubmitSsp,
                     large = true,
@@ -305,7 +309,11 @@ private fun CompactSaleBasketPanel(
         if (cashEnabled) {
             add(
                 CompactPaymentAction(
-                    stringResource(R.string.pay_cash).substringAfter('\n'),
+                    if (totalPrice <= 0.0) {
+                        stringResource(R.string.sale_cash_payout)
+                    } else {
+                        stringResource(R.string.pay_cash).substringAfter('\n')
+                    },
                     ready && cashierHasRegister,
                     onSubmitCash,
                 )
@@ -395,13 +403,17 @@ private fun CompactSaleBasketPanel(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = stringResource(R.string.sale_total_label),
+                    text = if (totalPrice < 0.0) {
+                        stringResource(R.string.sale_credit_payout_total_label)
+                    } else {
+                        stringResource(R.string.sale_total_label)
+                    },
                     color = OperatorPalette.title,
                     fontSize = if (compactHandheld) 17.sp else 18.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = if (totalPrice == 0.0) "€0.00" else "€%.2f".format(totalPrice),
+                    text = formatSignedEuro(totalPrice),
                     color = OperatorPalette.success,
                     fontSize = if (compactHandheld) 22.sp else 24.sp,
                     fontWeight = FontWeight.Bold,
@@ -543,9 +555,18 @@ private fun buildSaleBasketSummary(
                         is SaleItemPrice.Returnable -> price.price ?: 0.0
                         is SaleItemPrice.FreePrice -> price.defaultPrice ?: 0.0
                     }
+                    val direction = when {
+                        button.price is SaleItemPrice.Returnable && amount.amount < 0 -> {
+                            " ${stringResource(R.string.sale_deposit_return)}"
+                        }
+                        button.price is SaleItemPrice.Returnable && amount.amount > 0 -> {
+                            " ${stringResource(R.string.sale_deposit_extra_issue)}"
+                        }
+                        else -> ""
+                    }
                     lines += SaleBasketSummaryLine(
-                        label = "${amount.amount}x $label",
-                        value = "€%.2f".format(amount.amount * unitPrice),
+                        label = "${abs(amount.amount)}x $label$direction",
+                        value = formatSignedEuro(amount.amount * unitPrice),
                     )
                 }
             }
@@ -554,7 +575,7 @@ private fun buildSaleBasketSummary(
                 if (amount.price > 0u) {
                     lines += SaleBasketSummaryLine(
                         label = label,
-                        value = "€%.2f".format(amount.price.toDouble() / 100.0),
+                        value = formatSignedEuro(amount.price.toDouble() / 100.0),
                     )
                 }
             }
@@ -570,6 +591,14 @@ private fun buildSaleBasketSummary(
     }
 
     return lines
+}
+
+private fun formatSignedEuro(amount: Double): String {
+    return if (amount < 0.0) {
+        "-€%.2f".format(abs(amount))
+    } else {
+        "€%.2f".format(amount)
+    }
 }
 
 private data class CompactPaymentAction(
