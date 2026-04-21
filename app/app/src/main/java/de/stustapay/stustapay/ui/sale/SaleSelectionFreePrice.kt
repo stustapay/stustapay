@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
 import de.stustapay.stustapay.ui.common.amountselect.AmountSelection
+import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 
 @Composable
 fun SaleSelectionFreePrice(
@@ -27,5 +29,6 @@ fun SaleSelectionFreePrice(
         onClear = {
             viewModel.adjustPrice(buttonId, newPrice = FreePrice.Unset)
         },
+        amountTextStyle = MoneyAmountStyle.copy(color = OperatorPalette.title),
     )
 }

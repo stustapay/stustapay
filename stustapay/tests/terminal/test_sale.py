@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
@@ -25,21 +26,21 @@ from stustapay.core.schema.till import (
     TillLayout,
 )
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
-from stustapay.core.schema.user import ADMIN_ROLE_ID, UserTag
+from stustapay.core.schema.user import ADMIN_ROLE_ID, NewUser, NewUserRole, Privilege, User, UserRole, UserTag
 from stustapay.core.service.cashier import (
     CashierService,
     CloseOut,
     InvalidCloseOutException,
 )
-from sftkit.error import InvalidArgument
 from stustapay.core.service.order import NotEnoughVouchersException, OrderService
 from stustapay.core.service.order.order import InvalidSaleException
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.till.till import TillService
+from stustapay.core.service.user import UserService, associate_user_to_role
 
 from ...core.service.terminal import TerminalService
-from ..conftest import Cashier
+from ..conftest import Cashier, CreateRandomUserTag
 from .conftest import (
     START_BALANCE,
     AssertAccountBalance,
@@ -195,6 +196,9 @@ async def test_basic_sale_flow(
     assert pending_sale.new_balance == START_BALANCE - pending_sale.total_price
     completed_sale = await order_service.book_sale(token=terminal_token, new_sale=new_sale)
     assert completed_sale is not None
+    customer_orders = await till_service.get_customer_orders(token=terminal_token, customer_tag_uid=customer.tag.uid)
+    assert completed_sale.id in {customer_order.id for customer_order in customer_orders}
+    assert all(customer_order.till_id == till.id for customer_order in customer_orders)
     order = await order_service.get_order(token=event_admin_token, node_id=event_node.id, order_id=completed_sale.id)
     assert order is not None
     await assert_system_account_balance(
@@ -219,6 +223,52 @@ async def test_basic_sale_flow(
     )
     z_nr = await db_connection.fetchval("select z_nr from till where id = $1", till.id)
     assert z_nr_start + 1 == z_nr
+
+
+async def test_customer_order_history_denies_terminal_user_without_ordering_privilege(
+    db_connection: Connection,
+    till_service: TillService,
+    terminal_token: str,
+    customer: Customer,
+    event_admin_token: str,
+    event_admin_user: tuple[User, str],
+    event_node: Node,
+    user_service: UserService,
+    create_random_user_tag: CreateRandomUserTag,
+    login_supervised_user: LoginSupervisedUser,
+):
+    user_tag = await create_random_user_tag()
+    role: UserRole = await user_service.create_user_role(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_role=NewUserRole(
+            name=f"no-customer-history-{uuid.uuid4()}",
+            is_privileged=False,
+            privileges=[Privilege.supervised_terminal_login],
+        ),
+    )
+    user: User = await user_service.create_user_no_auth(
+        node_id=event_node.id,
+        new_user=NewUser(
+            login=f"no-customer-history-{uuid.uuid4()}",
+            user_tag_uid=user_tag.uid,
+            user_tag_pin=user_tag.pin,
+            description="",
+            display_name="No Customer History",
+        ),
+    )
+    await associate_user_to_role(
+        conn=db_connection,
+        node=event_node,
+        current_user_id=event_admin_user[0].id,
+        user_id=user.id,
+        role_id=role.id,
+    )
+
+    await login_supervised_user(user_tag_uid=user_tag.uid, user_role_id=role.id)
+
+    with pytest.raises(AccessDenied):
+        await till_service.get_customer_orders(token=terminal_token, customer_tag_uid=customer.tag.uid)
 
 
 async def test_returnable_products(

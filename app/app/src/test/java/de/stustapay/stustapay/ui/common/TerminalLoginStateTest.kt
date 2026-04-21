@@ -104,6 +104,75 @@ class TerminalLoginStateTest {
         assertTrue(state.checkTerminalAccess(Access::canChangeConfig))
     }
 
+    @Test
+    fun customerHistoryFilterIsAvailableForOrderingAndCustomerManagementUsers() {
+        val orderingState = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders))),
+            terminal = TerminalConfigState.Success(terminalConfig(selfService = false, allowTopUp = true)),
+        )
+        val customerManagementState = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.customer_management))),
+            terminal = TerminalConfigState.Success(terminalConfig(selfService = false, allowTopUp = true)),
+        )
+        val topUpState = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_topup, Privilege.terminal_login))),
+            terminal = TerminalConfigState.Success(terminalConfig(selfService = false, allowTopUp = true)),
+        )
+
+        assertTrue(orderingState.checkUserAccess(Access::canFilterCustomerHistory))
+        assertTrue(customerManagementState.checkUserAccess(Access::canFilterCustomerHistory))
+        assertFalse(topUpState.checkUserAccess(Access::canFilterCustomerHistory))
+    }
+
+    @Test
+    fun topUpCardHandlingUsesSumupPaymentEnabledNotProfileCardFlag() {
+        val sumupEnabledProfileCardDisabled = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders))),
+            terminal = TerminalConfigState.Success(
+                terminalConfig(
+                    selfService = false,
+                    allowTopUp = true,
+                    enableCardPayment = false,
+                    sumupPaymentEnabled = true,
+                )
+            ),
+        )
+        val sumupDisabledProfileCardEnabled = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders))),
+            terminal = TerminalConfigState.Success(
+                terminalConfig(
+                    selfService = false,
+                    allowTopUp = true,
+                    enableCardPayment = true,
+                    sumupPaymentEnabled = false,
+                )
+            ),
+        )
+
+        assertTrue(sumupEnabledProfileCardDisabled.canHandleCardTopUp())
+        assertFalse(sumupDisabledProfileCardEnabled.canHandleCardTopUp())
+    }
+
+    @Test
+    fun saleCardHandlingStillUsesProfileCardFlag() {
+        val profileCardDisabled = terminalConfig(
+            selfService = false,
+            allowTopUp = true,
+            enableCardPayment = false,
+            sumupPaymentEnabled = true,
+        )
+        val profileCardEnabled = terminalConfig(
+            selfService = false,
+            allowTopUp = true,
+            enableCardPayment = true,
+            sumupPaymentEnabled = false,
+        )
+        val user = currentUser(listOf(Privilege.can_book_orders))
+
+        assertFalse(Access.canSell(user, profileCardDisabled) && profileCardDisabled.till?.enableCardPayment == true)
+        assertTrue(profileCardEnabled.till?.enableCardPayment == true)
+    }
+
     private fun currentUser(privileges: List<Privilege>): CurrentUser {
         return CurrentUser(
             nodeId = 1.toBigInteger(),
@@ -119,6 +188,8 @@ class TerminalLoginStateTest {
         allowTopUp: Boolean,
         userPrivileges: List<Privilege>? = null,
         tillUserPrivileges: List<Privilege>? = null,
+        enableCardPayment: Boolean = true,
+        sumupPaymentEnabled: Boolean = true,
     ): TerminalConfig {
         return TerminalConfig(
             id = 1.toBigInteger(),
@@ -146,11 +217,11 @@ class TerminalLoginStateTest {
                 allowTicketVouchers = false,
                 enableSspPayment = true,
                 enableCashPayment = false,
-                enableCardPayment = true,
+                enableCardPayment = enableCardPayment,
                 buttons = emptyList(),
                 sumupSecrets = null,
                 postPaymentAllowed = false,
-                sumupPaymentEnabled = true,
+                sumupPaymentEnabled = sumupPaymentEnabled,
                 userPrivileges = tillUserPrivileges,
                 secrets = null,
                 activeUserId = null,

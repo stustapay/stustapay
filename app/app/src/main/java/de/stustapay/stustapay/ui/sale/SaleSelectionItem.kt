@@ -57,11 +57,6 @@ sealed interface SaleSelectionItemType {
     ) : SaleSelectionItemType
 }
 
-enum class SaleSelectionItemLayout {
-    Card,
-    ListRow,
-}
-
 private data class SaleSelectionLabelParts(
     val title: String,
     val variantBadge: String?,
@@ -116,7 +111,6 @@ fun PreviewSaleSelectionItem() {
 fun SaleSelectionItem(
     caption: String,
     type: SaleSelectionItemType,
-    layout: SaleSelectionItemLayout = SaleSelectionItemLayout.Card,
 ) {
     val isReturnable = type is SaleSelectionItemType.Returnable
     val itemPrice: String
@@ -206,221 +200,107 @@ fun SaleSelectionItem(
         }
     }
 
-    if (layout == SaleSelectionItemLayout.ListRow) {
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = OperatorPalette.interactivePanel,
-            border = BorderStroke(1.dp, OperatorPalette.panelBorder),
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = OperatorPalette.interactivePanel,
+        border = BorderStroke(1.dp, OperatorPalette.panelBorder),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = labelParts.title,
-                                color = OperatorPalette.title,
-                                fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false),
-                            )
-
-                            labelParts.variantBadge?.let { badge ->
-                                Box(
-                                    modifier = Modifier
-                                        .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
-                                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                                ) {
-                                    Text(
-                                        text = badge,
-                                        color = OperatorPalette.title,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                            }
-                        }
-
-                        selectionLabel?.let { detail ->
-                            Text(
-                                text = detail,
-                                color = OperatorPalette.subtitle,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = itemPrice,
+                            text = labelParts.title,
                             color = OperatorPalette.title,
-                            fontSize = 24.sp,
+                            fontSize = 23.sp,
                             fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
                         )
 
-                        if (quantityLabel != null) {
+                        labelParts.variantBadge?.let { badge ->
                             Box(
                                 modifier = Modifier
-                                    .background(OperatorPalette.panel, RoundedCornerShape(999.dp))
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
+                                    .padding(horizontal = 10.dp, vertical = 5.dp),
                             ) {
                                 Text(
-                                    text = quantityLabel,
+                                    text = badge,
                                     color = OperatorPalette.title,
-                                    fontSize = 16.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
                             }
                         }
                     }
-                }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Button(
-                        onClick = secondaryAction,
-                        enabled = secondaryEnabled,
-                        modifier = Modifier
-                            .height(46.dp)
-                            .widthIn(min = if (secondaryText.length > 1) 96.dp else 64.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = secondaryButtonColor,
-                            contentColor = secondaryButtonTextColor,
-                            disabledBackgroundColor = OperatorPalette.panel,
-                            disabledContentColor = OperatorPalette.subtitle,
-                        ),
-                    ) {
+                    selectionLabel?.let { detail ->
                         Text(
-                            text = secondaryText,
-                            fontSize = if (secondaryText.length > 1) 13.sp else 21.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-
-                    Button(
-                        onClick = primaryAction,
-                        modifier = Modifier
-                            .height(46.dp)
-                            .weight(1f)
-                            .widthIn(min = if (primaryIsSymbol) 92.dp else if (isReturnable || primaryText.length > 4) 132.dp else 104.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = primaryButtonColor,
-                            contentColor = primaryButtonTextColor,
-                        ),
-                    ) {
-                        Text(
-                            text = primaryText,
-                            fontSize = if (primaryIsSymbol) 28.sp else 16.sp,
-                            fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
+                            text = detail,
+                            color = OperatorPalette.subtitle,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
-            }
-        }
-        return
-    }
 
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = OperatorPalette.interactivePanel,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
-            ) {
-                Text(
-                    text = caption,
-                    color = OperatorPalette.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (quantityLabel != null) {
-                    Box(
-                        modifier = Modifier
-                            .background(OperatorPalette.pill, RoundedCornerShape(999.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            text = quantityLabel,
-                            color = OperatorPalette.title,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-
-            Text(
-                text = itemPrice,
-                color = OperatorPalette.subtitle,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Button(
-                    onClick = primaryAction,
-                    modifier = Modifier
-                        .weight(if (primaryIsSymbol) 0.32f else 0.72f)
-                        .height(38.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = primaryButtonColor,
-                        contentColor = primaryButtonTextColor,
-                    ),
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = primaryText,
-                        fontSize = if (primaryIsSymbol) 24.sp else 13.sp,
-                        fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
+                        text = itemPrice,
+                        color = OperatorPalette.title,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
                     )
-                }
 
+                    if (quantityLabel != null) {
+                        Box(
+                            modifier = Modifier
+                                .background(OperatorPalette.panel, RoundedCornerShape(999.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                        ) {
+                            Text(
+                                text = quantityLabel,
+                                color = OperatorPalette.title,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Button(
                     onClick = secondaryAction,
                     enabled = secondaryEnabled,
                     modifier = Modifier
-                        .weight(0.28f)
-                        .height(38.dp),
+                        .height(46.dp)
+                        .widthIn(min = if (secondaryText.length > 1) 96.dp else 64.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = secondaryButtonColor,
                         contentColor = secondaryButtonTextColor,
@@ -430,8 +310,27 @@ fun SaleSelectionItem(
                 ) {
                     Text(
                         text = secondaryText,
-                        fontSize = 13.sp,
+                        fontSize = if (secondaryText.length > 1) 13.sp else 21.sp,
                         fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                Button(
+                    onClick = primaryAction,
+                    modifier = Modifier
+                        .height(46.dp)
+                        .weight(1f)
+                        .widthIn(min = if (primaryIsSymbol) 92.dp else if (isReturnable || primaryText.length > 4) 132.dp else 104.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = primaryButtonColor,
+                        contentColor = primaryButtonTextColor,
+                    ),
+                ) {
+                    Text(
+                        text = primaryText,
+                        fontSize = if (primaryIsSymbol) 28.sp else 16.sp,
+                        fontWeight = if (primaryIsSymbol) FontWeight.ExtraBold else FontWeight.SemiBold,
+                        maxLines = 1,
                     )
                 }
             }

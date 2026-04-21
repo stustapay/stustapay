@@ -262,8 +262,10 @@ class TillService(Service[Config]):
         return customer
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.customer_management])
-    async def get_customer_orders(self, *, conn: Connection, node: Node, customer_tag_uid: int) -> list[Order]:
+    @requires_terminal(user_privileges=[Privilege.customer_management, Privilege.can_book_orders])
+    async def get_customer_orders(
+        self, *, conn: Connection, node: Node, current_till: Till, customer_tag_uid: int
+    ) -> list[Order]:
         customer_id = await conn.fetchval(
             "select id from account_with_history a where a.user_tag_uid = $1 and node_id = any($2)",
             customer_tag_uid,
@@ -274,8 +276,11 @@ class TillService(Service[Config]):
 
         orders = await conn.fetch_many(
             Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1), $2)",
+            "select * from order_value_prefiltered("
+            "  (select array_agg(o.id) from ordr o where customer_account_id = $1 and till_id = $2), $3"
+            ")",
             customer_id,
+            current_till.id,
             node.event_node_id,
         )
         return orders

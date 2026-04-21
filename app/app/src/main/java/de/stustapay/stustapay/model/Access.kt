@@ -62,6 +62,11 @@ object Access {
         return user.privileges.contains(Privilege.customer_management)
     }
 
+    fun canFilterCustomerHistory(user: CurrentUser): Boolean {
+        return user.privileges.contains(Privilege.customer_management) ||
+               user.privileges.contains(Privilege.can_book_orders)
+    }
+
     // Till features
     fun canSellTicket(terminal: TerminalConfig, user: CurrentUser): Boolean {
         return terminal.till?.allowTicketSale == true && user.privileges.contains(Privilege.can_book_orders)

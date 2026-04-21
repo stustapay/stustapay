@@ -427,7 +427,7 @@ private fun CompactSaleBasketPanel(
                     if (basketCount > 0) {
                         Text(
                             text = stringResource(R.string.sale_clear_basket),
-                            color = OperatorPalette.danger,
+                            color = Color(0xFFFF4D4D),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.clickable(onClick = onAbort),
@@ -501,7 +501,7 @@ private fun CompactSaleBasketPanel(
                 if (!stackPaymentActions && basketCount > 0) {
                     Text(
                         text = stringResource(R.string.sale_clear_basket),
-                        color = OperatorPalette.danger,
+                        color = Color(0xFFFF4D4D),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable(onClick = onAbort),
@@ -596,7 +596,7 @@ private fun CompactActionButton(
         modifier = modifier.heightIn(min = minHeight),
         colors = ButtonDefaults.buttonColors(
             backgroundColor = when {
-                destructive -> Color(0xFF3A1D25)
+                destructive -> Color(0xFFB91C1C)
                 emphasized -> OperatorPalette.accent
                 else -> OperatorPalette.pill
             },

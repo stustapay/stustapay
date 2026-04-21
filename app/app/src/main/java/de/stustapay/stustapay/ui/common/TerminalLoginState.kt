@@ -129,7 +129,7 @@ class TerminalLoginState(
         if (terminal !is TerminalConfigState.Success) {
             return false
         }
-        return terminal.config.till?.enableCardPayment == true
+        return terminal.config.till?.sumupPaymentEnabled == true
     }
     
     /**

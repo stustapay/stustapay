@@ -66,7 +66,7 @@ class SaleHistoryViewModel @Inject constructor(
     )
 
     val canScanCustomerHistory: StateFlow<Boolean> = terminalLoginState
-        .map { loginState -> loginState.checkUserAccess(Access::canViewCustomerOrders) }
+        .map { loginState -> loginState.checkUserAccess(Access::canFilterCustomerHistory) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(),

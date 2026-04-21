@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +27,7 @@ fun AmountSelection(
     onAmountUpdate: (UInt) -> Unit,
     onClear: () -> Unit,
     viewModel: AmountSelectionViewModel = hiltViewModel(),
+    amountTextStyle: TextStyle = MoneyAmountStyle,
     title: @Composable () -> Unit = {},
 ) {
     val currentAmount by viewModel.amount.collectAsStateWithLifecycle()
@@ -64,7 +66,7 @@ fun AmountSelection(
                         currentAmount.toString()
                     }
                 },
-                style = MoneyAmountStyle,
+                style = amountTextStyle,
             )
         }
         NumberKeyboard(
