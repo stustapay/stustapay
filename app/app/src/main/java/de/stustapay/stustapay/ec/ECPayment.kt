@@ -15,4 +15,7 @@ data class ECPayment(
 
     /** additional tip */
     val tip: BigDecimal = BigDecimal(0),
+
+    /** whether the card reader may ask for a tip during checkout */
+    val allowTipOnCardReader: Boolean = true,
 )

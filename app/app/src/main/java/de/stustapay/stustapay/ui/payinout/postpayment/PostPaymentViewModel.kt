@@ -304,6 +304,7 @@ class PostPaymentViewModel @Inject constructor(
             id = newTopUp.uuid.toString(),
             amount = BigDecimal(newTopUp.amount),
             tag = NfcTag(newTopUp.customerTagUid, null),
+            allowTipOnCardReader = false,
         )
     }
 

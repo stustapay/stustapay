@@ -66,6 +66,10 @@ data class SumUpConfig(
     val terminal: ECTerminalConfig,
 )
 
+internal fun shouldEnableTipOnCardReader(terminalConfig: ECTerminalConfig, payment: ECPayment): Boolean {
+    return terminalConfig.enableCardPayment && payment.allowTipOnCardReader
+}
+
 sealed interface SumUpConfigState {
     data class OK(val cfg: SumUpConfig) : SumUpConfigState
     data class Error(val msg: String) : SumUpConfigState
@@ -605,12 +609,12 @@ class SumUp @Inject constructor(
             .skipSuccessScreen()
             // optional: skip the failed screen
             .skipFailedScreen()
-        
-        // Only enable tip on card reader if card payment is enabled in the till profile
-        if (cfg.terminal.enableCardPayment) {
+
+        // Only enable tip on card reader if card payment is enabled and the flow allows tipping.
+        if (shouldEnableTipOnCardReader(cfg.terminal, payment)) {
             sumUpPaymentBuilder.tipOnCardReader()
         }
-        
+
         val sumUpPayment = sumUpPaymentBuilder.build()
 
         _paymentStatus.update { SumUpState.Started(payment.id) }
