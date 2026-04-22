@@ -134,11 +134,14 @@ begin
         coalesce(li.total_no_tax, 0)                as total_no_tax,
         coalesce(li.line_items, json_build_array()) as line_items
     from ordr
-        left join line_item_aggregated_json li ON ordr.id = li.order_id and li.order_id = any(order_value_prefiltered.order_ids)
+        join till on ordr.till_id = till.id
+        join node on till.node_id = node.id
+        left join line_item_aggregated_json li
+            ON ordr.id = li.order_id and li.order_id = any(order_value_prefiltered.order_ids)
         left join account a on ordr.customer_account_id = a.id
         left join user_tag ut on a.user_tag_id = ut.id
-        where ordr.id = any(order_value_prefiltered.order_ids);
--- TODO: fix and add a proper node_id filter
+        where ordr.id = any(order_value_prefiltered.order_ids)
+          and node.event_node_id = order_value_prefiltered.event_node_id;
 
 
 end;

@@ -243,10 +243,33 @@ async def fetch_order(*, conn: Connection, order_id: int) -> Optional[Order]:
     return await conn.fetch_maybe_one(Order, "select * from order_value where id = $1", order_id)
 
 
+async def fetch_order_at_node(*, conn: Connection, node: Node, order_id: int) -> Optional[Order]:
+    return await conn.fetch_maybe_one(
+        Order,
+        "select * from order_value_prefiltered(array[$1]::bigint[], $2)",
+        order_id,
+        node.event_node_id,
+    )
+
+
 async def fetch_transaction(*, conn: Connection, node: Node, transaction_id: int) -> Transaction:
-    del node  # unused
-    # TODO: tree permissions
-    return await conn.fetch_one(Transaction, "select * from transaction_with_order t where id = $1", transaction_id)
+    return await conn.fetch_one(
+        Transaction,
+        "select t.* "
+        "from transaction_with_order t "
+        "left join ordr o on t.order_id = o.id "
+        "left join till ot on o.till_id = ot.id "
+        "left join node order_node on ot.node_id = order_node.id "
+        "where t.id = $1 and ("
+        "   order_node.event_node_id = $2 "
+        "   or exists ("
+        "       select from account a where a.id in (t.source_account, t.target_account) and a.node_id = any($3)"
+        "   )"
+        ")",
+        transaction_id,
+        node.event_node_id,
+        node.ids_to_event_node,
+    )
 
 
 class OrderService(Service[Config]):
@@ -274,6 +297,7 @@ class OrderService(Service[Config]):
     async def _get_products_from_buttons(
         *,
         conn: Connection,
+        node: Node,
         till_profile_id: int,
         buttons: list[BookedButton],
     ) -> list[BookedProduct]:
@@ -291,9 +315,14 @@ class OrderService(Service[Config]):
                     button.id,
                     till_profile_id,
                 )
+                if any(product.node_id not in node.ids_to_event_node for product in products):
+                    raise InvalidArgument("this till profile is not allowed to use these buttons")
             else:
                 products = await conn.fetch_many(
-                    Product, "select p.* from product_with_tax_and_restrictions p where p.id = $1", button.id
+                    Product,
+                    "select p.* from product_with_tax_and_restrictions p where p.id = $1 and p.node_id = any($2)",
+                    button.id,
+                    node.ids_to_event_node,
                 )
             if len(products) == 0:
                 raise InvalidArgument("this till profile is not allowed to use these buttons")
@@ -608,7 +637,7 @@ class OrderService(Service[Config]):
             )
 
         booked_products = await self._get_products_from_buttons(
-            conn=conn, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
+            conn=conn, node=node, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
         )
         line_items = await self._preprocess_order_positions(
             customer_restrictions=(
@@ -1018,11 +1047,13 @@ class OrderService(Service[Config]):
         order_id: int,
         edit_sale: EditSaleProducts,
     ) -> CompletedSaleProducts:
-        order = await fetch_order(conn=conn, order_id=order_id)
+        order = await fetch_order_at_node(conn=conn, node=node, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
-        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=virtual_till.id)
+        await self._cancel_sale(
+            conn=conn, node=node, current_user=current_user, order_id=order_id, till_id=virtual_till.id
+        )
 
         assert order.customer_tag_uid is not None
 
@@ -1087,13 +1118,22 @@ class OrderService(Service[Config]):
         conn: Connection,
         current_user: CurrentUser,
         till_id: int,
+        node: Node,
         order_id: int,
     ):
-        is_order_cancelled = await conn.fetchval("select true from ordr where cancels_order = $1", order_id)
+        is_order_cancelled = await conn.fetchval(
+            "select true "
+            "from ordr o "
+            "join till t on o.till_id = t.id "
+            "join node n on t.node_id = n.id "
+            "where o.cancels_order = $1 and n.event_node_id = $2",
+            order_id,
+            node.event_node_id,
+        )
         if is_order_cancelled:
             raise InvalidArgument("Order has already been cancelled")
 
-        order = await fetch_order(conn=conn, order_id=order_id)
+        order = await fetch_order_at_node(conn=conn, node=node, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
         if order.order_type != OrderType.sale:
@@ -1144,15 +1184,21 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
-    async def cancel_sale(self, *, conn: Connection, current_till: Till, current_user: CurrentUser, order_id: int):
-        await self._cancel_sale(conn=conn, till_id=current_till.id, current_user=current_user, order_id=order_id)
+    async def cancel_sale(
+        self, *, conn: Connection, node: Node, current_till: Till, current_user: CurrentUser, order_id: int
+    ):
+        await self._cancel_sale(
+            conn=conn, node=node, till_id=current_till.id, current_user=current_user, order_id=order_id
+        )
 
     @with_db_transaction(read_only=False)
     @requires_node()
     @requires_user([Privilege.can_book_orders])
     async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
-        await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
+        await self._cancel_sale(
+            conn=conn, node=node, till_id=virtual_till.id, current_user=current_user, order_id=order_id
+        )
 
     @with_db_transaction(read_only=False)
     @requires_terminal(user_privileges=[Privilege.can_book_orders])
@@ -1789,8 +1835,8 @@ class OrderService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration, Privilege.can_book_orders])
-    async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
-        return await fetch_order(conn=conn, order_id=order_id)
+    async def get_order(self, *, conn: Connection, node: Node, order_id: int) -> Optional[Order]:
+        return await fetch_order_at_node(conn=conn, node=node, order_id=order_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()

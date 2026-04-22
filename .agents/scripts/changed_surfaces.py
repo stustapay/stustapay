@@ -48,10 +48,25 @@ def load_paths_from_git(staged: bool = False) -> list[str]:
     return sorted(paths)
 
 
+def add_path_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--files", nargs="*", help="Explicit files to analyze. When omitted, uses git changes.")
+    parser.add_argument("--staged", action="store_true", help="Read staged files with `git diff --cached --name-only`.")
+    parser.add_argument(
+        "--scope",
+        choices=("worktree", "staged"),
+        default="worktree",
+        help="Which git change set to inspect when --files is omitted.",
+    )
+
+
+def resolve_paths(files: list[str] | None = None, scope: str = "worktree") -> list[str]:
+    if files:
+        return [_normalize(path) for path in files]
+    return [_normalize(path) for path in load_paths_from_git(staged=scope == "staged")]
+
+
 def _load_paths(args: argparse.Namespace) -> list[str]:
-    if args.files:
-        return [_normalize(path) for path in args.files]
-    return [_normalize(path) for path in load_paths_from_git(staged=args.staged)]
+    return resolve_paths(files=args.files, scope="staged" if args.staged else args.scope)
 
 
 def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
@@ -126,7 +141,10 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
             surfaces.add("docs")
 
     if requires_contract_sync:
-        notes.append("Backend contract or generated client surface touched. Run `make sync-contract` and review generated diffs separately.")
+        notes.append(
+            "Backend contract or generated client surface touched. "
+            "Run `make sync-contract` and review generated diffs separately."
+        )
 
     if web_targets == {"administration", "customerportal"}:
         notes.append("Shared web code changed. Verify both web applications.")
@@ -145,8 +163,7 @@ def analyze_paths(paths: Iterable[str]) -> SurfaceReport:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Summarize impacted StuStaPay surfaces from changed files.")
-    parser.add_argument("--files", nargs="*", help="Explicit files to analyze. When omitted, uses `git diff --name-only`.")
-    parser.add_argument("--staged", action="store_true", help="Read staged files with `git diff --cached --name-only`.")
+    add_path_arguments(parser)
     parser.add_argument("--output", choices=("text", "json"), default="text")
     return parser.parse_args()
 

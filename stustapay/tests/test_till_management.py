@@ -1,8 +1,11 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
+import secrets
+
 import pytest
 from sftkit.error import InvalidArgument
 
+from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.terminal import NewTerminal, Terminal, TerminalMode
 from stustapay.core.schema.tax_rate import TaxRate
@@ -13,14 +16,64 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import NewNode, Node
+from stustapay.core.schema.tree import NewEvent, NewNode, Node, ROOT_NODE_ID
 from sftkit.error import AccessDenied
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till.till import TillService
-from stustapay.core.service.tree.service import TreeService
+from stustapay.core.service.tree.service import TreeService, create_event
+from sftkit.database import Connection
 
 from .conftest import Cashier
+
+
+async def _create_other_event(db_connection: Connection) -> Node:
+    return await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=NewEvent(
+            name=f"other-till-event-{secrets.token_hex(8)}",
+            description="",
+            customer_portal_url=f"http://other-till-event-{secrets.token_hex(8)}.test",
+            customer_portal_contact_email="test@test.support.test.com",
+            customer_portal_about_page_url="",
+            customer_portal_data_privacy_url="",
+            currency_identifier="EUR",
+            sepa_enabled=False,
+            sepa_sender_name="",
+            sepa_description="",
+            sepa_sender_iban="",
+            sepa_allowed_country_codes=[],
+            bon_title="",
+            bon_issuer="",
+            bon_address="",
+            max_account_balance=150,
+            sumup_topup_enabled=False,
+            sumup_payment_enabled=False,
+            sumup_affiliate_key="",
+            sumup_api_key="",
+            sumup_merchant_code="",
+            ust_id="",
+            email_enabled=False,
+            email_default_sender=None,
+            email_smtp_host=None,
+            email_smtp_port=None,
+            email_smtp_username=None,
+            email_smtp_password=None,
+            payout_done_subject="",
+            payout_done_message="",
+            payout_registered_subject="",
+            payout_registered_message="",
+            payout_sender=None,
+            pretix_presale_enabled=False,
+            pretix_api_key=None,
+            pretix_event=None,
+            pretix_organizer=None,
+            pretix_shop_url=None,
+            pretix_ticket_ids=None,
+        ),
+    )
 
 
 async def _create_node_local_till_setup(
@@ -156,6 +209,126 @@ async def test_basic_till_button_workflow(
         token=event_admin_token, node_id=event_node.id, button_id=updated_button.id
     )
     assert deleted
+
+
+async def test_till_buttons_reject_foreign_event_products(
+    db_connection: Connection,
+    product_service: ProductService,
+    tax_rate_ust: TaxRate,
+    till_service: TillService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+):
+    other_event = await _create_other_event(db_connection)
+    local_product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(name="Local Button Product", price=3, tax_rate_id=tax_rate_ust.id, is_locked=True),
+    )
+    foreign_product = await product_service.create_product(
+        token=global_admin_token,
+        node_id=other_event.id,
+        product=NewProduct(name="Foreign Button Product", price=3, tax_rate_id=tax_rate_ust.id, is_locked=True),
+    )
+
+    with pytest.raises(InvalidArgument):
+        await till_service.layout.create_button(
+            token=event_admin_token,
+            node_id=event_node.id,
+            button=NewTillButton(name="Foreign Product Button", product_ids=[foreign_product.id]),
+        )
+
+    button = await till_service.layout.create_button(
+        token=event_admin_token,
+        node_id=event_node.id,
+        button=NewTillButton(name="Local Product Button", product_ids=[local_product.id]),
+    )
+    with pytest.raises(InvalidArgument):
+        await till_service.layout.update_button(
+            token=event_admin_token,
+            node_id=event_node.id,
+            button_id=button.id,
+            button=NewTillButton(name="Invalid Updated Button", product_ids=[foreign_product.id]),
+        )
+
+    unchanged = await till_service.layout.get_button(
+        token=event_admin_token, node_id=event_node.id, button_id=button.id
+    )
+    assert unchanged is not None
+    assert unchanged.product_ids == [local_product.id]
+
+
+async def test_till_layouts_reject_foreign_event_buttons_and_tickets(
+    db_connection: Connection,
+    product_service: ProductService,
+    ticket_service: TicketService,
+    tax_rate_ust: TaxRate,
+    till_service: TillService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+):
+    other_event = await _create_other_event(db_connection)
+    local_button = await till_service.layout.create_button(
+        token=event_admin_token,
+        node_id=event_node.id,
+        button=NewTillButton(name="Local Layout Button", product_ids=[]),
+    )
+    foreign_product = await product_service.create_product(
+        token=global_admin_token,
+        node_id=other_event.id,
+        product=NewProduct(name="Foreign Layout Product", price=3, tax_rate_id=tax_rate_ust.id, is_locked=True),
+    )
+    foreign_button = await till_service.layout.create_button(
+        token=global_admin_token,
+        node_id=other_event.id,
+        button=NewTillButton(name="Foreign Layout Button", product_ids=[foreign_product.id]),
+    )
+    foreign_ticket = await ticket_service.create_ticket(
+        token=global_admin_token,
+        node_id=other_event.id,
+        ticket=NewTicket(
+            name="Foreign Layout Ticket",
+            price=3,
+            tax_rate_id=tax_rate_ust.id,
+            restrictions=[],
+            is_locked=True,
+            initial_top_up_amount=0,
+        ),
+    )
+
+    with pytest.raises(InvalidArgument):
+        await till_service.layout.create_layout(
+            token=event_admin_token,
+            node_id=event_node.id,
+            layout=NewTillLayout(name="Foreign Button Layout", description="", button_ids=[foreign_button.id]),
+        )
+    with pytest.raises(InvalidArgument):
+        await till_service.layout.create_layout(
+            token=event_admin_token,
+            node_id=event_node.id,
+            layout=NewTillLayout(name="Foreign Ticket Layout", description="", ticket_ids=[foreign_ticket.id]),
+        )
+
+    layout = await till_service.layout.create_layout(
+        token=event_admin_token,
+        node_id=event_node.id,
+        layout=NewTillLayout(name="Local Layout", description="", button_ids=[local_button.id]),
+    )
+    with pytest.raises(InvalidArgument):
+        await till_service.layout.update_layout(
+            token=event_admin_token,
+            node_id=event_node.id,
+            layout_id=layout.id,
+            layout=NewTillLayout(name="Invalid Updated Layout", description="", button_ids=[foreign_button.id]),
+        )
+
+    unchanged = await till_service.layout.get_layout(
+        token=event_admin_token, node_id=event_node.id, layout_id=layout.id
+    )
+    assert unchanged is not None
+    assert unchanged.button_ids == [local_button.id]
 
 
 async def test_basic_till_workflow(

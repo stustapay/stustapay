@@ -14,7 +14,7 @@ from stustapay.core.schema.till import (
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import Privilege
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from sftkit.error import NotFound
+from sftkit.error import InvalidArgument, NotFound
 from stustapay.core.service.user import AuthService
 
 
@@ -27,6 +27,45 @@ async def _fetch_till_layout(*, conn: Connection, node: Node, layout_id: int) ->
     )
 
 
+async def _ensure_products_at_node(*, conn: Connection, node: Node, product_ids: list[int]) -> None:
+    if not product_ids:
+        return
+
+    valid_product_ids = await conn.fetch(
+        "select id from product where id = any($1) and type = 'user_defined' and node_id = any($2)",
+        product_ids,
+        node.ids_to_event_node,
+    )
+    if {row["id"] for row in valid_product_ids} != set(product_ids):
+        raise InvalidArgument("Button references products outside the current event")
+
+
+async def _ensure_buttons_at_node(*, conn: Connection, node: Node, button_ids: list[int] | None) -> None:
+    if not button_ids:
+        return
+
+    valid_button_ids = await conn.fetch(
+        "select id from till_button where id = any($1) and node_id = any($2)",
+        button_ids,
+        node.ids_to_event_node,
+    )
+    if {row["id"] for row in valid_button_ids} != set(button_ids):
+        raise InvalidArgument("Layout references buttons outside the current event")
+
+
+async def _ensure_tickets_at_node(*, conn: Connection, node: Node, ticket_ids: list[int] | None) -> None:
+    if not ticket_ids:
+        return
+
+    valid_ticket_ids = await conn.fetch(
+        "select id from product where id = any($1) and type = 'ticket' and node_id = any($2)",
+        ticket_ids,
+        node.ids_to_event_node,
+    )
+    if {row["id"] for row in valid_ticket_ids} != set(ticket_ids):
+        raise InvalidArgument("Layout references tickets outside the current event")
+
+
 class TillLayoutService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -36,6 +75,7 @@ class TillLayoutService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_button(self, *, conn: Connection, node: Node, button: NewTillButton) -> TillButton:
+        await _ensure_products_at_node(conn=conn, node=node, product_ids=button.product_ids)
         row = await conn.fetchrow(
             "insert into till_button (node_id, name) values ($1, $2) returning id, name",
             node.id,
@@ -84,6 +124,7 @@ class TillLayoutService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def update_button(self, *, conn: Connection, node: Node, button_id: int, button: NewTillButton) -> TillButton:
+        await _ensure_products_at_node(conn=conn, node=node, product_ids=button.product_ids)
         row = await conn.fetchrow(
             "update till_button set name = $2 where id = $1 and node_id = $3 returning id, name",
             button_id,
@@ -118,6 +159,8 @@ class TillLayoutService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def create_layout(self, *, conn: Connection, node: Node, layout: NewTillLayout) -> TillLayout:
+        await _ensure_buttons_at_node(conn=conn, node=node, button_ids=layout.button_ids)
+        await _ensure_tickets_at_node(conn=conn, node=node, ticket_ids=layout.ticket_ids)
         till_layout_id = await conn.fetchval(
             "insert into till_layout (node_id, name, description) values ($1, $2, $3) returning id",
             node.id,
@@ -168,6 +211,8 @@ class TillLayoutService(Service[Config]):
     async def update_layout(
         self, *, conn: Connection, node: Node, layout_id: int, layout: NewTillLayout
     ) -> Optional[TillLayout]:
+        await _ensure_buttons_at_node(conn=conn, node=node, button_ids=layout.button_ids)
+        await _ensure_tickets_at_node(conn=conn, node=node, ticket_ids=layout.ticket_ids)
         till_layout_id = await conn.fetchval(
             "update till_layout set name = $2, description = $3 where id = $1 and node_id = $4 returning id",
             layout_id,

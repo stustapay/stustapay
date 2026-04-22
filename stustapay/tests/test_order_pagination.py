@@ -1,16 +1,17 @@
 # pylint: disable=redefined-outer-name
 import secrets
 from datetime import UTC, datetime
+from uuid import uuid4
 
 import pytest
 from sftkit.database import Connection
-from sftkit.error import AccessDenied
+from sftkit.error import AccessDenied, InvalidArgument
 
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.order import BookedProduct, EditSaleProducts, NewSaleProducts, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
-from stustapay.core.schema.tree import Node
+from stustapay.core.schema.tree import NewEvent, Node, ROOT_NODE_ID
 from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.account import AccountService
@@ -18,9 +19,60 @@ from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
 from stustapay.core.service.order.order import get_source_account, get_target_account
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.tax_rate import fetch_tax_rate_none
+from stustapay.core.service.till.common import fetch_virtual_till
+from stustapay.core.service.tree.service import create_event
 from stustapay.core.service.user import UserService
 
 from .conftest import Cashier, CreateRandomUserTag
+
+
+async def _create_other_event(db_connection: Connection) -> Node:
+    return await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=NewEvent(
+            name=f"other-event-{secrets.token_hex(8)}",
+            description="",
+            customer_portal_url=f"http://other-{secrets.token_hex(8)}.test",
+            customer_portal_contact_email="test@test.support.test.com",
+            customer_portal_about_page_url="",
+            customer_portal_data_privacy_url="",
+            currency_identifier="EUR",
+            sepa_enabled=False,
+            sepa_sender_name="",
+            sepa_description="",
+            sepa_sender_iban="",
+            sepa_allowed_country_codes=[],
+            bon_title="",
+            bon_issuer="",
+            bon_address="",
+            max_account_balance=150,
+            sumup_topup_enabled=False,
+            sumup_payment_enabled=False,
+            sumup_affiliate_key="",
+            sumup_api_key="",
+            sumup_merchant_code="",
+            ust_id="",
+            email_enabled=False,
+            email_default_sender=None,
+            email_smtp_host=None,
+            email_smtp_port=None,
+            email_smtp_username=None,
+            email_smtp_password=None,
+            payout_done_subject="",
+            payout_done_message="",
+            payout_registered_subject="",
+            payout_registered_message="",
+            payout_sender=None,
+            pretix_presale_enabled=False,
+            pretix_api_key=None,
+            pretix_event=None,
+            pretix_organizer=None,
+            pretix_shop_url=None,
+            pretix_ticket_ids=None,
+        ),
+    )
 
 
 async def _create_event_token_with_privileges(
@@ -128,6 +180,47 @@ async def _create_sale_order(
     )
 
     return booking.id
+
+
+async def _create_other_event_order(
+    *,
+    db_connection: Connection,
+    product_service: ProductService,
+    global_admin_token: str,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+) -> tuple[Node, Product, int, int, int]:
+    other_event = await _create_other_event(db_connection)
+    other_tax_rate = await fetch_tax_rate_none(conn=db_connection, node=other_event)
+    other_product = await product_service.create_product(
+        token=global_admin_token,
+        node_id=other_event.id,
+        product=NewProduct(
+            name=f"Other Event Product {secrets.token_hex(4)}",
+            price=5.0,
+            tax_rate_id=other_tax_rate.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+    del create_random_user_tag
+    other_customer_account_id = await db_connection.fetchval(
+        "insert into account (node_id, type, name, balance) "
+        "values ($1, 'private', 'Other Event Customer', 100.0) returning id",
+        other_event.event_node_id,
+    )
+    other_till = await fetch_virtual_till(conn=db_connection, node=other_event)
+    other_order_id = await _create_sale_order(
+        db_connection=db_connection,
+        event_node=other_event,
+        cashier=cashier,
+        till_id=other_till.id,
+        customer_account_id=other_customer_account_id,
+        product=other_product,
+    )
+    return other_event, other_product, other_customer_account_id, other_till.id, other_order_id
 
 
 async def test_list_orders_filtered_paginates_with_stable_ordering(
@@ -485,4 +578,147 @@ async def test_order_admin_reads_require_node_administration_or_can_book_orders(
             token=no_order_privilege_token,
             node_id=event_node.id,
             order_id=order_id,
+        )
+
+
+async def test_order_reads_are_scoped_to_current_event(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    other_event, _, other_customer_account_id, other_till_id, other_order_id = await _create_other_event_order(
+        db_connection=db_connection,
+        product_service=product_service,
+        global_admin_token=global_admin_token,
+        cashier=cashier,
+        create_random_user_tag=create_random_user_tag,
+    )
+
+    assert await db_connection.fetch(
+        "select id from order_value_prefiltered(array[$1]::bigint[], $2)",
+        other_order_id,
+        event_node.event_node_id,
+    ) == []
+    assert [
+        row["id"]
+        for row in await db_connection.fetch(
+            "select id from order_value_prefiltered(array[$1]::bigint[], $2)",
+            other_order_id,
+            other_event.event_node_id,
+        )
+    ] == [other_order_id]
+
+    assert (
+        await order_service.get_order(token=event_admin_token, node_id=event_node.id, order_id=other_order_id) is None
+    )
+    assert (
+        await order_service.list_orders(
+            token=event_admin_token,
+            node_id=event_node.id,
+            customer_account_id=other_customer_account_id,
+        )
+        == []
+    )
+    assert (
+        await order_service.list_orders_by_till(
+            token=event_admin_token,
+            node_id=event_node.id,
+            till_id=other_till_id,
+        )
+        == []
+    )
+
+
+async def test_foreign_event_order_mutations_are_rejected_without_balance_changes(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+    tax_rate_ust: TaxRate,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    _, _, other_customer_account_id, _, other_order_id = await _create_other_event_order(
+        db_connection=db_connection,
+        product_service=product_service,
+        global_admin_token=global_admin_token,
+        cashier=cashier,
+        create_random_user_tag=create_random_user_tag,
+    )
+    event_product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(
+            name="Event Edit Product",
+            price=2.0,
+            tax_rate_id=tax_rate_ust.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+
+    balance_before = await db_connection.fetchval(
+        "select balance from account where id = $1", other_customer_account_id
+    )
+
+    with pytest.raises(InvalidArgument):
+        await order_service.cancel_sale_admin(token=event_admin_token, node_id=event_node.id, order_id=other_order_id)
+
+    with pytest.raises(InvalidArgument):
+        await order_service.edit_sale_products(
+            token=event_admin_token,
+            node_id=event_node.id,
+            order_id=other_order_id,
+            edit_sale=EditSaleProducts(
+                uuid=uuid4(),
+                products=[BookedProduct(product_id=event_product.id, quantity=1)],
+            ),
+        )
+
+    assert (
+        await db_connection.fetchval("select balance from account where id = $1", other_customer_account_id)
+        == balance_before
+    )
+    assert (
+        await db_connection.fetchval("select exists(select from ordr where cancels_order = $1)", other_order_id)
+        is False
+    )
+
+
+async def test_book_sale_products_rejects_foreign_event_product_ids(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    global_admin_token: str,
+    cashier: Cashier,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    _, other_product, _, _, _ = await _create_other_event_order(
+        db_connection=db_connection,
+        product_service=product_service,
+        global_admin_token=global_admin_token,
+        cashier=cashier,
+        create_random_user_tag=create_random_user_tag,
+    )
+
+    with pytest.raises(InvalidArgument):
+        await order_service.book_sale_products(
+            token=event_admin_token,
+            node_id=event_node.id,
+            new_sale=NewSaleProducts(
+                uuid=uuid4(),
+                payment_method=PaymentMethod.cash,
+                products=[BookedProduct(product_id=other_product.id, quantity=1)],
+            ),
         )
