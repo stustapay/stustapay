@@ -58,4 +58,12 @@ class SumUpTipOnCardReaderTest {
             )
         )
     }
+
+    @Test
+    fun `merchant check only accepts exact configured merchant`() {
+        assertTrue(isExpectedSumUpMerchant("MERCHANT-1", "MERCHANT-1"))
+        assertFalse(isExpectedSumUpMerchant("MERCHANT-2", "MERCHANT-1"))
+        assertFalse(isExpectedSumUpMerchant(null, "MERCHANT-1"))
+        assertFalse(isExpectedSumUpMerchant("MERCHANT-1", ""))
+    }
 }

@@ -6,7 +6,7 @@ from sftkit.database import Connection
 
 from stustapay.core.schema.sumup import SumUpConnectionSource
 from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node
-from stustapay.core.service.sumup_link import create_sumup_api_for_node
+from stustapay.core.service.sumup_link import create_sumup_api_for_node, resolve_terminal_sumup_access
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.payment.sumup.api import SumUpMerchantProfile, SumUpOAuthToken
@@ -79,7 +79,9 @@ async def test_create_sumup_api_for_node_prefers_parent_link(
         node_id=ROOT_NODE_ID,
         new_node=NewNode(name="Organizer", description=""),
     )
-    scoped_event = await _copy_event_under_parent(db_connection, tree_service, global_admin_token, event_node, parent.id)
+    scoped_event = await _copy_event_under_parent(
+        db_connection, tree_service, global_admin_token, event_node, parent.id
+    )
     await _set_global_sumup_config(db_connection)
     await db_connection.execute(
         "insert into node_sumup_link (node_id, merchant_code, merchant_name, refresh_token) values ($1, $2, $3, $4)",
@@ -114,6 +116,82 @@ async def test_create_sumup_api_for_node_prefers_parent_link(
     assert access.affiliate_key == "sup_afk_global"
 
 
+async def test_terminal_sumup_oauth_cache_is_scoped_to_credential_identity(
+    db_connection: Connection,
+    tree_service: TreeService,
+    terminal_service,
+    global_admin_token: str,
+    event_node: Node,
+    monkeypatch,
+):
+    terminal_service.sumup_oauth_cache.clear()
+    parent = await tree_service.create_node(
+        token=global_admin_token,
+        node_id=ROOT_NODE_ID,
+        new_node=NewNode(name="Organizer", description=""),
+    )
+    scoped_event = await _copy_event_under_parent(
+        db_connection, tree_service, global_admin_token, event_node, parent.id
+    )
+    await _set_global_sumup_config(db_connection)
+    await db_connection.execute(
+        "insert into node_sumup_link (node_id, merchant_code, merchant_name, refresh_token) values ($1, $2, $3, $4)",
+        parent.id,
+        "OLD-MERCHANT",
+        "Old Merchant",
+        "old-refresh-token",
+    )
+    event_settings = await fetch_restricted_event_settings_for_node(conn=db_connection, node_id=scoped_event.id)
+
+    refresh_tokens: list[str] = []
+
+    async def fake_fetch_new_oauth_token(client_id: str, client_secret: str, refresh_token: str):
+        assert client_id == "sumup-client-id"
+        assert client_secret == "sumup-client-secret"
+        refresh_tokens.append(refresh_token)
+        return SumUpOAuthToken(
+            access_token=f"access-token-for-{refresh_token}",
+            refresh_token=refresh_token,
+            expires_in=3600,
+            token_type="bearer",
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        )
+
+    monkeypatch.setattr("stustapay.core.service.terminal.fetch_new_oauth_token", fake_fetch_new_oauth_token)
+
+    old_token = await terminal_service._get_terminal_sumup_oauth_token(  # pylint: disable=protected-access
+        conn=db_connection,
+        terminal_id=0,
+        node=scoped_event,
+        event_settings=event_settings,
+    )
+    old_token_again = await terminal_service._get_terminal_sumup_oauth_token(  # pylint: disable=protected-access
+        conn=db_connection,
+        terminal_id=0,
+        node=scoped_event,
+        event_settings=event_settings,
+    )
+    await db_connection.execute(
+        "update node_sumup_link set merchant_code = $1, refresh_token = $2 where node_id = $3",
+        "NEW-MERCHANT",
+        "new-refresh-token",
+        parent.id,
+    )
+    new_token = await terminal_service._get_terminal_sumup_oauth_token(  # pylint: disable=protected-access
+        conn=db_connection,
+        terminal_id=0,
+        node=scoped_event,
+        event_settings=event_settings,
+    )
+
+    assert old_token is not None
+    assert old_token_again is old_token
+    assert new_token is not None
+    assert new_token.access_token == "access-token-for-new-refresh-token"
+    assert refresh_tokens == ["old-refresh-token", "new-refresh-token"]
+    assert len(terminal_service.sumup_oauth_cache) == 1
+
+
 async def test_create_sumup_api_for_node_falls_back_to_legacy_event_api_key(
     db_connection: Connection,
     event_node: Node,
@@ -126,6 +204,27 @@ async def test_create_sumup_api_for_node_falls_back_to_legacy_event_api_key(
     assert api.merchant_code == "TEST_MERCHANT"
     assert access.source == SumUpConnectionSource.legacy_event_api_key
     assert access.source_node_id == event_node.id
+
+
+async def test_terminal_sumup_access_rejects_legacy_oauth_without_merchant_code(
+    db_connection: Connection,
+    event_node: Node,
+):
+    await db_connection.execute(
+        "update event set "
+        "sumup_api_key = '', "
+        "sumup_merchant_code = '', "
+        "sumup_oauth_client_id = $1, "
+        "sumup_oauth_client_secret = $2, "
+        "sumup_oauth_refresh_token = $3 "
+        "where id = (select event_id from node where id = $4)",
+        "legacy-client-id",
+        "legacy-client-secret",
+        "legacy-refresh-token",
+        event_node.id,
+    )
+
+    assert await resolve_terminal_sumup_access(conn=db_connection, node_id=event_node.id) is None
 
 
 async def test_sumup_auth_code_flow_saves_link_on_non_event_node(

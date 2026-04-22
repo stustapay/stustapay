@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional
 
@@ -59,6 +60,15 @@ from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class SumUpOAuthCacheKey:
+    source_node_id: int
+    merchant_code: str
+    refresh_token: str
+    oauth_client_id: str
+    oauth_client_secret: str
+
+
 def _terminal_scope_node_ids(node: Node) -> list[int]:
     if node.ids_to_event_node is not None:
         return node.ids_to_event_node
@@ -106,7 +116,7 @@ class TerminalService(Service[Config]):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
-        self.sumup_oauth_cache: dict[int, SumUpOAuthToken] = {}
+        self.sumup_oauth_cache: dict[SumUpOAuthCacheKey, SumUpOAuthToken] = {}
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
@@ -282,8 +292,17 @@ class TerminalService(Service[Config]):
         access = await resolve_terminal_sumup_access(conn=conn, node_id=node.id, event_settings=event_settings)
         if access is None or not access.is_oauth:
             return None
+        if access.refresh_token is None or access.oauth_client_id is None or access.oauth_client_secret is None:
+            return None
 
-        current_token = self.sumup_oauth_cache.get(access.source_node_id, None)
+        cache_key = SumUpOAuthCacheKey(
+            source_node_id=access.source_node_id,
+            merchant_code=access.merchant_code,
+            refresh_token=access.refresh_token,
+            oauth_client_id=access.oauth_client_id,
+            oauth_client_secret=access.oauth_client_secret,
+        )
+        current_token = self.sumup_oauth_cache.get(cache_key, None)
         if current_token and current_token.is_valid():
             return current_token
 
@@ -299,7 +318,12 @@ class TerminalService(Service[Config]):
         if new_token is None:
             return None
 
-        self.sumup_oauth_cache[access.source_node_id] = new_token
+        self.sumup_oauth_cache = {
+            key: token
+            for key, token in self.sumup_oauth_cache.items()
+            if key == cache_key or (key.source_node_id != access.source_node_id and token.is_valid())
+        }
+        self.sumup_oauth_cache[cache_key] = new_token
         return new_token
 
     async def _get_terminal_till_config(
@@ -373,6 +397,7 @@ class TerminalService(Service[Config]):
             sumup_secrets = TerminalSumupSecrets(
                 sumup_affiliate_key=sumup_affiliate_key,
                 sumup_api_key=sumup_api_oauth_token,
+                sumup_merchant_code=access.merchant_code if access is not None else "",
                 sumup_api_key_expires_at=sumup_api_oauth_valid_until,
             )
 

@@ -76,10 +76,19 @@ OPTIONAL_EVENT_DB_COLUMNS = {
 }
 
 PRIVATE_EVENT_METADATA_COLUMNS = (
-    "sumup_oauth_refresh_token",
     "banner_image",
     "banner_image_mime_type",
 )
+
+COPY_EVENT_SUMUP_RESET_VALUES = {
+    "sumup_api_key": "",
+    "sumup_affiliate_key": "",
+    "sumup_merchant_code": "",
+    "sumup_oauth_client_id": "",
+    "sumup_oauth_client_secret": "",
+    "sumup_topup_enabled": False,
+    "sumup_payment_enabled": False,
+}
 
 
 async def _fetch_event_table_columns(conn: Connection) -> set[str]:
@@ -1418,7 +1427,9 @@ class TreeService(Service[Config]):
 
         if request.options.copy_event_settings:
             copied_event_payload = source_event.model_dump(exclude=COPY_EVENT_SETTINGS_MODEL_EXCLUDES)
-            copied_event_payload.update({"name": request.name, "description": request.description})
+            copied_event_payload.update(
+                {"name": request.name, "description": request.description, **COPY_EVENT_SUMUP_RESET_VALUES}
+            )
             new_event_data = NewEvent.model_validate(copied_event_payload)
         else:
             new_event_data = NewEvent(

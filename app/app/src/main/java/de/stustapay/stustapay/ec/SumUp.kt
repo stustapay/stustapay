@@ -63,11 +63,16 @@ data class ECTerminalConfig(
 data class SumUpConfig(
     val affiliateKey: String,
     val apiKey: String,
+    val merchantCode: String,
     val terminal: ECTerminalConfig,
 )
 
 internal fun shouldEnableTipOnCardReader(terminalConfig: ECTerminalConfig, payment: ECPayment): Boolean {
     return terminalConfig.enableCardPayment && payment.allowTipOnCardReader
+}
+
+internal fun isExpectedSumUpMerchant(loggedInMerchantCode: String?, expectedMerchantCode: String): Boolean {
+    return expectedMerchantCode.isNotBlank() && loggedInMerchantCode == expectedMerchantCode
 }
 
 sealed interface SumUpConfigState {
@@ -331,10 +336,14 @@ class SumUp @Inject constructor(
                 if (!secrets.sumupAffiliateKey.startsWith("sup_afk")) {
                     return SumUpConfigState.Error("invalid affiliate key: '${secrets.sumupAffiliateKey}'")
                 }
+                if (secrets.sumupMerchantCode.isBlank()) {
+                    return SumUpConfigState.Error("no sumup merchant configured")
+                }
 
                 sumUpConfig = SumUpConfig(
                     affiliateKey = secrets.sumupAffiliateKey,
                     apiKey = secrets.sumupApiKey,
+                    merchantCode = secrets.sumupMerchantCode,
                     terminal = ECTerminalConfig(
                         name = cfg.name,
                         id = cfg.id.toString(),
@@ -586,6 +595,18 @@ class SumUp @Inject constructor(
         val cfg = sumUpPaymentState.config
         if (cfg == null) {
             _paymentStatus.update { SumUpState.Error("no payment status") }
+            return
+        }
+        val loggedInMerchantCode = SumUpAPI.getCurrentMerchant()?.merchantCode
+        if (!isExpectedSumUpMerchant(loggedInMerchantCode, cfg.merchantCode)) {
+            SumUpAPI.logout()
+            _loginApiKeyUsed = null
+            _loginStatus.update { "no logged in merchant" }
+            _paymentStatus.update {
+                SumUpState.Error(
+                    "SumUp merchant mismatch. Expected ${cfg.merchantCode}, got ${loggedInMerchantCode ?: "no logged in merchant"}."
+                )
+            }
             return
         }
 

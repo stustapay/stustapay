@@ -1,10 +1,15 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
+from datetime import datetime, timedelta, timezone
+
+from sftkit.database import Connection
+
 from stustapay.core.schema.entry import NewEntryArea
 from stustapay.core.schema.terminal import NewTerminal, Terminal, TerminalMode
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.entry import EntryService
 from stustapay.core.service.terminal import TerminalService
+from stustapay.payment.sumup.api import SumUpOAuthToken
 
 
 async def test_terminal_registration_flow(
@@ -77,6 +82,51 @@ async def test_terminal_config_exposes_self_service_flag(
     terminal_config = await terminal_service.get_terminal_config(token=terminal_token)
     assert terminal_config is not None
     assert terminal_config.self_service is True
+
+
+async def test_terminal_config_exposes_resolved_sumup_merchant_code(
+    db_connection: Connection,
+    terminal_service: TerminalService,
+    terminal_token: str,
+    event_node: Node,
+    monkeypatch,
+):
+    await db_connection.execute(
+        "update event set "
+        "sumup_affiliate_key = $1, "
+        "sumup_merchant_code = $2, "
+        "sumup_oauth_client_id = $3, "
+        "sumup_oauth_client_secret = $4, "
+        "sumup_oauth_refresh_token = $5 "
+        "where id = (select event_id from node where id = $6)",
+        "sup_afk_terminal",
+        "TERMINAL-MERCHANT",
+        "terminal-client-id",
+        "terminal-client-secret",
+        "terminal-refresh-token",
+        event_node.id,
+    )
+
+    async def fake_fetch_new_oauth_token(client_id: str, client_secret: str, refresh_token: str):
+        assert client_id == "terminal-client-id"
+        assert client_secret == "terminal-client-secret"
+        assert refresh_token == "terminal-refresh-token"
+        return SumUpOAuthToken(
+            access_token="terminal-access-token",
+            refresh_token=refresh_token,
+            expires_in=3600,
+            token_type="bearer",
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        )
+
+    monkeypatch.setattr("stustapay.core.service.terminal.fetch_new_oauth_token", fake_fetch_new_oauth_token)
+
+    terminal_config = await terminal_service.get_terminal_config(token=terminal_token)
+
+    assert terminal_config is not None
+    assert terminal_config.till is not None
+    assert terminal_config.till.sumup_secrets is not None
+    assert terminal_config.till.sumup_secrets.sumup_merchant_code == "TERMINAL-MERCHANT"
 
 
 async def test_entry_and_exit_terminals_clear_self_service(

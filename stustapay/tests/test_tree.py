@@ -666,16 +666,29 @@ async def test_copy_event(
         "sumup_global_affiliate_key_configured",
         "sumup_legacy_api_key_configured",
         "sumup_legacy_oauth_configured",
+        "sumup_api_key",
+        "sumup_affiliate_key",
+        "sumup_merchant_code",
+        "sumup_oauth_client_id",
+        "sumup_oauth_client_secret",
+        "sumup_oauth_refresh_token",
+        "sumup_topup_enabled",
+        "sumup_payment_enabled",
     }
     assert copied_settings.model_dump(exclude=sumup_enrichment_exclude) == original_settings.model_dump(
         exclude=sumup_enrichment_exclude
     )
-    assert copied_settings.resolved_sumup_link is not None
     assert original_settings.resolved_sumup_link is not None
-    assert copied_settings.resolved_sumup_link.source == original_settings.resolved_sumup_link.source
-    assert copied_settings.resolved_sumup_link.merchant_code == original_settings.resolved_sumup_link.merchant_code
-    assert copied_settings.resolved_sumup_link.source_node_id == copied_event.id
+    assert copied_settings.resolved_sumup_link is None
     assert original_settings.resolved_sumup_link.source_node_id == original_event.id
+    assert copied_settings.sumup_api_key == ""
+    assert copied_settings.sumup_affiliate_key == ""
+    assert copied_settings.sumup_merchant_code == ""
+    assert copied_settings.sumup_oauth_client_id == ""
+    assert copied_settings.sumup_oauth_client_secret == ""
+    assert copied_settings.sumup_oauth_refresh_token == ""
+    assert copied_settings.sumup_topup_enabled is False
+    assert copied_settings.sumup_payment_enabled is False
 
     copied_banner = await db_connection.fetchrow(
         "select e.banner_image, e.banner_image_mime_type from event e join node n on n.event_id = e.id where n.id = $1",

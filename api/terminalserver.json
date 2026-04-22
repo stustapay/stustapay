@@ -4327,6 +4327,10 @@
             "type": "string",
             "title": "Sumup Api Key"
           },
+          "sumup_merchant_code": {
+            "type": "string",
+            "title": "Sumup Merchant Code"
+          },
           "sumup_api_key_expires_at": {
             "anyOf": [
               {
@@ -4344,6 +4348,7 @@
         "required": [
           "sumup_affiliate_key",
           "sumup_api_key",
+          "sumup_merchant_code",
           "sumup_api_key_expires_at"
         ],
         "title": "TerminalSumupSecrets"

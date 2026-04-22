@@ -216,6 +216,7 @@ async def enrich_event_sumup_settings(
         event_settings.sumup_oauth_refresh_token.strip()
         and event_settings.sumup_oauth_client_id.strip()
         and event_settings.sumup_oauth_client_secret.strip()
+        and event_settings.sumup_merchant_code.strip()
     )
 
     access = await resolve_sumup_access(conn=conn, node_id=node_id)
@@ -265,6 +266,7 @@ async def resolve_terminal_sumup_access(
         resolved_event_settings.sumup_oauth_refresh_token.strip() != ""
         and resolved_event_settings.sumup_oauth_client_id.strip() != ""
         and resolved_event_settings.sumup_oauth_client_secret.strip() != ""
+        and resolved_event_settings.sumup_merchant_code.strip() != ""
     ):
         return ResolvedSumUpAccess(
             source=SumUpConnectionSource.legacy_event_oauth,

@@ -21,11 +21,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param sumupAffiliateKey 
- * @param sumupApiKey 
- * @param sumupApiKeyExpiresAt 
+ *
+ * @param sumupAffiliateKey
+ * @param sumupApiKey
+ * @param sumupMerchantCode
+ * @param sumupApiKeyExpiresAt
  */
 @Serializable
 
@@ -37,6 +38,9 @@ data class TerminalSumupSecrets (
     @SerialName(value = "sumup_api_key")
     val sumupApiKey: kotlin.String,
 
+    @SerialName(value = "sumup_merchant_code")
+    val sumupMerchantCode: kotlin.String,
+
     @Contextual @SerialName(value = "sumup_api_key_expires_at")
     val sumupApiKeyExpiresAt: java.time.OffsetDateTime?
 
@@ -44,4 +48,3 @@ data class TerminalSumupSecrets (
 
 
 }
-

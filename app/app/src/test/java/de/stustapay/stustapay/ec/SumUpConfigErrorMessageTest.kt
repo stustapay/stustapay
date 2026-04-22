@@ -21,6 +21,14 @@ class SumUpConfigErrorMessageTest {
     }
 
     @Test
+    fun missingMerchantCodeUsesSentenceStyleMessage() {
+        assertEquals(
+            "Failed to load SumUp configuration. No sumup merchant configured.",
+            toUserFacingSumUpConfigError("no sumup merchant configured")
+        )
+    }
+
+    @Test
     fun unknownErrorsAreNormalizedToSentenceCase() {
         assertEquals(
             "Failed to load SumUp configuration. Backend timeout.",
