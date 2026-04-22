@@ -235,7 +235,7 @@ async def test_transfer_cash_register_moves_to_target_cashier_till(
     assert target_cashier_register.balance == cash_register_stocking.total
 
 
-async def test_terminal_config_repairs_stale_cash_register_assignment(
+async def test_terminal_config_does_not_reassign_cash_register(
     db_connection: Connection,
     till_service: TillService,
     terminal_service: TerminalService,
@@ -262,7 +262,7 @@ async def test_terminal_config_repairs_stale_cash_register_assignment(
         event_admin_token=event_admin_token,
         event_node=event_node,
         till_profile_id=till_profile.id,
-        name="config-repair",
+        name="config-readonly",
     )
 
     await till_service.register.stock_up_cash_register(
@@ -289,6 +289,6 @@ async def test_terminal_config_repairs_stale_cash_register_assignment(
 
     assert terminal_config is not None
     assert terminal_config.till is not None
-    assert terminal_config.till.cash_register_id == cash_register.id
-    assert await db_connection.fetchval("select active_cash_register_id from till where id = $1", till.id) is None
-    assert await db_connection.fetchval("select active_cash_register_id from till where id = $1", second_till.id) == cash_register.id
+    assert terminal_config.till.cash_register_id is None
+    assert await db_connection.fetchval("select active_cash_register_id from till where id = $1", till.id) == cash_register.id
+    assert await db_connection.fetchval("select active_cash_register_id from till where id = $1", second_till.id) is None

@@ -526,38 +526,6 @@ class TerminalService(Service[Config]):
 
         till_config = None
         if current_terminal.till is not None:
-            till = current_terminal.till
-            # If the till doesn't have an active cash register, but the user does,
-            # try to assign it now to fix the "no cash register" issue
-            user_cash_register_id = None
-            if current_terminal.active_user_id is not None:
-                user_cash_register_id = await conn.fetchval(
-                    "select cash_register_id from usr where id = $1", 
-                    current_terminal.active_user_id
-                )
-                
-                # If user has a cash register, verify it's from the same event
-                if user_cash_register_id is not None:
-                    cash_register_exists = await conn.fetchval(
-                        "select exists(select 1 from cash_register cr "
-                        "join node n on cr.node_id = n.id "
-                        "where cr.id = $1 and (cr.node_id = $2 OR n.event_node_id = $2))", 
-                        user_cash_register_id, event_node.id
-                    )
-                    
-                    if cash_register_exists:
-                        till_cash_register = await conn.fetchval(
-                            "select active_cash_register_id from till where id = $1", 
-                            current_terminal.till.id
-                        )
-
-                        if till_cash_register != user_cash_register_id:
-                            await assign_cash_register_to_active_user_till(
-                                conn=conn,
-                                user_id=current_terminal.active_user_id,
-                                cash_register_id=user_cash_register_id,
-                            )
-
             till = await conn.fetch_one(Till, "select * from till_with_cash_register where id = $1", current_terminal.till.id)
             till_config = await self._get_terminal_till_config(
                 conn=conn, terminal_id=current_terminal.id, till=till, event_node=event_node
