@@ -180,6 +180,10 @@ private fun infallibleFailedStatusMessage(response: InfallibleApiResponse?): Str
         is InfallibleApiResponse.TicketSale -> {
             (response.ticketSale as? Response.Error)?.let { response.ticketSale.msg() }
         }
+
+        is InfallibleApiResponse.Sale -> {
+            (response.sale as? Response.Error)?.let { response.sale.msg() }
+        }
     }
 }
 
@@ -213,6 +217,22 @@ private fun infallibleSuccessMessage(response: InfallibleApiResponse): String {
 
                 is Response.Error -> {
                     "Finanzteam kontaktieren! Ticketverkauf abgebrochen: %s".format(ticketSale.msg())
+                }
+            }
+        }
+
+        is InfallibleApiResponse.Sale -> {
+            when (val sale = response.sale) {
+                is Response.OK -> {
+                    "Verkauf erfolgreich!"
+                }
+
+                is Response.Error.Service.AlreadyProcessed -> {
+                    "Verkauf erfolgreich! (war bereits gebucht: %s)".format(sale.msg())
+                }
+
+                is Response.Error -> {
+                    "Finanzteam kontaktieren! Verkauf abgebrochen: %s".format(sale.msg())
                 }
             }
         }

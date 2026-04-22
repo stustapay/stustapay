@@ -12,13 +12,17 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import de.stustapay.api.models.Button
+import de.stustapay.api.models.NewSale
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.api.models.PaymentMethod
 import de.stustapay.api.models.UserTagScan
 import de.stustapay.stustapay.model.InfallibleApiRequest
+import de.stustapay.stustapay.proto.InfallibleApiRequestButtonProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestKindProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestProto
+import de.stustapay.stustapay.proto.InfallibleApiRequestSaleProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestStatus
 import de.stustapay.stustapay.proto.InfallibleApiRequestTagProto
 import de.stustapay.stustapay.proto.InfallibleApiRequestTicketSaleProto
@@ -32,6 +36,22 @@ import javax.inject.Singleton
 
 object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
     override val defaultValue: InfallibleApiRequest? get() = null
+
+    private fun decodePaymentMethod(value: String): PaymentMethod? {
+        val paymentMethod = PaymentMethod.decode(value)
+        if (paymentMethod == null) {
+            logError("unrecognized payment method: $value")
+        }
+        return paymentMethod
+    }
+
+    private fun logError(message: String) {
+        try {
+            Log.e("infallible storage", message)
+        } catch (_: RuntimeException) {
+            // android.util.Log is not available in local JVM unit tests.
+        }
+    }
 
     override suspend fun readFrom(input: InputStream): InfallibleApiRequest? {
         return try {
@@ -51,21 +71,20 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                     }
 
                     null, InfallibleApiRequestStatus.UNRECOGNIZED -> {
-                        Log.e(
-                            "infallible storage",
-                            "unrecognized transaction status: ${req.status}"
-                        )
+                        logError("unrecognized transaction status: ${req.status}")
                         InfallibleApiRequest.Status.Normal // default is to retry
                     }
                 }
 
                 when (req.kind) {
                     InfallibleApiRequestKindProto.KIND_TOP_UP -> {
+                        val paymentMethod =
+                            decodePaymentMethod(req.topUp.paymentMethod) ?: return defaultValue
                         InfallibleApiRequest.TopUp(
                             NewTopUp(
                                 amount = req.topUp.amount,
                                 customerTagUid = BigInteger.parseString(req.topUp.customerTagUid),
-                                paymentMethod = PaymentMethod.decode(req.topUp.paymentMethod)!!,
+                                paymentMethod = paymentMethod,
                                 uuid = id,
                             ),
                             status,
@@ -73,12 +92,47 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                     }
 
                     InfallibleApiRequestKindProto.KIND_TICKET_SALE -> {
+                        val paymentMethod =
+                            decodePaymentMethod(req.ticketSale.paymentMethod) ?: return defaultValue
                         InfallibleApiRequest.TicketSale(
                             NewTicketSale(
                                 customerTags = req.ticketSale.customerTagsList.map { tag ->
                                     UserTagScan(BigInteger.parseString(tag.uid), tag.pin)
                                 },
-                                paymentMethod = PaymentMethod.decode(req.ticketSale.paymentMethod)!!,
+                                paymentMethod = paymentMethod,
+                                uuid = id,
+                            ),
+                            status,
+                        )
+                    }
+
+                    InfallibleApiRequestKindProto.KIND_SALE -> {
+                        val paymentMethod =
+                            decodePaymentMethod(req.sale.paymentMethod) ?: return defaultValue
+                        InfallibleApiRequest.Sale(
+                            NewSale(
+                                buttons = req.sale.buttonsList.map { button ->
+                                    Button(
+                                        tillButtonId = BigInteger.parseString(button.tillButtonId),
+                                        quantity = if (button.hasQuantity()) {
+                                            BigInteger.parseString(button.quantity)
+                                        } else {
+                                            null
+                                        },
+                                        price = if (button.hasPrice()) button.price else null,
+                                    )
+                                },
+                                customerTagUid = if (req.sale.hasCustomerTagUid()) {
+                                    BigInteger.parseString(req.sale.customerTagUid)
+                                } else {
+                                    null
+                                },
+                                paymentMethod = paymentMethod,
+                                usedVouchers = if (req.sale.hasUsedVouchers()) {
+                                    BigInteger.parseString(req.sale.usedVouchers)
+                                } else {
+                                    null
+                                },
                                 uuid = id,
                             ),
                             status,
@@ -86,17 +140,17 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                     }
 
                     null, InfallibleApiRequestKindProto.UNRECOGNIZED -> {
-                        Log.e("infallible storage", "unrecognized transaction kind: ${req.kind}")
+                        logError("unrecognized transaction kind: ${req.kind}")
                         null
                     }
                 }
             }
         } catch (e: IllegalArgumentException) {
-            Log.e("infallible storage", "invalid storage content: ${e}")
+            logError("invalid storage content: ${e}")
             e.printStackTrace()
             defaultValue
         } catch (e: InvalidProtocolBufferException) {
-            Log.e("infallible storage", "invalid storage content, defaulting.")
+            logError("invalid storage content, defaulting.")
             e.printStackTrace()
             defaultValue
         }
@@ -143,6 +197,23 @@ object InfallibleApiRequestSerializer : Serializer<InfallibleApiRequest?> {
                             })
                             .setPaymentMethod(PaymentMethod.encode(t.ticketSale.paymentMethod))
                             .build()
+                }
+
+                is InfallibleApiRequest.Sale -> {
+                    request.id = t.sale.uuid.toString()
+                    request.kind = InfallibleApiRequestKindProto.KIND_SALE
+                    val saleBuilder = InfallibleApiRequestSaleProto.newBuilder()
+                        .addAllButtons(t.sale.buttons.map { button ->
+                            val buttonBuilder = InfallibleApiRequestButtonProto.newBuilder()
+                                .setTillButtonId(button.tillButtonId.toString())
+                            button.quantity?.let { buttonBuilder.setQuantity(it.toString()) }
+                            button.price?.let { buttonBuilder.setPrice(it) }
+                            buttonBuilder.build()
+                        })
+                        .setPaymentMethod(PaymentMethod.encode(t.sale.paymentMethod))
+                    t.sale.customerTagUid?.let { saleBuilder.setCustomerTagUid(it.toString()) }
+                    t.sale.usedVouchers?.let { saleBuilder.setUsedVouchers(it.toString()) }
+                    request.sale = saleBuilder.build()
                 }
             }
             storage.request = request.build()

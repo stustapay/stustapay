@@ -24,6 +24,10 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         working-directory: ./app
         run: |
+          test -n "$ANDROID_KEY_STORE"
+          test -n "$ANDROID_KEY_STORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
           echo $ANDROID_KEY_STORE | base64 --decode > keystore.jks
           mkdir -p ~/.gradle
           echo "ANDROID_KEY_STORE_FILE=$(pwd)/keystore.jks" >> ~/.gradle/gradle.properties
@@ -33,7 +37,10 @@ jobs:
           ./gradlew app:signingReport
       - name: build app
         working-directory: ./app
-        run: ./gradlew app:assembleRelease
+        run: ./gradlew -PrequireReleaseSigning app:assembleRelease
+      - name: verify signed artifact
+        working-directory: ./app
+        run: test -f ./app/build/outputs/apk/release/app-release.apk
       - name: upload apk
         uses: actions/upload-artifact@v4
         with:

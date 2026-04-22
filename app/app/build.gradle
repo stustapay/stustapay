@@ -20,9 +20,13 @@ android {
     defaultConfig {
         applicationId "de.teamfestlichpay.teamfestlichpay"
         minSdk 27
-        targetSdk 33
+        targetSdk 35
         versionCode getSSPVersionCode()
         versionName getSSPVersionName()
+        manifestPlaceholders = [
+                appAuthRedirectScheme: 'de.stustapay.stustapay',
+                cleartextTraffic     : 'false',
+        ]
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,6 +50,7 @@ android {
         debug {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
+            manifestPlaceholders.cleartextTraffic = 'true'
         }
         benchmark {
             initWith(release)
@@ -53,6 +58,7 @@ android {
             signingConfig signingConfigs.debug
             debuggable false
             profileable true
+            manifestPlaceholders.cleartextTraffic = 'true'
         }
         release {
             minifyEnabled true
@@ -88,6 +94,27 @@ android {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
+    }
+}
+
+tasks.register('validateReleaseSigning') {
+    doLast {
+        def requiredProperties = [
+                'ANDROID_KEY_STORE_FILE',
+                'ANDROID_KEY_STORE_PASSWORD',
+                'ANDROID_KEY_ALIAS',
+                'ANDROID_KEY_PASSWORD',
+        ]
+        def missing = requiredProperties.findAll { !project.hasProperty(it) || project.property(it).toString().trim().isEmpty() }
+        if (!missing.isEmpty()) {
+            throw new GradleException("Release signing is required but missing Gradle properties: ${missing.join(', ')}")
+        }
+    }
+}
+
+if (project.hasProperty('requireReleaseSigning')) {
+    tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
+        dependsOn tasks.named('validateReleaseSigning')
     }
 }
 
@@ -168,7 +195,3 @@ protobuf {
         }
     }
 }
-
-android.defaultConfig.manifestPlaceholders = [
-        'appAuthRedirectScheme': 'de.stustapay.stustapay'
-]

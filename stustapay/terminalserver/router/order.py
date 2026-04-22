@@ -62,6 +62,19 @@ async def book_sale(
     return await order_service.book_sale(token=token, new_sale=sale)
 
 
+@router.post(
+    "/register-pending-sale",
+    summary="Register a pending sale with the server where the sumup payment is still pending",
+    response_model=PendingSale,
+)
+async def register_pending_sale(
+    sale: NewSale,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+):
+    return await order_service.register_pending_sale(token=token, new_sale=sale)
+
+
 @router.post("/check-topup", summary="check if a top up is valid", response_model=PendingTopUp)
 async def check_topup(
     topup: NewTopUp,
@@ -102,6 +115,18 @@ class CancelOrderPayload(BaseModel):
     summary="Mark a pending topup as cancelled, e.g. because the sumup booking failed",
 )
 async def cancel_pending_topup(
+    payload: CancelOrderPayload,
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+) -> None:
+    await order_service.cancel_pending_order(token=token, order_uuid=payload.order_uuid)
+
+
+@router.post(
+    "/cancel-pending-sale",
+    summary="Mark a pending sale as cancelled, e.g. because the sumup booking failed",
+)
+async def cancel_pending_sale(
     payload: CancelOrderPayload,
     token: CurrentAuthToken,
     order_service: ContextOrderService,

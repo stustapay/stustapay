@@ -417,6 +417,7 @@
     <string name="sale_status_nothing_ordered">Nichts bestellt!</string>
     <string name="sale_status_unchecked_sale">Verkauf wurde nicht geprüft!</string>
     <string name="sale_status_starting_ec">EC-Transaktion startet...</string>
+    <string name="sale_status_order_announced">Verkauf angekündigt!</string>
     <string name="sale_status_ready_for_order">Bereit für Bestellung.</string>
     <string name="sale_status_no_till_assigned">Dem Terminal ist keine Kasse zugewiesen</string>
     <string name="sale_status_order_cleared_ready">Bestellung geleert - bereit.</string>

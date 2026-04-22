@@ -17,6 +17,7 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
+import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
@@ -82,6 +83,7 @@ class SaleViewModel @Inject constructor(
     private val saleRepository: SaleRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
     private val ecPaymentRepository: ECPaymentRepository,
+    private val infallibleRepository: InfallibleRepository,
     private val customerDisplayManager: CustomerDisplayManager,
 ) : ViewModel() {
     private val saleAmountLocale: Locale by lazy {
@@ -459,18 +461,34 @@ class SaleViewModel @Inject constructor(
             _status.update { context.getString(R.string.sale_status_unchecked_sale) }
             return
         }
+        val newSale = _saleStatus.value.getNewSale(tag, sale.paymentMethod)
 
         if (sale.paymentMethod == PaymentMethod.sumup) {
             ecPaymentRepository.wakeup()
 
             val payment = ECPayment(
-                id = sale.uuid.toString(),
+                id = newSale.uuid.toString(),
                 amount = BigDecimal(sale.totalPrice),
                 // we don't have a NFC tag for direct card sales.
                 tag = NfcTag(BigInteger(0), null),
             )
 
-            // TODO: register pending sale for guaranteed sumup processing
+            when (val registerResponse = saleRepository.registerPendingSale(newSale)) {
+                is Response.OK -> {
+                    _status.update { context.getString(R.string.sale_status_order_announced) }
+                }
+
+                is Response.Error.Service -> {
+                    _status.update { registerResponse.msg() }
+                    _navState.update { SalePage.Error }
+                    return
+                }
+
+                is Response.Error -> {
+                    _status.update { registerResponse.msg() }
+                    return
+                }
+            }
 
             _status.update { context.getString(R.string.sale_status_starting_ec) }
 
@@ -482,6 +500,9 @@ class SaleViewModel @Inject constructor(
 
             when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
                 is ECPaymentResult.Failure -> {
+                    if (!paymentResult.mayHaveCreatedCharge) {
+                        saleRepository.cancelPendingSale(newSale.uuid)
+                    }
                     _status.update { context.getString(R.string.topup_status_ec_result, paymentResult.msg) }
                     return
                 }
@@ -494,9 +515,7 @@ class SaleViewModel @Inject constructor(
 
         _saleCompleted.update { null }
 
-        val response = saleRepository.bookSale(
-            newSale = _saleStatus.value.getNewSale(tag, sale.paymentMethod)
-        )
+        val response = infallibleRepository.bookSale(newSale)
 
         when (response) {
             is Response.OK -> {

@@ -418,6 +418,7 @@
     <string name="sale_status_nothing_ordered">Nothing ordered!</string>
     <string name="sale_status_unchecked_sale">Unchecked sale!</string>
     <string name="sale_status_starting_ec">Starting EC transaction...</string>
+    <string name="sale_status_order_announced">Sale announced!</string>
     <string name="sale_status_ready_for_order">Ready for order.</string>
     <string name="sale_status_no_till_assigned">No till assigned to terminal</string>
     <string name="sale_status_order_cleared_ready">Order cleared - ready.</string>

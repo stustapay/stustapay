@@ -1,17 +1,21 @@
 package de.stustapay.stustapay.repository
 
 import android.util.Log
+import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.CompletedTopUp
+import de.stustapay.api.models.NewSale
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
 import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.model.InfallibleApiRequest
 import de.stustapay.stustapay.model.InfallibleApiResponse
+import de.stustapay.stustapay.netsource.SaleRemoteDataSource
 import de.stustapay.stustapay.netsource.TicketRemoteDataSource
 import de.stustapay.stustapay.netsource.TopUpRemoteDataSource
 import de.stustapay.stustapay.storage.InfallibleApiRequestLocalDataSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +52,8 @@ sealed interface InfallibleState {
 class InfallibleRepository @Inject constructor(
     private val dataSource: InfallibleApiRequestLocalDataSource,
     private val topUpApi: TopUpRemoteDataSource,
-    private val ticketApi: TicketRemoteDataSource
+    private val ticketApi: TicketRemoteDataSource,
+    private val saleApi: SaleRemoteDataSource,
 ) {
     private val scope: CoroutineScope =
         CoroutineScope(Dispatchers.Default + CoroutineName("infallible"))
@@ -148,17 +153,41 @@ class InfallibleRepository @Inject constructor(
                 val maxAttempts = 1
                 for (attempt in 1..maxAttempts) {
                     Log.i("infallible", "attempt ${attempt} to send")
-                    response = when (request) {
-                        is InfallibleApiRequest.TopUp -> {
-                            val repoResponse = topUpApi.bookTopUp(request.topUp)
-                            success = repoResponse.submitSuccess()
-                            InfallibleApiResponse.TopUp(repoResponse)
-                        }
+                    response = try {
+                        when (request) {
+                            is InfallibleApiRequest.TopUp -> {
+                                val repoResponse = topUpApi.bookTopUp(request.topUp)
+                                success = repoResponse.submitSuccess()
+                                InfallibleApiResponse.TopUp(repoResponse)
+                            }
 
-                        is InfallibleApiRequest.TicketSale -> {
-                            val repoResponse = ticketApi.bookTicketSale(request.ticketSale)
-                            success = repoResponse.submitSuccess()
-                            InfallibleApiResponse.TicketSale(repoResponse)
+                            is InfallibleApiRequest.TicketSale -> {
+                                val repoResponse = ticketApi.bookTicketSale(request.ticketSale)
+                                success = repoResponse.submitSuccess()
+                                InfallibleApiResponse.TicketSale(repoResponse)
+                            }
+
+                            is InfallibleApiRequest.Sale -> {
+                                val repoResponse = saleApi.bookSale(request.sale)
+                                success = repoResponse.submitSuccess()
+                                InfallibleApiResponse.Sale(repoResponse)
+                            }
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.e("infallible", "unexpected exception while sending request", e)
+                        success = false
+                        when (request) {
+                            is InfallibleApiRequest.TopUp -> InfallibleApiResponse.TopUp(
+                                Response.Error.Request(throwable = e)
+                            )
+                            is InfallibleApiRequest.TicketSale -> InfallibleApiResponse.TicketSale(
+                                Response.Error.Request(throwable = e)
+                            )
+                            is InfallibleApiRequest.Sale -> InfallibleApiResponse.Sale(
+                                Response.Error.Request(throwable = e)
+                            )
                         }
                     }
 
@@ -220,6 +249,19 @@ class InfallibleRepository @Inject constructor(
         val ret = (response as InfallibleApiResponse.TicketSale).ticketSale
 
         // allow the next booking
+        _response.update { null }
+        return ret
+    }
+
+    suspend fun bookSale(newSale: NewSale): Response<CompletedSale> {
+        _response.update { null }
+        updateRequest(
+            InfallibleApiRequest.Sale(newSale)
+        )
+
+        val response = _response.waitFor { it != null }!!
+        val ret = (response as InfallibleApiResponse.Sale).sale
+
         _response.update { null }
         return ret
     }

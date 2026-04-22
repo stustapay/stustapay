@@ -13,6 +13,7 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.order import (
+    CompletedSale,
     CompletedTicketSale,
     CompletedTopUp,
     PaymentMethod,
@@ -25,18 +26,19 @@ from stustapay.core.schema.tree import Node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.order.pending_order import (
-    fetch_pending_order,
-    fetch_pending_online_topup_for_customer,
     fetch_order_by_uuid,
+    fetch_pending_online_topup_for_customer,
     fetch_pending_orders,
+    load_pending_sale,
     load_pending_ticket_sale,
     load_pending_topup,
+    make_sale_bookings,
     make_ticket_sale_bookings,
     make_topup_bookings,
     save_pending_topup,
 )
-from stustapay.core.service.till.common import fetch_till, fetch_virtual_till
 from stustapay.core.service.sumup_link import create_sumup_api_for_node
+from stustapay.core.service.till.common import fetch_till, fetch_virtual_till
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_node,
@@ -134,6 +136,24 @@ class SumupService(Service[Config]):
         await conn.execute("update pending_sumup_order set status = 'booked' where uuid = $1", pending_order.uuid)
         return ticket_sale
 
+    async def _process_sale(
+        self, conn: Connection, node: Node, till: Till, pending_order: PendingOrder, sale
+    ) -> CompletedSale:
+        if pending_order.cashier_id is None:
+            raise InvalidArgument("Pending sales require a cashier")
+        completed_sale = await make_sale_bookings(
+            conn=conn,
+            current_till=till,
+            node=node,
+            current_user_id=pending_order.cashier_id,
+            sale=sale,
+            booked_at=pending_order.created_at,
+        )
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        completed_sale.bon_url = event_settings.customer_portal_url + "/bon/" + str(completed_sale.uuid)
+        await conn.execute("update pending_sumup_order set status = 'booked' where uuid = $1", pending_order.uuid)
+        return completed_sale
+
     async def pending_order_exists_at_sumup(self, conn: Connection, pending_order: PendingOrder) -> bool:
         resolved = await create_sumup_api_for_node(
             conn=conn, node_id=pending_order.node_id, api_factory=self._create_sumup_api
@@ -146,7 +166,7 @@ class SumupService(Service[Config]):
 
     async def process_pending_order(
         self, conn: Connection, pending_order: PendingOrder
-    ) -> CompletedTicketSale | CompletedTopUp | None:
+    ) -> CompletedSale | CompletedTicketSale | CompletedTopUp | None:
         # Number of retry attempts for serialization errors
         max_retries = 3
         retry_count = 0
@@ -205,6 +225,13 @@ class SumupService(Service[Config]):
                             ticket_sale = load_pending_ticket_sale(pending_order)
                             result = await self._process_ticket_sale(conn=conn, node=node, till=till, pending_order=pending_order, ticket_sale=ticket_sale)
                             self.logger.info(f"Successfully processed checkout ticket sale for order {pending_order.uuid}")
+                            return result
+                        elif pending_order.order_type == PendingOrderType.sale:
+                            sale = load_pending_sale(pending_order)
+                            result = await self._process_sale(
+                                conn=conn, node=node, till=till, pending_order=pending_order, sale=sale
+                            )
+                            self.logger.info(f"Successfully processed checkout sale for order {pending_order.uuid}")
                             return result
                     elif sumup_checkout.status == SumUpCheckoutStatus.FAILED:
                         # For failed checkouts, mark as cancelled

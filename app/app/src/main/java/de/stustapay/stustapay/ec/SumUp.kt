@@ -412,15 +412,10 @@ class SumUp @Inject constructor(
             _paymentStatus.update { SumUpState.Error("sumup api not initialized") }
             return
         }
-        // Create a new payment with the same data but new ID to avoid duplicate foreign transaction IDs
-        val modifiedPayment = payment.copy(
-            id = "${payment.id}_retry_${System.currentTimeMillis()}"
-        )
-        
         // Reset the payment state to avoid any leftover state from previous attempts
         _paymentStatus.update { SumUpState.None }
         
-        if (setState(target = SumUpAction.Checkout, payment = modifiedPayment)) {
+        if (setState(target = SumUpAction.Checkout, payment = payment)) {
             nextAction(context)
         }
     }
@@ -669,8 +664,9 @@ class SumUp @Inject constructor(
 
             else -> {
                 // For ERROR_DUPLICATE_FOREIGN_TX_ID, provide a clearer error message
-                val errorMsg = if (result == SumUpResultCode.ERROR_DUPLICATE_FOREIGN_TX_ID) {
-                    "Duplicate transaction ID. Please try again."
+                val mayHaveCreatedCharge = result == SumUpResultCode.ERROR_DUPLICATE_FOREIGN_TX_ID
+                val errorMsg = if (mayHaveCreatedCharge) {
+                    "Duplicate transaction ID. Pending payment will be reconciled by the server."
                 } else {
                     "checkout result: $result: $resultMsg"
                 }
@@ -679,7 +675,7 @@ class SumUp @Inject constructor(
                 sumUpPaymentState = SumUpPaymentState()
                 
                 _paymentStatus.update {
-                    SumUpState.Error(errorMsg)
+                    SumUpState.Error(errorMsg, mayHaveCreatedCharge)
                 }
             }
         }

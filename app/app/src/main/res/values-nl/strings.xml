@@ -409,6 +409,7 @@
     <string name="sale_status_nothing_ordered">Niets besteld!</string>
     <string name="sale_status_unchecked_sale">Verkoop niet gecontroleerd!</string>
     <string name="sale_status_starting_ec">EC-transactie wordt gestart...</string>
+    <string name="sale_status_order_announced">Verkoop aangekondigd!</string>
     <string name="sale_status_ready_for_order">Klaar voor bestelling.</string>
     <string name="sale_status_no_till_assigned">Geen kassalade aan deze terminal gekoppeld</string>
     <string name="sale_status_order_cleared_ready">Bestelling gewist - klaar.</string>

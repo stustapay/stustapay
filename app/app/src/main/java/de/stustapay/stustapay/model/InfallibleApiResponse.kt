@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.model
 
+import de.stustapay.api.models.CompletedSale
 import de.stustapay.api.models.CompletedTicketSale
 import de.stustapay.api.models.CompletedTopUp
 import de.stustapay.libssp.net.Response
@@ -21,6 +22,14 @@ sealed interface InfallibleApiResponse {
     ) : InfallibleApiResponse {
         override fun submitSuccess(): Boolean {
             return ticketSale.submitSuccess()
+        }
+    }
+
+    data class Sale(
+        val sale: Response<CompletedSale>
+    ) : InfallibleApiResponse {
+        override fun submitSuccess(): Boolean {
+            return sale.submitSuccess()
         }
     }
 }

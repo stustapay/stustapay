@@ -15,6 +15,7 @@ message InfallibleApiRequestProto {
   oneof content {
     InfallibleApiRequestTopUpProto top_up = 4;
     InfallibleApiRequestTicketSaleProto ticket_sale = 5;
+    InfallibleApiRequestSaleProto sale = 6;
   }
 }
 
@@ -26,6 +27,7 @@ enum InfallibleApiRequestStatus {
 enum InfallibleApiRequestKindProto {
   KIND_TOP_UP = 0;
   KIND_TICKET_SALE = 1;
+  KIND_SALE = 2;
 }
 
 message InfallibleApiRequestTopUpProto {
@@ -37,6 +39,19 @@ message InfallibleApiRequestTopUpProto {
 message InfallibleApiRequestTicketSaleProto {
   repeated InfallibleApiRequestTagProto customer_tags = 1;
   string payment_method = 2;
+}
+
+message InfallibleApiRequestSaleProto {
+  repeated InfallibleApiRequestButtonProto buttons = 1;
+  string payment_method = 2;
+  optional string customer_tag_uid = 3;
+  optional string used_vouchers = 4;
+}
+
+message InfallibleApiRequestButtonProto {
+  string till_button_id = 1;
+  optional string quantity = 2;
+  optional double price = 3;
 }
 
 message InfallibleApiRequestTagProto {

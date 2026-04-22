@@ -38,6 +38,7 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.till.common import fetch_till
 from stustapay.core.service.till.till import TillService
 from stustapay.core.service.user import UserService, associate_user_to_role
+from stustapay.tests.sumup_mock import MockSumUpApi
 
 from ...core.service.terminal import TerminalService
 from ..conftest import Cashier, CreateRandomUserTag
@@ -223,6 +224,97 @@ async def test_basic_sale_flow(
     )
     z_nr = await db_connection.fetchval("select z_nr from till where id = $1", till.id)
     assert z_nr_start + 1 == z_nr
+
+
+async def test_sale_deferred_sumup_order_flow(
+    order_service: OrderService,
+    terminal_token: str,
+    assert_system_account_balance: AssertSystemAccountBalance,
+    get_system_account_balance: GetSystemAccountBalance,
+    sale_products: SaleProducts,
+    cashier: Cashier,
+    login_supervised_user: LoginSupervisedUser,
+):
+    # pylint: disable=protected-access
+    order_service.sumup._create_sumup_api = lambda merchant_code, api_key: MockSumUpApi(api_key, merchant_code)  # type: ignore
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+
+    sumup_start_balance = await get_system_account_balance(account_type=AccountType.sumup_entry)
+    sale_exit_start_balance = await get_system_account_balance(account_type=AccountType.sale_exit)
+    new_sale = NewSale(
+        uuid=uuid.uuid4(),
+        buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=2)],
+        customer_tag_uid=None,
+        payment_method=PaymentMethod.sumup,
+    )
+
+    pending_sale = await order_service.check_sale(token=terminal_token, new_sale=new_sale)
+    MockSumUpApi.mock_amount(pending_sale.total_price)
+    registered_sale = await order_service.register_pending_sale(token=terminal_token, new_sale=new_sale)
+    assert registered_sale.uuid == new_sale.uuid
+    await assert_system_account_balance(account_type=AccountType.sumup_entry, expected_balance=sumup_start_balance)
+    await assert_system_account_balance(account_type=AccountType.sale_exit, expected_balance=sale_exit_start_balance)
+
+    completed_sale = await order_service.check_pending_sale(token=terminal_token, order_uuid=new_sale.uuid)
+    assert completed_sale is not None
+    assert completed_sale.uuid == new_sale.uuid
+    assert completed_sale.total_price == pending_sale.total_price
+    await assert_system_account_balance(
+        account_type=AccountType.sumup_entry,
+        expected_balance=sumup_start_balance - completed_sale.total_price,
+    )
+    await assert_system_account_balance(
+        account_type=AccountType.sale_exit,
+        expected_balance=sale_exit_start_balance + completed_sale.total_price,
+    )
+
+
+async def test_register_pending_sale_rejects_non_sumup(
+    order_service: OrderService,
+    terminal_token: str,
+    customer: Customer,
+    sale_products: SaleProducts,
+    cashier: Cashier,
+    login_supervised_user: LoginSupervisedUser,
+):
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    new_sale = NewSale(
+        uuid=uuid.uuid4(),
+        buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=1)],
+        customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
+    )
+
+    with pytest.raises(InvalidArgument):
+        await order_service.register_pending_sale(token=terminal_token, new_sale=new_sale)
+
+
+async def test_direct_book_sale_marks_pending_sumup_sale_booked(
+    db_connection: Connection,
+    order_service: OrderService,
+    terminal_token: str,
+    sale_products: SaleProducts,
+    cashier: Cashier,
+    login_supervised_user: LoginSupervisedUser,
+):
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    new_sale = NewSale(
+        uuid=uuid.uuid4(),
+        buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=1)],
+        customer_tag_uid=None,
+        payment_method=PaymentMethod.sumup,
+    )
+
+    await order_service.register_pending_sale(token=terminal_token, new_sale=new_sale)
+    completed_sale = await order_service.book_sale(token=terminal_token, new_sale=new_sale)
+    assert completed_sale.uuid == new_sale.uuid
+    assert (
+        await db_connection.fetchval(
+            "select status::text from pending_sumup_order where uuid = $1",
+            new_sale.uuid,
+        )
+        == "booked"
+    )
 
 
 async def test_customer_order_history_denies_terminal_user_without_ordering_privilege(

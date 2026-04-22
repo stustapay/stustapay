@@ -363,6 +363,7 @@ class NewFreeTicketGrant(BaseModel):
 class PendingOrderType(enum.Enum):
     topup = "topup"
     ticket = "ticket"
+    sale = "sale"
 
 
 class PendingOrderStatus(enum.Enum):

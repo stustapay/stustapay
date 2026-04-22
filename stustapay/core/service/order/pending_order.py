@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -6,6 +7,8 @@ from sftkit.error import InvalidArgument
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import (
+    Button,
+    CompletedSale,
     CompletedTicketSale,
     CompletedTopUp,
     CustomerRegistration,
@@ -13,8 +16,12 @@ from stustapay.core.schema.order import (
     PaymentMethod,
     PendingOrder,
     PendingOrderType,
+    PendingSale,
+    PendingSaleBase,
     PendingTicketSale,
     PendingTopUp,
+    get_source_account,
+    get_target_account,
 )
 from stustapay.core.schema.product import ProductType
 from stustapay.core.schema.till import Till
@@ -29,6 +36,7 @@ from stustapay.core.service.order.booking import (
 )
 from stustapay.core.service.product import fetch_top_up_product
 from stustapay.core.service.till.common import get_cash_register_account_id
+from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.user_tag import ensure_private_account_creation_allowed
 
 
@@ -94,6 +102,131 @@ def load_pending_ticket_sale(pending_order: PendingOrder) -> CompletedTicketSale
     # TODO: version check
     ticket_sale = CompletedTicketSale.model_validate_json(pending_order.order_content)
     return ticket_sale
+
+
+async def save_pending_sale(
+    conn: Connection, till_id: int, node_id: int, cashier_id: int | None, sale: PendingSale
+):
+    await conn.execute(
+        "insert into pending_sumup_order "
+        "(uuid, node_id, till_id, cashier_id, order_type, order_content_version, order_content) "
+        "values ($1, $2, $3, $4, 'sale', 1, $5)",
+        sale.uuid,
+        node_id,
+        till_id,
+        cashier_id,
+        sale.model_dump_json(),
+    )
+
+
+def load_pending_sale(pending_order: PendingOrder) -> PendingSale:
+    if pending_order.order_type != PendingOrderType.sale:
+        raise InvalidArgument("Invalid order type found for this uuid")
+    # TODO: version check
+    sale = PendingSale.model_validate_json(pending_order.order_content)
+    return sale
+
+
+async def make_sale_bookings(
+    *,
+    conn: Connection,
+    current_till: Till,
+    node: Node,
+    current_user_id: int,
+    sale: PendingSaleBase,
+    booked_at: datetime | None = None,
+    cash_register_id: int | None = None,
+    buttons: list[Button] | None = None,
+) -> CompletedSale:
+    line_items = [
+        NewLineItem(
+            quantity=line_item.quantity,
+            product_id=line_item.product.id,
+            product_price=line_item.product_price,
+            tax_rate_id=line_item.tax_rate_id,
+        )
+        for line_item in sale.line_items
+    ]
+
+    cash_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_entry)
+    cash_topup_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.cash_topup_source)
+    sumup_entry_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sumup_entry)
+    sale_exit_acc = await get_system_account_for_node(conn=conn, node=node, account_type=AccountType.sale_exit)
+
+    bookings: dict[BookingIdentifier, float] = defaultdict(lambda: 0.0)
+    for line_item in sale.line_items:
+        product = line_item.product
+
+        source_acc_id = None
+        target_acc_id = None
+        if sale.payment_method == PaymentMethod.tag:
+            assert sale.customer_account_id is not None
+            source_acc_id = get_source_account(OrderType.sale, sale.customer_account_id)
+            target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+        elif sale.payment_method == PaymentMethod.cash:
+            if current_till.active_cash_register_id is None:
+                raise InvalidArgument("Cash payments require a cash register")
+            active_cash_register_account_id = await get_cash_register_account_id(
+                conn=conn, node=node, cash_register_id=current_till.active_cash_register_id
+            )
+            bookings[
+                BookingIdentifier(source_account_id=cash_entry_acc.id, target_account_id=active_cash_register_account_id)
+            ] += float(line_item.total_price)
+            source_acc_id = get_source_account(OrderType.sale, cash_topup_acc.id)
+            target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+        elif sale.payment_method == PaymentMethod.sumup:
+            source_acc_id = get_source_account(OrderType.sale, sumup_entry_acc.id)
+            target_acc_id = get_target_account(OrderType.sale, product, sale_exit_acc.id)
+        else:
+            raise InvalidArgument("Invalid payment method")
+
+        assert source_acc_id is not None
+        assert target_acc_id is not None
+
+        bookings[BookingIdentifier(source_account_id=source_acc_id, target_account_id=target_acc_id)] += float(
+            line_item.total_price
+        )
+
+    order_info = await book_order(
+        conn=conn,
+        booked_at=booked_at,
+        order_type=OrderType.sale,
+        uuid=sale.uuid,
+        payment_method=sale.payment_method,
+        customer_account_id=sale.customer_account_id,
+        cashier_id=current_user_id,
+        cash_register_id=cash_register_id,
+        line_items=line_items,
+        bookings=bookings,
+        till_id=current_till.id,
+    )
+
+    if sale.used_vouchers > 0:
+        assert sale.customer_account_id is not None
+        await book_transaction(
+            conn=conn,
+            order_id=order_info.id,
+            source_account_id=sale.customer_account_id,
+            target_account_id=sale_exit_acc.id,
+            voucher_amount=sale.used_vouchers,
+        )
+
+    return CompletedSale(
+        buttons=buttons if buttons is not None else getattr(sale, "buttons", []),
+        id=order_info.id,
+        uuid=order_info.uuid,
+        old_balance=sale.old_balance,
+        new_balance=sale.new_balance,
+        old_voucher_balance=sale.old_voucher_balance,
+        new_voucher_balance=sale.new_voucher_balance,
+        customer_account_id=sale.customer_account_id,
+        payment_method=sale.payment_method,
+        line_items=sale.line_items,
+        booked_at=order_info.booked_at,
+        till_id=current_till.id,
+        cashier_id=current_user_id,
+        bon_url="",
+    )
 
 
 async def make_ticket_sale_bookings(

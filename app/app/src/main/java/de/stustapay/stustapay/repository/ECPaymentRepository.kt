@@ -11,7 +11,10 @@ import javax.inject.Singleton
 
 sealed interface ECPaymentResult {
     data class Success(val result: SumUpState.Success) : ECPaymentResult
-    data class Failure(val msg: String) : ECPaymentResult
+    data class Failure(
+        val msg: String,
+        val mayHaveCreatedCharge: Boolean = false,
+    ) : ECPaymentResult
 }
 
 @Singleton
@@ -85,8 +88,14 @@ class ECPaymentRepository @Inject constructor(
                 return ECPaymentResult.Failure("SumUp not finished? ${sumUpState.msg()}")
             }
 
-            is SumUpState.Failed,
             is SumUpState.Error -> {
+                return ECPaymentResult.Failure(
+                    msg = "SumUp failed: ${sumUpState.msg()}",
+                    mayHaveCreatedCharge = sumUpState.mayHaveCreatedCharge,
+                )
+            }
+
+            is SumUpState.Failed -> {
                 return ECPaymentResult.Failure("SumUp failed: ${sumUpState.msg()}")
             }
 

@@ -275,8 +275,10 @@ class TicketViewModel @Inject constructor(
 
         when (val ecResult = ecPaymentRepository.pay(context = context, ecPayment = payment)) {
             is ECPaymentResult.Failure -> {
-                // oh dear, the ec payment failed - let's tell the backend.
-                ticketApi.cancelPendingTicketSale(orderUUID = newSale.uuid)
+                if (!ecResult.mayHaveCreatedCharge) {
+                    // oh dear, the ec payment failed - let's tell the backend.
+                    ticketApi.cancelPendingTicketSale(orderUUID = newSale.uuid)
+                }
                 _status.update { ecResult.msg }
             }
 

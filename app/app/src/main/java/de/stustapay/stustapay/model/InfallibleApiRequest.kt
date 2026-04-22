@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.model
 
+import de.stustapay.api.models.NewSale
 import de.stustapay.api.models.NewTicketSale
 import de.stustapay.api.models.NewTopUp
 
@@ -59,6 +60,27 @@ sealed interface InfallibleApiRequest {
 
         override fun asFailed(): InfallibleApiRequest {
             return TicketSale(ticketSale, Status.Failed)
+        }
+
+        override fun status(): Status {
+            return status
+        }
+    }
+
+    data class Sale(
+        val sale: NewSale,
+        val status: Status = Status.Normal,
+    ) : InfallibleApiRequest {
+        override fun msg(): String {
+            return "Sale ${sale.uuid} with ${sale.paymentMethod}"
+        }
+
+        override fun asNormal(): InfallibleApiRequest {
+            return Sale(sale, Status.Normal)
+        }
+
+        override fun asFailed(): InfallibleApiRequest {
+            return Sale(sale, Status.Failed)
         }
 
         override fun status(): Status {

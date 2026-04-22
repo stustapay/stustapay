@@ -6,6 +6,7 @@ import de.stustapay.api.models.Order
 import de.stustapay.api.models.PendingSale
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.SaleRemoteDataSource
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,6 +20,14 @@ class SaleRepository @Inject constructor(
 
     suspend fun bookSale(newSale: NewSale): Response<CompletedSale> {
         return saleRemoteDataSource.bookSale(newSale)
+    }
+
+    suspend fun registerPendingSale(newSale: NewSale): Response<PendingSale> {
+        return saleRemoteDataSource.registerPendingSale(newSale)
+    }
+
+    suspend fun cancelPendingSale(orderUUID: UUID): Response<Unit> {
+        return saleRemoteDataSource.cancelPendingSale(orderUUID)
     }
 
     suspend fun listSales(): Response<List<Order>> {

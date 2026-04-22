@@ -403,6 +403,52 @@
         ]
       }
     },
+    "/order/register-pending-sale": {
+      "post": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Register a pending sale with the server where the sumup payment is still pending",
+        "operationId": "register_pending_sale",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewSale"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingSale"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/order/check-topup": {
       "post": {
         "tags": [
@@ -548,6 +594,50 @@
         ],
         "summary": "Mark a pending topup as cancelled, e.g. because the sumup booking failed",
         "operationId": "cancel_pending_topup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/order/cancel-pending-sale": {
+      "post": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Mark a pending sale as cancelled, e.g. because the sumup booking failed",
+        "operationId": "cancel_pending_sale",
         "requestBody": {
           "content": {
             "application/json": {

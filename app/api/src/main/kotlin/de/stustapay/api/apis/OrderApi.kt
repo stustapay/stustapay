@@ -218,6 +218,39 @@ import io.ktor.http.ParametersBuilder
             }
 
         /**
+        * POST /order/cancel-pending-sale
+        * Mark a pending sale as cancelled, e.g. because the sumup booking failed
+        * 
+         * @param cancelOrderPayload  
+         * @return kotlin.Unit
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun cancelPendingSale(cancelOrderPayload: CancelOrderPayload): HttpResponse<kotlin.Unit> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = cancelOrderPayload
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/cancel-pending-sale",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
         * POST /order/cancel-pending-ticket-sale
         * Mark a pending ticket sale as cancelled, e.g. because the sumup booking failed
         * 
@@ -475,6 +508,39 @@ import io.ktor.http.ParametersBuilder
             )
 
             return request(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+            ).wrap()
+            }
+
+        /**
+        * POST /order/register-pending-sale
+        * Register a pending sale with the server where the sumup payment is still pending
+        * 
+         * @param newSale  
+         * @return PendingSale
+        */
+            @Suppress("UNCHECKED_CAST")
+        open suspend fun registerPendingSale(newSale: NewSale): HttpResponse<PendingSale> {
+
+            val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
+
+            val localVariableBody = newSale
+
+            val localVariableQuery = mutableMapOf<String, List<String>>()
+
+            val localVariableHeaders = mutableMapOf<String, String>()
+
+            val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/order/register-pending-sale",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+            )
+
+            return jsonRequest(
             localVariableConfig,
             localVariableBody,
             localVariableAuthNames
