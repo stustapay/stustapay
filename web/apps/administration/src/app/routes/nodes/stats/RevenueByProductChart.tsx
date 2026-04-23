@@ -1,5 +1,4 @@
 import * as React from "react";
-import { DateTime } from "luxon";
 import {
   Card,
   CardContent,
@@ -22,19 +21,15 @@ import {
 } from "@mui/icons-material";
 import { BarChart, BarChartData } from "@/components";
 import { FilterBadge } from "@/components/common/FilterBadge";
-import { useCurrentNode, useCurrencyFormatter } from "@/hooks";
-import { useGetProductStatsQuery } from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
+import { GetProductStatsApiResponse } from "@/api";
 import { useTranslation } from "react-i18next";
-import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByProductChartProps = {
-  fromTimestamp?: DateTime;
-  toTimestamp?: DateTime;
-  selectedDates?: string[];
-  tillId?: number;
-  subnodeId?: number;
   productId?: number;
-  pollingIntervalMs?: number;
+  enabled?: boolean;
+  isLoading?: boolean;
+  data?: GetProductStatsApiResponse;
   onProductClick?: (productId: number) => void;
   onClearFilter?: () => void;
 };
@@ -42,17 +37,13 @@ export type RevenueByProductChartProps = {
 type SortOption = "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
 
 export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
-  fromTimestamp,
-  toTimestamp,
-  selectedDates,
-  tillId,
-  subnodeId,
   productId,
-  pollingIntervalMs = 0,
+  enabled = true,
+  isLoading = false,
+  data,
   onProductClick,
   onClearFilter,
 }) => {
-  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
   const theme = useTheme();
@@ -74,18 +65,6 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
     setSortOption(option);
     handleMenuClose();
   };
-
-  const { data, isLoading } = useGetProductStatsQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
 
   // Create a map of product_name to product_id for bar click handling
   const productNameToIdMap = React.useMemo(() => {
@@ -158,41 +137,45 @@ export const RevenueByProductChart: React.FC<RevenueByProductChartProps> = ({
     return product?.product_name || String(productId);
   }, [productId, data]);
 
-    if (isLoading) {
-        return (
-            <Card
-                sx={{
-                    backgroundColor: (theme) =>
-                        theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-                    border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
-                    boxShadow: "none",
-                }}
-            >
-                <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-                    <Skeleton variant="rounded" height={isMobile ? 250 : 300} />
-                </CardContent>
-            </Card>
-        );
-    }
+  if (!enabled) {
+    return null;
+  }
 
-    if (!data) {
-        return (
-            <Card
-                sx={{
-                    backgroundColor: (theme) =>
-                        theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
-                    border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
-                    boxShadow: "none",
-                }}
-            >
-                <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-                        {t("overview.noDataAvailable")}
-                    </Typography>
-                </CardContent>
-            </Card>
-        );
-    }
+  if (isLoading) {
+    return (
+      <Card
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+          border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+          boxShadow: "none",
+        }}
+      >
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
+          <Skeleton variant="rounded" height={isMobile ? 250 : 300} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "rgba(26, 27, 30, 0.8)" : "rgba(255, 255, 255, 0.9)",
+          border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"}`,
+          boxShadow: "none",
+        }}
+      >
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
+            {t("overview.noDataAvailable")}
+          </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (data && chartData.length === 0 && !isLoading) {
     return (

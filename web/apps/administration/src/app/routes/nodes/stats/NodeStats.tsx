@@ -2,6 +2,10 @@ import * as React from "react";
 import {
   NodeSeenByUser,
   useGetAvailableDatesQuery,
+  useGetDashboardOverviewQuery,
+  useGetPaymentMethodStatsQuery,
+  useGetProductStatsQuery,
+  useGetRevenueByCounterQuery,
   useListTillsQuery,
   useListProductsQuery,
   useGetRevenuePredictionQuery,
@@ -72,7 +76,7 @@ export const NodeStats: React.FC = () => {
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();
   const dispatch = useAppDispatch();
-  const [datePreset, setDatePreset] = React.useState<DatePreset>("all");
+  const [datePreset, setDatePreset] = React.useState<DatePreset>("today");
   const [selectedDates, setSelectedDates] = React.useState<string[]>([]);
   const [selectedSubnodeId, setSelectedSubnodeId] = React.useState<number | undefined>(undefined);
   const [selectedTillId, setSelectedTillId] = React.useState<number | undefined>(undefined);
@@ -84,6 +88,14 @@ export const NodeStats: React.FC = () => {
   const predictionPollingIntervalMs = pollingIntervalMs > 0 ? Math.max(pollingIntervalMs, 300000) : 0;
 
   const effectiveFilterNodeId = selectedSubnodeId ?? currentNode.id;
+  const isFiltersExpanded = expandedSections.filters;
+  const isKpisExpanded = expandedSections.kpis;
+  const isPredictionExpanded = expandedSections.prediction;
+  const isCounterChartExpanded = expandedSections.counterChart;
+  const isProductChartExpanded = expandedSections.productChart;
+  const isQuantityTableExpanded = expandedSections.quantityTable;
+  const isCounterTableExpanded = expandedSections.counterTable;
+  const isOrdersExpanded = expandedSections.orders;
 
   const subnodeOptions = React.useMemo(() => {
     const options: Array<{ id: number; name: string; depth: number }> = [];
@@ -117,14 +129,33 @@ export const NodeStats: React.FC = () => {
     }
   }, [selectedSubnodeId, subnodeOptions]);
 
+  const isCustomDateSelection = datePreset === "custom";
+  const shouldLoadAvailableDates = isFiltersExpanded || isCustomDateSelection;
+  const isProductDataEnabled = isProductChartExpanded || isQuantityTableExpanded || isKpisExpanded;
+  const isCounterDataEnabled = isCounterChartExpanded || isCounterTableExpanded;
+  const isOverviewDataEnabled = isKpisExpanded;
+  const isOrdersDataEnabled = isOrdersExpanded && canViewOrders;
+
   const { data: availableDates } = useGetAvailableDatesQuery(
     { nodeId: currentNode.id, subnodeId: selectedSubnodeId },
-    statsQueryOptions(pollingIntervalMs)
+    {
+      ...statsQueryOptions(pollingIntervalMs, shouldLoadAvailableDates),
+      skip: !shouldLoadAvailableDates,
+    }
   );
-  const { data: tills } = useListTillsQuery({ nodeId: effectiveFilterNodeId }, statsQueryOptions(pollingIntervalMs));
+  const { data: tills } = useListTillsQuery(
+    { nodeId: effectiveFilterNodeId },
+    {
+      ...statsQueryOptions(pollingIntervalMs, isFiltersExpanded || isOrdersDataEnabled),
+      skip: !isFiltersExpanded && !isOrdersDataEnabled,
+    }
+  );
   const { data: products } = useListProductsQuery(
     { nodeId: effectiveFilterNodeId },
-    statsQueryOptions(pollingIntervalMs)
+    {
+      ...statsQueryOptions(pollingIntervalMs, isFiltersExpanded || isProductDataEnabled),
+      skip: !isFiltersExpanded && !isProductDataEnabled,
+    }
   );
   const { data: prediction, isLoading: isPredictionLoading } = useGetRevenuePredictionQuery(
     {
@@ -133,8 +164,8 @@ export const NodeStats: React.FC = () => {
       subnodeId: selectedSubnodeId,
     },
     {
-      ...statsQueryOptions(predictionPollingIntervalMs),
-      skip: currentNode.event == null || !isPredictionEnabled || selectedProductId !== undefined,
+      ...statsQueryOptions(predictionPollingIntervalMs, isPredictionExpanded),
+      skip: currentNode.event == null || !isPredictionEnabled || selectedProductId !== undefined || !isPredictionExpanded,
     }
   );
 
@@ -252,6 +283,34 @@ export const NodeStats: React.FC = () => {
     return fromTimestamp.plus({ days: 1 }).minus({ milliseconds: 1 });
   }, [fromTimestamp, datePreset, sortedSelectedDates, eventSettings.daily_end_time, businessDayStartForDate]);
 
+  const sharedStatsArgs = React.useMemo(
+    () => ({
+      nodeId: currentNode.id,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+      selectedDates: selectedDatesForQuery,
+      tillId: selectedTillId,
+      subnodeId: selectedSubnodeId,
+    }),
+    [currentNode.id, fromTimestamp, selectedDatesForQuery, selectedTillId, selectedSubnodeId, toTimestamp]
+  );
+  const { data: overview, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(sharedStatsArgs, {
+    ...statsQueryOptions(pollingIntervalMs, isOverviewDataEnabled),
+    skip: !isOverviewDataEnabled,
+  });
+  const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery(sharedStatsArgs, {
+    ...statsQueryOptions(pollingIntervalMs, isOverviewDataEnabled),
+    skip: !isOverviewDataEnabled,
+  });
+  const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery(sharedStatsArgs, {
+    ...statsQueryOptions(pollingIntervalMs, isProductDataEnabled),
+    skip: !isProductDataEnabled,
+  });
+  const { data: revenueByCounter, isLoading: isRevenueByCounterLoading } = useGetRevenueByCounterQuery(sharedStatsArgs, {
+    ...statsQueryOptions(pollingIntervalMs, isCounterDataEnabled),
+    skip: !isCounterDataEnabled,
+  });
+
   const selectedSubnodeName = React.useMemo(
     () => subnodeOptions.find((node) => node.id === selectedSubnodeId)?.name,
     [subnodeOptions, selectedSubnodeId]
@@ -290,7 +349,7 @@ export const NodeStats: React.FC = () => {
     return <Navigate to="/" />;
   }
 
-  if (eventSettings.start_date == null || eventSettings.end_date == null || eventSettings.daily_end_time == null) {
+  if (currentNode.event != null && (eventSettings.start_date == null || eventSettings.end_date == null || eventSettings.daily_end_time == null)) {
     return (
       <Alert severity="warning">
         <AlertTitle>{t("overview.warningEventDatesNeedConfiguration")}</AlertTitle>
@@ -339,6 +398,15 @@ export const NodeStats: React.FC = () => {
                       renderValue={(selected) => {
                         const values = selected as string[];
                         if (values.length === 0) {
+                          if (datePreset === "today") {
+                            return <em>{t("overview.today")}</em>;
+                          }
+                          if (datePreset === "yesterday") {
+                            return <em>{t("overview.yesterday")}</em>;
+                          }
+                          if (datePreset === "last7") {
+                            return <em>{t("overview.last7Days")}</em>;
+                          }
                           return <em>{t("overview.allDates")}</em>;
                         }
                         if (values.length === 1) {
@@ -346,7 +414,7 @@ export const NodeStats: React.FC = () => {
                         }
                         return t("overview.selectedDatesCount", { count: values.length });
                       }}
-                    >
+                    > 
                       {availableDates && availableDates.length > 0 ? (
                         availableDates.map((date) => (
                           <MenuItem key={date} value={date}>
@@ -624,15 +692,14 @@ export const NodeStats: React.FC = () => {
           </AccordionSummary>
           <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
             <DashboardKPIs
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              selectedDates={selectedDatesForQuery}
-              tillId={selectedTillId}
-              subnodeId={selectedSubnodeId}
+              enabled={isKpisExpanded}
               productId={selectedProductId}
               prediction={isPredictionEnabled ? prediction : undefined}
               isPredictionLoading={isPredictionEnabled ? isPredictionLoading : false}
-              pollingIntervalMs={pollingIntervalMs}
+              isLoading={isOverviewLoading || isPaymentMethodsLoading || (selectedProductId !== undefined && isProductStatsLoading)}
+              overview={overview}
+              paymentMethods={paymentMethods}
+              productStats={productStats}
             />
           </AccordionDetails>
         </Accordion>
@@ -669,12 +736,10 @@ export const NodeStats: React.FC = () => {
             </AccordionSummary>
             <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
               <RevenueByCounterChart
-                fromTimestamp={fromTimestamp}
-                toTimestamp={toTimestamp}
-                selectedDates={selectedDatesForQuery}
                 tillId={selectedTillId}
-                subnodeId={selectedSubnodeId}
-                pollingIntervalMs={pollingIntervalMs}
+                enabled={isCounterChartExpanded}
+                isLoading={isRevenueByCounterLoading}
+                data={revenueByCounter}
                 onBarClick={(tillId) => setSelectedTillId(tillId)}
                 onClearFilter={() => setSelectedTillId(undefined)}
               />
@@ -694,13 +759,10 @@ export const NodeStats: React.FC = () => {
           </AccordionSummary>
           <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
             <RevenueByProductChart
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              selectedDates={selectedDatesForQuery}
-              tillId={selectedTillId}
-              subnodeId={selectedSubnodeId}
+              enabled={isProductChartExpanded}
               productId={selectedProductId}
-              pollingIntervalMs={pollingIntervalMs}
+              isLoading={isProductStatsLoading}
+              data={productStats}
               onProductClick={(productId) => setSelectedProductId(productId)}
               onClearFilter={() => setSelectedProductId(undefined)}
             />
@@ -719,13 +781,10 @@ export const NodeStats: React.FC = () => {
           </AccordionSummary>
           <AccordionDetails sx={{ p: { xs: 0.75, sm: 1, md: 1.5 } }}>
             <QuantitiesByProductTable
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              selectedDates={selectedDatesForQuery}
-              tillId={selectedTillId}
-              subnodeId={selectedSubnodeId}
+              enabled={isQuantityTableExpanded}
               productId={selectedProductId}
-              pollingIntervalMs={pollingIntervalMs}
+              isLoading={isProductStatsLoading}
+              data={productStats}
             />
           </AccordionDetails>
         </Accordion>
@@ -747,9 +806,9 @@ export const NodeStats: React.FC = () => {
                 fromTimestamp={fromTimestamp}
                 toTimestamp={toTimestamp}
                 selectedDates={selectedDatesForQuery}
-                tillId={selectedTillId}
-                subnodeId={selectedSubnodeId}
-                pollingIntervalMs={pollingIntervalMs}
+                enabled={isCounterTableExpanded}
+                isLoading={isRevenueByCounterLoading}
+                data={revenueByCounter}
               />
             </AccordionDetails>
           </Accordion>
@@ -775,6 +834,7 @@ export const NodeStats: React.FC = () => {
                 subnodeId={selectedSubnodeId}
                 productId={selectedProductId}
                 pollingIntervalMs={pollingIntervalMs}
+                enabled={isOrdersDataEnabled}
               />
             </AccordionDetails>
           </Accordion>

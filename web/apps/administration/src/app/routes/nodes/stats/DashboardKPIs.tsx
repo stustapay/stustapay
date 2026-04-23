@@ -1,35 +1,36 @@
 import * as React from "react";
-import { DateTime } from "luxon";
 import { Card, CardContent, Grid, Skeleton, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { TrendingUp as TrendingUpIcon } from "@mui/icons-material";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { PieChart, PieChartData } from "@/components";
-import { useGetDashboardOverviewQuery, useGetPaymentMethodStatsQuery, useGetProductStatsQuery, RevenuePrediction } from "@/api";
+import {
+  RevenuePrediction,
+  GetDashboardOverviewApiResponse,
+  GetPaymentMethodStatsApiResponse,
+  GetProductStatsApiResponse,
+} from "@/api";
 import { useTranslation } from "react-i18next";
-import { statsQueryOptions } from "./queryOptions";
 
 export type DashboardKPIsProps = {
-  fromTimestamp?: DateTime;
-  toTimestamp?: DateTime;
-  selectedDates?: string[];
-  tillId?: number;
-  subnodeId?: number;
   productId?: number;
   prediction?: RevenuePrediction;
   isPredictionLoading?: boolean;
-  pollingIntervalMs?: number;
+  enabled?: boolean;
+  isLoading?: boolean;
+  overview?: GetDashboardOverviewApiResponse;
+  paymentMethods?: GetPaymentMethodStatsApiResponse;
+  productStats?: GetProductStatsApiResponse;
 };
 
 export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
-  fromTimestamp,
-  toTimestamp,
-  selectedDates,
-  tillId,
-  subnodeId,
   productId,
   prediction,
   isPredictionLoading,
-  pollingIntervalMs = 0,
+  enabled = true,
+  isLoading = false,
+  overview,
+  paymentMethods,
+  productStats,
 }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
@@ -39,40 +40,6 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const mobileKpiGridSize = isSmallMobile ? 6 : 12;
 
-  const { data: overviewResponse, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
-  const { data: paymentMethods, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodStatsQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
-  const { data: productStats, isLoading: isProductStatsLoading } = useGetProductStatsQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
-
   // Get selected product stats if productId is specified
   const selectedProductStats = React.useMemo(() => {
     if (productId === undefined || !productStats) return null;
@@ -80,9 +47,11 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
     return allProducts.find((p) => p.product_id === productId) || null;
   }, [productId, productStats]);
 
-  const overview = overviewResponse;
+  if (!enabled) {
+    return null;
+  }
 
-  if (isOverviewLoading || isPaymentMethodsLoading || isProductStatsLoading) {
+  if (isLoading) {
     return (
       <Grid container spacing={{ xs: 1, sm: 1.5 }}>
         {[...Array(8)].map((_, i) => (
@@ -94,7 +63,7 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({
     );
   }
 
-  if (!overview || !paymentMethods) {
+  if (!overview || !paymentMethods || !productStats) {
     return (
       <Grid container spacing={{ xs: 1, sm: 1.5 }}>
         <Grid size={12}>

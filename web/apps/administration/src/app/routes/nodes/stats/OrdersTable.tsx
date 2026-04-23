@@ -36,6 +36,7 @@ export type OrdersTableProps = {
   subnodeId?: number;
   productId?: number;
   pollingIntervalMs?: number;
+  enabled?: boolean;
 };
 
 type TableRowData = {
@@ -61,6 +62,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   subnodeId,
   productId,
   pollingIntervalMs = 0,
+  enabled = true,
 }) => {
   const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
@@ -106,8 +108,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
       offset: currentOffset,
     },
     {
-      ...statsQueryOptions(pollingIntervalMs),
-      skip: !canViewOrderLinks,
+      ...statsQueryOptions(pollingIntervalMs, enabled),
+      skip: !canViewOrderLinks || !enabled,
     }
   );
 
@@ -169,10 +171,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   }, [currentOffset, currentPageOrders, fulfilledTimeStamp, pendingAppendOffset, queryKey]);
 
   const orders = loadedOrders;
-
-  if (!canViewOrderLinks) {
-    return null;
-  }
 
   const tableRowsData = React.useMemo((): TableRowData[] => {
     if (!orders) {
@@ -292,6 +290,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
     setPendingAppendOffset(nextOffset);
     setCurrentOffset(nextOffset);
   }, [currentOffset, hasMoreOrders]);
+
+  if (!canViewOrderLinks || !enabled) {
+    return null;
+  }
 
   if (isLoading && !orders) {
     return (

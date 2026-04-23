@@ -1,5 +1,4 @@
 import * as React from "react";
-import { DateTime } from "luxon";
 import {
   Card,
   CardContent,
@@ -22,18 +21,14 @@ import {
 } from "@mui/icons-material";
 import { BarChart, BarChartData } from "@/components";
 import { FilterBadge } from "@/components/common/FilterBadge";
-import { useCurrentNode } from "@/hooks";
-import { useGetRevenueByCounterQuery } from "@/api";
+import { GetRevenueByCounterApiResponse } from "@/api";
 import { useTranslation } from "react-i18next";
-import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByCounterChartProps = {
-  fromTimestamp?: DateTime;
-  toTimestamp?: DateTime;
-  selectedDates?: string[];
   tillId?: number;
-  subnodeId?: number;
-  pollingIntervalMs?: number;
+  enabled?: boolean;
+  isLoading?: boolean;
+  data?: GetRevenueByCounterApiResponse;
   onBarClick?: (tillId: number) => void;
   onClearFilter?: () => void;
 };
@@ -41,16 +36,13 @@ export type RevenueByCounterChartProps = {
 type SortOption = "revenue-desc" | "revenue-asc" | "name-asc" | "name-desc";
 
 export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
-  fromTimestamp,
-  toTimestamp,
-  selectedDates,
   tillId,
-  subnodeId,
-  pollingIntervalMs = 0,
+  enabled = true,
+  isLoading = false,
+  data,
   onBarClick,
   onClearFilter,
 }) => {
-  const { currentNode } = useCurrentNode();
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -71,18 +63,6 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
     setSortOption(option);
     handleMenuClose();
   };
-
-  const { data, isLoading } = useGetRevenueByCounterQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
 
   // Create a map of till_name to till_id for bar click handling
   // Must be called before any early returns (Rules of Hooks)
@@ -151,6 +131,10 @@ export const RevenueByCounterChart: React.FC<RevenueByCounterChartProps> = ({
     },
     [onBarClick, tillNameToIdMap]
   );
+
+  if (!enabled) {
+    return null;
+  }
 
   if (isLoading) {
     return (

@@ -1,6 +1,6 @@
-export const statsQueryOptions = (pollingIntervalMs = 0) => ({
-  pollingInterval: pollingIntervalMs,
-  refetchOnFocus: pollingIntervalMs > 0,
-  refetchOnReconnect: pollingIntervalMs > 0,
-  refetchOnMountOrArgChange: pollingIntervalMs > 0,
+export const statsQueryOptions = (pollingIntervalMs = 0, enabled = true) => ({
+  pollingInterval: enabled ? pollingIntervalMs : 0,
+  refetchOnFocus: enabled && pollingIntervalMs > 0,
+  refetchOnReconnect: enabled && pollingIntervalMs > 0,
+  refetchOnMountOrArgChange: enabled && pollingIntervalMs > 0,
 });

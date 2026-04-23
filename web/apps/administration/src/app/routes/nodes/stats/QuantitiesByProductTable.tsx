@@ -16,21 +16,17 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { useGetProductStatsQuery } from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
+import { GetProductStatsApiResponse } from "@/api";
 import { useTranslation } from "react-i18next";
 import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
 import { useFilterableTable } from "@/hooks/useFilterableTable";
-import { statsQueryOptions } from "./queryOptions";
 
 export type QuantitiesByProductTableProps = {
-  fromTimestamp?: DateTime;
-  toTimestamp?: DateTime;
-  selectedDates?: string[];
-  tillId?: number;
-  subnodeId?: number;
   productId?: number;
-  pollingIntervalMs?: number;
+  enabled?: boolean;
+  isLoading?: boolean;
+  data?: GetProductStatsApiResponse;
 };
 
 type ProductRow = {
@@ -41,32 +37,16 @@ type ProductRow = {
 };
 
 export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> = ({
-  fromTimestamp,
-  toTimestamp,
-  selectedDates,
-  tillId,
-  subnodeId,
   productId,
-  pollingIntervalMs = 0,
+  enabled = true,
+  isLoading = false,
+  data,
 }) => {
-  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const { data, isLoading } = useGetProductStatsQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
 
   // Combine product data
   const tableData: ProductRow[] = React.useMemo(() => {
@@ -109,6 +89,10 @@ export const QuantitiesByProductTable: React.FC<QuantitiesByProductTableProps> =
       { quantity: 0, revenue: 0 }
     );
   }, [filteredData]);
+
+  if (!enabled) {
+    return null;
+  }
 
   if (isLoading) {
     return (

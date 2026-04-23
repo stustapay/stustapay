@@ -19,7 +19,7 @@ const defaultStatsExpandedSections: Record<string, boolean> = {
   productChart: true,
   quantityTable: true,
   counterTable: true,
-  orders: true,
+  orders: false,
 };
 
 const initialState: UiState = {

@@ -16,49 +16,35 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { useGetRevenueByCounterQuery } from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
+import { GetRevenueByCounterApiResponse } from "@/api";
 import { useTranslation } from "react-i18next";
 import { TableFilterBar } from "@/components/tables/TableFilterBar";
 import { SortableTableHeader } from "@/components/tables/SortableTableHeader";
 import { useFilterableTable } from "@/hooks/useFilterableTable";
-import { statsQueryOptions } from "./queryOptions";
 
 export type RevenueByCounterTableProps = {
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
   selectedDates?: string[];
-  tillId?: number;
-  subnodeId?: number;
-  pollingIntervalMs?: number;
+  enabled?: boolean;
+  isLoading?: boolean;
+  data?: GetRevenueByCounterApiResponse;
 };
 
 export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
   fromTimestamp,
   toTimestamp,
   selectedDates,
-  tillId,
-  subnodeId,
-  pollingIntervalMs = 0,
+  enabled = true,
+  isLoading = false,
+  data,
 }) => {
-  const { currentNode } = useCurrentNode();
   const formatCurrency = useCurrencyFormatter();
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const { data, isLoading } = useGetRevenueByCounterQuery(
-    {
-      nodeId: currentNode.id,
-      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-      toTimestamp: toTimestamp?.toISO() ?? undefined,
-      selectedDates,
-      tillId: tillId,
-      subnodeId: subnodeId,
-    },
-    statsQueryOptions(pollingIntervalMs)
-  );
 
   const dateStr = React.useMemo(() => {
     if (selectedDates && selectedDates.length > 1) {
@@ -89,6 +75,10 @@ export const RevenueByCounterTable: React.FC<RevenueByCounterTableProps> = ({
     () => filteredData.reduce((sum, counter) => sum + Number(counter.order_count || 0), 0),
     [filteredData]
   );
+
+  if (!enabled) {
+    return null;
+  }
 
   if (isLoading) {
     return (

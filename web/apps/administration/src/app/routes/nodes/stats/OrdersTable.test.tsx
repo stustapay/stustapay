@@ -143,6 +143,52 @@ describe("OrdersTable", () => {
     expect(screen.queryByText("1")).toBeNull();
   });
 
+  test("skips querying when the orders section is collapsed", () => {
+    mockUseCurrentUserHasPrivilege.mockReturnValue(true);
+    mockUseListOrdersFilteredQuery.mockReturnValue({
+      data: makeNormalizedOrders(1, 1),
+      isLoading: false,
+      fulfilledTimeStamp: 1,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/node/5/stats"]}>
+        <OrdersTable enabled={false} />
+      </MemoryRouter>
+    );
+
+    expect(mockUseListOrdersFilteredQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 50, offset: 0 }),
+      expect.objectContaining({ skip: true })
+    );
+    expect(screen.queryByRole("link", { name: "1" })).toBeNull();
+  });
+
+  test("can transition from expanded to collapsed without throwing", async () => {
+    mockUseCurrentUserHasPrivilege.mockReturnValue(true);
+    mockUseListOrdersFilteredQuery.mockReturnValue({
+      data: makeNormalizedOrders(1, 2),
+      isLoading: false,
+      fulfilledTimeStamp: 1,
+    });
+
+    const { rerender } = render(
+      <MemoryRouter initialEntries={["/node/5/stats"]}>
+        <OrdersTable enabled={true} />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("link", { name: "1" })).toBeTruthy();
+
+    rerender(
+      <MemoryRouter initialEntries={["/node/5/stats"]}>
+        <OrdersTable enabled={false} />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole("link", { name: "1" })).toBeNull();
+  });
+
   test("loads orders in 50-item pages and resets to the first page when filters change", async () => {
     mockUseCurrentUserHasPrivilege.mockReturnValue(true);
     mockUseListOrdersFilteredQuery.mockImplementation(
