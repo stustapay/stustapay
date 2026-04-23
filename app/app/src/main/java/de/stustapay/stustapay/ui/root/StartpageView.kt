@@ -27,6 +27,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -48,6 +49,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -74,6 +78,8 @@ import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
 import de.stustapay.stustapay.ui.nav.NavDest
+
+private const val TOP_OVERSCROLL_REFRESH_THRESHOLD_PX = 96f
 
 @Composable
 fun StartpageView(
@@ -132,8 +138,10 @@ fun StartpageView(
                 SelfServiceLanding(
                     canCheckBalance = selfServiceAccess.canSelfServiceBalance,
                     canTopUp = selfServiceAccess.canSelfServiceTopUp,
+                    configLoading = configLoading,
                     onCheckBalance = { navigateToHook(RootNavDests.status) },
                     onTopUp = { navigateToHook(RootNavDests.topup) },
+                    onRefreshConfig = { terminalConfigViewModel.refreshAccessData() },
                     onShowTerminalInfo = { showInfoDialog = true },
                     onOpenSettings = { navigateToHook(RootNavDests.settings) },
                     fallbackMessage = terminalStatusMessage ?: stringResource(R.string.payinout_no_action_available),
@@ -225,6 +233,7 @@ private fun OperatorLanding(
     val terminalName = loginState.title()
     var showRestartDialog by remember { mutableStateOf(false) }
     val operatorStrings = rememberOperatorMenuStrings()
+    val refreshState = remember { TopOverscrollRefreshState(TOP_OVERSCROLL_REFRESH_THRESHOLD_PX) }
     val primaryCards = remember(
         loginState,
         configLoading,
@@ -352,10 +361,17 @@ private fun OperatorLanding(
             }
             val cardRows = remember(primaryCards, columns) { primaryCards.chunked(columns) }
             val scrollState = rememberScrollState()
+            val overscrollModifier = rememberTopOverscrollRefreshModifier(
+                scrollState = scrollState,
+                configLoading = configLoading,
+                refreshState = refreshState,
+                onRefresh = onRefreshConfig,
+            )
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .then(overscrollModifier)
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -429,6 +445,11 @@ private fun OperatorLanding(
                         }
                     }
                 }
+
+                LandingRefreshStatus(
+                    loading = configLoading,
+                    message = stringResource(R.string.operator_refreshing_setup_hint),
+                )
             }
         }
     }
@@ -645,14 +666,17 @@ private fun rememberOperatorMenuStrings(): OperatorMenuStrings {
 private fun SelfServiceLanding(
     canCheckBalance: Boolean,
     canTopUp: Boolean,
+    configLoading: Boolean,
     onCheckBalance: () -> Unit,
     onTopUp: () -> Unit,
+    onRefreshConfig: () -> Unit,
     onShowTerminalInfo: () -> Unit,
     onOpenSettings: () -> Unit,
     fallbackMessage: String,
     modifier: Modifier = Modifier
 ) {
     val profile = rememberSelfServiceDeviceProfile()
+    val refreshState = remember { TopOverscrollRefreshState(TOP_OVERSCROLL_REFRESH_THRESHOLD_PX) }
     val checkBalanceTitle = stringResource(R.string.selfservice_check_balance)
     val checkBalanceDescription = stringResource(R.string.selfservice_check_balance_hint)
     val topUpTitle = stringResource(R.string.selfservice_topup)
@@ -660,6 +684,7 @@ private fun SelfServiceLanding(
     val openAction = stringResource(R.string.selfservice_action_open)
     val startAction = stringResource(R.string.selfservice_action_start)
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val scrollState = rememberScrollState()
         val actionCards = remember(
             canCheckBalance,
             canTopUp,
@@ -708,9 +733,18 @@ private fun SelfServiceLanding(
         } else {
             320.dp
         }
+        val overscrollModifier = rememberTopOverscrollRefreshModifier(
+            scrollState = scrollState,
+            configLoading = configLoading,
+            refreshState = refreshState,
+            onRefresh = onRefreshConfig,
+        )
 
         Column(
             modifier = Modifier
+                .fillMaxSize()
+                .then(overscrollModifier)
+                .verticalScroll(scrollState)
                 .fillMaxWidth()
                 .padding(
                     horizontal = profile.contentPaddingHorizontal,
@@ -771,6 +805,14 @@ private fun SelfServiceLanding(
                     }
                 }
             }
+
+            LandingRefreshStatus(
+                loading = configLoading,
+                message = stringResource(R.string.operator_refreshing_setup_hint),
+                accentColor = SelfServicePalette.accent,
+                textColor = SelfServicePalette.title,
+                trackColor = SelfServicePalette.panelBorder,
+            )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -867,6 +909,69 @@ private data class SelfServiceActionCardState(
     val onClick: () -> Unit,
     val highlighted: Boolean,
 )
+
+@Composable
+private fun rememberTopOverscrollRefreshModifier(
+    scrollState: androidx.compose.foundation.ScrollState,
+    configLoading: Boolean,
+    refreshState: TopOverscrollRefreshState,
+    onRefresh: () -> Unit,
+): Modifier {
+    return Modifier.pointerInput(scrollState, configLoading, refreshState, onRefresh) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                val pressed = event.changes.any { it.pressed }
+                if (!pressed) {
+                    refreshState.reset()
+                    continue
+                }
+
+                val deltaY = event.changes.firstOrNull()?.positionChange()?.y ?: 0f
+                val atTop = scrollState.value == 0
+                if (refreshState.onDragDelta(deltaY, atTop = atTop, loading = configLoading)) {
+                    onRefresh()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LandingRefreshStatus(
+    loading: Boolean,
+    message: String,
+    accentColor: Color = OperatorPalette.accent,
+    textColor: Color = OperatorPalette.subtitle,
+    trackColor: Color = Color.White.copy(alpha = 0.1f),
+) {
+    if (!loading) {
+        return
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = message,
+            color = textColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        LinearProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp),
+            color = accentColor,
+            backgroundColor = trackColor,
+        )
+    }
+}
 
 @Composable
 private fun SelfServiceEmptyStateCard(

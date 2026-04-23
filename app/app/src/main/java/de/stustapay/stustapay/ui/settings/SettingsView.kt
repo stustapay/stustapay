@@ -54,6 +54,7 @@ fun SettingsRootView(
         footerHint = stringResource(R.string.settings_footer_hint),
         footerSection = stringResource(R.string.settings_footer_section),
         footerStatus = stringResource(R.string.settings_footer_status),
+        showFooter = false,
         onBack = navigateBack,
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {

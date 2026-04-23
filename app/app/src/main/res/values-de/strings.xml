@@ -336,6 +336,7 @@
     <string name="operator_settings_desc">Terminalverbindung, EC-Leser und App-Informationen.</string>
     <string name="operator_refresh_setup_title">Einrichtung aktualisieren</string>
     <string name="operator_refresh_setup_desc">Terminalkonfiguration und Login-Abgleich mit dem Backend erneut ausführen.</string>
+    <string name="operator_refreshing_setup_hint">Terminaleinrichtung wird aktualisiert…</string>
     <string name="operator_development_desc">Diagnosewerkzeuge für Netzwerk, QR und SumUp.</string>
     <string name="operator_restart_desc">App neu starten und Terminalstatus neu laden.</string>
     <string name="operator_restart_confirm_title">App jetzt neu starten?</string>

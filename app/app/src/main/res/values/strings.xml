@@ -337,6 +337,7 @@
     <string name="operator_settings_desc">Terminal connection, EC reader, and app information.</string>
     <string name="operator_refresh_setup_title">Refresh setup</string>
     <string name="operator_refresh_setup_desc">Retry terminal configuration and login sync with the backend.</string>
+    <string name="operator_refreshing_setup_hint">Refreshing terminal setup…</string>
     <string name="operator_development_desc">Network, QR, and SumUp diagnostic tools.</string>
     <string name="operator_restart_desc">Restart the app and reload terminal state.</string>
     <string name="operator_restart_confirm_title">Restart app now?</string>
