@@ -7,6 +7,7 @@ import asyncpg
 from schwifty import IBAN
 from sepaxml import SepaTransfer
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -24,7 +25,6 @@ from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_u
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from sftkit.error import InvalidArgument, NotFound
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.mail import MailService
@@ -221,12 +221,14 @@ class PayoutService(Service[Config]):
         sepa_config = event_node.event.sepa_config
         if sepa_config is None:
             raise InvalidArgument("SEPA payout is disabled for this event")
+        payout_run = await fetch_payout_run(conn=conn, node=node, payout_run_id=payout_run_id)
         payouts = await conn.fetch_many(
             Payout,
             "select * from payout_view "
-            "where payout_run_id = $1 and round(amount, 2) > 0 "
+            "where payout_run_id = $1 and node_id = $2 and round(amount, 2) > 0 "
             "order by customer_account_id asc",
-            payout_run_id,
+            payout_run.id,
+            payout_run.node_id,
         )
         currency_identifier = event_node.event.currency_identifier
         sepa_xml = dump_payout_run_as_sepa_xml(
@@ -236,7 +238,12 @@ class PayoutService(Service[Config]):
             execution_date=execution_date,
         )
 
-        await conn.execute("update payout_run set sepa_xml = $1 where id = $2", sepa_xml, payout_run_id)
+        await conn.execute(
+            "update payout_run set sepa_xml = $1 where id = $2 and node_id = $3",
+            sepa_xml,
+            payout_run.id,
+            payout_run.node_id,
+        )
 
         return sepa_xml
 

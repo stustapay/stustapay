@@ -9,18 +9,20 @@ from io import StringIO
 
 import pytest
 from sftkit.database import Connection
-from sftkit.error import AccessDenied, InvalidArgument
+from sftkit.error import AccessDenied, InvalidArgument, NotFound
 
 from stustapay.core.schema.config import SEPAConfig
 from stustapay.core.schema.customer import Customer
 from stustapay.core.schema.payout import NewPayoutRun, PayoutRunWithStats
-from stustapay.core.schema.tree import Node, RestrictedEventSettings
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, Node, RestrictedEventSettings
 from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege, format_user_tag_uid
+from stustapay.core.schema.user_tag import NewUserTag
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.customer.payout import Payout, dump_payout_run_as_sepa_xml
 from stustapay.core.service.mail import MailService
+from stustapay.core.service.tree.service import create_event
 from stustapay.core.service.user import UserService
-from stustapay.core.service.user_tag import get_or_assign_user_tag
+from stustapay.core.service.user_tag import create_user_tags, get_or_assign_user_tag
 from stustapay.tests.conftest import CreateRandomUserTag
 
 
@@ -181,6 +183,88 @@ async def create_event_role_token(
     return result.success.token
 
 
+async def _create_other_payout_event(conn: Connection) -> Node:
+    suffix = secrets.token_hex(8)
+    return await create_event(
+        conn=conn,
+        parent_id=ROOT_NODE_ID,
+        event=NewEvent(
+            name=f"other-payout-event-{suffix}",
+            description="",
+            customer_portal_url=f"http://other-payout-event-{suffix}.test",
+            customer_portal_contact_email="test@test.support.test.com",
+            customer_portal_about_page_url="",
+            customer_portal_data_privacy_url="",
+            currency_identifier="EUR",
+            sepa_enabled=True,
+            sepa_sender_name="Other Event",
+            sepa_description="other payout {user_tag_uid}",
+            sepa_sender_iban="DE89370400440532013000",
+            sepa_allowed_country_codes=["DE"],
+            bon_title="",
+            bon_issuer="",
+            bon_address="",
+            max_account_balance=150,
+            sumup_topup_enabled=False,
+            sumup_payment_enabled=False,
+            sumup_affiliate_key="",
+            sumup_api_key="",
+            sumup_merchant_code="",
+            ust_id="",
+            email_enabled=False,
+            email_default_sender=None,
+            email_smtp_host=None,
+            email_smtp_port=None,
+            email_smtp_username=None,
+            email_smtp_password=None,
+            payout_done_subject="",
+            payout_done_message="",
+            payout_registered_subject="",
+            payout_registered_message="",
+            payout_sender=None,
+            pretix_presale_enabled=False,
+            pretix_api_key=None,
+            pretix_event=None,
+            pretix_organizer=None,
+            pretix_shop_url=None,
+            pretix_ticket_ids=None,
+        ),
+    )
+
+
+async def _create_payout_customer(
+    conn: Connection, event_node: Node, create_random_user_tag: CreateRandomUserTag
+) -> int:
+    tag = await create_random_user_tag()
+    secret_id = await conn.fetchval(
+        "insert into user_tag_secret (node_id, key0, key1) values "
+        "($1, decode('000102030405060708090a0b0c0d0e0f', 'hex'), decode('000102030405060708090a0b0c0d0e0f', 'hex')) "
+        "returning id",
+        event_node.id,
+    )
+    await create_user_tags(
+        conn=conn,
+        node_id=event_node.id,
+        tags=[NewUserTag(uid=tag.uid, pin=tag.pin, secret_id=secret_id)],
+    )
+    user_tag_id = await conn.fetchval("select id from user_tag where node_id = $1 and uid = $2", event_node.id, tag.uid)
+    account_id = await conn.fetchval(
+        "insert into account (node_id, user_tag_id, balance, type) values ($1, $2, $3, 'private') returning id",
+        event_node.id,
+        user_tag_id,
+        42,
+    )
+    await conn.execute(
+        "update customer_info set iban = $2, account_name = $3, email = $4, donation = 0, payout_export = true, "
+        "donate_all = false, has_entered_info = true where customer_account_id = $1",
+        account_id,
+        "DE89370400440532013000",
+        "Other Event Customer",
+        "other@example.test",
+    )
+    return account_id
+
+
 async def test_create_payout_run(
     db_connection: Connection,
     event_admin_token: str,
@@ -250,6 +334,35 @@ async def test_create_payout_run(
         execution_date=datetime.date.today(),
     )
     check_sepa_xml(xml_content, [c for c in customers if c.id in ids_not_to_transfer], event.sepa_config)
+
+
+async def test_sepa_xml_generation_rejects_foreign_event_payout_run(
+    db_connection: Connection,
+    event_admin_token: str,
+    event_node: Node,
+    customer_service: CustomerService,
+    global_admin_token: str,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    other_event = await _create_other_payout_event(db_connection)
+    await _create_payout_customer(db_connection, other_event, create_random_user_tag)
+    foreign_payout_run = await customer_service.payout.create_payout_run(
+        token=global_admin_token,
+        node_id=other_event.id,
+        new_payout_run=NewPayoutRun(max_num_payouts=10, max_payout_sum=10000),
+    )
+
+    with pytest.raises(NotFound):
+        await customer_service.payout.get_payout_run_sepa_xml(
+            token=event_admin_token,
+            node_id=event_node.id,
+            payout_run_id=foreign_payout_run.id,
+            execution_date=datetime.date.today(),
+        )
+
+    assert (
+        await db_connection.fetchval("select sepa_xml from payout_run where id = $1", foreign_payout_run.id)
+    ) is None
 
 
 async def test_max_payout_sum(

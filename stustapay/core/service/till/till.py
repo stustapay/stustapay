@@ -101,8 +101,7 @@ async def assign_till_to_terminal(conn: Connection, node: Node, till_id: int, te
 async def assign_cash_register_to_till_if_available(conn: Connection, till_id: int, cash_register_id: int):
     # Check if the cash register is already in use by another till
     is_in_use = await conn.fetchval(
-        "select exists(select from till where active_cash_register_id = $1 and id != $2) ", 
-        cash_register_id, till_id
+        "select exists(select from till where active_cash_register_id = $1 and id != $2) ", cash_register_id, till_id
     )
     if is_in_use:
         return
@@ -111,28 +110,26 @@ async def assign_cash_register_to_till_if_available(conn: Connection, till_id: i
     till_node_id = await conn.fetchval("select node_id from till where id = $1", till_id)
     if till_node_id is None:
         return
-        
+
     # Get the till's event node
-    till_node = await conn.fetchrow(
-        "select id, event_node_id from node where id = $1", 
-        till_node_id
-    )
+    till_node = await conn.fetchrow("select id, event_node_id from node where id = $1", till_node_id)
     if till_node is None:
         return
-        
+
     event_node_id = till_node["event_node_id"] if till_node["event_node_id"] is not None else till_node["id"]
-    
+
     # Check if the cash register belongs to the same event
     cash_register_valid = await conn.fetchval(
         "select exists(select 1 from cash_register cr "
         "join node n on cr.node_id = n.id "
-        "where cr.id = $1 and (cr.node_id = $2 OR n.event_node_id = $2))", 
-        cash_register_id, event_node_id
+        "where cr.id = $1 and (cr.node_id = $2 OR n.event_node_id = $2))",
+        cash_register_id,
+        event_node_id,
     )
-    
+
     if not cash_register_valid:
         return
-        
+
     # All checks passed, assign the cash register to the till
     await conn.execute("update till set active_cash_register_id = $1 where id = $2", cash_register_id, till_id)
 
@@ -234,13 +231,18 @@ class TillService(Service[Config]):
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def remove_from_terminal(self, *, conn: Connection, node: Node, till_id: int):
-        del node
+        till = await fetch_till(conn=conn, node=node, till_id=till_id)
+        if till is None:
+            raise NotFound(element_type="till", element_id=till_id)
         await remove_terminal_from_till(conn=conn, till_id=till_id)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
     async def switch_terminal(self, *, conn: Connection, node: Node, till_id: int, new_terminal_id: int):
+        till = await fetch_till(conn=conn, node=node, till_id=till_id)
+        if till is None:
+            raise NotFound(element_type="till", element_id=till_id)
         await remove_terminal_from_till(conn=conn, till_id=till_id)
         await assign_till_to_terminal(conn=conn, node=node, till_id=till_id, terminal_id=new_terminal_id)
 

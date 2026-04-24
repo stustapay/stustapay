@@ -3,12 +3,13 @@
 import secrets
 
 import pytest
-from sftkit.error import InvalidArgument
+from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument, NotFound
 
-from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.product import NewProduct
-from stustapay.core.schema.terminal import NewTerminal, Terminal, TerminalMode
 from stustapay.core.schema.tax_rate import TaxRate
+from stustapay.core.schema.terminal import NewTerminal, Terminal, TerminalMode
+from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.till import (
     NewCashRegisterStocking,
     NewTill,
@@ -16,14 +17,12 @@ from stustapay.core.schema.till import (
     NewTillLayout,
     NewTillProfile,
 )
-from stustapay.core.schema.tree import NewEvent, NewNode, Node, ROOT_NODE_ID
-from sftkit.error import AccessDenied
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till.till import TillService
 from stustapay.core.service.tree.service import TreeService, create_event
-from sftkit.database import Connection
 
 from .conftest import Cashier
 
@@ -121,6 +120,54 @@ async def _create_node_local_till_setup(
         ),
     )
     return child_node, first_terminal, second_terminal, profile.id
+
+
+async def _create_other_event_till_setup(
+    *,
+    db_connection: Connection,
+    terminal_service: TerminalService,
+    till_service: TillService,
+    global_admin_token: str,
+) -> tuple[Node, Terminal, int]:
+    other_event = await _create_other_event(db_connection)
+    terminal = await terminal_service.create_terminal(
+        token=global_admin_token,
+        node_id=other_event.id,
+        terminal=NewTerminal(name="Other Event Terminal", description="", mode=TerminalMode.till),
+    )
+    layout = await till_service.layout.create_layout(
+        token=global_admin_token,
+        node_id=other_event.id,
+        layout=NewTillLayout(name="other-event-layout", description="", button_ids=[]),
+    )
+    profile = await till_service.profile.create_profile(
+        token=global_admin_token,
+        node_id=other_event.id,
+        profile=NewTillProfile(
+            name="other-event-profile",
+            description="",
+            layout_id=layout.id,
+            allow_top_up=True,
+            allow_cash_out=True,
+            allow_ticket_sale=True,
+            allow_ticket_vouchers=False,
+            enable_ssp_payment=True,
+            enable_cash_payment=True,
+            enable_card_payment=False,
+        ),
+    )
+    till = await till_service.create_till(
+        token=global_admin_token,
+        node_id=other_event.id,
+        till=NewTill(
+            name="Other Event Till",
+            description="",
+            active_profile_id=profile.id,
+            terminal_id=terminal.id,
+        ),
+    )
+    assert till.terminal_id == terminal.id
+    return other_event, terminal, till.id
 
 
 async def test_basic_till_register_stocking(till_service: TillService, event_node: Node, event_admin_token: str):
@@ -439,7 +486,9 @@ async def test_child_node_till_create_and_update_keep_terminal_assignment_local(
         token=event_admin_token,
         node_id=child_node.id,
         till_id=till.id,
-        till=NewTill(name="Child Till Updated", description="", active_profile_id=profile_id, terminal_id=second_terminal.id),
+        till=NewTill(
+            name="Child Till Updated", description="", active_profile_id=profile_id, terminal_id=second_terminal.id
+        ),
     )
     assert updated_till.terminal_id == second_terminal.id
 
@@ -530,6 +579,35 @@ async def test_switch_terminal_rejects_cross_node_terminal_assignment(
         )
 
 
+async def test_switch_terminal_rejects_foreign_event_till_without_detaching_it(
+    db_connection: Connection,
+    till_service: TillService,
+    terminal_service: TerminalService,
+    terminal: Terminal,
+    event_admin_token: str,
+    event_node: Node,
+    global_admin_token: str,
+):
+    other_event, other_terminal, other_till_id = await _create_other_event_till_setup(
+        db_connection=db_connection,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        global_admin_token=global_admin_token,
+    )
+
+    with pytest.raises(NotFound):
+        await till_service.switch_terminal(
+            token=event_admin_token,
+            node_id=event_node.id,
+            till_id=other_till_id,
+            new_terminal_id=terminal.id,
+        )
+
+    foreign_till = await till_service.get_till(token=global_admin_token, node_id=other_event.id, till_id=other_till_id)
+    assert foreign_till is not None
+    assert foreign_till.terminal_id == other_terminal.id
+
+
 async def test_switch_till_rejects_cross_node_till_assignment(
     till_service: TillService,
     terminal_service: TerminalService,
@@ -590,6 +668,33 @@ async def test_remove_from_terminal_clears_legacy_cross_node_assignment(
     detached_till = await till_service.get_till(token=event_admin_token, node_id=event_node.id, till_id=child_till.id)
     assert detached_till is not None
     assert detached_till.terminal_id is None
+
+
+async def test_remove_from_terminal_rejects_foreign_event_till_without_detaching_it(
+    db_connection: Connection,
+    till_service: TillService,
+    terminal_service: TerminalService,
+    event_admin_token: str,
+    event_node: Node,
+    global_admin_token: str,
+):
+    other_event, other_terminal, other_till_id = await _create_other_event_till_setup(
+        db_connection=db_connection,
+        terminal_service=terminal_service,
+        till_service=till_service,
+        global_admin_token=global_admin_token,
+    )
+
+    with pytest.raises(NotFound):
+        await till_service.remove_from_terminal(
+            token=event_admin_token,
+            node_id=event_node.id,
+            till_id=other_till_id,
+        )
+
+    foreign_till = await till_service.get_till(token=global_admin_token, node_id=other_event.id, till_id=other_till_id)
+    assert foreign_till is not None
+    assert foreign_till.terminal_id == other_terminal.id
 
 
 async def test_button_references_max_one_voucher_product(
