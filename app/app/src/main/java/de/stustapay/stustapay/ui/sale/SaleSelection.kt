@@ -135,6 +135,7 @@ fun SaleSelection(
                         }
                     } else {
                         SaleSelectionList(
+                            compactHandheld = compactHandheld,
                             modifier = Modifier.weight(1f),
                             viewModel = viewModel
                         )
@@ -200,6 +201,7 @@ fun SaleSelection(
                             }
                         } else {
                             SaleSelectionList(
+                                compactHandheld = compactHandheld,
                                 modifier = contentModifier,
                                 viewModel = viewModel
                             )
@@ -447,7 +449,7 @@ private fun CompactSaleBasketPanel(
                     }
                 }
             } else {
-                val usePrimaryLayout = paymentActions.size == 1
+                val usePrimaryLayout = paymentActions.size == 1 && !stackPaymentActions
                 val primaryAction = paymentActions.firstOrNull { it.large }?.takeIf { usePrimaryLayout }
                 val secondaryActions = if (usePrimaryLayout) {
                     paymentActions.filterNot { it.large }
@@ -520,16 +522,18 @@ private fun CompactSaleBasketPanel(
                     )
                 }
             }
-            if (stackPaymentActions && basketCount > 0) {
+            if (stackPaymentActions && (compactHandheld || basketCount > 0)) {
+                val clearBasketVisible = basketCount > 0
+                val clearBasketClick = if (clearBasketVisible) onAbort else ({})
                 CompactActionButton(
                     text = stringResource(R.string.sale_clear_basket),
-                    enabled = ready,
+                    enabled = ready && clearBasketVisible,
                     emphasized = false,
                     destructive = true,
                     modifier = Modifier.fillMaxWidth(),
                     minHeight = 34.dp,
                     textFontSize = 13.sp,
-                    onClick = onAbort,
+                    onClick = clearBasketClick,
                 )
             }
         }

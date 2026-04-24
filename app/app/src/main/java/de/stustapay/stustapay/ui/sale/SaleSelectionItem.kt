@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
@@ -19,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -27,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
+import kotlin.math.abs
 
 sealed interface SaleSelectionItemType {
     data class FixedPrice(
@@ -75,6 +79,15 @@ fun PreviewSaleSelectionItem() {
             ),
         )
         SaleSelectionItem(
+            caption = "Robbenfutter",
+            type = SaleSelectionItemType.FixedPrice(
+                onIncr = {},
+                onDecr = {},
+                price = SaleItemPrice.FixedPrice(13.37),
+                amount = null,
+            ),
+        )
+        SaleSelectionItem(
             caption = "Internetkanister",
             type = SaleSelectionItemType.FreePrice(
                 onPriceEdit = {},
@@ -99,6 +112,15 @@ fun PreviewSaleSelectionItem() {
                 onDecr = { },
             )
         )
+        SaleSelectionItem(
+            caption = "Pfand Becher",
+            type = SaleSelectionItemType.Returnable(
+                price = SaleItemPrice.Returnable(2.0),
+                amount = SaleItemAmount.FixedPrice(2),
+                onIncr = { },
+                onDecr = { },
+            )
+        )
     }
 }
 
@@ -108,8 +130,10 @@ fun PreviewSaleSelectionItem() {
 @Composable
 fun SaleSelectionItem(
     caption: String,
+    compactHandheld: Boolean = false,
     type: SaleSelectionItemType,
 ) {
+    val haptic = LocalHapticFeedback.current
     val isReturnable = type is SaleSelectionItemType.Returnable
     val itemPrice: String
     val quantityLabel: String?
@@ -123,6 +147,7 @@ fun SaleSelectionItem(
     val secondaryButtonColor: Color
     val secondaryButtonTextColor: Color
     val selectionLabel: String?
+    val primaryTriggersAddHaptic: Boolean
     var primaryIsSymbol = false
     val labelParts = caption.toSelectionLabelParts()
 
@@ -140,7 +165,8 @@ fun SaleSelectionItem(
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
-            selectionLabel = if (amount > 0) stringResource(R.string.sale_item_in_basket) else null
+            selectionLabel = null
+            primaryTriggersAddHaptic = true
             primaryIsSymbol = true
         }
 
@@ -148,8 +174,8 @@ fun SaleSelectionItem(
             val amount: Int = type.amount?.amount ?: 0
             itemPrice = "%.02f€".format(type.price.price ?: 0.0)
             quantityLabel = when {
-                amount < 0 -> stringResource(R.string.sale_deposit_return_count, -amount)
-                amount > 0 -> stringResource(R.string.sale_deposit_extra_issue_count, amount)
+                amount < 0 -> "−${abs(amount)}"
+                amount > 0 -> "+$amount"
                 else -> null
             }
             primaryText = stringResource(R.string.sale_deposit_return)
@@ -161,11 +187,8 @@ fun SaleSelectionItem(
             primaryButtonTextColor = Color.White
             secondaryButtonColor = Color(0xFFEAB308)
             secondaryButtonTextColor = Color(0xFF1A1200)
-            selectionLabel = when {
-                amount < 0 -> stringResource(R.string.sale_deposit_return_selected)
-                amount > 0 -> stringResource(R.string.sale_deposit_extra_issue_selected)
-                else -> null
-            }
+            selectionLabel = null
+            primaryTriggersAddHaptic = false
         }
 
         is SaleSelectionItemType.FreePrice -> {
@@ -186,6 +209,7 @@ fun SaleSelectionItem(
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
             selectionLabel = if (type.amount != null) stringResource(R.string.sale_item_price_set) else null
+            primaryTriggersAddHaptic = false
         }
 
         is SaleSelectionItemType.Vouchers -> {
@@ -200,7 +224,8 @@ fun SaleSelectionItem(
             primaryButtonTextColor = OperatorPalette.accentText
             secondaryButtonColor = Color(0xFFB91C1C)
             secondaryButtonTextColor = Color.White
-            selectionLabel = if (type.amount > 0) stringResource(R.string.sale_item_selected) else null
+            selectionLabel = null
+            primaryTriggersAddHaptic = true
             primaryIsSymbol = true
         }
     }
@@ -267,31 +292,29 @@ fun SaleSelectionItem(
                     }
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                Row(
+                    modifier = Modifier.wrapContentWidth(Alignment.End),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    if (quantityLabel != null) {
+                        Text(
+                            modifier = Modifier
+                                .background(OperatorPalette.panel, RoundedCornerShape(999.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            text = quantityLabel,
+                            color = OperatorPalette.title,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+
                     Text(
                         text = itemPrice,
                         color = OperatorPalette.title,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.ExtraBold,
                     )
-
-                    if (quantityLabel != null) {
-                        Box(
-                            modifier = Modifier
-                                .background(OperatorPalette.panel, RoundedCornerShape(999.dp))
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                        ) {
-                            Text(
-                                text = quantityLabel,
-                                color = OperatorPalette.title,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                    }
                 }
             }
 
@@ -321,7 +344,12 @@ fun SaleSelectionItem(
                 }
 
                 Button(
-                    onClick = primaryAction,
+                    onClick = {
+                        if (compactHandheld && primaryTriggersAddHaptic) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        primaryAction()
+                    },
                     modifier = Modifier
                         .height(46.dp)
                         .weight(1f)

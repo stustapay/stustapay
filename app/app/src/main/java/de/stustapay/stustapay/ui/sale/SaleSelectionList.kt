@@ -62,6 +62,7 @@ private data class SaleSelectionEntry(
 
 @Composable
 fun SaleSelectionList(
+    compactHandheld: Boolean = false,
     modifier: Modifier = Modifier,
     viewModel: SaleViewModel
 ) {
@@ -203,6 +204,7 @@ fun SaleSelectionList(
                 items(entries, key = { it.stableKey }) { entry ->
                     SaleSelectionItem(
                         caption = entry.caption,
+                        compactHandheld = compactHandheld,
                         type = entry.type,
                     )
                 }
@@ -216,6 +218,7 @@ fun SaleSelectionList(
                 items(entries, key = { it.stableKey }) { entry ->
                     SaleSelectionItem(
                         caption = entry.caption,
+                        compactHandheld = compactHandheld,
                         type = entry.type,
                     )
                 }
