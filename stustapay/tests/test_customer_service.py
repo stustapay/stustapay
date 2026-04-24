@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,disable=protected-access,redefined-outer-name
 
+import asyncio
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -483,6 +484,133 @@ async def test_create_online_topup_checkout_replaces_timed_out_pending_checkout(
         "select status from pending_sumup_order where uuid = $1",
         old_order_uuid,
     ) == PendingOrderStatus.cancelled.value
+
+
+async def test_check_online_topup_checkout_books_paid_checkout_before_returning_paid(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+
+    assert (
+        await customer_service.sumup.check_online_topup_checkout(
+            token=auth.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PENDING
+    )
+
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
+
+    assert (
+        await customer_service.sumup.check_online_topup_checkout(
+            token=auth.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval(
+        "select status from pending_sumup_order where uuid = $1",
+        order_uuid,
+    ) == PendingOrderStatus.booked.value
+    assert await db_connection.fetchval("select count(*) from ordr where uuid = $1", order_uuid) == 1
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
+
+    assert (
+        await customer_service.sumup.check_online_topup_checkout(
+            token=auth.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval("select count(*) from ordr where uuid = $1", order_uuid) == 1
+
+
+async def test_check_online_topup_checkout_keeps_paid_checkout_pending_when_booking_fails(
+    customer_service: CustomerService,
+    db_connection: Connection,
+    test_customer: Customer,
+    event_node: Node,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
+
+    async def fail_booking(**kwargs):
+        del kwargs
+        raise RuntimeError("forced booking failure")
+
+    monkeypatch.setattr(customer_service.sumup, "_book_paid_pending_order", fail_booking)
+
+    assert (
+        await customer_service.sumup.check_online_topup_checkout(
+            token=auth.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PENDING
+    )
+    assert await db_connection.fetchval(
+        "select status from pending_sumup_order where uuid = $1",
+        order_uuid,
+    ) == PendingOrderStatus.pending.value
+    assert await db_connection.fetchval("select count(*) from ordr where uuid = $1", order_uuid) == 0
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 120
+
+
+async def test_concurrent_check_online_topup_checkout_books_paid_checkout_once(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=20,
+    )
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
+
+    first, second = await asyncio.gather(
+        customer_service.sumup.check_online_topup_checkout(token=auth.token, order_uuid=order_uuid),
+        customer_service.sumup.check_online_topup_checkout(token=auth.token, order_uuid=order_uuid),
+    )
+
+    assert first == SumUpCheckoutStatus.PAID
+    assert second == SumUpCheckoutStatus.PAID
+    assert await db_connection.fetchval(
+        "select status from pending_sumup_order where uuid = $1",
+        order_uuid,
+    ) == PendingOrderStatus.booked.value
+    assert await db_connection.fetchval("select count(*) from ordr where uuid = $1", order_uuid) == 1
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
 
 
 async def test_get_orders_with_bon(

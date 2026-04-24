@@ -27,6 +27,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.order.pending_order import (
     fetch_order_by_uuid,
+    fetch_order_by_uuid_for_update,
     fetch_pending_online_topup_for_customer,
     fetch_pending_orders,
     load_pending_sale,
@@ -164,31 +165,65 @@ class SumupService(Service[Config]):
         sumup_checkout = await sumup_api.find_checkout(pending_order.uuid)
         return sumup_checkout is not None
 
+    async def _book_paid_pending_order(
+        self, *, conn: Connection, pending_order: PendingOrder
+    ) -> CompletedSale | CompletedTicketSale | CompletedTopUp | None:
+        existing_order = await conn.fetchrow("SELECT id FROM ordr WHERE uuid = $1", pending_order.uuid)
+        if existing_order is not None:
+            self.logger.info(f"Order {pending_order.uuid} has already been processed")
+            await conn.execute("UPDATE pending_sumup_order SET status = 'booked' WHERE uuid = $1", pending_order.uuid)
+            return None
+
+        node = await fetch_node(conn=conn, node_id=pending_order.node_id)
+        if node is None:
+            self.logger.error(f"Found a pending order without a matching node: {pending_order.uuid}")
+            raise InvalidArgument("Found a pending order without a matching node")
+        till = await fetch_till(conn=conn, node=node, till_id=pending_order.till_id)
+        if till is None:
+            self.logger.error(f"Found a pending order without a matching till: {pending_order.uuid}")
+            raise InvalidArgument("Found a pending order without a matching till")
+
+        if pending_order.order_type == PendingOrderType.topup:
+            topup = load_pending_topup(pending_order)
+            result = await self._process_topup(
+                conn=conn, node=node, till=till, pending_order=pending_order, topup=topup
+            )
+            self.logger.info(f"Successfully processed checkout topup for order {pending_order.uuid}")
+            return result
+        if pending_order.order_type == PendingOrderType.ticket:
+            ticket_sale = load_pending_ticket_sale(pending_order)
+            result = await self._process_ticket_sale(
+                conn=conn, node=node, till=till, pending_order=pending_order, ticket_sale=ticket_sale
+            )
+            self.logger.info(f"Successfully processed checkout ticket sale for order {pending_order.uuid}")
+            return result
+        if pending_order.order_type == PendingOrderType.sale:
+            sale = load_pending_sale(pending_order)
+            result = await self._process_sale(conn=conn, node=node, till=till, pending_order=pending_order, sale=sale)
+            self.logger.info(f"Successfully processed checkout sale for order {pending_order.uuid}")
+            return result
+
+        raise InvalidArgument("Invalid pending order type")
+
     async def process_pending_order(
         self, conn: Connection, pending_order: PendingOrder
     ) -> CompletedSale | CompletedTicketSale | CompletedTopUp | None:
         # Number of retry attempts for serialization errors
         max_retries = 3
         retry_count = 0
-        
+
         while retry_count <= max_retries:
             try:
                 self.logger.debug(f"Processing pending order {pending_order.uuid} (attempt {retry_count + 1})")
-                
-                # Check if order has already been processed
-                existing_order = await conn.fetchrow(
-                    "SELECT id FROM ordr WHERE uuid = $1",
-                    pending_order.uuid
-                )
+
+                existing_order = await conn.fetchrow("SELECT id FROM ordr WHERE uuid = $1", pending_order.uuid)
                 if existing_order is not None:
                     self.logger.info(f"Order {pending_order.uuid} has already been processed")
-                    # Update the pending order status to booked to remove it from processing queue
                     await conn.execute(
-                        "UPDATE pending_sumup_order SET status = 'booked' WHERE uuid = $1",
-                        pending_order.uuid
+                        "UPDATE pending_sumup_order SET status = 'booked' WHERE uuid = $1", pending_order.uuid
                     )
                     return None
-                    
+
                 resolved = await create_sumup_api_for_node(
                     conn=conn, node_id=pending_order.node_id, api_factory=self._create_sumup_api
                 )
@@ -196,47 +231,21 @@ class SumupService(Service[Config]):
                     self.logger.error(f"Missing SumUp API key or merchant code for order {pending_order.uuid}")
                     return None
                 sumup_api, _ = resolved
-                
+
                 # For online payments, only check the checkout API
                 try:
                     sumup_checkout = await sumup_api.find_checkout(pending_order.uuid)
                     if not sumup_checkout:
                         self.logger.debug(f"Order {pending_order.uuid} not found in sumup")
                         return None
-                        
+
                     self.logger.info(f"Found checkout for order {pending_order.uuid} with status {sumup_checkout.status}")
                     if sumup_checkout.status == SumUpCheckoutStatus.PAID:
-                        # Process the successful checkout
-                        node = await fetch_node(conn=conn, node_id=pending_order.node_id)
-                        if node is None:
-                            self.logger.error(f"Found a pending order without a matching node: {pending_order.uuid}")
-                            raise InvalidArgument("Found a pending order without a matching node")
-                        till = await fetch_till(conn=conn, node=node, till_id=pending_order.till_id)
-                        if till is None:
-                            self.logger.error(f"Found a pending order without a matching till: {pending_order.uuid}")
-                            raise InvalidArgument("Found a pending order without a matching till")
-                            
-                        if pending_order.order_type == PendingOrderType.topup:
-                            topup = load_pending_topup(pending_order)
-                            result = await self._process_topup(conn=conn, node=node, till=till, pending_order=pending_order, topup=topup)
-                            self.logger.info(f"Successfully processed checkout topup for order {pending_order.uuid}")
-                            return result
-                        elif pending_order.order_type == PendingOrderType.ticket:
-                            ticket_sale = load_pending_ticket_sale(pending_order)
-                            result = await self._process_ticket_sale(conn=conn, node=node, till=till, pending_order=pending_order, ticket_sale=ticket_sale)
-                            self.logger.info(f"Successfully processed checkout ticket sale for order {pending_order.uuid}")
-                            return result
-                        elif pending_order.order_type == PendingOrderType.sale:
-                            sale = load_pending_sale(pending_order)
-                            result = await self._process_sale(
-                                conn=conn, node=node, till=till, pending_order=pending_order, sale=sale
-                            )
-                            self.logger.info(f"Successfully processed checkout sale for order {pending_order.uuid}")
-                            return result
+                        return await self._book_paid_pending_order(conn=conn, pending_order=pending_order)
                     elif sumup_checkout.status == SumUpCheckoutStatus.FAILED:
                         # For failed checkouts, mark as cancelled
                         await conn.execute(
-                            "UPDATE pending_sumup_order SET status = 'cancelled' WHERE uuid = $1", 
+                            "UPDATE pending_sumup_order SET status = 'cancelled' WHERE uuid = $1",
                             pending_order.uuid
                         )
                 except SumUpError as e:
@@ -247,7 +256,7 @@ class SumupService(Service[Config]):
                     return None
 
                 return None
-                
+
             except asyncpg.exceptions.SerializationError as e:
                 retry_count += 1
                 if retry_count <= max_retries:
@@ -261,7 +270,7 @@ class SumupService(Service[Config]):
             except Exception as e:
                 self.logger.exception(f"Error processing pending order {pending_order.uuid}: {e}")
                 return None
-                
+
         return None
 
     @with_db_transaction
@@ -277,11 +286,10 @@ class SumupService(Service[Config]):
     ) -> SumUpCheckoutStatus:
         del customer_portal_base_url
         try:
-            # Use fetch_order_by_uuid to get the order regardless of status
-            pending_order = await fetch_order_by_uuid(conn=conn, uuid=order_uuid)
+            pending_order = await fetch_order_by_uuid_for_update(conn=conn, uuid=order_uuid)
             if not pending_order:
                 return SumUpCheckoutStatus.FAILED
-                
+
             if pending_order.order_type != PendingOrderType.topup:
                 raise InvalidArgument("Invalid order uuid")
             topup = load_pending_topup(pending_order)
@@ -306,7 +314,7 @@ class SumupService(Service[Config]):
                         order_uuid,
                     )
                     return SumUpCheckoutStatus.FAILED
-                
+
                 resolved = await create_sumup_api_for_node(
                     conn=conn, node_id=pending_order.node_id, api_factory=self._create_sumup_api
                 )
@@ -314,19 +322,33 @@ class SumupService(Service[Config]):
                     self.logger.error(f"Missing SumUp API key or merchant code for order {pending_order.uuid}")
                     return SumUpCheckoutStatus.FAILED
                 sumup_api, _ = resolved
-                
-                # Only check the checkout status, don't process the payment
+
                 try:
-                    # Find the checkout
                     sumup_checkout = await sumup_api.find_checkout(order_uuid)
                     if sumup_checkout:
                         self.logger.info(f"Found checkout for order {order_uuid} with status {sumup_checkout.status}")
-                        # Just return the checkout status - let the payment processor handle the actual processing
                         if sumup_checkout.status == SumUpCheckoutStatus.PAID:
-                            # Mark the order as seen as PAID but don't process it here
-                            # The background payment processor will handle the actual processing
-                            self.logger.info(f"Customer portal detected PAID status for order {order_uuid}, letting payment processor handle it")
-                            return SumUpCheckoutStatus.PAID
+                            self.logger.info(
+                                f"Customer portal detected PAID status for order {order_uuid}, booking topup"
+                            )
+                            try:
+                                await self._book_paid_pending_order(conn=conn, pending_order=pending_order)
+                            except asyncpg.exceptions.SerializationError:
+                                raise
+                            except Exception:
+                                self.logger.exception(
+                                    f"Customer portal failed to book paid order {order_uuid}"
+                                )
+                                return SumUpCheckoutStatus.PENDING
+                            local_status = await conn.fetchval(
+                                "SELECT status FROM pending_sumup_order WHERE uuid = $1", order_uuid
+                            )
+                            if local_status == PendingOrderStatus.booked.value:
+                                return SumUpCheckoutStatus.PAID
+                            self.logger.error(
+                                f"Customer portal could not confirm local booking for paid order {order_uuid}"
+                            )
+                            return SumUpCheckoutStatus.PENDING
                         return sumup_checkout.status
                     else:
                         self.logger.debug(f"Checkout not found for order {order_uuid}")
@@ -336,8 +358,10 @@ class SumupService(Service[Config]):
                 except Exception as e:
                     self.logger.exception(f"Unexpected error finding checkout for order {order_uuid}: {e}")
                     return SumUpCheckoutStatus.FAILED
-            
+
             return SumUpCheckoutStatus.FAILED
+        except asyncpg.exceptions.SerializationError:
+            raise
         except asyncpg.exceptions.PostgresError:
             self.logger.exception(f"Error checking sumup checkout for order_uuid={order_uuid}")
             return SumUpCheckoutStatus.FAILED

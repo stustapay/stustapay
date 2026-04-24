@@ -68,6 +68,12 @@ async def fetch_order_by_uuid(conn: Connection, uuid: UUID) -> PendingOrder:
     )
 
 
+async def fetch_order_by_uuid_for_update(conn: Connection, uuid: UUID) -> PendingOrder:
+    return await conn.fetch_one(
+        PendingOrder, "select * from pending_sumup_order where uuid = $1 for update", uuid
+    )
+
+
 SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 
 
