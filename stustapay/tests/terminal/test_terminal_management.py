@@ -158,6 +158,49 @@ async def test_transfer_cash_register(
     assert await get_active_till_for_cash_register(db_connection, cash_register.id) == till.id
 
 
+async def test_cash_register_attaches_to_top_up_till_without_cash_sales(
+    db_connection: Connection,
+    till_service: TillService,
+    event_admin_token: str,
+    event_node: Node,
+    cashier: Cashier,
+    cash_register: CashRegister,
+    cash_register_stocking: CashRegisterStocking,
+    terminal_token: str,
+    till: Till,
+    till_profile: TillProfile,
+    login_supervised_user: LoginSupervisedUser,
+):
+    updated_profile = await till_service.profile.update_profile(
+        token=event_admin_token,
+        node_id=event_node.id,
+        profile_id=till_profile.id,
+        profile=NewTillProfile(
+            name=till_profile.name,
+            description=till_profile.description,
+            layout_id=till_profile.layout_id,
+            allow_top_up=True,
+            allow_cash_out=False,
+            allow_ticket_sale=till_profile.allow_ticket_sale,
+            allow_ticket_vouchers=till_profile.allow_ticket_vouchers,
+            enable_ssp_payment=till_profile.enable_ssp_payment,
+            enable_cash_payment=False,
+            enable_card_payment=till_profile.enable_card_payment,
+        ),
+    )
+    assert updated_profile is not None
+
+    await till_service.register.stock_up_cash_register(
+        token=terminal_token,
+        cashier_tag_uid=cashier.user_tag_uid,
+        stocking_id=cash_register_stocking.id,
+        cash_register_id=cash_register.id,
+    )
+    await login_supervised_user(cashier.user_tag_uid, cashier.cashier_role.id)
+
+    assert await get_active_till_for_cash_register(db_connection, cash_register.id) == till.id
+
+
 async def test_transfer_cash_register_moves_to_target_cashier_till(
     db_connection: Connection,
     till_service: TillService,
@@ -290,5 +333,10 @@ async def test_terminal_config_does_not_reassign_cash_register(
     assert terminal_config is not None
     assert terminal_config.till is not None
     assert terminal_config.till.cash_register_id is None
-    assert await db_connection.fetchval("select active_cash_register_id from till where id = $1", till.id) == cash_register.id
-    assert await db_connection.fetchval("select active_cash_register_id from till where id = $1", second_till.id) is None
+    assert (
+        await db_connection.fetchval("select active_cash_register_id from till where id = $1", till.id)
+        == cash_register.id
+    )
+    assert (
+        await db_connection.fetchval("select active_cash_register_id from till where id = $1", second_till.id) is None
+    )

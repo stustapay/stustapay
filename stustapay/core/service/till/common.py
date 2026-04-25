@@ -81,15 +81,20 @@ async def get_cash_register_account_id(*, conn: Connection, node: Node, cash_reg
 
 
 async def detach_cash_register_from_tills(conn: Connection, cash_register_id: int):
-    await conn.execute("update till set active_cash_register_id = null where active_cash_register_id = $1", cash_register_id)
+    await conn.execute(
+        "update till set active_cash_register_id = null where active_cash_register_id = $1", cash_register_id
+    )
 
 
-async def assign_cash_register_to_active_user_till(conn: Connection, user_id: int, cash_register_id: int) -> Optional[int]:
+async def assign_cash_register_to_active_user_till(
+    conn: Connection, user_id: int, cash_register_id: int
+) -> Optional[int]:
     tills = await conn.fetch(
         "select t.id, t.name from till t "
         "join terminal tm on t.terminal_id = tm.id "
         "join till_profile tp on t.active_profile_id = tp.id "
-        "where tm.active_user_id = $1 and tp.enable_cash_payment",
+        "where tm.active_user_id = $1 "
+        "and (tp.enable_cash_payment or tp.allow_top_up or tp.allow_cash_out)",
         user_id,
     )
     if len(tills) == 0:
