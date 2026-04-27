@@ -76,7 +76,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     nameHasSpecialChars: "Der Accountname enthält nicht valide Sonderzeichen",
-    mustAcceptPrivacyPolicy: "Sie müssen die Datenschutserklärung akzeptieren",
+    mustAcceptPrivacyPolicy: "Sie müssen die Datenschutzerklärung akzeptieren",
     privacyPolicyCheck: "Ich habe die <1>Datenschutzerklärung</1> gelesen und akzeptiere sie.",
     errorFetchingData: "Fehler beim laden der Daten.",
     updatedBankData:

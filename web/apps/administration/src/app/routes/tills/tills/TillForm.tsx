@@ -1,8 +1,17 @@
-import { NewTill, Terminal, selectTerminalAll, useListTerminalsQuery } from "@/api";
+import {
+  NewTill,
+  Terminal,
+  TillProfile,
+  findNode,
+  selectTerminalAll,
+  selectTillProfileAll,
+  useListTerminalsQuery,
+  useListTillProfilesQuery,
+  useNodeTree,
+} from "@/api";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
-import { TillProfile, selectTillProfileAll, useListTillProfilesQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { Select } from "@stustapay/components";
 
@@ -10,6 +19,7 @@ export type TillFormProps<T extends NewTill> = FormikProps<T>;
 
 export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
   const { currentNode } = useCurrentNode();
+  const { root } = useNodeTree();
   const { touched, values, setFieldValue, errors } = props;
   const { t } = useTranslation();
   const { profiles } = useListTillProfilesQuery(
@@ -17,10 +27,18 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
-        profiles: data ? selectTillProfileAll(data).filter((profile) => profile.node_id === currentNode.id) : [],
+        profiles: data ? selectTillProfileAll(data) : [],
       }),
     }
   );
+
+  const formatProfileOption = (profile: TillProfile) => {
+    if (profile.node_id === currentNode.id) {
+      return profile.name;
+    }
+    const origin = findNode(profile.node_id, root);
+    return origin ? `${profile.name} (${origin.name})` : profile.name;
+  };
   const { terminals } = useListTerminalsQuery(
     { nodeId: currentNode.id },
     {
@@ -38,7 +56,7 @@ export function TillForm<T extends NewTill>(props: TillFormProps<T>) {
       <FormTextField name="description" label={t("till.description")} formik={props} />
       <Select
         multiple={false}
-        formatOption={(profile: TillProfile) => profile.name}
+        formatOption={formatProfileOption}
         value={profiles.find((p) => p.id === values.active_profile_id) ?? null}
         options={profiles}
         label={t("till.profile")}
