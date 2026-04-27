@@ -327,6 +327,7 @@ class Order(BaseModel):
     customer_account_id: Optional[int]
     customer_tag_uid: Optional[int]
     customer_tag_id: Optional[int]
+    shared_topup_contributor_name: Optional[str] = None
 
     @computed_field  # type: ignore[misc]
     @property

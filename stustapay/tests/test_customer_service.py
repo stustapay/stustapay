@@ -613,6 +613,98 @@ async def test_concurrent_check_online_topup_checkout_books_paid_checkout_once(
     assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
 
 
+async def test_shared_topup_link_lifecycle_and_contributor_validation(
+    customer_service: CustomerService, test_customer: Customer, event_node: Node
+):
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    links = await customer_service.list_shared_topup_links(token=auth.token)
+    assert links[0].id == link.id
+    assert links[0].token is None
+
+    info = await customer_service.get_shared_topup_public_info(token=link.token)
+    assert info.event_name == event_node.name
+
+    with pytest.raises(InvalidArgument):
+        await customer_service.sumup.create_shared_topup_checkout(
+            token=link.token,
+            amount=5,
+            contributor_name=" ",
+        )
+
+    await customer_service.revoke_shared_topup_link(token=auth.token, link_id=link.id)
+    with pytest.raises(AccessDenied):
+        await customer_service.get_shared_topup_public_info(token=link.token)
+
+
+async def test_shared_topup_checkout_books_contributor_and_reserves_pending_balance(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    await db_connection.execute(
+        "update event set max_account_balance = 145, vip_max_account_balance = 145 "
+        "where id = (select event_id from node where id = $1)",
+        event_node.id,
+    )
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, first_order_uuid = await customer_service.sumup.create_shared_topup_checkout(
+        token=link.token,
+        amount=20,
+        contributor_name="Alice",
+    )
+    assert (
+        await db_connection.fetchval(
+            "select coalesce(sum((((pso.order_content #>> '{}')::jsonb)->>'amount')::numeric), 0) "
+            "from pending_sumup_order pso "
+            "join shared_topup_order sto on sto.order_uuid = pso.uuid "
+            "where pso.status = 'pending' "
+            "and sto.customer_account_id = $1",
+            test_customer.id,
+        )
+        == 20
+    )
+
+    with pytest.raises(InvalidArgument):
+        await customer_service.sumup.create_shared_topup_checkout(
+            token=link.token,
+            amount=6,
+            contributor_name="Bob",
+        )
+
+    contributions = await customer_service.list_shared_topup_contributions(token=auth.token)
+    assert contributions[0].order_uuid == first_order_uuid
+    assert contributions[0].contributor_name == "Alice"
+    assert contributions[0].amount == 20
+    assert contributions[0].status == PendingOrderStatus.pending.value
+
+    sumup_api.checkouts[first_order_uuid].status = SumUpCheckoutStatus.PAID
+    assert (
+        await customer_service.sumup.check_shared_topup_checkout(
+            token=link.token,
+            order_uuid=first_order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
+
+    orders = await customer_service.get_orders_with_bon(token=auth.token)
+    shared_topup_order = next(order for order in orders if order.uuid == first_order_uuid)
+    assert shared_topup_order.shared_topup_contributor_name == "Alice"
+
+
 async def test_get_orders_with_bon(
     customer_service: CustomerService, order_with_bon: Order, test_customer: Customer, event_node: Node
 ):

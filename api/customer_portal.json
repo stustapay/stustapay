@@ -450,6 +450,359 @@
         }
       }
     },
+    "/shared-topup/links": {
+      "get": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "list current customer's shared topup links",
+        "operationId": "list_shared_topup_links",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SharedTopupLink"
+                  },
+                  "type": "array",
+                  "title": "Response List Shared Topup Links Shared Topup Links Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "create a shared topup link",
+        "operationId": "create_shared_topup_link",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSharedTopupLinkPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedTopupLink"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/shared-topup/links/{link_id}": {
+      "delete": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "revoke a shared topup link",
+        "operationId": "revoke_shared_topup_link",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "link_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Link Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shared-topup/contributions": {
+      "get": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "list current customer's shared topup contributions",
+        "operationId": "list_shared_topup_contributions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SharedTopupContribution"
+                  },
+                  "type": "array",
+                  "title": "Response List Shared Topup Contributions Shared Topup Contributions Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/shared-topup/{shared_topup_token}": {
+      "get": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "get public shared topup link info",
+        "operationId": "get_shared_topup_public_info",
+        "parameters": [
+          {
+            "name": "shared_topup_token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Shared Topup Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedTopupPublicInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shared-topup/{shared_topup_token}/create-checkout": {
+      "post": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "initiate shared topup checkout",
+        "operationId": "create_shared_topup_checkout",
+        "parameters": [
+          {
+            "name": "shared_topup_token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Shared Topup Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSharedTopupCheckoutPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSharedTopupCheckoutResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shared-topup/{shared_topup_token}/check-checkout": {
+      "post": {
+        "tags": [
+          "shared-topup"
+        ],
+        "summary": "after shared topup payment check checkout state",
+        "operationId": "check_shared_topup_checkout",
+        "parameters": [
+          {
+            "name": "shared_topup_token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Shared Topup Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckSharedTopupCheckoutPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckSharedTopupCheckoutResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "403": {
+            "description": "forbidden"
+          },
+          "404": {
+            "description": "not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sumup/create-checkout": {
       "post": {
         "tags": [
@@ -666,6 +1019,32 @@
         ],
         "title": "CheckCheckoutResponse"
       },
+      "CheckSharedTopupCheckoutPayload": {
+        "properties": {
+          "order_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Uuid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_uuid"
+        ],
+        "title": "CheckSharedTopupCheckoutPayload"
+      },
+      "CheckSharedTopupCheckoutResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/SumUpCheckoutStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "CheckSharedTopupCheckoutResponse"
+      },
       "CreateCheckoutPayload": {
         "properties": {
           "amount": {
@@ -697,6 +1076,60 @@
           "order_uuid"
         ],
         "title": "CreateCheckoutResponse"
+      },
+      "CreateSharedTopupCheckoutPayload": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "contributor_name": {
+            "type": "string",
+            "title": "Contributor Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "contributor_name"
+        ],
+        "title": "CreateSharedTopupCheckoutPayload"
+      },
+      "CreateSharedTopupCheckoutResponse": {
+        "properties": {
+          "checkout_id": {
+            "type": "string",
+            "title": "Checkout Id"
+          },
+          "order_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Uuid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checkout_id",
+          "order_uuid"
+        ],
+        "title": "CreateSharedTopupCheckoutResponse"
+      },
+      "CreateSharedTopupLinkPayload": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "title": "CreateSharedTopupLinkPayload"
       },
       "Customer": {
         "properties": {
@@ -1347,6 +1780,17 @@
             ],
             "title": "Customer Tag Id"
           },
+          "shared_topup_contributor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shared Topup Contributor Name"
+          },
           "line_items": {
             "items": {
               "$ref": "#/components/schemas/LineItem"
@@ -1511,6 +1955,17 @@
               }
             ],
             "title": "Customer Tag Id"
+          },
+          "shared_topup_contributor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shared Topup Contributor Name"
           },
           "line_items": {
             "items": {
@@ -1977,6 +2432,148 @@
           "ticket"
         ],
         "title": "ProductType"
+      },
+      "SharedTopupContribution": {
+        "properties": {
+          "order_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Uuid"
+          },
+          "contributor_name": {
+            "type": "string",
+            "title": "Contributor Name"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "booked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_uuid",
+          "contributor_name",
+          "amount",
+          "status",
+          "created_at",
+          "booked_at"
+        ],
+        "title": "SharedTopupContribution"
+      },
+      "SharedTopupLink": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "expires_at",
+          "revoked_at",
+          "label"
+        ],
+        "title": "SharedTopupLink"
+      },
+      "SharedTopupPublicInfo": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
+          "currency_identifier": {
+            "type": "string",
+            "title": "Currency Identifier"
+          },
+          "payment_methods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Payment Methods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_name",
+          "currency_identifier",
+          "payment_methods"
+        ],
+        "title": "SharedTopupPublicInfo"
       },
       "SumUpCheckoutStatus": {
         "type": "string",

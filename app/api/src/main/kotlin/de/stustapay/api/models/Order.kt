@@ -43,6 +43,7 @@ import kotlinx.serialization.Contextual
  * @param customerTagId 
  * @param lineItems 
  * @param customerTagUidHex 
+ * @param sharedTopupContributorName
  */
 @Serializable
 
@@ -97,10 +98,12 @@ data class Order (
     val lineItems: kotlin.collections.List<LineItem>,
 
     @SerialName(value = "customer_tag_uid_hex")
-    val customerTagUidHex: kotlin.String?
+    val customerTagUidHex: kotlin.String?,
+
+    @SerialName(value = "shared_topup_contributor_name")
+    val sharedTopupContributorName: kotlin.String? = null
 
 ) {
 
 
 }
-

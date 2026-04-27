@@ -31,6 +31,10 @@ export const translations: NestedPartialAsStrings<Translations> = {
     error: "Fehler",
     currentlyUnavailable: "Das TeamFestlichPay Kundenportal ist aktuell nicht verfügbar",
   },
+  index: {
+    sharedTopupHint:
+      "Auf der Seite <1>Geteilte Aufladung</1> kannst du einen teilbaren Link erstellen, damit andere dein Guthaben aufladen können.",
+  },
   transaction:
   {
     sepaExit: "Auszahlung (SEPA)"
@@ -54,6 +58,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     total: "Summe",
     viewReceipt: "Beleg anzeigen",
     bookedAt: "Gebucht um: {{date}}",
+    sharedTopupContributor: "Geteilte Aufladung von: {{name}}",
     orderType: {
       sale: "Kauf",
       cancel_sale: "Stornierter Kauf",
@@ -123,6 +128,40 @@ export const translations: NestedPartialAsStrings<Translations> = {
     awaiting3ds: "Bitte bestätige jetzt 3-D Secure im geöffneten Fenster oder in der Weiterleitung.",
     paymentTakingTooLong: "Die Zahlung dauert länger als erwartet. Du kannst warten oder es noch einmal versuchen.",
     unexpectedError: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später noch einmal.",
+    next: "Weiter",
+    shared: {
+      title: "Geteilte Online-Aufladung",
+      description: "Lade das gemeinsame Guthaben für {{eventName}} auf.",
+      ownerTitle: "Link zur geteilten Aufladung",
+      ownerDescription: "Erstelle einen reinen Auflade-Link für Personen, die Geld auf diesen Chip laden sollen. Sie können nur ihren Namen und einen Betrag eingeben und bezahlen.",
+      createLink: "Geteilten Link erstellen",
+      createFailed: "Geteilter Link konnte nicht erstellt werden.",
+      created: "Geteilter Link wurde erstellt und kopiert.",
+      link: "Link zur geteilten Aufladung",
+      copy: "Link kopieren",
+      copied: "Link kopiert.",
+      copyFailed: "Link konnte nicht kopiert werden.",
+      revoke: "Geteilten Link sperren",
+      revoked: "Geteilter Link wurde gesperrt.",
+      revokeFailed: "Geteilter Link konnte nicht gesperrt werden.",
+      createdAt: "Erstellt",
+      status: "Status",
+      actions: "Aktionen",
+      activeStatus: "Aktiv",
+      revokedStatus: "Gesperrt",
+      contributionsTitle: "Geteilte Aufladungen",
+      noContributions: "Noch keine geteilten Aufladungen.",
+      name: "Dein Name",
+      nameRequired: "Name ist erforderlich",
+      nameTooLong: "Name ist zu lang",
+      invalidLink: "Dieser Link zur geteilten Aufladung ist ungültig oder wurde gesperrt.",
+      success: "Das gemeinsame Chip-Guthaben wurde aufgeladen.",
+      contributionStatus: {
+        pending: "Ausstehend",
+        booked: "Bezahlt",
+        cancelled: "Abgebrochen",
+      },
+    },
     success: {
       title: "Aufladung erfolgreich",
       message: "Bitte gehe weiter zur <1>Übersichtsseite</1>.",

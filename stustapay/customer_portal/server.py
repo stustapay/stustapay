@@ -17,7 +17,7 @@ from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.user import AuthService
 
-from .routers import auth, base, sumup
+from .routers import auth, base, shared_topup, sumup
 
 
 def get_server(config: Config):
@@ -31,6 +31,7 @@ def get_server(config: Config):
 
     server.add_router(auth.router)
     server.add_router(base.router)
+    server.add_router(shared_topup.router)
     server.add_router(sumup.router)
     return server
 

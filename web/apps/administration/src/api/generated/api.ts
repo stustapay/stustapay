@@ -3623,6 +3623,7 @@ export type Order = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItem[];
 };
 export type OrderRead = {
@@ -3641,6 +3642,7 @@ export type OrderRead = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItemRead[];
   customer_tag_uid_hex: string | null;
 };
@@ -3828,6 +3830,7 @@ export type OrderWithTse = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItem[];
   signature_status: string;
   transaction_process_type?: string | null;
@@ -3858,6 +3861,7 @@ export type OrderWithTseRead = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItemRead[];
   signature_status: string;
   transaction_process_type?: string | null;
