@@ -2,6 +2,7 @@
 # pylint: disable=unused-argument
 import logging
 import re
+import secrets
 from typing import Optional
 
 import asyncpg
@@ -17,6 +18,9 @@ from stustapay.core.schema.customer import (
     OrderWithBon,
     PayoutInfo,
     PayoutTransaction,
+    SharedTopupContribution,
+    SharedTopupLink,
+    SharedTopupPublicInfo,
 )
 from stustapay.core.schema.language import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
@@ -26,7 +30,7 @@ from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer_portal_event_node_id
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.mail import MailService
-from stustapay.core.service.order.sumup import SumupService
+from stustapay.core.service.order.sumup import SumupService, hash_shared_topup_token
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
@@ -82,6 +86,151 @@ class CustomerService(Service[Config]):
         self.sumup = SumupService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.payout = PayoutService(
             db_pool=db_pool, config=config, auth_service=auth_service, config_service=config_service
+        )
+
+    @staticmethod
+    def hash_shared_topup_token(token: str) -> str:
+        return hash_shared_topup_token(token)
+
+    async def _fetch_shared_topup_link(
+        self,
+        *,
+        conn: Connection,
+        token: str,
+        customer_portal_base_url: str | None = None,
+    ):
+        token_hash = self.hash_shared_topup_token(token)
+        link = await conn.fetchrow(
+            "select stl.*, c.node_id, n.event_node_id "
+            "from shared_topup_link stl "
+            "join customer c on c.id = stl.customer_account_id "
+            "join node n on n.id = c.node_id "
+            "where stl.token_hash = $1 "
+            "  and stl.revoked_at is null "
+            "  and (stl.expires_at is null or stl.expires_at > now())",
+            token_hash,
+        )
+        if link is None:
+            raise AccessDenied("Invalid shared topup link")
+
+        if customer_portal_base_url is not None:
+            portal_event_node_id = await fetch_customer_portal_event_node_id(
+                conn=conn,
+                base_url=customer_portal_base_url,
+            )
+            if portal_event_node_id is None or portal_event_node_id != link["event_node_id"]:
+                raise AccessDenied("Shared topup link does not match current customer portal")
+
+        return link
+
+    @with_db_transaction
+    @requires_customer
+    async def create_shared_topup_link(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        label: str | None = None,
+        customer_portal_base_url: str | None = None,
+    ) -> SharedTopupLink:
+        token = secrets.token_urlsafe(32)
+        link = await conn.fetchrow(
+            "insert into shared_topup_link (customer_account_id, token_hash, label) "
+            "values ($1, $2, $3) "
+            "returning id, created_at, expires_at, revoked_at, label",
+            current_customer.id,
+            self.hash_shared_topup_token(token),
+            label,
+        )
+        return SharedTopupLink(token=token, **dict(link))
+
+    @with_db_transaction(read_only=True)
+    @requires_customer
+    async def list_shared_topup_links(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        customer_portal_base_url: str | None = None,
+    ) -> list[SharedTopupLink]:
+        rows = await conn.fetch(
+            "select id, null::text as token, created_at, expires_at, revoked_at, label "
+            "from shared_topup_link "
+            "where customer_account_id = $1 "
+            "order by created_at desc",
+            current_customer.id,
+        )
+        return [SharedTopupLink(**dict(row)) for row in rows]
+
+    @with_db_transaction
+    @requires_customer
+    async def revoke_shared_topup_link(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        link_id: int,
+        customer_portal_base_url: str | None = None,
+    ) -> None:
+        result = await conn.execute(
+            "update shared_topup_link set revoked_at = now() "
+            "where id = $1 and customer_account_id = $2 and revoked_at is null",
+            link_id,
+            current_customer.id,
+        )
+        if result == "UPDATE 0":
+            raise InvalidArgument("Shared topup link not found")
+
+    @with_db_transaction(read_only=True)
+    @requires_customer
+    async def list_shared_topup_contributions(
+        self,
+        *,
+        conn: Connection,
+        current_customer: Customer,
+        customer_portal_base_url: str | None = None,
+    ) -> list[SharedTopupContribution]:
+        return await conn.fetch_many(
+            SharedTopupContribution,
+            "select "
+            "  sto.order_uuid, "
+            "  sto.contributor_name, "
+            "  (((pso.order_content #>> '{}')::jsonb)->>'amount')::numeric as amount, "
+            "  pso.status::text as status, "
+            "  sto.created_at, "
+            "  o.booked_at "
+            "from shared_topup_order sto "
+            "join pending_sumup_order pso on pso.uuid = sto.order_uuid "
+            "left join ordr o on o.uuid = sto.order_uuid "
+            "where sto.customer_account_id = $1 "
+            "order by sto.created_at desc",
+            current_customer.id,
+        )
+
+    @with_db_transaction(read_only=True)
+    async def get_shared_topup_public_info(
+        self,
+        *,
+        conn: Connection,
+        token: str,
+        customer_portal_base_url: str | None = None,
+    ) -> SharedTopupPublicInfo:
+        link = await self._fetch_shared_topup_link(
+            conn=conn,
+            token=token,
+            customer_portal_base_url=customer_portal_base_url,
+        )
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=link["node_id"])
+        if event_node is None or event_node.event is None:
+            raise AccessDenied("Invalid shared topup link")
+        payment_methods = await self.sumup.get_available_payment_methods_for_node(
+            conn=conn,
+            node_id=event_node.id,
+        )
+        return SharedTopupPublicInfo(
+            event_name=event_node.name,
+            currency_identifier=event_node.event.currency_identifier,
+            payment_methods=payment_methods,
         )
 
     @with_db_transaction

@@ -7,7 +7,8 @@ import { QRCodeLogin } from "./routes/auth/QRCodeLogin";
 import { PublicRoot } from "./routes/PublicRoot";
 import { Index } from "./routes/Index";
 import { PayoutInfo } from "./routes/PayoutInfo";
-import { TopUp } from "./routes/topup";
+import { SharedTopUpOwner, TopUp } from "./routes/topup";
+import { SharedTopUp } from "./routes/topup/SharedTopUp";
 import { Faq } from "./routes/Faq";
 import { Agb } from "./routes/Agb";
 import { PrivacyPolicy } from "./routes/PrivacyPolicy";
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
         path: "topup",
         element: <TopUp />,
       },
+      {
+        path: "topup/shared",
+        element: <SharedTopUpOwner />,
+      },
     ],
   },
   {
@@ -50,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "/login/qr",
         element: <QRCodeLogin />, // This is the new component for QR code login
+      },
+      {
+        path: "/shared-topup/:sharedTopupToken",
+        element: <SharedTopUp />,
       },
       {
         path: "/faq",
