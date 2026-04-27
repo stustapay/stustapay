@@ -3331,17 +3331,6 @@
             ],
             "title": "Customer Tag Id"
           },
-          "shared_topup_contributor_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Shared Topup Contributor Name"
-          },
           "line_items": {
             "items": {
               "$ref": "#/components/schemas/LineItem"

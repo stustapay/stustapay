@@ -1,21 +1,9 @@
-import {
-  useCheckCheckoutMutation,
-  useCreateCheckoutMutation,
-  useGetCustomerQuery,
-} from "@/api";
+import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
 import { PageContainer, SumupPaymentMethods } from "@/components";
 import { usePublicConfig } from "@/hooks";
 import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
-import {
-  Alert,
-  AlertTitle,
-  Box,
-  Button,
-  LinearProgress,
-  Link,
-  Stack,
-} from "@mui/material";
+import { Alert, AlertTitle, Box, Button, LinearProgress, Link, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { FormCurrencyInput } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";

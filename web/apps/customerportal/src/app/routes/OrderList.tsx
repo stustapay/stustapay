@@ -136,11 +136,6 @@ export const OrderList: React.FC = () => {
                 <Typography variant="subtitle2">
                   {t("order.bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
                 </Typography>
-                {order.shared_topup_contributor_name && (
-                  <Typography variant="subtitle2">
-                    {t("order.sharedTopupContributor", { name: order.shared_topup_contributor_name })}
-                  </Typography>
-                )}
                 {order.bon_generated && (
                   <Link component={RouterLink} target="_blank" to={`/bon/${order.uuid}`}>
                     {t("order.viewReceipt")}
