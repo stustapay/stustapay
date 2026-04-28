@@ -29,18 +29,19 @@ export const Login: React.FC = () => {
   const [query] = useSearchParams();
   const [login] = useLoginMutation();
 
-  const ticketVoucher = query.get("ticketVoucher");
+  // direct login from POST parameters (wristband QR code scan or ticket shop)
+  const loginToken = query.get("pin") ?? query.get("ticketVoucher");
   React.useEffect(() => {
-    if (isLoggedIn || !ticketVoucher) {
+    if (isLoggedIn || !loginToken) {
       return;
     }
 
-    login({ loginPayload: { pin: ticketVoucher, node_id: config.apiConfig.node_id } })
+    login({ loginPayload: { pin: loginToken, node_id: config.apiConfig.node_id } })
       .unwrap()
       .catch((err) => {
         toast.error(t("loginFailed", { reason: err.error }));
       });
-  }, [query, isLoggedIn, ticketVoucher, login, t]);
+  }, [query, isLoggedIn, loginToken, login, t]);
 
   if (isLoggedIn) {
     const next = query.get("next");
