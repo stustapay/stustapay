@@ -3,10 +3,12 @@ import {
   selectEntryAreaById,
   selectTerminalAll,
   selectTillById,
+  selectUserById,
   useListEntryAreasQuery,
   useDeleteTerminalMutation,
   useListTerminalsQuery,
   useListTillsQuery,
+  useListUsersQuery,
 } from "@/api";
 import { useListHeadwindMappingsQuery } from "@/api/mdm";
 import { MdmRoutes, TerminalRoutes, TillRoutes } from "@/app/routes";
@@ -16,6 +18,7 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { getUserName } from "@stustapay/models";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -48,6 +51,7 @@ export const TerminalList: React.FC = () => {
     }
   );
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: entryAreas, isLoading: isEntryAreasLoading } = useListEntryAreasQuery({ nodeId: currentNode.id });
   const { data: headwindMappings, isLoading: isHeadwindMappingsLoading } = useListHeadwindMappingsQuery({
     nodeId: currentNode.id,
@@ -55,7 +59,7 @@ export const TerminalList: React.FC = () => {
   const [deleteTerminal] = useDeleteTerminalMutation();
   const { dataGridNodeColumn } = useRenderNode();
 
-  if (isTerminalsLoading || isTillsLoading || isEntryAreasLoading || isHeadwindMappingsLoading) {
+  if (isTerminalsLoading || isTillsLoading || isUsersLoading || isEntryAreasLoading || isHeadwindMappingsLoading) {
     return <Loading />;
   }
 
@@ -84,6 +88,19 @@ export const TerminalList: React.FC = () => {
       return "";
     }
     return entryArea.name;
+  };
+
+  const renderActiveUser = (id: number | null) => {
+    if (id == null || !users) {
+      return "";
+    }
+
+    const user = selectUserById(users, id);
+    if (!user) {
+      return "";
+    }
+
+    return getUserName(user);
   };
 
   const openConfirmDeleteDialog = (terminalId: number) => {
@@ -167,6 +184,13 @@ export const TerminalList: React.FC = () => {
       headerName: t("terminal.loggedIn"),
       type: "boolean",
       valueGetter: (session_uuid) => session_uuid != null,
+    },
+    {
+      field: "active_user_id",
+      headerName: t("till.activeUser"),
+      flex: 0.8,
+      sortable: false,
+      renderCell: (params) => renderActiveUser(params.row.active_user_id ?? null),
     },
     dataGridNodeColumn,
   ];

@@ -1,4 +1,9 @@
-import { useLoginUserMutation, useListUserToRoleQuery, useListUserRolesQuery, useListTerminalsQuery } from "@/api/generated/api";
+import {
+  useLoginUserMutation,
+  useListTerminalsQuery,
+  useListUserRolesQuery,
+  useListUserToRoleQuery,
+} from "@/api/generated/api";
 import { selectTerminalAll } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
@@ -10,6 +15,7 @@ import * as Yup from "yup";
 import { NormalizedListUserInt, User, UserRole } from "@/api/generated/api";
 import { getUserName } from "@stustapay/models";
 import { Loading } from "@stustapay/components";
+import { getAvailableTerminalUserIds } from "./terminalUserAvailability";
 
 interface Props {
   open: boolean;
@@ -31,10 +37,11 @@ const validationSchema = Yup.object().shape({
 export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, onClose }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const terminalScopeNodeId = currentNode.event_node_id ?? currentNode.id;
   const [loginUser] = useLoginUserMutation();
   const { data: userToRoles, isLoading: isLoadingUserToRoles } = useListUserToRoleQuery({ nodeId: currentNode.id });
   const { data: userRoles, isLoading: isLoadingUserRoles } = useListUserRolesQuery({ nodeId: currentNode.id });
-  const { data: terminals, isLoading: isLoadingTerminals } = useListTerminalsQuery({ nodeId: currentNode.id });
+  const { data: terminals, isLoading: isLoadingTerminals } = useListTerminalsQuery({ nodeId: terminalScopeNodeId });
 
   const formik = useFormik<FormValues>({
     initialValues: {
@@ -65,30 +72,7 @@ export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, on
   // Filter users to show only those who are not already logged into another terminal
   const availableUsers = React.useMemo(() => {
     if (!users || !terminals) return [];
-    
-    // Get all terminals
-    const allTerminals = selectTerminalAll(terminals);
-    
-    // Find the current terminal
-    const currentTerminal = allTerminals.find(t => t.id === terminalId);
-    
-    // Collect all user IDs that are already logged into terminals (except current)
-    const loggedInUsers = new Set<number>();
-    for (const terminal of allTerminals) {
-      if (terminal.id !== terminalId && terminal.active_user_id) {
-        loggedInUsers.add(terminal.active_user_id);
-      }
-    }
-    
-    // Filter user IDs
-    return users.ids.filter(userId => {
-      // Always include the current terminal's active user
-      if (currentTerminal?.active_user_id === userId) {
-        return true;
-      }
-      // Filter out users already logged into other terminals
-      return !loggedInUsers.has(userId);
-    });
+    return getAvailableTerminalUserIds(users.ids, selectTerminalAll(terminals), terminalId);
   }, [users, terminals, terminalId]);
 
   if (isLoadingUserToRoles || isLoadingUserRoles || isLoadingTerminals) {
