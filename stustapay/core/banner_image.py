@@ -18,6 +18,7 @@ _WHITELIST_FORMAT_TO_MIME: Final[dict[str, str]] = {
     "GIF": "image/gif",
     "WEBP": "image/webp",
 }
+_ALLOWED_PIL_FORMATS: Final[tuple[str, ...]] = tuple(_WHITELIST_FORMAT_TO_MIME)
 
 
 def canonical_mime_for_pil_format(pil_format: str | None) -> str | None:
@@ -40,13 +41,13 @@ def validate_and_prepare_banner_upload(image_data: bytes) -> tuple[bytes, str]:
         raise InvalidArgument(f"Banner image must be at most {BANNER_MAX_BYTES} bytes")
 
     try:
-        with Image.open(BytesIO(image_data)) as im:
+        with Image.open(BytesIO(image_data), formats=_ALLOWED_PIL_FORMATS) as im:
             im.verify()
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise InvalidArgument("Banner must be a valid PNG, JPEG, GIF, or WebP image") from exc
 
     try:
-        with Image.open(BytesIO(image_data)) as im:
+        with Image.open(BytesIO(image_data), formats=_ALLOWED_PIL_FORMATS) as im:
             im.load()
             mime = canonical_mime_for_pil_format(im.format)
             if mime is None:
@@ -72,9 +73,9 @@ def http_response_for_stored_banner(image_data: bytes | None) -> dict[str, objec
     }
 
     try:
-        with Image.open(BytesIO(image_data)) as im:
+        with Image.open(BytesIO(image_data), formats=_ALLOWED_PIL_FORMATS) as im:
             im.verify()
-        with Image.open(BytesIO(image_data)) as im:
+        with Image.open(BytesIO(image_data), formats=_ALLOWED_PIL_FORMATS) as im:
             im.load()
             mime = canonical_mime_for_pil_format(im.format)
             if mime is not None:

@@ -16,6 +16,10 @@ def _tiny_png_bytes() -> bytes:
     return buf.getvalue()
 
 
+def _fits_header_bytes() -> bytes:
+    return b"SIMPLE  =                    T" + b" " * (2880 - 30)
+
+
 def test_validate_accepts_png_and_returns_canonical_mime() -> None:
     raw = _tiny_png_bytes()
     out_bytes, mime = validate_and_prepare_banner_upload(raw)
@@ -31,6 +35,11 @@ def test_validate_rejects_empty() -> None:
 def test_validate_rejects_non_image() -> None:
     with pytest.raises(InvalidArgument, match="valid"):
         validate_and_prepare_banner_upload(b"<html><script>alert(1)</script></html>")
+
+
+def test_validate_rejects_fits_without_invoking_decoder() -> None:
+    with pytest.raises(InvalidArgument, match="valid"):
+        validate_and_prepare_banner_upload(_fits_header_bytes())
 
 
 def test_validate_rejects_oversize() -> None:

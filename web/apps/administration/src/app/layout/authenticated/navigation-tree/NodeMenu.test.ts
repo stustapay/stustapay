@@ -1,5 +1,7 @@
 import { TextDecoder, TextEncoder } from "util";
 
+import { NodeSeenByUser } from "@/api";
+
 (globalThis as typeof globalThis & { TextEncoder: typeof TextEncoder; TextDecoder: typeof TextDecoder }).TextEncoder =
   TextEncoder;
 (globalThis as typeof globalThis & { TextEncoder: typeof TextEncoder; TextDecoder: typeof TextDecoder }).TextDecoder =
@@ -11,7 +13,6 @@ jest.mock("@/i18n", () => ({
   },
 }));
 
-import { NodeSeenByUser } from "@/api";
 const { isMenuEntryValidAtNode, nodeMenuEntryDefinitions } = require("./NodeMenu");
 
 const createNode = (privileges_at_node: string[]): NodeSeenByUser =>

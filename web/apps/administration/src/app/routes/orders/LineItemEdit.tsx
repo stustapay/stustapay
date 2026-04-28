@@ -23,7 +23,6 @@ import { Loading, NumericInput } from "@stustapay/components";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { v4 as uuidv4 } from "uuid";
 
 interface SelectedProduct {
   product: Product;
@@ -124,7 +123,7 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
       orderId: order.id,
       nodeId: currentNode.id,
       editSaleProducts: {
-        uuid: uuidv4(),
+        uuid: crypto.randomUUID(),
         products: selectedProducts.map((p) => {
           if (p.product.fixed_price) {
             return { product_id: p.product.id, price: null, quantity: p.quantity };
