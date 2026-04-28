@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.payinout.topup
 
 import android.app.Activity
+import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,10 +24,16 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +59,9 @@ import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.delay
+
+private const val SELF_SERVICE_TOPUP_IDLE_TIMEOUT_MS = 30_000L
 
 @Composable
 fun TopUpSelection(
@@ -65,6 +75,10 @@ fun TopUpSelection(
     val uiLocked by viewModel.uiLocked.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val isSelfServiceTopUp = topUpConfig.hasOnlyTopUpPrivilege()
+    val (lastActivityTimestamp, setLastActivityTimestamp) = remember {
+        mutableLongStateOf(SystemClock.elapsedRealtime())
+    }
     val maxAmount = (topUpConfig.maxAccountBalance * 100).toUInt()
 
     val currentStep = when {
@@ -74,7 +88,7 @@ fun TopUpSelection(
     }
 
     if (errorMessage != null) {
-        if (topUpConfig.hasOnlyTopUpPrivilege()) {
+        if (isSelfServiceTopUp) {
             SelfServiceTopUpErrorDialog(
                 message = errorMessage.orEmpty(),
                 onDismiss = {
@@ -90,7 +104,23 @@ fun TopUpSelection(
         }
     }
 
-    if (topUpConfig.hasOnlyTopUpPrivilege()) {
+    LaunchedEffect(isSelfServiceTopUp, requestActive, onBack, lastActivityTimestamp) {
+        if (!isSelfServiceTopUp || onBack == null || requestActive) {
+            return@LaunchedEffect
+        }
+
+        val elapsed = SystemClock.elapsedRealtime() - lastActivityTimestamp
+        val remaining = SELF_SERVICE_TOPUP_IDLE_TIMEOUT_MS - elapsed
+        if (remaining <= 0L) {
+            onBack()
+            return@LaunchedEffect
+        }
+
+        delay(remaining)
+        onBack()
+    }
+
+    if (isSelfServiceTopUp) {
         val activity = LocalActivity.current as? Activity
         val paymentSelectionViewModel: CashECSelectionViewModel = hiltViewModel()
         val scanState = rememberNfcScanDialogState()
@@ -139,6 +169,9 @@ fun TopUpSelection(
             },
             onBack = onBack,
             bottomPadding = 0.dp,
+            onUserActivity = {
+                setLastActivityTimestamp(SystemClock.elapsedRealtime())
+            },
         )
     } else {
         OperatorTopUpSelection(
@@ -218,7 +251,8 @@ private fun SelfServiceTopUpContent(
     onClear: () -> Unit,
     onScanPay: () -> Unit,
     onBack: (() -> Unit)?,
-    bottomPadding: androidx.compose.ui.unit.Dp
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    onUserActivity: () -> Unit,
 ) {
     val profile = rememberSelfServiceDeviceProfile()
     val customAmountDialog = rememberDialogDisplayState()
@@ -235,6 +269,16 @@ private fun SelfServiceTopUpContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(bottom = bottomPadding)
+            .pointerInput(onUserActivity) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                        if (event.changes.any { it.pressed || it.positionChanged() }) {
+                            onUserActivity()
+                        }
+                    }
+                }
+            }
     ) {
         Column(
             modifier = Modifier

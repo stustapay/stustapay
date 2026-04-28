@@ -91,6 +91,7 @@ fun StartpageView(
 ) {
     val activity = LocalActivity.current!!
     val selfServiceAccess = loginState.selfServiceAccess()
+    val canOpenSelfServiceSettings = loginState.checkTerminalAccess(Access::canChangeConfig)
     val isSelfServiceMode = loginState.isSelfServiceTerminal() && loginState.hasConfig() && !configLoading
     val isEntryMode = loginState.isEntryMode() && loginState.hasConfig() && !configLoading
     val gradientColors = if (isSelfServiceMode) {
@@ -138,6 +139,7 @@ fun StartpageView(
                 SelfServiceLanding(
                     canCheckBalance = selfServiceAccess.canSelfServiceBalance,
                     canTopUp = selfServiceAccess.canSelfServiceTopUp,
+                    canOpenSettings = canOpenSelfServiceSettings,
                     configLoading = configLoading,
                     onCheckBalance = { navigateToHook(RootNavDests.status) },
                     onTopUp = { navigateToHook(RootNavDests.topup) },
@@ -666,6 +668,7 @@ private fun rememberOperatorMenuStrings(): OperatorMenuStrings {
 private fun SelfServiceLanding(
     canCheckBalance: Boolean,
     canTopUp: Boolean,
+    canOpenSettings: Boolean,
     configLoading: Boolean,
     onCheckBalance: () -> Unit,
     onTopUp: () -> Unit,
@@ -836,17 +839,22 @@ private fun SelfServiceLanding(
                             text = stringResource(R.string.selfservice_action_terminal_info),
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        SelfServiceFooterActionButton(
-                            onClick = onOpenSettings,
-                            icon = Icons.Filled.Edit,
-                            text = stringResource(R.string.root_item_settings),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        if (canOpenSettings) {
+                            SelfServiceFooterActionButton(
+                                onClick = onOpenSettings,
+                                icon = Icons.Filled.Edit,
+                                text = stringResource(R.string.root_item_settings),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 } else {
                     Row(
                         modifier = footerModifier,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            10.dp,
+                            if (canOpenSettings) Alignment.End else Alignment.Start
+                        ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SelfServiceFooterActionButton(
@@ -855,12 +863,14 @@ private fun SelfServiceLanding(
                             text = stringResource(R.string.selfservice_action_terminal_info),
                             modifier = Modifier.widthIn(min = 170.dp)
                         )
-                        SelfServiceFooterActionButton(
-                            onClick = onOpenSettings,
-                            icon = Icons.Filled.Edit,
-                            text = stringResource(R.string.root_item_settings),
-                            modifier = Modifier.widthIn(min = 140.dp)
-                        )
+                        if (canOpenSettings) {
+                            SelfServiceFooterActionButton(
+                                onClick = onOpenSettings,
+                                icon = Icons.Filled.Edit,
+                                text = stringResource(R.string.root_item_settings),
+                                modifier = Modifier.widthIn(min = 140.dp)
+                            )
+                        }
                     }
                 }
             }

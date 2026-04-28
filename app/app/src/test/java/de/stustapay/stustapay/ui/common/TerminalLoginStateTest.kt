@@ -105,6 +105,35 @@ class TerminalLoginStateTest {
     }
 
     @Test
+    fun selfServiceSettingsUseTerminalScopedPrivileges() {
+        val withoutTerminalAdminPrivilege = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders, Privilege.node_administration))),
+            terminal = TerminalConfigState.Success(
+                terminalConfig(
+                    selfService = true,
+                    allowTopUp = true,
+                    userPrivileges = listOf(Privilege.can_topup, Privilege.terminal_login),
+                    tillUserPrivileges = listOf(Privilege.can_book_orders),
+                )
+            ),
+        )
+        val withTerminalAdminPrivilege = TerminalLoginState(
+            user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders))),
+            terminal = TerminalConfigState.Success(
+                terminalConfig(
+                    selfService = true,
+                    allowTopUp = true,
+                    userPrivileges = listOf(Privilege.node_administration),
+                    tillUserPrivileges = listOf(Privilege.can_book_orders),
+                )
+            ),
+        )
+
+        assertFalse(withoutTerminalAdminPrivilege.checkTerminalAccess(Access::canChangeConfig))
+        assertTrue(withTerminalAdminPrivilege.checkTerminalAccess(Access::canChangeConfig))
+    }
+
+    @Test
     fun customerHistoryFilterIsAvailableForOrderingAndCustomerManagementUsers() {
         val orderingState = TerminalLoginState(
             user = UserState.LoggedIn(currentUser(listOf(Privilege.can_book_orders))),
