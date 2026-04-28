@@ -164,7 +164,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
       pinRequired: "PIN ist erforderlich",
       uidInvalid: "UID muss dezimal oder hexadezimal sein",
       vipInvalid: "VIP muss true/false, 1/0, yes/no oder ja/nein sein",
-      duplicatePin: "PIN ist im Grid doppelt vorhanden",
+      duplicatePin: "Dieselbe PIN erscheint mehrfach ohne UID im Grid",
+      duplicatePinUid: "Dieselbe PIN- und UID-Kombination erscheint mehrfach im Grid",
       duplicateUid: "UID ist im Grid doppelt vorhanden",
     },
     columnMapping: {

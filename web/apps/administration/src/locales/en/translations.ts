@@ -159,7 +159,8 @@ export const translations = {
       pinRequired: "PIN is required",
       uidInvalid: "UID must be decimal or hexadecimal",
       vipInvalid: "VIP must be true/false, 1/0, yes/no, or ja/nein",
-      duplicatePin: "PIN is duplicated in the grid",
+      duplicatePin: "The same PIN appears more than once without a UID in the grid",
+      duplicatePinUid: "The same PIN and UID pair appears more than once in the grid",
       duplicateUid: "UID is duplicated in the grid",
     },
     columnMapping: {

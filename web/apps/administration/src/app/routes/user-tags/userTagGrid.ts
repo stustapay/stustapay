@@ -126,7 +126,10 @@ export const parseUserTagVipInput = (
 export const collectUserTagGridIssues = (rows: UserTagGridRow[]): UserTagGridIssue[] => {
   const issues: UserTagGridIssue[] = [];
   const normalizedRows = rows.map(normalizeUserTagGridRow);
-  const pinOccurrences = new Map<string, number[]>();
+  /** Same PIN with no UID (pre-activation stock): at most one per PIN in the import grid */
+  const pinRowsWithoutUid = new Map<string, number[]>();
+  /** Duplicate (pin, uid) pairs when UID is set */
+  const pinUidPairRows = new Map<string, number[]>();
   const uidOccurrences = new Map<number, number[]>();
   let hasNonEmptyRow = false;
 
@@ -139,19 +142,25 @@ export const collectUserTagGridIssues = (rows: UserTagGridRow[]): UserTagGridIss
 
     if (row.pin === "") {
       issues.push({ rowIndex, field: "pin", messageKey: "userTag.gridErrors.pinRequired" });
-    } else {
-      const existingPinRows = pinOccurrences.get(row.pin) ?? [];
-      existingPinRows.push(rowIndex);
-      pinOccurrences.set(row.pin, existingPinRows);
     }
 
     const parsedUid = parseUserTagUidInput(row.uid);
     if (parsedUid.errorKey) {
       issues.push({ rowIndex, field: "uid", messageKey: parsedUid.errorKey });
     } else if (parsedUid.value != null) {
+      if (row.pin !== "") {
+        const pairKey = `${row.pin}\u0000${parsedUid.value}`;
+        const pairRows = pinUidPairRows.get(pairKey) ?? [];
+        pairRows.push(rowIndex);
+        pinUidPairRows.set(pairKey, pairRows);
+      }
       const existingUidRows = uidOccurrences.get(parsedUid.value) ?? [];
       existingUidRows.push(rowIndex);
       uidOccurrences.set(parsedUid.value, existingUidRows);
+    } else if (row.pin !== "" && !parsedUid.errorKey) {
+      const rowsForPin = pinRowsWithoutUid.get(row.pin) ?? [];
+      rowsForPin.push(rowIndex);
+      pinRowsWithoutUid.set(row.pin, rowsForPin);
     }
 
     const parsedVip = parseUserTagVipInput(row.is_vip);
@@ -164,12 +173,21 @@ export const collectUserTagGridIssues = (rows: UserTagGridRow[]): UserTagGridIss
     issues.push({ messageKey: "userTag.gridErrors.noRows" });
   }
 
-  pinOccurrences.forEach((rowIndexes) => {
+  pinRowsWithoutUid.forEach((rowIndexes) => {
     if (rowIndexes.length < 2) {
       return;
     }
     rowIndexes.forEach((rowIndex) => {
       issues.push({ rowIndex, field: "pin", messageKey: "userTag.gridErrors.duplicatePin" });
+    });
+  });
+
+  pinUidPairRows.forEach((rowIndexes) => {
+    if (rowIndexes.length < 2) {
+      return;
+    }
+    rowIndexes.forEach((rowIndex) => {
+      issues.push({ rowIndex, field: "pin", messageKey: "userTag.gridErrors.duplicatePinUid" });
     });
   });
 

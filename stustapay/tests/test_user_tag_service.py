@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 
+import asyncpg
 import pytest
 from sftkit.database import Connection
 
@@ -436,3 +437,52 @@ async def test_create_user_tags_with_hex_uid(
         assert created_tag is not None
         assert created_tag["uid"] == test_uid
         assert created_tag["pin"] == f"test_pin_{test_uid}"
+
+
+async def test_create_user_tags_same_pin_different_uids_allowed(
+    user_tag_service: UserTagService,
+    event_node: Node,
+    event_admin_token: str,
+    user_tag_secret: int,
+    db_connection: Connection,
+):
+    """Same printed PIN may exist on multiple chips when UIDs differ."""
+    import random
+
+    shared_pin = "shared_pin_for_duplicate_print_test"
+    base = random.randint(10_000_000_000_000_000, 89_999_999_999_999_999)
+    uid_a = base + 1
+    uid_b = base + 2
+    await user_tag_service.create_user_tags(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_user_tags=[
+            NewUserTag(pin=shared_pin, secret_id=user_tag_secret, uid=uid_a, is_vip=False),
+            NewUserTag(pin=shared_pin, secret_id=user_tag_secret, uid=uid_b, is_vip=False),
+        ],
+    )
+    count = await db_connection.fetchval(
+        "select count(*) from user_tag where pin = $1 and node_id = $2", shared_pin, event_node.id
+    )
+    assert count == 2
+
+
+async def test_create_user_tags_rejects_two_unassigned_same_pin(
+    user_tag_service: UserTagService,
+    event_node: Node,
+    event_admin_token: str,
+    user_tag_secret: int,
+):
+    """At most one user_tag per PIN may have uid NULL in the tree."""
+    shared_pin = "unassigned_dup_pin_test"
+    await user_tag_service.create_user_tags(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_user_tags=[NewUserTag(pin=shared_pin, secret_id=user_tag_secret, uid=None, is_vip=False)],
+    )
+    with pytest.raises((asyncpg.RaiseError, asyncpg.CheckViolationError), match="null uid is not unique"):
+        await user_tag_service.create_user_tags(
+            token=event_admin_token,
+            node_id=event_node.id,
+            new_user_tags=[NewUserTag(pin=shared_pin, secret_id=user_tag_secret, uid=None, is_vip=False)],
+        )

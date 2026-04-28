@@ -50,7 +50,7 @@ describe("userTagGrid helpers", () => {
     expect(updatedRows[1].uid).toBe("42");
   });
 
-  test("reports duplicate pins and UIDs in the grid", () => {
+  test("reports duplicate (pin, uid) pairs and duplicate UIDs", () => {
     const rowOne = createEmptyUserTagGridRow();
     rowOne.pin = "pin-1";
     rowOne.uid = "0x1A";
@@ -63,11 +63,27 @@ describe("userTagGrid helpers", () => {
 
     expect(issues).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ rowIndex: 0, field: "pin", messageKey: "userTag.gridErrors.duplicatePin" }),
-        expect.objectContaining({ rowIndex: 1, field: "pin", messageKey: "userTag.gridErrors.duplicatePin" }),
+        expect.objectContaining({ rowIndex: 0, field: "pin", messageKey: "userTag.gridErrors.duplicatePinUid" }),
+        expect.objectContaining({ rowIndex: 1, field: "pin", messageKey: "userTag.gridErrors.duplicatePinUid" }),
         expect.objectContaining({ rowIndex: 0, field: "uid", messageKey: "userTag.gridErrors.duplicateUid" }),
         expect.objectContaining({ rowIndex: 1, field: "uid", messageKey: "userTag.gridErrors.duplicateUid" }),
       ])
     );
+  });
+
+  test("allows the same PIN when UIDs differ", () => {
+    const rowOne = createEmptyUserTagGridRow();
+    rowOne.pin = "same-pin";
+    rowOne.uid = "100";
+
+    const rowTwo = createEmptyUserTagGridRow();
+    rowTwo.pin = "same-pin";
+    rowTwo.uid = "200";
+
+    const issues = collectUserTagGridIssues([rowOne, rowTwo]);
+    const dupPin = issues.filter((i) => i.messageKey === "userTag.gridErrors.duplicatePin");
+    const dupPair = issues.filter((i) => i.messageKey === "userTag.gridErrors.duplicatePinUid");
+    expect(dupPin).toHaveLength(0);
+    expect(dupPair).toHaveLength(0);
   });
 });

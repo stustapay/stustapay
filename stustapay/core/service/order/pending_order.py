@@ -250,17 +250,27 @@ async def make_ticket_sale_bookings(
 
     for scanned_ticket in ticket_sale.scanned_tickets:
         restriction = await conn.fetchval(
-            "select restriction from user_tag where pin = $1 and node_id = any($2)",
+            "select restriction from user_tag where pin = $1 and node_id = any($2) and (uid = $3 or uid is null) "
+            "order by case when uid = $3 then 0 else 1 end limit 1",
             scanned_ticket.customer_tag_pin,
             node.ids_to_root,
+            scanned_ticket.customer_tag_uid,
         )
-        # register tag uid
+        # register tag uid (match exact chip first, else the single unassigned stock row for this PIN)
         user_tag_id = await conn.fetchval(
-            "update user_tag set uid = $1 where pin = $2 and node_id = any($3) returning id",
+            "update user_tag ut set uid = $1 from ( "
+            "  select id from user_tag where pin = $2 and node_id = any($3) and (uid = $4 or uid is null) "
+            "  order by case when uid = $4 then 0 else 1 end limit 1 "
+            ") x where ut.id = x.id returning ut.id",
             scanned_ticket.customer_tag_uid,
             scanned_ticket.customer_tag_pin,
             node.ids_to_root,
+            scanned_ticket.customer_tag_uid,
         )
+        if user_tag_id is None:
+            raise InvalidArgument(
+                f"No user tag matches PIN {scanned_ticket.customer_tag_pin!r} and UID {scanned_ticket.customer_tag_uid}"
+            )
 
         customer_account_id: int
         if scanned_ticket.account is None:

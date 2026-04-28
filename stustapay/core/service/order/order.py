@@ -429,14 +429,13 @@ class OrderService(Service[Config]):
 
     @staticmethod
     async def _fetch_account_by_ticket_voucher(
-        *, conn: Connection, node: Node, ticket_voucher: TicketVoucher, tag_pin: str
+        *, conn: Connection, node: Node, ticket_voucher: TicketVoucher
     ) -> Account:
         account = await conn.fetch_maybe_one(
             Account,
-            "select a.*, (select t.restriction from user_tag t where t.pin = $1) as restriction "
-            "from account a "
-            "where a.type = 'private' and a.node_id = any($2) and a.id = $3",
-            tag_pin,
+            "select a.*, t.restriction as restriction "
+            "from account a join user_tag t on t.id = a.user_tag_id "
+            "where a.type = 'private' and a.node_id = any($1) and a.id = $2",
             node.ids_to_root,
             ticket_voucher.customer_account_id,
         )
@@ -1420,27 +1419,41 @@ class OrderService(Service[Config]):
         layout_id = await conn.fetchval(
             "select layout_id from till_profile tp where id = $1", current_till.active_profile_id
         )
-        customer_pins = list(map(lambda x: x.tag_pin, new_ticket_scan.customer_tags))
+        scan_pins = [x.tag_pin for x in new_ticket_scan.customer_tags]
+        scan_uids = [x.tag_uid for x in new_ticket_scan.customer_tags]
 
+        # Scanned (pin, uid) pairs that already have a private account (ticket not sellable on this tag).
         known_tag_ids = await conn.fetch(
-            "select u.pin as user_tag_pin "
+            "select u.pin as user_tag_pin, u.uid as user_tag_uid "
             "from account a join user_tag u on a.user_tag_id = u.id "
-            "where u.pin = any($1) and u.node_id = any($2)",
-            customer_pins,
+            "where u.node_id = any($1) and (u.pin, u.uid) in (select * from unnest($2::text[], $3::numeric[]))",
             node.ids_to_root,
+            scan_pins,
+            scan_uids,
         )
 
         if len(known_tag_ids) > 0:
-            formatted_pins = ", ".join(a["user_tag_pin"] for a in known_tag_ids)
-            raise InvalidArgument(f"Ticket already has account: {formatted_pins}")
+            formatted = ", ".join(f"{r['user_tag_pin']}:{r['user_tag_uid']}" for r in known_tag_ids)
+            raise InvalidArgument(f"Ticket already has account: {formatted}")
 
-        known_pins = await conn.fetch(
-            "select pin from user_tag where pin = any($1)",
-            customer_pins,
+        # A scan is "known" if some user_tag in scope can represent it:
+        # - exact (pin, uid) chip row, or
+        # - (pin, uid IS NULL) pre-activation stock (same printed PIN; NFC uid is applied at sale).
+        # DB allows at most one NULL-uid row per PIN in the tree, so the NULL branch does not mask
+        # another chip that already owns this uid for that PIN (that row would match ut.uid = s.tag_uid).
+        unknown_scans = await conn.fetch(
+            "with scans as (select * from unnest($1::text[], $2::numeric[]) as s(tag_pin, tag_uid)) "
+            "select s.tag_pin, s.tag_uid from scans s where not exists ( "
+            "  select 1 from user_tag ut "
+            "  where ut.pin = s.tag_pin and ut.node_id = any($3) "
+            "    and (ut.uid = s.tag_uid or ut.uid is null))",
+            scan_pins,
+            scan_uids,
+            node.ids_to_root,
         )
-        if len(known_pins) != len(new_ticket_scan.customer_tags):
-            unknown_ids = set(customer_pins) - set(i["pin"] for i in known_pins)
-            raise InvalidArgument(f"Unknown Ticket ID: {', '.join(unknown_ids)}")
+        if len(unknown_scans) > 0:
+            formatted = ", ".join(f"{r['tag_pin']}:{r['tag_uid']}" for r in unknown_scans)
+            raise InvalidArgument(f"Unknown Ticket ID: {formatted}")
 
         # check if vouchers have duplicates
         known_voucher_tokens: set[str] = set()
@@ -1458,9 +1471,13 @@ class OrderService(Service[Config]):
                 "join user_tag ut "
                 "   on (ut.restriction = any(t.restrictions) "
                 "       or t.restrictions = '{}'::text array and ut.restriction is null) "
-                "where tltt.layout_id = $1 and ut.pin = $2",
+                "where tltt.layout_id = $1 and ut.pin = $2 and ut.node_id = any($4) "
+                "  and (ut.uid = $3 or ut.uid is null) "
+                "order by case when ut.uid = $3 then 0 else 1 end limit 1",
                 layout_id,
                 customer_tag.tag_pin,
+                customer_tag.tag_uid,
+                node.ids_to_root,
             )
             if ticket is None:
                 raise InvalidArgument("This terminal is not allowed to sell this ticket")
@@ -1478,7 +1495,7 @@ class OrderService(Service[Config]):
                 known_voucher_tokens.add(voucher_token)
 
                 account = await self._fetch_account_by_ticket_voucher(
-                    conn=conn, node=node, ticket_voucher=ticket_voucher, tag_pin=customer_tag.tag_pin
+                    conn=conn, node=node, ticket_voucher=ticket_voucher
                 )
                 # ticket was already sold due to voucher
                 ticket.total_price = 0.0

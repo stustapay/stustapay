@@ -85,12 +85,17 @@ async def get_or_assign_user_tag(conn: Connection, node: Node, pin: Optional[str
     if pin is None:
         raise InvalidArgument("Chip was not activated and no pin was provided")
 
-    user_tag_id = await conn.fetchval(
-        "select id from user_tag where pin = $1 and node_id = any($2)", pin, node.ids_to_root
+    rows = await conn.fetch(
+        "select id from user_tag where pin = $1 and node_id = any($2) and uid is null",
+        pin,
+        node.ids_to_root,
     )
-    if user_tag_id is None:
+    if len(rows) == 0:
         raise NotFound(element_type="user_tag", element_id=pin)
+    if len(rows) > 1:
+        raise InvalidArgument("Multiple unassigned tags share this PIN; cannot assign UID")
 
+    user_tag_id = rows[0]["id"]
     await conn.fetchval("update user_tag set uid = $1 where id = $2", uid, user_tag_id)
 
     return user_tag_id

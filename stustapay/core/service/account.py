@@ -674,9 +674,12 @@ class AccountService(Service[Config]):
     ) -> Account:
         user_tag = await conn.fetchrow(
             "select true as found, u.id as user_tag_id, a.id as account_id "
-            "from user_tag u left join account a on a.user_tag_id = u.id where u.pin = $1 and u.node_id = any($2)",
+            "from user_tag u left join account a on a.user_tag_id = u.id "
+            "where u.pin = $1 and u.node_id = any($2) and (u.uid is null or u.uid = $3) "
+            "order by case when u.uid = $3 then 0 else 1 end limit 1",
             new_free_ticket_grant.user_tag_pin,
             node.ids_to_event_node,
+            new_free_ticket_grant.user_tag_uid,
         )
         if user_tag is None:
             raise InvalidArgument(f"Tag does not exist {new_free_ticket_grant.user_tag_pin}")
@@ -740,19 +743,26 @@ class AccountService(Service[Config]):
         new_user_tag_uid: int,
         comment: Optional[str],
     ):
-        row = await conn.fetchrow(
+        rows = await conn.fetch(
             "select a.id as account_id, u.id as user_tag_id "
             "from account a join user_tag u on a.user_tag_id = u.id "
             "where u.pin = $1 and a.node_id = any($2)",
             old_user_tag_pin,
             node.ids_to_event_node,
         )
-        if not row:
+        if len(rows) == 0:
             raise NotFound(element_type="user_tag", element_id=old_user_tag_pin)
-        account_id, old_user_tag_id = row
+        if len(rows) > 1:
+            raise InvalidArgument("Multiple activated tags share this PIN; use UID-based tag switch instead")
+        row = rows[0]
+        account_id, old_user_tag_id = row["account_id"], row["user_tag_id"]
 
         new_user_tag_id = await conn.fetchval(
-            "select id from user_tag where pin = $1 and node_id = any($2)", new_user_tag_pin, node.ids_to_root
+            "select id from user_tag where pin = $1 and node_id = any($2) and (uid is null or uid = $3) "
+            "order by case when uid = $3 then 0 else 1 end limit 1",
+            new_user_tag_pin,
+            node.ids_to_root,
+            new_user_tag_uid,
         )
         if new_user_tag_id is None:
             raise NotFound(element_type="user_tag", element_id=new_user_tag_pin)
