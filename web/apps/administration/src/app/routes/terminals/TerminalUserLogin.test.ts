@@ -1,13 +1,13 @@
 import { getAvailableTerminalUserIds } from "./terminalUserAvailability";
 
 describe("getAvailableTerminalUserIds", () => {
-  test("filters out users active on other terminals in event scope", () => {
+  test("filters out users active on other returned terminals", () => {
     const userIds = [11, 12, 13, 14];
     const terminals = [
-      { id: 100, active_user_id: 11 }, // current terminal in subnode A
-      { id: 101, active_user_id: 12 }, // sibling subnode B terminal
+      { id: 100, active_user_id: 11 }, // current terminal
+      { id: 101, active_user_id: 12 }, // another returned terminal
       { id: 102, active_user_id: null }, // free terminal
-      { id: 103, active_user_id: 14 }, // another sibling terminal
+      { id: 103, active_user_id: 14 }, // another returned terminal
     ];
 
     expect(getAvailableTerminalUserIds(userIds, terminals, 100)).toEqual([11, 13]);

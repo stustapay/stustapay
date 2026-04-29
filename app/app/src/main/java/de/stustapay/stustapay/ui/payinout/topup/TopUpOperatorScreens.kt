@@ -437,14 +437,19 @@ fun TopUpAmountDialog(
     amount: UInt,
     onAmountUpdate: (UInt) -> Unit,
     onClear: () -> Unit,
+    onClose: () -> Unit = {},
 ) {
     if (!state.isOpen()) {
         return
     }
 
     var currentAmount by remember(state.isOpen(), amount) { mutableStateOf(amount) }
+    val closeDialog = {
+        state.close()
+        onClose()
+    }
 
-    Dialog(onDismissRequest = { state.close() }) {
+    Dialog(onDismissRequest = closeDialog) {
         OperatorPanel(modifier = Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
@@ -471,12 +476,12 @@ fun TopUpAmountDialog(
                     text = stringResource(R.string.check_ok),
                     onClick = {
                         onAmountUpdate(currentAmount)
-                        state.close()
+                        closeDialog()
                     },
                 )
                 OperatorActionButton(
                     text = stringResource(R.string.arrow_back),
-                    onClick = { state.close() },
+                    onClick = closeDialog,
                     primary = false,
                 )
             }

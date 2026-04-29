@@ -21,19 +21,29 @@ export const Index: React.FC = () => {
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();
   const { data: payoutInfo, error: payoutInfoError, isLoading: isPayoutInfoLoading } = usePayoutInfoQuery();
 
-  if (
-    isCustomerLoading ||
-    (!customer && !customerError) ||
-    isPayoutInfoLoading ||
-    (!payoutInfo && !payoutInfoError)
-  ) {
+  const showLoading =
+    isCustomerLoading || (!customer && !customerError) || isPayoutInfoLoading || (!payoutInfo && !payoutInfoError);
+  // Don't show an error toast during the initial loading phase.
+  // During that phase RTK Query typically has `data === undefined` while `isLoading === true`.
+  const showError = !showLoading && (customerError || !customer || payoutInfoError || !payoutInfo);
+
+  React.useEffect(() => {
+    if (showError) {
+      toast.error(t("errorLoadingCustomer"));
+    }
+  }, [showError, t]);
+
+  if (showLoading) {
     return <Loading />;
   }
 
-  if (customerError || !customer || payoutInfoError || !payoutInfo) {
-    React.useEffect(() => {
-      toast.error(t("errorLoadingCustomer"));
-    }, []);
+  if (showError) {
+    return null;
+  }
+
+  // TypeScript can't reliably narrow RTK Query `data` based on our derived booleans,
+  // even though at runtime we already returned above for the error/loading states.
+  if (!customer || !payoutInfo) {
     return null;
   }
 

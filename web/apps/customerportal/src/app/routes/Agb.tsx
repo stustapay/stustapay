@@ -15,7 +15,7 @@ export const Agb = () => {
   const hasPrivacyPolicy = !!config.translation_texts[i18n.language]?.["privacy_policy"];
 
   return (
-    <PageContainer title="TeamFestlichPay AGB">
+    <PageContainer title="AGB">
       {hasPrivacyPolicy && (
         <Box sx={{ width: "100%", mb: 3, textAlign: "center" }}>
           <Trans i18nKey="termsAndConditionsHeader">

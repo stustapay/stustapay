@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.activity.compose.LocalActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.ui.common.DialogDisplayState
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
@@ -104,35 +105,42 @@ fun TopUpSelection(
         }
     }
 
-    LaunchedEffect(isSelfServiceTopUp, requestActive, onBack, lastActivityTimestamp) {
-        if (!isSelfServiceTopUp || onBack == null || requestActive) {
-            return@LaunchedEffect
-        }
-
-        val elapsed = SystemClock.elapsedRealtime() - lastActivityTimestamp
-        val remaining = SELF_SERVICE_TOPUP_IDLE_TIMEOUT_MS - elapsed
-        if (remaining <= 0L) {
-            onBack()
-            return@LaunchedEffect
-        }
-
-        delay(remaining)
-        onBack()
-    }
-
     if (isSelfServiceTopUp) {
         val activity = LocalActivity.current as? Activity
         val paymentSelectionViewModel: CashECSelectionViewModel = hiltViewModel()
         val scanState = rememberNfcScanDialogState()
+        val customAmountDialog = rememberDialogDisplayState()
+        val modalOpen = scanState.isOpen() || customAmountDialog.isOpen()
+        val resetIdleTimer = {
+            setLastActivityTimestamp(SystemClock.elapsedRealtime())
+        }
+
+        LaunchedEffect(requestActive, onBack, modalOpen, lastActivityTimestamp) {
+            if (onBack == null || requestActive || modalOpen) {
+                return@LaunchedEffect
+            }
+
+            val elapsed = SystemClock.elapsedRealtime() - lastActivityTimestamp
+            val remaining = SELF_SERVICE_TOPUP_IDLE_TIMEOUT_MS - elapsed
+            if (remaining <= 0L) {
+                onBack()
+                return@LaunchedEffect
+            }
+
+            delay(remaining)
+            onBack()
+        }
 
         NfcScanDialog(
             state = scanState,
             showClarification = true,
             onDismiss = {
                 paymentSelectionViewModel.resetCustomerDisplay()
+                resetIdleTimer()
             },
             onScan = { tag ->
                 paymentSelectionViewModel.resetCustomerDisplay()
+                resetIdleTimer()
                 activity?.let { currentActivity ->
                     scope.launch {
                         viewModel.topUpWithCard(currentActivity, tag)
@@ -154,6 +162,8 @@ fun TopUpSelection(
             currentStep = currentStep,
             amount = topUpState.currentAmount,
             maxAmount = maxAmount,
+            customAmountDialog = customAmountDialog,
+            onCustomAmountDialogClose = resetIdleTimer,
             requestActive = requestActive,
             uiLocked = uiLocked,
             onAmountUpdate = { viewModel.setAmount(it) },
@@ -164,6 +174,7 @@ fun TopUpSelection(
                         return@let
                     }
                     paymentSelectionViewModel.showScanChipOnCustomerDisplay()
+                    resetIdleTimer()
                     scanState.open()
                 }
             },
@@ -245,6 +256,8 @@ private fun SelfServiceTopUpContent(
     currentStep: Int,
     amount: UInt,
     maxAmount: UInt,
+    customAmountDialog: DialogDisplayState,
+    onCustomAmountDialogClose: () -> Unit,
     requestActive: Boolean,
     uiLocked: Boolean,
     onAmountUpdate: (UInt) -> Unit,
@@ -255,7 +268,6 @@ private fun SelfServiceTopUpContent(
     onUserActivity: () -> Unit,
 ) {
     val profile = rememberSelfServiceDeviceProfile()
-    val customAmountDialog = rememberDialogDisplayState()
 
     TopUpAmountDialog(
         state = customAmountDialog,
@@ -263,6 +275,7 @@ private fun SelfServiceTopUpContent(
         amount = amount,
         onAmountUpdate = onAmountUpdate,
         onClear = onClear,
+        onClose = onCustomAmountDialogClose,
     )
 
     SelfServiceBackground(

@@ -89,7 +89,7 @@ fun TerminalConfig(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.h5,
-                    color = if (selfServiceMode) SelfServicePalette.subtitle else MaterialTheme.colors.onSurface,
+                    color = if (selfServiceMode) SelfServicePalette.title else MaterialTheme.colors.onSurface,
                     modifier = Modifier.padding(top = 10.dp)
                 )
             }

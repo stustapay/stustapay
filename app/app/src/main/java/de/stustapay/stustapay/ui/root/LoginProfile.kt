@@ -22,7 +22,7 @@ fun LoginProfile(
 ) {
     val loginProfileUiState: LoginProfileUIState by viewModel.loginProfileUIState.collectAsStateWithLifecycle()
     val titleColor = if (selfServiceMode) SelfServicePalette.title else Color.Unspecified
-    val subtitleColor = if (selfServiceMode) SelfServicePalette.subtitle else Color.Unspecified
+    val subtitleColor = if (selfServiceMode) SelfServicePalette.title else Color.Unspecified
 
     /*
     var image: ImageVector = Icons.Filled.Person

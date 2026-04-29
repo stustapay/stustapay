@@ -44,6 +44,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     privacyPolicy: "Datenschutzerklärung",
   },
   balance: "Guthaben",
+  tagPin: "Guthabenkarte-Chip Pin",
   tagUid: "Guthabenkarte-Chip ID",
   vouchers: "Getränkemarken",
   order: {

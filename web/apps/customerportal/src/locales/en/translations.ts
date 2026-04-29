@@ -37,6 +37,7 @@ export const translations = {
     currentlyUnavailable: "The TeamFestlichPay customer portal is currently unavailable",
   },
   balance: "Balance",
+  tagPin: "Voucher card Tag Pin",
   tagUid: "Voucher card Tag ID",
   vouchers: "Vouchers",
   order: {

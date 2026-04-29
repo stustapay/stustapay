@@ -29,23 +29,7 @@ class RootWrapperViewModel @Inject constructor(
         BorderState.NoBorder,
         viewModelScope
     ) { state ->
-        when (state) {
-            is TerminalConfigState.NoConfig -> {
-                BorderState.Border("no terminal configuration")
-            }
-
-            is TerminalConfigState.Error -> {
-                BorderState.Border("config error: ${state.message}")
-            }
-
-            is TerminalConfigState.Success -> {
-                if (state.config.testMode) {
-                    BorderState.Border(state.config.testModeMessage)
-                } else {
-                    BorderState.NoBorder
-                }
-            }
-        }
+        terminalConfigBorderState(state)
     }
 
     val infallibleVisible = infallibleRepository.state.map {
@@ -57,3 +41,24 @@ class RootWrapperViewModel @Inject constructor(
     )
 }
 
+internal fun terminalConfigBorderState(state: TerminalConfigState): BorderState {
+    return when (state) {
+        is TerminalConfigState.NoConfig -> {
+            BorderState.Border("no terminal configuration")
+        }
+
+        is TerminalConfigState.Error -> {
+            BorderState.Border("config error: ${state.message}")
+        }
+
+        is TerminalConfigState.Success -> {
+            if (state.refreshErrorMessage != null) {
+                BorderState.Border("config refresh failed: ${state.refreshErrorMessage}")
+            } else if (state.config.testMode) {
+                BorderState.Border(state.config.testModeMessage)
+            } else {
+                BorderState.NoBorder
+            }
+        }
+    }
+}

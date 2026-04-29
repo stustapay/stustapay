@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.repository
 
 import de.stustapay.api.models.TerminalConfig
+import de.stustapay.api.models.UserTagSecret
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.TerminalConfigRemoteDataSource
 import kotlinx.coroutines.delay
@@ -19,12 +20,79 @@ sealed interface TerminalConfigState {
     object NoConfig : TerminalConfigState
 
     data class Success(
-        var config: TerminalConfig
+        var config: TerminalConfig,
+        val refreshErrorMessage: String? = null,
     ) : TerminalConfigState
 
     data class Error(
         val message: String
     ) : TerminalConfigState
+}
+
+internal data class TerminalConfigFetchResult(
+    val state: TerminalConfigState,
+    val userTagSecret: UserTagSecret?,
+    val ok: Boolean,
+    val shouldRetry: Boolean,
+)
+
+internal const val TERMINAL_CONFIG_MISSING_USER_TAG_SECRET_MESSAGE =
+    "terminal config missing user tag secret"
+
+internal fun terminalConfigFetchResult(
+    currentState: TerminalConfigState,
+    response: Response<TerminalConfig>,
+): TerminalConfigFetchResult {
+    return when (response) {
+        is Response.OK -> {
+            val userTagSecret = response.data.secrets?.userTagSecret
+            if (userTagSecret == null) {
+                staleOrErrorResult(
+                    currentState = currentState,
+                    message = TERMINAL_CONFIG_MISSING_USER_TAG_SECRET_MESSAGE,
+                )
+            } else {
+                TerminalConfigFetchResult(
+                    state = TerminalConfigState.Success(response.data),
+                    userTagSecret = userTagSecret,
+                    ok = true,
+                    shouldRetry = false,
+                )
+            }
+        }
+
+        is Response.Error -> {
+            staleOrErrorResult(
+                currentState = currentState,
+                message = response.msg(),
+            )
+        }
+    }
+}
+
+private fun staleOrErrorResult(
+    currentState: TerminalConfigState,
+    message: String,
+): TerminalConfigFetchResult {
+    return when (currentState) {
+        is TerminalConfigState.Success -> {
+            TerminalConfigFetchResult(
+                state = currentState.copy(refreshErrorMessage = message),
+                userTagSecret = null,
+                ok = false,
+                shouldRetry = true,
+            )
+        }
+
+        else -> {
+            TerminalConfigFetchResult(
+                state = TerminalConfigState.Error(message),
+                userTagSecret = null,
+                ok = false,
+                shouldRetry = true,
+            )
+        }
+    }
 }
 
 @Singleton
@@ -33,10 +101,6 @@ class TerminalConfigRepository @Inject constructor(
     private val terminalConfigRemoteDataSource: TerminalConfigRemoteDataSource,
     private val nfcRepository: NfcRepository,
 ) {
-    private companion object {
-        const val MISSING_USER_TAG_SECRET_MESSAGE = "terminal config missing user tag secret"
-    }
-
     private val _terminalConfigState =
         MutableStateFlow<TerminalConfigState>(TerminalConfigState.NoConfig)
     var terminalConfigState = _terminalConfigState.asStateFlow()
@@ -62,28 +126,15 @@ class TerminalConfigRepository @Inject constructor(
 
         var ok: Boolean
         while (true) {
-            ok = when (val response = terminalConfigRemoteDataSource.getTerminalConfig()) {
-                is Response.OK -> {
-                    val userTagSecret = response.data.secrets?.userTagSecret
-                    if (userTagSecret == null) {
-                        _terminalConfigState.update {
-                            TerminalConfigState.Error(MISSING_USER_TAG_SECRET_MESSAGE)
-                        }
-                        true
-                    } else {
-                        _terminalConfigState.update { TerminalConfigState.Success(response.data) }
-                        nfcRepository.setTagKeys(userTagSecret)
-                        true
-                    }
-                }
+            val result = terminalConfigFetchResult(
+                currentState = _terminalConfigState.value,
+                response = terminalConfigRemoteDataSource.getTerminalConfig(),
+            )
+            _terminalConfigState.update { result.state }
+            result.userTagSecret?.let { nfcRepository.setTagKeys(it) }
+            ok = result.ok
 
-                is Response.Error -> {
-                    _terminalConfigState.update { TerminalConfigState.Error(response.msg()) }
-                    false
-                }
-            }
-
-            if (!ok && keepTrying) {
+            if (!ok && keepTrying && result.shouldRetry) {
                 delay(1000)
                 continue
             }

@@ -52,6 +52,14 @@ export const PageContainer: React.FC<PageContainerProps> = ({ title, children, m
                                 fontWeight: "bold",
                                 color: "white",
                                 textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                    width: "100%",
+                                    // Prevent cutting/overflow of long single "words" on small screens
+                                    // (e.g. "Datenschutzerklärung" without spaces).
+                                    whiteSpace: "normal",
+                                    overflowWrap: "anywhere",
+                                    wordBreak: "break-word",
+                                    lineHeight: { xs: 1.1, sm: 1.2 },
+                                    fontSize: { xs: "1.65rem" },
                             }}
                         >
                             {title}

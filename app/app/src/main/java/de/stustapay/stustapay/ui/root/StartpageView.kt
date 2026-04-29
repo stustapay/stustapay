@@ -202,7 +202,13 @@ fun StartpageView(
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
                             modifier = Modifier.align(Alignment.End),
-                            onClick = { showInfoDialog = false }
+                            onClick = { showInfoDialog = false },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = SelfServicePalette.panelMuted,
+                                contentColor = SelfServicePalette.title,
+                                disabledBackgroundColor = SelfServicePalette.panelBorder,
+                                disabledContentColor = SelfServicePalette.subtitle,
+                            ),
                         ) {
                             Text(text = stringResource(R.string.done))
                         }

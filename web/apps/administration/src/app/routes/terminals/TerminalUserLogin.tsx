@@ -37,11 +37,10 @@ const validationSchema = Yup.object().shape({
 export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, onClose }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const terminalScopeNodeId = currentNode.event_node_id ?? currentNode.id;
   const [loginUser] = useLoginUserMutation();
   const { data: userToRoles, isLoading: isLoadingUserToRoles } = useListUserToRoleQuery({ nodeId: currentNode.id });
   const { data: userRoles, isLoading: isLoadingUserRoles } = useListUserRolesQuery({ nodeId: currentNode.id });
-  const { data: terminals, isLoading: isLoadingTerminals } = useListTerminalsQuery({ nodeId: terminalScopeNodeId });
+  const { data: terminals, isLoading: isLoadingTerminals } = useListTerminalsQuery({ nodeId: currentNode.id });
 
   const formik = useFormik<FormValues>({
     initialValues: {
@@ -140,4 +139,4 @@ export const TerminalUserLogin: React.FC<Props> = ({ open, terminalId, users, on
       </form>
     </Dialog>
   );
-}; 
+};

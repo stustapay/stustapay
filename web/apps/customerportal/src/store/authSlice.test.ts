@@ -1,3 +1,5 @@
+import { authSlice, forceLogout, initialAuthState, migrateAuthState, setAuthenticatedSession, shouldResetPersistedPortalAuth } from "./authSlice";
+
 jest.mock("@/api", () => ({
   api: {
     endpoints: {
@@ -8,8 +10,6 @@ jest.mock("@/api", () => ({
     },
   },
 }));
-
-import { authSlice, forceLogout, initialAuthState, migrateAuthState, setAuthenticatedSession, shouldResetPersistedPortalAuth } from "./authSlice";
 
 describe("authSlice", () => {
   test("stores the portal-bound session on successful login", () => {

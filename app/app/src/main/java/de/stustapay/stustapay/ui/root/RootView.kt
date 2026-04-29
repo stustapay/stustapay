@@ -65,8 +65,7 @@ fun RootView(uictrl: SysUiController? = null) {
             val terminalStatusMessage by viewModel.terminalStatusMessage.collectAsStateWithLifecycle()
             DynamicSystemUiEffect(
                 uictrl = uictrl,
-                hidden = loginState.isSelfServiceTerminal() &&
-                    loginState.hasConfig() &&
+                hidden = loginState.hasConfig() &&
                     !configLoading,
             )
 

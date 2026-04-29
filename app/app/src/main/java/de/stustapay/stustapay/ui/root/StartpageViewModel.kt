@@ -39,14 +39,20 @@ class StartpageViewModel @Inject constructor(
     )
 
     val terminalStatusMessage = terminalConfigRepository.terminalConfigState.map { state ->
-        when (state) {
-            is TerminalConfigState.NoConfig -> null
-            is TerminalConfigState.Error -> "Configuration error: ${state.message}"
-            is TerminalConfigState.Success -> state.config.testModeMessage.takeIf { state.config.testMode }
-        }
+        terminalConfigStatusMessage(state)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = null,
     )
+}
+
+internal fun terminalConfigStatusMessage(state: TerminalConfigState): String? {
+    return when (state) {
+        is TerminalConfigState.NoConfig -> null
+        is TerminalConfigState.Error -> "Configuration error: ${state.message}"
+        is TerminalConfigState.Success -> state.refreshErrorMessage?.let {
+            "Configuration refresh failed: $it"
+        } ?: state.config.testModeMessage.takeIf { state.config.testMode }
+    }
 }

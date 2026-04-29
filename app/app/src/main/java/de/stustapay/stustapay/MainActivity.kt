@@ -13,6 +13,8 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import de.stustapay.stustapay.ec.SumUp
@@ -138,9 +140,39 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     private var sysUiHidden = false
     private var desiredSysUiHidden = true
+    private var insetsListenerInstalled = false
 
     private fun reapplyDesiredSystemUI() {
         applySystemUIVisibility(hidden = desiredSysUiHidden, force = true)
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    private fun installSystemUiRehideListeners() {
+        if (insetsListenerInstalled) {
+            return
+        }
+
+        val decorView = window.decorView
+        ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, insets ->
+            if (desiredSysUiHidden && insets.isVisible(WindowInsetsCompat.Type.systemBars())) {
+                decorView.post { reapplyDesiredSystemUI() }
+            }
+            insets
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            @Suppress("DEPRECATION")
+            decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+                if (desiredSysUiHidden &&
+                    (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0 ||
+                        visibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0)
+                ) {
+                    decorView.post { reapplyDesiredSystemUI() }
+                }
+            }
+        }
+
+        insetsListenerInstalled = true
     }
 
     @SuppressLint("ObsoleteSdkInt")
@@ -174,6 +206,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         }
 
         applyFullscreenWindowFlags(enabled = hidden)
+        installSystemUiRehideListeners()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let {
                 if (hidden) {
