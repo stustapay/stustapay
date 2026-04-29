@@ -19,6 +19,9 @@ const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
 });
 
+const EXTENDED_CHECKOUT_POLL_INTERVAL_MS = 30 * 1000;
+const STALLED_CHECKOUT_TIMEOUT_MS = 2 * 60 * 1000;
+
 type FormVal = z.infer<typeof TopUpSchema>;
 
 const initialValues: FormVal = { amount: 0 };
@@ -104,6 +107,7 @@ export const TopUp: React.FC = () => {
 
   const [state, dispatch] = React.useReducer(reducer, initialState);
   const [sumupMessage, setSumupMessage] = React.useState<string | null>(null);
+  const [isExtendedPending, setIsExtendedPending] = React.useState(false);
 
   // Handle APM redirect navigation state
   React.useEffect(() => {
@@ -149,19 +153,84 @@ export const TopUp: React.FC = () => {
     hasSeenAuthScreen.current = false;
     hasShownPendingWarning.current = false;
     setSumupMessage(null);
+    setIsExtendedPending(false);
     unmountSumupCard();
   }, [state.stage]);
 
   React.useEffect(() => {
-    const startCheckoutStatusPolling = (reason: Exclude<SumUpResponseType, "invalid">) => {
+    if (state.stage !== "sumup") {
+      return;
+    }
+
+    let active = true;
+
+    checkCheckout({ checkCheckoutPayload: { order_uuid: state.orderUUID } })
+      .unwrap()
+      .then((resp) => {
+        if (!active || state.stage !== "sumup") {
+          return;
+        }
+
+        if (resp.status === "PAID") {
+          clearCheckoutPoll();
+          unmountSumupCard();
+          dispatch({ type: "sumup-success" });
+        } else if (resp.status === "FAILED") {
+          clearCheckoutPoll();
+          unmountSumupCard();
+          dispatch({ type: "sumup-cancelled", message: t("topup.cancelled.message") });
+        }
+      })
+      .catch(() => {
+        // Ignore initial lookup errors and wait for the normal checkout flow.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [checkCheckout, state, t]);
+
+  React.useEffect(() => {
+    if (state.stage !== "sumup") {
+      return;
+    }
+
+    const enterExtendedPending = () => {
+      setIsExtendedPending(true);
+      setSumupMessage(t("topup.paymentTakingTooLong"));
+      if (!hasShownPendingWarning.current) {
+        hasShownPendingWarning.current = true;
+        toast.warning(t("topup.paymentTakingTooLong"));
+      }
+    };
+
+    const handleCheckoutStatus = (status: string) => {
+      if (status === "PAID") {
+        clearCheckoutPoll();
+        unmountSumupCard();
+        dispatch({ type: "sumup-success" });
+        return true;
+      }
+
+      if (status === "FAILED") {
+        clearCheckoutPoll();
+        unmountSumupCard();
+        dispatch({ type: "sumup-cancelled", message: t("topup.cancelled.message") });
+        return true;
+      }
+
+      return false;
+    };
+
+    const startCheckoutStatusPolling = (reason: Exclude<SumUpResponseType, "invalid">, startExtended = false) => {
       if (state.stage !== "sumup") {
         return;
       }
 
       clearCheckoutPoll();
       const pollRun = ++checkoutPollRun.current;
-      let attempt = 0;
       const maxAttempts = reason === "success" ? 8 : 20;
+      let attempt = startExtended ? maxAttempts : 0;
 
       const scheduleNextPoll = (delayMs: number) => {
         clearCheckoutPoll();
@@ -181,35 +250,18 @@ export const TopUp: React.FC = () => {
             return;
           }
 
-          if (resp.status === "PAID") {
-            clearCheckoutPoll();
-            unmountSumupCard();
-            dispatch({ type: "sumup-success" });
-            return;
-          }
-
-          if (resp.status === "FAILED") {
-            clearCheckoutPoll();
-            unmountSumupCard();
-            dispatch({ type: "sumup-cancelled", message: t("topup.cancelled.message") });
+          if (handleCheckoutStatus(resp.status)) {
             return;
           }
 
           attempt += 1;
-          setSumupMessage(
-            hasSeenAuthScreen.current ? t("topup.awaiting3ds") : t("topup.processingPayment")
-          );
-
           if (attempt >= maxAttempts) {
-            clearCheckoutPoll();
-            setSumupMessage(t("topup.paymentTakingTooLong"));
-            if (!hasShownPendingWarning.current) {
-              hasShownPendingWarning.current = true;
-              toast.warning(t("topup.paymentTakingTooLong"));
-            }
+            enterExtendedPending();
+            scheduleNextPoll(EXTENDED_CHECKOUT_POLL_INTERVAL_MS);
             return;
           }
 
+          setSumupMessage(hasSeenAuthScreen.current ? t("topup.awaiting3ds") : t("topup.processingPayment"));
           scheduleNextPoll(reason === "success" ? Math.min(8000, 1000 * 2 ** (attempt - 1)) : 2000);
         } catch {
           if (checkoutPollRun.current !== pollRun || state.stage !== "sumup") {
@@ -218,12 +270,8 @@ export const TopUp: React.FC = () => {
 
           attempt += 1;
           if (attempt >= 5) {
-            clearCheckoutPoll();
-            setSumupMessage(t("topup.paymentTakingTooLong"));
-            if (!hasShownPendingWarning.current) {
-              hasShownPendingWarning.current = true;
-              toast.warning(t("topup.paymentTakingTooLong"));
-            }
+            enterExtendedPending();
+            scheduleNextPoll(EXTENDED_CHECKOUT_POLL_INTERVAL_MS);
             return;
           }
 
@@ -281,7 +329,43 @@ export const TopUp: React.FC = () => {
     handleSumupCardLoad.current = () => {
       setSumupMessage(t("topup.processingPayment"));
     };
-  }, [checkCheckout, dispatch, state, t]);
+
+    let stalledCheckoutActive = true;
+
+    const stalledCheckoutTimeout = window.setTimeout(() => {
+      if (state.stage !== "sumup" || isExtendedPending) {
+        return;
+      }
+
+      checkCheckout({ checkCheckoutPayload: { order_uuid: state.orderUUID } })
+        .unwrap()
+        .then((resp) => {
+          if (!stalledCheckoutActive || state.stage !== "sumup") {
+            return;
+          }
+
+          if (handleCheckoutStatus(resp.status)) {
+            return;
+          }
+
+          enterExtendedPending();
+          startCheckoutStatusPolling("error", true);
+        })
+        .catch(() => {
+          if (!stalledCheckoutActive) {
+            return;
+          }
+
+          enterExtendedPending();
+          startCheckoutStatusPolling("error", true);
+        });
+    }, STALLED_CHECKOUT_TIMEOUT_MS);
+
+    return () => {
+      stalledCheckoutActive = false;
+      window.clearTimeout(stalledCheckoutTimeout);
+    };
+  }, [checkCheckout, dispatch, isExtendedPending, state, t]);
 
   React.useEffect(() => {
     if (state.stage !== "sumup") {
@@ -290,6 +374,7 @@ export const TopUp: React.FC = () => {
 
     hasSeenAuthScreen.current = false;
     hasShownPendingWarning.current = false;
+    setIsExtendedPending(false);
     setSumupMessage(t("topup.processingPayment"));
 
     const config = {
@@ -313,34 +398,6 @@ export const TopUp: React.FC = () => {
       }
     }
   }, [state, i18n.language, dispatch, t]);
-
-  // Add an effect to check for stalled payments
-  React.useEffect(() => {
-    if (state.stage !== "sumup") {
-      return;
-    }
-
-    // Set up a timeout to check if the payment is taking too long (2 minutes)
-    const timeoutId = setTimeout(() => {
-      checkCheckout({ checkCheckoutPayload: { order_uuid: state.orderUUID } })
-        .unwrap()
-        .then((resp) => {
-          if (resp.status === "PENDING") {
-            // Still pending after 2 minutes, offer to restart
-            setSumupMessage(t("topup.paymentTakingTooLong"));
-            toast.warning(t("topup.paymentTakingTooLong"));
-          }
-        })
-        .catch(() => {
-          // Ignore errors here
-        });
-    }, 2 * 60 * 1000);  // 2 minutes
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [state, checkCheckout, t]);
-
 
   if (!config.sumup_topup_enabled) {
     toast.error(t("topup.sumupTopupDisabled"));
@@ -410,11 +467,6 @@ export const TopUp: React.FC = () => {
               {sumupMessage || t("topup.processingPayment")}
             </Alert>
             <div id="sumup-card"></div>
-            <Box>
-              <Button onClick={reset} color="inherit" size="small">
-                {t("topup.tryAgain")}
-              </Button>
-            </Box>
           </Stack>
         </PageContainer>
       );
