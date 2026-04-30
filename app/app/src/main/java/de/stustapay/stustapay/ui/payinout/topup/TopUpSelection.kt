@@ -110,25 +110,30 @@ fun TopUpSelection(
         val paymentSelectionViewModel: CashECSelectionViewModel = hiltViewModel()
         val scanState = rememberNfcScanDialogState()
         val customAmountDialog = rememberDialogDisplayState()
-        val modalOpen = scanState.isOpen() || customAmountDialog.isOpen()
         val resetIdleTimer = {
             setLastActivityTimestamp(SystemClock.elapsedRealtime())
         }
+        val leaveSelfService = {
+            paymentSelectionViewModel.resetCustomerDisplay()
+            scanState.close()
+            customAmountDialog.close()
+            onBack?.invoke()
+        }
 
-        LaunchedEffect(requestActive, onBack, modalOpen, lastActivityTimestamp) {
-            if (onBack == null || requestActive || modalOpen) {
+        LaunchedEffect(requestActive, onBack, lastActivityTimestamp) {
+            if (onBack == null || requestActive) {
                 return@LaunchedEffect
             }
 
             val elapsed = SystemClock.elapsedRealtime() - lastActivityTimestamp
             val remaining = SELF_SERVICE_TOPUP_IDLE_TIMEOUT_MS - elapsed
             if (remaining <= 0L) {
-                onBack()
+                leaveSelfService()
                 return@LaunchedEffect
             }
 
             delay(remaining)
-            onBack()
+            leaveSelfService()
         }
 
         NfcScanDialog(

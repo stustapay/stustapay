@@ -28,7 +28,7 @@
     <string name="selfservice_title">Guthaben prüfen oder aufladen</string>
     <string name="selfservice_description">Bitte wählen Sie eine Option.</string>
     <string name="selfservice_check_balance">Guthaben prüfen</string>
-    <string name="selfservice_check_balance_hint">Aktuellen Bändchen-Stand anzeigen.</string>
+    <string name="selfservice_check_balance_hint">Aktuelles Guthaben anzeigen.</string>
     <string name="selfservice_topup">Guthaben aufladen</string>
     <string name="selfservice_topup_hint">Guthaben hinzufügen und am Kartenterminal zahlen.</string>
     <string name="selfservice_hint_scan">Bändchen bei Aufforderung auf den Leser halten.</string>
@@ -36,7 +36,7 @@
     <string name="selfservice_action_open">Öffnen</string>
     <string name="selfservice_action_start">Starten</string>
     <string name="selfservice_action_terminal_info">Terminalinfo</string>
-    <string name="selfservice_scan_balance_title">Bändchen hier vorhalten</string>
+    <string name="selfservice_scan_balance_title">Chip hier vorhalten</string>
     <string name="selfservice_scan_balance_title_compact">Chip hier vorhalten</string>
     <string name="selfservice_scan_balance_subtitle">Scannen, um Ihr Guthaben anzuzeigen</string>
     <string name="selfservice_scan_topup_subtitle">Scannen, um Ihr Guthaben aufzuladen</string>
