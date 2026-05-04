@@ -10,17 +10,20 @@ from sftkit.error import AccessDenied, InvalidArgument
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import BookedProduct, EditSaleProducts, NewSaleProducts, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct, Product
+from stustapay.core.schema.till import NewCashRegister
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.tree import NewEvent, Node, ROOT_NODE_ID
 from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.order import OrderService
+from stustapay.core.service.order.booking import book_cashier_shift_start_order
 from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
 from stustapay.core.service.order.order import get_source_account, get_target_account
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import fetch_tax_rate_none
 from stustapay.core.service.till.common import fetch_virtual_till
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.tree.service import create_event
 from stustapay.core.service.user import UserService
 
@@ -444,6 +447,41 @@ async def test_list_orders_filtered_excludes_money_transfers(
     )
     assert money_transfer_count == 1
     assert all(order.order_type != OrderType.money_transfer for order in filtered_orders)
+
+
+async def test_list_orders_filtered_excludes_cashier_shift_start(
+    order_service: OrderService,
+    till_service: TillService,
+    event_admin_token: str,
+    db_connection: Connection,
+    event_node: Node,
+    cashier: Cashier,
+):
+    cash_register = await till_service.register.create_cash_register(
+        node_id=event_node.id,
+        token=event_admin_token,
+        new_register=NewCashRegister(name="Pagination Register"),
+    )
+
+    await book_cashier_shift_start_order(
+        conn=db_connection,
+        cashier_id=cashier.id,
+        node=event_node,
+        cash_register_id=cash_register.id,
+    )
+
+    filtered_orders = await order_service.list_orders_filtered(
+        token=event_admin_token,
+        node_id=event_node.id,
+    )
+
+    cashier_shift_start_count = await db_connection.fetchval(
+        "select count(*) from ordr where order_type = $1 and cashier_id = $2",
+        OrderType.cashier_shift_start.name,
+        cashier.id,
+    )
+    assert cashier_shift_start_count == 1
+    assert all(order.order_type != OrderType.cashier_shift_start for order in filtered_orders)
 
 
 async def test_can_book_orders_can_read_orders_in_admin_context(

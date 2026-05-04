@@ -190,6 +190,7 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
     assert captured["context"].order_groups[0].orders[0].customer_tag_uid_hex == "ABCD"
     assert [item.product_name for item in captured["context"].order_groups[0].orders[0].line_items] == ["Helles", "Pfand"]
     assert "order_type = 'sale'" in conn.fetch_many.await_args.args[1]
+    assert "not exists (select 1 from ordr c where c.cancels_order = o.id)" in conn.fetch_many.await_args.args[1]
 
 
 async def test_generate_report_renders_template_fallbacks(monkeypatch):

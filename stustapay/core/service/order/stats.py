@@ -444,6 +444,7 @@ async def get_hourly_sales_stats(
             "join line_item li on o.id = li.order_id "
             "where o.booked_at >= $1 and o.booked_at <= $2 and o.payment_method = 'tag' "
             "   and o.order_type = 'sale' "
+            "   and not exists (select 1 from ordr c where c.cancels_order = o.id) "
             "   and ($4::int IS NULL OR o.till_id = $4) "
             f"{selected_date_filter} "
             "group by from_time, to_time "
@@ -499,6 +500,7 @@ async def get_hourly_product_stats(
             "join line_item li on o.id = li.order_id "
             "join product p on li.product_id = p.id "
             "where o.booked_at >= $1 and o.booked_at <= $2 "
+            "   and not exists (select 1 from ordr c where c.cancels_order = o.id) "
             "   and p.type = 'user_defined' "
             "   and p.is_returnable = $4 "
             "   and ($5::int IS NULL OR o.till_id = $5) "
@@ -565,6 +567,7 @@ async def get_product_breakdown_stats(
             "   join line_item li on o.id = li.order_id "
             "   join product p on li.product_id = p.id "
             "   where o.booked_at >= $1 and o.booked_at <= $2 "
+            "       and not exists (select 1 from ordr c where c.cancels_order = o.id) "
             "       and p.type = 'user_defined' "
             "       and ($4::int is null or o.till_id = $4) "
             f"       {selected_date_filter} "
@@ -948,6 +951,7 @@ class OrderStatsService(Service[Config]):
                 "    JOIN scope_tills st ON st.id = o.till_id "
                 "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
                 "      AND o.order_type = 'sale' "
+                "      AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id) "
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
                 f"      {selected_date_filter} "
                 "), "
@@ -956,7 +960,8 @@ class OrderStatsService(Service[Config]):
                 "    FROM ordr o "
                 "    JOIN scope_tills st ON st.id = o.till_id "
                 "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "      AND o.order_type IN ('sale', 'cancel_sale') "
+                "      AND o.order_type = 'sale' "
+                "      AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id) "
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
                 f"      {selected_date_filter} "
                 "), "
@@ -966,6 +971,23 @@ class OrderStatsService(Service[Config]):
                 "    JOIN line_item li ON li.order_id = ro.id "
                 "    JOIN product p ON p.id = li.product_id "
                 "    WHERE p.type = 'user_defined'"
+                "), "
+                "guests_completed_accounts AS MATERIALIZED ("
+                "    SELECT DISTINCT customer_account_id AS account_id "
+                "    FROM filtered_orders fo "
+                "    JOIN account a ON a.id = fo.customer_account_id "
+                "    WHERE fo.customer_account_id IS NOT NULL "
+                "      AND a.balance = 0 "
+                "    UNION "
+                "    SELECT DISTINCT t.source_account AS account_id "
+                "    FROM transaction t "
+                "    JOIN account source_account ON t.source_account = source_account.id "
+                "    JOIN account target_account ON t.target_account = target_account.id "
+                "    WHERE t.booked_at >= $1 AND t.booked_at <= $2 "
+                "      AND source_account.type = 'private' "
+                "      AND source_account.node_id = ANY($5) "
+                "      AND source_account.balance = 0 "
+                "      AND target_account.type IN ('cash_exit', 'sepa_exit', 'donation_exit') "
                 ") "
                 "SELECT "
                 "   COALESCE((SELECT SUM(balance) FROM account WHERE balance > 0 AND type = 'private' AND node_id = ANY($5)), 0) "
@@ -980,14 +1002,7 @@ class OrderStatsService(Service[Config]):
                 "             FROM account "
                 "             WHERE type = 'private' AND node_id = ANY($5) AND balance > 0), 0) "
                 "       AS guests_with_credit, "
-                "   COALESCE((SELECT COUNT(DISTINCT t.source_account) "
-                "             FROM transaction t "
-                "             JOIN account source_account ON t.source_account = source_account.id "
-                "             JOIN account target_account ON t.target_account = target_account.id "
-                "             WHERE t.booked_at >= $1 AND t.booked_at <= $2 "
-                "               AND source_account.type = 'private' "
-                "               AND source_account.node_id = ANY($5) "
-                "               AND target_account.type IN ('cash_exit', 'sepa_exit', 'donation_exit')), 0) "
+                "   COALESCE((SELECT COUNT(*) FROM guests_completed_accounts), 0) "
                 "       AS guests_paid_out, "
                 "   COALESCE((SELECT SUM(p.donation) "
                 "             FROM payout p "
@@ -1057,6 +1072,7 @@ class OrderStatsService(Service[Config]):
                 "AND ($4::int IS NULL OR o.till_id = $4) "
                 f"{selected_date_filter} "
                 "AND o.order_type = 'sale' "
+                "AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id) "
                 "AND t.is_virtual IS NOT TRUE "
                 "AND t.name <> 'CheckTerminal' "
                 "GROUP BY t.id, t.name "
@@ -1238,6 +1254,7 @@ class OrderStatsService(Service[Config]):
                     JOIN event e ON event_node.event_id = e.id
                     WHERE o.payment_method = 'tag'
                         AND o.order_type = 'sale'
+                        AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id)
                         AND o.booked_at >= $3
                         AND o.booked_at < $2
                     GROUP BY hour, day, e.id
@@ -1272,6 +1289,7 @@ class OrderStatsService(Service[Config]):
                     JOIN node n ON t.node_id = n.id
                     WHERE o.payment_method = 'tag'
                         AND o.order_type = 'sale'
+                        AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id)
                         AND o.booked_at >= $2
                         AND o.booked_at < $1
                         AND n.event_node_id IS NOT NULL
@@ -1307,6 +1325,7 @@ class OrderStatsService(Service[Config]):
                 LEFT JOIN line_item li ON li.order_id = o.id
                 WHERE o.payment_method = 'tag'
                     AND o.order_type = 'sale'
+                    AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id)
                     AND o.booked_at >= $2
                     AND o.booked_at <= now()
                     AND ($3::int IS NULL OR o.till_id = $3)
@@ -1437,6 +1456,7 @@ class OrderStatsService(Service[Config]):
                 JOIN node n ON n.id = t.node_id
                 WHERE o.payment_method = 'tag'
                     AND o.order_type = 'sale'
+                    AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id)
                     AND o.booked_at >= $2
                     AND o.booked_at <= $3
                     AND ($1 = ANY(n.parent_ids) OR n.id = $1)
@@ -1477,6 +1497,7 @@ class OrderStatsService(Service[Config]):
                 LEFT JOIN line_item li ON li.order_id = o.id
                 WHERE o.payment_method = 'tag'
                     AND o.order_type = 'sale'
+                    AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id)
                     AND o.booked_at >= $2
                     AND o.booked_at <= $3
                     AND o.customer_account_id IS NOT NULL

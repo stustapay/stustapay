@@ -308,6 +308,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.0) -> PdfRender
         "select o.*, o.total_price * $2 as fees, o.total_price - o.total_price * $2 as total_price_minus_fees "
         "from orders_at_node_and_children($1) o "
         "where o.payment_method = 'tag' and o.order_type = 'sale' "
+        "  and not exists (select 1 from ordr c where c.cancels_order = o.id) "
         "order by o.booked_at",
         node_id,
         fees,

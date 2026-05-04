@@ -1759,10 +1759,14 @@ class OrderService(Service[Config]):
         scope_node = await self._resolve_scope_node(conn=conn, node=node, subnode_id=subnode_id)
         conditions: list[str] = []
         params: list = [scope_node.id]
+        excluded_order_types = [
+            OrderType.money_transfer.name,
+            OrderType.cashier_shift_start.name,
+        ]
 
         conditions.append("o.id IN (SELECT id FROM orders_at_node_and_children($1))")
-        params.append(OrderType.money_transfer.name)
-        conditions.append(f"o.order_type != ${len(params)}")
+        params.append(excluded_order_types)
+        conditions.append(f"o.order_type != ALL(${len(params)}::text[])")
 
         if from_timestamp is not None:
             params.append(from_timestamp)
