@@ -8,9 +8,9 @@ import {
 } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Alert, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, Link, Stack, Typography } from "@mui/material";
+import { Alert, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Link, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { FormCheckbox, FormCurrencyInput, FormTextField } from "@stustapay/form-components";
+import { FormCurrencyInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Formik, FormikHelpers } from "formik";
 import iban from "iban";
@@ -137,7 +137,7 @@ export const PayoutInfo: React.FC = () => {
   } else if (customer.has_entered_info) {
     info_text = t("payout.infoPayoutInitiated");
   } else {
-    info_text = t("payout.info");
+    info_text = config.donation_enabled ? t("payout.infoWithDonation") : t("payout.info");
   }
 
   let submit_text: string;

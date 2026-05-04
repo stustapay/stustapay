@@ -68,12 +68,14 @@ export const translations: NestedPartialAsStrings<Translations> = {
     bankAccountHolder: "Kontoinhaber",
     email: "E-Mail",
     infoPayoutInitiated:
-      "Du hast deine Bankinformationen bereits angegeben und dein verbleibendes Guthaben wird in der nächsten manuell ausgelösten Auszahlung (in der Regel innerhalb eines Monats) ausgezahlt. Du kannst jedoch weiterhin deine Bankinformationen oder deine Spendenwahl ändern. Vielen Dank für deine Geduld.",
+      "Du hast deine Bankinformationen bereits angegeben und dein verbleibendes Guthaben wird in der nächsten manuell ausgelösten Auszahlung (in der Regel innerhalb eines Monats) ausgezahlt. Du kannst jedoch weiterhin deine Bankinformationen ändern. Vielen Dank für deine Geduld.",
     infoPayoutScheduled:
       "Du bist für unsere nächste manuell ausgelöste Auszahlung eingeplant, daher kannst du deine Bankinformationen nicht mehr ändern. Halte durch, wir werden dich benachrichtigen, sobald wir die Banküberweisung von unserer Seite aus initiiert haben.",
     infoPayoutCompleted:
       "Vielen Dank für deine Geduld, wir haben die Banküberweisung von unserer Seite aus am {{payout_date}} initiiert. Möglicherweise hast du die Gelder bereits erhalten, andernfalls sollten sie innerhalb der nächsten Tage eintreffen. Du kannst die Überweisungsdetails in der Transaktionsliste auf der Hauptseite einsehen.",
-    info: "Damit wir dein Restguthaben überweisen können, trage bitte Deine Bankdaten hier ein. Wenn Du unser ehrenamtliches Engagement unterstützen möchtest, kannst Du bei dem Punkt \"Spendenbetrag\" einen Betrag Deiner Wahl eingegeben. Das System errechnet nach dem Drücken des Buttons \"Bankdaten speichern\" dann automatisch den Auszahlungsbetrag. Möchtest Du keinen Betrag spenden bitte einfach nur den Button \"Bankdaten speichern\" drücken, der auf der Karte verfügbare Betrag wird dann zur Auszahlung vorgemerkt.Die erste Auszahlung findet voraussichtlich 3 Wochen nach Veranstaltungsende statt.",
+    info: "Damit wir dein Restguthaben überweisen können, trage bitte deine Bankdaten hier ein. Die erste Auszahlung findet voraussichtlich 3 Wochen nach Veranstaltungsende statt.",
+    infoWithDonation:
+      "Damit wir dein Restguthaben überweisen können, trage bitte deine Bankdaten hier ein. Wenn du unser ehrenamtliches Engagement unterstützen möchtest, kannst du bei dem Punkt \"Spendenbetrag\" einen Betrag deiner Wahl eingeben. Das System errechnet nach dem Drücken des Buttons \"Bankdaten speichern\" dann automatisch den Auszahlungsbetrag. Möchtest du keinen Betrag spenden, drücke einfach nur den Button \"Bankdaten speichern\"; der auf der Karte verfügbare Betrag wird dann zur Auszahlung vorgemerkt. Die erste Auszahlung findet voraussichtlich 3 Wochen nach Veranstaltungsende statt.",
     ibanNotValid: "ungültige IBAN",
     countryCodeNotSupported: "IBAN Ländercode wird nicht unterstützt",
     nameHasSpecialChars: "Der Accountname enthält nicht valide Sonderzeichen",

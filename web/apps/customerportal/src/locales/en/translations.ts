@@ -66,12 +66,14 @@ export const translations = {
     bankAccountHolder: "Account Holder",
     email: "E-Mail",
     infoPayoutInitiated:
-      "You have already provided your bank information and your remaining balance will be payed out in the next manual triggered payout batch (usually within a month). However, you can still edit your bank information or donation choice. Thank you for your patience.",
+      "You have already provided your bank information and your remaining balance will be payed out in the next manual triggered payout batch (usually within a month). However, you can still edit your bank information. Thank you for your patience.",
     infoPayoutScheduled:
       "You are scheduled for our next manual triggered payout, thus you cannot change your bank information anymore. Hold on tide, we will notify you once we have initiated the bank transfer from our side.",
     infoPayoutCompleted:
       "Thank you for our patience, we have initiated the bank transfer from our side on {{payout_date}}. You might have already received the funds, otherwise they should arrive within the next few days. You can see the transfer details in the transaction list on the main page.",
-    info: "Please enter your bank account information so we can transfer your leftover balance. You can also donate parts or your whole remaining balance to support our volunteer work. The first payout is planned approximately 3 weeks after the end of the event.",
+    info: "Please enter your bank account information so we can transfer your leftover balance. The first payout is planned approximately 3 weeks after the end of the event.",
+    infoWithDonation:
+      "Please enter your bank account information so we can transfer your leftover balance. You can also donate part or all of your remaining balance to support our volunteer work. The first payout is planned approximately 3 weeks after the end of the event.",
     ibanNotValid: "IBAN is not valid",
     countryCodeNotSupported: "Provided IBAN country code is not supported",
     nameHasSpecialChars: "Provided account name contains invalid special characters",
