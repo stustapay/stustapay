@@ -47,6 +47,7 @@ class CustomerPortalApiConfig(BaseModel):
     translation_texts: dict[Language, dict[str, str]]
     event_design: EventDesign
     node_id: int
+    feedback_url: Optional[str] = None
 
 
 class CustomerLoginSuccess(BaseModel):
@@ -275,4 +276,5 @@ class CustomerService(Service[Config]):
             currency_identifier=node.event.currency_identifier,
             event_design=event_design,
             node_id=node.id,
+            feedback_url=node.event.customer_portal_feedback_url,
         )

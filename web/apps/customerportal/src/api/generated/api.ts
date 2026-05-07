@@ -359,6 +359,7 @@ export type CustomerPortalApiConfig = {
   test_mode_message: string;
   data_privacy_url: string;
   contact_email: string;
+  feedback_url: string | null;
   about_page_url: string;
   payout_enabled: boolean;
   currency_identifier: string;

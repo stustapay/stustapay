@@ -7,7 +7,7 @@ import {
 } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Alert, Button, Grid, Link, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Grid, Link, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { FormCheckbox, FormCurrencyInput, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -226,6 +226,19 @@ export const PayoutInfo: React.FC = () => {
                       </Trans>
                     }
                   />
+                  {config.feedback_url && (
+                    <Box sx={{ textAlign: "center", my: 1 }}>
+                      <Link
+                        href={config.feedback_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="body2"
+                        color="primary"
+                      >
+                        {t("payout.sendFeedback")} →
+                      </Link>
+                    </Box>
+                  )}
                   <Typography>{t("payout.donationDescription")}</Typography>
                   <FormCurrencyInput
                     name="donation"

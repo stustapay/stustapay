@@ -13,6 +13,7 @@ export const CustomerPortalSettingsSchema = z.object({
   customer_portal_contact_email: z.string().email(),
   customer_portal_about_page_url: z.string().url(),
   customer_portal_data_privacy_url: z.string().url(),
+  customer_portal_feedback_url: z.string().url().optional(),
 });
 
 export type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
@@ -36,6 +37,12 @@ export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSett
         label={t("settings.customerPortal.data_privacy_url")}
         name="customer_portal_data_privacy_url"
         formik={formik}
+      />
+      <FormTextField
+        label={t("settings.customerPortal.feedback_url")}
+        name="customer_portal_feedback_url"
+        formik={formik}
+        placeholder={t("settings.customerPortal.feedback_url_placeholder")}
       />
     </>
   );
