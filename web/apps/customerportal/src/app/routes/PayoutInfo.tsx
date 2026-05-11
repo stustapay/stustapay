@@ -130,10 +130,10 @@ export const PayoutInfo: React.FC = () => {
   };
 
   let info_text: string;
-  if (payoutInfo.in_payout_run && !payoutInfo.payout_date) {
-    info_text = t("payout.infoPayoutScheduled");
-  } else if (payoutInfo.in_payout_run && payoutInfo.payout_date) {
+  if (payoutInfo.payout_date) {
     info_text = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
+  } else if (payoutInfo.in_payout_run) {
+    info_text = t("payout.infoPayoutScheduled");
   } else if (customer.has_entered_info) {
     info_text = t("payout.infoPayoutInitiated");
   } else {

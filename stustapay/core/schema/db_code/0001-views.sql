@@ -107,7 +107,14 @@ create or replace view customer as
     select
         a.*,
         customer_info.*,
-        (select row_to_json(p.*) from payout_view p where p.customer_account_id = a.id) as payout
+        (
+            select row_to_json(p.*)
+            from payout_view p
+            join payout_run pr on pr.id = p.payout_run_id
+            where p.customer_account_id = a.id and not pr.done and not pr.revoked
+            order by pr.created_at desc, p.id desc
+            limit 1
+        ) as payout
     from
         account_with_history a
         left join customer_info on (a.id = customer_info.customer_account_id)
@@ -118,8 +125,16 @@ create or replace view customers_without_payout_run as
     select
         c.*
     from customer c
-    left join payout p on c.id = p.customer_account_id
-    where p.id is null and c.has_entered_info and c.payout_export != false and round(c.balance, 2) > 0;
+    where
+        c.has_entered_info
+        and c.payout_export != false
+        and round(c.balance, 2) > 0
+        and not exists(
+            select 1
+            from payout p
+            join payout_run pr on pr.id = p.payout_run_id
+            where p.customer_account_id = c.id and not pr.done and not pr.revoked
+        );
 
 create or replace view payout_run_with_stats as
     select

@@ -51,10 +51,10 @@ export const Index: React.FC = () => {
   // we also might want to show the balance of the account after each order
 
   let payout_info;
-  if (payoutInfo.in_payout_run && !payoutInfo.payout_date) {
-    payout_info = t("payout.infoPayoutScheduled");
-  } else if (payoutInfo.in_payout_run && payoutInfo.payout_date) {
+  if (payoutInfo.payout_date) {
     payout_info = t("payout.infoPayoutCompleted", { payout_date: new Date(payoutInfo.payout_date).toLocaleString() });
+  } else if (payoutInfo.in_payout_run) {
+    payout_info = t("payout.infoPayoutScheduled");
   } else if (customer.has_entered_info) {
     payout_info = t("payout.infoPayoutInitiated");
   } else {

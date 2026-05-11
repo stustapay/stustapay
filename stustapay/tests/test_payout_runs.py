@@ -425,7 +425,7 @@ async def test_revoke_payout(
     customer_service: CustomerService,
     mail_service: MailService,
 ):
-    del customers  # we just need the fixture to be setup to populate the database
+    expected_num_payouts = len([customer for customer in customers if round(customer.balance, 2) > 0])
     payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,
         node_id=event_node.id,
@@ -448,6 +448,13 @@ async def test_revoke_payout(
     assert payout_run.n_payouts == 0
     assert payout_run.total_payout_amount == pytest.approx(0)
     assert payout_run.total_donation_amount == pytest.approx(0)
+
+    payout_run_after_revoke: PayoutRunWithStats = await customer_service.payout.create_payout_run(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_payout_run=NewPayoutRun(max_num_payouts=15, max_payout_sum=15000),
+    )
+    assert payout_run_after_revoke.n_payouts == expected_num_payouts
 
     with pytest.raises(InvalidArgument):
         await customer_service.payout.set_payout_run_as_done(
@@ -488,12 +495,55 @@ async def test_set_payout_to_done(
     assert not payout_run.revoked
     assert payout_run.done
 
+    updated_customers = await db_connection.fetch_many(Customer, "select * from customer where id = any($1)", [c.id for c in customers])
+    assert all(customer.payout is None for customer in updated_customers)
+
     with pytest.raises(InvalidArgument):
         await customer_service.payout.revoke_payout_run(
             token=event_admin_token,
             node_id=event_node.id,
             payout_run_id=payout_run.id,
         )
+
+
+async def test_customer_with_completed_payout_can_be_scheduled_again(
+    db_connection: Connection,
+    customers: list[CustomerTestInfo],
+    event_node: Node,
+    event_admin_token: str,
+    customer_service: CustomerService,
+    mail_service: MailService,
+):
+    first_payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_payout_run=NewPayoutRun(max_num_payouts=15, max_payout_sum=15000),
+    )
+    await customer_service.payout.set_payout_run_as_done(
+        token=event_admin_token,
+        node_id=event_node.id,
+        payout_run_id=first_payout_run.id,
+        mail_service=mail_service,
+    )
+
+    rescheduled_customers = customers[:3]
+    for index, customer in enumerate(rescheduled_customers, start=1):
+        await db_connection.execute("update account set balance = $2 where id = $1", customer.id, 20 + index)
+
+    second_payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_payout_run=NewPayoutRun(max_num_payouts=15, max_payout_sum=15000),
+    )
+
+    second_run_payouts = await customer_service.payout.get_payout_run_payouts(
+        token=event_admin_token,
+        node_id=event_node.id,
+        payout_run_id=second_payout_run.id,
+    )
+
+    assert second_payout_run.n_payouts == len(rescheduled_customers)
+    assert {p.customer_account_id for p in second_run_payouts} == {customer.id for customer in rescheduled_customers}
 
 
 async def test_csv_export(

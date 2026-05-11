@@ -16,6 +16,7 @@ from sftkit.error import (
 
 from stustapay.core.schema.customer import Customer, OrderWithBon
 from stustapay.core.schema.order import Order, OrderType, PaymentMethod, PendingOrderStatus
+from stustapay.core.schema.payout import NewPayoutRun
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import Till
@@ -929,3 +930,76 @@ async def test_update_customer_info(
         await customer_service.update_customer_info(
             token="wrong", customer_bank=customer_bank, mail_service=mail_service
         )
+
+
+async def test_update_customer_info_blocked_only_for_active_payout_runs(
+    test_customer: Customer,
+    customer_service: CustomerService,
+    mail_service: MailService,
+    event_node: Node,
+    event_admin_token: str,
+    db_connection: Connection,
+):
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+
+    initial_bank_data = CustomerBank(
+        iban="DE89370400440532013000",
+        account_name="Der Tester",
+        email="test@testermensch.de",
+        donation=0,
+    )
+    await customer_service.update_customer_info(
+        token=auth.token,
+        customer_bank=initial_bank_data,
+        mail_service=mail_service,
+    )
+
+    payout_run = await customer_service.payout.create_payout_run(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_payout_run=NewPayoutRun(max_num_payouts=10, max_payout_sum=10000),
+    )
+
+    updated_bank_data = CustomerBank(
+        iban="DE44500105175407324931",
+        account_name="Tester Updated",
+        email="updated@testermensch.de",
+        donation=0,
+    )
+
+    with pytest.raises(InvalidArgument):
+        await customer_service.update_customer_info(
+            token=auth.token,
+            customer_bank=updated_bank_data,
+            mail_service=mail_service,
+        )
+    active_payout_info = await customer_service.payout_info(token=auth.token)
+    assert active_payout_info.in_payout_run
+    assert active_payout_info.payout_date is None
+
+    await customer_service.payout.set_payout_run_as_done(
+        token=event_admin_token,
+        node_id=event_node.id,
+        payout_run_id=payout_run.id,
+        mail_service=mail_service,
+    )
+    completed_payout_info = await customer_service.payout_info(token=auth.token)
+    assert not completed_payout_info.in_payout_run
+    assert completed_payout_info.payout_date is not None
+
+    await db_connection.execute("update account set balance = 30 where id = $1", test_customer.id)
+
+    await customer_service.update_customer_info(
+        token=auth.token,
+        customer_bank=updated_bank_data,
+        mail_service=mail_service,
+    )
+
+    result = await customer_service.get_customer(token=auth.token)
+    assert result is not None
+    assert result.iban == updated_bank_data.iban
+    assert result.account_name == updated_bank_data.account_name
+    assert result.email == updated_bank_data.email

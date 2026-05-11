@@ -8,6 +8,7 @@ import asyncpg
 from pydantic import BaseModel, EmailStr, Field
 from schwifty import IBAN
 from sftkit.database import Connection
+from sftkit.error import AccessDenied, InvalidArgument
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.banner_image import http_response_for_stored_banner
@@ -21,7 +22,6 @@ from stustapay.core.schema.customer import (
 from stustapay.core.schema.language import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.decorators import requires_customer
-from sftkit.error import AccessDenied, InvalidArgument
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer_portal_event_node_id
 from stustapay.core.service.customer.payout import PayoutService
@@ -175,11 +175,15 @@ class CustomerService(Service[Config]):
         return await conn.fetch_one(
             PayoutInfo,
             "select "
-            "   exists(select from payout where customer_account_id = $1) as in_payout_run, "
+            "   exists(select from payout p join payout_run pr on pr.id = p.payout_run_id "
+            "       where p.customer_account_id = $1 and not pr.done and not pr.revoked) as in_payout_run, "
             "   ( "
             "       select pr.set_done_at "
-            "       from payout_run pr left join payout p on pr.id = p.payout_run_id left join customer c on p.customer_account_id = c.id"
-            "       where c.id = $1 "
+            "       from payout_run pr "
+            "       join payout p on pr.id = p.payout_run_id "
+            "       where p.customer_account_id = $1 and pr.done and not pr.revoked "
+            "       order by pr.set_done_at desc, pr.created_at desc, p.id desc "
+            "       limit 1 "
             "    ) as payout_date",
             current_customer.id,
         )
@@ -354,7 +358,11 @@ class CustomerService(Service[Config]):
     async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
         # if a payout is assigned, disallow updates.
         is_in_payout = await conn.fetchval(
-            "select exists(select from payout where customer_account_id = $1)",
+            "select exists("
+            "   select from payout p "
+            "   join payout_run pr on pr.id = p.payout_run_id "
+            "   where p.customer_account_id = $1 and not pr.done and not pr.revoked"
+            ")",
             current_customer.id,
         )
         if is_in_payout:

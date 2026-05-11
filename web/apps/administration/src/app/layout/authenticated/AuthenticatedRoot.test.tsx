@@ -1,4 +1,3 @@
-import * as React from "react";
 import { render, screen } from "@testing-library/react";
 import { TextDecoder, TextEncoder } from "util";
 
@@ -8,7 +7,23 @@ import { TextDecoder, TextEncoder } from "util";
   TextDecoder;
 
 jest.mock("@/api", () => ({
+  useGetProfileQuery: () => ({
+    data: null,
+  }),
   useGetTreeForCurrentUserQuery: () => ({
+    data: {
+      id: 1,
+      name: "Festival",
+      parent_ids: [],
+      children: [
+        {
+          id: 42,
+          name: "Bar 1",
+          parent_ids: [1],
+          children: [],
+        },
+      ],
+    },
     isLoading: false,
     error: null,
   }),
@@ -39,6 +54,7 @@ jest.mock("@/components", () => {
 
 jest.mock("@/store", () => ({
   selectCurrentUser: "selectCurrentUser",
+  useAppDispatch: () => jest.fn(),
   useAppSelector: () => ({
     login: "admin",
   }),
@@ -91,5 +107,22 @@ describe("AuthenticatedRoot", () => {
     );
 
     expect(screen.getByRole("link", { name: "help.open" }).getAttribute("href")).toBe("/help?nodeId=42");
+  });
+
+  test("renders the current node path in the header", () => {
+    render(
+      <MemoryRouter initialEntries={["/node/42/products"]}>
+        <Routes>
+          <Route element={<AuthenticatedRoot />}>
+            <Route path="*" element={<div>Outlet</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("TeamFestlichPay")).toBeTruthy();
+    expect(screen.getByText("Festival > Bar 1")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "auth.profile" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "logout" })).toBeTruthy();
   });
 });

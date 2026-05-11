@@ -31,6 +31,7 @@ import { Loading, TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { getCurrentNodePath } from "./currentNodePath";
 import { NavigationTree } from "./navigation-tree";
 
 export const AuthenticatedRoot: React.FC = () => {
@@ -48,7 +49,15 @@ export const AuthenticatedRoot: React.FC = () => {
   const user = useAppSelector(selectCurrentUser);
   const { data: currentProfile } = useGetProfileQuery(undefined, { skip: !user });
 
-  const { isLoading: isTreeLoading, error: treeError } = useGetTreeForCurrentUserQuery();
+  const { data: tree, isLoading: isTreeLoading, error: treeError } = useGetTreeForCurrentUserQuery();
+
+  const currentNodePath = React.useMemo(() => {
+    if (!tree) {
+      return null;
+    }
+
+    return getCurrentNodePath(tree, currentNodeId);
+  }, [tree, currentNodeId]);
 
   React.useEffect(() => {
     if (isMobile) {
@@ -98,21 +107,29 @@ export const AuthenticatedRoot: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Box sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
             <RouterLink
               to="/"
               style={{
                 textDecoration: "none",
                 color: "inherit",
                 display: "block",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
               }}
             >
-              {t("TeamFestlichPay")}
+              <Typography variant="h6" component="div" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {t("TeamFestlichPay")}
+              </Typography>
+              {currentNodePath && currentNodePath.length > 0 ? (
+                <Typography
+                  variant="body2"
+                  component="div"
+                  sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.85 }}
+                >
+                  {currentNodePath.map((segment) => t(segment)).join(" > ")}
+                </Typography>
+              ) : null}
             </RouterLink>
-          </Typography>
+          </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, flexShrink: 0 }}>
             {isMobile ? (
               <IconButton color="inherit" component={RouterLink} to={helpRoute} size="small" aria-label={t("help.open")}>
