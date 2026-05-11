@@ -278,9 +278,9 @@ class SaleViewModel @Inject constructor(
         val checkedSale = _saleStatus.value.checkedSale
         customerDisplayManager.updateState(
             CustomerDisplayState.ValidatingSale(
-                totalPrice = checkedSale?.totalPrice?.toString() ?: "0",
-                currentBalance = checkedSale?.oldBalance?.toString() ?: "0",
-                newBalance = checkedSale?.newBalance?.toString(),
+                totalPrice = checkedSale?.totalPrice ?: 0.0,
+                currentBalance = checkedSale?.oldBalance,
+                newBalance = checkedSale?.newBalance,
                 products = productsList
             )
         )
@@ -321,9 +321,9 @@ class SaleViewModel @Inject constructor(
                 
                 customerDisplayManager.updateState(
                     CustomerDisplayState.ValidatingSale(
-                        totalPrice = pendingSale.totalPrice.toString(),
-                        currentBalance = pendingSale.oldBalance.toString(),
-                        newBalance = pendingSale.newBalance.toString(),
+                        totalPrice = pendingSale.totalPrice,
+                        currentBalance = pendingSale.oldBalance,
+                        newBalance = pendingSale.newBalance,
                         products = productsList
                     )
                 )
@@ -337,8 +337,8 @@ class SaleViewModel @Inject constructor(
                 if (insufficientFundsDetails != null) {
                     customerDisplayManager.updateState(
                         CustomerDisplayState.InsufficientFunds(
-                            totalPrice = insufficientFundsDetails.neededAmount.toString(),
-                            currentBalance = insufficientFundsDetails.availableAmount.toString(),
+                            totalPrice = insufficientFundsDetails.neededAmount,
+                            currentBalance = insufficientFundsDetails.availableAmount,
                         )
                     )
                 } else {
@@ -567,13 +567,13 @@ class SaleViewModel @Inject constructor(
         }
         
         // Calculate rough total price based on current selections
-        val roughTotalPrice = _saleStatus.value.getRoughTotalPrice(saleConfig.value).toString()
+        val roughTotalPrice = _saleStatus.value.getRoughTotalPrice(saleConfig.value)
         
         // Show products and total price on customer display
         customerDisplayManager.updateState(
             CustomerDisplayState.ValidatingSale(
                 totalPrice = roughTotalPrice,
-                currentBalance = "", // Remove the current balance
+                currentBalance = null,
                 products = productsList
             )
         )

@@ -14,12 +14,12 @@ sealed class CustomerDisplayState {
         val voucherCount: String? = null,
     ) : CustomerDisplayState()
     data class SaleCompleted(val sale: CompletedSale) : CustomerDisplayState()
-    data class TopUpCompleted(val newBalance: String, val topUpAmount: String) : CustomerDisplayState()
+    data class TopUpCompleted(val newBalance: Double, val topUpAmount: Double) : CustomerDisplayState()
     data class ValidatingSale(
-        val totalPrice: String,
-        val currentBalance: String,
-        val newBalance: String? = null,
+        val totalPrice: Double,
+        val currentBalance: Double? = null,
+        val newBalance: Double? = null,
         val products: List<Pair<String, String>> = emptyList(),
     ) : CustomerDisplayState()
-    data class InsufficientFunds(val totalPrice: String, val currentBalance: String) : CustomerDisplayState()
+    data class InsufficientFunds(val totalPrice: Double, val currentBalance: Double) : CustomerDisplayState()
 }

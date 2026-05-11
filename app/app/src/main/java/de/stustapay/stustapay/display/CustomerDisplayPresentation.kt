@@ -311,7 +311,12 @@ class CustomerDisplayPresentation(
 
     private fun formatAmount(amount: Double): String {
         val locale = context.resources.configuration.locales[0]
-        return String.format(locale, "%.2f €", amount)
+        return formatCustomerDisplayAmount(amount, locale)
+    }
+
+    private fun formatAmountValue(amount: Double): String {
+        val locale = context.resources.configuration.locales[0]
+        return formatCustomerDisplayAmountValue(amount, locale)
     }
 
     /**
@@ -449,8 +454,8 @@ class CustomerDisplayPresentation(
      * Shows the custom insufficient funds view
      */
     private fun showInsufficientFundsView(state: CustomerDisplayState.InsufficientFunds, rootView: FrameLayout?) {
-        val totalPrice = state.totalPrice.toDoubleOrNull() ?: 0.0
-        val currentBalance = state.currentBalance.toDoubleOrNull() ?: 0.0
+        val totalPrice = state.totalPrice
+        val currentBalance = state.currentBalance
         val missingAmount = (totalPrice - currentBalance).coerceAtLeast(0.0)
         
         // Create a box with red border for the error message
@@ -698,7 +703,7 @@ class CustomerDisplayPresentation(
         }
         
         val totalPriceValue = android.widget.TextView(context).apply {
-            text = "${state.sale.totalPrice} €"
+            text = formatAmount(state.sale.totalPrice)
             textSize = 26f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(android.graphics.Color.parseColor("#4CAF50"))
@@ -713,48 +718,45 @@ class CustomerDisplayPresentation(
         totalPriceBox.addView(totalPriceValue)
         infoBox.addView(totalPriceBox)
         
-        // New balance row (only if available)
-        if (state.sale.newBalance != null) {
-            val newBalanceBox = android.widget.LinearLayout(context).apply {
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                orientation = android.widget.LinearLayout.HORIZONTAL
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    setColor(android.graphics.Color.parseColor("#F0F0F0"))
-                    cornerRadius = 8f
-                }
-                setPadding(15, 10, 15, 10)
+        val newBalanceBox = android.widget.LinearLayout(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#F0F0F0"))
+                cornerRadius = 8f
             }
-            
-            val newBalanceLabel = android.widget.TextView(context).apply {
-                text = text(R.string.customer_display_new_balance)
-                textSize = 26f
-                setTextColor(android.graphics.Color.parseColor("#333333"))
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    0,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                    1f
-                )
-            }
-            
-            val newBalanceValue = android.widget.TextView(context).apply {
-                text = "${state.sale.newBalance} €"
-                textSize = 26f
-                typeface = android.graphics.Typeface.DEFAULT_BOLD
-                setTextColor(android.graphics.Color.parseColor("#3366CC"))
-                gravity = android.view.Gravity.END
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
-            
-            newBalanceBox.addView(newBalanceLabel)
-            newBalanceBox.addView(newBalanceValue)
-            infoBox.addView(newBalanceBox)
+            setPadding(15, 10, 15, 10)
         }
+
+        val newBalanceLabel = android.widget.TextView(context).apply {
+            text = text(R.string.customer_display_new_balance)
+            textSize = 26f
+            setTextColor(android.graphics.Color.parseColor("#333333"))
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                0,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+
+        val newBalanceValue = android.widget.TextView(context).apply {
+            text = formatAmount(state.sale.newBalance)
+            textSize = 26f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setTextColor(android.graphics.Color.parseColor("#3366CC"))
+            gravity = android.view.Gravity.END
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        newBalanceBox.addView(newBalanceLabel)
+        newBalanceBox.addView(newBalanceValue)
+        infoBox.addView(newBalanceBox)
         
         // Add all elements to container
         container.addView(headerLayout)
@@ -887,7 +889,7 @@ class CustomerDisplayPresentation(
         }
         
         val topUpAmountValue = android.widget.TextView(context).apply {
-            text = "${state.topUpAmount} €"
+            text = formatAmount(state.topUpAmount)
             textSize = 26f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(android.graphics.Color.parseColor("#3366CC"))
@@ -924,7 +926,7 @@ class CustomerDisplayPresentation(
         }
         
         val newBalanceValue = android.widget.TextView(context).apply {
-            text = "${state.newBalance} €"
+            text = formatAmount(state.newBalance)
             textSize = 26f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(android.graphics.Color.parseColor("#4CAF50"))  // Use green for new balance
@@ -1003,7 +1005,7 @@ class CustomerDisplayPresentation(
         }
         
         val totalPriceValue = android.widget.TextView(context).apply {
-            text = text(R.string.customer_display_sale_total_highlight, state.totalPrice)
+            text = text(R.string.customer_display_sale_total_highlight, formatAmountValue(state.totalPrice))
             textSize = 28f
             setTextColor(android.graphics.Color.WHITE)
             typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -1014,7 +1016,7 @@ class CustomerDisplayPresentation(
         headerSection.addView(priceHighlightBox)
         
         // Add balance info if available (more compact)
-        if (state.currentBalance.isNotEmpty() && state.currentBalance != "0") {
+        if (state.currentBalance != null) {
             val balanceInfoBox = android.widget.LinearLayout(context).apply {
                 layoutParams = android.widget.LinearLayout.LayoutParams(
                     android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -1056,7 +1058,7 @@ class CustomerDisplayPresentation(
             
             // Current balance value
             val currentBalanceValue = android.widget.TextView(context).apply {
-                text = "${state.currentBalance} €"
+                text = formatAmount(state.currentBalance)
                 textSize = 30f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setTextColor(android.graphics.Color.parseColor("#333333"))
@@ -1115,7 +1117,7 @@ class CustomerDisplayPresentation(
                 
                 // New balance value
                 val newBalanceValue = android.widget.TextView(context).apply {
-                    text = "${state.newBalance} €"
+                    text = formatAmount(state.newBalance)
                     textSize = 32f
                     typeface = android.graphics.Typeface.DEFAULT_BOLD
                     setTextColor(android.graphics.Color.parseColor("#4CAF50"))

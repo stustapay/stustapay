@@ -370,8 +370,8 @@ class TopUpViewModel @Inject constructor(
         topUp?.let {
             customerDisplayManager.updateState(
                 CustomerDisplayState.TopUpCompleted(
-                    newBalance = it.newBalance.toString(),
-                    topUpAmount = it.amount.toString()
+                    newBalance = it.newBalance,
+                    topUpAmount = it.amount
                 )
             )
         } ?: customerDisplayManager.updateState(CustomerDisplayState.Welcome)
