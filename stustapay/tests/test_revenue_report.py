@@ -88,8 +88,29 @@ def _make_order(
     )
 
 
+def _make_event_node(name: str = "PMP Festival 2026") -> Node:
+    return Node(
+        id=1,
+        parent=0,
+        name=name,
+        description="",
+        read_only=False,
+        event=None,
+        path="/0/1",
+        parent_ids=[0],
+        event_node_id=1,
+        parents_until_event_node=[],
+        forbidden_objects_at_node=[],
+        computed_forbidden_objects_at_node=[],
+        forbidden_objects_in_subtree=[],
+        computed_forbidden_objects_in_subtree=[],
+        children=[],
+    )
+
+
 async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
     node = _make_node()
+    event_node = _make_event_node()
     event = SimpleNamespace(
         start_date=datetime(2025, 6, 20, 0, 0, tzinfo=timezone.utc),
         end_date=datetime(2025, 6, 21, 23, 0, tzinfo=timezone.utc),
@@ -165,7 +186,7 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
         captured["context"] = context
         return PdfRenderResult(success=True)
 
-    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(return_value=node))
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(side_effect=[node, event_node]))
     monkeypatch.setattr("stustapay.bon.revenue_report.fetch_event_for_node", AsyncMock(return_value=event))
     monkeypatch.setattr("stustapay.bon.revenue_report.get_hourly_sales_stats", fake_get_hourly_sales_stats)
     monkeypatch.setattr("stustapay.bon.revenue_report.get_daily_stats", fake_get_daily_stats)
@@ -182,6 +203,7 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
     assert captured["context"].summary.average_day_revenue == 20.0
     assert captured["context"].summary.top_day_label == "Freitag 2025-06-20"
     assert captured["context"].summary.top_day_revenue == 20.0
+    assert captured["context"].config.title == "PMP Festival 2026"
     assert [daily.day for daily in captured["context"].daily_revenue_stats] == ["Freitag 2025-06-20"]
     assert len(captured["context"].order_groups) == 1
     assert captured["context"].order_groups[0].date_label == "Freitag 2025-06-20"
@@ -195,6 +217,7 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
 
 async def test_generate_report_includes_sales_before_daily_cutoff(monkeypatch):
     node = _make_node()
+    event_node = _make_event_node()
     event = SimpleNamespace(
         start_date=datetime(2025, 6, 20, 0, 0, tzinfo=timezone.utc),
         end_date=datetime(2025, 6, 21, 23, 0, tzinfo=timezone.utc),
@@ -251,7 +274,7 @@ async def test_generate_report_includes_sales_before_daily_cutoff(monkeypatch):
         captured["context"] = context
         return PdfRenderResult(success=True)
 
-    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(return_value=node))
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(side_effect=[node, event_node]))
     monkeypatch.setattr("stustapay.bon.revenue_report.fetch_event_for_node", AsyncMock(return_value=event))
     monkeypatch.setattr("stustapay.bon.revenue_report.get_hourly_sales_stats", fake_get_hourly_sales_stats)
     monkeypatch.setattr("stustapay.bon.revenue_report.get_daily_stats", fake_get_daily_stats)
@@ -265,10 +288,12 @@ async def test_generate_report_includes_sales_before_daily_cutoff(monkeypatch):
     assert captured["context"].summary.order_count == 2
     assert captured["context"].total_revenue == 15.0
     assert captured["context"].order_groups[0].day_total == 15.0
+    assert captured["context"].config.title == "PMP Festival 2026"
 
 
 async def test_generate_report_excludes_sales_after_daily_cutoff(monkeypatch):
     node = _make_node()
+    event_node = _make_event_node()
     event = SimpleNamespace(
         start_date=datetime(2025, 6, 20, 0, 0, tzinfo=timezone.utc),
         end_date=datetime(2025, 6, 21, 23, 0, tzinfo=timezone.utc),
@@ -295,7 +320,7 @@ async def test_generate_report_excludes_sales_after_daily_cutoff(monkeypatch):
         captured["context"] = context
         return PdfRenderResult(success=True)
 
-    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(return_value=node))
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(side_effect=[node, event_node]))
     monkeypatch.setattr("stustapay.bon.revenue_report.fetch_event_for_node", AsyncMock(return_value=event))
     monkeypatch.setattr("stustapay.bon.revenue_report.get_hourly_sales_stats", fake_get_hourly_sales_stats)
     monkeypatch.setattr("stustapay.bon.revenue_report.get_daily_stats", fake_get_daily_stats)
@@ -312,6 +337,7 @@ async def test_generate_report_excludes_sales_after_daily_cutoff(monkeypatch):
 
 async def test_generate_report_renders_template_fallbacks(monkeypatch):
     node = _make_node()
+    event_node = _make_event_node()
     event = SimpleNamespace(
         start_date=datetime(2025, 6, 20, 8, 0, tzinfo=timezone.utc),
         end_date=datetime(2025, 6, 21, 2, 0, tzinfo=timezone.utc),
@@ -336,7 +362,7 @@ async def test_generate_report_renders_template_fallbacks(monkeypatch):
         captured["tex"] = file_content
         return PdfRenderResult(success=True)
 
-    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(return_value=node))
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(side_effect=[node, event_node]))
     monkeypatch.setattr("stustapay.bon.revenue_report.fetch_event_for_node", AsyncMock(return_value=event))
     monkeypatch.setattr("stustapay.bon.revenue_report.get_hourly_sales_stats", fake_get_hourly_sales_stats)
     monkeypatch.setattr("stustapay.bon.revenue_report.get_daily_stats", fake_get_daily_stats)
@@ -345,6 +371,7 @@ async def test_generate_report_renders_template_fallbacks(monkeypatch):
     result = await generate_report(conn=conn, node_id=node.id)
 
     assert result.success is True
+    assert "PMP Festival 2026" in captured["tex"]
     assert "USt-IdNr." not in captured["tex"]
     assert "Keine Umsaetze im Zeitraum." in captured["tex"]
     assert "Keine Einzelbuchungen im Zeitraum." in captured["tex"]

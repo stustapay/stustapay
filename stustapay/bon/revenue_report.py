@@ -321,6 +321,8 @@ async def generate_report(conn: Connection, node_id: int, fees=0.0) -> PdfRender
     node = await fetch_node(conn=conn, node_id=node_id)
     assert node is not None
     event = await fetch_event_for_node(conn=conn, node=node)
+    event_node = await fetch_node(conn=conn, node_id=node.event_node_id)
+    assert event_node is not None
 
     all_orders = await conn.fetch_many(
         OrderWithFees,
@@ -338,7 +340,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.0) -> PdfRender
 
     orders = [order for order in all_orders if from_time <= _normalize_datetime(order.booked_at) <= to_time]
 
-    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
+    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event_node.name)
     query = TimeseriesStatsQuery(from_time=from_time, to_time=to_time)
     hourly_revenue_stats = await get_hourly_sales_stats(
         conn=conn, node=node, query=query, from_time=from_time, to_time=to_time
