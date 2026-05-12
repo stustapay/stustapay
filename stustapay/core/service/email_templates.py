@@ -139,7 +139,7 @@ BASE_EMAIL_HTML_TEMPLATE = """<!DOCTYPE html>
                 bgcolor="#F5FFFE"
                 style="padding:24px 32px;background:#F5FFFE;color:#000000;font-size:12px;
                 line-height:1.6;border-top:2px solid #2AD2C9;">
-                This invitation email was sent by teamfestlichPay.
+                This email was sent by teamfestlichPay.
               </td>
             </tr>
           </table>
