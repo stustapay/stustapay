@@ -25,6 +25,7 @@ from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.common import fetch_customer_portal_event_node_id
 from stustapay.core.service.customer.payout import PayoutService
+from stustapay.core.service.email_templates import render_plain_text_payout_html
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.sumup import SumupService
 from stustapay.core.service.tree.common import (
@@ -324,20 +325,22 @@ class CustomerService(Service[Config]):
             "select * from customer where id = $1",
             current_customer.id,
         )
-        
+
         # Store email-related information to be used outside the transaction
         email_to_send = None
         if updated_customer.email is not None:
             res_config = await fetch_restricted_event_settings_for_node(conn, updated_customer.node_id)
             if res_config.email_enabled and res_config.payout_registered_message is not None:
+                message = res_config.payout_registered_message.format(**updated_customer.model_dump())
                 email_to_send = {
                     "subject": res_config.payout_registered_subject,
-                    "message": res_config.payout_registered_message.format(**updated_customer.model_dump()),
+                    "message": message,
+                    "html_message": render_plain_text_payout_html(message, res_config.payout_registered_subject),
                     "from_addr": res_config.payout_sender,
                     "to_addr": updated_customer.email,
-                    "node_id": updated_customer.node_id
+                    "node_id": updated_customer.node_id,
                 }
-                
+
         return email_to_send
 
     # New method to send email outside transaction
@@ -347,6 +350,7 @@ class CustomerService(Service[Config]):
                 await mail_service.send_mail(
                     subject=email_info["subject"],
                     text_message=email_info["message"],
+                    html_message=email_info["html_message"],
                     from_addr=email_info["from_addr"],
                     to_addr=email_info["to_addr"],
                     node_id=email_info["node_id"],

@@ -473,7 +473,13 @@ async def test_set_payout_to_done(
     customer_service: CustomerService,
     mail_service: MailService,
 ):
-    payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
+    await db_connection.execute(
+        "update event set email_enabled = true, email_default_sender = $2 where id = $1",
+        event_node.id,
+        "noreply@test.invalid",
+    )
+
+    created_payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,
         node_id=event_node.id,
         new_payout_run=NewPayoutRun(max_num_payouts=15, max_payout_sum=15000),
@@ -481,7 +487,7 @@ async def test_set_payout_to_done(
     await customer_service.payout.set_payout_run_as_done(
         token=event_admin_token,
         node_id=event_node.id,
-        payout_run_id=payout_run.id,
+        payout_run_id=created_payout_run.id,
         mail_service=mail_service,
     )
 
@@ -490,13 +496,29 @@ async def test_set_payout_to_done(
         assert balance == 0
 
     payout_run = await customer_service.payout.get_payout_run(
-        token=event_admin_token, node_id=event_node.id, payout_run_id=payout_run.id
+        token=event_admin_token, node_id=event_node.id, payout_run_id=created_payout_run.id
     )
     assert not payout_run.revoked
     assert payout_run.done
 
-    updated_customers = await db_connection.fetch_many(Customer, "select * from customer where id = any($1)", [c.id for c in customers])
+    updated_customers = await db_connection.fetch_many(
+        Customer, "select * from customer where id = any($1)", [c.id for c in customers]
+    )
     assert all(customer.payout is None for customer in updated_customers)
+
+    mails = await db_connection.fetch(
+        "select subject, text_message, html_message, to_addr from mails order by id asc"
+    )
+    assert len(mails) == created_payout_run.n_payouts
+    first_mail = mails[0]
+    assert first_mail["subject"] == "[StuStaPay] Payout Completed"
+    assert first_mail["to_addr"] == customers[0].email
+    assert "payout process has been completed" in first_mail["text_message"]
+    assert first_mail["html_message"] is not None
+    assert "<html" in first_mail["html_message"]
+    assert "teamfestlichPay" in first_mail["html_message"]
+    assert "#2AD2C9" in first_mail["html_message"]
+    assert "payout process has been completed" in first_mail["html_message"]
 
     with pytest.raises(InvalidArgument):
         await customer_service.payout.revoke_payout_run(

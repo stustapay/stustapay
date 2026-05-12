@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit, urlunsplit
 
 from jinja2.sandbox import SandboxedEnvironment
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 from stustapay.core.schema.language import Language
 
@@ -168,6 +168,18 @@ def render_template_string(template: str, context: dict[str, object], *, autoesc
 def render_email_html(content: str, subject: str) -> str:
     shell = _sandbox(True).from_string(BASE_EMAIL_HTML_TEMPLATE)
     return shell.render(subject=subject, content=Markup(content), logo_url=TEAMFESTLICHPAY_LOGO_URL)
+
+
+def render_plain_text_payout_html(message: str, subject: str) -> str:
+    paragraphs = []
+    for block in message.strip().split("\n\n"):
+        normalized = block.strip()
+        if not normalized:
+            continue
+        paragraphs.append(f"<p>{escape(normalized).replace(chr(10), Markup('<br />'))}</p>")
+
+    content = "\n".join(paragraphs) if paragraphs else "<p></p>"
+    return render_email_html(content, subject)
 
 
 def render_invitation_html(template: str, context: dict[str, object], subject: str) -> str:

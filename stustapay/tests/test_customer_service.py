@@ -846,8 +846,18 @@ async def test_get_orders_with_bon(
 
 
 async def test_update_customer_info(
-    test_customer: Customer, customer_service: CustomerService, mail_service: MailService, event_node: Node
+    test_customer: Customer,
+    customer_service: CustomerService,
+    mail_service: MailService,
+    event_node: Node,
+    db_connection: Connection,
 ):
+    await db_connection.execute(
+        "update event set email_enabled = true, email_default_sender = $2 where id = $1",
+        event_node.id,
+        "noreply@test.invalid",
+    )
+
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
     )
@@ -862,11 +872,12 @@ async def test_update_customer_info(
 
     customer_bank = CustomerBank(iban=valid_IBAN, account_name=account_name, email=email, donation=0)
 
-    await customer_service.update_customer_info(
+    email_info = await customer_service.update_customer_info(
         token=auth.token,
         customer_bank=customer_bank,
         mail_service=mail_service,
     )
+    await customer_service.send_payout_registered_email(mail_service=mail_service, email_info=email_info)
 
     # test if get_customer returns the updated data
     result = await customer_service.get_customer(token=auth.token)
@@ -876,6 +887,19 @@ async def test_update_customer_info(
     assert result.iban == valid_IBAN
     assert result.account_name == account_name
     assert result.email == email
+
+    mail = await db_connection.fetchrow(
+        "select subject, text_message, html_message, to_addr from mails order by id desc limit 1"
+    )
+    assert mail is not None
+    assert mail["subject"] == "[StuStaPay] Registered for Payout"
+    assert mail["to_addr"] == email
+    assert "remaining funds are registered for payout" in mail["text_message"]
+    assert mail["html_message"] is not None
+    assert "<html" in mail["html_message"]
+    assert "teamfestlichPay" in mail["html_message"]
+    assert "#2AD2C9" in mail["html_message"]
+    assert "remaining funds are registered for payout" in mail["html_message"]
 
     # test invalid IBAN
     customer_bank = CustomerBank(iban=invalid_IBAN, account_name=account_name, email=email, donation=0)
