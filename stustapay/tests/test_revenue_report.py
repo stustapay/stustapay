@@ -153,8 +153,8 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
                     revenue=20.0,
                 ),
                 StatInterval(
-                    from_time=datetime(2025, 6, 22, 1, 0, tzinfo=timezone.utc),
-                    to_time=datetime(2025, 6, 23, 1, 0, tzinfo=timezone.utc),
+                    from_time=datetime(2025, 6, 22, 3, 0, tzinfo=timezone.utc),
+                    to_time=datetime(2025, 6, 23, 3, 0, tzinfo=timezone.utc),
                     count=0,
                     revenue=0.0,
                 ),
@@ -175,7 +175,7 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
 
     assert result.success is True
     assert captured["query"].from_time == event.start_date
-    assert captured["query"].to_time == event.end_date
+    assert captured["query"].to_time == datetime(2025, 6, 22, 3, 0, tzinfo=timezone.utc)
     assert [order.id for order in captured["context"].orders] == [in_range_order.id, same_report_day_order.id]
     assert captured["context"].summary.order_count == 2
     assert captured["context"].summary.average_order_value == 10.0
@@ -191,6 +191,123 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
     assert [item.product_name for item in captured["context"].order_groups[0].orders[0].line_items] == ["Helles", "Pfand"]
     assert "order_type = 'sale'" in conn.fetch_many.await_args.args[1]
     assert "not exists (select 1 from ordr c where c.cancels_order = o.id)" in conn.fetch_many.await_args.args[1]
+
+
+async def test_generate_report_includes_sales_before_daily_cutoff(monkeypatch):
+    node = _make_node()
+    event = SimpleNamespace(
+        start_date=datetime(2025, 6, 20, 0, 0, tzinfo=timezone.utc),
+        end_date=datetime(2025, 6, 21, 23, 0, tzinfo=timezone.utc),
+        daily_end_time=time(3, 0),
+        ust_id="UST",
+        bon_address="Address",
+        bon_issuer="Issuer",
+        bon_title="Title",
+        currency_identifier="EUR",
+    )
+    in_range_order = _make_order(1, datetime(2025, 6, 21, 22, 0, tzinfo=timezone.utc), 10.0)
+    before_cutoff_order = _make_order(2, datetime(2025, 6, 22, 0, 30, tzinfo=timezone.utc), 5.0)
+    after_cutoff_order = _make_order(3, datetime(2025, 6, 22, 3, 30, tzinfo=timezone.utc), 99.0)
+
+    conn = SimpleNamespace(fetch_many=AsyncMock(return_value=[in_range_order, before_cutoff_order, after_cutoff_order]))
+    captured = {}
+
+    async def fake_get_hourly_sales_stats(*, conn, node, query, from_time, to_time):
+        captured["query"] = query
+        return Timeseries(
+            from_time=from_time,
+            to_time=to_time,
+            intervals=[
+                StatInterval(
+                    from_time=datetime(2025, 6, 21, 22, 0, tzinfo=timezone.utc),
+                    to_time=datetime(2025, 6, 21, 23, 0, tzinfo=timezone.utc),
+                    count=1,
+                    revenue=10.0,
+                ),
+                StatInterval(
+                    from_time=datetime(2025, 6, 22, 0, 0, tzinfo=timezone.utc),
+                    to_time=datetime(2025, 6, 22, 1, 0, tzinfo=timezone.utc),
+                    count=1,
+                    revenue=5.0,
+                ),
+            ],
+        )
+
+    async def fake_get_daily_stats(*, hourly_stats, event):
+        return Timeseries(
+            from_time=hourly_stats.from_time,
+            to_time=hourly_stats.to_time,
+            intervals=[
+                StatInterval(
+                    from_time=datetime(2025, 6, 21, 3, 0, tzinfo=timezone.utc),
+                    to_time=datetime(2025, 6, 22, 3, 0, tzinfo=timezone.utc),
+                    count=2,
+                    revenue=15.0,
+                )
+            ],
+        )
+
+    async def fake_render_report(context):
+        captured["context"] = context
+        return PdfRenderResult(success=True)
+
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(return_value=node))
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_event_for_node", AsyncMock(return_value=event))
+    monkeypatch.setattr("stustapay.bon.revenue_report.get_hourly_sales_stats", fake_get_hourly_sales_stats)
+    monkeypatch.setattr("stustapay.bon.revenue_report.get_daily_stats", fake_get_daily_stats)
+    monkeypatch.setattr("stustapay.bon.revenue_report.render_report", fake_render_report)
+
+    result = await generate_report(conn=conn, node_id=node.id)
+
+    assert result.success is True
+    assert captured["query"].to_time == datetime(2025, 6, 22, 3, 0, tzinfo=timezone.utc)
+    assert [order.id for order in captured["context"].orders] == [in_range_order.id, before_cutoff_order.id]
+    assert captured["context"].summary.order_count == 2
+    assert captured["context"].total_revenue == 15.0
+    assert captured["context"].order_groups[0].day_total == 15.0
+
+
+async def test_generate_report_excludes_sales_after_daily_cutoff(monkeypatch):
+    node = _make_node()
+    event = SimpleNamespace(
+        start_date=datetime(2025, 6, 20, 0, 0, tzinfo=timezone.utc),
+        end_date=datetime(2025, 6, 21, 23, 0, tzinfo=timezone.utc),
+        daily_end_time=time(3, 0),
+        ust_id="UST",
+        bon_address="Address",
+        bon_issuer="Issuer",
+        bon_title="Title",
+        currency_identifier="EUR",
+    )
+    after_cutoff_order = _make_order(1, datetime(2025, 6, 22, 3, 30, tzinfo=timezone.utc), 99.0)
+
+    conn = SimpleNamespace(fetch_many=AsyncMock(return_value=[after_cutoff_order]))
+    captured = {}
+
+    async def fake_get_hourly_sales_stats(*, conn, node, query, from_time, to_time):
+        captured["query"] = query
+        return Timeseries(from_time=from_time, to_time=to_time, intervals=[])
+
+    async def fake_get_daily_stats(*, hourly_stats, event):
+        return Timeseries(from_time=hourly_stats.from_time, to_time=hourly_stats.to_time, intervals=[])
+
+    async def fake_render_report(context):
+        captured["context"] = context
+        return PdfRenderResult(success=True)
+
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_node", AsyncMock(return_value=node))
+    monkeypatch.setattr("stustapay.bon.revenue_report.fetch_event_for_node", AsyncMock(return_value=event))
+    monkeypatch.setattr("stustapay.bon.revenue_report.get_hourly_sales_stats", fake_get_hourly_sales_stats)
+    monkeypatch.setattr("stustapay.bon.revenue_report.get_daily_stats", fake_get_daily_stats)
+    monkeypatch.setattr("stustapay.bon.revenue_report.render_report", fake_render_report)
+
+    result = await generate_report(conn=conn, node_id=node.id)
+
+    assert result.success is True
+    assert captured["query"].to_time == datetime(2025, 6, 22, 3, 0, tzinfo=timezone.utc)
+    assert captured["context"].orders == []
+    assert captured["context"].summary.order_count == 0
+    assert captured["context"].total_revenue == 0.0
 
 
 async def test_generate_report_renders_template_fallbacks(monkeypatch):

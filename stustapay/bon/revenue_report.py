@@ -187,6 +187,22 @@ def _format_day_label(dt: datetime) -> str:
     return f"{GERMAN_WEEKDAYS[dt.weekday()]} {dt:%Y-%m-%d}"
 
 
+def _extend_report_end_time(end_time: datetime, daily_end_time: time | None) -> datetime:
+    normalized_end_time = _normalize_datetime(end_time)
+    if daily_end_time is None:
+        return normalized_end_time
+
+    boundary = normalized_end_time.replace(
+        hour=daily_end_time.hour,
+        minute=daily_end_time.minute,
+        second=daily_end_time.second,
+        microsecond=0,
+    )
+    if boundary < normalized_end_time:
+        boundary += timedelta(days=1)
+    return boundary
+
+
 def _resolve_report_time_bounds(event: PublicEventSettings, orders: list[OrderWithFees]) -> tuple[datetime, datetime]:
     if orders:
         fallback_from = _normalize_datetime(orders[0].booked_at)
@@ -195,7 +211,10 @@ def _resolve_report_time_bounds(event: PublicEventSettings, orders: list[OrderWi
         fallback_from = event.start_date or event.end_date or datetime.now(tz=timezone.utc)
         fallback_to = event.end_date or event.start_date or fallback_from
 
-    return _normalize_datetime(event.start_date or fallback_from), _normalize_datetime(event.end_date or fallback_to)
+    from_time = _normalize_datetime(event.start_date or fallback_from)
+    raw_to_time = _normalize_datetime(event.end_date or fallback_to)
+    to_time = _extend_report_end_time(raw_to_time, event.daily_end_time) if event.end_date is not None else raw_to_time
+    return from_time, to_time
 
 
 def _report_day_start(local_dt: datetime, daily_end_time: time | None) -> datetime:
