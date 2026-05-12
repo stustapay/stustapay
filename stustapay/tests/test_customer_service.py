@@ -852,6 +852,7 @@ async def test_update_customer_info(
     event_node: Node,
     db_connection: Connection,
 ):
+    await db_connection.execute("delete from mails")
     await db_connection.execute(
         "update event set email_enabled = true, email_default_sender = $2 where id = $1",
         event_node.id,
@@ -889,11 +890,12 @@ async def test_update_customer_info(
     assert result.email == email
 
     mail = await db_connection.fetchrow(
-        "select subject, text_message, html_message, to_addr from mails order by id desc limit 1"
+        "select subject, text_message, html_message, to_addr, from_addr from mails order by id desc limit 1"
     )
     assert mail is not None
     assert mail["subject"] == "[StuStaPay] Registered for Payout"
     assert mail["to_addr"] == email
+    assert mail["from_addr"] == f"{event_node.name} Auszahlung <noreply@test.invalid>"
     assert "remaining funds are registered for payout" in mail["text_message"]
     assert mail["html_message"] is not None
     assert "<html" in mail["html_message"]

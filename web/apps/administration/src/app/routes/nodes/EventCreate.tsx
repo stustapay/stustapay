@@ -20,7 +20,8 @@ import {
   CustomerPortalSettingsForm,
   CustomerPortalSettingsSchema,
 } from "./event-settings/TabCustomerPortal";
-import { PayoutSettings, PayoutSettingsForm, PayoutSettingsSchema } from "./event-settings/TabPayout";
+import { PayoutSettingsForm } from "./event-settings/TabPayout";
+import { PayoutSettings, PayoutSettingsSchema } from "./event-settings/TabPayout.schema";
 import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
 import { CurrencyIdentifierSelect } from "@/components/features";
 import { useNavigate } from "react-router-dom";
@@ -136,6 +137,7 @@ const emailFormStep: FormStep = {
 const payoutFormStep: FormStep = {
   title: "Payout",
   initialValues: {
+    translation_texts: {},
     sepa_allowed_country_codes: [],
     sepa_description: "",
     sepa_enabled: false,

@@ -1,63 +1,14 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
-import { Button, LinearProgress, Stack } from "@mui/material";
-import { FormSelect, FormSwitch, FormTextField, zodExtension } from "@stustapay/form-components";
+import { Button, FormControl, FormHelperText, LinearProgress, Stack, TextField } from "@mui/material";
+import { FormSelect, FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import iban from "iban";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { z } from "zod";
-import i18n from "@/i18n";
-
-const requiredIssue = {
-  code: z.ZodIssueCode.custom,
-  message: "Required if payout is enabled",
-};
-
-export const PayoutSettingsSchema = z
-  .object({
-    sepa_enabled: z.boolean(),
-    sepa_sender_name: zodExtension.emptyString(),
-    sepa_sender_iban: z
-      .string()
-      .optional()
-      .superRefine((val, ctx) => {
-        if (val != null && !iban.isValid(val)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: i18n.t("settings.payout.ibanNotValid"),
-          });
-        }
-      })
-      .transform((val) => val ?? ""),
-    sepa_description: zodExtension.emptyString(),
-    sepa_allowed_country_codes: z.array(z.string()).default([]),
-    payout_done_subject: zodExtension.undefineableString(),
-    payout_done_message: zodExtension.undefineableString(),
-    payout_registered_subject: zodExtension.undefineableString(),
-    payout_registered_message: zodExtension.undefineableString(),
-    payout_sender: z.string().email().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.sepa_enabled) {
-      return;
-    }
-    if (data.sepa_sender_name === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sepa_sender_name"] });
-    }
-    if (data.sepa_sender_iban === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sepa_sender_iban"] });
-    }
-    if (data.sepa_description === "") {
-      ctx.addIssue({ ...requiredIssue, path: ["sepa_description"] });
-    }
-    if (data.sepa_allowed_country_codes === undefined || data.sepa_allowed_country_codes.length === 0) {
-      ctx.addIssue({ ...requiredIssue, path: ["sepa_allowed_country_codes"] });
-    }
-  });
-
-export type PayoutSettings = z.infer<typeof PayoutSettingsSchema>;
+import { updateTranslationTexts } from "./common";
+import { PayoutSettings, PayoutSettingsSchema } from "./TabPayout.schema";
 
 export const PayoutSettingsForm: React.FC<FormikProps<PayoutSettings>> = (formik) => {
   const { t } = useTranslation();
@@ -95,6 +46,46 @@ export const PayoutSettingsForm: React.FC<FormikProps<PayoutSettings>> = (formik
         formik={formik}
       />
       <FormTextField label={t("settings.payout.payout_sender")} name="payout_sender" formik={formik} />
+      <FormControl error={!!formik.errors.translation_texts}>
+        <TextField
+          label={t("settings.payout.payout_disabled_notice_de")}
+          variant="standard"
+          fullWidth
+          multiline
+          minRows={4}
+          value={formik.values.translation_texts["de-DE"]?.["payout_disabled_notice"] ?? ""}
+          onChange={(evt) => {
+            const newSettings = updateTranslationTexts(
+              formik.values.translation_texts,
+              "de-DE",
+              "payout_disabled_notice",
+              evt.target.value
+            );
+            formik.setFieldValue("translation_texts", newSettings);
+            formik.setFieldTouched("translation_texts");
+          }}
+        />
+        <TextField
+          label={t("settings.payout.payout_disabled_notice_en")}
+          variant="standard"
+          fullWidth
+          multiline
+          minRows={4}
+          value={formik.values.translation_texts["en-US"]?.["payout_disabled_notice"] ?? ""}
+          onChange={(evt) => {
+            const newSettings = updateTranslationTexts(
+              formik.values.translation_texts,
+              "en-US",
+              "payout_disabled_notice",
+              evt.target.value
+            );
+            formik.setFieldValue("translation_texts", newSettings);
+            formik.setFieldTouched("translation_texts");
+          }}
+        />
+        <FormHelperText>{t("settings.payout.payout_disabled_notice_help")}</FormHelperText>
+        {!!formik.errors.translation_texts && <FormHelperText>{String(formik.errors.translation_texts)}</FormHelperText>}
+      </FormControl>
     </>
   );
 };

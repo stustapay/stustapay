@@ -664,6 +664,9 @@ export const translations = {
     },
     payout: {
       tabLabel: "Payout",
+      payout_disabled_notice_de: "Notice when payout is disabled (DE)",
+      payout_disabled_notice_en: "Notice when payout is disabled (EN)",
+      payout_disabled_notice_help: "Optional notice shown in the customer portal while payouts are disabled for this event.",
       sepa_enabled: "Payout enabled",
       ibanNotValid: "IBAN is not valid",
       sepa_sender_name: "SEPA sender name",

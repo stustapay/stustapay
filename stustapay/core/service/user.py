@@ -2,6 +2,7 @@
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+from email.utils import formataddr
 from typing import Optional
 
 import asyncpg
@@ -752,6 +753,11 @@ class UserService(Service[Config]):
             subject=subject,
             text_message=message,
             html_message=html_message,
+            from_addr=(
+                formataddr(("teamfestlichPay Invite", email_config.email_default_sender))
+                if email_config.email_default_sender
+                else None
+            ),
             to_addr=user.email,
         )
 

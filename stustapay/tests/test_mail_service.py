@@ -1,3 +1,9 @@
+from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
+
+from stustapay.core.schema.mail import Mail
 from stustapay.core.schema.tree import ROOT_NODE_ID
 from stustapay.core.service.mail import MailService
 
@@ -25,3 +31,43 @@ async def test_fetch_mail_claims_rows(mail_service: MailService, db_connection):
     assert len(first_claim) == 1
     assert first_claim[0].id == mail_id
     assert second_claim == []
+
+
+@pytest.mark.asyncio
+async def test_send_mail_sets_delivery_headers(mail_service: MailService, monkeypatch: pytest.MonkeyPatch):
+    captured: dict[str, object] = {}
+
+    async def fake_send(message, **kwargs):
+        captured["message"] = message
+        captured["kwargs"] = kwargs
+
+    monkeypatch.setattr("stustapay.core.service.mail.aiosmtplib.send", fake_send)
+    monkeypatch.setattr(
+        mail_service,
+        "_resolve_mail_settings",
+        AsyncMock(return_value=(True, "noreply@teamfestlichpay.de", "smtp.example.test", 587, "user", "secret")),
+    )
+
+    mail = Mail(
+        id=123,
+        node_id=ROOT_NODE_ID,
+        subject="Payout registered",
+        text_message="hello world",
+        html_message="<p>hello world</p>",
+        to_addr="recipient@example.test",
+        from_addr="payout@teamfestlichpay.de",
+        send_date=None,
+        scheduled_send_date=datetime.now(),
+        retry_count=0,
+        retry_max=5,
+        retry_next_attempt=None,
+        failure_reason=None,
+        attachments=[],
+    )
+
+    await mail_service._send_mail(mail=mail)
+
+    message = captured["message"]
+    assert message["From"] == "teamfestlichPay <payout@teamfestlichpay.de>"
+    assert message["Reply-To"] == "teamfestlichPay <payout@teamfestlichpay.de>"
+    assert message["Message-ID"].endswith("@teamfestlichpay.de>")

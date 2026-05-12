@@ -187,8 +187,8 @@ async def test_global_email_config_uses_builtin_localized_templates_when_entries
 
     config = await config_service.get_global_email_config(token=global_admin_token)
 
-    assert config.invitation_texts[Language.de_DE]["subject"] == "Einladung zur Verwaltung von {{ node_name }}"
-    assert config.invitation_texts[Language.en_US]["subject"] == "Invitation to manage {{ node_name }}"
+    assert config.invitation_texts[Language.de_DE]["subject"] == "teamfestlichPay Invite: {{ node_name }}"
+    assert config.invitation_texts[Language.en_US]["subject"] == "teamfestlichPay Invite: {{ node_name }}"
     assert "teamfestlichPay" in config.invitation_texts[Language.de_DE]["text_body"]
     assert "teamfestlichPay" in config.invitation_texts[Language.en_US]["html_body"]
 
@@ -222,7 +222,7 @@ async def test_global_email_config_treats_blank_templates_as_missing(
         ),
     )
 
-    assert updated.invitation_texts[Language.de_DE]["subject"] == "Einladung zur Verwaltung von {{ node_name }}"
+    assert updated.invitation_texts[Language.de_DE]["subject"] == "teamfestlichPay Invite: {{ node_name }}"
     assert "teamfestlichPay" in updated.invitation_texts[Language.de_DE]["text_body"]
     assert "teamfestlichPay" in updated.invitation_texts[Language.en_US]["html_body"]
 

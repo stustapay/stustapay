@@ -8,7 +8,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import formatdate
+from email.utils import formataddr, formatdate, make_msgid, parseaddr
 
 import aiosmtplib
 import asyncpg
@@ -34,6 +34,38 @@ class MailService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config):
         super().__init__(db_pool, config)
         self.logger = logging.getLogger("mail_service")
+
+    @staticmethod
+    def _format_sender_header(sender: str | None, display_name: str | None = None) -> str | None:
+        if sender is None:
+            return None
+
+        parsed_display_name, email_addr = parseaddr(sender)
+        if not email_addr:
+            return sender
+
+        if display_name:
+            return formataddr((display_name, email_addr))
+
+        display_name = parsed_display_name
+        if display_name:
+            return formataddr((display_name, email_addr))
+
+        if email_addr.lower().endswith("@teamfestlichpay.de"):
+            return formataddr(("teamfestlichPay", email_addr))
+
+        return formataddr((email_addr, email_addr))
+
+    @staticmethod
+    def _message_id_domain(sender: str | None) -> str | None:
+        if sender is None:
+            return None
+
+        _display_name, email_addr = parseaddr(sender)
+        if "@" not in email_addr:
+            return None
+
+        return email_addr.rsplit("@", maxsplit=1)[1]
 
     async def _fetch_global_mail_config(
         self,
@@ -219,11 +251,18 @@ class MailService(Service[Config]):
             )
             return
 
+        effective_sender = mail.from_addr if mail.from_addr else default_sender
+        formatted_sender = self._format_sender_header(effective_sender)
+
         message = MIMEMultipart()
         message["Subject"] = mail.subject
-        message["From"] = mail.from_addr if mail.from_addr else default_sender
+        if formatted_sender is not None:
+            message["From"] = formatted_sender
+            message["Reply-To"] = formatted_sender
         message["To"] = mail.to_addr
         message["Date"] = formatdate(localtime=True)
+        message_id_domain = self._message_id_domain(effective_sender)
+        message["Message-ID"] = make_msgid(domain=message_id_domain)
 
         if mail.html_message:
             alternative = MIMEMultipart("alternative")

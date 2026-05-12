@@ -473,6 +473,7 @@ async def test_set_payout_to_done(
     customer_service: CustomerService,
     mail_service: MailService,
 ):
+    await db_connection.execute("delete from mails")
     await db_connection.execute(
         "update event set email_enabled = true, email_default_sender = $2 where id = $1",
         event_node.id,
@@ -507,12 +508,13 @@ async def test_set_payout_to_done(
     assert all(customer.payout is None for customer in updated_customers)
 
     mails = await db_connection.fetch(
-        "select subject, text_message, html_message, to_addr from mails order by id asc"
+        "select subject, text_message, html_message, to_addr, from_addr from mails order by id asc"
     )
     assert len(mails) == created_payout_run.n_payouts
     first_mail = mails[0]
     assert first_mail["subject"] == "[StuStaPay] Payout Completed"
     assert first_mail["to_addr"] == customers[0].email
+    assert first_mail["from_addr"] == f"{event_node.name} Auszahlung <noreply@test.invalid>"
     assert "payout process has been completed" in first_mail["text_message"]
     assert first_mail["html_message"] is not None
     assert "<html" in first_mail["html_message"]

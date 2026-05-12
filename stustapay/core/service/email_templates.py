@@ -14,8 +14,8 @@ INVITATION_SECTION_LABELS = {
 }
 
 DEFAULT_INVITATION_SUBJECTS = {
-    Language.de_DE: "Einladung zur Verwaltung von {{ node_name }}",
-    Language.en_US: "Invitation to manage {{ node_name }}",
+    Language.de_DE: "teamfestlichPay Invite: {{ node_name }}",
+    Language.en_US: "teamfestlichPay Invite: {{ node_name }}",
 }
 
 DEFAULT_INVITATION_TEXT_BODIES = {
@@ -139,7 +139,11 @@ BASE_EMAIL_HTML_TEMPLATE = """<!DOCTYPE html>
                 bgcolor="#F5FFFE"
                 style="padding:24px 32px;background:#F5FFFE;color:#000000;font-size:12px;
                 line-height:1.6;border-top:2px solid #2AD2C9;">
-                This email was sent by teamfestlichPay.
+                teamfestlichPay<br />
+                Diese Nachricht wurde automatisch versendet. Bitte antworten Sie nicht direkt auf diese E-Mail.<br />
+                This message was sent automatically. Please do not reply directly to this email.<br />
+                <a href="https://www.teamfestlichpay.de/"
+                  style="color:#176B67;text-decoration:underline;">www.teamfestlichpay.de</a>
               </td>
             </tr>
           </table>

@@ -1,3 +1,5 @@
+from email.utils import formataddr
+
 import asyncpg
 from jinja2 import TemplateSyntaxError
 from sftkit.database import Connection
@@ -310,6 +312,11 @@ class ConfigService(Service[Config]):
             subject=f"[Preview] {subject}",
             text_message=text_message,
             html_message=html_message,
+            from_addr=(
+                formataddr(("teamfestlichPay Invite", config.email_default_sender))
+                if config.email_default_sender
+                else None
+            ),
             to_addr=current_user.email,
         )
         return {"status": "queued", "message": f"Preview email queued for {current_user.email}"}

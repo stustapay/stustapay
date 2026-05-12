@@ -196,7 +196,7 @@ async def test_invitation_uses_global_email_templates(
     )
     assert mail is not None
     assert mail["node_id"] == ROOT_NODE_ID
-    assert mail["from_addr"] == "noreply@example.test"
+    assert mail["from_addr"] == "teamfestlichPay Invite <noreply@example.test>"
     assert "Templated User" in mail["subject"]
     assert "Einladung fuer Templated User" in mail["subject"]
     assert "Invitation for Templated User" in mail["subject"]
@@ -258,9 +258,8 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
     )
     assert mail is not None
     assert mail["node_id"] == ROOT_NODE_ID
-    assert mail["from_addr"] == "noreply@example.test"
-    assert f"Einladung zur Verwaltung von {event_node.name}" in mail["subject"]
-    assert f"Invitation to manage {event_node.name}" in mail["subject"]
+    assert mail["from_addr"] == "teamfestlichPay Invite <noreply@example.test>"
+    assert f"teamfestlichPay Invite: {event_node.name}" in mail["subject"]
     assert "Deutsch" in mail["text_message"]
     assert "English" in mail["text_message"]
     assert "Fallback User" in mail["text_message"]
@@ -323,9 +322,9 @@ async def test_invitation_uses_partial_template_overrides(
     )
     assert mail is not None
     assert mail["node_id"] == ROOT_NODE_ID
-    assert mail["from_addr"] == "noreply@example.test"
+    assert mail["from_addr"] == "teamfestlichPay Invite <noreply@example.test>"
     assert "Benutzerdefinierter Betreff fuer Partial Template User" in mail["subject"]
-    assert "Invitation to manage" in mail["subject"]
+    assert "teamfestlichPay Invite:" in mail["subject"]
     assert "accept-invitation?token=" in mail["text_message"]
     assert "Benutzerdefiniertes HTML fuer Partial Template User" in mail["html_message"]
     assert "Hello Partial Template User" in mail["html_message"]

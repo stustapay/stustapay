@@ -2,6 +2,7 @@
 # pylint: disable=unused-argument
 import logging
 import re
+from email.utils import formataddr
 from typing import Optional
 
 import asyncpg
@@ -332,11 +333,16 @@ class CustomerService(Service[Config]):
             res_config = await fetch_restricted_event_settings_for_node(conn, updated_customer.node_id)
             if res_config.email_enabled and res_config.payout_registered_message is not None:
                 message = res_config.payout_registered_message.format(**updated_customer.model_dump())
+                payout_sender = res_config.payout_sender or res_config.email_default_sender
                 email_to_send = {
                     "subject": res_config.payout_registered_subject,
                     "message": message,
                     "html_message": render_plain_text_payout_html(message, res_config.payout_registered_subject),
-                    "from_addr": res_config.payout_sender,
+                    "from_addr": (
+                        formataddr((f"{event_node.name} Auszahlung", payout_sender))
+                        if payout_sender
+                        else None
+                    ),
                     "to_addr": updated_customer.email,
                     "node_id": updated_customer.node_id,
                 }

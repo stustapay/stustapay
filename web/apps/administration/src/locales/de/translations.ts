@@ -648,6 +648,10 @@ export const translations: NestedPartialAsStrings<Translations> = {
     },
     payout: {
       tabLabel: "Auszahlung",
+      payout_disabled_notice_de: "Hinweis bei deaktivierter Auszahlung (DE)",
+      payout_disabled_notice_en: "Hinweis bei deaktivierter Auszahlung (EN)",
+      payout_disabled_notice_help:
+        "Optionaler Hinweistext im Kundenportal, solange Auszahlungen für dieses Event deaktiviert sind.",
       sepa_enabled: "Auszahlung aktiviert",
       ibanNotValid: "IBAN ist nicht gültig",
       sepa_sender_name: "SEPA-Absendername",

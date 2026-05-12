@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import { OrderList } from "./OrderList";
 
 export const Index: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const config = usePublicConfig();
 
@@ -67,6 +67,9 @@ export const Index: React.FC = () => {
       </Trans>
     );
   }
+
+  const payoutDisabledNotice =
+    config.translation_texts[i18n.language]?.["payout_disabled_notice"] ?? t("payout.onlyDuringEvent");
 
   return (
     <Grid container justifyItems="center" justifyContent="center" spacing={2}>
@@ -167,7 +170,7 @@ export const Index: React.FC = () => {
       {!config.payout_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="warning" variant="outlined" className="glass-alert" style={{ marginBottom: "1em", width: "100%" }}>
-            <b>{t("payout.onlyDuringEvent")}</b>
+            <b>{payoutDisabledNotice}</b>
           </Alert>
         </Grid>
       )}
