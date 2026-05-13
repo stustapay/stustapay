@@ -15,9 +15,10 @@ from stustapay.core.schema.till import NewTill, Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.till.till import TillService
 
-from .conftest import Cashier, CreateRandomUserTag
+from .conftest import Cashier
 
 
 async def test_edit_order_preserves_till_id(
@@ -83,10 +84,10 @@ async def test_edit_order_preserves_till_id(
     # Create initial order using book_sale_products (this uses virtual_till by default)
     # But we want to test with a specific till, so we'll create the order directly
     # and then edit it
-    from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
-    from stustapay.core.service.account import get_system_account_for_node
     from stustapay.core.schema.account import AccountType
     from stustapay.core.schema.order import get_source_account, get_target_account
+    from stustapay.core.service.account import get_system_account_for_node
+    from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
 
     line_items = [
         NewLineItem(
@@ -167,9 +168,11 @@ async def test_edit_order_preserves_till_id(
     cancel_order = await fetch_order(conn=db_connection, order_id=cancel_order_id)
     assert cancel_order is not None
     assert cancel_order.order_type == OrderType.cancel_sale
+    assert cancel_order.till_id == original_order.till_id
 
 
 async def test_edit_order_falls_back_to_virtual_till_when_till_not_accessible(
+    monkeypatch,
     db_connection: Connection,
     order_service: OrderService,
     product_service: ProductService,
@@ -192,8 +195,79 @@ async def test_edit_order_falls_back_to_virtual_till_when_till_not_accessible(
     database constraints, we test the main scenario: till_id preservation.
     This edge case is covered by the code logic in edit_sale_products.
     """
-    # This test verifies the fallback logic exists in the code
-    # The actual fallback happens when fetch_till returns None
-    # We can't easily test this without complex node setup, so we
-    # just verify the main functionality works
-    pass
+    from stustapay.core.schema.account import AccountType
+    from stustapay.core.schema.order import get_source_account, get_target_account
+    from stustapay.core.service.account import get_system_account_for_node
+    from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
+    from stustapay.core.service.order.order import fetch_order
+
+    product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(
+            name="Fallback Test Product",
+            price=5.0,
+            tax_rate_id=tax_rate_ust.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+
+    from stustapay.core.service.user_tag import get_or_assign_user_tag
+
+    customer_tag = await create_random_user_tag()
+    user_tag_id = await get_or_assign_user_tag(
+        conn=db_connection, node=event_node, uid=customer_tag.uid, pin=customer_tag.pin
+    )
+    customer_account_id = await db_connection.fetchval(
+        """
+        insert into account (node_id, type, name, user_tag_id, balance)
+        values ($1, 'private', 'Fallback Customer', $2, $3)
+        returning id
+        """,
+        event_node.event_node_id,
+        user_tag_id,
+        100.0,
+    )
+
+    sale_exit_acc = await get_system_account_for_node(
+        conn=db_connection, node=event_node, account_type=AccountType.sale_exit
+    )
+    booking = await book_order(
+        conn=db_connection,
+        order_type=OrderType.sale,
+        payment_method=PaymentMethod.tag,
+        cashier_id=cashier.id,
+        till_id=till.id,
+        line_items=[
+            NewLineItem(
+                quantity=1,
+                product_id=product.id,
+                product_price=product.price,
+                tax_rate_id=product.tax_rate_id,
+            )
+        ],
+        bookings={
+            BookingIdentifier(
+                source_account_id=get_source_account(OrderType.sale, customer_account_id),
+                target_account_id=get_target_account(OrderType.sale, product, sale_exit_acc.id),
+            ): product.price
+        },
+        customer_account_id=customer_account_id,
+    )
+
+    order = await fetch_order(conn=db_connection, order_id=booking.id)
+    assert order is not None
+
+    async def _missing_till(*, conn: Connection, node: Node, till_id: int):
+        del conn, node, till_id
+        return None
+
+    monkeypatch.setattr("stustapay.core.service.order.order.fetch_till", _missing_till)
+
+    fallback_till = await order_service._resolve_admin_cancel_till(conn=db_connection, node=event_node, order=order)
+    virtual_till = await fetch_virtual_till(conn=db_connection, node=event_node)
+
+    assert fallback_till.id == virtual_till.id

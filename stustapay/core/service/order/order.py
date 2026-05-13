@@ -1049,19 +1049,15 @@ class OrderService(Service[Config]):
         order = await fetch_order_at_node(conn=conn, node=node, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
-        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+        cancel_till = await self._resolve_admin_cancel_till(conn=conn, node=node, order=order)
         await self._cancel_sale(
-            conn=conn, node=node, current_user=current_user, order_id=order_id, till_id=virtual_till.id
+            conn=conn, node=node, current_user=current_user, order_id=order_id, till_id=cancel_till.id
         )
 
         assert order.customer_tag_uid is not None
 
         # Preserve the original order's till_id if it exists, otherwise use virtual_till
-        till = virtual_till
-        if order.till_id is not None:
-            original_till = await fetch_till(conn=conn, node=node, till_id=order.till_id)
-            if original_till is not None:
-                till = original_till
+        till = cancel_till
 
         new_sale = NewSaleProducts(
             products=edit_sale.products,
@@ -1110,6 +1106,20 @@ class OrderService(Service[Config]):
             line_items=completed_sale.line_items,
             products=new_sale.products,
         )
+
+    @staticmethod
+    async def _resolve_admin_cancel_till(
+        *,
+        conn: Connection,
+        node: Node,
+        order: Order,
+    ) -> Till:
+        if order.till_id is not None:
+            original_till = await fetch_till(conn=conn, node=node, till_id=order.till_id)
+            if original_till is not None:
+                return original_till
+
+        return await fetch_virtual_till(conn=conn, node=node)
 
     @staticmethod
     async def _cancel_sale(
@@ -1194,9 +1204,12 @@ class OrderService(Service[Config]):
     @requires_node()
     @requires_user([Privilege.can_book_orders])
     async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
-        virtual_till = await fetch_virtual_till(conn=conn, node=node)
+        order = await fetch_order_at_node(conn=conn, node=node, order_id=order_id)
+        if order is None:
+            raise InvalidArgument("Order does not exist")
+        till = await self._resolve_admin_cancel_till(conn=conn, node=node, order=order)
         await self._cancel_sale(
-            conn=conn, node=node, till_id=virtual_till.id, current_user=current_user, order_id=order_id
+            conn=conn, node=node, till_id=till.id, current_user=current_user, order_id=order_id
         )
 
     @with_db_transaction(read_only=False)

@@ -10,15 +10,18 @@ from sftkit.error import AccessDenied, InvalidArgument
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import BookedProduct, EditSaleProducts, NewSaleProducts, OrderType, PaymentMethod
 from stustapay.core.schema.product import NewProduct, Product
-from stustapay.core.schema.till import NewCashRegister
 from stustapay.core.schema.tax_rate import TaxRate
-from stustapay.core.schema.tree import NewEvent, Node, ROOT_NODE_ID
+from stustapay.core.schema.till import NewCashRegister
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, Node
 from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege
-from stustapay.core.service.account import get_system_account_for_node
-from stustapay.core.service.account import AccountService
+from stustapay.core.service.account import AccountService, get_system_account_for_node
 from stustapay.core.service.order import OrderService
-from stustapay.core.service.order.booking import book_cashier_shift_start_order
-from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
+from stustapay.core.service.order.booking import (
+    BookingIdentifier,
+    NewLineItem,
+    book_cashier_shift_start_order,
+    book_order,
+)
 from stustapay.core.service.order.order import get_source_account, get_target_account
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import fetch_tax_rate_none
@@ -549,6 +552,59 @@ async def test_can_book_orders_can_read_orders_in_admin_context(
     assert [entry.id for entry in till_orders] == [order_id]
     assert order is not None
     assert order.id == order_id
+
+
+async def test_list_orders_filtered_by_till_includes_admin_cancel_sale_on_original_till(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    tax_rate_ust: TaxRate,
+    cashier: Cashier,
+    till,
+    create_random_user_tag: CreateRandomUserTag,
+):
+    product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(
+            name="Till Filter Cancel Product",
+            price=5.0,
+            tax_rate_id=tax_rate_ust.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+    customer_account_id = await _create_customer_account(db_connection, event_node, create_random_user_tag)
+    order_id = await _create_sale_order(
+        db_connection=db_connection,
+        event_node=event_node,
+        cashier=cashier,
+        till_id=till.id,
+        customer_account_id=customer_account_id,
+        product=product,
+    )
+
+    await order_service.cancel_sale_admin(token=event_admin_token, node_id=event_node.id, order_id=order_id)
+    cancel_order_id = await db_connection.fetchval("select id from ordr where cancels_order = $1", order_id)
+
+    filtered_orders = await order_service.list_orders_filtered(
+        token=event_admin_token,
+        node_id=event_node.id,
+        till_id=till.id,
+    )
+    till_orders = await order_service.list_orders_by_till(
+        token=event_admin_token,
+        node_id=event_node.id,
+        till_id=till.id,
+    )
+
+    assert cancel_order_id is not None
+    assert [entry.id for entry in filtered_orders] == [cancel_order_id, order_id]
+    assert {entry.id for entry in till_orders} == {cancel_order_id, order_id}
 
 
 async def test_order_admin_reads_require_node_administration_or_can_book_orders(
