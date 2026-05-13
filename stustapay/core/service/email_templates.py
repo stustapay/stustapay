@@ -28,6 +28,8 @@ Ihr Benutzername ist: {{ username }}
 Um Ihr Konto zu aktivieren, klicken Sie bitte auf den folgenden Link und setzen Sie Ihr Passwort:
 {{ invitation_url }}
 
+Nach dem Setzen Ihres Passworts melden Sie sich mit Ihrem Benutzernamen und dem gerade erstellten Passwort im Portal an.
+
 Diese Einladung ist gueltig bis {{ expires_at }}.
 
 Falls Sie diese Einladung nicht erwartet haben, ignorieren Sie bitte diese E-Mail.
@@ -43,6 +45,8 @@ Your username is: {{ username }}
 
 To activate your account, please click the following link and set your password:
 {{ invitation_url }}
+
+After setting your password, return to the login page and sign in with your username and the password you just created.
 
 This invitation will expire on {{ expires_at }}.
 
@@ -65,6 +69,7 @@ DEFAULT_INVITATION_HTML_BODIES = {
       text-decoration:none;font-weight:700;border-radius:999px;"
   >Einladung annehmen</a>
 </p>
+<p>Nach dem Setzen Ihres Passworts melden Sie sich mit Ihrem Benutzernamen und dem gerade erstellten Passwort im Portal an.</p>
 <p>Diese Einladung ist gueltig bis {{ expires_at }}.</p>
 <p>Falls Sie diese Einladung nicht erwartet haben, ignorieren Sie bitte diese E-Mail.</p>
 <p>Viele Gruesse<br />Ihr teamfestlichPay-Team</p>
@@ -80,6 +85,7 @@ DEFAULT_INVITATION_HTML_BODIES = {
       text-decoration:none;font-weight:700;border-radius:999px;"
   >Accept invitation</a>
 </p>
+<p>After setting your password, sign in to the portal with your username and the password you just created.</p>
 <p>This invitation will expire on {{ expires_at }}.</p>
 <p>If you did not expect this invitation, please ignore this email.</p>
 <p>Best regards,<br />The teamfestlichPay Team</p>

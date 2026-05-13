@@ -8,6 +8,7 @@ from stustapay.core.http.context import ContextMailService, ContextUserService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
     AcceptInvitationPayload,
+    AcceptInvitationResult,
     NewUser,
     NewUserRole,
     NewUserToRoles,
@@ -80,7 +81,7 @@ async def create_user(
     )
 
 
-@user_router.post("/accept-invitation", response_model=dict[str, str])
+@user_router.post("/accept-invitation", response_model=AcceptInvitationResult)
 async def accept_invitation(
     payload: AcceptInvitationPayload,
     user_service: ContextUserService,

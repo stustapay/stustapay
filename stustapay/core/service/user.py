@@ -15,6 +15,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.tree import ROOT_NODE_ID, Node, ObjectType
 from stustapay.core.schema.user import (
     AcceptInvitationPayload,
+    AcceptInvitationResult,
     CurrentUser,
     NewUser,
     NewUserRole,
@@ -782,7 +783,7 @@ class UserService(Service[Config]):
     @with_db_transaction
     async def accept_invitation(
         self, *, conn: Connection, payload: AcceptInvitationPayload
-    ) -> dict[str, str]:
+    ) -> AcceptInvitationResult:
         if payload.token.startswith(self.INVITATION_TOKEN_HASH_PREFIX):
             # Do not allow using already-hashed tokens directly; the raw token must be provided.
             raise AccessDenied("Invalid invitation token")
@@ -814,6 +815,8 @@ class UserService(Service[Config]):
             raise InvalidArgument("This invitation has expired")
 
         user_id = invitation["user_id"]
+        user_login = await conn.fetchval("select login from usr where id = $1", user_id)
+        assert user_login is not None
 
         # Set user password
         hashed_password = self._hash_password(payload.password)
@@ -826,4 +829,8 @@ class UserService(Service[Config]):
             invitation["id"],
         )
 
-        return {"status": "success", "message": "Password set successfully. You can now log in."}
+        return AcceptInvitationResult(
+            status="success",
+            message="Password set successfully. You can now sign in with your username.",
+            login=user_login,
+        )

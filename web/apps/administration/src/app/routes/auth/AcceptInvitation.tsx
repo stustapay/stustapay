@@ -1,6 +1,7 @@
 import { useAcceptInvitationMutation } from "@/api";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import {
+  Alert,
   Stack,
   Avatar,
   Button,
@@ -68,14 +69,18 @@ export const AcceptInvitation: React.FC = () => {
   const handleSubmit = async (values: FormSchema, helpers: FormikHelpers<FormSchema>) => {
     setIsSubmitting(true);
     try {
-      await acceptInvitation({
+      const result = await acceptInvitation({
         acceptInvitationPayload: {
           token,
           password: values.password,
         },
       }).unwrap();
       toast.success(t("user.invitationAccepted"));
-      navigate("/login");
+      const loginParams = new URLSearchParams({
+        username: result.login,
+        invitationAccepted: "1",
+      });
+      navigate(`/login?${loginParams.toString()}`);
     } catch (err) {
       const error = err as { data?: { detail?: string } };
       toast.error(error.data?.detail || t("user.invitationAcceptFailed"));
@@ -95,6 +100,9 @@ export const AcceptInvitation: React.FC = () => {
         <Typography component="h1" variant="h5">
           {t("user.acceptInvitation")}
         </Typography>
+        <Alert severity="info" sx={{ mt: 2, width: "100%" }}>
+          {t("user.acceptInvitationHelp")}
+        </Alert>
         <Formik
           initialValues={initialValues}
           validationSchema={toFormikValidationSchema(validationSchema)}

@@ -261,7 +261,7 @@ create or replace view till_button_with_products as
 
                 bool_and(p.fixed_price)               as fixed_price,   -- a constraint assures us that for variable priced products a button can only refer to one product
                 bool_and(p.is_returnable)             as is_returnable, -- a constraint assures us that for returnable products a button can only refer to one product
-                array_agg(tlb.product_id)             as product_ids
+                array_agg(tlb.product_id order by tlb.product_id) as product_ids
             from
                 till_button_product tlb
                 join product_with_tax_and_restrictions p on tlb.product_id = p.id

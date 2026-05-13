@@ -121,7 +121,13 @@ async def test_invitation_token_is_stored_hashed_and_raw_token_is_required_for_a
     accepted = await user_service.accept_invitation(
         payload=AcceptInvitationPayload(token=invitation.token, password="safe-password")
     )
-    assert accepted["status"] == "success"
+    assert accepted.status == "success"
+    assert accepted.login == user.login
+    assert "sign in with your username" in accepted.message
+
+    logged_in = await user_service.login_user(username=user.login, password="safe-password")
+    assert logged_in.success is not None
+    assert logged_in.success.user.login == user.login
 
 
 @pytest.mark.parametrize(
@@ -265,11 +271,14 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
     assert "Fallback User" in mail["text_message"]
     assert user.login in mail["text_message"]
     assert "teamfestlichPay administration portal" in mail["text_message"]
+    assert "Nach dem Setzen Ihres Passworts" in mail["text_message"]
+    assert "After setting your password" in mail["text_message"]
     assert "Hallo Fallback User" in mail["html_message"]
     assert "Hello Fallback User" in mail["html_message"]
     assert user.login in mail["html_message"]
     assert "teamfestlichPay" in mail["html_message"]
     assert "Accept invitation" in mail["html_message"]
+    assert "sign in to the portal with your username" in mail["html_message"]
 
 
 async def test_invitation_uses_partial_template_overrides(

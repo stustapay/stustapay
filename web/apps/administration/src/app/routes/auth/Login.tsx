@@ -2,6 +2,7 @@ import { useLoginMutation, UserLoginResult } from "@/api";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import {
+  Alert,
   Stack,
   Avatar,
   Button,
@@ -28,11 +29,6 @@ const validationSchema = z.object({
 });
 
 type FormSchema = z.infer<typeof validationSchema>;
-
-const initialValues: FormSchema = {
-  username: "",
-  password: "",
-};
 
 type NodeSelectInfo = {
   username: string;
@@ -86,6 +82,15 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const [login] = useLoginMutation();
   const [nodeSelectInfo, setNodeSelectInfo] = React.useState<NodeSelectInfo | null>(null);
+  const prefilledUsername = query.get("username") ?? "";
+  const showInvitationAcceptedHint = query.get("invitationAccepted") === "1" && prefilledUsername !== "";
+  const initialValues = React.useMemo(
+    () => ({
+      username: prefilledUsername,
+      password: "",
+    }),
+    [prefilledUsername]
+  );
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -131,8 +136,14 @@ export const Login: React.FC = () => {
             <Typography component="h1" variant="h5">
               {t("auth.signIn")}
             </Typography>
+            {showInvitationAcceptedHint && (
+              <Alert severity="success" sx={{ mt: 2, width: "100%" }}>
+                {t("auth.invitationLoginHint", { username: prefilledUsername })}
+              </Alert>
+            )}
             <Formik
               initialValues={initialValues}
+              enableReinitialize
               onSubmit={handleSubmit}
               validationSchema={toFormikValidationSchema(validationSchema)}
             >

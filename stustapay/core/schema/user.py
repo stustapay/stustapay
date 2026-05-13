@@ -131,6 +131,12 @@ class AcceptInvitationPayload(BaseModel):
     password: str
 
 
+class AcceptInvitationResult(BaseModel):
+    status: str
+    message: str
+    login: str
+
+
 class UserInvitation(BaseModel):
     id: int
     user_id: int

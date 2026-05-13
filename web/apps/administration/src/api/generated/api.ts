@@ -2101,9 +2101,7 @@ export type CreateUserApiArg = {
   nodeId: number;
   createUserPayload: CreateUserPayload;
 };
-export type AcceptInvitationApiResponse = /** status 200 Successful Response */ {
-  [key: string]: string;
-};
+export type AcceptInvitationApiResponse = /** status 200 Successful Response */ AcceptInvitationResult;
 export type AcceptInvitationApiArg = {
   acceptInvitationPayload: AcceptInvitationPayload;
 };
@@ -3277,6 +3275,11 @@ export type CreateUserPayload = {
   user_tag_uid_hex?: string | null;
   email?: string | null;
   password?: string | null;
+};
+export type AcceptInvitationResult = {
+  status: string;
+  message: string;
+  login: string;
 };
 export type AcceptInvitationPayload = {
   token: string;

@@ -202,6 +202,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     password: "Passwort",
     login: "Anmelden",
     loginFailed: "Anmeldung fehlgeschlagen: {{reason}}.",
+    invitationLoginHint:
+      "Ihr Passwort wurde gesetzt. Melden Sie sich jetzt mit dem Benutzernamen {{username}} und Ihrem neuen Passwort an.",
     profile: "Profil",
     selectNode: "Knoten für die Anmeldung auswählen",
     changePassword: "Passwort ändern",
@@ -836,6 +838,8 @@ export const translations: NestedPartialAsStrings<Translations> = {
     noEmail: "Keine E-Mail",
     invite: "Einladen",
     acceptInvitation: "Einladung annehmen",
+    acceptInvitationHelp:
+      "Setzen Sie ein Passwort für Ihr Administrationskonto. Danach melden Sie sich im nächsten Schritt mit Ihrem Benutzernamen an.",
     invitationInvalid: "Der Einladungslink ist ungueltig",
     invitationAccepted: "Einladung erfolgreich angenommen",
     invitationAcceptFailed: "Einladung konnte nicht angenommen werden",

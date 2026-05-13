@@ -474,9 +474,10 @@ async def test_set_payout_to_done(
     mail_service: MailService,
 ):
     await db_connection.execute("delete from mails")
+    assert event_node.event is not None
     await db_connection.execute(
         "update event set email_enabled = true, email_default_sender = $2 where id = $1",
-        event_node.id,
+        event_node.event.id,
         "noreply@test.invalid",
     )
 

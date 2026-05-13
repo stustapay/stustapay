@@ -197,6 +197,8 @@ export const translations = {
     password: "Password",
     login: "Login",
     loginFailed: "Login failed: {{reason}}.",
+    invitationLoginHint:
+      "Your password has been set. Sign in with username {{username}} and the password you just created.",
     profile: "Profile",
     selectNode: "Select node for login",
     changePassword: "Change Password",
@@ -864,6 +866,8 @@ export const translations = {
     noEmail: "No email",
     invite: "Invite",
     acceptInvitation: "Accept invitation",
+    acceptInvitationHelp:
+      "Set a password for your administration account. After that, you will sign in with your username on the next screen.",
     invitationInvalid: "Invitation link is invalid",
     invitationAccepted: "Invitation accepted successfully",
     invitationAcceptFailed: "Failed to accept invitation",

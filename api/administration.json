@@ -38,7 +38,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Product__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Product_int_"
                 }
               }
             }
@@ -343,7 +343,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_User__int_"
+                  "$ref": "#/components/schemas/NormalizedList_User_int_"
                 }
               }
             }
@@ -445,11 +445,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Accept Invitation Users Accept Invitation Post"
+                  "$ref": "#/components/schemas/AcceptInvitationResult"
                 }
               }
             }
@@ -808,7 +804,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_UserRole__int_"
+                  "$ref": "#/components/schemas/NormalizedList_UserRole_int_"
                 }
               }
             }
@@ -1152,7 +1148,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TaxRate__int_"
+                  "$ref": "#/components/schemas/NormalizedList_TaxRate_int_"
                 }
               }
             }
@@ -1630,7 +1626,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Till__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Till_int_"
                 }
               }
             }
@@ -2047,7 +2043,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TillLayout__int_"
+                  "$ref": "#/components/schemas/NormalizedList_TillLayout_int_"
                 }
               }
             }
@@ -2336,7 +2332,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TillProfile__int_"
+                  "$ref": "#/components/schemas/NormalizedList_TillProfile_int_"
                 }
               }
             }
@@ -2625,7 +2621,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TillButton__int_"
+                  "$ref": "#/components/schemas/NormalizedList_TillButton_int_"
                 }
               }
             }
@@ -2914,7 +2910,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashRegisterStocking__int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashRegisterStocking_int_"
                 }
               }
             }
@@ -3146,7 +3142,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashRegister__int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashRegister_int_"
                 }
               }
             }
@@ -3442,7 +3438,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashierShift__int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashierShift_int_"
                 }
               }
             }
@@ -3501,7 +3497,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Transaction__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Transaction_int_"
                 }
               }
             }
@@ -3733,7 +3729,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_ConfigEntry__str_"
+                  "$ref": "#/components/schemas/NormalizedList_ConfigEntry_str_"
                 }
               }
             }
@@ -4010,7 +4006,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Account__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Account_int_"
                 }
               }
             }
@@ -4070,7 +4066,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Account__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Account_int_"
                 }
               }
             }
@@ -4506,7 +4502,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Order__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Order_int_"
                 }
               }
             }
@@ -4673,7 +4669,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Order__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Order_int_"
                 }
               }
             }
@@ -4732,7 +4728,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Order__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Order_int_"
                 }
               }
             }
@@ -5010,7 +5006,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Cashier__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Cashier_int_"
                 }
               }
             }
@@ -5128,7 +5124,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashierShift__int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashierShift_int_"
                 }
               }
             }
@@ -6554,7 +6550,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Ticket__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Ticket_int_"
                 }
               }
             }
@@ -7027,7 +7023,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_UserTagDetail__int_"
+                  "$ref": "#/components/schemas/NormalizedList_UserTagDetail_int_"
                 }
               }
             }
@@ -7523,7 +7519,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Tse__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Tse_int_"
                 }
               }
             }
@@ -7700,7 +7696,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_PayoutRunWithStats__int_"
+                  "$ref": "#/components/schemas/NormalizedList_PayoutRunWithStats_int_"
                 }
               }
             }
@@ -9777,7 +9773,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Terminal__int_"
+                  "$ref": "#/components/schemas/NormalizedList_Terminal_int_"
                 }
               }
             }
@@ -11726,7 +11722,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_EntryArea__int_"
+                  "$ref": "#/components/schemas/NormalizedList_EntryArea_int_"
                 }
               }
             }
@@ -12504,7 +12500,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_EntryGroup__int_"
+                  "$ref": "#/components/schemas/NormalizedList_EntryGroup_int_"
                 }
               }
             }
@@ -13449,6 +13445,29 @@
         ],
         "title": "AcceptInvitationPayload"
       },
+      "AcceptInvitationResult": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "login": {
+            "type": "string",
+            "title": "Login"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "login"
+        ],
+        "title": "AcceptInvitationResult"
+      },
       "Account": {
         "properties": {
           "node_id": {
@@ -13630,7 +13649,7 @@
         "properties": {
           "file": {
             "type": "string",
-            "format": "binary",
+            "contentMediaType": "application/octet-stream",
             "title": "File"
           }
         },
@@ -17914,7 +17933,7 @@
         ],
         "title": "NodeSumUpConnectionStatus"
       },
-      "NormalizedList_Account__int_": {
+      "NormalizedList_Account_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -17938,7 +17957,7 @@
         ],
         "title": "NormalizedList[Account, int]"
       },
-      "NormalizedList_CashRegisterStocking__int_": {
+      "NormalizedList_CashRegisterStocking_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -17962,7 +17981,7 @@
         ],
         "title": "NormalizedList[CashRegisterStocking, int]"
       },
-      "NormalizedList_CashRegister__int_": {
+      "NormalizedList_CashRegister_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -17986,7 +18005,7 @@
         ],
         "title": "NormalizedList[CashRegister, int]"
       },
-      "NormalizedList_CashierShift__int_": {
+      "NormalizedList_CashierShift_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18010,7 +18029,7 @@
         ],
         "title": "NormalizedList[CashierShift, int]"
       },
-      "NormalizedList_Cashier__int_": {
+      "NormalizedList_Cashier_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18034,7 +18053,7 @@
         ],
         "title": "NormalizedList[Cashier, int]"
       },
-      "NormalizedList_ConfigEntry__str_": {
+      "NormalizedList_ConfigEntry_str_": {
         "properties": {
           "ids": {
             "items": {
@@ -18058,7 +18077,7 @@
         ],
         "title": "NormalizedList[ConfigEntry, str]"
       },
-      "NormalizedList_EntryArea__int_": {
+      "NormalizedList_EntryArea_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18082,7 +18101,7 @@
         ],
         "title": "NormalizedList[EntryArea, int]"
       },
-      "NormalizedList_EntryGroup__int_": {
+      "NormalizedList_EntryGroup_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18106,7 +18125,7 @@
         ],
         "title": "NormalizedList[EntryGroup, int]"
       },
-      "NormalizedList_Order__int_": {
+      "NormalizedList_Order_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18130,7 +18149,7 @@
         ],
         "title": "NormalizedList[Order, int]"
       },
-      "NormalizedList_PayoutRunWithStats__int_": {
+      "NormalizedList_PayoutRunWithStats_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18154,7 +18173,7 @@
         ],
         "title": "NormalizedList[PayoutRunWithStats, int]"
       },
-      "NormalizedList_Product__int_": {
+      "NormalizedList_Product_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18178,7 +18197,7 @@
         ],
         "title": "NormalizedList[Product, int]"
       },
-      "NormalizedList_TaxRate__int_": {
+      "NormalizedList_TaxRate_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18202,7 +18221,7 @@
         ],
         "title": "NormalizedList[TaxRate, int]"
       },
-      "NormalizedList_Terminal__int_": {
+      "NormalizedList_Terminal_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18226,7 +18245,7 @@
         ],
         "title": "NormalizedList[Terminal, int]"
       },
-      "NormalizedList_Ticket__int_": {
+      "NormalizedList_Ticket_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18250,7 +18269,7 @@
         ],
         "title": "NormalizedList[Ticket, int]"
       },
-      "NormalizedList_TillButton__int_": {
+      "NormalizedList_TillButton_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18274,7 +18293,7 @@
         ],
         "title": "NormalizedList[TillButton, int]"
       },
-      "NormalizedList_TillLayout__int_": {
+      "NormalizedList_TillLayout_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18298,7 +18317,7 @@
         ],
         "title": "NormalizedList[TillLayout, int]"
       },
-      "NormalizedList_TillProfile__int_": {
+      "NormalizedList_TillProfile_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18322,7 +18341,7 @@
         ],
         "title": "NormalizedList[TillProfile, int]"
       },
-      "NormalizedList_Till__int_": {
+      "NormalizedList_Till_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18346,7 +18365,7 @@
         ],
         "title": "NormalizedList[Till, int]"
       },
-      "NormalizedList_Transaction__int_": {
+      "NormalizedList_Transaction_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18370,7 +18389,7 @@
         ],
         "title": "NormalizedList[Transaction, int]"
       },
-      "NormalizedList_Tse__int_": {
+      "NormalizedList_Tse_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18394,7 +18413,7 @@
         ],
         "title": "NormalizedList[Tse, int]"
       },
-      "NormalizedList_UserRole__int_": {
+      "NormalizedList_UserRole_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18418,7 +18437,7 @@
         ],
         "title": "NormalizedList[UserRole, int]"
       },
-      "NormalizedList_UserTagDetail__int_": {
+      "NormalizedList_UserTagDetail_int_": {
         "properties": {
           "ids": {
             "items": {
@@ -18442,7 +18461,7 @@
         ],
         "title": "NormalizedList[UserTagDetail, int]"
       },
-      "NormalizedList_User__int_": {
+      "NormalizedList_User_int_": {
         "properties": {
           "ids": {
             "items": {
