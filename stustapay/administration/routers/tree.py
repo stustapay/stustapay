@@ -27,9 +27,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_tree_for_current_user(
-    token: CurrentAuthToken, tree_service: ContextTreeService
-) -> NodeSeenByUser:
+async def get_tree_for_current_user(token: CurrentAuthToken, tree_service: ContextTreeService) -> NodeSeenByUser:
     return await tree_service.get_tree_for_current_user(token=token)
 
 
@@ -40,9 +38,7 @@ async def create_node(
     node_id: int,
     payload: NewNode,
 ) -> Node:
-    return await tree_service.create_node(
-        token=token, node_id=node_id, new_node=payload
-    )
+    return await tree_service.create_node(token=token, node_id=node_id, new_node=payload)
 
 
 @router.post("/nodes/{node_id}/settings")
@@ -52,15 +48,11 @@ async def update_node(
     node_id: int,
     payload: NewNode,
 ) -> Node:
-    return await tree_service.update_node(
-        token=token, node_id=node_id, updated_node=payload
-    )
+    return await tree_service.update_node(token=token, node_id=node_id, updated_node=payload)
 
 
 @router.post("/nodes/{node_id}/archive-node")
-async def archive_node(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def archive_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     await tree_service.archive_node(token=token, node_id=node_id)
 
 
@@ -121,15 +113,11 @@ async def update_wristband_guide(
     node_id: int,
     payload: NewBlob,
 ):
-    await tree_service.update_wristband_guide(
-        token=token, node_id=node_id, image=payload
-    )
+    await tree_service.update_wristband_guide(token=token, node_id=node_id, image=payload)
 
 
 @router.get("/events/{node_id}/event-design")
-async def get_event_design(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-) -> EventDesign:
+async def get_event_design(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int) -> EventDesign:
     return await tree_service.get_event_design(token=token, node_id=node_id)
 
 
@@ -137,29 +125,21 @@ async def get_event_design(
 async def get_restricted_event_settings(
     token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
 ) -> RestrictedEventSettings:
-    return await tree_service.get_restricted_event_settings(
-        token=token, node_id=node_id
-    )
+    return await tree_service.get_restricted_event_settings(token=token, node_id=node_id)
 
 
 @router.delete("/nodes/{node_id}")
-async def delete_node(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def delete_node(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.delete_node(token=token, node_id=node_id)
 
 
 @router.post("/events/{node_id}/generate-test-bon", response_model=BonJson)
-async def generate_test_bon(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def generate_test_bon(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.generate_test_bon(token=token, node_id=node_id)
 
 
 @router.post("/events/{node_id}/check-pretix-connection")
-async def check_pretix_connection(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def check_pretix_connection(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.check_pretix_connection(token=token, node_id=node_id)
 
 
@@ -170,12 +150,8 @@ class PretixFetchProductsPayload(BaseModel):
     url: str
 
 
-@router.post(
-    "/events/{node_id}/fetch-pretix-products", response_model=list[PretixProduct]
-)
-async def fetch_pretix_products(
-    token: CurrentAuthToken, payload: PretixFetchProductsPayload, node_id: int
-):
+@router.post("/events/{node_id}/fetch-pretix-products", response_model=list[PretixProduct])
+async def fetch_pretix_products(token: CurrentAuthToken, payload: PretixFetchProductsPayload, node_id: int):
     del token, node_id  # unused
     api = PretixApi(
         api_key=payload.apiKey,
@@ -194,18 +170,14 @@ class GenerateWebhookResponse(BaseModel):
     webhook_url: str
 
 
-@router.post(
-    "/events/{node_id}/generate-webhook-url", response_model=GenerateWebhookResponse
-)
+@router.post("/events/{node_id}/generate-webhook-url", response_model=GenerateWebhookResponse)
 async def generate_webhook_url(
     token: CurrentAuthToken,
     webhook_service: ContextWebhookService,
     node_id: int,
     payload: GenerateWebhookPayload,
 ):
-    url = await webhook_service.get_webhook_url(
-        token=token, node_id=node_id, webhook_type=payload.webhook_type
-    )
+    url = await webhook_service.get_webhook_url(token=token, node_id=node_id, webhook_type=payload.webhook_type)
     return GenerateWebhookResponse(webhook_url=url)
 
 
@@ -218,12 +190,8 @@ async def generate_webhook_url(
         }
     },
 )
-async def generate_test_revenue_report(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
-    content = await tree_service.generate_test_revenue_report(
-        token=token, node_id=node_id
-    )
+async def generate_test_revenue_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    content = await tree_service.generate_test_revenue_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="test_revenue_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
 
@@ -237,9 +205,7 @@ async def generate_test_revenue_report(
         }
     },
 )
-async def generate_revenue_report(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def generate_revenue_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     content = await tree_service.generate_revenue_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="revenue_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
@@ -284,12 +250,8 @@ async def generate_daily_report(
         }
     },
 )
-async def generate_test_daily_report(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
-    content = await tree_service.generate_test_daily_report(
-        token=token, node_id=node_id
-    )
+async def generate_test_daily_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
+    content = await tree_service.generate_test_daily_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="test_daily_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
 
@@ -303,9 +265,7 @@ async def generate_test_daily_report(
         }
     },
 )
-async def generate_payout_report(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def generate_payout_report(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     content = await tree_service.generate_payout_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="payout_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
@@ -328,9 +288,7 @@ async def configure_sumup_token(
 
 
 @router.get("/nodes/{node_id}/audit-logs", response_model=list[AuditLog])
-async def list_audit_logs(
-    token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int
-):
+async def list_audit_logs(token: CurrentAuthToken, tree_service: ContextTreeService, node_id: int):
     return await tree_service.list_audit_logs(token=token, node_id=node_id)
 
 
@@ -341,6 +299,4 @@ async def get_audit_log(
     node_id: int,
     audit_log_id: int,
 ):
-    return await tree_service.get_audit_log(
-        token=token, node_id=node_id, audit_log_id=audit_log_id
-    )
+    return await tree_service.get_audit_log(token=token, node_id=node_id, audit_log_id=audit_log_id)

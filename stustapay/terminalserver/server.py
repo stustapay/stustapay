@@ -77,33 +77,19 @@ class Api:
         await database.check_revision_version(db)
 
         auth_service = AuthService(db_pool=db_pool, config=self.cfg)
-        order_service = OrderService(
-            db_pool=db_pool, config=self.cfg, auth_service=auth_service
-        )
+        order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,
             order_service=order_service,
-            user_service=UserService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service
-            ),
-            till_service=TillService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service
-            ),
-            account_service=AccountService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service
-            ),
-            terminal_service=TerminalService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service
-            ),
-            media_service=MediaService(
-                db_pool=db_pool, config=self.cfg, auth_service=auth_service
-            ),
+            user_service=UserService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            till_service=TillService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            account_service=AccountService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            media_service=MediaService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
         )
         try:
-            self.server.add_task(
-                asyncio.create_task(run_healthcheck(db, service_name="terminalserver"))
-            )
+            self.server.add_task(asyncio.create_task(run_healthcheck(db, service_name="terminalserver")))
             await self.server.run(context)
         finally:
             await db_pool.close()

@@ -68,9 +68,7 @@ async def update_customer_info(
     mail_service: ContextMailService,
     customer_bank: CustomerBank,
 ):
-    await customer_service.update_customer_info(
-        customer_bank=customer_bank, token=token, mail_service=mail_service
-    )
+    await customer_service.update_customer_info(customer_bank=customer_bank, token=token, mail_service=mail_service)
 
 
 @router.post(
@@ -83,9 +81,7 @@ async def update_customer_info_donate_all(
     customer_service: ContextCustomerService,
     mail_service: ContextMailService,
 ):
-    await customer_service.update_customer_info_donate_all(
-        token=token, mail_service=mail_service
-    )
+    await customer_service.update_customer_info_donate_all(token=token, mail_service=mail_service)
 
 
 @router.get(

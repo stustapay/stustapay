@@ -74,9 +74,7 @@ class CustomerService(Service[Config]):
         self.config_service = config_service
         self.logger = logging.getLogger("customer")
 
-        self.sumup = SumupService(
-            db_pool=db_pool, config=config, auth_service=auth_service
-        )
+        self.sumup = SumupService(db_pool=db_pool, config=config, auth_service=auth_service)
         self.payout = PayoutService(
             db_pool=db_pool,
             config=config,
@@ -85,9 +83,7 @@ class CustomerService(Service[Config]):
         )
 
     @with_db_transaction
-    async def login_customer(
-        self, *, conn: Connection, pin: str, node_id: int
-    ) -> CustomerLoginSuccess:
+    async def login_customer(self, *, conn: Connection, pin: str, node_id: int) -> CustomerLoginSuccess:
         node = await fetch_node(conn=conn, node_id=node_id)
         if node is None:
             raise AccessDenied("customer portal configured incorrectly")
@@ -125,9 +121,7 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction
     @requires_customer
-    async def logout_customer(
-        self, *, conn: Connection, current_customer: Customer, token: str
-    ) -> bool:
+    async def logout_customer(self, *, conn: Connection, current_customer: Customer, token: str) -> bool:
         token_payload = self.auth_service.decode_customer_jwt_payload(token)
         assert token_payload is not None
         assert current_customer.id == token_payload.customer_id
@@ -146,9 +140,7 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def payout_info(
-        self, *, conn: Connection, current_customer: Customer
-    ) -> PayoutInfo:
+    async def payout_info(self, *, conn: Connection, current_customer: Customer) -> PayoutInfo:
         # is customer registered for payout
         return await conn.fetch_one(
             PayoutInfo,
@@ -164,9 +156,7 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def get_orders_with_bon(
-        self, *, conn: Connection, current_customer: Customer
-    ) -> list[OrderWithBon]:
+    async def get_orders_with_bon(self, *, conn: Connection, current_customer: Customer) -> list[OrderWithBon]:
         return await conn.fetch_many(
             OrderWithBon,
             "select o.*, case when b.bon_json is null then false else true end as bon_generated from order_value_prefiltered("
@@ -178,9 +168,7 @@ class CustomerService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_customer
-    async def get_payout_transactions(
-        self, *, conn: Connection, current_customer: Customer
-    ) -> list[PayoutTransaction]:
+    async def get_payout_transactions(self, *, conn: Connection, current_customer: Customer) -> list[PayoutTransaction]:
         return await conn.fetch_many(
             PayoutTransaction,
             "select t.amount, t.booked_at, a.name as target_account_name, a.type as target_account_type, t.id as transaction_id "
@@ -199,9 +187,7 @@ class CustomerService(Service[Config]):
         customer_bank: CustomerBank,
         mail_service: MailService,
     ) -> None:
-        event_node = await fetch_event_node_for_node(
-            conn=conn, node_id=current_customer.node_id
-        )
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
         assert event_node is not None
         assert event_node.event is not None
         await self.check_payout_run(conn, current_customer)
@@ -218,9 +204,7 @@ class CustomerService(Service[Config]):
 
         allowed_country_codes = event_node.event.sepa_allowed_country_codes
         if iban.country_code not in allowed_country_codes:
-            raise InvalidArgument(
-                "Provided IBAN contains country code which is not supported"
-            )
+            raise InvalidArgument("Provided IBAN contains country code which is not supported")
 
         # check donation
         if customer_bank.donation < 0:
@@ -249,23 +233,17 @@ class CustomerService(Service[Config]):
             current_customer.id,
         )
         if current_customer.email is not None:
-            res_config = await fetch_restricted_event_settings_for_node(
-                conn, current_customer.node_id
-            )
+            res_config = await fetch_restricted_event_settings_for_node(conn, current_customer.node_id)
             assert res_config.payout_registered_message is not None
             await mail_service.send_mail(
                 subject=res_config.payout_registered_subject,
-                message=res_config.payout_registered_message.format(
-                    **current_customer.model_dump()
-                ),
+                message=res_config.payout_registered_message.format(**current_customer.model_dump()),
                 from_addr=res_config.payout_sender,
                 to_addr=current_customer.email,
                 node_id=current_customer.node_id,
             )
 
-    async def check_payout_run(
-        self, conn: Connection, current_customer: Customer
-    ) -> None:
+    async def check_payout_run(self, conn: Connection, current_customer: Customer) -> None:
         # if a payout is assigned, disallow updates.
         is_in_payout = await conn.fetchval(
             "select exists(select from payout where customer_account_id = $1)",
@@ -299,9 +277,7 @@ class CustomerService(Service[Config]):
         return await fetch_event_design(conn=conn, node_id=node_id)
 
     @with_db_transaction(read_only=True)
-    async def get_api_config(
-        self, *, conn: Connection, base_url: str
-    ) -> CustomerPortalApiConfig:
+    async def get_api_config(self, *, conn: Connection, base_url: str) -> CustomerPortalApiConfig:
         node_id = await conn.fetchval(
             "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1",
             base_url,
@@ -320,8 +296,7 @@ class CustomerService(Service[Config]):
             contact_email=node.event.customer_portal_contact_email,
             data_privacy_url=node.event.customer_portal_data_privacy_url,
             payout_enabled=node.event.sepa_enabled,
-            sumup_topup_enabled=self.config.core.sumup_enabled
-            and node.event.sumup_topup_enabled,
+            sumup_topup_enabled=self.config.core.sumup_enabled and node.event.sumup_topup_enabled,
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,
             event_design=event_design,

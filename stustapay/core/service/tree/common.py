@@ -20,9 +20,7 @@ class TranslationText(BaseModel):
     content: str
 
 
-async def _fetch_translation_textx(
-    conn: Connection, event_id: int
-) -> dict[Language, dict[str, str]]:
+async def _fetch_translation_textx(conn: Connection, event_id: int) -> dict[Language, dict[str, str]]:
     texts = await conn.fetch_many(
         TranslationText,
         "select lang_code, type, content from translation_text where event_id = $1",
@@ -45,9 +43,7 @@ async def fetch_node(conn: Connection, node_id: int) -> Node | None:
     if node is None:
         return None
     if node.event is not None:
-        node.event.translation_texts = await _fetch_translation_textx(
-            conn=conn, event_id=node.event.id
-        )
+        node.event.translation_texts = await _fetch_translation_textx(conn=conn, event_id=node.event.id)
     node_map: dict[int, Node] = {node.id: node}
 
     children = await conn.fetch_many(
@@ -59,18 +55,14 @@ async def fetch_node(conn: Connection, node_id: int) -> Node | None:
     )
     for child in children:
         if child.event is not None:
-            child.event.translation_texts = await _fetch_translation_textx(
-                conn=conn, event_id=child.event.id
-            )
+            child.event.translation_texts = await _fetch_translation_textx(conn=conn, event_id=child.event.id)
         node_map[child.parent].children.append(child)
         node_map[child.id] = child
 
     return node
 
 
-async def get_tree_for_current_user(
-    conn: Connection, current_user: CurrentUser
-) -> NodeSeenByUser:
+async def get_tree_for_current_user(conn: Connection, current_user: CurrentUser) -> NodeSeenByUser:
     user_node = await conn.fetch_maybe_one(
         NodeSeenByUser,
         "select n.*, u.privileges_at_node, '{}'::json array as children "
@@ -98,9 +90,7 @@ async def get_tree_for_current_user(
         user_node.id: user_node,
         root_node.id: root_node,
     }
-    for child in trace_to_root[
-        1:
-    ]:  # the first element in the list is the root node, we want to skip that one
+    for child in trace_to_root[1:]:  # the first element in the list is the root node, we want to skip that one
         node_map[child.parent].children.append(child)
         node_map[child.id] = child
 
@@ -132,20 +122,14 @@ async def fetch_event_for_node(conn: Connection, node: Node) -> PublicEventSetti
 
 
 async def fetch_event_node_for_node(conn: Connection, node_id: int) -> Node | None:
-    event_node_id = await conn.fetchval(
-        "select event_node_id from node where id = $1", node_id
-    )
+    event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
     if event_node_id is None:
         raise NotFound(element_type="node", element_id=node_id)
     return await fetch_node(conn=conn, node_id=event_node_id)
 
 
-async def fetch_restricted_event_settings_for_node(
-    conn: Connection, node_id: int
-) -> RestrictedEventSettings:
-    event_node_id = await conn.fetchval(
-        "select event_node_id from node where id = $1", node_id
-    )
+async def fetch_restricted_event_settings_for_node(conn: Connection, node_id: int) -> RestrictedEventSettings:
+    event_node_id = await conn.fetchval("select event_node_id from node where id = $1", node_id)
     if event_node_id is None:
         raise NotFound(element_type="node", element_id=node_id)
     settings = await conn.fetch_one(
@@ -153,16 +137,12 @@ async def fetch_restricted_event_settings_for_node(
         "select e.* from event_with_translations e join node n on n.event_id = e.id where n.id = $1",
         event_node_id,
     )
-    settings.translation_texts = await _fetch_translation_textx(
-        conn=conn, event_id=settings.id
-    )
+    settings.translation_texts = await _fetch_translation_textx(conn=conn, event_id=settings.id)
     return settings
 
 
 async def fetch_event_design(conn: Connection, node_id: int) -> EventDesign:
-    design = await conn.fetch_maybe_one(
-        EventDesign, "select * from event_design where node_id = $1", node_id
-    )
+    design = await conn.fetch_maybe_one(EventDesign, "select * from event_design where node_id = $1", node_id)
     if design is None:
         return EventDesign(
             bon_logo_blob_id=None,

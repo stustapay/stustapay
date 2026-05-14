@@ -115,13 +115,9 @@ class PretixApi:
         query: dict | None = None,
         json_data: dict | None = None,
     ) -> dict:
-        async with aiohttp.ClientSession(
-            trust_env=True, headers=self._get_pretix_auth_headers()
-        ) as session:
+        async with aiohttp.ClientSession(trust_env=True, headers=self._get_pretix_auth_headers()) as session:
             try:
-                async with session.request(
-                    method, url, params=query, json=json_data, timeout=self.timeout
-                ) as response:
+                async with session.request(method, url, params=query, json=json_data, timeout=self.timeout) as response:
                     if not response.ok:
                         resp = await response.json()
                         err = _PretixErrorFormat.model_validate(resp)
@@ -215,19 +211,14 @@ class PretixTicketProvider(TicketProvider):
         all add-on positions that reference this ticket and are top-up products."""
         total_topup = 0.0
         for position in order.positions:
-            if (
-                position.item in pretix_topup_ids
-                and position.addon_to == ticket_position.id
-            ):
+            if position.item in pretix_topup_ids and position.addon_to == ticket_position.id:
                 try:
                     total_topup += float(position.price) if position.price else 0.0
                 except (ValueError, TypeError):
                     pass
         return total_topup
 
-    def _resolve_customer_email(
-        self, order: PretixOrder, position: PretixOrderPosition
-    ) -> str | None:
+    def _resolve_customer_email(self, order: PretixOrder, position: PretixOrderPosition) -> str | None:
         """Resolve customer email: prefer attendee_email on position, fall back to order email."""
         if position.attendee_email:
             return position.attendee_email
@@ -235,9 +226,7 @@ class PretixTicketProvider(TicketProvider):
             return order.email
         return None
 
-    def _resolve_customer_name(
-        self, order: PretixOrder, position: PretixOrderPosition
-    ) -> str | None:
+    def _resolve_customer_name(self, order: PretixOrder, position: PretixOrderPosition) -> str | None:
         """Resolve customer name: prefer attendee_name, fall back to invoice address name."""
         if position.attendee_name:
             return position.attendee_name
@@ -268,9 +257,7 @@ class PretixTicketProvider(TicketProvider):
             for position in order.positions:
                 if position.item in pretix_ticket_product_ids:
                     # Compute top-up amount from add-on positions linked to this ticket
-                    topup_amount = self._compute_topup_for_ticket(
-                        order, position, pretix_topup_ids
-                    )
+                    topup_amount = self._compute_topup_for_ticket(order, position, pretix_topup_ids)
 
                     customer_email = self._resolve_customer_email(order, position)
                     customer_name = self._resolve_customer_name(order, position)
@@ -339,39 +326,23 @@ class PretixTicketProvider(TicketProvider):
                     )
 
                     if not relevant_node_ids:
-                        self.logger.debug(
-                            "No pretix-enabled events found, skipping sync"
-                        )
-                        await asyncio.sleep(
-                            self.config.core.pretix_synchronization_interval.seconds
-                        )
+                        self.logger.debug("No pretix-enabled events found, skipping sync")
+                        await asyncio.sleep(self.config.core.pretix_synchronization_interval.seconds)
                         continue
 
                     for relevant_node_id in relevant_node_ids:
                         node = await fetch_node(conn=conn, node_id=relevant_node_id)
                         assert node is not None
-                        settings = await fetch_restricted_event_settings_for_node(
-                            conn=conn, node_id=node.id
-                        )
-                        self.logger.debug(
-                            f"Synchronizing pretix tickets for event {node.name}"
-                        )
-                        await self._synchronize_tickets_for_node(
-                            conn=conn, node=node, event_settings=settings
-                        )
-                        await self._sync_pending_checkins(
-                            conn=conn, node=node, event_settings=settings
-                        )
+                        settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+                        self.logger.debug(f"Synchronizing pretix tickets for event {node.name}")
+                        await self._synchronize_tickets_for_node(conn=conn, node=node, event_settings=settings)
+                        await self._sync_pending_checkins(conn=conn, node=node, event_settings=settings)
             except Exception:
                 self.logger.exception("process pending orders threw an error")
 
-            await asyncio.sleep(
-                self.config.core.pretix_synchronization_interval.seconds
-            )
+            await asyncio.sleep(self.config.core.pretix_synchronization_interval.seconds)
 
-    async def _sync_pending_checkins(
-        self, conn: Connection, node: Node, event_settings: RestrictedEventSettings
-    ):
+    async def _sync_pending_checkins(self, conn: Connection, node: Node, event_settings: RestrictedEventSettings):
         """Sync pending checkins to Pretix (NFC band was assigned in StuStaPay)."""
         pending = await conn.fetch(
             "select id, token from ticket_voucher where node_id = $1 and needs_pretix_checkin = true and not cancelled",
@@ -383,9 +354,7 @@ class PretixTicketProvider(TicketProvider):
         api = PretixApi.from_event(event_settings)
         checkin_lists = await api.fetch_checkin_lists()
         if not checkin_lists:
-            self.logger.warning(
-                f"No checkin lists found for event {node.name}, cannot sync checkins to Pretix"
-            )
+            self.logger.warning(f"No checkin lists found for event {node.name}, cannot sync checkins to Pretix")
             return
 
         checkin_list_id = checkin_lists[0]["id"]
@@ -399,19 +368,13 @@ class PretixTicketProvider(TicketProvider):
                 )
                 self.logger.info(f"Synced checkin to Pretix for voucher {row['id']}")
             else:
-                self.logger.warning(
-                    f"Failed to sync checkin to Pretix for voucher {row['id']}"
-                )
+                self.logger.warning(f"Failed to sync checkin to Pretix for voucher {row['id']}")
 
-    async def _handle_pretix_order_paid_webhook(
-        self, node_id: int, payload: PretixOrderWebhookPayload
-    ):
+    async def _handle_pretix_order_paid_webhook(self, node_id: int, payload: PretixOrderWebhookPayload):
         async with self.db_pool.acquire() as conn:
             node = await fetch_node(conn=conn, node_id=node_id)
             assert node is not None
-            settings = await fetch_restricted_event_settings_for_node(
-                conn=conn, node_id=node_id
-            )
+            settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
             if not settings.pretix_presale_enabled:
                 self.logger.warning(
                     f"Skipping pretix ticket synchronization for event {node.name} as pretix presale is disabled"
@@ -441,9 +404,7 @@ class PretixTicketProvider(TicketProvider):
                 product_names=product_names,
             )
 
-    async def _handle_pretix_order_canceled_webhook(
-        self, node_id: int, payload: PretixOrderWebhookPayload
-    ):
+    async def _handle_pretix_order_canceled_webhook(self, node_id: int, payload: PretixOrderWebhookPayload):
         """Handle order cancellation: mark all vouchers for this order as cancelled."""
         async with self.db_pool.acquire() as conn:
             node = await fetch_node(conn=conn, node_id=node_id)
@@ -455,20 +416,14 @@ class PretixTicketProvider(TicketProvider):
                 node.event_node_id,
                 payload.code,
             )
-            self.logger.info(
-                f"Cancelled vouchers for pretix order {payload.code} in event {node.name}: {result}"
-            )
+            self.logger.info(f"Cancelled vouchers for pretix order {payload.code} in event {node.name}: {result}")
 
-    async def _handle_pretix_order_changed_webhook(
-        self, node_id: int, payload: PretixOrderWebhookPayload
-    ):
+    async def _handle_pretix_order_changed_webhook(self, node_id: int, payload: PretixOrderWebhookPayload):
         """Handle order changes: re-fetch order and update voucher data."""
         async with self.db_pool.acquire() as conn:
             node = await fetch_node(conn=conn, node_id=node_id)
             assert node is not None
-            settings = await fetch_restricted_event_settings_for_node(
-                conn=conn, node_id=node_id
-            )
+            settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
             if not settings.pretix_presale_enabled:
                 return
 
@@ -482,9 +437,7 @@ class PretixTicketProvider(TicketProvider):
                     node.event_node_id,
                     payload.code,
                 )
-                self.logger.info(
-                    f"Order {payload.code} was changed to cancelled status"
-                )
+                self.logger.info(f"Order {payload.code} was changed to cancelled status")
                 return
 
             if order.status == PretixOrderStatus.paid:
@@ -494,9 +447,7 @@ class PretixTicketProvider(TicketProvider):
                 )
                 self.logger.info(f"Re-synced changed pretix order {payload.code}")
 
-    async def _handle_pretix_checkin_webhook(
-        self, node_id: int, payload: PretixWebhookPayload
-    ):
+    async def _handle_pretix_checkin_webhook(self, node_id: int, payload: PretixWebhookPayload):
         """Handle checkin from pretixSCAN: mark voucher as externally checked in."""
         async with self.db_pool.acquire() as conn:
             node = await fetch_node(conn=conn, node_id=node_id)
@@ -513,9 +464,7 @@ class PretixTicketProvider(TicketProvider):
         async with self.db_pool.acquire() as conn:
             node = await fetch_node(conn=conn, node_id=node_id)
             assert node is not None
-            settings = await fetch_restricted_event_settings_for_node(
-                conn=conn, node_id=node_id
-            )
+            settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
             if not settings.pretix_presale_enabled:
                 return
 
@@ -524,21 +473,15 @@ class PretixTicketProvider(TicketProvider):
             # Find the first checkin list for this event
             checkin_lists = await api.fetch_checkin_lists()
             if not checkin_lists:
-                self.logger.warning(
-                    f"No checkin lists found for event {node.name}, cannot sync checkin to Pretix"
-                )
+                self.logger.warning(f"No checkin lists found for event {node.name}, cannot sync checkin to Pretix")
                 return
 
             checkin_list_id = checkin_lists[0]["id"]
             success = await api.redeem_checkin(checkin_list_id, voucher_token)
             if success:
-                self.logger.info(
-                    f"Successfully synced checkin to Pretix for token {voucher_token[:8]}..."
-                )
+                self.logger.info(f"Successfully synced checkin to Pretix for token {voucher_token[:8]}...")
             else:
-                self.logger.warning(
-                    f"Failed to sync checkin to Pretix for token {voucher_token[:8]}..."
-                )
+                self.logger.warning(f"Failed to sync checkin to Pretix for token {voucher_token[:8]}...")
 
     async def pretix_webhook(self, node_id: int, payload: dict):
         try:
@@ -547,9 +490,7 @@ class PretixTicketProvider(TicketProvider):
             if validated.action == "pretix.event.order.paid":
                 try:
                     order_payload = PretixOrderWebhookPayload.model_validate(payload)
-                    await self._handle_pretix_order_paid_webhook(
-                        node_id=node_id, payload=order_payload
-                    )
+                    await self._handle_pretix_order_paid_webhook(node_id=node_id, payload=order_payload)
                 except ValidationError:
                     return
 
@@ -559,30 +500,22 @@ class PretixTicketProvider(TicketProvider):
             ):
                 try:
                     order_payload = PretixOrderWebhookPayload.model_validate(payload)
-                    await self._handle_pretix_order_canceled_webhook(
-                        node_id=node_id, payload=order_payload
-                    )
+                    await self._handle_pretix_order_canceled_webhook(node_id=node_id, payload=order_payload)
                 except ValidationError:
                     return
 
             elif validated.action == "pretix.event.order.changed":
                 try:
                     order_payload = PretixOrderWebhookPayload.model_validate(payload)
-                    await self._handle_pretix_order_changed_webhook(
-                        node_id=node_id, payload=order_payload
-                    )
+                    await self._handle_pretix_order_changed_webhook(node_id=node_id, payload=order_payload)
                 except ValidationError:
                     return
 
             elif validated.action == "pretix.event.checkin":
-                await self._handle_pretix_checkin_webhook(
-                    node_id=node_id, payload=validated
-                )
+                await self._handle_pretix_checkin_webhook(node_id=node_id, payload=validated)
 
             else:
-                self.logger.debug(
-                    f"Ignoring unhandled pretix webhook action: {validated.action}"
-                )
+                self.logger.debug(f"Ignoring unhandled pretix webhook action: {validated.action}")
 
         except ValidationError:
             self.logger.info("Received invalid webhook payload from pretix")

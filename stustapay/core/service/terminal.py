@@ -56,9 +56,7 @@ from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
 logger = logging.getLogger(__name__)
 
 
-async def _fetch_terminal(
-    conn: Connection, node: Node, terminal_id: int
-) -> Terminal | None:
+async def _fetch_terminal(conn: Connection, node: Node, terminal_id: int) -> Terminal | None:
     return await conn.fetch_maybe_one(
         Terminal,
         "select t.*, till.id as till_id from terminal t left join till on t.id = till.terminal_id "
@@ -69,9 +67,7 @@ async def _fetch_terminal(
 
 
 class TerminalService(Service[Config]):
-    def __init__(
-        self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
-    ):
+    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
 
@@ -119,9 +115,7 @@ class TerminalService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user([Privilege.node_administration])
-    async def get_terminal(
-        self, *, conn: Connection, node: Node, terminal_id: int
-    ) -> Optional[Terminal]:
+    async def get_terminal(self, *, conn: Connection, node: Node, terminal_id: int) -> Optional[Terminal]:
         return await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
 
     @with_db_transaction
@@ -145,9 +139,7 @@ class TerminalService(Service[Config]):
         )
         if term_id is None:
             raise NotFound(element_type="terminal", element_id=terminal_id)
-        updated_terminal = await _fetch_terminal(
-            conn=conn, node=node, terminal_id=terminal_id
-        )
+        updated_terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert updated_terminal is not None
         await create_audit_log(
             conn=conn,
@@ -169,9 +161,7 @@ class TerminalService(Service[Config]):
         current_user: CurrentUser,
         terminal_id: int,
     ) -> bool:
-        result = await conn.execute(
-            "delete from terminal where id = $1 and node_id = $2", terminal_id, node.id
-        )
+        result = await conn.execute("delete from terminal where id = $1 and node_id = $2", terminal_id, node.id)
         # TODO: AUDIT_DELETE
         await create_audit_log(
             conn=conn,
@@ -183,9 +173,7 @@ class TerminalService(Service[Config]):
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=False)
-    async def register_terminal(
-        self, *, conn: Connection, registration_uuid: str
-    ) -> TerminalRegistrationSuccess:
+    async def register_terminal(self, *, conn: Connection, registration_uuid: str) -> TerminalRegistrationSuccess:
         # TODO: TREE visibility
         terminal = await conn.fetch_maybe_one(
             Terminal,
@@ -218,9 +206,7 @@ class TerminalService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
     @requires_user([Privilege.node_administration])
-    async def logout_terminal_id(
-        self, *, conn: Connection, node: Node, terminal_id: int
-    ) -> bool:
+    async def logout_terminal_id(self, *, conn: Connection, node: Node, terminal_id: int) -> bool:
         row = await conn.fetchrow(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null "
             "where id = $1 and node_id = $2 returning id",
@@ -230,16 +216,10 @@ class TerminalService(Service[Config]):
         if row is None:
             raise NotFound(element_type="terminal", element_id=terminal_id)
 
-        till_id = await conn.fetchval(
-            "select id from till where terminal_id = $1", terminal_id
-        )
+        till_id = await conn.fetchval("select id from till where terminal_id = $1", terminal_id)
         if till_id is not None:
-            till_node_id = await conn.fetchval(
-                "select node_id from till where id = $1", till_id
-            )
-            await remove_terminal_from_till(
-                conn=conn, node_id=till_node_id, till_id=till_id
-            )
+            till_node_id = await conn.fetchval("select node_id from till where id = $1", till_id)
+            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=till_id)
 
         return True
 
@@ -259,16 +239,10 @@ class TerminalService(Service[Config]):
         if terminal is None:
             raise NotFound(element_type="terminal", element_id=terminal_id)
         if terminal.till_id is not None:
-            till_node_id = await conn.fetchval(
-                "select node_id from till where id = $1", terminal.till_id
-            )
-            await remove_terminal_from_till(
-                conn=conn, node_id=till_node_id, till_id=terminal.till_id
-            )
+            till_node_id = await conn.fetchval("select node_id from till where id = $1", terminal.till_id)
+            await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)
 
-        await assign_till_to_terminal(
-            conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id
-        )
+        await assign_till_to_terminal(conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id)
         await create_audit_log(
             conn=conn,
             log_type=AuditType.terminal_to_till_changed,
@@ -283,9 +257,7 @@ class TerminalService(Service[Config]):
 
     @with_db_transaction
     @requires_terminal(requires_till=False)
-    async def logout_terminal(
-        self, *, conn: Connection, current_terminal: CurrentTerminal
-    ):
+    async def logout_terminal(self, *, conn: Connection, current_terminal: CurrentTerminal):
         await conn.fetchval(
             "update terminal set registration_uuid = gen_random_uuid(), session_uuid = null where id = $1",
             current_terminal.id,
@@ -303,10 +275,7 @@ class TerminalService(Service[Config]):
         del terminal_id
         if not event_settings.sumup_payment_enabled:
             return None
-        if (
-            event_settings.sumup_oauth_client_id == ""
-            or event_settings.sumup_oauth_client_secret == ""
-        ):
+        if event_settings.sumup_oauth_client_id == "" or event_settings.sumup_oauth_client_secret == "":
             return None
 
         event_node_id = node.event_node_id
@@ -322,11 +291,7 @@ class TerminalService(Service[Config]):
             client_secret=event_settings.sumup_oauth_client_secret,
             refresh_token=event_settings.sumup_oauth_refresh_token,
         )
-        if (
-            new_token is None
-            and current_token is not None
-            and current_token.is_valid(tolerance=timedelta(minutes=2))
-        ):
+        if new_token is None and current_token is not None and current_token.is_valid(tolerance=timedelta(minutes=2)):
             return current_token
 
         if new_token is None:
@@ -340,9 +305,7 @@ class TerminalService(Service[Config]):
     ) -> TerminalTillConfig:
         node = await fetch_node(conn=conn, node_id=till.node_id)
         assert node is not None
-        event_settings = await fetch_restricted_event_settings_for_node(
-            conn=conn, node_id=event_node.id
-        )
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=event_node.id)
         profile = await conn.fetch_one(
             TillProfile,
             "select * from till_profile tp where id = $1",
@@ -384,12 +347,8 @@ class TerminalService(Service[Config]):
             oauth_token = await self._get_terminal_sumup_oauth_token(
                 terminal_id=terminal_id, node=node, event_settings=event_settings
             )
-            sumup_api_oauth_token = (
-                oauth_token.access_token if oauth_token is not None else ""
-            )
-            sumup_api_oauth_valid_until = (
-                oauth_token.expires_at if oauth_token is not None else None
-            )
+            sumup_api_oauth_token = oauth_token.access_token if oauth_token is not None else ""
+            sumup_api_oauth_valid_until = oauth_token.expires_at if oauth_token is not None else None
 
             secrets = TerminalSumupSecrets(
                 sumup_affiliate_key=sumup_affiliate_key,
@@ -430,9 +389,7 @@ class TerminalService(Service[Config]):
         )
 
     @staticmethod
-    async def _get_assignable_roles_for_user_at_node(
-        conn: Connection, current_terminal: CurrentTerminal
-    ):
+    async def _get_assignable_roles_for_user_at_node(conn: Connection, current_terminal: CurrentTerminal):
         available_roles = []
         if current_terminal.till is not None:
             node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
@@ -451,9 +408,7 @@ class TerminalService(Service[Config]):
     async def get_terminal_config(
         self, *, conn: Connection, current_terminal: CurrentTerminal
     ) -> TerminalConfig | None:
-        event_node = await fetch_event_node_for_node(
-            conn=conn, node_id=current_terminal.node_id
-        )
+        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.node_id)
         assert event_node is not None
 
         user_privileges = await conn.fetchval(
@@ -533,9 +488,7 @@ class TerminalService(Service[Config]):
                 "have permission to login at a terminal"
             )
 
-        new_user_id = await conn.fetchval(
-            "select id from user_with_tag where user_tag_uid = $1", user_tag.uid
-        )
+        new_user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
         assert new_user_id is not None
 
         new_user_is_supervisor = await conn.fetchval(
@@ -545,10 +498,7 @@ class TerminalService(Service[Config]):
             node.id,
         )
         if not new_user_is_supervisor:
-            if (
-                current_user is None
-                or Privilege.terminal_login not in current_user.privileges
-            ):
+            if current_user is None or Privilege.terminal_login not in current_user.privileges:
                 raise AccessDenied("You can only be logged in by a supervisor")
 
         return available_roles
@@ -621,9 +571,7 @@ class TerminalService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_terminal(requires_till=False)
-    async def get_current_user(
-        self, *, current_user: Optional[CurrentUser]
-    ) -> Optional[CurrentUser]:
+    async def get_current_user(self, *, current_user: Optional[CurrentUser]) -> Optional[CurrentUser]:
         return current_user
 
     @with_db_transaction
@@ -646,9 +594,7 @@ class TerminalService(Service[Config]):
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
     @requires_user([Privilege.node_administration])
-    async def force_logout_user(
-        self, *, conn: Connection, node: Node, terminal_id: int
-    ):
+    async def force_logout_user(self, *, conn: Connection, node: Node, terminal_id: int):
         terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         if terminal is None:
             raise NotFound(element_id=terminal_id, element_type="terminal")
@@ -657,9 +603,7 @@ class TerminalService(Service[Config]):
                 "update till set active_cash_register_id = null where id = $1",
                 terminal.till_id,
             )
-        await logout_user_from_terminal(
-            conn=conn, node_id=node.id, terminal_id=terminal_id
-        )
+        await logout_user_from_terminal(conn=conn, node_id=node.id, terminal_id=terminal_id)
 
     @with_db_transaction(read_only=True)
     @requires_terminal(requires_till=False)
@@ -677,9 +621,7 @@ class TerminalService(Service[Config]):
             and Privilege.create_user not in current_user.privileges
             and user_tag_uid != current_user.user_tag_uid
         ):
-            raise AccessDenied(
-                "cannot retrieve user info for someone other than yourself"
-            )
+            raise AccessDenied("cannot retrieve user info for someone other than yourself")
 
         info = await conn.fetch_maybe_one(
             UserInfo,
@@ -697,9 +639,7 @@ class TerminalService(Service[Config]):
             user_tag_uid,
         )
         if info is None:
-            raise InvalidArgument(
-                f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}"
-            )
+            raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")
 
         assigned_roles = await conn.fetch_many(
             UserRoleInfo,
