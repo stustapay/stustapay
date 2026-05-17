@@ -268,7 +268,7 @@ class TerminalService(Service[Config]):
         if new_token is None:
             return None
 
-        self.sumup_oauth_cache[node.id] = new_token
+        self.sumup_oauth_cache[event_node_id] = new_token
         return new_token
 
     async def _get_terminal_till_config(
