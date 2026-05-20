@@ -33,9 +33,7 @@ import javax.inject.Inject
 
 
 enum class TopUpPage(val route: String) {
-    Selection("amount"),
-    Done("done"),
-    Failure("aborted"),
+    Selection("amount"), Done("done"), Failure("aborted"),
 }
 
 
@@ -74,8 +72,7 @@ class TopUpViewModel @Inject constructor(
 
     // configuration infos from backend
     val terminalLoginState = combine(
-        userRepository.userState,
-        terminalConfigRepository.terminalConfigState
+        userRepository.userState, terminalConfigRepository.terminalConfigState
     ) { user, terminal ->
         TerminalLoginState(user, terminal)
     }.stateIn(
@@ -199,6 +196,14 @@ class TopUpViewModel @Inject constructor(
 
             is ECPaymentResult.Success -> {
                 _status.update { "EC: ${paymentResult.result.msg}" }
+            }
+
+            is ECPaymentResult.SilentCancelled -> {
+                // There may be multiple instances of this suspend fun launched simultaneously.
+                // Only show the status for the one that actually succeeds and silently drop all
+                // others.
+                topUpApi.cancelPendingTopUp(newTopUp.uuid)
+                return
             }
         }
 

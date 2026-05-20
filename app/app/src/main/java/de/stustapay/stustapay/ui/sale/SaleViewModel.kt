@@ -291,6 +291,13 @@ class SaleViewModel @Inject constructor(
                 is ECPaymentResult.Success -> {
                     _status.update { "EC: ${paymentResult.result.msg}" }
                 }
+
+                is ECPaymentResult.SilentCancelled -> {
+                    // There may be multiple instances of this suspend fun launched simultaneously.
+                    // Only show the status for the one that actually succeeds and silently drop all
+                    // others.
+                    return
+                }
             }
         }
 
