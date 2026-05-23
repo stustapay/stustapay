@@ -17,19 +17,13 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -181,36 +175,36 @@ fun AccountDetails(
 
 @Composable
 fun OrderListEntry(order: DetailedOrder, onClick: () -> Unit) {
-    var icon = Icons.Filled.Warning
+    var icon = de.stustapay.libssp.R.drawable.warning_24
     var label = R.string.common_error
     var amount = 0.0;
     when (order.orderType) {
         OrderType.sale -> {
-            icon = Icons.Filled.ShoppingCart
+            icon = de.stustapay.libssp.R.drawable.shopping_cart_24
             label = R.string.root_item_sale
             amount = -order.totalPrice
         }
 
         OrderType.cancel_sale -> {
-            icon = Icons.Filled.Clear
+            icon = de.stustapay.libssp.R.drawable.close_24
             label = R.string.common_action_cancel
             amount = -order.totalPrice
         }
 
         OrderType.top_up -> {
-            icon = Icons.Filled.KeyboardArrowUp
+            icon = de.stustapay.libssp.R.drawable.keyboard_double_arrow_up_24
             label = R.string.common_topup
             amount = order.totalPrice
         }
 
         OrderType.pay_out -> {
-            icon = Icons.Filled.KeyboardArrowDown
+            icon = de.stustapay.libssp.R.drawable.arrow_downward_24
             label = R.string.sale_payout
             amount = order.totalPrice
         }
 
         OrderType.ticket -> {
-            icon = Icons.Filled.Face
+            icon = de.stustapay.libssp.R.drawable.local_activity_24
             label = R.string.root_item_ticket
             amount = -order.totalPrice
         }
@@ -230,7 +224,7 @@ fun OrderListEntry(order: DetailedOrder, onClick: () -> Unit) {
             }, horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row {
-            Icon(icon, "")
+            Icon(painter = painterResource(icon), "")
             Spacer(modifier = Modifier.width(5.dp))
             Text(stringResource(label))
         }

@@ -15,8 +15,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,7 +102,7 @@ fun TicketSuccess(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Image(
-                    imageVector = Icons.Filled.CheckCircle,
+                    painter = painterResource(de.stustapay.libssp.R.drawable.check_circle_24),
                     modifier = Modifier
                         .size(size = 120.dp)
                         .clip(shape = CircleShape)

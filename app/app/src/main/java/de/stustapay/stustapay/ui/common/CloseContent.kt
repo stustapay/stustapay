@@ -5,20 +5,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import de.stustapay.libssp.R
 import de.stustapay.libssp.ui.theme.errorButtonColors
 
 
 @Composable
 fun CloseContent(
     onClose: () -> Unit,
-    icon: ImageVector = Icons.Filled.Clear,
+    iconId: Int = R.drawable.close_24,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -36,7 +35,7 @@ fun CloseContent(
                 .width(80.dp)
                 .padding(10.dp),
         ) {
-            Icon(icon, "close")
+            Icon(painter = painterResource(iconId), "close")
         }
     }
 }

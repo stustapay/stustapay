@@ -13,14 +13,13 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.stustapay.libssp.R
 import de.stustapay.libssp.ui.theme.Theme
 
 @Composable
@@ -73,7 +72,7 @@ fun PreviewButtonListItem() {
         ButtonListItem(
             icon = {
                 Icon(
-                    Icons.Filled.LocalFireDepartment,
+                    painter = painterResource(R.drawable.local_fire_department_24),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
@@ -96,7 +95,7 @@ fun PreviewButtonListItem() {
                         Icon(
                             modifier = Modifier
                                 .size(60.dp),
-                            imageVector = Icons.Filled.Language,
+                            painter = painterResource(R.drawable.language_24),
                             contentDescription = null,
                         )
                     }
@@ -108,7 +107,7 @@ fun PreviewButtonListItem() {
                         Icon(
                             modifier = Modifier
                                 .size(60.dp),
-                            imageVector = Icons.Filled.LocalFireDepartment,
+                            painter = painterResource(R.drawable.language_24),
                             contentDescription = null,
                         )
                     }

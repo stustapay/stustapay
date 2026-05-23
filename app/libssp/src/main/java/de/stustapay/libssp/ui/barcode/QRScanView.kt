@@ -24,10 +24,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +40,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -54,6 +51,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rscja.barcode.BarcodeFactory
 import com.rscja.barcode.BarcodeUtility
+import de.stustapay.libssp.R
 import de.stustapay.libssp.barcode.ZXingQRCode
 import de.stustapay.libssp.barcode.ZXingQRCodeStatus
 import de.stustapay.libssp.ui.common.ConfirmCard
@@ -214,16 +212,14 @@ fun QRScanView(
             ) {
                 Column {
                     Icon(
-                        imageVector = Icons.Filled.QrCodeScanner,
-                        modifier = Modifier
-                            .size(size = 80.dp),
+                        painter = painterResource(R.drawable.qr_code_24),
+                        modifier = Modifier.size(size = 80.dp),
                         contentDescription = null,
                         tint = MaterialTheme.colors.onSurface
                     )
                     Icon(
-                        imageVector = Icons.Filled.ArrowUpward,
-                        modifier = Modifier
-                            .size(size = 80.dp),
+                        painter = painterResource(R.drawable.keyboard_double_arrow_up_24),
+                        modifier = Modifier.size(size = 80.dp),
                         contentDescription = null,
                         tint = MaterialTheme.colors.onSurface
                     )

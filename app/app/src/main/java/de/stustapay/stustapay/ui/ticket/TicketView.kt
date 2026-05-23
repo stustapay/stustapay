@@ -1,6 +1,6 @@
 package de.stustapay.stustapay.ui.ticket
 
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 
 

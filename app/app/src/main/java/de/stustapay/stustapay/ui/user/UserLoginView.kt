@@ -2,12 +2,9 @@ package de.stustapay.stustapay.ui.user
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -132,7 +129,7 @@ fun UserLoginView(
                     text = { Text(userRolesV.msg) },
                     icon = {
                         Icon(
-                            Icons.Filled.Warning,
+                            painter = painterResource(de.stustapay.libssp.R.drawable.warning_24),
                             contentDescription = null,
                             modifier = Modifier.size(56.dp)
                         )
@@ -164,7 +161,7 @@ fun UserLoginView(
             secondaryText = { Text(subtext ?: "") },
             icon = {
                 Icon(
-                    Icons.Filled.Person,
+                    painter = painterResource(de.stustapay.libssp.R.drawable.person_24),
                     contentDescription = null,
                     modifier = Modifier.size(42.dp)
                 )
@@ -222,7 +219,7 @@ fun UserLoginView(
                 text = { Text(statusV) },
                 icon = {
                     Icon(
-                        Icons.Filled.Info,
+                        painter = painterResource(de.stustapay.libssp.R.drawable.info_24),
                         contentDescription = null,
                         modifier = Modifier.size(56.dp)
                     )

@@ -6,15 +6,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ionspin.kotlin.bignum.integer.toBigInteger
-import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.libssp.ui.theme.errorButtonColors
 
@@ -42,7 +40,7 @@ fun TagSelectedItem(
             colors = errorButtonColors(),
             modifier = Modifier.width(80.dp),
         ) {
-            Icon(Icons.Filled.Clear, "scan new tag")
+            Icon(painter = painterResource(de.stustapay.libssp.R.drawable.close_24), "scan new tag")
         }
     }
 }

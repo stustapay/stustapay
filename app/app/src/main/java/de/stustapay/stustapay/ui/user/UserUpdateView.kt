@@ -20,8 +20,6 @@ import androidx.compose.material.ListItem
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -134,7 +133,7 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                         ) {
                                             Text(r.name)
                                             if (roles.contains(r.id.ulongValue())) {
-                                                Icon(Icons.Filled.Check, null)
+                                                Icon(painter = painterResource(de.stustapay.libssp.R.drawable.check_24), null)
                                             }
                                         }
                                     }

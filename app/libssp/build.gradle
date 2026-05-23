@@ -1,6 +1,8 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'com.google.devtools.ksp'
@@ -10,13 +12,10 @@ plugins {
 
 android {
     namespace 'de.stustapay.libssp'
-    compileSdk 35
+    compileSdk 37
 
     defaultConfig {
         minSdk 28
-        targetSdk 33
-        versionCode getSSPVersionCode()
-        versionName getSSPVersionName()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -32,12 +31,23 @@ android {
         sourceCompatibility = targetJavaVersion
         targetCompatibility = targetJavaVersion
     }
-    kotlinOptions {
-        jvmTarget = targetJavaVersion.toString()
-    }
 
     buildFeatures {
         compose true
+    }
+    lint {
+        targetSdk 33
+    }
+    testOptions {
+        targetSdk 33
+    }
+}
+
+
+kotlin {
+    compilerOptions {
+        languageVersion = KotlinVersion.fromVersion(kotlinLanguageVersion)
+        jvmTarget = JvmTarget.fromTarget(jvmTargetVersion)
     }
 }
 
@@ -45,8 +55,6 @@ dependencies {
     implementation project(":deviceapi")
     implementation "androidx.core:core-ktx:$core_ktx_version"
     implementation "androidx.compose.material:material:$compose_ui_version"
-    implementation "androidx.compose.material:material-icons-core:$compose_ui_version"
-    implementation "androidx.compose.material:material-icons-extended:$compose_ui_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
     implementation "com.google.dagger:hilt-android:$hilt_version"
     implementation "androidx.activity:activity-ktx:$activity_compose_version"
@@ -57,7 +65,7 @@ dependencies {
     implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
     implementation "com.ionspin.kotlin:bignum:$bignum_version"
     implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:$bignum_version"
-    implementation 'com.google.zxing:core:3.5.1'
+    implementation 'com.google.zxing:core:3.5.4'
     implementation "androidx.camera:camera-core:$camerax_version"
     implementation "androidx.camera:camera-lifecycle:$camerax_version"
     implementation "androidx.camera:camera-view:$camerax_version"

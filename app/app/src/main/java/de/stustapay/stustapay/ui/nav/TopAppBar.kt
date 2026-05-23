@@ -2,10 +2,9 @@ package de.stustapay.stustapay.ui.nav
 
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
+import de.stustapay.libssp.R
 import androidx.compose.material.TopAppBar as MaterialTopAppBar
 
 class TopAppBarIcon(
@@ -33,11 +32,11 @@ fun TopAppBar(
                 }) {
                     when (icon.type) {
                         TopAppBarIcon.Type.MENU -> {
-                            Icon(Icons.Filled.Menu, "Open the menu")
+                            Icon(painter = painterResource(R.drawable.menu_24), "Open the menu")
                         }
 
                         TopAppBarIcon.Type.BACK -> {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Go back")
+                            Icon(painter = painterResource(R.drawable.arrow_back_24), "Go back")
                         }
                     }
                 }

@@ -3,19 +3,15 @@ package de.stustapay.stustapay.ui.ticket
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.LocalActivity
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,7 +35,7 @@ fun TicketListItem(
         modifier = modifier,
         icon = {
             Icon(
-                Icons.Filled.LocalActivity,
+                painter = painterResource(de.stustapay.libssp.R.drawable.local_activity_24),
                 contentDescription = null,
                 modifier = Modifier.size(35.dp)
             )
@@ -127,7 +123,7 @@ fun TicketListItem(
                         Icon(
                             modifier = Modifier
                                 .size(50.dp),
-                            imageVector = Icons.Filled.AddShoppingCart,
+                            painter = painterResource(de.stustapay.libssp.R.drawable.add_shopping_cart_24),
                             contentDescription = null,
                         )
                     }
@@ -143,7 +139,7 @@ fun TicketListItem(
                         Icon(
                             modifier = Modifier
                                 .size(50.dp),
-                            imageVector = Icons.Filled.QrCodeScanner,
+                            painter = painterResource(de.stustapay.libssp.R.drawable.qr_code_24),
                             contentDescription = null,
                         )
                     }

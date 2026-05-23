@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -41,7 +38,7 @@ fun SettingsRootView(navController: NavHostController) {
             PrefLink(
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Settings,
+                        painter = painterResource(de.stustapay.libssp.R.drawable.settings_24),
                         contentDescription = "Settings"
                     )
                 },
@@ -55,7 +52,7 @@ fun SettingsRootView(navController: NavHostController) {
             PrefLink(
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.ShoppingCart,
+                        painter = painterResource(de.stustapay.libssp.R.drawable.shopping_cart_24),
                         contentDescription = "EC Settings"
                     )
                 },
@@ -67,7 +64,7 @@ fun SettingsRootView(navController: NavHostController) {
         item {
             PrefGroup(title = { Text("About") }) {
                 PrefLink(
-                    icon = { Icon(imageVector = Icons.Default.Info, contentDescription = "About") },
+                    icon = { Icon(painter = painterResource(de.stustapay.libssp.R.drawable.info_24), contentDescription = "About") },
                     title = { Text(text = "About this App") },
                 ) {
                     navController.navigate(SettingsNavDest.about.route)

@@ -20,9 +20,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,7 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.theme.MoneyAmountStyle
 import de.stustapay.libssp.ui.theme.NfcScanStyle
@@ -105,10 +102,10 @@ fun CashierView(
 
                     when (uiState.nav) {
                         CashierNavState.Scan, CashierNavState.Root, CashierNavState.Transfer -> {
-                            CloseContent(icon = if (uiState.canViewCashier) {
-                                Icons.Filled.Clear
+                            CloseContent(iconId = if (uiState.canViewCashier) {
+                                de.stustapay.libssp.R.drawable.close_24
                             } else {
-                                Icons.Filled.Refresh
+                                de.stustapay.libssp.R.drawable.refresh_24
                             }, modifier = Modifier.fillMaxSize(), onClose = {
                                 scope.launch { viewModel.reset() }
                             }) {
