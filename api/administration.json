@@ -5,7 +5,7 @@
     "license": {
       "name": "AGPL-3.0"
     },
-    "version": "0.1.0"
+    "version": "2026.2.1"
   },
   "paths": {
     "/products": {
@@ -46,7 +46,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Product_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Product__int_"
                 }
               }
             }
@@ -351,7 +351,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_User_int_"
+                  "$ref": "#/components/schemas/NormalizedList_User__int_"
                 }
               }
             }
@@ -709,7 +709,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_UserRole_int_"
+                  "$ref": "#/components/schemas/NormalizedList_UserRole__int_"
                 }
               }
             }
@@ -1053,7 +1053,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TaxRate_int_"
+                  "$ref": "#/components/schemas/NormalizedList_TaxRate__int_"
                 }
               }
             }
@@ -1455,7 +1455,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Till_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Till__int_"
                 }
               }
             }
@@ -1872,7 +1872,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TillLayout_int_"
+                  "$ref": "#/components/schemas/NormalizedList_TillLayout__int_"
                 }
               }
             }
@@ -2161,7 +2161,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TillProfile_int_"
+                  "$ref": "#/components/schemas/NormalizedList_TillProfile__int_"
                 }
               }
             }
@@ -2450,7 +2450,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TillButton_int_"
+                  "$ref": "#/components/schemas/NormalizedList_TillButton__int_"
                 }
               }
             }
@@ -2739,7 +2739,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashRegisterStocking_int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashRegisterStocking__int_"
                 }
               }
             }
@@ -2971,7 +2971,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashRegister_int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashRegister__int_"
                 }
               }
             }
@@ -3267,7 +3267,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashierShift_int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashierShift__int_"
                 }
               }
             }
@@ -3326,7 +3326,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Transaction_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Transaction__int_"
                 }
               }
             }
@@ -3442,7 +3442,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_ConfigEntry_str_"
+                  "$ref": "#/components/schemas/NormalizedList_ConfigEntry__str_"
                 }
               }
             }
@@ -3534,7 +3534,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Account_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Account__int_"
                 }
               }
             }
@@ -3644,7 +3644,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Account_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Account__int_"
                 }
               }
             }
@@ -4022,7 +4022,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Order_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Order__int_"
                 }
               }
             }
@@ -4081,7 +4081,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Order_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Order__int_"
                 }
               }
             }
@@ -4359,7 +4359,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Cashier_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Cashier__int_"
                 }
               }
             }
@@ -4477,7 +4477,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_CashierShift_int_"
+                  "$ref": "#/components/schemas/NormalizedList_CashierShift__int_"
                 }
               }
             }
@@ -5091,7 +5091,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Ticket_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Ticket__int_"
                 }
               }
             }
@@ -5618,7 +5618,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_UserTagDetail_int_"
+                  "$ref": "#/components/schemas/NormalizedList_UserTagDetail__int_"
                 }
               }
             }
@@ -5796,7 +5796,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Tse_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Tse__int_"
                 }
               }
             }
@@ -5973,7 +5973,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_PayoutRunWithStats_int_"
+                  "$ref": "#/components/schemas/NormalizedList_PayoutRunWithStats__int_"
                 }
               }
             }
@@ -8127,7 +8127,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Terminal_int_"
+                  "$ref": "#/components/schemas/NormalizedList_Terminal__int_"
                 }
               }
             }
@@ -8952,6 +8952,7 @@
             "title": "Originating Terminal Id"
           },
           "content": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Content"
           }
@@ -10658,6 +10659,17 @@
             "format": "email",
             "title": "Customer Portal Contact Email"
           },
+          "customer_portal_feedback_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Feedback Url"
+          },
           "pretix_presale_enabled": {
             "type": "boolean",
             "title": "Pretix Presale Enabled"
@@ -11775,7 +11787,7 @@
         ],
         "title": "NodeSeenByUser"
       },
-      "NormalizedList_Account_int_": {
+      "NormalizedList_Account__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11799,7 +11811,7 @@
         ],
         "title": "NormalizedList[Account, int]"
       },
-      "NormalizedList_CashRegisterStocking_int_": {
+      "NormalizedList_CashRegisterStocking__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11823,7 +11835,7 @@
         ],
         "title": "NormalizedList[CashRegisterStocking, int]"
       },
-      "NormalizedList_CashRegister_int_": {
+      "NormalizedList_CashRegister__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11847,7 +11859,7 @@
         ],
         "title": "NormalizedList[CashRegister, int]"
       },
-      "NormalizedList_CashierShift_int_": {
+      "NormalizedList_CashierShift__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11871,7 +11883,7 @@
         ],
         "title": "NormalizedList[CashierShift, int]"
       },
-      "NormalizedList_Cashier_int_": {
+      "NormalizedList_Cashier__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11895,7 +11907,7 @@
         ],
         "title": "NormalizedList[Cashier, int]"
       },
-      "NormalizedList_ConfigEntry_str_": {
+      "NormalizedList_ConfigEntry__str_": {
         "properties": {
           "ids": {
             "items": {
@@ -11919,7 +11931,7 @@
         ],
         "title": "NormalizedList[ConfigEntry, str]"
       },
-      "NormalizedList_Order_int_": {
+      "NormalizedList_Order__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11943,7 +11955,7 @@
         ],
         "title": "NormalizedList[Order, int]"
       },
-      "NormalizedList_PayoutRunWithStats_int_": {
+      "NormalizedList_PayoutRunWithStats__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11967,7 +11979,7 @@
         ],
         "title": "NormalizedList[PayoutRunWithStats, int]"
       },
-      "NormalizedList_Product_int_": {
+      "NormalizedList_Product__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -11991,7 +12003,7 @@
         ],
         "title": "NormalizedList[Product, int]"
       },
-      "NormalizedList_TaxRate_int_": {
+      "NormalizedList_TaxRate__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12015,7 +12027,7 @@
         ],
         "title": "NormalizedList[TaxRate, int]"
       },
-      "NormalizedList_Terminal_int_": {
+      "NormalizedList_Terminal__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12039,7 +12051,7 @@
         ],
         "title": "NormalizedList[Terminal, int]"
       },
-      "NormalizedList_Ticket_int_": {
+      "NormalizedList_Ticket__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12063,7 +12075,7 @@
         ],
         "title": "NormalizedList[Ticket, int]"
       },
-      "NormalizedList_TillButton_int_": {
+      "NormalizedList_TillButton__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12087,7 +12099,7 @@
         ],
         "title": "NormalizedList[TillButton, int]"
       },
-      "NormalizedList_TillLayout_int_": {
+      "NormalizedList_TillLayout__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12111,7 +12123,7 @@
         ],
         "title": "NormalizedList[TillLayout, int]"
       },
-      "NormalizedList_TillProfile_int_": {
+      "NormalizedList_TillProfile__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12135,7 +12147,7 @@
         ],
         "title": "NormalizedList[TillProfile, int]"
       },
-      "NormalizedList_Till_int_": {
+      "NormalizedList_Till__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12159,7 +12171,7 @@
         ],
         "title": "NormalizedList[Till, int]"
       },
-      "NormalizedList_Transaction_int_": {
+      "NormalizedList_Transaction__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12183,7 +12195,7 @@
         ],
         "title": "NormalizedList[Transaction, int]"
       },
-      "NormalizedList_Tse_int_": {
+      "NormalizedList_Tse__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12207,7 +12219,7 @@
         ],
         "title": "NormalizedList[Tse, int]"
       },
-      "NormalizedList_UserRole_int_": {
+      "NormalizedList_UserRole__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12231,7 +12243,7 @@
         ],
         "title": "NormalizedList[UserRole, int]"
       },
-      "NormalizedList_UserTagDetail_int_": {
+      "NormalizedList_UserTagDetail__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12255,7 +12267,7 @@
         ],
         "title": "NormalizedList[UserTagDetail, int]"
       },
-      "NormalizedList_User_int_": {
+      "NormalizedList_User__int_": {
         "properties": {
           "ids": {
             "items": {
@@ -12985,6 +12997,10 @@
             "type": "number",
             "title": "Total Payout Amount"
           },
+          "total_unclaimed_payout_amount": {
+            "type": "number",
+            "title": "Total Unclaimed Payout Amount"
+          },
           "total_donation_amount": {
             "type": "number",
             "title": "Total Donation Amount"
@@ -12997,6 +13013,7 @@
         "type": "object",
         "required": [
           "total_payout_amount",
+          "total_unclaimed_payout_amount",
           "total_donation_amount",
           "n_payouts"
         ],
@@ -13399,6 +13416,17 @@
             "format": "email",
             "title": "Customer Portal Contact Email"
           },
+          "customer_portal_feedback_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Feedback Url"
+          },
           "pretix_presale_enabled": {
             "type": "boolean",
             "title": "Pretix Presale Enabled"
@@ -13770,6 +13798,17 @@
             "type": "string",
             "format": "email",
             "title": "Customer Portal Contact Email"
+          },
+          "customer_portal_feedback_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Feedback Url"
           },
           "pretix_presale_enabled": {
             "type": "boolean",
@@ -15274,6 +15313,17 @@
             "type": "string",
             "format": "email",
             "title": "Customer Portal Contact Email"
+          },
+          "customer_portal_feedback_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Feedback Url"
           },
           "pretix_presale_enabled": {
             "type": "boolean",

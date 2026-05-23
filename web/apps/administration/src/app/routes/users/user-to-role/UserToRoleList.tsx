@@ -81,17 +81,19 @@ export const UserToRoleList: React.FC = () => {
       lhs !== undefined && rhs && undefined ? lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()) : -1
     );
 
+    const visibleRoles = roles.filter((role) => role != null);
+
     return (
-      <Box sx={{ display: "grid", gap: 1, gridAutoFlow: "column" }}>
-        {roles.map(
-          (role) =>
-            role != null && (
-              <Link key={role.id} component={RouterLink} to={UserRoleRoutes.detail(role.id, role.node_id)}>
-                {role.name}
-              </Link>
-            )
-        )}
-      </Box>
+      <div>
+        {visibleRoles.map((role, index) => (
+          <React.Fragment key={role.id}>
+            {index > 0 ? ", " : null}
+            <Link component={RouterLink} to={UserRoleRoutes.detail(role.id, role.node_id)}>
+              {role.name}
+            </Link>
+          </React.Fragment>
+        ))}
+      </div>
     );
   };
 

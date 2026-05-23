@@ -52,20 +52,28 @@ export const CashierList: React.FC = () => {
     return <Loading />;
   }
 
-  const renderTerminal = (id?: number | null) => {
-    if (!id || !terminals) {
+  const renderTerminals = (ids?: number[] | null) => {
+    if (!ids || !terminals) {
       return "";
     }
-
-    const terminal = selectTerminalById(terminals, id);
-    if (!terminal) {
-      return "";
-    }
+    const actualTerminals = ids
+      .map((id) => selectTerminalById(terminals, id))
+      .filter((t): t is NonNullable<typeof t> => t != null);
+    actualTerminals.sort((a, b) => a.name.localeCompare(b.name));
 
     return (
-      <Link component={RouterLink} key={id} to={TerminalRoutes.detail(terminal.id)}>
-        {terminal.name}
-      </Link>
+      <div>
+        {actualTerminals.map((terminal, index) => {
+          return (
+            <React.Fragment key={terminal.id}>
+              {index > 0 ? ", " : null}
+              <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id)}>
+                {terminal.name}
+              </Link>
+            </React.Fragment>
+          );
+        })}
+      </div>
     );
   };
 
@@ -96,12 +104,13 @@ export const CashierList: React.FC = () => {
       headerName: t("cashier.terminals"),
       flex: 0.5,
       minWidth: 150,
-      renderCell: (params) => params.row.terminal_ids.map((id) => renderTerminal(id)),
+      renderCell: (params) => renderTerminals(params.row.terminal_ids),
     },
     {
       field: "user_tag_id",
       headerName: t("cashier.tagId"),
       type: "number",
+      valueGetter: (_, row) => formatUserTagUid(row.user_tag_uid_hex),
       renderCell: (params) => (
         <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}

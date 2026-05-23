@@ -51,11 +51,7 @@ export const NodePageLayout: React.FC = () => {
 
   return (
     <Box>
-      <Tabs
-        sx={{ borderBottom: 1, borderColor: "divider" }}
-        value={getActiveTab(node.id, location.pathname)}
-        aria-label="Users"
-      >
+      <Tabs sx={{ borderBottom: 1, borderColor: "divider" }} value={getActiveTab(node.id, location.pathname)}>
         <Tab
           label={t("nodes.overview")}
           component={RouterLink}
@@ -65,24 +61,24 @@ export const NodePageLayout: React.FC = () => {
           to={nodeUrl}
         />
         {node.event_node_id != null && (
-          <>
-            <Tab
-              label={t("nodes.statistics")}
-              component={RouterLink}
-              value={`${nodeUrl}/stats`}
-              icon={<LeaderboardIcon />}
-              iconPosition="start"
-              to={`${nodeUrl}/stats`}
-            />
-            <Tab
-              label={t("nodes.reports")}
-              component={RouterLink}
-              value={`${nodeUrl}/reports`}
-              icon={<ReceiptIcon />}
-              iconPosition="start"
-              to={`${nodeUrl}/reports`}
-            />
-          </>
+          <Tab
+            label={t("nodes.statistics")}
+            component={RouterLink}
+            value={`${nodeUrl}/stats`}
+            icon={<LeaderboardIcon />}
+            iconPosition="start"
+            to={`${nodeUrl}/stats`}
+          />
+        )}
+        {node.event_node_id != null && (
+          <Tab
+            label={t("nodes.reports")}
+            component={RouterLink}
+            value={`${nodeUrl}/reports`}
+            icon={<ReceiptIcon />}
+            iconPosition="start"
+            to={`${nodeUrl}/reports`}
+          />
         )}
         <Tab
           label={t("auditLog.auditLogs")}

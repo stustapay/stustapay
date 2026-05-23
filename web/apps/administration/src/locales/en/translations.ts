@@ -677,6 +677,7 @@ export const translations = {
     executionDate: "Execution Date",
     totalPayoutAmount: "Total Payout Amount",
     totalDonationAmount: "Total Donation Amount",
+    totalUnclaimedPayoutAmount: "Total Unclaimed Payout Amount",
     nPayouts: "Num. Payouts",
     payoutRuns: "Payout Runs",
     payoutsInPayoutRun: "Customers to be paid out in this payout run",

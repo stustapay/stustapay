@@ -23,6 +23,7 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
+      valueGetter: (_, row) => formatUserTagUid(row.user_tag_uid_hex),
       renderCell: (params) => (
         <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
           {formatUserTagUid(params.row.user_tag_uid_hex)}

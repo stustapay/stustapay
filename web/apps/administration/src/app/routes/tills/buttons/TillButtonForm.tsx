@@ -18,6 +18,8 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
   const { currentNode } = useCurrentNode();
   const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
 
+  const [currentSelectedProduct, setCurrentSelectedProduct] = React.useState<Product | null>(null);
+
   const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
   const mapped = products ? (productIds.map((id) => getProductById(id)) as Product[]) : [];
 
@@ -28,25 +30,29 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
   const addProduct = (product: Product | null) => {
     if (product != null) {
       onChange([...productIds, product.id]);
+      setCurrentSelectedProduct(product);
+      setTimeout(() => setCurrentSelectedProduct(null));
     }
   };
 
   return (
     <List>
       {mapped.map((product) => (
-        <ListItem key={product.id}>
-          <ListItemText primary={product.name} />
-          <ListItemSecondaryAction>
+        <ListItem
+          key={product.id}
+          secondaryAction={
             <IconButton color="error" onClick={() => removeProduct(product.id)}>
               <DeleteIcon />
             </IconButton>
-          </ListItemSecondaryAction>
+          }
+        >
+          <ListItemText primary={product.name} />
         </ListItem>
       ))}
       <ProductSelect
         label={t("button.addProductToButton")}
         variant="standard"
-        value={null}
+        value={currentSelectedProduct}
         onChange={addProduct}
         onlyLocked
       />

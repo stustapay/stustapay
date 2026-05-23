@@ -174,14 +174,26 @@ class PayoutService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user([Privilege.payout_management])
     async def get_pending_payout_detail(self, *, conn: Connection, node: Node) -> PendingPayoutDetail:
-        return await conn.fetch_one(
+        pending_detail = await conn.fetch_one(
             PendingPayoutDetail,
             "select coalesce(sum(c.balance), 0) - coalesce(sum(c.donation), 0) as total_payout_amount, "
+            "   0 as total_unclaimed_payout_amount, "
             "   coalesce(sum(c.donation), 0) as total_donation_amount, "
             "   count(*) as n_payouts "
             "from customers_without_payout_run c where c.node_id = $1",
             node.id,
         )
+        pending_detail.total_unclaimed_payout_amount = (
+            float(
+                await conn.fetchval(
+                    "select coalesce(sum(a.balance), 0) from account a where a.node_id = $1 and a.type = 'private'",
+                    node.id,
+                )
+            )
+            - pending_detail.total_payout_amount
+            - pending_detail.total_donation_amount
+        )
+        return pending_detail
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)

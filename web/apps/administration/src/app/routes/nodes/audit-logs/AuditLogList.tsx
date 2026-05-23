@@ -53,6 +53,7 @@ export const AuditLogList: React.FC = () => {
       field: "originating_user_id",
       headerName: t("auditLog.originatingUser"),
       flex: 1,
+      valueGetter: (value) => renderUser(value),
       renderCell: ({ row }) => (
         <Link component={RouterLink} to={UserRoutes.detail(row.originating_user_id)}>
           {renderUser(row.originating_user_id)}

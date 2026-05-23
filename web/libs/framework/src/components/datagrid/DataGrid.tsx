@@ -5,8 +5,6 @@ import {
   GridValidRowModel,
   type DataGridProps as MuiDataGridProps,
   type GridColDef as MuiGridColDef,
-  GridToolbarContainer,
-  GridToolbarQuickFilter,
   GridColTypeDef,
 } from "@mui/x-data-grid";
 import { GridBaseColDef } from "@mui/x-data-grid/internals";
@@ -25,14 +23,6 @@ export type DataGridProps<R extends GridValidRowModel = any> = Omit<MuiDataGridP
   React.RefAttributes<HTMLDivElement> & {
     readonly columns: GridColDef<R>[];
   };
-
-const Toolbar = () => {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarQuickFilter />
-    </GridToolbarContainer>
-  );
-};
 
 export const DataGrid = <R extends GridValidRowModel = any>({ columns, ...props }: DataGridProps<R>) => {
   const currencyIdentifier = useOptionalCurrencyIdentifier();
@@ -61,7 +51,8 @@ export const DataGrid = <R extends GridValidRowModel = any>({ columns, ...props 
       disableColumnFilter
       disableColumnSelector
       disableDensitySelector
-      slots={{ toolbar: Toolbar }}
+      showToolbar
+      // slots={{ toolbar: Toolbar }}
       columns={modifiedColumns}
       {...props}
     />

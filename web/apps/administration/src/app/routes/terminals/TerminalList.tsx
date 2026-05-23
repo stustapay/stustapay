@@ -107,6 +107,7 @@ export const TerminalList: React.FC = () => {
       field: "active_user_id",
       headerName: t("till.activeUser"),
       flex: 1,
+      valueGetter: (value) => renderUser(value),
       renderCell: ({ row }) => (
         <Link component={RouterLink} to={UserRoutes.detail(row.active_user_id)}>
           {renderUser(row.active_user_id)}

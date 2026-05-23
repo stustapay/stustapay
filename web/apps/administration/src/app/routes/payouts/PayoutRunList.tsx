@@ -52,6 +52,13 @@ export const PayoutRunList: React.FC = () => {
       field: "created_by",
       headerName: t("payoutRun.createdBy"),
       flex: 1,
+      valueGetter: (value) => {
+        if (!value || !users) {
+          return "";
+        }
+
+        return getUserName(selectUserById(users, value));
+      },
       renderCell: (params) =>
         params.row.created_by && (
           <Link component={RouterLink} to={UserRoutes.detail(params.row.created_by)}>
