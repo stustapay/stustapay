@@ -50,11 +50,7 @@ export const EventPageLayout: React.FC<{ node: Node }> = ({ node }) => {
 
   return (
     <Box>
-      <Tabs
-        sx={{ borderBottom: 1, borderColor: "divider" }}
-        value={getActiveTab(node.id, location.pathname)}
-        aria-label="Users"
-      >
+      <Tabs sx={{ borderBottom: 1, borderColor: "divider" }} value={getActiveTab(node.id, location.pathname)}>
         <Tab
           label={t("nodes.overview")}
           component={RouterLink}
