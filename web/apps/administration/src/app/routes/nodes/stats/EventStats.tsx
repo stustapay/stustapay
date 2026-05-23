@@ -95,7 +95,6 @@ const TopUpStats: React.FC<{
       </Grid>
     </>
   );
-  return;
 };
 
 const PayOutStats: React.FC<{
@@ -141,7 +140,6 @@ const PayOutStats: React.FC<{
       </Grid>
     </>
   );
-  return;
 };
 
 export type EventStatsProps = {
