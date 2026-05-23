@@ -6,7 +6,7 @@ Electronic Payment System for Festivals, developed for [StuStaCulum](https://stu
 Use NFC wristbands to quickly pay at events!
 
 
-<img style="float: right; width: 25%;" src="assets/logo.png" alt="StuStaPay logo"/>
+<img float="right" style="float: right; width: 25%;" src="assets/logo.png" alt="StuStaPay logo"/>
 
 ## Idea
 
