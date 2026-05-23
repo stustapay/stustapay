@@ -947,6 +947,10 @@
             "type": "string",
             "title": "Test Mode Message"
           },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
           "data_privacy_url": {
             "type": "string",
             "title": "Data Privacy Url"
@@ -1022,6 +1026,7 @@
         "required": [
           "test_mode",
           "test_mode_message",
+          "event_name",
           "data_privacy_url",
           "contact_email",
           "about_page_url",

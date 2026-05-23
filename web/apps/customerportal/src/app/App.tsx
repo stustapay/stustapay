@@ -29,6 +29,7 @@ export function App() {
   React.useEffect(() => {
     const init = async () => {
       await fetchConfig();
+      document.title = `StuStaPay - ${config.apiConfig.event_name}`;
     };
     init()
       .then(() => {

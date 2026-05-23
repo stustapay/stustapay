@@ -10,6 +10,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
   login: "Login",
   userTagUid: "Bändchen-Chip ID",
   userTagPin: "Bändchen-Chip Pin",
+  pinRequired: "Bändchen-Chip Pin is benötigt",
   loginFailed: "Login fehlgeschlagen: {{reason}}.",
   errorLoadingCustomer: "Fehler beim Laden der Kundendaten",
   payoutInfo:
