@@ -4,51 +4,12 @@
    id="svg2"
    width="170.24001"
    height="124.8"
-   viewBox="0 0 170.24001 124.8">
+   viewBox="0 0 170.24001 124.8"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs6">
-    <clipPath
-       clipPathUnits="userSpaceOnUse"
-       id="clipPath18">
-      <path
-         d="M 0,93.6 H 127.68 V 0 H 0 Z"
-         id="path16" />
-    </clipPath>
-    <clipPath
-       clipPathUnits="userSpaceOnUse"
-       id="clipPath26">
-      <path
-         d="M 9.98251,82.2525 H 117.697 V 14.2275 H 9.98251 Z"
-         id="path24" />
-    </clipPath>
-    <clipPath
-       clipPathUnits="userSpaceOnUse"
-       id="clipPath86">
-      <path
-         d="M 0,93.6 H 127.68 V 0 H 0 Z"
-         id="path84" />
-    </clipPath>
-    <clipPath
-       clipPathUnits="userSpaceOnUse"
-       id="clipPath94">
-      <path
-         d="m 102.72,69.6 h 8.505 V 26.88 h -8.505 z"
-         id="path92" />
-    </clipPath>
-    <clipPath
-       clipPathUnits="userSpaceOnUse"
-       id="clipPath110">
-      <path
-         d="M 0,93.6 H 127.68 V 0 H 0 Z"
-         id="path108" />
-    </clipPath>
-    <clipPath
-       clipPathUnits="userSpaceOnUse"
-       id="clipPath118">
-      <path
-         d="m 16.32,69.6 h 8.505 V 26.88 H 16.32 Z"
-         id="path116" />
-    </clipPath>
     <clipPath
        clipPathUnits="userSpaceOnUse"
        id="clipPath3966">
