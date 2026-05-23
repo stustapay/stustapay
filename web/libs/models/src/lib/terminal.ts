@@ -7,6 +7,9 @@ export const NewTerminalSchema = z.object({
 
 export type NewTerminal = z.infer<typeof NewTerminalSchema>;
 
-export const UpdateTerminalSchema = NewTerminalSchema.merge(z.object({ id: z.number() }));
+export const UpdateTerminalSchema = z.object({
+  ...NewTerminalSchema.shape,
+  id: z.number(),
+});
 
 export type UpdateTerminal = z.infer<typeof UpdateTerminalSchema>;

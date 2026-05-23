@@ -18,10 +18,9 @@ export const NewProductSchema = z.object({
 });
 export type NewProduct = z.infer<typeof NewProductSchema>;
 
-export const ProductSchema = NewProductSchema.merge(
-  z.object({
-    id: z.number(),
-    tax_rate: z.number(),
-  })
-);
+export const ProductSchema = z.object({
+  ...NewProductSchema.shape,
+  id: z.number(),
+  tax_rate: z.number(),
+});
 export type Product = z.infer<typeof ProductSchema>;
