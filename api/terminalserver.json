@@ -5,7 +5,7 @@
     "license": {
       "name": "AGPL-3.0"
     },
-    "version": "0.1.0"
+    "version": "2026.2.1"
   },
   "paths": {
     "/health": {

@@ -263,11 +263,7 @@ const injectedRtkApi = api
         invalidatesTags: ["auth"],
       }),
       changePassword: build.mutation<ChangePasswordApiResponse, ChangePasswordApiArg>({
-        query: (queryArg) => ({
-          url: `/auth/change-password`,
-          method: "POST",
-          body: queryArg.changePasswordPayload,
-        }),
+        query: (queryArg) => ({ url: `/auth/change-password`, method: "POST", body: queryArg.changePasswordPayload }),
         invalidatesTags: ["auth"],
       }),
       logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
@@ -1173,10 +1169,7 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       checkPretixConnection: build.mutation<CheckPretixConnectionApiResponse, CheckPretixConnectionApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       fetchPretixProducts: build.mutation<FetchPretixProductsApiResponse, FetchPretixProductsApiArg>({
@@ -1200,10 +1193,7 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generateDailyReport: build.mutation<GenerateDailyReportApiResponse, GenerateDailyReportApiArg>({
@@ -1215,10 +1205,7 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateTestDailyReport: build.mutation<GenerateTestDailyReportApiResponse, GenerateTestDailyReportApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generatePayoutReport: build.mutation<GeneratePayoutReportApiResponse, GeneratePayoutReportApiArg>({
@@ -3148,6 +3135,7 @@ export type NewPayoutRun = {
 };
 export type PendingPayoutDetail = {
   total_payout_amount: number;
+  total_unclaimed_payout_amount: number;
   total_donation_amount: number;
   n_payouts: number;
 };
@@ -3192,6 +3180,7 @@ export type PublicEventSettings = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  customer_portal_feedback_url?: string | null;
   pretix_presale_enabled: boolean;
   pretix_shop_url: string | null;
   pretix_organizer: string | null;
@@ -3296,6 +3285,7 @@ export type NewEvent = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  customer_portal_feedback_url?: string | null;
   pretix_presale_enabled: boolean;
   pretix_shop_url: string | null;
   pretix_organizer: string | null;
@@ -3350,6 +3340,7 @@ export type UpdateEvent = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  customer_portal_feedback_url?: string | null;
   pretix_presale_enabled: boolean;
   pretix_shop_url: string | null;
   pretix_organizer: string | null;
@@ -3407,6 +3398,7 @@ export type RestrictedEventSettings = {
   customer_portal_about_page_url: string;
   customer_portal_data_privacy_url: string;
   customer_portal_contact_email: string;
+  customer_portal_feedback_url?: string | null;
   pretix_presale_enabled: boolean;
   pretix_shop_url: string | null;
   pretix_organizer: string | null;
@@ -3483,7 +3475,9 @@ export type AuditLogDetail = {
   log_type: string;
   originating_user_id: number | null;
   originating_terminal_id: number | null;
-  content: object;
+  content: {
+    [key: string]: any;
+  };
 };
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type SumUpTransactionStatus = "SUCCESSFUL" | "CANCELLED" | "FAILED" | "PENDING" | "REFUNDED";

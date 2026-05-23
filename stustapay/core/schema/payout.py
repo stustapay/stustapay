@@ -24,6 +24,7 @@ class PayoutRun(BaseModel):
 
 class PendingPayoutDetail(BaseModel):
     total_payout_amount: float
+    total_unclaimed_payout_amount: float
     total_donation_amount: float
     n_payouts: int
 

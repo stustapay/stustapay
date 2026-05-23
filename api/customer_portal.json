@@ -5,7 +5,7 @@
     "license": {
       "name": "AGPL-3.0"
     },
-    "version": "0.1.0"
+    "version": "2026.2.1"
   },
   "paths": {
     "/auth/login": {
@@ -1005,6 +1005,17 @@
           "node_id": {
             "type": "integer",
             "title": "Node Id"
+          },
+          "feedback_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Url"
           }
         },
         "type": "object",

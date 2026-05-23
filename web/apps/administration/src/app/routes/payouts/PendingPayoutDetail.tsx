@@ -26,6 +26,11 @@ export const PendingPayoutDetail: React.FC = () => {
             type="currency"
             value={pendingPayoutDetail.total_payout_amount}
           />
+          <DetailNumberField
+            label={t("payoutRun.totalUnclaimedPayoutAmount")}
+            type="currency"
+            value={pendingPayoutDetail.total_unclaimed_payout_amount}
+          />
           <DetailField label={t("payoutRun.nPayouts")} value={pendingPayoutDetail.n_payouts} />
         </>
       ) : (
