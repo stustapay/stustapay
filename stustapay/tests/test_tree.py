@@ -3,10 +3,53 @@ import pytest
 from asyncpg import RaiseError
 from sftkit.database import Connection
 
+from stustapay.core.schema.terminal import Terminal
+from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node, ObjectType
+from stustapay.core.service.terminal import TerminalService
+from stustapay.core.service.till.till import TillService
 from stustapay.core.service.tree.common import fetch_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.tests.common import list_equals
+
+dummy_event = NewEvent(
+    name="Test event",
+    description="",
+    currency_identifier="EUR",
+    sumup_topup_enabled=False,
+    sumup_payment_enabled=False,
+    max_account_balance=100,
+    customer_portal_url="https://pay.stustapay.de",
+    customer_portal_about_page_url="https://pay.stustapay.de/about",
+    customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
+    customer_portal_contact_email="test@test.com",
+    ust_id="UST ID",
+    bon_issuer="Issuer",
+    bon_address="Address",
+    bon_title="Title",
+    sepa_enabled=False,
+    sepa_description="",
+    sepa_sender_iban="",
+    sepa_allowed_country_codes=[],
+    sepa_sender_name="",
+    email_enabled=False,
+    email_default_sender=None,
+    email_smtp_host=None,
+    email_smtp_port=None,
+    email_smtp_username=None,
+    email_smtp_password=None,
+    payout_done_subject="[StuStaPay] Payout Completed",
+    payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
+    payout_registered_subject="[StuStaPay] Registered for Payout",
+    payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
+    payout_sender=None,
+    pretix_presale_enabled=False,
+    pretix_api_key=None,
+    pretix_event=None,
+    pretix_organizer=None,
+    pretix_shop_url=None,
+    pretix_ticket_ids=[],
+)
 
 
 async def test_node_creation(db_connection: Connection, tree_service: TreeService, global_admin_token: str):
@@ -44,44 +87,7 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
     event_node: Node = await tree_service.create_event(
         token=global_admin_token,
         node_id=ROOT_NODE_ID,
-        event=NewEvent(
-            name="Test event",
-            description="",
-            currency_identifier="EUR",
-            sumup_topup_enabled=False,
-            sumup_payment_enabled=False,
-            max_account_balance=100,
-            customer_portal_url="https://pay.stustapay.de",
-            customer_portal_about_page_url="https://pay.stustapay.de/about",
-            customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
-            customer_portal_contact_email="test@test.com",
-            ust_id="UST ID",
-            bon_issuer="Issuer",
-            bon_address="Address",
-            bon_title="Title",
-            sepa_enabled=False,
-            sepa_description="",
-            sepa_sender_iban="",
-            sepa_allowed_country_codes=[],
-            sepa_sender_name="",
-            email_enabled=False,
-            email_default_sender=None,
-            email_smtp_host=None,
-            email_smtp_port=None,
-            email_smtp_username=None,
-            email_smtp_password=None,
-            payout_done_subject="[StuStaPay] Payout Completed",
-            payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
-            payout_registered_subject="[StuStaPay] Registered for Payout",
-            payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
-            payout_sender=None,
-            pretix_presale_enabled=False,
-            pretix_api_key=None,
-            pretix_event=None,
-            pretix_organizer=None,
-            pretix_shop_url=None,
-            pretix_ticket_ids=[],
-        ),
+        event=dummy_event,
     )
     assert event_node.event is not None
     assert f"/0/{event_node.id}" == event_node.path
@@ -167,48 +173,12 @@ async def test_object_rules(tree_service: TreeService, global_admin_token: str):
         top_node.computed_forbidden_objects_at_node,
     )
     assert len(top_node.computed_forbidden_objects_in_subtree) == 0
+    new_event = dummy_event.model_copy()
+    new_event.forbidden_objects_in_subtree = [ObjectType.ticket]
     event_node = await tree_service.create_event(
         token=global_admin_token,
         node_id=top_node.id,
-        event=NewEvent(
-            name="Test event",
-            description="",
-            currency_identifier="EUR",
-            sumup_topup_enabled=False,
-            sumup_payment_enabled=False,
-            max_account_balance=100,
-            customer_portal_url="https://pay.stustapay.de",
-            customer_portal_about_page_url="https://pay.stustapay.de/about",
-            customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
-            customer_portal_contact_email="test@test.com",
-            ust_id="UST ID",
-            bon_issuer="Issuer",
-            bon_address="Address",
-            bon_title="Title",
-            sepa_enabled=False,
-            sepa_description="",
-            sepa_sender_iban="",
-            sepa_allowed_country_codes=[],
-            sepa_sender_name="",
-            forbidden_objects_in_subtree=[ObjectType.ticket],
-            email_enabled=False,
-            email_default_sender=None,
-            email_smtp_host=None,
-            email_smtp_port=None,
-            email_smtp_username=None,
-            email_smtp_password=None,
-            payout_done_subject="[StuStaPay] Payout Completed",
-            payout_done_message="Thank you for your patience. The payout process has been completed and the funds should arrive within the next days to your specified bank account.",
-            payout_registered_subject="[StuStaPay] Registered for Payout",
-            payout_registered_message="Thank you for being part of our festival. Your remaining funds are registered for payout. They will be transferred to the specified bank account in our next manual payout. You will receive another email once we transferred the funds.",
-            payout_sender=None,
-            pretix_presale_enabled=False,
-            pretix_api_key=None,
-            pretix_event=None,
-            pretix_organizer=None,
-            pretix_shop_url=None,
-            pretix_ticket_ids=[],
-        ),
+        event=new_event,
     )
     assert len(event_node.forbidden_objects_at_node) == 0
     assert list_equals([ObjectType.ticket], event_node.forbidden_objects_in_subtree)
@@ -264,3 +234,40 @@ async def test_object_rules(tree_service: TreeService, global_admin_token: str):
         ],
         sub_node.computed_forbidden_objects_in_subtree,
     )
+
+
+async def test_event_archive_deregisters_terminals(
+    db_connection: Connection,
+    tree_service: TreeService,
+    terminal_service: TerminalService,
+    till_service: TillService,
+    global_admin_token: str,
+    event_node: Node,
+    till: Till,
+    terminal: Terminal,
+):
+    assert terminal.registration_uuid is not None
+    assert terminal.session_uuid is None
+    await terminal_service.register_terminal(
+        registration_uuid=str(terminal.registration_uuid),
+    )
+
+    await tree_service.archive_node(token=global_admin_token, node_id=event_node.id)
+
+    archived_event = await fetch_node(conn=db_connection, node_id=event_node.id)
+    assert archived_event is not None
+    assert archived_event.read_only
+
+    archived_terminal = await terminal_service.get_terminal(
+        token=global_admin_token,
+        node_id=event_node.id,
+        terminal_id=terminal.id,
+    )
+    assert archived_terminal is not None
+    assert archived_terminal.registration_uuid is not None
+    assert archived_terminal.session_uuid is None
+    assert archived_terminal.active_user_id is None
+    assert archived_terminal.active_user_role_id is None
+    archived_till = await till_service.get_till(token=global_admin_token, node_id=till.node_id, till_id=till.id)
+    assert archived_till is not None
+    assert archived_till.terminal_id is None

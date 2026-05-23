@@ -7,19 +7,17 @@ export const NewTillButtonSchema = z.object({
 
 export type NewTillButton = z.infer<typeof NewTillButtonSchema>;
 
-export const UpdateTillButtonSchema = NewTillButtonSchema.merge(
-  z.object({
-    id: z.number().int(),
-  })
-);
+export const UpdateTillButtonSchema = z.object({
+  ...NewTillButtonSchema.shape,
+  id: z.number().int(),
+});
 
 export type UpdateTillButton = z.infer<typeof UpdateTillButtonSchema>;
 
-export const TillButtonSchema = UpdateTillButtonSchema.merge(
-  z.object({
-    price: z.number(),
-  })
-);
+export const TillButtonSchema = z.object({
+  ...UpdateTillButtonSchema.shape,
+  price: z.number(),
+});
 
 export type TillButton = z.infer<typeof TillButtonSchema>;
 
@@ -32,11 +30,10 @@ export const NewTillLayoutSchema = z.object({
 
 export type NewTillLayout = z.infer<typeof NewTillLayoutSchema>;
 
-export const TillLayoutSchema = NewTillLayoutSchema.merge(
-  z.object({
-    id: z.number().int(),
-  })
-);
+export const TillLayoutSchema = z.object({
+  ...NewTillLayoutSchema.shape,
+  id: z.number().int(),
+});
 export type TillLayout = z.infer<typeof TillLayoutSchema>;
 
 export const NewTillProfileSchema = z.object({
@@ -54,11 +51,10 @@ export const NewTillProfileSchema = z.object({
 
 export type NewTillProfile = z.infer<typeof NewTillProfileSchema>;
 
-export const TillProfileSchema = NewTillProfileSchema.merge(
-  z.object({
-    id: z.number().int(),
-  })
-);
+export const TillProfileSchema = z.object({
+  ...NewTillProfileSchema.shape,
+  id: z.number().int(),
+});
 export type TillProfile = z.infer<typeof TillProfileSchema>;
 
 export const NewTillSchema = z.object({
@@ -72,7 +68,7 @@ export const NewTillSchema = z.object({
 
 export type NewTill = z.infer<typeof NewTillSchema>;
 
-export const UpdateTillSchema = NewTillSchema.merge(z.object({ id: z.number() }));
+export const UpdateTillSchema = z.object({ ...NewTillSchema.shape, id: z.number() });
 
 export type UpdateTill = z.infer<typeof UpdateTillSchema>;
 
@@ -97,19 +93,17 @@ export const NewCashRegisterStockingSchema = z.object({
 
 export type NewCashRegisterStocking = z.infer<typeof NewCashRegisterStockingSchema>;
 
-export const UpdateCashRegisterStockingSchema = NewCashRegisterStockingSchema.merge(
-  z.object({
-    id: z.number().int(),
-  })
-);
+export const UpdateCashRegisterStockingSchema = z.object({
+  ...NewCashRegisterStockingSchema.shape,
+  id: z.number().int(),
+});
 
 export type UpdateCashRegisterStocking = z.infer<typeof UpdateCashRegisterStockingSchema>;
 
-export const CashRegisterStockingSchema = UpdateCashRegisterStockingSchema.merge(
-  z.object({
-    total: z.number(),
-  })
-);
+export const CashRegisterStockingSchema = z.object({
+  ...UpdateCashRegisterStockingSchema.shape,
+  total: z.number(),
+});
 
 export type CashRegisterStocking = z.infer<typeof CashRegisterStockingSchema>;
 
@@ -119,13 +113,16 @@ export const NewCashRegisterSchema = z.object({
 
 export type NewCashRegister = z.infer<typeof NewCashRegisterSchema>;
 
-export const CashRegisterSchema = NewCashRegisterSchema.merge(
-  z.object({
-    id: z.number().int(),
-    current_cashier_id: z.number().int().nullable(),
-    current_till_id: z.number().int().nullable(),
-    current_balance: z.number(),
-  })
-);
+export const UpdateCashRegisterSchema = NewCashRegisterSchema;
+
+export type UpdateCashRegister = z.infer<typeof UpdateCashRegisterSchema>;
+
+export const CashRegisterSchema = z.object({
+  ...NewCashRegisterSchema.shape,
+  id: z.number().int(),
+  current_cashier_id: z.number().int().nullable(),
+  current_till_id: z.number().int().nullable(),
+  current_balance: z.number(),
+});
 
 export type CashRegister = z.infer<typeof CashRegisterSchema>;

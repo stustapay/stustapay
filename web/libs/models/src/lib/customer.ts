@@ -14,7 +14,10 @@ export const CustomerInfoSchema = z.object({
 
 export type CustomerInfo = z.infer<typeof CustomerInfoSchema>;
 
-export const CustomerSchema = AccountSchema.merge(CustomerInfoSchema);
+export const CustomerSchema = z.object({
+  ...AccountSchema.shape,
+  ...CustomerInfoSchema.shape,
+});
 export type Customer = z.infer<typeof CustomerSchema>;
 
 export const BonSchema = z.object({
@@ -22,5 +25,8 @@ export const BonSchema = z.object({
   bon_output_file: z.string().nullable(),
 });
 
-export const OrderWithBonSchema = OrderSchema.merge(BonSchema);
+export const OrderWithBonSchema = z.object({
+  ...OrderSchema.shape,
+  ...BonSchema.shape,
+});
 export type OrderWithBon = z.infer<typeof OrderWithBonSchema>;

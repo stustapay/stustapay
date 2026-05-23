@@ -35,12 +35,11 @@ export const NewUserRoleSchema = z.object({
 
 export type NewUserRole = z.infer<typeof NewUserRoleSchema>;
 
-export const UserRoleSchema = NewUserRoleSchema.merge(
-  z.object({
-    node_id: z.number().int(),
-    id: z.number(),
-  })
-);
+export const UserRoleSchema = z.object({
+  ...NewUserRoleSchema.shape,
+  node_id: z.number().int(),
+  id: z.number(),
+});
 
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
@@ -56,19 +55,17 @@ const CommonUserSchema = z.object({
   user_tag_pin: z.string().optional().nullable(),
 });
 
-export const UserSchema = CommonUserSchema.merge(
-  z.object({
-    id: z.number(),
-  })
-);
+export const UserSchema = z.object({
+  ...CommonUserSchema.shape,
+  id: z.number(),
+});
 
 export type User = z.infer<typeof UserSchema>;
 
-export const NewUserSchema = CommonUserSchema.merge(
-  z.object({
-    password: z.string().optional().nullable(),
-  })
-);
+export const NewUserSchema = z.object({
+  ...CommonUserSchema.shape,
+  password: z.string().optional().nullable(),
+});
 
 export type NewUser = z.infer<typeof NewUserSchema>;
 
@@ -82,14 +79,13 @@ export const getUserName = (user?: Pick<User, "login" | "display_name">) => {
   return user.display_name;
 };
 
-export const CurrentUserSchema = UserSchema.merge(
-  z.object({
-    transport_account_id: z.number().optional().nullable(),
-    cashier_account_id: z.number().optional().nullable(),
-    active_role_id: z.number().optional(),
-    active_role_name: z.string().optional(),
-    privileges: z.array(PrivilegeSchema),
-  })
-);
+export const CurrentUserSchema = z.object({
+  ...UserSchema.shape,
+  transport_account_id: z.number().optional().nullable(),
+  cashier_account_id: z.number().optional().nullable(),
+  active_role_id: z.number().optional(),
+  active_role_name: z.string().optional(),
+  privileges: z.array(PrivilegeSchema),
+});
 
 export type CurrentUser = z.infer<typeof CurrentUserSchema>;

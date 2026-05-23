@@ -122,6 +122,7 @@ class Api:
         order_service = OrderService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         config_service = ConfigService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
         mail_service = MailService(db_pool=db_pool, config=self.cfg)
+        terminal_service = TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service)
 
         context = Context(
             config=self.cfg,
@@ -136,12 +137,14 @@ class Api:
             ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_tag_service=UserTagService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             tse_service=TseService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
-            tree_service=TreeService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            tree_service=TreeService(
+                db_pool=db_pool, config=self.cfg, auth_service=auth_service, terminal_service=terminal_service
+            ),
             customer_service=CustomerService(
                 db_pool=db_pool, config=self.cfg, auth_service=auth_service, config_service=config_service
             ),
             sumup_service=SumUpService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
-            terminal_service=TerminalService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            terminal_service=terminal_service,
             webhook_service=WebhookService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             media_service=MediaService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             mail_service=mail_service,

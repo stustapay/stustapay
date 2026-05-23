@@ -9,10 +9,9 @@ export const UpdateTseSchema = z.object({
 });
 export type UpdateTse = z.infer<typeof UpdateTseSchema>;
 
-export const NewTseSchema = UpdateTseSchema.merge(
-  z.object({
-    serial: z.string().min(1),
-    type: z.literal("diebold_nixdorf"),
-  })
-);
+export const NewTseSchema = z.object({
+  ...UpdateTseSchema.shape,
+  serial: z.string().min(1),
+  type: z.literal("diebold_nixdorf"),
+});
 export type NewTse = z.infer<typeof NewTseSchema>;

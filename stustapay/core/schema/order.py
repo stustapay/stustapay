@@ -123,12 +123,11 @@ class Button(BaseModel):
     price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
-    @model_validator(mode="after")  # type: ignore
-    @classmethod
-    def check_quantity_or_price_set(cls, m: "Button"):
-        if (m.quantity is None) == (m.price is None):
+    @model_validator(mode="after")
+    def check_quantity_or_price_set(self):
+        if (self.quantity is None) == (self.price is None):
             raise ValueError("either price or quantity must be set")
-        return m
+        return self
 
 
 class BookedProduct(BaseModel):
@@ -140,12 +139,11 @@ class BookedProduct(BaseModel):
     price: Optional[float] = None
 
     # check for new Items if either quantity or price is set
-    @model_validator(mode="after")  # type: ignore
-    @classmethod
-    def check_quantity_or_price_set(cls, m: "BookedProduct"):
-        if (m.quantity is None) == (m.price is None):
+    @model_validator(mode="after")
+    def check_quantity_or_price_set(self):
+        if (self.quantity is None) == (self.price is None):
             raise ValueError("either price or quantity must be set")
-        return m
+        return self
 
 
 class NewSaleBase(BaseModel):
