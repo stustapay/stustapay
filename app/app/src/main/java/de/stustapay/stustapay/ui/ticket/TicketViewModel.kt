@@ -392,6 +392,13 @@ class TicketViewModel @Inject constructor(
                 _status.update { ecResult.result.msg }
                 bookSale(newSale)
             }
+
+            is ECPaymentResult.SilentCancelled -> {
+                // There may be multiple instances of this suspend fun launched simultaneously.
+                // Only show the status for the one that actually succeeds and silently drop all
+                // others.
+                ticketApi.cancelPendingTicketSale(orderUUID = newSale.uuid)
+            }
         }
     }
 
