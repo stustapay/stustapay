@@ -371,6 +371,8 @@ export const translations = {
       contact_email: "Contact E-Mail",
       data_privacy_url: "Data privacy URL",
       about_page_url: "About page URL",
+      feedback_url: "Feedback URL",
+      feedback_url_placeholder: "Optional URL for event feedback form",
     },
     design: {
       tabLabel: "Design",
