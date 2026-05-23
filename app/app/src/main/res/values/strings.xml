@@ -35,6 +35,7 @@
     <string name="common_status_idle">Idle</string>
     <string name="common_status_success">Success!</string>
     <string name="common_tag_id">Chip ID</string>
+    <string name="common_tag_pin">Chip PIN</string>
     <string name="common_topup">Top up</string>
     <string name="common_voucher">Voucher</string>
     <string name="common_voucher_amount">Voucher amount</string>
