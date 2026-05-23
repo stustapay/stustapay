@@ -34,6 +34,7 @@
     <string name="common_status_idle">Bereit</string>
     <string name="common_status_success">Erfolgreich!</string>
     <string name="common_tag_id">Chip ID</string>
+    <string name="common_tag_pin">Chip PIN</string>
     <string name="common_topup">Aufladung</string>
     <string name="common_voucher">Gutschein</string>
     <string name="common_voucher_amount">Gutscheinanzahl</string>

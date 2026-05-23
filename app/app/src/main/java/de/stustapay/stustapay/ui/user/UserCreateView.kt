@@ -146,8 +146,8 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                         .padding(10.dp)
                 ) {
                     ListItem(
-                        text = { Text(stringResource(R.string.common_tag_id)) },
-                        secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue())) })
+                        text = { Text(stringResource(R.string.common_tag_pin)) },
+                        secondaryText = { Text(currentTag.pin.orEmpty()) })
 
                     Divider()
                     Spacer(modifier = Modifier.height(10.dp))
