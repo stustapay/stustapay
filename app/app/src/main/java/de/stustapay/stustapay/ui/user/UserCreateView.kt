@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.user
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenuItem
@@ -24,7 +27,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,23 +34,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.model.NfcTag
+import de.stustapay.libssp.ui.barcode.QRScanDialog
+import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.stustapay.R
-import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
+import de.stustapay.stustapay.model.UserCreateQRContent
+import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import android.widget.Toast
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import de.stustapay.libssp.ui.barcode.QRScanDialog
-import de.stustapay.libssp.ui.common.rememberDialogDisplayState
-import de.stustapay.stustapay.model.UserCreateQRContent
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -72,21 +71,10 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     val displayName =
         _firstName.replaceFirstChar { it.uppercase() } + " " + _lastName.replaceFirstChar { it.uppercase() }
 
-    NfcScanDialog(state = nfcScanState, onScan = { tag ->
-        scope.launch {
-            if (viewModel.checkCreate(tag)) {
-                goToUserDisplayView()
-            } else {
-                currentTagState = tag
-            }
-        }
-    })
-
     val registerScanState = rememberDialogDisplayState()
     val context = LocalContext.current
     QRScanDialog(
-        state = registerScanState,
-        onScan = { qrcode ->
+        state = registerScanState, onScan = { qrcode ->
             try {
                 val obj = Json.decodeFromString(UserCreateQRContent.serializer(), qrcode)
                 firstName = obj.firstName ?: ""
@@ -94,25 +82,29 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                 description = obj.description ?: ""
             } catch (e: Exception) {
                 Log.e("UserCreateView", "Failed to parse QR code: $qrcode", e)
-                Toast
-                    .makeText(context, "QR has wrong format!", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(context, "QR has wrong format!", Toast.LENGTH_SHORT).show()
             }
-        }
-    )
+        })
 
-    val currentTag = currentTagState;
+    val currentTag = currentTagState
     if (currentTag == null) {
-        LaunchedEffect(Unit) {
-            scope.launch {
-                nfcScanState.open()
-            }
-        }
-
         Scaffold(content = { padding ->
             Box(
-                modifier = Modifier.padding(padding)
-            ) {}
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(20.dp)
+            ) {
+                NfcScanCard(
+                    keepScanning = true, onScan = { tag ->
+                        scope.launch {
+                            if (viewModel.checkCreate(tag)) {
+                                goToUserDisplayView()
+                            } else {
+                                currentTagState = tag
+                            }
+                        }
+                    })
+            }
         }, bottomBar = {
             Column {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -144,10 +136,8 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     } else {
         nfcScanState.close()
 
-        val scrollState = rememberScrollState()
-
         Scaffold(content = { padding ->
-            Box(modifier = Modifier.padding(padding).verticalScroll(state=scrollState)) {
+            Box(modifier = Modifier.padding(padding)) {
                 val scroll = rememberScrollState()
                 Column(
                     modifier = Modifier
@@ -201,8 +191,7 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                         var expanded by remember { mutableStateOf(false) }
 
                         ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = it }) {
+                            expanded = expanded, onExpandedChange = { expanded = it }) {
                             OutlinedTextField(
                                 label = { Text(stringResource(R.string.user_roles)) },
                                 readOnly = true,
@@ -218,8 +207,7 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }) {
+                                expanded = expanded, onDismissRequest = { expanded = false }) {
                                 for (r in availableRoles) {
                                     if (!r.isPrivileged!!) {
                                         DropdownMenuItem(onClick = {
@@ -277,11 +265,9 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                 Button(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    onClick = {
+                        .padding(horizontal = 10.dp), onClick = {
                         registerScanState.open()
-                    }
-                ) {
+                    }) {
                     Text(stringResource(R.string.user_load_data_from_qr), fontSize = 24.sp)
                 }
 
