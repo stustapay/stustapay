@@ -12,9 +12,10 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import i18n from "@/i18n";
 
 const validationSchema = z.object({
-  userTagPin: z.string(),
+  userTagPin: z.string({ error: i18n.t("pinRequired") }),
 });
 
 type FormSchema = z.infer<typeof validationSchema>;

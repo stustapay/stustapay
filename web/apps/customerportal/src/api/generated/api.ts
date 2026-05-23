@@ -59,19 +59,11 @@ const injectedRtkApi = api
         providesTags: ["base"],
       }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
-        query: (queryArg) => ({
-          url: `/sumup/create-checkout`,
-          method: "POST",
-          body: queryArg.createCheckoutPayload,
-        }),
+        query: (queryArg) => ({ url: `/sumup/create-checkout`, method: "POST", body: queryArg.createCheckoutPayload }),
         invalidatesTags: ["sumup"],
       }),
       checkCheckout: build.mutation<CheckCheckoutApiResponse, CheckCheckoutApiArg>({
-        query: (queryArg) => ({
-          url: `/sumup/check-checkout`,
-          method: "POST",
-          body: queryArg.checkCheckoutPayload,
-        }),
+        query: (queryArg) => ({ url: `/sumup/check-checkout`, method: "POST", body: queryArg.checkCheckoutPayload }),
         invalidatesTags: ["sumup"],
       }),
     }),
@@ -357,9 +349,9 @@ export type EventDesign = {
 export type CustomerPortalApiConfig = {
   test_mode: boolean;
   test_mode_message: string;
+  event_name: string;
   data_privacy_url: string;
   contact_email: string;
-  feedback_url: string | null;
   about_page_url: string;
   payout_enabled: boolean;
   currency_identifier: string;
@@ -372,6 +364,7 @@ export type CustomerPortalApiConfig = {
   };
   event_design: EventDesign;
   node_id: number;
+  feedback_url?: string | null;
 };
 export type OrderWithTse = {
   id: number;

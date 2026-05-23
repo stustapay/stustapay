@@ -4,6 +4,7 @@ export const translations = {
   login: "Login",
   userTagUid: "Wristband Tag ID",
   userTagPin: "Wristband Tag Pin",
+  pinRequired: "Wristband Tag Pin is required",
   nav: {
     payout: "Pay Out",
     topup: "Top Up",

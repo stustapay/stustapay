@@ -13,7 +13,7 @@ export interface ChangeLayoutProps<T extends Record<string, any>> {
   saveAndClearLabel?: string;
   initialValues: T;
   validationSchema: z.ZodSchema<T>;
-  successRoute: string;
+  successRoute: string | ((result: any) => string);
   onSubmit: (t: T) => MutationActionCreatorResult<any>;
   form: React.FC<FormikProps<T>>;
 }
@@ -28,9 +28,6 @@ export function ChangeLayout<T extends Record<string, any>>({
   onSubmit,
   form: ChildForm,
 }: ChangeLayoutProps<T>) {
-  const initial = React.useMemo(() => {
-    return { ...initialValues, isAddAnother: false };
-  }, [initialValues]);
   const navigate = useNavigate();
   const handleSubmit = (values: T, { setSubmitting, resetForm }: FormikHelpers<T>) => {
     setSubmitting(true);
@@ -42,12 +39,12 @@ export function ChangeLayout<T extends Record<string, any>>({
 
     onSubmit(submittingValues)
       .unwrap()
-      .then(() => {
+      .then((result) => {
         setSubmitting(false);
         if (isAddAnother) {
           resetForm();
         } else {
-          navigate(successRoute);
+          navigate(typeof successRoute === "function" ? successRoute(result) : successRoute);
         }
       })
       .catch((err) => {

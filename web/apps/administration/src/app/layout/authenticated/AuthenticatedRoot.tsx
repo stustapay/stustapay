@@ -44,7 +44,22 @@ const BreadcrumbHeader: React.FC = () => {
     }
     const idsToUserRoot = currentNode.parent_ids.slice(idxOfUserRoot);
     return [...idsToUserRoot.map((nodeId) => findNode(nodeId, tree)), currentNode];
-  }, [currentNode]);
+  }, [currentNode, tree]);
+
+  React.useEffect(() => {
+    let filteredNodes = [...nodes];
+    if (currentNode.event_node_id != null) {
+      const indexOfEventNode = filteredNodes.findIndex((node) => node?.id === currentNode.event_node_id);
+      if (indexOfEventNode >= 0) {
+        filteredNodes = filteredNodes.slice(indexOfEventNode);
+      }
+    }
+    const breadcrumbPath = filteredNodes
+      .map((node) => node?.name)
+      .filter(Boolean)
+      .join(" / ");
+    document.title = breadcrumbPath ? `SSP - ${breadcrumbPath}` : t("StuStaPay");
+  }, [nodes, t]);
 
   return (
     <Stack sx={{ flexGrow: 1, alignItems: "center" }} direction="row" spacing={3}>

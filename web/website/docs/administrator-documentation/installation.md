@@ -2,7 +2,7 @@
 
 :::info
 
-Currently only installations on **Debian 11 (bookworm)** are supported.
+Currently only installations on **Debian 13 (trixie) and Debian 12 (bookworm)** are supported.
 
 :::
 
@@ -11,7 +11,7 @@ Head over to the [GitHub Release Page](https://github.com/stustapay/stustapay/re
 Install the debian package
 
 ```bash
-sudo apt install ./stustapay_<version>+bookworm1_amd64.deb
+sudo apt install ./stustapay_<version>+trixie1_amd64.deb
 ```
 
 ## Setup Postgres database
