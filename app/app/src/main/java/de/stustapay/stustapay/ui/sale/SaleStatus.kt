@@ -25,11 +25,11 @@ sealed interface SaleItemPrice {
     companion object {
         fun fromTerminalButton(button: TerminalButton): SaleItemPrice {
             return if (button.isReturnable) {
-                Returnable(price = button.price?.toDouble() ?: 0.0)
+                Returnable(price = button.price ?: 0.0)
             } else if (button.fixedPrice) {
-                FixedPrice(price = button.price?.toDouble() ?: 0.0)
+                FixedPrice(price = button.price ?: 0.0)
             } else {
-                FreePrice(defaultPrice = button.defaultPrice?.toDouble())
+                FreePrice(defaultPrice = button.defaultPrice)
             }
         }
     }
