@@ -3,6 +3,7 @@ import logging
 import math
 import random
 import secrets
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
@@ -53,8 +54,22 @@ CUSTOMER_TAG_START = 100000
 logger = logging.getLogger(__name__)
 
 
-async def _create_tags_and_users(conn: Connection, user_service: UserService, event_node: Node, n_customer_tags: int):
-    logger.info(f"Creating {n_customer_tags} tags")
+@dataclass
+class TagEntryCustom:
+    login: str | None
+    pin: str
+    uid: int | None
+    roles: list[str]
+
+
+async def _create_tags_and_users(
+    conn: Connection,
+    user_service: UserService,
+    event_node: Node,
+    n_customer_tags: int,
+    custom_tags: Optional[list[TagEntryCustom]] = None,
+):
+    logger.info("Creating demo event & admin privileges")
     root_node = await fetch_node(conn=conn, node_id=ROOT_NODE_ID)
     assert root_node is not None and event_node is not None
 
@@ -81,6 +96,7 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
             description="dummy simulator event key",
         ),
     )
+    logger.info("Creating admin and orga tags")
 
     finanzorga_role: UserRole = await user_service.create_user_role(
         conn=conn,
@@ -101,30 +117,42 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
         ),
     )
 
-    admin_tag = NewUserTag(pin="admin", secret_id=secret.id)
-    await create_user_tags(conn=conn, node_id=event_node.id, tags=[admin_tag])
-    node_admin = await user_service.create_user_no_auth(
+    # very useful for app debugging using the simulator
+    godmode: UserRole = await user_service.create_user_role(
         conn=conn,
+        token=admin_token,
         node_id=event_node.id,
-        new_user=NewUser(
-            login="admin", display_name="", user_tag_pin=admin_tag.pin, user_tag_uid=random.randint(1, 100000)
+        new_role=NewUserRole(
+            name="godmode",
+            is_privileged=False,
+            privileges=[e.value for e in Privilege],
         ),
-        password="admin",
     )
-    await associate_user_to_role(
-        conn=conn,
-        node=event_node,
-        current_user_id=global_admin.id,
-        user_id=node_admin.id,
-        role_id=ADMIN_ROLE_ID,
-    )
-    await associate_user_to_role(
-        conn=conn,
-        node=event_node,
-        current_user_id=global_admin.id,
-        user_id=node_admin.id,
-        role_id=finanzorga_role.id,
-    )
+
+    admin_tags = [
+        ("admin", NewUserTag(pin="admin", secret_id=secret.id), None, [ADMIN_ROLE_ID, finanzorga_role.id]),
+    ]
+    await create_user_tags(conn=conn, node_id=event_node.id, tags=[tag[1] for tag in admin_tags])
+    for admin_name, admin_tag, admin_uid, admin_roles in admin_tags:
+        node_admin = await user_service.create_user_no_auth(
+            conn=conn,
+            node_id=event_node.id,
+            new_user=NewUser(
+                login=admin_name,
+                display_name="",
+                user_tag_pin=admin_tag.pin,
+                user_tag_uid=admin_uid or random.randint(1, 100000),
+            ),
+            password="admin",
+        )
+        for admin_role_id in admin_roles:
+            await associate_user_to_role(
+                conn=conn,
+                node=event_node,
+                current_user_id=global_admin.id,
+                user_id=node_admin.id,
+                role_id=admin_role_id,
+            )
 
     finanzorga_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(10, 16)]
     await create_user_tags(conn=conn, node_id=event_node.id, tags=finanzorga_tags)
@@ -148,8 +176,53 @@ async def _create_tags_and_users(conn: Connection, user_service: UserService, ev
             role_id=finanzorga_role.id,
         )
 
+    logger.info(f"Creating {n_customer_tags} tags")
     customer_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(n_customer_tags)]
+
+    if custom_tags is not None:
+        logger.info(f"Adding {len(custom_tags)} tags")
+        customer_tags.extend([NewUserTag(pin=entry.pin, secret_id=secret.id) for entry in custom_tags])
+
     await create_user_tags(conn=conn, node_id=event_node.id, tags=customer_tags)
+
+    if custom_tags:
+        role_map = {
+            "admin": ADMIN_ROLE_ID,
+            "finanzorga": finanzorga_role.id,
+            "godmode": godmode.id,
+        }
+        for hwtag_id, entry in enumerate(custom_tags):
+            if entry.uid is None or not entry.roles:
+                continue
+
+            role_ids = []
+            for role_name in entry.roles:
+                if role_name not in role_map:
+                    raise ValueError(
+                        f"Unknown role '{role_name}' for tag {entry.pin}. Known roles: {list(role_map.keys())}"
+                    )
+                role_ids.append(role_map[role_name])
+
+            if role_ids:
+                tag_user = await user_service.create_user_no_auth(
+                    conn=conn,
+                    node_id=event_node.id,
+                    new_user=NewUser(
+                        login=entry.login or f"tag-{hwtag_id}",
+                        display_name="",
+                        user_tag_pin=entry.pin,
+                        user_tag_uid=entry.uid,
+                    ),
+                    password="user",
+                )
+            for role_id in role_ids:
+                await associate_user_to_role(
+                    conn=conn,
+                    node=event_node,
+                    current_user_id=global_admin.id,
+                    user_id=tag_user.id,
+                    role_id=role_id,
+                )
 
     return global_admin, admin_token
 
@@ -552,6 +625,7 @@ class DatabaseSetup:
         n_topup_tills: int,
         n_beer_tills: int,
         n_cocktail_tills: int,
+        custom_tags: Optional[list[TagEntryCustom]] = None,
     ):
         self.config = config
         self.n_cashiers = n_cashiers or int((n_topup_tills + n_beer_tills + n_cocktail_tills + n_entry_tills) * 1.5)
@@ -560,6 +634,7 @@ class DatabaseSetup:
         self.n_topup_tills = n_topup_tills
         self.n_beer_tills = n_beer_tills
         self.n_cocktail_tills = n_cocktail_tills
+        self.custom_tags = custom_tags
 
         self.event_node_id: int = None  # type: ignore # initialized at the start of run()
         self.event_node: Node = None  # type: ignore # initialized at the start of run()
@@ -812,7 +887,11 @@ class DatabaseSetup:
             self.event_node = event_node
 
             admin, admin_token = await _create_tags_and_users(
-                conn=conn, user_service=user_service, event_node=self.event_node, n_customer_tags=self.n_tags
+                conn=conn,
+                user_service=user_service,
+                event_node=self.event_node,
+                n_customer_tags=self.n_tags,
+                custom_tags=self.custom_tags,
             )
             tax_rate_ust = await tax_service.create_tax_rate(
                 conn=conn,
