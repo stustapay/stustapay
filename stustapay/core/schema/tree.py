@@ -32,6 +32,7 @@ class _BaseEvent(BaseModel):
     customer_portal_about_page_url: str
     customer_portal_data_privacy_url: str
     customer_portal_contact_email: EmailStr
+    customer_portal_feedback_url: str | None = None
 
     pretix_presale_enabled: bool
     pretix_shop_url: str | None
