@@ -31,18 +31,10 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
- * @param userTagUid 
- * @param roleIds 
  */
 @Serializable
 
-data class UpdateUserPayload (
-
-    @SerialName(value = "user_tag_uid")
-    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
-
-    @SerialName(value = "role_ids")
-    val roleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>
+class LocationInner (
 
 ) {
 

@@ -37,6 +37,7 @@ src/main/kotlin/de/stustapay/api/models/DetailedOrder.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
 src/main/kotlin/de/stustapay/api/models/HTTPValidationError.kt
 src/main/kotlin/de/stustapay/api/models/LineItem.kt
+src/main/kotlin/de/stustapay/api/models/LocationInner.kt
 src/main/kotlin/de/stustapay/api/models/LoginPayload.kt
 src/main/kotlin/de/stustapay/api/models/NewFreeTicketGrant.kt
 src/main/kotlin/de/stustapay/api/models/NewPayOut.kt
@@ -86,4 +87,3 @@ src/main/kotlin/de/stustapay/api/models/UserTagHistoryEntry.kt
 src/main/kotlin/de/stustapay/api/models/UserTagScan.kt
 src/main/kotlin/de/stustapay/api/models/UserTagSecret.kt
 src/main/kotlin/de/stustapay/api/models/ValidationError.kt
-src/main/kotlin/de/stustapay/api/models/ValidationErrorLocInner.kt

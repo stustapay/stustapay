@@ -107,18 +107,22 @@ tasks.register('_modApi') {
 tasks.register('_genApi', GenerateTask) {
     dependsOn tasks._cleanApi
     generatorName.set("kotlin")
-    inputSpec.set("$projectDir/../api/terminalserver.json")
-    outputDir.set("$projectDir/build/generated/api")
+
+    inputSpec.set(layout.projectDirectory.file("../api/terminalserver.json"))
+    outputDir.set(layout.buildDirectory.dir("generated/api"))
+
     generateApiTests.set(false)
     generateModelTests.set(false)
     skipValidateSpec.set(true)
     generateApiDocumentation.set(false)
     generateModelDocumentation.set(false)
-    typeMappings.put("AnyType", "kotlin.Unit")   // otherwise it would be kotlin.Any
-    configOptions.set([library             : "jvm-ktor",
-                       serializationLibrary: "kotlinx_serialization",
-                       packageName         : "de.stustapay.api",
-                       omitGradleWrapper   : "true"])
+    typeMappings.put("AnyType", "kotlin.Unit")
+    configOptions.set([
+            library             : "jvm-ktor",
+            serializationLibrary: "kotlinx_serialization",
+            packageName         : "de.stustapay.api",
+            omitGradleWrapper   : "true"
+    ])
 }
 
 tasks.register('_cleanApi') {

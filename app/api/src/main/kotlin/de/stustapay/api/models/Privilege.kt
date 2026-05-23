@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package de.stustapay.api.models
@@ -18,6 +26,7 @@ package de.stustapay.api.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
 
 /**
  * 
@@ -86,10 +95,11 @@ enum class Privilege(val value: kotlin.String) {
          */
         fun decode(data: kotlin.Any?): Privilege? = data?.let {
           val normalizedData = "$it".lowercase()
-          values().firstOrNull { value ->
+          entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
           }
         }
     }
 }
+
 
