@@ -35,6 +35,7 @@ fun TopUpSelection(
     val requestActive by viewModel.requestActive.collectAsStateWithLifecycle()
     val errorMessage_ by viewModel.errorMessage.collectAsStateWithLifecycle()
     val errorMessage = errorMessage_
+    val bookingActive by viewModel.bookingActive.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalActivity.current!!
 
@@ -62,7 +63,7 @@ fun TopUpSelection(
                 }
             },
         ),
-        ready = topUpConfig.hasConfig() && !requestActive,
+        ready = topUpConfig.hasConfig() && !requestActive && !bookingActive,
         getAmount = { topUpState.currentAmount },
     ) { paddingValues ->
         val scrollState = rememberScrollState()

@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import java.util.UUID
 import javax.inject.Inject
@@ -69,6 +71,10 @@ class TopUpViewModel @Inject constructor(
     val topUpCompleted = _topUpCompleted.asStateFlow()
 
     val requestActive = infallibleRepository.active
+
+    private val _bookingActive = MutableStateFlow(false)
+    val bookingActive = _bookingActive.asStateFlow()
+    private val bookingActiveLock = Mutex()
 
     // configuration infos from backend
     val terminalLoginState = combine(
@@ -145,91 +151,111 @@ class TopUpViewModel @Inject constructor(
 
     /** called from the card payment button */
     suspend fun topUpWithCard(context: Activity, tag: NfcTag) {
-        // this can't be called twice since multiple button presses just open the tag scan popup
-        // the tag scan popup then only issues one success call
-
-        _status.update { "Card TopUp in progress..." }
-        // wake the soon-needed reader :)
-        // TODO: move this even before the chip scan
-        // CashECPay could get a prepareEC callback function for that.
-        ecPaymentRepository.wakeup()
-
-        val newTopUp = NewTopUp(
-            amount = _topUpState.value.currentAmount.toDouble() / 100,
-            customerTagUid = tag.uid,
-            paymentMethod = PaymentMethod.sumup,
-            // we generate the topup transaction identifier here
-            uuid = UUID.randomUUID(),
-        )
-
-        if (!checkTopUp(newTopUp)) {
-            // it already updates the status message
-            return
+        // This might be called multiple times if another transaction is started before the SumUp
+        // activity is opened. This is, however, extremely unlikely and we should do our best to
+        // prevent this case
+        bookingActiveLock.withLock {
+            if (_bookingActive.value == true) {
+                return
+            }
+            _bookingActive.update { true }
         }
+        try {
+            _status.update { "Card TopUp in progress..." }
+            // wake the soon-needed reader :)
+            // TODO: move this even before the chip scan
+            // CashECPay could get a prepareEC callback function for that.
+            ecPaymentRepository.wakeup()
 
-        val payment = getECPayment(newTopUp)
+            val newTopUp = NewTopUp(
+                amount = _topUpState.value.currentAmount.toDouble() / 100,
+                customerTagUid = tag.uid,
+                paymentMethod = PaymentMethod.sumup,
+                // we generate the topup transaction identifier here
+                uuid = UUID.randomUUID(),
+            )
 
-        // pre-register the payment so the backend starts polling sumup
-        // if the transaction has completed, but the callback to the POS terminal got missing
-        // due to wlan glitches etc.
-
-        if (!registerTopUp("Card", newTopUp)) {
-            // already updates status message
-            return
-        }
-
-        _status.update { "Remove the chip. Starting EC transaction..." }
-
-        // workaround so the sumup activity is not in foreground too quickly.
-        // when it's active, nfc intents are no longer captured by us, apparently,
-        // and then the system nfc handler spawns the default handler (e.g. stustapay) again.
-        // https://stackoverflow.com/questions/60868912
-        delay(800)
-
-        // perform ec transaction
-        when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
-            is ECPaymentResult.Failure -> {
-                _status.update { "EC: ${paymentResult.msg}" }
-                topUpApi.cancelPendingTopUp(newTopUp.uuid)
+            if (!checkTopUp(newTopUp)) {
+                // it already updates the status message
                 return
             }
 
-            is ECPaymentResult.Success -> {
-                _status.update { "EC: ${paymentResult.result.msg}" }
-            }
+            val payment = getECPayment(newTopUp)
 
-            is ECPaymentResult.SilentCancelled -> {
-                // There may be multiple instances of this suspend fun launched simultaneously.
-                // Only show the status for the one that actually succeeds and silently drop all
-                // others.
-                topUpApi.cancelPendingTopUp(newTopUp.uuid)
+            // pre-register the payment so the backend starts polling sumup
+            // if the transaction has completed, but the callback to the POS terminal got missing
+            // due to wlan glitches etc.
+
+            if (!registerTopUp("Card", newTopUp)) {
+                // already updates status message
                 return
             }
-        }
 
-        // when successful, book the transaction
-        // if this doesn't reach the backend, the backend will book the topUp on its own
-        // when sumup confirms the payment.
-        bookTopUp("Card", newTopUp)
+            _status.update { "Remove the chip. Starting EC transaction..." }
+
+            // workaround so the sumup activity is not in foreground too quickly.
+            // when it's active, nfc intents are no longer captured by us, apparently,
+            // and then the system nfc handler spawns the default handler (e.g. stustapay) again.
+            // https://stackoverflow.com/questions/60868912
+            delay(800)
+
+            // perform ec transaction
+            when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
+                is ECPaymentResult.Failure -> {
+                    _status.update { "EC: ${paymentResult.msg}" }
+                    topUpApi.cancelPendingTopUp(newTopUp.uuid)
+                    return
+                }
+
+                is ECPaymentResult.Success -> {
+                    _status.update { "EC: ${paymentResult.result.msg}" }
+                }
+
+                is ECPaymentResult.SilentCancelled -> {
+                    // There may be multiple instances of this suspend fun launched simultaneously.
+                    // Only show the status for the one that actually succeeds and silently drop all
+                    // others.
+                    topUpApi.cancelPendingTopUp(newTopUp.uuid)
+                    return
+                }
+            }
+
+            // when successful, book the transaction
+            // if this doesn't reach the backend, the backend will book the topUp on its own
+            // when sumup confirms the payment.
+            bookTopUp("Card", newTopUp)
+        } finally {
+            _bookingActive.update { false }
+        }
     }
 
     suspend fun topUpWithCash(tag: NfcTag) {
-        _status.update { "Cash TopUp in progress..." }
-
-        val newTopUp = NewTopUp(
-            amount = _topUpState.value.currentAmount.toDouble() / 100,
-            customerTagUid = tag.uid,
-            paymentMethod = PaymentMethod.cash,
-            // we generate the topup transaction identifier here
-            uuid = UUID.randomUUID(),
-        )
-
-        if (!checkTopUp(newTopUp)) {
-            // it already updates the status message
-            return
+        bookingActiveLock.withLock {
+            if (_bookingActive.value == true) {
+                return
+            }
+            _bookingActive.update { true }
         }
+        try {
+            _status.update { "Cash TopUp in progress..." }
 
-        bookTopUp("Cash", newTopUp)
+            val newTopUp = NewTopUp(
+                amount = _topUpState.value.currentAmount.toDouble() / 100,
+                customerTagUid = tag.uid,
+                paymentMethod = PaymentMethod.cash,
+                // we generate the topup transaction identifier here
+                uuid = UUID.randomUUID(),
+            )
+
+            if (!checkTopUp(newTopUp)) {
+                // it already updates the status message
+                return
+            }
+
+            bookTopUp("Cash", newTopUp)
+        } finally {
+            _bookingActive.update { false }
+        }
     }
 
     private suspend fun registerTopUp(topUpType: String, newTopUp: NewTopUp): Boolean {
