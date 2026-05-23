@@ -226,6 +226,14 @@ export const PayoutInfo: React.FC = () => {
                       </Trans>
                     }
                   />
+                  <Typography>{t("payout.donationDescription")}</Typography>
+                  <FormCurrencyInput
+                    name="donation"
+                    label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
+                    variant="outlined"
+                    formik={formik}
+                    disabled={payoutInfo.in_payout_run}
+                  />
                   {config.feedback_url && (
                     <Box sx={{ textAlign: "center", my: 1 }}>
                       <Link
@@ -239,14 +247,6 @@ export const PayoutInfo: React.FC = () => {
                       </Link>
                     </Box>
                   )}
-                  <Typography>{t("payout.donationDescription")}</Typography>
-                  <FormCurrencyInput
-                    name="donation"
-                    label={t("payout.donationAmount") + `(max ${formatCurrency(customer.balance)})`}
-                    variant="outlined"
-                    formik={formik}
-                    disabled={payoutInfo.in_payout_run}
-                  />
                   <Button
                     type="submit"
                     variant="contained"
