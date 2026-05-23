@@ -173,6 +173,11 @@ class UserTagService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user([Privilege.node_administration])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
+        search_term = search_term.strip()
+        search_term = search_term.lstrip("0")
+        if not search_term:
+            return []
+
         return await conn.fetch_many(
             UserTagDetail,
             "select * from user_tag_with_history utwh "
