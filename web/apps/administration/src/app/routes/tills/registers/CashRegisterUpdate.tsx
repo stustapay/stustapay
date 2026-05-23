@@ -3,7 +3,7 @@ import { CashRegistersRoutes } from "@/app/routes";
 import { EditLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
-import { CashRegisterSchema } from "@stustapay/models";
+import { UpdateCashRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -36,9 +36,9 @@ export const CashRegisterUpdate: React.FC = withPrivilegeGuard("node_administrat
   return (
     <EditLayout
       title={t("register.update")}
-      successRoute={CashRegistersRoutes.list()}
+      successRoute={CashRegistersRoutes.detail(register.id)}
       initialValues={register}
-      validationSchema={CashRegisterSchema}
+      validationSchema={UpdateCashRegisterSchema}
       onSubmit={(r) => update({ nodeId: currentNode.id, registerId: register.id, newCashRegister: r })}
       form={CashRegisterForm}
     />
