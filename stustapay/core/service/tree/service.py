@@ -22,6 +22,7 @@ from stustapay.core.service.common.audit_logs import create_audit_log, fetch_aud
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import InvalidArgument, NotFound
 from stustapay.core.service.media import delete_blob, store_blob
+from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.tree.common import (
     fetch_event_design,
     fetch_event_logo,
@@ -348,9 +349,12 @@ async def update_event(conn: Connection, node: Node, event: NewEvent) -> Node:
 
 
 class TreeService(Service[Config]):
-    def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
+    def __init__(
+        self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, terminal_service: TerminalService
+    ):
         super().__init__(db_pool, config)
         self.auth_service = auth_service
+        self.terminal_service = terminal_service
 
     @with_db_transaction
     @requires_node()
@@ -518,6 +522,19 @@ class TreeService(Service[Config]):
         if node.read_only:
             raise InvalidArgument("Node is already read only")
 
+        # deregister all terminals from the node
+        terminals = await conn.fetch(
+            "select t.id, t.node_id from terminal t where t.node_id = any($1)",
+            node.ids_to_root,
+        )
+        for terminal in terminals:
+            terminal_id = terminal["id"]
+            terminal_node_id = terminal["node_id"]
+            terminal_node = await fetch_node(conn=conn, node_id=terminal_node_id)
+            await self.terminal_service.logout_terminal_id(
+                conn=conn, current_user=current_user, node=terminal_node, terminal_id=terminal_id
+            )
+
         await conn.execute("update node set read_only = true where id = $1 or $1 = any(parent_ids)", node.id)
         await conn.execute(
             "update event set customer_portal_url = '' "
@@ -526,6 +543,7 @@ class TreeService(Service[Config]):
             ")",
             node.id,
         )
+
         await create_audit_log(
             conn=conn,
             log_type=AuditType.node_archived,

@@ -309,8 +309,19 @@ async def ticket_service(setup_test_db_pool: asyncpg.Pool, config: Config, auth_
 
 
 @pytest.fixture(scope="session")
-async def tree_service(setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService) -> TreeService:
-    return TreeService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
+async def terminal_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
+) -> TerminalService:
+    return TerminalService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
+
+
+@pytest.fixture(scope="session")
+async def tree_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService, terminal_service: TerminalService
+) -> TreeService:
+    return TreeService(
+        db_pool=setup_test_db_pool, config=config, auth_service=auth_service, terminal_service=terminal_service
+    )
 
 
 @pytest.fixture(scope="session")
@@ -323,13 +334,6 @@ async def cashier_service(
 @pytest.fixture(scope="session")
 async def order_service(setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService) -> OrderService:
     return OrderService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
-
-
-@pytest.fixture(scope="session")
-async def terminal_service(
-    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
-) -> TerminalService:
-    return TerminalService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
 
 
 @pytest.fixture(scope="session")
