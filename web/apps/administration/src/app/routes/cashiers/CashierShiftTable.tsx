@@ -2,7 +2,6 @@ import {
   CashierShift,
   selectCashRegisterById,
   selectUserById,
-  useGetCashRegisterAdminQuery,
   useListCashRegistersAdminQuery,
   useListUsersQuery,
 } from "@/api";
@@ -63,6 +62,7 @@ export const CashierShiftTable: React.FC<{
             field: "cashier_id",
             headerName: t("common.cashier"),
             type: "string",
+            valueGetter: (value: number) => getUsernameForUser(value),
             renderCell: (params: any) => (
               <RouterLink to={CashierRoutes.detail(params.row.cashier_id)}>
                 {getUsernameForUser(params.row.cashier_id)}
@@ -76,6 +76,7 @@ export const CashierShiftTable: React.FC<{
       field: "closing_out_user_id",
       headerName: t("closeOut.closingOutUser"),
       type: "string",
+      valueGetter: (value) => getUsernameForUser(value),
       renderCell: (params) => (
         <RouterLink to={UserRoutes.detail(params.row.closing_out_user_id)}>
           {getUsernameForUser(params.row.closing_out_user_id)}
@@ -89,6 +90,7 @@ export const CashierShiftTable: React.FC<{
             field: "cash_register_id",
             headerName: t("shift.cashRegister"),
             type: "string",
+            valueGetter: (value: number) => selectCashRegisterById(registers, value)?.name,
             renderCell: (params: any) => (
               <RouterLink to={CashRegistersRoutes.detail(params.row.cash_register_id)}>
                 {selectCashRegisterById(registers, params.row.cash_register_id)?.name}
