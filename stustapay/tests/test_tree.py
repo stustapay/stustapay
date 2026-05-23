@@ -173,10 +173,12 @@ async def test_object_rules(tree_service: TreeService, global_admin_token: str):
         top_node.computed_forbidden_objects_at_node,
     )
     assert len(top_node.computed_forbidden_objects_in_subtree) == 0
+    new_event = dummy_event.model_copy()
+    new_event.forbidden_objects_in_subtree = [ObjectType.ticket]
     event_node = await tree_service.create_event(
         token=global_admin_token,
         node_id=top_node.id,
-        event=dummy_event,
+        event=new_event,
     )
     assert len(event_node.forbidden_objects_at_node) == 0
     assert list_equals([ObjectType.ticket], event_node.forbidden_objects_in_subtree)
