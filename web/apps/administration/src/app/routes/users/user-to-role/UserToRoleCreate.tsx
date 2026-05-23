@@ -1,4 +1,4 @@
-import { NewUserToRoles, useUpdateUserToRolesMutation } from "@/api";
+import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } from "@/api";
 import { UserToRoleRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
@@ -16,12 +16,33 @@ const NewUserToRoleSchema = z.object({
 
 const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors, setFieldValue, touched }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
+  const { data: userToRoles } = useListUserToRoleQuery({ nodeId: currentNode.id });
+
+  const changeUserId = React.useCallback(
+    (userId: number | undefined) => {
+      if (!userToRoles) {
+        return;
+      }
+      setFieldValue("user_id", userId);
+      if (userId != null) {
+        const userRoles = userToRoles.find((u) => u.node_id === currentNode.id && u.user_id === userId);
+        console.log("user roles", userRoles);
+        if (userRoles) {
+          setFieldValue("role_ids", userRoles.role_ids);
+        } else {
+          setFieldValue("role_ids", []);
+        }
+      }
+    },
+    [userToRoles, setFieldValue]
+  );
   return (
     <>
       <UserSelect
         label={t("user.user")}
         value={values.user_id}
-        onChange={(val) => setFieldValue("user_id", val)}
+        onChange={changeUserId}
         error={touched.user_id && !!errors.user_id}
         helperText={(touched.user_id && errors.user_id) as string}
       />

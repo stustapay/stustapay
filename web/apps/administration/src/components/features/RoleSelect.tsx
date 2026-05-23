@@ -29,7 +29,11 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({ value, onChange, ...prop
     [onChange]
   );
 
-  const selected = React.useMemo(() => roles.filter((r) => value.includes(r.id)) ?? null, [roles, value]);
+  const selected = React.useMemo(() => {
+    const list = roles.filter((r) => value.includes(r.id));
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    return list;
+  }, [roles, value]);
 
   return (
     <Select
