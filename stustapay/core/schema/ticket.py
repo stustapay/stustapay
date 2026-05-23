@@ -33,6 +33,7 @@ class TicketVoucher(BaseModel):
     created_at: datetime
     customer_account_id: int
     token: str
+    initial_top_up_amount: float = 0.0
 
 
 class NewTicketScan(BaseModel):

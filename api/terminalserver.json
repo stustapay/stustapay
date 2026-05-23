@@ -4404,6 +4404,11 @@
           "token": {
             "type": "string",
             "title": "Token"
+          },
+          "initial_top_up_amount": {
+            "type": "number",
+            "title": "Initial Top Up Amount",
+            "default": 0.0
           }
         },
         "type": "object",

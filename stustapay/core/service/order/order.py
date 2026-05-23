@@ -369,7 +369,7 @@ class OrderService(Service[Config]):
             "select t.* "
             "from ticket_voucher t "
             "join account a on (a.id = t.customer_account_id) "
-            "where t.token = $1 and a.user_tag_id is null and t.node_id = any($2)",
+            "where t.token = $1 and a.user_tag_id is null and not t.cancelled and t.node_id = any($2)",
             voucher_token,
             node.ids_to_root,
         )
@@ -1301,7 +1301,8 @@ class OrderService(Service[Config]):
                 # ticket was already sold due to voucher
                 ticket.price = 0.0
                 ticket.total_price = 0.0
-                ticket.initial_top_up_amount = 0.0
+                # Use top-up amount from voucher (set during Pretix sync) instead of product default
+                ticket.initial_top_up_amount = ticket_voucher.initial_top_up_amount
 
                 account_balance = account.balance
 

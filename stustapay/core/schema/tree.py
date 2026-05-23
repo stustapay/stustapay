@@ -39,6 +39,7 @@ class _BaseEvent(BaseModel):
     pretix_organizer: str | None
     pretix_event: str | None
     pretix_ticket_ids: list[int] | None
+    pretix_topup_ids: list[int] | None
 
     ust_id: str
     bon_issuer: str

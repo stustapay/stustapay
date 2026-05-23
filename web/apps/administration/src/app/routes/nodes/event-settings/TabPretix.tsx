@@ -29,6 +29,7 @@ export const PretixSettingsSchema = z
     pretix_organizer: z.string().optional().nullable(),
     pretix_event: z.string().optional().nullable(),
     pretix_ticket_ids: z.array(z.number().int()).optional().nullable(),
+    pretix_topup_ids: z.array(z.number().int()).optional().nullable(),
   })
   .superRefine((data, ctx) => {
     if (!data.pretix_presale_enabled) {
@@ -49,11 +50,22 @@ export const PretixSettingsSchema = z
     if (data.pretix_ticket_ids == null) {
       ctx.addIssue({ ...requiredIssue, path: ["pretix_ticket_ids"] });
     }
+    // Warn if a product is in both ticket and topup lists
+    const ticketIds = data.pretix_ticket_ids ?? [];
+    const topupIds = data.pretix_topup_ids ?? [];
+    const overlap = ticketIds.filter((id) => topupIds.includes(id));
+    if (overlap.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Product(s) ${overlap.join(", ")} cannot be both ticket and top-up`,
+        path: ["pretix_topup_ids"],
+      });
+    }
   });
 
 export type PretixSettings = z.infer<typeof PretixSettingsSchema>;
 
-const PretixProductSelect: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({ nodeId, formik }) => {
+const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({ nodeId, formik }) => {
   const { t, i18n } = useTranslation();
   const languageBaseCode = i18n.language.split("-")[0];
   const [products, setProducts] = React.useState<PretixProduct[]>([]);
@@ -87,20 +99,34 @@ const PretixProductSelect: React.FC<{ nodeId: number; formik: FormikProps<Pretix
     });
   }, [pretixApiKey, pretixUrl, pretixOrganizer, pretixEvent, fetchProducts, nodeId]);
 
+  const formatProduct = (productId: number) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return "";
+    const name = product.name[languageBaseCode] ?? Object.values(product.name)[0] ?? "";
+    return `#${product.id} ${name} — ${product.default_price}€`;
+  };
+
   return (
-    <FormSelect
-      name="pretix_ticket_ids"
-      label={t("settings.pretix.ticketIds")}
-      formik={formik}
-      options={productIds}
-      multiple={true}
-      checkboxes={true}
-      formatOption={(productId) => {
-        const product = products.find((p) => p.id === productId);
-        const name = product?.name[languageBaseCode] ?? "";
-        return name;
-      }}
-    />
+    <>
+      <FormSelect
+        name="pretix_ticket_ids"
+        label={t("settings.pretix.ticketIds")}
+        formik={formik}
+        options={productIds}
+        multiple={true}
+        checkboxes={true}
+        formatOption={formatProduct}
+      />
+      <FormSelect
+        name="pretix_topup_ids"
+        label={t("settings.pretix.topupIds", "Top-Up / Credit Products")}
+        formik={formik}
+        options={productIds}
+        multiple={true}
+        checkboxes={true}
+        formatOption={formatProduct}
+      />
+    </>
   );
 };
 
@@ -117,7 +143,7 @@ export const PretixSettingsForm: React.FC<{ nodeId: number; formik: FormikProps<
       <FormTextField label={t("settings.pretix.apiKey")} name="pretix_api_key" formik={formik} />
       <FormTextField label={t("settings.pretix.organizer")} name="pretix_organizer" formik={formik} />
       <FormTextField label={t("settings.pretix.event")} name="pretix_event" formik={formik} />
-      <PretixProductSelect nodeId={nodeId} formik={formik} />
+      <PretixProductSelects nodeId={nodeId} formik={formik} />
     </>
   );
 };
