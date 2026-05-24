@@ -82,6 +82,10 @@ class TicketViewModel @Inject constructor(
     val bookingActive = _bookingActive.asStateFlow()
     private val bookingActiveLock = Mutex()
 
+    // serialize all draft-modifying operations to prevent race conditions
+    // with out-of-order server responses
+    private val draftLock = Mutex()
+
     // configuration infos from backend
     val terminalLoginState = terminalConfigRepository.terminalConfigState.mapState(
         initialValue = TerminalLoginState(), scope = viewModelScope
@@ -130,23 +134,31 @@ class TicketViewModel @Inject constructor(
             return
         }
 
-        _ticketDraft.update { oldDraft ->
-            val draft = oldDraft.copy()
-            draft.addScan(tag)
-            if (!checkTicketDraft(draft)) {
-                return@update oldDraft
+        draftLock.withLock {
+            _ticketDraft.update { oldDraft ->
+                val draft = oldDraft.copy()
+                draft.addScan(tag)
+                if (!checkTicketDraft(draft)) {
+                    return@update oldDraft
+                }
+                _status.update { resourcesProvider.getString(R.string.ticket_valid) }
+                draft
             }
-            _status.update { resourcesProvider.getString(R.string.ticket_valid) }
-            draft
         }
-
     }
 
     private suspend fun checkTicketDraft(draft: TicketDraft): Boolean {
+        // Capture the serial at request time so we can detect stale responses
+        val requestSerial = draft.statusSerial
         val response = ticketApi.checkTicketScan(draft.getTicketScan())
 
         when (response) {
             is Response.OK -> {
+                // Guard against out-of-order responses: if the draft has been
+                // modified since we sent this request, discard the stale result.
+                if (_ticketDraft.value.statusSerial != requestSerial) {
+                    return false
+                }
 
                 val scanned = response.data.scannedTickets
                 if (scanned.size != draft.scans.size) {
@@ -198,17 +210,19 @@ class TicketViewModel @Inject constructor(
         if (tag == null) {
             return
         }
-        _ticketDraft.update { oldDraft ->
-            val draft = oldDraft.copy()
-            val amountD = amount.toDouble() / 100.0
-            if (!draft.setTopUpAmount(tag, amountD)) {
-                return@update oldDraft
+        draftLock.withLock {
+            _ticketDraft.update { oldDraft ->
+                val draft = oldDraft.copy()
+                val amountD = amount.toDouble() / 100.0
+                if (!draft.setTopUpAmount(tag, amountD)) {
+                    return@update oldDraft
+                }
+                if (!checkTicketDraft(draft)) {
+                    return@update oldDraft
+                }
+                _status.update { resourcesProvider.getString(R.string.common_action_topup_validated) }
+                draft
             }
-            if (!checkTicketDraft(draft)) {
-                return@update oldDraft
-            }
-            _status.update { resourcesProvider.getString(R.string.common_action_topup_validated) }
-            draft
         }
     }
 
@@ -216,16 +230,18 @@ class TicketViewModel @Inject constructor(
         if (tag == null) {
             return
         }
-        _ticketDraft.update { oldDraft ->
-            val draft = oldDraft.copy()
-            if (!draft.setVoucherToken(tag, voucherToken)) {
-                return@update oldDraft
+        draftLock.withLock {
+            _ticketDraft.update { oldDraft ->
+                val draft = oldDraft.copy()
+                if (!draft.setVoucherToken(tag, voucherToken)) {
+                    return@update oldDraft
+                }
+                if (!checkTicketDraft(draft)) {
+                    return@update oldDraft
+                }
+                _status.update { resourcesProvider.getString(R.string.ticket_voucher_valid) }
+                draft
             }
-            if (!checkTicketDraft(draft)) {
-                return@update oldDraft
-            }
-            _status.update { resourcesProvider.getString(R.string.ticket_voucher_valid) }
-            draft
         }
     }
 
@@ -243,7 +259,8 @@ class TicketViewModel @Inject constructor(
 
     fun dismissError() {
         _navState.update { TicketPage.Scan }
-        // TODO: clearTicketSale(success = false)?
+        // Don't clear the draft here — the user may have scanned tags and set
+        // top-up amounts that they want to keep. Only the error state is dismissed.
     }
 
     /** once the sale was booked completely */
@@ -265,39 +282,41 @@ class TicketViewModel @Inject constructor(
 
     /** test if we can sell this */
     suspend fun checkSale() {
-        val draft = _ticketDraft.value
+        draftLock.withLock {
+            val draft = _ticketDraft.value
 
-        _status.update { resourcesProvider.getString(R.string.sale_order_checking) }
+            _status.update { resourcesProvider.getString(R.string.sale_order_checking) }
 
-        // check if the sale is nice and well
-        val response = ticketApi.checkTicketSale(
-            draft.getNewTicketSale(null)
-        )
+            // check if the sale is nice and well
+            val response = ticketApi.checkTicketSale(
+                draft.getNewTicketSale(null)
+            )
 
-        when (response) {
-            is Response.OK -> {
-                _ticketDraft.update { oldDraft ->
-                    oldDraft.copy(response.data)
+            when (response) {
+                is Response.OK -> {
+                    _ticketDraft.update { oldDraft ->
+                        oldDraft.copy(pendingSale = response.data)
+                    }
+                    _pendingTicketSale.update { response.data }
+
+                    _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
+
+                    if (response.data.totalPrice == 0.0) {
+                        // when response has item and totalprice zero, skip to process sale directly!
+                        processSale(paymentMethod = PaymentMethod.cash)
+                    } else {
+                        _navState.update { TicketPage.Confirm }
+                    }
                 }
-                _pendingTicketSale.update { response.data }
 
-                _status.update { resourcesProvider.getString(R.string.ticket_order_validated) }
-
-                if (response.data.totalPrice == 0.0) {
-                    // when response has item and totalprice zero, skip to process sale directly!
-                    processSale(paymentMethod = PaymentMethod.cash)
-                } else {
-                    _navState.update { TicketPage.Confirm }
+                is Response.Error.Service -> {
+                    _status.update { response.msg() }
+                    _navState.update { TicketPage.Error }
                 }
-            }
 
-            is Response.Error.Service -> {
-                _status.update { response.msg() }
-                _navState.update { TicketPage.Error }
-            }
-
-            is Response.Error -> {
-                _status.update { response.msg() }
+                is Response.Error -> {
+                    _status.update { response.msg() }
+                }
             }
         }
     }
