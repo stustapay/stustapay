@@ -10,6 +10,7 @@ import de.stustapay.libssp.net.Response
 import de.stustapay.libssp.net.transformResponse
 import de.stustapay.stustapay.repository.RegistrationRepositoryInner
 import io.ktor.serialization.JsonConvertException
+import java.util.concurrent.CancellationException
 import javax.inject.Singleton
 
 @Module
@@ -39,6 +40,8 @@ open class TerminalApiAccessor(
             }
         } catch (e: JsonConvertException) {
             Response.Error.BadResponse(e.localizedMessage.orEmpty())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("StuStaPay req", "request failed: ${e.localizedMessage}")
             Response.Error.Request(null, e)
