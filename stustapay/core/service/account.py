@@ -188,7 +188,7 @@ class AccountService(Service[Config]):
             "   (a.name like $1 "
             "   or a.comment like $1 "
             "   or (a.user_tag_pin is not null and a.user_tag_pin like $2)) "
-            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $2k ",
+            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $2)",
             f"%{search_term.lower()}%",
             f"%{search_term_numeric.lower()}%",
             node.ids_to_root,
