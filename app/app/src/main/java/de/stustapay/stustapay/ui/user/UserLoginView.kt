@@ -1,8 +1,10 @@
 package de.stustapay.stustapay.ui.user
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -16,6 +18,7 @@ import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import de.stustapay.libssp.ui.theme.errorButtonColors
+import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 
 /** after a scan happened, where do we send the info to */
@@ -47,6 +50,8 @@ fun UserLoginView(
     val userUIStateV = userUIState
 
     val status by viewModel.userStatus.collectAsStateWithLifecycle()
+    val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
+    val currentTagV = currentTag
 
     val userRoles by viewModel.userRoles.collectAsStateWithLifecycle()
     val userRolesV = userRoles
@@ -206,6 +211,22 @@ fun UserLoginView(
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center
                 )
+            }
+        }
+        else if (currentTagV != null) {
+            Row(modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp)) {
+                Text(
+                    "Tag UID: ",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center,
+                )
+                SelectionContainer {
+                    Text(
+                        tagIDtoString(currentTagV.uid.ulongValue(true)),
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
 

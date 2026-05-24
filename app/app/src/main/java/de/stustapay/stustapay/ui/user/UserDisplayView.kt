@@ -33,6 +33,7 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
+    val currentTagV = currentTag
 
     if (currentUser == null) {
         Scaffold(
@@ -99,11 +100,19 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                     ) {
                         ListItem(
                             text = { Text(stringResource(R.string.common_tag_pin)) },
-                            secondaryText = { Text(currentTag.pin.orEmpty()) }
+                            secondaryText = { Text(currentTag?.pin ?: "") }
                         )
                         ListItem(
                             text = { Text(stringResource(R.string.common_tag_id)) },
-                            secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue(true))) }
+                            secondaryText = {
+                                Text(
+                                    if (currentTagV != null) {
+                                        tagIDtoString(currentTagV.uid.ulongValue(true))
+                                    } else {
+                                        "unknown"
+                                    }
+                                )
+                            }
                         )
                         ListItem(
                             text = { Text(stringResource(R.string.user_username)) },

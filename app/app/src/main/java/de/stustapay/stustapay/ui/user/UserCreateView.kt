@@ -286,7 +286,6 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                 roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },
                                 description
                             )
-                            viewModel.checkCreate(currentTag)
                             goToUserDisplayView()
                         }
                     }) {

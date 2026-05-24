@@ -48,6 +48,7 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
+    val currentTagV = currentTag
 
     val currentUserV = currentUser
     if (currentUserV == null) {
@@ -79,7 +80,15 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
             ) {
                 ListItem(
                     text = { Text(stringResource(R.string.common_tag_id)) },
-                    secondaryText = { Text(tagIDtoString(currentTag.uid.ulongValue(true))) })
+                    secondaryText = {
+                        Text(
+                            if (currentTagV != null) {
+                                tagIDtoString(currentTagV.uid.ulongValue(true))
+                            } else {
+                                "unknown"
+                            }
+                        )
+                    })
                 ListItem(
                     text = { Text(stringResource(R.string.user_username)) },
                     secondaryText = { Text(currentUserV.login) })
@@ -133,7 +142,10 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                         ) {
                                             Text(r.name)
                                             if (roles.contains(r.id.ulongValue())) {
-                                                Icon(painter = painterResource(de.stustapay.libssp.R.drawable.check_24), null)
+                                                Icon(
+                                                    painter = painterResource(de.stustapay.libssp.R.drawable.check_24),
+                                                    null
+                                                )
                                             }
                                         }
                                     }
@@ -193,9 +205,8 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                 onClick = {
                     scope.launch {
                         viewModel.update(
-                            currentTag,
+                            currentTagV,
                             roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id })
-                        viewModel.checkCreate(currentTag)
                         goToUserDisplayView()
                     }
                 }) {
