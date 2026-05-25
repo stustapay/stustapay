@@ -29,7 +29,7 @@ open class TerminalApiAccessor(
 ) {
     private val inner = TerminalApiAccessorInner(registrationRepository, retry = true)
 
-    internal suspend inline fun <reified O : Any> execute(fn: ((acc: TerminalApiAccessorInner) -> HttpResponse<O>?)): Response<O> {
+    internal suspend inline fun <reified O> execute(fn: ((acc: TerminalApiAccessorInner) -> HttpResponse<O>?)): Response<O> {
         return try {
             // res will only be null when TerminalApiAccessorInner.<subapi> is not set (because we're not registered)
             val res = fn(this.inner)

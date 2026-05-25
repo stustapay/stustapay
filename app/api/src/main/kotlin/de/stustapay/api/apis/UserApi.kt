@@ -126,7 +126,7 @@ import io.ktor.http.ParametersBuilder
          * @return CurrentUser
         */
             @Suppress("UNCHECKED_CAST")
-        open suspend fun getCurrentUser(): HttpResponse<CurrentUser> {
+        open suspend fun getCurrentUser(): HttpResponse<CurrentUser?> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 

@@ -73,6 +73,22 @@ tasks.register('_modApi') {
                     line
                 }
             }
+            // Workaround: OpenAPI Generator ignores 'nullable' in response schemas.
+            filter { String line ->
+                line.replace("fun getCurrentUser(): HttpResponse<CurrentUser>", "fun getCurrentUser(): HttpResponse<CurrentUser?>")
+                    .replace("fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order>", "fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order?>")
+            }
+        }
+
+        copy {
+            from("$projectDir/build/generated/api")
+            into("$projectDir/api")
+            include("**/infrastructure/HttpResponse.kt")
+            filter { String line ->
+                line.replace("T : Any", "T")
+                    .replace("S : Any", "S")
+                    .replace("V : Any", "V")
+            }
         }
 
         copy {
@@ -104,11 +120,60 @@ tasks.register('_modApi') {
     }
 }
 
+tasks.register('_preprocessSpec') {
+    doLast {
+        def inputFile = layout.projectDirectory.file("../api/terminalserver.json").asFile
+        def outputDir = layout.buildDirectory.dir("preprocessed").get().asFile
+        outputDir.mkdirs()
+        def outputFile = new File(outputDir, "terminalserver.json")
+
+        def json = new groovy.json.JsonSlurper().parse(inputFile)
+
+        // Only transform anyOf:[ref,null] in response schemas.
+        // Model properties are left as-is because the generator handles
+        // anyOf+null correctly for properties (produces T?) but not for
+        // response schemas (produces HttpResponse<T> instead of HttpResponse<T?>).
+        // workaround for https://github.com/OpenAPITools/openapi-generator/pull/23870
+        json.paths?.each { path, methods ->
+            methods.each { method, details ->
+                if (method in ['get', 'post', 'put', 'delete', 'patch']) {
+                    details.responses?.each { code, resp ->
+                        resp.content?.each { mediaType, content ->
+                            def schema = content.schema
+                            if (schema instanceof Map && schema.anyOf instanceof List && schema.anyOf.size() == 2) {
+                                def nullIdx = -1
+                                def refIdx = -1
+                                schema.anyOf.eachWithIndex { item, idx ->
+                                    if (item instanceof Map && item.type == 'null' && item.size() == 1) {
+                                        nullIdx = idx
+                                    } else if (item instanceof Map && item.containsKey('\$ref')) {
+                                        refIdx = idx
+                                    }
+                                }
+                                if (nullIdx >= 0 && refIdx >= 0) {
+                                    def newSchema = new LinkedHashMap(schema)
+                                    newSchema.remove('anyOf')
+                                    newSchema.put('allOf', [schema.anyOf[refIdx]])
+                                    newSchema.put('nullable', true)
+                                    content.schema = newSchema
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        outputFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
+    }
+}
+
 tasks.register('_genApi', GenerateTask) {
+    dependsOn tasks._preprocessSpec
     dependsOn tasks._cleanApi
     generatorName.set("kotlin")
 
-    inputSpec.set(layout.projectDirectory.file("../api/terminalserver.json"))
+    inputSpec.set(layout.buildDirectory.file("preprocessed/terminalserver.json"))
     outputDir.set(layout.buildDirectory.dir("generated/api"))
 
     generateApiTests.set(false)
@@ -128,7 +193,11 @@ tasks.register('_genApi', GenerateTask) {
 tasks.register('_cleanApi') {
     doLast {
         delete("$projectDir/build/generated/api")
-        delete("$projectDir/api")
+        // Only delete api contents, not the directory itself,
+        // because :api is a Gradle subproject.
+        if (file("$projectDir/api").exists()) {
+            delete(fileTree("$projectDir/api").include("**/*"))
+        }
     }
 }
 
