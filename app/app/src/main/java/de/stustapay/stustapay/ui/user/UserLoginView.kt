@@ -1,9 +1,27 @@
 package de.stustapay.stustapay.ui.user
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.Button
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.ListItem
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -12,12 +30,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.stustapay.libssp.model.NfcTag
+import de.stustapay.libssp.ui.theme.errorButtonColors
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.UserRolesState
-import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.ui.chipscan.NfcScanDialog
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustapay.libssp.ui.theme.errorButtonColors
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
 
@@ -42,6 +60,7 @@ fun UserLoginView(
     viewModel: UserViewModel,
     goToUserCreateView: () -> Unit,
     goToUserDisplayView: () -> Unit,
+    onLoginSuccess: () -> Unit = {},
 ) {
 
     val scope = rememberCoroutineScope()
@@ -107,7 +126,11 @@ fun UserLoginView(
                         LaunchedEffect(Unit) {
                             scope.launch {
                                 roleSelection = RoleSelectionState.Closed
-                                viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
+                                val loginOk =
+                                    viewModel.login(roleSelectionV.tag, userRolesV.roles[0].id)
+                                if (loginOk) {
+                                    onLoginSuccess()
+                                }
                             }
                         }
                     } else {
@@ -120,7 +143,10 @@ fun UserLoginView(
                                 scope.launch {
                                     val tag = roleSelectionV.tag
                                     roleSelection = RoleSelectionState.Closed
-                                    viewModel.login(tag, roleID)
+                                    val loginOk = viewModel.login(tag, roleID)
+                                    if (loginOk) {
+                                        onLoginSuccess()
+                                    }
                                 }
                             }
                         )
@@ -186,11 +212,13 @@ fun UserLoginView(
                     scanState.open()
                 },
             ) {
-                Text(if (userUIStateV !is UserUIState.LoggedIn) {
-                    stringResource(R.string.user_login)
-                } else {
-                    stringResource(R.string.user_login_other)
-                }, fontSize = 24.sp, textAlign = TextAlign.Center)
+                Text(
+                    if (userUIStateV !is UserUIState.LoggedIn) {
+                        stringResource(R.string.user_login)
+                    } else {
+                        stringResource(R.string.user_login_other)
+                    }, fontSize = 24.sp, textAlign = TextAlign.Center
+                )
             }
         }
 
@@ -212,9 +240,10 @@ fun UserLoginView(
                     textAlign = TextAlign.Center
                 )
             }
-        }
-        else if (currentTagV != null) {
-            Row(modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp)) {
+        } else if (currentTagV != null) {
+            Row(modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(vertical = 10.dp)) {
                 Text(
                     "Tag UID: ",
                     fontSize = 24.sp,

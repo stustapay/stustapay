@@ -105,8 +105,8 @@ class UserViewModel @Inject constructor(
         userRepository.checkLogin(tag)
     }
 
-    suspend fun login(tag: NfcTag, roleID: BigInteger) {
-        userRepository.login(tag, roleID)
+    suspend fun login(tag: NfcTag, roleID: BigInteger): Boolean {
+        return userRepository.login(tag, roleID)
     }
 
     suspend fun logout() {
@@ -126,6 +126,7 @@ class UserViewModel @Inject constructor(
                 display(tag)
                 true
             }
+
             is Response.Error -> false
         }
     }

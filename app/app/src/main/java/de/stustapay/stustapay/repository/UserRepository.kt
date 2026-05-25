@@ -54,17 +54,19 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun login(userTag: NfcTag, roleID: BigInteger) {
+    suspend fun login(userTag: NfcTag, roleID: BigInteger): Boolean {
         when (val loginResult =
             userRemoteDataSource.userLogin(LoginPayload(UserTag(userTag.uid), roleID))) {
             is UserState.Error -> {
                 status.update { loginResult.msg }
+                return false
             }
 
             is UserState.LoggedIn, is UserState.NoLogin -> {
                 status.update { null }
                 _userState.update { loginResult }
                 terminalConfigRepository.fetchConfig(keepTrying = false)
+                return true
             }
         }
     }

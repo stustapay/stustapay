@@ -63,6 +63,8 @@ fun UserView(
                     }, goToUserDisplayView = {
                         viewModel.idleState()
                         navController.navigateTo(UserNavDest.display.route)
+                    }, onLoginSuccess = {
+                        leaveView()
                     })
                 }
             }
