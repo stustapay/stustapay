@@ -22,15 +22,16 @@ class UserRemoteDataSource @Inject constructor(
             it.user()?.getCurrentUser()
         }) {
             is Response.OK -> {
-                UserState.LoggedIn(res.data)
+                val data = res.data
+                if (data != null) {
+                    UserState.LoggedIn(data)
+                } else {
+                    UserState.NoLogin
+                }
             }
 
             is Response.Error -> {
-                if (res is Response.Error.BadResponse) {
-                    UserState.NoLogin
-                } else {
-                    UserState.Error(res.msg())
-                }
+                UserState.Error(res.msg())
             }
         }
     }
