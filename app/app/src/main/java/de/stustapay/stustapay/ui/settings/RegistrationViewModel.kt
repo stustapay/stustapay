@@ -47,11 +47,12 @@ class RegistrationViewModel @Inject constructor(
 
     val allowForceDeregister = registrationRepo.forceDeregisterState
 
-    suspend fun register(qrcodeB64: String) {
+    suspend fun register(qrcodeB64: String): Boolean {
         val ok = registrationRepo.register(qrcodeB64)
         if (ok) {
             terminalConfigRepository.fetchConfig(keepTrying = false)
         }
+        return ok
     }
 
     suspend fun deregister(force: Boolean = false) {

@@ -64,7 +64,12 @@ fun SettingsRootView(navController: NavHostController) {
         item {
             PrefGroup(title = { Text("About") }) {
                 PrefLink(
-                    icon = { Icon(painter = painterResource(de.stustapay.libssp.R.drawable.info_24), contentDescription = "About") },
+                    icon = {
+                        Icon(
+                            painter = painterResource(de.stustapay.libssp.R.drawable.info_24),
+                            contentDescription = "About"
+                        )
+                    },
                     title = { Text(text = "About this App") },
                 ) {
                     navController.navigate(SettingsNavDest.about.route)
@@ -100,7 +105,7 @@ fun SettingsView(leaveView: () -> Unit = {}) {
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             composable(SettingsNavDest.root.route) { SettingsRootView(navController) }
-            composable(SettingsNavDest.connection.route) { RegistrationView() }
+            composable(SettingsNavDest.connection.route) { RegistrationView(onRegistrationSuccess = { leaveView() }) }
             composable(SettingsNavDest.ecreader.route) { ECSettingsView() }
             composable(SettingsNavDest.about.route) { AboutView() }
         }
