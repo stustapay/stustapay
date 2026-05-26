@@ -17,10 +17,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.model.NfcTag
+import de.stustapay.libssp.ui.barcode.QRScanDialog
 import de.stustapay.libssp.ui.common.rememberDialogDisplayState
 import de.stustapay.libssp.ui.theme.NfcScanStyle
 import de.stustapay.stustapay.R
-import de.stustapay.libssp.ui.barcode.QRScanDialog
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.amountselect.AmountConfig
@@ -43,6 +43,7 @@ fun TicketScan(
     val ticketStatus by viewModel.ticketDraft.collectAsStateWithLifecycle()
     val tagScanStatus by viewModel.tagScanStatus.collectAsStateWithLifecycle()
     val requestActive by viewModel.requestActive.collectAsStateWithLifecycle()
+    val transactionActive by viewModel.transactionActive.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
@@ -180,7 +181,7 @@ fun TicketScan(
                 status = {
                     StatusText(status)
                 },
-                ready = config.isTerminalReady() && ticketStatus.scans.isNotEmpty() && !requestActive,
+                ready = config.isTerminalReady() && ticketStatus.scans.isNotEmpty() && !requestActive && !transactionActive,
                 onAbort = {
                     scope.launch {
                         viewModel.clearDraft()

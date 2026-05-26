@@ -20,13 +20,12 @@ import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.InfallibleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
+import de.stustapay.stustapay.ui.common.MutexStateFlow
 import de.stustapay.stustapay.ui.common.TerminalLoginState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import java.util.UUID
 import javax.inject.Inject
@@ -77,14 +76,19 @@ class TicketViewModel @Inject constructor(
     private val _saleCompleted = MutableStateFlow<CompletedTicketSale?>(null)
     val saleCompleted = _saleCompleted.asStateFlow()
 
-    // so only one order can be submitted
-    private val _bookingActive = MutableStateFlow(false)
-    val bookingActive = _bookingActive.asStateFlow()
-    private val bookingActiveLock = Mutex()
-
-    // serialize all draft-modifying operations to prevent race conditions
-    // with out-of-order server responses
-    private val draftLock = Mutex()
+    // so only one order/ticket check can be submitted
+    private val _transactionActive = object : MutexStateFlow() {
+        override suspend fun <T> intercept(action: suspend () -> T): T {
+            val currentStatus = _tagScanStatus.value
+            return try {
+                _tagScanStatus.value = TagScanStatus.NoScan
+                action()
+            } finally {
+                _tagScanStatus.value = currentStatus
+            }
+        }
+    }
+    val transactionActive = _transactionActive.asStateFlow()
 
     // configuration infos from backend
     val terminalLoginState = terminalConfigRepository.terminalConfigState.mapState(
@@ -106,7 +110,7 @@ class TicketViewModel @Inject constructor(
     }
 
     /**
-     *  test if a tag scan was successful, i.e. we didn't scan it previously.
+     * test if a tag scan was successful, i.e. we didn't scan it previously.
      * if this returns false, the scan dialog will remain open.
      */
     fun checkTagScan(tag: NfcTag): Boolean {
@@ -134,7 +138,7 @@ class TicketViewModel @Inject constructor(
             return
         }
 
-        draftLock.withLock {
+        _transactionActive.withLock {
             _ticketDraft.update { oldDraft ->
                 val draft = oldDraft.copy()
                 draft.addScan(tag)
@@ -203,7 +207,7 @@ class TicketViewModel @Inject constructor(
         if (tag == null) {
             return
         }
-        draftLock.withLock {
+        _transactionActive.withLock {
             _ticketDraft.update { oldDraft ->
                 val draft = oldDraft.copy()
                 val amountD = amount.toDouble() / 100.0
@@ -223,7 +227,7 @@ class TicketViewModel @Inject constructor(
         if (tag == null) {
             return
         }
-        draftLock.withLock {
+        _transactionActive.withLock {
             _ticketDraft.update { oldDraft ->
                 val draft = oldDraft.copy()
                 if (!draft.setVoucherToken(tag, voucherToken)) {
@@ -239,11 +243,13 @@ class TicketViewModel @Inject constructor(
     }
 
     /** when the delete-selections button is clicked */
-    fun clearDraft() {
-        _status.update { "cleared" }
+    suspend fun clearDraft() {
+        _transactionActive.withLock {
+            _status.update { "cleared" }
+            _ticketDraft.update { TicketDraft() }
+            _pendingTicketSale.update { null }
+        }
         _tagScanStatus.update { TagScanStatus.Scan }
-        _ticketDraft.update { TicketDraft() }
-        _pendingTicketSale.update { null }
     }
 
     fun dismissSuccess() {
@@ -275,7 +281,7 @@ class TicketViewModel @Inject constructor(
 
     /** test if we can sell this */
     suspend fun checkSale() {
-        draftLock.withLock {
+        _transactionActive.withLock {
             val draft = _ticketDraft.value
 
             _status.update { resourcesProvider.getString(R.string.sale_order_checking) }
@@ -315,21 +321,16 @@ class TicketViewModel @Inject constructor(
     }
 
     suspend fun processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
-        bookingActiveLock.withLock {
-            if (_bookingActive.value == true) {
-                return
-            }
-            _bookingActive.update { true }
+        if (_transactionActive.isLocked) {
+            return
         }
-        try {
+        _transactionActive.withLock {
             _processSale(paymentMethod, context)
-        } finally {
-            _bookingActive.update { false }
         }
     }
 
     /** let's start the payment process. context needed for sumup. */
-    suspend fun _processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
+    private suspend fun _processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
         val checked = _pendingTicketSale.value
 
         if (checked == null) {
