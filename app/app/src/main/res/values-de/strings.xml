@@ -116,6 +116,7 @@
     <string name="sale_payout_action">🪙 Auszahlen...</string>
     <string name="stats_daily_revenue">Täglicher Umsatz</string>
     <string name="stats_hourly_revenue">Stündlicher Umsatz</string>
+    <string name="ticket_check_scan">Prüfe ticket...</string>
     <string name="ticket_error_duplicate">Schon gescanned. Neues Ticket scannen!</string>
     <string name="ticket_error_preambel">Fehler beim Ticket-Kauf:</string>
     <string name="ticket_free_activated">Kostenloses Ticket aktiviert</string>

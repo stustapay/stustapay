@@ -148,18 +148,11 @@ class TicketViewModel @Inject constructor(
     }
 
     private suspend fun checkTicketDraft(draft: TicketDraft): Boolean {
-        // Capture the serial at request time so we can detect stale responses
-        val requestSerial = draft.statusSerial
+        _status.update { resourcesProvider.getString(R.string.ticket_check_scan) }
         val response = ticketApi.checkTicketScan(draft.getTicketScan())
 
         when (response) {
             is Response.OK -> {
-                // Guard against out-of-order responses: if the draft has been
-                // modified since we sent this request, discard the stale result.
-                if (_ticketDraft.value.statusSerial != requestSerial) {
-                    return false
-                }
-
                 val scanned = response.data.scannedTickets
                 if (scanned.size != draft.scans.size) {
                     _status.update { resourcesProvider.getString(R.string.ticket_unknown) }
