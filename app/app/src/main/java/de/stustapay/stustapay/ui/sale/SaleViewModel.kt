@@ -16,13 +16,12 @@ import de.stustapay.stustapay.repository.ECPaymentResult
 import de.stustapay.stustapay.repository.SaleRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.TerminalConfigState
+import de.stustapay.stustapay.ui.common.MutexStateFlow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -30,8 +29,6 @@ import javax.inject.Inject
 enum class SalePage(val route: String) {
     ProductSelect("product"),
     Confirm("confirm"),
-    ConfirmCash("confirm_cash"),
-    ConfirmCard("confirm_card"),
     Success("done"),
     Error("error"),
 }
@@ -80,9 +77,8 @@ class SaleViewModel @Inject constructor(
     )
 
     // so only one order can be submitted
-    private val _bookingActive = MutableStateFlow(false)
-    val bookingActive = _bookingActive.asStateFlow()
-    private val bookingActiveLock = Mutex()
+    private val _transactionActive = MutexStateFlow()
+    val transactionActive = _transactionActive.asStateFlow()
 
     fun incrementVouchers() {
         _saleStatus.update { sale ->
@@ -137,12 +133,15 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun clearSale(success: Boolean = false) {
-        _saleStatus.update { SaleStatus() }
-        scanTarget.update { ScanTarget.None }
-        _navState.update { SalePage.ProductSelect }
-        _saleCompleted.update { null }
+        _transactionActive.withLock {
+            _saleStatus.update { SaleStatus() }
+            scanTarget.update { ScanTarget.None }
+            _navState.update { SalePage.ProductSelect }
+            _saleCompleted.update { null }
+        }
         if (success) {
-            _status.update { "Order cleared - ready." }
+            // TODO: make string resource
+            _status.update { "Ready for new order" }
         } else {
             _status.update { "Order cleared" }
         }
@@ -191,6 +190,15 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun checkSale(paymentMethod: PaymentMethod) {
+        if (_transactionActive.isLocked) {
+            return
+        }
+        _transactionActive.withLock {
+            _checkSale(paymentMethod)
+        }
+    }
+
+    private suspend fun _checkSale(paymentMethod: PaymentMethod) {
         // important to check for the list entries
         // and not fold them and check if sum == 0
         // because one can have negative returnable items!
@@ -241,16 +249,11 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun bookSale(context: Activity) {
-        bookingActiveLock.withLock {
-            if (_bookingActive.value == true) {
-                return
-            }
-            _bookingActive.update { true }
+        if (_transactionActive.isLocked) {
+            return
         }
-        try {
+        _transactionActive.withLock {
             _bookSale(context)
-        } finally {
-            _bookingActive.update { false }
         }
     }
 

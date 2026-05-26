@@ -28,6 +28,7 @@ fun SaleSelection(
 ) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val saleStatus by viewModel.saleStatus.collectAsStateWithLifecycle()
+    val transactionActive by viewModel.transactionActive.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val config = saleConfig
@@ -151,7 +152,7 @@ fun SaleSelection(
                 status = {
                     StatusText(status = status)
                 },
-                ready = config is SaleConfig.Ready,
+                ready = config is SaleConfig.Ready && !transactionActive,
                 paymentActions = paymentActions,
                 onAbort = {
                     scope.launch {

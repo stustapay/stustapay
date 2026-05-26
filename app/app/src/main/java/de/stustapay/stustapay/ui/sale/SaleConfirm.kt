@@ -36,7 +36,7 @@ fun SaleConfirm(
     val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
-    val bookingActive by viewModel.bookingActive.collectAsStateWithLifecycle()
+    val transactionActive by viewModel.transactionActive.collectAsStateWithLifecycle()
     val config = saleConfig
 
     val checkedSale = saleDraft.checkedSale
@@ -130,7 +130,7 @@ fun SaleConfirm(
                         )
                     }
                 },
-                ready = config is SaleConfig.Ready && !bookingActive,
+                ready = config is SaleConfig.Ready && !transactionActive,
                 onAbort = onEdit,
                 onSubmit = onConfirm,
             )
