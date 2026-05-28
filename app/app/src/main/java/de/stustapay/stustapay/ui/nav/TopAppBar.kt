@@ -5,6 +5,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import de.stustapay.libssp.R
+import de.stustapay.libssp.ui.common.Spinner
 import androidx.compose.material.TopAppBar as MaterialTopAppBar
 
 class TopAppBarIcon(
@@ -22,9 +23,9 @@ class TopAppBarIcon(
 fun TopAppBar(
     title: @Composable () -> Unit,
     icon: TopAppBarIcon? = null,
+    loading: Boolean = false,
 ) {
     MaterialTopAppBar(
-        title = title,
         navigationIcon = if (icon != null) {
             {
                 IconButton(onClick = {
@@ -43,6 +44,14 @@ fun TopAppBar(
             }
         } else {
             null
+        },
+        title = title,
+        actions = {
+            if (loading) {
+                IconButton(onClick = {}) {
+                    Spinner()
+                }
+            }
         }
     )
 }

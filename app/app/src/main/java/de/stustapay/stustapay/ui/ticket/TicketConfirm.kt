@@ -54,7 +54,8 @@ fun TicketConfirm(
 
     NavScaffold(
         title = { Text(config.title().title) },
-        navigateBack = goBack
+        navigateBack = goBack,
+        loading = transactionActive,
     ) { pv ->
         Column {
             if (!config.canHandleCash()) {

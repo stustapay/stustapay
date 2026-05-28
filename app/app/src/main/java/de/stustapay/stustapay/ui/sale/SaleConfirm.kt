@@ -55,13 +55,16 @@ fun SaleConfirm(
     Scaffold(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                TopAppBar(title = {
-                    if (config is SaleConfig.Ready) {
-                        Text(config.tillName)
-                    } else {
-                        Text("No Till")
-                    }
-                })
+                TopAppBar(
+                    title = {
+                        if (config is SaleConfig.Ready) {
+                            Text(config.tillName)
+                        } else {
+                            Text("No Till")
+                        }
+                    },
+                    loading = transactionActive
+                )
                 Text(
                     stringResource(R.string.sale_check_your_order),
                     style = MaterialTheme.typography.h4,

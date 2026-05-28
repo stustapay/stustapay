@@ -89,6 +89,7 @@ fun TicketScan(
                 icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
                     leaveView()
                 },
+                loading = transactionActive
             )
         },
         content = { paddingValues ->

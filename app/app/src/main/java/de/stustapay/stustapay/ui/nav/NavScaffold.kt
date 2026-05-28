@@ -19,6 +19,7 @@ fun NavScaffold(
     title: @Composable () -> Unit,
     state: ScaffoldState = rememberScaffoldState(),
     bottomBar: @Composable () -> Unit = {},
+    loading: Boolean = false,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -29,6 +30,7 @@ fun NavScaffold(
                 icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
                     navigateBack()
                 },
+                loading = loading,
             )
         },
 
