@@ -11,11 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.stustapay.stustapay.ui.nav.NavDest
 import de.stustapay.libssp.ui.theme.StartpageItemStyle
 
@@ -40,7 +38,7 @@ fun StartpageEntry(
 
         Box {
             Icon(
-                imageVector = item.icon,
+                painter = painterResource(item.iconId),
                 modifier = Modifier
                     .padding(all = 2.dp)
                     .size(size = 28.dp),

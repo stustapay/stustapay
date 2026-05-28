@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 @ActivityScoped
 class ActivityCallback @Inject constructor(
-    @ActivityContext val context: Context,
+    @param:ActivityContext val context: Context,
 ) {
     private val map = mutableMapOf<Int, (Int, Bundle?) -> Unit>()
 

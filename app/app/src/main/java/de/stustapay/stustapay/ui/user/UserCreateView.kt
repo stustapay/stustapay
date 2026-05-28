@@ -24,8 +24,6 @@ import androidx.compose.material.ListItem
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,8 +44,8 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.UserCreateQRContent
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
-import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.painterResource
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -225,7 +223,10 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                             ) {
                                                 Text(r.name)
                                                 if (roles.contains(r.id.ulongValue())) {
-                                                    Icon(Icons.Filled.Check, null)
+                                                    Icon(
+                                                        painter = painterResource(de.stustapay.libssp.R.drawable.check_24),
+                                                        null
+                                                    )
                                                 }
                                             }
                                         }
@@ -285,7 +286,6 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                 roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },
                                 description
                             )
-                            viewModel.checkCreate(currentTag)
                             goToUserDisplayView()
                         }
                     }) {

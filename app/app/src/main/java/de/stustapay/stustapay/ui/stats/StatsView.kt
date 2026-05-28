@@ -17,24 +17,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.theme.StartpageItemStyle
 import de.stustapay.libssp.util.formatCurrencyValue
@@ -131,7 +127,7 @@ fun StatsViewRoot(
             .padding(horizontal = 24.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                imageVector = Icons.Filled.KeyboardArrowRight,
+                painter = painterResource(de.stustapay.libssp.R.drawable.keyboard_arrow_right_24),
                 modifier = Modifier
                     .padding(all = 2.dp)
                     .size(size = 28.dp),
@@ -154,7 +150,7 @@ fun StatsViewRoot(
             .padding(horizontal = 24.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                imageVector = Icons.Filled.KeyboardArrowRight,
+                painter = painterResource(de.stustapay.libssp.R.drawable.keyboard_arrow_right_24),
                 modifier = Modifier
                     .padding(all = 2.dp)
                     .size(size = 28.dp),

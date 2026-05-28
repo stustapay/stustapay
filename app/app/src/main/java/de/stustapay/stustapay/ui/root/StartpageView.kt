@@ -6,17 +6,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.util.restartApp
 import de.stustapay.stustapay.R
@@ -79,7 +75,7 @@ fun StartpageView(
                 if (loginState.hasConfig()) {
                     StartpageEntry(
                         item = StartpageItem(
-                            icon = Icons.Filled.Person,
+                            iconId = de.stustapay.libssp.R.drawable.person_24,
                             navDestination = RootNavDests.user,
                             label = R.string.user_title,
                         ),
@@ -90,7 +86,7 @@ fun StartpageView(
                 if (loginState.checkAccess { u, _ -> Access.canChangeConfig(u) } || !loginState.hasConfig()) {
                     StartpageEntry(
                         item = StartpageItem(
-                            icon = Icons.Filled.Settings,
+                            iconId = de.stustapay.libssp.R.drawable.settings_24,
                             label = R.string.root_item_settings,
                             navDestination = RootNavDests.settings,
                         ),
@@ -101,7 +97,7 @@ fun StartpageView(
                 if (loginState.checkAccess { u, _ -> Access.canHackTheSystem(u) }) {
                     StartpageEntry(
                         item = StartpageItem(
-                            icon = Icons.AutoMirrored.Filled.Send,
+                            iconId = de.stustapay.libssp.R.drawable.send_24,
                             label = R.string.root_item_development,
                             navDestination = RootNavDests.development,
                         ),
@@ -111,7 +107,7 @@ fun StartpageView(
 
                 StartpageEntry(
                     item = StartpageItem(
-                        icon = Icons.Filled.QuestionMark,
+                        iconId = de.stustapay.libssp.R.drawable.question_mark_24,
                         label = R.string.root_item_guide,
                         navDestination = RootNavDests.guide,
                     ),
@@ -121,7 +117,7 @@ fun StartpageView(
                 val activity = LocalActivity.current
                 StartpageEntry(
                     item = StartpageItem(
-                        icon = Icons.Filled.Refresh,
+                        iconId = de.stustapay.libssp.R.drawable.refresh_24,
                         label = R.string.root_item_restart_app,
                         navDestination = RootNavDests.startpage,
                     ),

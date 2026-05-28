@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NetDebugViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val terminalApiAccessor: TerminalApiAccessor
 ) : ViewModel() {
     var endpointURL: String = "http://10.0.2.2:8080/"

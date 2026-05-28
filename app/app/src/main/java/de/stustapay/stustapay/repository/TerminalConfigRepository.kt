@@ -3,6 +3,7 @@ package de.stustapay.stustapay.repository
 import de.stustapay.api.models.TerminalConfig
 import de.stustapay.libssp.net.Response
 import de.stustapay.stustapay.netsource.TerminalConfigRemoteDataSource
+import de.stustapay.stustapay.ui.common.MutexStateFlow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,16 +38,15 @@ class TerminalConfigRepository @Inject constructor(
         MutableStateFlow<TerminalConfigState>(TerminalConfigState.NoConfig)
     var terminalConfigState = _terminalConfigState.asStateFlow()
 
-    private val _fetching = MutableStateFlow(false)
+    private val _fetching = MutexStateFlow()
     val fetching = _fetching.asStateFlow()
 
-    suspend fun fetchConfig(keepTrying: Boolean): Boolean {
-        try {
-            _fetching.update { true }
-            return fetchConfig_(keepTrying)
+    suspend fun fetchConfig(keepTrying: Boolean) {
+        if (_fetching.isLocked and !keepTrying) {
+            return
         }
-        finally {
-            _fetching.update { false }
+        _fetching.withLock {
+            fetchConfig_(keepTrying)
         }
     }
 
@@ -83,7 +83,7 @@ class TerminalConfigRepository @Inject constructor(
         return ok
     }
 
-    fun clearConfig() {
+    suspend fun clearConfig() {
         _terminalConfigState.update { TerminalConfigState.NoConfig }
     }
 
@@ -91,8 +91,8 @@ class TerminalConfigRepository @Inject constructor(
     suspend fun tokenRefresh() {
         when (val cfg = terminalConfigState.value) {
             is TerminalConfigState.Success -> {
-                cfg.config.till?.sumupSecrets?.sumupApiKeyExpiresAt?.let {
-                    val expiry = it
+                val expiry: OffsetDateTime? = cfg.config.till?.sumupSecrets?.sumupApiKeyExpiresAt
+                if (expiry != null) {
                     val currentTime = OffsetDateTime.now()
                     val secondsLeft = expiry.toEpochSecond() - currentTime.toEpochSecond()
 

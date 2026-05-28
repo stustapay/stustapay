@@ -14,6 +14,7 @@ import de.stustapay.stustapay.ui.common.StatusText
 import de.stustapay.stustapay.ui.common.pay.PaymentAction
 import de.stustapay.stustapay.ui.common.pay.PaymentVariant
 import de.stustapay.stustapay.ui.common.pay.ProductSelectionBottomBar
+import de.stustapay.stustapay.ui.nav.NavScaffold
 import de.stustapay.stustapay.ui.nav.TopAppBar
 import de.stustapay.stustapay.ui.nav.TopAppBarIcon
 import kotlinx.coroutines.launch
@@ -28,25 +29,23 @@ fun SaleSelection(
 ) {
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
     val saleStatus by viewModel.saleStatus.collectAsStateWithLifecycle()
+    val transactionActive by viewModel.transactionActive.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val config = saleConfig
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    if (config is SaleConfig.Ready) {
-                        Text(config.tillName)
-                    } else {
-                        Text("No Till")
-                    }
-                },
-                icon = TopAppBarIcon(type = TopAppBarIcon.Type.BACK) {
-                    leaveView()
-                },
-            )
+    NavScaffold (
+        title = {
+            if (config is SaleConfig.Ready) {
+                Text(config.tillName)
+            } else {
+                Text("No Till")
+            }
         },
+        navigateBack = {
+            leaveView()
+        },
+        loading = transactionActive,
         content = { paddingValues ->
 
             // if we only have one free price item to sell
@@ -151,7 +150,7 @@ fun SaleSelection(
                 status = {
                     StatusText(status = status)
                 },
-                ready = config is SaleConfig.Ready,
+                ready = config is SaleConfig.Ready && !transactionActive,
                 paymentActions = paymentActions,
                 onAbort = {
                     scope.launch {

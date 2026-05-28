@@ -10,16 +10,15 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.libssp.ui.common.Spinner
 import kotlinx.coroutines.launch
@@ -56,7 +55,7 @@ fun TerminalConfig(
             if (configLoading) {
                 Spinner()
             } else {
-                Icon(Icons.Filled.Refresh, "Refresh")
+                Icon(painter = painterResource(de.stustapay.libssp.R.drawable.refresh_24), "Refresh")
             }
         }
         Column(

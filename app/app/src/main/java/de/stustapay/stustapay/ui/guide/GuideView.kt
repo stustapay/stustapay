@@ -5,10 +5,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,9 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -135,8 +131,8 @@ fun GuideView(
                         )
                         var showControls by remember { mutableStateOf(true) }
                         val state = rememberPlayPauseButtonState(player)
-                        val icon =
-                            if (state.showPlay) Icons.Default.PlayArrow else Icons.Default.Pause
+                        val iconId =
+                            if (state.showPlay) de.stustapay.libssp.R.drawable.play_arrow_24 else de.stustapay.libssp.R.drawable.pause_24
 
                         LaunchedEffect(Unit) {
                             player.play()
@@ -188,7 +184,7 @@ fun GuideView(
                                         enabled = state.isEnabled
                                     ) {
                                         Icon(
-                                            icon,
+                                            painter = painterResource(iconId),
                                             contentDescription = "",
                                             modifier = Modifier
                                                 .size(80.dp)

@@ -6,8 +6,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +16,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,7 +61,7 @@ fun TopUpSuccess(onDismiss: () -> Unit, viewModel: TopUpViewModel) {
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Image(
-                        imageVector = Icons.Filled.CheckCircle,
+                        painter = painterResource(de.stustapay.libssp.R.drawable.check_circle_24),
                         modifier = Modifier
                             .size(size = 120.dp)
                             .clip(shape = CircleShape)

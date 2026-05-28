@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.stustapay.chip_debug.ui.nav.NavDest
@@ -37,7 +38,7 @@ fun StartpageEntry(
 
         Box {
             Icon(
-                imageVector = item.icon,
+                painter = painterResource(item.iconId),
                 modifier = Modifier
                     .padding(all = 2.dp)
                     .size(size = 28.dp),

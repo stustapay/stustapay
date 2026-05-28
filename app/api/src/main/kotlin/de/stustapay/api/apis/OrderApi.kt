@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package de.stustapay.api.apis
@@ -555,7 +563,7 @@ import io.ktor.http.ParametersBuilder
          * @return Order
         */
             @Suppress("UNCHECKED_CAST")
-        open suspend fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order> {
+        open suspend fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order?> {
 
             val localVariableAuthNames = listOf<String>("OAuth2PasswordBearer")
 

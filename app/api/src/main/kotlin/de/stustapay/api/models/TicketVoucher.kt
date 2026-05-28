@@ -8,9 +8,17 @@
 
 @file:Suppress(
     "ArrayInDataClass",
+    "DuplicatedCode",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "RemoveRedundantCallsOfConversionMethods",
+    "REDUNDANT_CALL_OF_CONVERSION_METHOD",
+    "RedundantUnitReturnType",
+    "RemoveEmptyClassBody",
+    "UnnecessaryVariable",
+    "UnusedImport",
+    "UnnecessaryVariable",
+    "unused"
 )
 
 package de.stustapay.api.models
@@ -28,6 +36,7 @@ import kotlinx.serialization.Contextual
  * @param createdAt 
  * @param customerAccountId 
  * @param token 
+ * @param initialTopUpAmount 
  */
 @Serializable
 
@@ -46,7 +55,10 @@ data class TicketVoucher (
     val customerAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "token")
-    val token: kotlin.String
+    val token: kotlin.String,
+
+    @Contextual @SerialName(value = "initial_top_up_amount")
+    val initialTopUpAmount: kotlin.Double? = 0.0
 
 ) {
 

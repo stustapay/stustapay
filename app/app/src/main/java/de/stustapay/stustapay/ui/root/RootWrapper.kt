@@ -15,7 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 
@@ -26,36 +26,36 @@ fun RootWrapper(
     val borderState by viewModel.borderState.collectAsStateWithLifecycle()
     val infallibleVisible by viewModel.infallibleVisible.collectAsStateWithLifecycle()
 
-    when (val border = borderState) {
-        is BorderState.NoBorder -> {
-            InfallibleContent(infallibleVisible, content)
+    val borderMsg = (borderState as? BorderState.Border)?.msg
+    val borderSize = 4.dp
+
+    Box(
+        modifier = if (borderMsg != null) {
+            Modifier
+                .border(BorderStroke(borderSize, MaterialTheme.colors.error))
+                .padding(borderSize)
+        } else {
+            Modifier
         }
-
-        is BorderState.Border -> {
-            val borderSize = 4.dp
-            Box(
-                modifier = Modifier
-                    .border(BorderStroke(borderSize, MaterialTheme.colors.error))
-                    .padding(borderSize)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colors.error)
-                    ) {
-                        Text(
-                            border.msg,
-                            style = MaterialTheme.typography.h6,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colors.onError,
-                        )
-                    }
-
-                    InfallibleContent(infallibleVisible, content)
+    ) {
+        Column {
+            if (borderMsg != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colors.error)
+                ) {
+                    Text(
+                        borderMsg,
+                        style = MaterialTheme.typography.h6,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colors.onError,
+                    )
                 }
             }
+
+            InfallibleContent(infallibleVisible, content)
         }
     }
 }

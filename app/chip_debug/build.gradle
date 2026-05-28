@@ -1,6 +1,8 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'com.google.devtools.ksp'
@@ -11,7 +13,7 @@ plugins {
 
 android {
     namespace 'de.stustapay.chip_debug'
-    compileSdk 35
+    compileSdk 37
 
     defaultConfig {
         applicationId "de.stustapay.chip_debug"
@@ -36,14 +38,18 @@ android {
         sourceCompatibility = targetJavaVersion
         targetCompatibility = targetJavaVersion
     }
-    kotlinOptions {
-        jvmTarget = targetJavaVersion.toString()
-    }
 
     packaging {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        languageVersion = KotlinVersion.fromVersion(kotlinLanguageVersion)
+        jvmTarget = JvmTarget.fromTarget(jvmTargetVersion)
     }
 }
 
@@ -56,7 +62,6 @@ dependencies {
     implementation "androidx.compose.ui:ui:$compose_ui_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
     implementation "androidx.compose.material:material:$compose_ui_version"
-    implementation "androidx.compose.material:material-icons-core:$compose_ui_version"
     implementation "androidx.navigation:navigation-compose:$navigation_compose_version"
     implementation "androidx.preference:preference-ktx:$preference_ktx_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"

@@ -4,35 +4,36 @@ import org.apache.tools.ant.filters.BaseParamFilterReader
 
 buildscript {
     ext {
-        kotlin_version = '2.1.10'
-        compose_ui_version = '1.7.8'
-        camerax_version = '1.4.2'
+        kotlin_version = '2.3.21'
+        compose_ui_version = '1.11.2'
+        camerax_version = '1.6.1'
         ktor_version = '3.1.1'
-        protobuf_version = '4.29.3'
-        hilt_version = '2.55'
-        hilt_android_version = '1.2.0'
+        protobuf_version = '4.35.0'
+        hilt_version = '2.59.2'
+        hilt_android_version = '1.3.0'
         lifecycle_version = '2.8.7'
         bignum_version = '0.3.10'
-        core_ktx_version = '1.15.0'
+        core_ktx_version = '1.18.0'
         preference_ktx_version = '1.2.1'
-        navigation_compose_version = '2.8.9'
-        activity_compose_version = '1.10.1'
+        navigation_compose_version = '2.9.8'
+        activity_compose_version = '1.13.0'
         serialization_json_version = '1.8.0'
         targetJavaVersion = JavaVersion.VERSION_17
+        jvmTargetVersion = "17"
+        kotlinLanguageVersion = "2.3"
     }
 }
 
 plugins {
-    id 'com.android.application' version '8.8.2' apply false
-    id 'com.android.library' version '8.8.2' apply false
-    id 'org.jetbrains.kotlin.android' version '1.9.25' apply false
+    id 'com.android.application' version '9.2.1' apply false
+    id 'com.android.library' version '9.2.1' apply false
+    //id 'org.jetbrains.kotlin.android' version "$kotlin_version" apply false
     id "org.jetbrains.kotlin.plugin.compose" version "$kotlin_version" apply false
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.25' apply false
-    // https://github.com/google/ksp/releases  must be the same as plugin.compose version!
-    id 'com.google.devtools.ksp' version "$kotlin_version-1.0.31" apply false
-    id "com.google.dagger.hilt.android" version "2.51.1" apply false
-    id "com.google.protobuf" version "0.9.4" apply false
-    id "org.openapi.generator" version "7.12.0"
+    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version" apply false
+    id 'com.google.devtools.ksp' version "2.3.8" apply false
+    id "com.google.dagger.hilt.android" version "2.59.2" apply false
+    id "com.google.protobuf" version "0.10.0" apply false
+    id "org.openapi.generator" version "7.22.0"
 }
 
 
@@ -72,6 +73,22 @@ tasks.register('_modApi') {
                     line
                 }
             }
+            // Workaround: OpenAPI Generator ignores 'nullable' in response schemas.
+            filter { String line ->
+                line.replace("fun getCurrentUser(): HttpResponse<CurrentUser>", "fun getCurrentUser(): HttpResponse<CurrentUser?>")
+                    .replace("fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order>", "fun show(orderId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger): HttpResponse<Order?>")
+            }
+        }
+
+        copy {
+            from("$projectDir/build/generated/api")
+            into("$projectDir/api")
+            include("**/infrastructure/HttpResponse.kt")
+            filter { String line ->
+                line.replace("T : Any", "T")
+                    .replace("S : Any", "S")
+                    .replace("V : Any", "V")
+            }
         }
 
         copy {
@@ -103,27 +120,84 @@ tasks.register('_modApi') {
     }
 }
 
+tasks.register('_preprocessSpec') {
+    doLast {
+        def inputFile = layout.projectDirectory.file("../api/terminalserver.json").asFile
+        def outputDir = layout.buildDirectory.dir("preprocessed").get().asFile
+        outputDir.mkdirs()
+        def outputFile = new File(outputDir, "terminalserver.json")
+
+        def json = new groovy.json.JsonSlurper().parse(inputFile)
+
+        // Only transform anyOf:[ref,null] in response schemas.
+        // Model properties are left as-is because the generator handles
+        // anyOf+null correctly for properties (produces T?) but not for
+        // response schemas (produces HttpResponse<T> instead of HttpResponse<T?>).
+        // workaround for https://github.com/OpenAPITools/openapi-generator/pull/23870
+        json.paths?.each { path, methods ->
+            methods.each { method, details ->
+                if (method in ['get', 'post', 'put', 'delete', 'patch']) {
+                    details.responses?.each { code, resp ->
+                        resp.content?.each { mediaType, content ->
+                            def schema = content.schema
+                            if (schema instanceof Map && schema.anyOf instanceof List && schema.anyOf.size() == 2) {
+                                def nullIdx = -1
+                                def refIdx = -1
+                                schema.anyOf.eachWithIndex { item, idx ->
+                                    if (item instanceof Map && item.type == 'null' && item.size() == 1) {
+                                        nullIdx = idx
+                                    } else if (item instanceof Map && item.containsKey('\$ref')) {
+                                        refIdx = idx
+                                    }
+                                }
+                                if (nullIdx >= 0 && refIdx >= 0) {
+                                    def newSchema = new LinkedHashMap(schema)
+                                    newSchema.remove('anyOf')
+                                    newSchema.put('allOf', [schema.anyOf[refIdx]])
+                                    newSchema.put('nullable', true)
+                                    content.schema = newSchema
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        outputFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
+    }
+}
+
 tasks.register('_genApi', GenerateTask) {
+    dependsOn tasks._preprocessSpec
     dependsOn tasks._cleanApi
     generatorName.set("kotlin")
-    inputSpec.set("$projectDir/../api/terminalserver.json")
-    outputDir.set("$projectDir/build/generated/api")
+
+    inputSpec.set(layout.buildDirectory.file("preprocessed/terminalserver.json"))
+    outputDir.set(layout.buildDirectory.dir("generated/api"))
+
     generateApiTests.set(false)
     generateModelTests.set(false)
     skipValidateSpec.set(true)
     generateApiDocumentation.set(false)
     generateModelDocumentation.set(false)
-    typeMappings.put("AnyType", "kotlin.Unit")   // otherwise it would be kotlin.Any
-    configOptions.set([library             : "jvm-ktor",
-                       serializationLibrary: "kotlinx_serialization",
-                       packageName         : "de.stustapay.api",
-                       omitGradleWrapper   : "true"])
+    typeMappings.put("AnyType", "kotlin.Unit")
+    configOptions.set([
+            library             : "jvm-ktor",
+            serializationLibrary: "kotlinx_serialization",
+            packageName         : "de.stustapay.api",
+            omitGradleWrapper   : "true"
+    ])
 }
 
 tasks.register('_cleanApi') {
     doLast {
         delete("$projectDir/build/generated/api")
-        delete("$projectDir/api")
+        // Only delete api contents, not the directory itself,
+        // because :api is a Gradle subproject.
+        if (file("$projectDir/api").exists()) {
+            delete(fileTree("$projectDir/api").include("**/*"))
+        }
     }
 }
 

@@ -117,6 +117,7 @@
     <string name="sale_payout_action">🪙 Pay out...</string>
     <string name="stats_daily_revenue">Daily Revenue</string>
     <string name="stats_hourly_revenue">Hourly Revenue</string>
+    <string name="ticket_check_scan">Checking ticket...</string>
     <string name="ticket_error_duplicate">Already scanned! Scan new ticket.</string>
     <string name="ticket_error_preambel">Error buying ticket:</string>
     <string name="ticket_free_activated">Free ticket activated</string>
@@ -126,8 +127,8 @@
     <string name="ticket_order_cleared_success">Ready for new order.</string>
     <string name="ticket_order_validated">Ticket order validated!</string>
     <string name="ticket_scan">🎫 Scan Ticket</string>
-    <string name="ticket_scan_voucher">Scan Ticket</string>
-    <string name="ticket_scanning_off">Not scanning.</string>
+    <string name="ticket_scan_voucher">Scan QR Ticket</string>
+    <string name="ticket_scanning_off">🎫 Waiting...</string>
     <string name="ticket_unknown">Ticket unknown.</string>
     <string name="ticket_valid">Ticket is valid.</string>
     <string name="ticket_voucher_valid">Ticket voucher is valid.</string>

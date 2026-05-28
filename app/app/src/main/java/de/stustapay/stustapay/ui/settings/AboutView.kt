@@ -2,11 +2,9 @@ package de.stustapay.stustapay.ui.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.stustapay.stustapay.BuildConfig
@@ -21,7 +19,7 @@ fun AboutView() {
             text = { Text("Version: " + BuildConfig.VERSION_NAME) },
             icon = {
                 Icon(
-                    Icons.Filled.Info,
+                    painter = painterResource(de.stustapay.libssp.R.drawable.info_24),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
@@ -32,7 +30,7 @@ fun AboutView() {
             text = { Text("Version code: " + BuildConfig.VERSION_CODE) },
             icon = {
                 Icon(
-                    Icons.Filled.Build,
+                    painter = painterResource(de.stustapay.libssp.R.drawable.build_24),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )

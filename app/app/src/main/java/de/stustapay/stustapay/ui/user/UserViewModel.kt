@@ -89,7 +89,7 @@ class UserViewModel @Inject constructor(
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser = _currentUser.asStateFlow()
 
-    private val _currentTag = MutableStateFlow(NfcTag(0.toBigInteger(), null))
+    private val _currentTag = MutableStateFlow<NfcTag?>(null)
     val currentTag = _currentTag.asStateFlow()
 
     fun clearErrors() {
@@ -101,21 +101,23 @@ class UserViewModel @Inject constructor(
     }
 
     suspend fun checkLogin(tag: NfcTag) {
+        _currentTag.update { tag }
         userRepository.checkLogin(tag)
     }
 
-    suspend fun login(tag: NfcTag, roleID: BigInteger) {
-        userRepository.login(tag, roleID)
+    suspend fun login(tag: NfcTag, roleID: BigInteger): Boolean {
+        return userRepository.login(tag, roleID)
     }
 
     suspend fun logout() {
+        _currentTag.update { null }
         userRepository.logout()
     }
 
     fun idleState() {
         _status.update { UserRequestState.Idle }
         _currentUser.update { null }
-        _currentTag.update { NfcTag(0.toBigInteger(), null) }
+        _currentTag.update { null }
     }
 
     suspend fun checkCreate(tag: NfcTag): Boolean {
@@ -124,6 +126,7 @@ class UserViewModel @Inject constructor(
                 display(tag)
                 true
             }
+
             is Response.Error -> false
         }
     }
@@ -147,9 +150,14 @@ class UserViewModel @Inject constructor(
                 _status.update { UserRequestState.Failed(res.msg) }
             }
         }
+        checkCreate(tag)
     }
 
-    suspend fun update(tag: NfcTag, roles: List<BigInteger>) {
+    suspend fun update(tag: NfcTag?, roles: List<BigInteger>) {
+        if (tag == null) {
+            _status.update { UserRequestState.Failed("no currentTag value passed!") }
+            return
+        }
         _status.update { UserRequestState.Fetching }
         when (val res = userRepository.update(tag, roles)) {
             is UserUpdateState.Created -> {
@@ -160,6 +168,7 @@ class UserViewModel @Inject constructor(
                 _status.update { UserRequestState.Failed(res.msg) }
             }
         }
+        checkCreate(tag)
     }
 
     suspend fun display(tag: NfcTag) {

@@ -1,58 +1,47 @@
 package de.stustapay.stustapay.ui.root
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocalActivity
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.ShoppingCart
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.model.Access
 
 
 val startpageItems = listOf(
-    StartpageItem(icon = Icons.Filled.ShoppingCart,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.shopping_cart_24,
         label = R.string.root_item_sale,
         navDestination = RootNavDests.sale,
         canAccess = { u, t -> Access.canSell(u, t) }),
-    StartpageItem(icon = Icons.Filled.AccountBalanceWallet,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.account_balance_wallet_24,
         label = R.string.root_item_topup,
         navDestination = RootNavDests.topup,
         canAccess = { u, t -> Access.canTopUp(t, u) }),
-    StartpageItem(icon = Icons.Filled.LocalActivity,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.local_activity_24,
         label = R.string.root_item_ticket,
         navDestination = RootNavDests.ticket,
         canAccess = { u, t -> Access.canSellTicket(t, u) }),
-    StartpageItem(icon = Icons.Filled.Favorite,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.favorite_24,
         label = R.string.root_item_rewards,
         navDestination = RootNavDests.rewards,
         canAccess = { u, _ -> Access.canGiveVouchers(u) || Access.canGiveFreeTickets(u) }),
-    StartpageItem(icon = Icons.AutoMirrored.Filled.ViewList,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.view_list_24,
         label = R.string.sale_history_title,
         navDestination = RootNavDests.history,
         canAccess = { u, t -> Access.canSell(u, t) }),
-    StartpageItem(icon = Icons.Filled.Info,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.info_24,
         label = R.string.customer_title,
         navDestination = RootNavDests.status,
         canAccess = { _, _ -> true }),
-    StartpageItem(icon = Icons.Filled.Refresh,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.refresh_24,
         label = R.string.customer_swap,
         navDestination = RootNavDests.swap,
         canAccess = { u, _, -> Access.canSwap(u) }),
-    StartpageItem(icon = Icons.Filled.AccountCircle,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.account_circle_24,
         label = R.string.management_title,
         navDestination = RootNavDests.cashier,
         canAccess = { u, t -> Access.canManageCashiers(u) or Access.canViewCashier(u) or Access.canPayOut(t, u) or Access.canTopUp(t, u) or Access.canSellTicket(t, u) }),
-    StartpageItem(icon = Icons.Filled.Lock,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.money_bag_24,
         label = R.string.management_vault_title,
         navDestination = RootNavDests.vault,
         canAccess = { u, _ -> Access.canManageCashiers(u) }),
-    StartpageItem(icon = Icons.Filled.DateRange,
+    StartpageItem(iconId = de.stustapay.libssp.R.drawable.date_range_24,
         label = R.string.root_item_stats,
         navDestination = RootNavDests.stats,
         canAccess = { u, _ -> Access.canViewStats(u) }),

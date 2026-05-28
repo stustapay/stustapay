@@ -27,7 +27,8 @@ class RootWrapperViewModel @Inject constructor(
 
     val borderState = terminalConfigRepository.terminalConfigState.mapState(
         BorderState.NoBorder,
-        viewModelScope
+        viewModelScope,
+        SharingStarted.Eagerly,
     ) { state ->
         when (state) {
             is TerminalConfigState.NoConfig -> {
