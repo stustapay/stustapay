@@ -459,6 +459,47 @@ async def test_basic_till_workflow(
     assert deleted
 
 
+async def test_delete_unused_till_profile(
+    till_service: TillService,
+    event_admin_token: str,
+    event_node: Node,
+):
+    layout = await till_service.layout.create_layout(
+        token=event_admin_token,
+        node_id=event_node.id,
+        layout=NewTillLayout(name="delete-profile-layout", description="", button_ids=[]),
+    )
+    profile = await till_service.profile.create_profile(
+        token=event_admin_token,
+        node_id=event_node.id,
+        profile=NewTillProfile(
+            name="delete-profile-test",
+            description="",
+            layout_id=layout.id,
+            allow_top_up=False,
+            allow_cash_out=False,
+            allow_ticket_sale=False,
+            allow_ticket_vouchers=False,
+            enable_ssp_payment=True,
+            enable_cash_payment=False,
+            enable_card_payment=False,
+        ),
+    )
+
+    deleted = await till_service.profile.delete_profile(
+        token=event_admin_token,
+        node_id=event_node.id,
+        till_profile_id=profile.id,
+    )
+
+    assert deleted
+    assert await till_service.profile.get_profile(
+        token=event_admin_token,
+        node_id=event_node.id,
+        profile_id=profile.id,
+    ) is None
+
+
 async def test_child_node_till_create_and_update_keep_terminal_assignment_local(
     till_service: TillService,
     terminal_service: TerminalService,
