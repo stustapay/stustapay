@@ -36,8 +36,7 @@ class TerminalConfigViewModel @Inject constructor(
     private val _user = userRepository.userState
     private val _terminal = terminalConfigRepository.terminalConfigState
 
-    private val _configLoading = MutableStateFlow(false)
-    val configLoading = _configLoading.asStateFlow()
+    val configLoading = terminalConfigRepository.fetching
 
     val uiState = combine(_user, _terminal) { user, terminal ->
         TerminalLoginState(user, terminal)
@@ -56,13 +55,8 @@ class TerminalConfigViewModel @Inject constructor(
     )
 
     suspend fun fetchAccessData() {
-        try {
-            _configLoading.update { true }
-            terminalConfigRepository.fetchConfig(keepTrying = true)
-            userRepository.fetchLogin()
-        } finally {
-            _configLoading.update { false }
-        }
+        terminalConfigRepository.fetchConfig(keepTrying = true)
+        userRepository.fetchLogin()
     }
 }
 
