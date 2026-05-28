@@ -3,6 +3,7 @@ package de.stustapay.stustapay.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.stustapay.model.RegistrationState
 import de.stustapay.stustapay.repository.RegistrationRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
@@ -32,6 +33,7 @@ sealed interface RegistrationUiState {
 class RegistrationViewModel @Inject constructor(
     private val registrationRepo: RegistrationRepository,
     private val terminalConfigRepository: TerminalConfigRepository,
+    private val sumUp: SumUp
 ) : ViewModel() {
 
     // convert the information flow from the repo to a stateflow (where we only want the latest element)
@@ -51,6 +53,7 @@ class RegistrationViewModel @Inject constructor(
         val ok = registrationRepo.register(qrcodeB64)
         if (ok) {
             terminalConfigRepository.fetchConfig(keepTrying = false)
+            sumUp.logout()
         }
         return ok
     }
@@ -59,6 +62,7 @@ class RegistrationViewModel @Inject constructor(
         val ok = registrationRepo.deregister(force)
         if (ok) {
             terminalConfigRepository.clearConfig()
+            sumUp.logout()
         }
     }
 }
