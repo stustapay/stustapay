@@ -38,7 +38,6 @@ fun NavScaffold(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
             ) {
                 content(innerPadding)
             }

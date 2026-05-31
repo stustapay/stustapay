@@ -42,7 +42,7 @@ class TerminalConfigRepository @Inject constructor(
     val fetching = _fetching.asStateFlow()
 
     suspend fun fetchConfig(keepTrying: Boolean) {
-        if (_fetching.isLocked and !keepTrying) {
+        if (_fetching.isLockedOutsideContext() and !keepTrying) {
             return
         }
         _fetching.withLock {

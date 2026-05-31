@@ -190,7 +190,7 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun checkSale(paymentMethod: PaymentMethod) {
-        if (_transactionActive.isLocked) {
+        if (_transactionActive.isLockedOutsideContext()) {
             return
         }
         _transactionActive.withLock {
@@ -249,7 +249,7 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun bookSale(context: Activity) {
-        if (_transactionActive.isLocked) {
+        if (_transactionActive.isLockedOutsideContext()) {
             return
         }
         _transactionActive.withLock {

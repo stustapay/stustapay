@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.ticket
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -321,7 +322,7 @@ class TicketViewModel @Inject constructor(
     }
 
     suspend fun processSale(paymentMethod: PaymentMethod, context: Activity? = null) {
-        if (_transactionActive.isLocked) {
+        if (_transactionActive.isLockedOutsideContext()) {
             return
         }
         _transactionActive.withLock {
@@ -418,14 +419,14 @@ class TicketViewModel @Inject constructor(
     private suspend fun bookSale(newTicketSale: NewTicketSale) {
         _saleCompleted.update { null }
 
-        val response = infallibleRepository.bookTicketSale(newTicketSale)
-
-        when (response) {
+        when (val response = infallibleRepository.bookTicketSale(newTicketSale)) {
             is Response.OK -> {
                 // delete the sale draft
-                clearDraft()
-                _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
+                _ticketDraft.update { TicketDraft() }
+                _pendingTicketSale.update { null }
+                _tagScanStatus.update { TagScanStatus.Scan }
                 // now we have a completed sale
+                _status.update { resourcesProvider.getString(R.string.ticket_order_booked) }
                 _saleCompleted.update { response.data }
                 _navState.update { TicketPage.Done }
             }
