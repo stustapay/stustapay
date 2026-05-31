@@ -2,7 +2,7 @@ import { NewTillButton, Product, selectProductById, useListProductsQuery } from 
 import { ProductSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText } from "@mui/material";
+import { IconButton, List, ListItem, ListItemText } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import * as React from "react";
@@ -54,7 +54,6 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
         variant="standard"
         value={currentSelectedProduct}
         onChange={addProduct}
-        onlyLocked
       />
     </List>
   );
