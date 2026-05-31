@@ -10,7 +10,7 @@ import {
 import { TicketRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon, LockOpen as UnlockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
@@ -59,8 +59,12 @@ export const TicketList: React.FC = () => {
     });
   };
 
-  const handleLockTicket = (ticket: Ticket) => {
-    updateTicket({ nodeId: currentNode.id, ticketId: ticket.id, newTicket: { ...ticket, is_locked: true } });
+  const handleToggleLockTicket = (ticket: Ticket) => {
+    updateTicket({
+      nodeId: currentNode.id,
+      ticketId: ticket.id,
+      newTicket: { ...ticket, is_locked: !ticket.is_locked },
+    });
   };
 
   const renderTaxRate = (id: number) => {
@@ -141,15 +145,25 @@ export const TicketList: React.FC = () => {
                 onClick={() => navigate(TicketRoutes.edit(params.row.id))}
               />,
               <GridActionsCellItem
-                icon={<LockIcon />}
+                icon={
+                  params.row.is_locked ? (
+                    <Tooltip title={t("ticket.unlock")}>
+                      <UnlockIcon />
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title={t("ticket.lock")}>
+                      <LockIcon />
+                    </Tooltip>
+                  )
+                }
                 color="primary"
-                disabled={params.row.is_locked}
                 label={t("ticket.lock")}
-                onClick={() => handleLockTicket(params.row)}
+                onClick={() => handleToggleLockTicket(params.row)}
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon color="error" />}
                 label={t("delete")}
+                disabled={params.row.is_locked}
                 onClick={() => openConfirmDeleteDialog(params.row.id)}
               />,
             ]

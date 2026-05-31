@@ -15,6 +15,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Lock as LockIcon,
+  LockOpen as UnlockIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
@@ -69,8 +70,12 @@ export const ProductList: React.FC = () => {
     );
   };
 
-  const handleLockProduct = (product: Product) => {
-    updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: { ...product, is_locked: true } });
+  const handleToggleLockProduct = (product: Product) => {
+    updateProduct({
+      nodeId: currentNode.id,
+      productId: product.id,
+      newProduct: { ...product, is_locked: !product.is_locked },
+    });
   };
 
   const openConfirmDeleteDialog = (productId: number) => {
@@ -164,11 +169,20 @@ export const ProductList: React.FC = () => {
                 onClick={() => copyProduct(params.row)}
               />,
               <GridActionsCellItem
-                icon={<LockIcon />}
+                icon={
+                  params.row.is_locked ? (
+                    <Tooltip title={t("product.unlock")}>
+                      <UnlockIcon />
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title={t("product.lock")}>
+                      <LockIcon />
+                    </Tooltip>
+                  )
+                }
                 color="primary"
-                disabled={params.row.is_locked}
                 label={t("product.lock")}
-                onClick={() => handleLockProduct(params.row)}
+                onClick={() => handleToggleLockProduct(params.row)}
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon color="error" />}
