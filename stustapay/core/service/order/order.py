@@ -279,6 +279,8 @@ class OrderService(Service[Config]):
                 raise InvalidArgument("this till profile is not allowed to use these buttons")
 
             for product in products:
+                if not product.is_locked:
+                    raise InvalidArgument(f"Product {product.name} is not locked.")
                 if (button.price is None) != product.fixed_price:
                     raise InvalidArgument("cannot book a fixed price product with a variable price")
                 if button.quantity is not None and button.quantity < 0 and not product.is_returnable:
@@ -1376,6 +1378,8 @@ class OrderService(Service[Config]):
             )
             assert ticket_product is not None
             assert ticket_scan.total_price is not None
+            if not ticket_product.is_locked:
+                raise InvalidArgument(f"Ticket {ticket_product.name} is not locked and cannot be sold")
 
             line_items.append(
                 PendingLineItem(

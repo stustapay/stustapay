@@ -72,25 +72,6 @@ alter table tse_signature add constraint tse_signature_set
 
 alter table customer_info add constraint donation_positive check (donation >= 0);
 
-create or replace function check_button_references_locked_products(
-    product_id bigint
-) returns boolean as
-$$
-<<locals>> declare
-    is_locked boolean;
-begin
-    select
-        product.is_locked
-    into locals.is_locked
-    from
-        product
-    where
-        id = check_button_references_locked_products.product_id;
-    return locals.is_locked;
-end
-$$ language plpgsql
-    set search_path = "$user", public;
-
 create or replace function check_button_references_max_one_non_fixed_price_product(
     button_id bigint,
     product_id bigint
@@ -189,10 +170,6 @@ begin
 end
 $$ language plpgsql
     set search_path = "$user", public;
-
-
-alter table till_button_product add constraint references_only_locked_products
-    check (check_button_references_locked_products(product_id));
 
 alter table till_button_product add constraint references_max_one_variable_price_product
     check (check_button_references_max_one_non_fixed_price_product(button_id, product_id));

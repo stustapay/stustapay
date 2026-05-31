@@ -221,6 +221,56 @@ async def test_basic_sale_flow(
     assert z_nr_start + 1 == z_nr
 
 
+async def test_sale_unlocked_products(
+    till_service: TillService,
+    product_service: ProductService,
+    order_service: OrderService,
+    customer: Customer,
+    event_node: Node,
+    terminal_token: str,
+    event_admin_token: str,
+    sale_products: SaleProducts,
+    cashier: Cashier,
+    login_supervised_user: LoginSupervisedUser,
+):
+    """Test that we cannot sell products that are not locked and that we can lock them again after unlocking."""
+    beer_product = sale_products.beer_product
+    beer_product.is_locked = False
+    await product_service.update_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product_id=sale_products.beer_product.id,
+        product=beer_product,
+    )
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    customer_acc = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
+    assert customer_acc is not None
+    new_sale = NewSale(
+        uuid=uuid.uuid4(),
+        buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=2)],
+        customer_tag_uid=customer.tag.uid,
+        payment_method=PaymentMethod.tag,
+    )
+    with pytest.raises(InvalidArgument):
+        await order_service.check_sale(
+            token=terminal_token,
+            new_sale=new_sale,
+        )
+    # check that we can lock the product again and then sell it
+    beer_product = sale_products.beer_product
+    beer_product.is_locked = True
+    await product_service.update_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product_id=sale_products.beer_product.id,
+        product=beer_product,
+    )
+    await order_service.check_sale(
+        token=terminal_token,
+        new_sale=new_sale,
+    )
+
+
 async def test_returnable_products(
     order_service: OrderService,
     customer: Customer,

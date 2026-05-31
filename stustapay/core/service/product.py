@@ -12,7 +12,7 @@ from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from stustapay.core.service.common.error import NotFound, ServiceException
+from stustapay.core.service.common.error import NotFound
 
 
 async def fetch_product(
@@ -57,11 +57,6 @@ async def fetch_money_transfer_product(*, conn: Connection, node: Node) -> Produ
 
 async def fetch_money_difference_product(*, conn: Connection, node: Node) -> Product:
     return await fetch_constant_product(conn=conn, node=node, product_type=ProductType.imbalance)
-
-
-class ProductIsLockedException(ServiceException):
-    id = "ProductNotEditable"
-    description = "The product has been marked as not editable, its core metadata is therefore fixed"
 
 
 class ProductService(Service[Config]):
@@ -147,21 +142,6 @@ class ProductService(Service[Config]):
         current_product = await fetch_product(conn=conn, node=node, product_id=product_id)
         if current_product is None:
             raise NotFound(element_type="product", element_id=product_id)
-
-        if current_product.is_locked:
-            if any(
-                [
-                    current_product.price != product.price,
-                    current_product.fixed_price != product.fixed_price,
-                    current_product.price_in_vouchers != product.price_in_vouchers,
-                    current_product.target_account_id != product.target_account_id,
-                    current_product.tax_rate_id != product.tax_rate_id,
-                    current_product.restrictions != product.restrictions,
-                    current_product.is_locked != product.is_locked,
-                    current_product.is_returnable != product.is_returnable,
-                ]
-            ):
-                raise ProductIsLockedException()
 
         row = await conn.fetchrow(
             "update product set name = $2, price = $3, tax_rate_id = $4, target_account_id = $5, fixed_price = $6, "
