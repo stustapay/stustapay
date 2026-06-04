@@ -1,4 +1,4 @@
-import { useLoginMutation } from "@/api";
+import { useLoginMutation, useLogoutMutation } from "@/api";
 import { config } from "@/api/common";
 import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
 import { selectIsAuthenticated, useAppSelector } from "@/store";
@@ -9,7 +9,7 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import i18n from "@/i18n";
@@ -27,24 +27,40 @@ const initialValues: FormSchema = {
 export const Login: React.FC = () => {
   const { t } = useTranslation();
   const isLoggedIn = useAppSelector(selectIsAuthenticated);
-  const [query] = useSearchParams();
+  const [query, setQuery] = useSearchParams();
   const [login] = useLoginMutation();
+  const [logout] = useLogoutMutation();
 
   // direct login from POST parameters (wristband QR code scan or ticket shop)
   const loginToken = query.get("pin") ?? query.get("ticketVoucher");
   React.useEffect(() => {
-    if (isLoggedIn || !loginToken) {
+    if (!loginToken) {
+      return;
+    }
+    if (isLoggedIn) {
+      logout()
+        .unwrap()
+        .catch((err) => {
+          console.error("Failed to logout before login with new token", err);
+        });
       return;
     }
 
+    setQuery((prev) => {
+      prev.delete("pin");
+      prev.delete("ticketVoucher");
+      return prev;
+    });
+
     login({ loginPayload: { pin: loginToken, node_id: config.apiConfig.node_id } })
       .unwrap()
+      .then(() => {})
       .catch((err) => {
         toast.error(t("loginFailed", { reason: err.error }));
       });
   }, [query, isLoggedIn, loginToken, login, t]);
 
-  if (isLoggedIn) {
+  if (isLoggedIn && !loginToken) {
     const next = query.get("next");
     const redirectUrl = next != null ? next : "/";
     return <Navigate to={redirectUrl} />;
