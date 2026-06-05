@@ -99,7 +99,7 @@ class SignatureProcessor:
                     till.tse_id is null
                 """
         )
-        if feral_till_id_rows is None:
+        if not feral_till_id_rows:
             return
 
         LOGGER.info(f"till(s) without TSE but an order {feral_till_id_rows}")
