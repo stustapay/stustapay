@@ -159,7 +159,6 @@ export const Login: React.FC = () => {
               width: "100%",
               height: "auto",
               marginTop: "1em",
-              filter: isDarkMode ? "invert(1) brightness(0.9)" : "none",
             }}
           />
         </Stack>

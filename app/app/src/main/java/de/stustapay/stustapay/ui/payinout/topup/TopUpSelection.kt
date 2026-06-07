@@ -374,6 +374,9 @@ private fun SelfServiceAmountEditor(
     onAmountUpdate: (UInt) -> Unit,
     onCustomAmount: () -> Unit,
 ) {
+    val presetAmounts = setOf(10u, 20u, 30u, 50u, 100u).map { it * 100u }.toSet()
+    val customAmountSelected = amount > 0u && amount !in presetAmounts
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 6.dp else 8.dp)
@@ -472,13 +475,12 @@ private fun SelfServiceAmountEditor(
             }
         }
 
-        SelfServiceActionButton(
-            text = stringResource(R.string.selfservice_custom_amount),
+        SelfServiceCustomAmountChip(
+            selected = customAmountSelected,
+            amount = amount.takeIf { customAmountSelected },
             onClick = onCustomAmount,
             modifier = Modifier.fillMaxWidth(),
-            primary = false,
-            fontSize = if (isSmallScreen) 16.sp else 18.sp,
-            height = if (isSmallScreen) 60.dp else 64.dp
+            isSmallScreen = isSmallScreen
         )
     }
 }
@@ -634,6 +636,62 @@ private fun SelfServiceQuickAmountChip(
         }
     }
 }
+
+@Composable
+private fun SelfServiceCustomAmountChip(
+    selected: Boolean,
+    amount: UInt?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isSmallScreen: Boolean
+) {
+    val chipHeight = if (isSmallScreen) 72.dp else 88.dp
+    val borderColor = if (selected) SelfServicePalette.accent else SelfServicePalette.title.copy(alpha = 0.32f)
+    Card(
+        modifier = modifier.height(chipHeight),
+        backgroundColor = if (selected) SelfServicePalette.accent else SelfServicePalette.interactivePanel,
+        shape = RoundedCornerShape(24.dp),
+        elevation = 0.dp,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    if (selected) 2.dp else 1.5.dp,
+                    borderColor,
+                    RoundedCornerShape(24.dp)
+                )
+                .clickable { onClick() }
+                .padding(horizontal = if (isSmallScreen) 14.dp else 18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = stringResource(R.string.selfservice_custom_amount),
+                    color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (isSmallScreen) 18.sp else 20.sp,
+                )
+                Text(
+                    text = stringResource(R.string.topup_operator_custom_amount_hint),
+                    color = if (selected) SelfServicePalette.backgroundTop.copy(alpha = 0.82f) else SelfServicePalette.subtitle,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = if (isSmallScreen) 12.sp else 13.sp,
+                )
+            }
+            Text(
+                text = amount?.let(::formatSelfServiceEuroAmount) ?: "…",
+                color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = if (isSmallScreen) 22.sp else 26.sp,
+                textAlign = TextAlign.End,
+            )
+        }
+    }
+}
+
+private fun formatSelfServiceEuroAmount(cents: UInt): String = "%.2f€".format(cents.toDouble() / 100.0)
 
 @Composable
 private fun SelfServiceProcessingPanel(

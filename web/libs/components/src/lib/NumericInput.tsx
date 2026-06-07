@@ -6,14 +6,20 @@ export type NumericInputProps = {
   value?: number | undefined | null;
   preserveDecimalZeros?: boolean;
   decimalPlaces?: number;
+  parseOnChange?: boolean;
+  integerOnly?: boolean;
 } & Omit<TextFieldProps, "value" | "onChange" | "onBlur" | "onKeyUp">;
 
-export const NumericInput: React.FC<NumericInputProps> = ({ 
-  value, 
-  onChange, 
+export const NumericInput: React.FC<NumericInputProps> = ({
+  value,
+  onChange,
   preserveDecimalZeros = true,
   decimalPlaces = 2,
-  ...props 
+  parseOnChange = false,
+  integerOnly = false,
+  slotProps,
+  inputProps,
+  ...props
 }) => {
   const [internalValue, setInternalValue] = React.useState("");
 
@@ -21,26 +27,56 @@ export const NumericInput: React.FC<NumericInputProps> = ({
     setInternalValue(String(value ?? ""));
   }, [value, setInternalValue]);
 
-  const onInternalChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setInternalValue(event.target.value);
-  };
-
-  const propagateChange = () => {
+  const parseValue = React.useCallback(() => {
     if (internalValue === "") {
       onChange(null);
       return;
     }
 
-    // Accept both comma and period as decimal separators
-    const normalized = internalValue.replace(",", ".");
-    
-    // Only parse if it's a valid number
-    if (/^-?\d*\.?\d*$/.test(normalized)) {
-      // Parse the value and round to specified decimal places
-      const parsedValue = parseFloat(normalized);
-      
+    const normalized = integerOnly ? internalValue : internalValue.replace(",", ".");
+    const isValidNumber = integerOnly ? /^\d+$/.test(normalized) : /^-?\d*\.?\d*$/.test(normalized);
+
+    if (!isValidNumber) {
+      return;
+    }
+
+    const parsedValue = integerOnly ? parseInt(normalized, 10) : parseFloat(normalized);
+
+    if (!isNaN(parsedValue)) {
+      if (integerOnly) {
+        onChange(parsedValue);
+        return;
+      }
+
+      const roundedValue = Math.round(parsedValue * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+      onChange(roundedValue);
+    }
+  }, [decimalPlaces, integerOnly, internalValue, onChange]);
+
+  const onInternalChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const nextValue = event.target.value;
+    setInternalValue(nextValue);
+
+    if (parseOnChange) {
+      if (nextValue === "") {
+        onChange(null);
+        return;
+      }
+
+      const normalized = integerOnly ? nextValue : nextValue.replace(",", ".");
+      const isValidNumber = integerOnly ? /^\d+$/.test(normalized) : /^-?\d*\.?\d*$/.test(normalized);
+
+      if (!isValidNumber) {
+        return;
+      }
+
+      const parsedValue = integerOnly ? parseInt(normalized, 10) : parseFloat(normalized);
       if (!isNaN(parsedValue)) {
-        // Round to the specified number of decimal places
+        if (integerOnly) {
+          onChange(parsedValue);
+          return;
+        }
+
         const roundedValue = Math.round(parsedValue * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
         onChange(roundedValue);
       }
@@ -48,13 +84,20 @@ export const NumericInput: React.FC<NumericInputProps> = ({
   };
 
   const onInternalBlur = () => {
-    propagateChange();
+    parseValue();
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {
-      propagateChange();
+      parseValue();
     }
+  };
+
+  const mergedInputProps: NonNullable<TextFieldProps["inputProps"]> = {
+    inputMode: integerOnly ? "numeric" : "decimal",
+    pattern: integerOnly ? "[0-9]*" : undefined,
+    style: { textAlign: "right" as const },
+    ...inputProps,
   };
 
   return (
@@ -62,7 +105,8 @@ export const NumericInput: React.FC<NumericInputProps> = ({
       value={internalValue}
       onChange={onInternalChange}
       onBlur={onInternalBlur}
-      slotProps={{ htmlInput: { style: { textAlign: "right" } } }}
+      slotProps={slotProps}
+      inputProps={mergedInputProps}
       onKeyDown={onKeyDown}
       variant="standard"
       onFocus={(event) => event.target.select()}

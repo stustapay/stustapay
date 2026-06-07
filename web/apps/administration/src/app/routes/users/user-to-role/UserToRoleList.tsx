@@ -1,6 +1,7 @@
 import {
   selectUserById,
   selectUserRoleById,
+  useGetUserQuery,
   useListUsersQuery,
   useListUserRolesQuery,
   useListUserToRoleQuery,
@@ -19,6 +20,31 @@ import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+
+type UserLinkCellProps = {
+  currentNodeId: number;
+  userId: number;
+  users?: Parameters<typeof selectUserById>[0];
+};
+
+const UserLinkCell: React.FC<UserLinkCellProps> = ({ currentNodeId, userId, users }) => {
+  const cachedUser = users ? selectUserById(users, userId) : undefined;
+  const { data: fetchedUser } = useGetUserQuery(
+    { nodeId: currentNodeId, userId },
+    { skip: cachedUser != null }
+  );
+
+  const user = cachedUser ?? fetchedUser;
+  if (!user) {
+    return <>{userId}</>;
+  }
+
+  return (
+    <Link component={RouterLink} to={UserRoutes.detail(userId, user.node_id)}>
+      {getUserName(user)}
+    </Link>
+  );
+};
 
 export const UserToRoleList: React.FC = () => {
   const { t } = useTranslation();
@@ -57,19 +83,7 @@ export const UserToRoleList: React.FC = () => {
   };
 
   const renderUser = (id: number) => {
-    if (!users) {
-      return "";
-    }
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={UserRoutes.detail(id, user.node_id)}>
-        {getUserName(user)}
-      </Link>
-    );
+    return <UserLinkCell currentNodeId={currentNode.id} userId={id} users={users} />;
   };
 
   const renderRoles = (ids: number[]) => {

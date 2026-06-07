@@ -114,6 +114,7 @@ export const translations = {
       sofort: "Sofort",
     },
     amount: "Amount",
+    amountHelper: "Choose an amount or enter your own.",
     errorWhileCreatingCheckout: "Error while trying to create sumup checkout",
     errorAmountGreaterZero: "Amount must be greater than 0",
     errorAmountMustBeIntegral: "Cent amounts are not allowed",

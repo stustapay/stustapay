@@ -117,6 +117,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       sofort: "Sofort",
     },
     amount: "Betrag",
+    amountHelper: "Wähle einen Betrag oder gib ihn ein.",
     errorWhileCreatingCheckout: "Fehler beim erstellen der SumUp-Zahlung.",
     errorAmountGreaterZero: "Betrag muss größer als 0 sein.",
     errorAmountMustBeIntegral: "Centbeträge sind nicht erlaubt.",

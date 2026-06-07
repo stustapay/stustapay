@@ -21,6 +21,7 @@ const TopUpSchema = z.object({
 
 const EXTENDED_CHECKOUT_POLL_INTERVAL_MS = 30 * 1000;
 const STALLED_CHECKOUT_TIMEOUT_MS = 2 * 60 * 1000;
+const QUICK_TOPUP_AMOUNTS = [10, 20, 50];
 
 type FormVal = z.infer<typeof TopUpSchema>;
 
@@ -443,14 +444,46 @@ export const TopUp: React.FC = () => {
           <Formik
             initialValues={initialValues}
             validationSchema={toFormikValidationSchema(TopUpSchema)}
+            validateOnMount
             onSubmit={onSubmit}
           >
             {(formik) => (
               <Form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
-                  <FormCurrencyInput name="amount" label={t("topup.amount")} variant="outlined" formik={formik} />
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    {QUICK_TOPUP_AMOUNTS.map((amount) => (
+                      <Button
+                        key={amount}
+                        type="button"
+                        variant={formik.values.amount === amount ? "contained" : "outlined"}
+                        color="primary"
+                        aria-pressed={formik.values.amount === amount}
+                        onClick={() => {
+                          void formik.setFieldValue("amount", amount, true);
+                          void formik.setFieldTouched("amount", true, false);
+                        }}
+                        sx={{ minWidth: 88 }}
+                      >
+                        {amount} EUR
+                      </Button>
+                    ))}
+                  </Stack>
+                  <FormCurrencyInput
+                    name="amount"
+                    label={t("topup.amount")}
+                    variant="outlined"
+                    formik={formik}
+                    helperText={t("topup.amountHelper")}
+                    parseOnChange
+                    integerOnly
+                  />
                   {formik.isSubmitting && <LinearProgress />}
-                  <Button type="submit" variant="contained" color="primary" disabled={formik.isSubmitting}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    disabled={formik.isSubmitting || !formik.values.amount || formik.values.amount <= 0 || !formik.isValid}
+                  >
                     {t("topup.next")}
                   </Button>
                 </Stack>

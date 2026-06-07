@@ -23,6 +23,7 @@ globalThis.TextDecoder = TextDecoder as typeof globalThis.TextDecoder;
 const translations: Record<string, string> = {
   "topup.onlineTopUp": "Online Top-Up",
   "topup.amount": "Amount",
+  "topup.amountHelper": "Choose an amount or enter your own.",
   "topup.next": "Next",
   "topup.tryAgain": "Try again",
   "topup.processingPayment": "Processing payment",
@@ -85,16 +86,21 @@ jest.mock("@stustapay/form-components", () => ({
     name,
     label,
     formik,
+    helperText,
   }: {
     name: string;
     label: string;
+    helperText?: string;
     formik: { values: Record<string, number>; setFieldValue: (field: string, value: number) => void };
   }) => (
-    <input
-      aria-label={label}
-      value={formik.values[name] ?? ""}
-      onChange={(event) => formik.setFieldValue(name, Number(event.target.value))}
-    />
+    <div>
+      <input
+        aria-label={label}
+        value={formik.values[name] ?? ""}
+        onChange={(event) => formik.setFieldValue(name, Number(event.target.value))}
+      />
+      {helperText ? <span>{helperText}</span> : null}
+    </div>
   ),
 }));
 
@@ -198,6 +204,46 @@ describe("TopUp", () => {
     await startTopUp();
 
     expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+  });
+
+  test("shows quick amounts and keeps submit disabled until a valid amount is chosen", () => {
+    renderTopUp();
+
+    expect(screen.getByText("Choose an amount or enter your own.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "10 EUR" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "20 EUR" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "50 EUR" })).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  test("clicking a quick amount sets the form value and enables submit", async () => {
+    renderTopUp();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "20 EUR" }));
+      await Promise.resolve();
+    });
+
+    expect((screen.getByLabelText("Amount") as HTMLInputElement).value).toBe("20");
+    expect(screen.getByRole("button", { name: "20 EUR" }).getAttribute("aria-pressed")).toBe("true");
+    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  test("manual input overrides a previously selected quick amount", async () => {
+    renderTopUp();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "20 EUR" }));
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "35" } });
+      await Promise.resolve();
+    });
+
+    expect((screen.getByLabelText("Amount") as HTMLInputElement).value).toBe("35");
+    expect(screen.getByRole("button", { name: "20 EUR" }).getAttribute("aria-pressed")).toBe("false");
+    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   test("returns to a retryable state only after the backend reports failure", async () => {

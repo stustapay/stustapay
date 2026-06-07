@@ -6,6 +6,7 @@ export interface FormNumericInputProps<Name extends string, Values>
   extends Omit<NumericInputProps, "value" | "onChange" | "error" | "helperText"> {
   name: Name;
   formik: FormikProps<Values>;
+  helperText?: React.ReactNode;
 }
 
 const MemoizedNumericInput = React.memo(NumericInput);
@@ -14,6 +15,7 @@ const MemoizedNumericInput = React.memo(NumericInput);
 export function FormNumericInput<Name extends string, Values extends Partial<Record<Name, any>>>({
   formik,
   name,
+  helperText,
   ...props
 }: FormNumericInputProps<Name, Values>) {
   const { setFieldValue, setFieldTouched } = formik;
@@ -34,7 +36,7 @@ export function FormNumericInput<Name extends string, Values extends Partial<Rec
       onChange={handleChange}
       value={formik.values[name]}
       error={formik.touched[name] && !!formik.errors[name]}
-      helperText={(formik.touched[name] && formik.errors[name]) as string}
+      helperText={formik.touched[name] ? ((formik.errors[name] as string) ?? helperText) : helperText}
       {...props}
     />
   );

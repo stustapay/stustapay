@@ -80,7 +80,7 @@
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
     "react-redux": "^9.2.0",
-    "react-router-dom": "7.13.1",
+    "react-router-dom": "7.17.0",
     "react-toastify": "^11.0.5",
     "redux-persist": "^6.0.0",
     "regenerator-runtime": "0.14.1",
@@ -90,7 +90,7 @@
     "zod": "^4.2.1"
   },
   "overrides": {
-    "axios": "1.15.2",
+    "axios": "1.16.1",
     "brace-expansion@^1.1.7": "1.1.13",
     "brace-expansion@^2.0.1": "2.0.3",
     "brace-expansion@^2.0.2": "2.0.3",
