@@ -21,7 +21,6 @@ GERMAN_WEEKDAYS = [
     "Samstag",
     "Sonntag",
 ]
-REPORT_EVENT_DATE_PADDING = timedelta(days=3)
 
 
 class DailyRevenue(BaseModel):
@@ -205,10 +204,6 @@ def _resolve_report_time_bounds(event: PublicEventSettings, orders: list[OrderWi
 
     from_time = _normalize_datetime(event.start_date or fallback_from)
     raw_to_time = _normalize_datetime(event.end_date or fallback_to)
-    if event.start_date is not None:
-        from_time -= REPORT_EVENT_DATE_PADDING
-    if event.end_date is not None:
-        raw_to_time += REPORT_EVENT_DATE_PADDING
     to_time = _extend_report_end_time(raw_to_time, event.daily_end_time) if event.end_date is not None else raw_to_time
     return from_time, to_time
 

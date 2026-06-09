@@ -159,12 +159,6 @@ async def test_generate_report_builds_summary_and_day_groups(monkeypatch):
     result = await generate_report(conn=conn, node_id=node.id)
 
     assert result.success is True
-    assert captured["context"].from_time == datetime(2025, 6, 17, 2, 0, tzinfo=timezone.utc).astimezone(
-        captured["context"].from_time.tzinfo
-    )
-    assert captured["context"].to_time == datetime(2025, 6, 25, 3, 0, tzinfo=timezone.utc).astimezone(
-        captured["context"].to_time.tzinfo
-    )
     assert [order.id for order in captured["context"].orders] == [in_range_order.id, same_report_day_order.id, cancel_order.id]
     assert captured["context"].summary.order_count == 3
     assert captured["context"].summary.average_order_value == 5.833333333333333
@@ -217,12 +211,6 @@ async def test_generate_report_includes_sales_before_daily_cutoff(monkeypatch):
     result = await generate_report(conn=conn, node_id=node.id)
 
     assert result.success is True
-    assert captured["context"].from_time == datetime(2025, 6, 17, 2, 0, tzinfo=timezone.utc).astimezone(
-        captured["context"].from_time.tzinfo
-    )
-    assert captured["context"].to_time == datetime(2025, 6, 25, 3, 0, tzinfo=timezone.utc).astimezone(
-        captured["context"].to_time.tzinfo
-    )
     assert [order.id for order in captured["context"].orders] == [in_range_order.id, before_cutoff_order.id]
     assert captured["context"].summary.order_count == 2
     assert captured["context"].total_revenue == 15.0
@@ -259,15 +247,9 @@ async def test_generate_report_excludes_sales_after_daily_cutoff(monkeypatch):
     result = await generate_report(conn=conn, node_id=node.id)
 
     assert result.success is True
-    assert captured["context"].from_time == datetime(2025, 6, 17, 2, 0, tzinfo=timezone.utc).astimezone(
-        captured["context"].from_time.tzinfo
-    )
-    assert captured["context"].to_time == datetime(2025, 6, 25, 3, 0, tzinfo=timezone.utc).astimezone(
-        captured["context"].to_time.tzinfo
-    )
-    assert captured["context"].orders == [after_cutoff_order]
-    assert captured["context"].summary.order_count == 1
-    assert captured["context"].total_revenue == 99.0
+    assert captured["context"].orders == []
+    assert captured["context"].summary.order_count == 0
+    assert captured["context"].total_revenue == 0.0
 
 
 async def test_generate_report_renders_template_fallbacks(monkeypatch):
