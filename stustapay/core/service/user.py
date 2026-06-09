@@ -482,6 +482,7 @@ class UserService(Service[Config]):
         visible_node_ids_list = list(visible_node_ids)
         if len(visible_node_ids_list) == 0:
             return []
+        ancestor_and_visible_node_ids = list(set(visible_node_ids_list).union(node.parent_ids))
 
         if filter_privilege is None:
             return await conn.fetch_many(
@@ -489,8 +490,9 @@ class UserService(Service[Config]):
                 "select distinct u.* "
                 "from user_with_tag u "
                 "left join user_to_role utr on utr.user_id = u.id "
-                "where u.node_id = any($1) or utr.node_id = any($1) "
+                "where u.node_id = any($1) or utr.node_id = any($2) "
                 "order by u.login",
+                ancestor_and_visible_node_ids,
                 visible_node_ids_list,
             )
 
@@ -500,12 +502,13 @@ class UserService(Service[Config]):
             "   select "
             "       u.*, "
             "       (select exists(select from user_privileges_at_node(u.id) up "
-            "       where $2 = any(up.privileges_at_node) and up.node_id = any($1))) as has_privilege "
+            "       where $3 = any(up.privileges_at_node) and up.node_id = any($2))) as has_privilege "
             "   from user_with_tag u "
             "   left join user_to_role utr on utr.user_id = u.id "
-            "   where u.node_id = any($1) or utr.node_id = any($1) "
+            "   where u.node_id = any($1) or utr.node_id = any($2) "
             ")"
             "select * from users_by_privilege where has_privilege",
+            ancestor_and_visible_node_ids,
             visible_node_ids_list,
             filter_privilege.name if filter_privilege is not None else None,
         )

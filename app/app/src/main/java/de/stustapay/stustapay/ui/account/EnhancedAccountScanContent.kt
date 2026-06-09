@@ -152,14 +152,14 @@ private fun SelfServiceScanContent(
             Box(
                 modifier = Modifier
                     .size(if (isSmallScreen) 120.dp else 170.dp)
-                    .background(Color(0xFF28497A), CircleShape)
+                    .background(SelfServicePalette.scanOuter, CircleShape)
                     .padding(if (isSmallScreen) 22.dp else 28.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF315A92), CircleShape)
+                        .background(SelfServicePalette.scanInner, CircleShape)
                         .padding(if (isSmallScreen) 20.dp else 24.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -173,7 +173,7 @@ private fun SelfServiceScanContent(
                         Icon(
                             imageVector = Icons.Filled.NearMe,
                             contentDescription = null,
-                            tint = SelfServicePalette.backgroundTop,
+                            tint = SelfServicePalette.accentText,
                             modifier = Modifier.size(if (isSmallScreen) 20.dp else 30.dp)
                         )
                     }

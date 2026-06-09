@@ -525,8 +525,8 @@ private fun SelfServiceTopUpStepper(currentStep: Int, isSmallScreen: Boolean) {
             val isDone = stepNumber < currentStep
             val isActive = stepNumber == currentStep
             val background = when {
-                isDone -> Color(0xFF16342A)
-                isActive -> Color(0xFF243A63)
+                isDone -> SelfServicePalette.successPanel
+                isActive -> SelfServicePalette.highlightedPanel
                 else -> SelfServicePalette.panelMuted
             }
             val border = when {
@@ -570,13 +570,13 @@ private fun SelfServiceTopUpStepper(currentStep: Int, isSmallScreen: Boolean) {
                             androidx.compose.material.Icon(
                                 imageVector = Icons.Filled.Check,
                                 contentDescription = null,
-                                tint = SelfServicePalette.backgroundTop,
+                                tint = SelfServicePalette.accentText,
                                 modifier = Modifier.size(14.dp)
                             )
                         } else {
                             Text(
                                 text = stepNumber.toString(),
-                                color = SelfServicePalette.backgroundTop,
+                                color = SelfServicePalette.accentText,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -627,7 +627,7 @@ private fun SelfServiceQuickAmountChip(
         ) {
             Text(
                 text = "€$amountEuro",
-                color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
+                color = if (selected) SelfServicePalette.accentText else SelfServicePalette.title,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (isSmallScreen) 20.sp else 24.sp,
                 textAlign = TextAlign.Center,
@@ -669,20 +669,20 @@ private fun SelfServiceCustomAmountChip(
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = stringResource(R.string.selfservice_custom_amount),
-                    color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
+                    color = if (selected) SelfServicePalette.accentText else SelfServicePalette.title,
                     fontWeight = FontWeight.Bold,
                     fontSize = if (isSmallScreen) 18.sp else 20.sp,
                 )
                 Text(
                     text = stringResource(R.string.topup_operator_custom_amount_hint),
-                    color = if (selected) SelfServicePalette.backgroundTop.copy(alpha = 0.82f) else SelfServicePalette.subtitle,
+                    color = if (selected) SelfServicePalette.accentText.copy(alpha = 0.82f) else SelfServicePalette.subtitle,
                     fontWeight = FontWeight.Medium,
                     fontSize = if (isSmallScreen) 12.sp else 13.sp,
                 )
             }
             Text(
                 text = amount?.let(::formatSelfServiceEuroAmount) ?: "…",
-                color = if (selected) SelfServicePalette.backgroundTop else SelfServicePalette.title,
+                color = if (selected) SelfServicePalette.accentText else SelfServicePalette.title,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = if (isSmallScreen) 22.sp else 26.sp,
                 textAlign = TextAlign.End,

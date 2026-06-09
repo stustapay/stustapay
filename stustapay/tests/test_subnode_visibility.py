@@ -234,3 +234,43 @@ async def test_list_users_only_returns_users_assigned_in_visible_subtree(
     assert visible_user.id in visible_user_ids
     assert hidden_user.id not in visible_user_ids
     assert unassigned_user.id not in visible_user_ids
+
+
+async def test_list_users_includes_parent_users_for_child_role_assignment(
+    tree_service: TreeService,
+    user_service: UserService,
+    event_node: Node,
+    global_admin_token: str,
+):
+    child_node = await tree_service.create_node(
+        token=global_admin_token,
+        node_id=event_node.id,
+        new_node=NewNode(name="Child", description=""),
+    )
+
+    scoped_admin = await _create_event_user(
+        user_service=user_service,
+        admin_token=global_admin_token,
+        event_node=event_node,
+        login_prefix="child-scoped-admin",
+    )
+    await user_service.update_user_to_roles(
+        token=global_admin_token,
+        node_id=child_node.id,
+        user_to_roles=NewUserToRoles(user_id=scoped_admin.id, role_ids=[ADMIN_ROLE_ID]),
+    )
+
+    parent_user = await _create_event_user(
+        user_service=user_service,
+        admin_token=global_admin_token,
+        event_node=event_node,
+        login_prefix="parent-user",
+    )
+
+    login_result = await user_service.login_user(username=scoped_admin.login, password="rolf")
+    assert login_result.success is not None
+
+    users = await user_service.list_users(token=login_result.success.token, node_id=child_node.id)
+    visible_user_ids = {user.id for user in users}
+
+    assert parent_user.id in visible_user_ids

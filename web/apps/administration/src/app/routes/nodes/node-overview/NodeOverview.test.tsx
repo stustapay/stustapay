@@ -49,8 +49,11 @@ describe("NodeOverview", () => {
     mockUseCurrentNode.mockReturnValue({
       currentNode: {
         id: 5,
+        name: "Event",
         event: {},
         event_node_id: 5,
+        privileges_at_node: ["view_node_stats"],
+        children: [],
       },
     });
     mockUseCurrentUserHasPrivilege.mockImplementation((privilege: string) => privilege === "view_node_stats");
@@ -71,8 +74,11 @@ describe("NodeOverview", () => {
     mockUseCurrentNode.mockReturnValue({
       currentNode: {
         id: 5,
+        name: "Event",
         event: {},
         event_node_id: 5,
+        privileges_at_node: ["node_administration"],
+        children: [],
       },
     });
     mockUseCurrentUserHasPrivilege.mockImplementation((privilege: string) => privilege === "node_administration");
@@ -90,8 +96,11 @@ describe("NodeOverview", () => {
     mockUseCurrentNode.mockReturnValue({
       currentNode: {
         id: 9,
+        name: "Root",
         event: null,
         event_node_id: null,
+        privileges_at_node: [],
+        children: [],
       },
     });
     mockUseCurrentUserHasPrivilege.mockReturnValue(false);
@@ -103,5 +112,77 @@ describe("NodeOverview", () => {
     );
 
     expect(screen.queryByRole("button", { name: "overview.generateRevenueReport" })).toBeNull();
+  });
+
+  test("redirects scoped event-root users to the only actionable descendant", () => {
+    mockUseCurrentNode.mockReturnValue({
+      currentNode: {
+        id: 5,
+        name: "Event",
+        event: {},
+        event_node_id: 5,
+        privileges_at_node: [],
+        children: [
+          {
+            id: 9,
+            name: "Bar",
+            privileges_at_node: ["view_node_stats"],
+            children: [],
+          },
+        ],
+      },
+    });
+    mockUseCurrentUserHasPrivilege.mockReturnValue(false);
+
+    render(
+      <MemoryRouter initialEntries={["/node/5"]}>
+        <Routes>
+          <Route path="/node/:nodeId" element={<NodeOverview />} />
+          <Route path="/node/9/stats" element={<div>child-node-stats</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("child-node-stats")).toBeTruthy();
+    expect(screen.queryByText("event-overview")).toBeNull();
+  });
+
+  test("keeps scoped event-root users on the root page when multiple actionable descendants exist", () => {
+    mockUseCurrentNode.mockReturnValue({
+      currentNode: {
+        id: 5,
+        name: "Event",
+        event: {},
+        event_node_id: 5,
+        privileges_at_node: [],
+        children: [
+          {
+            id: 9,
+            name: "Bar",
+            privileges_at_node: ["view_node_stats"],
+            children: [],
+          },
+          {
+            id: 11,
+            name: "Kitchen",
+            privileges_at_node: ["node_administration"],
+            children: [],
+          },
+        ],
+      },
+    });
+    mockUseCurrentUserHasPrivilege.mockReturnValue(false);
+
+    render(
+      <MemoryRouter initialEntries={["/node/5"]}>
+        <NodeOverview />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("overview.scopedOverviewUnavailable")).toBeTruthy();
+    expect(screen.getByText("overview.openAccessibleSubnode")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Bar" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Kitchen" })).toBeTruthy();
+    expect(screen.queryByText("event-overview")).toBeNull();
   });
 });

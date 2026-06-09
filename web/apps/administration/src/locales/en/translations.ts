@@ -374,6 +374,9 @@ export const translations = {
     noDataAvailable: "No data available for the selected time range.",
     noProductDataAvailable: "No product data available for the selected time range.",
     noOrdersFound: "No orders found for the selected filters",
+    scopedOverviewUnavailable:
+      "This event overview is only available on nodes where you have direct access. Open one of your visible subnodes instead.",
+    openAccessibleSubnode: "Open an accessible subnode",
     date: "Date",
     orderNumber: "Order No.",
     orderType: "Order Type",

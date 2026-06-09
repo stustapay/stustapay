@@ -544,7 +544,7 @@ private fun SelfServiceScanError(message: String, isSmallScreen: Boolean) {
     SelfServicePanel(
         modifier = Modifier.fillMaxWidth(),
         borderColor = SelfServicePalette.error,
-        backgroundColor = Color(0xFF4B1F2C)
+        backgroundColor = SelfServicePalette.errorPanel
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(

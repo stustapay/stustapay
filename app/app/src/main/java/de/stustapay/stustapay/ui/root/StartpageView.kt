@@ -74,6 +74,7 @@ import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceDisplayModeToggle
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
 import de.stustapay.stustapay.ui.common.selfservice.rememberSelfServiceDeviceProfile
@@ -686,6 +687,8 @@ private fun SelfServiceLanding(
 ) {
     val profile = rememberSelfServiceDeviceProfile()
     val refreshState = remember { TopOverscrollRefreshState(TOP_OVERSCROLL_REFRESH_THRESHOLD_PX) }
+    val title = stringResource(R.string.selfservice_title)
+    val description = stringResource(R.string.selfservice_description)
     val checkBalanceTitle = stringResource(R.string.selfservice_check_balance)
     val checkBalanceDescription = stringResource(R.string.selfservice_check_balance_hint)
     val topUpTitle = stringResource(R.string.selfservice_topup)
@@ -761,6 +764,16 @@ private fun SelfServiceLanding(
                 ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            SelfServiceSectionHeader(
+                title = title,
+                subtitle = description,
+                titleFontSize = profile.headlineTitleSize,
+                subtitleFontSize = profile.headlineSubtitleSize,
+                headerAction = {
+                    SelfServiceDisplayModeToggle()
+                },
+            )
+
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -1033,7 +1046,7 @@ private fun SelfServiceActionCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = 0.dp,
-        backgroundColor = if (highlighted) Color(0xFF243A63) else SelfServicePalette.panel,
+        backgroundColor = if (highlighted) SelfServicePalette.highlightedPanel else SelfServicePalette.panel,
     ) {
         Row(
             modifier = Modifier
@@ -1056,7 +1069,7 @@ private fun SelfServiceActionCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
-                    tint = SelfServicePalette.backgroundTop,
+                    tint = SelfServicePalette.accentText,
                     modifier = Modifier.size(if (cardHeight >= 220.dp) 34.dp else 26.dp)
                 )
             }

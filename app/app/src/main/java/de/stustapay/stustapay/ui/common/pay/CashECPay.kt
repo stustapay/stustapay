@@ -197,7 +197,7 @@ fun CashECSelection(
                             colors = if (config.hasOnlyTopUpPrivilege()) {
                                 ButtonDefaults.buttonColors(
                                     backgroundColor = SelfServicePalette.accent,
-                                    contentColor = SelfServicePalette.backgroundTop,
+                                    contentColor = SelfServicePalette.accentText,
                                     disabledBackgroundColor = SelfServicePalette.panelBorder,
                                     disabledContentColor = SelfServicePalette.subtitle
                                 )
@@ -214,7 +214,7 @@ fun CashECSelection(
                                 textAlign = TextAlign.Center,
                                 style = LargeButtonStyle,
                                 color = if (config.hasOnlyTopUpPrivilege()) {
-                                    SelfServicePalette.backgroundTop
+                                    SelfServicePalette.accentText
                                 } else {
                                     Color.Unspecified
                                 }

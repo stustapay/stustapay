@@ -366,6 +366,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
     noDataAvailable: "Keine Daten für den gewählten Zeitraum verfügbar.",
     noProductDataAvailable: "Keine Produktdaten für den gewählten Zeitraum verfügbar.",
     noOrdersFound: "Keine Bestellungen für die gewählten Filter gefunden",
+    scopedOverviewUnavailable:
+      "Diese Ereignisübersicht ist nur auf Knoten mit direktem Zugriff verfügbar. Öffnen Sie stattdessen einen Ihrer sichtbaren Unterknoten.",
+    openAccessibleSubnode: "Zugänglichen Unterknoten öffnen",
     date: "Datum",
     orderNumber: "Bestell-Nr.",
     orderType: "Bestelltyp",

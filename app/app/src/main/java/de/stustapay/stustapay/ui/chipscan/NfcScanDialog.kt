@@ -315,7 +315,7 @@ fun SelfServiceScanPanelContent(
                     Icon(
                         imageVector = Icons.Filled.NearMe,
                         contentDescription = null,
-                        tint = SelfServicePalette.backgroundTop,
+                        tint = SelfServicePalette.accentText,
                         modifier = Modifier.size(iconSize)
                     )
                 }
@@ -643,7 +643,7 @@ private fun PencilScanRadar(
                 Icon(
                     imageVector = Icons.Filled.NearMe,
                     contentDescription = null,
-                    tint = SelfServicePalette.backgroundTop,
+                    tint = SelfServicePalette.accentText,
                     modifier = Modifier.size(nearIconSize)
                 )
             }
@@ -667,7 +667,7 @@ private fun PencilScanStepper(isSmallScreen: Boolean) {
             val isDone = stepNumber < 2
             val isActive = stepNumber == 2
             val background = when {
-                isDone -> Color(0xFF16342A)
+                isDone -> SelfServicePalette.successPanel
                 isActive -> TfPayBluePalette.elevated
                 else -> SelfServicePalette.panelMuted
             }
@@ -707,13 +707,13 @@ private fun PencilScanStepper(isSmallScreen: Boolean) {
                             Icon(
                                 imageVector = Icons.Filled.Check,
                                 contentDescription = null,
-                                tint = SelfServicePalette.backgroundTop,
+                                tint = SelfServicePalette.accentText,
                                 modifier = Modifier.size(14.dp)
                             )
                         } else {
                             Text(
                                 text = stepNumber.toString(),
-                                color = SelfServicePalette.backgroundTop,
+                                color = SelfServicePalette.accentText,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )

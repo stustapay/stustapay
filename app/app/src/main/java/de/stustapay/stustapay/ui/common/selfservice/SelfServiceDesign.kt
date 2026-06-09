@@ -1,5 +1,6 @@
 package de.stustapay.stustapay.ui.common.selfservice
 
+import android.content.Context
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,9 +19,15 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Brightness2
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,29 +37,170 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 import de.stustapay.stustapay.locale.AppLanguage
 import de.stustapay.stustapay.locale.AppLocaleManager
 
+enum class SelfServiceDisplayMode(val persistedValue: String) {
+    Night("night"),
+    Day("day");
+
+    companion object {
+        fun fromPersistedValue(value: String?): SelfServiceDisplayMode {
+            return entries.firstOrNull { it.persistedValue == value } ?: Night
+        }
+    }
+}
+
+private data class SelfServiceColors(
+    val backgroundTop: Color,
+    val backgroundBottom: Color,
+    val panel: Color,
+    val panelMuted: Color,
+    val panelBorder: Color,
+    val interactivePanel: Color,
+    val highlightedPanel: Color,
+    val title: Color,
+    val subtitle: Color,
+    val accent: Color,
+    val accentText: Color,
+    val success: Color,
+    val successPanel: Color,
+    val successMuted: Color,
+    val error: Color,
+    val errorPanel: Color,
+    val errorMuted: Color,
+    val scanOuter: Color,
+    val scanInner: Color,
+)
+
+private val selfServiceNightColors = SelfServiceColors(
+    backgroundTop = TfPayBluePalette.backgroundTop,
+    backgroundBottom = TfPayBluePalette.backgroundBottom,
+    panel = TfPayBluePalette.panel,
+    panelMuted = TfPayBluePalette.panelMuted,
+    panelBorder = TfPayBluePalette.panelBorder,
+    interactivePanel = TfPayBluePalette.interactivePanel,
+    highlightedPanel = Color(0xFF243A63),
+    title = TfPayBluePalette.title,
+    subtitle = TfPayBluePalette.subtitle,
+    accent = Color(0xFFFFB547),
+    accentText = TfPayBluePalette.backgroundTop,
+    success = Color(0xFF1FC892),
+    successPanel = Color(0xFF16342A),
+    successMuted = Color(0xFFD8FFF2),
+    error = Color(0xFFFF6B6B),
+    errorPanel = Color(0xFF4B1F2C),
+    errorMuted = Color(0xFFFFC8C8),
+    scanOuter = Color(0xFF28497A),
+    scanInner = Color(0xFF315A92),
+)
+
+private val selfServiceDayColors = SelfServiceColors(
+    backgroundTop = Color(0xFFF7FAFD),
+    backgroundBottom = Color(0xFFE6EDF5),
+    panel = Color(0xFFFFFFFF),
+    panelMuted = Color(0xFFF0F4F8),
+    panelBorder = Color(0xFFB5C4D6),
+    interactivePanel = Color(0xFFE3EBF4),
+    highlightedPanel = Color(0xFFDCE8F7),
+    title = Color(0xFF122033),
+    subtitle = Color(0xFF44586F),
+    accent = Color(0xFFCE7A00),
+    accentText = Color(0xFF122033),
+    success = Color(0xFF177A57),
+    successPanel = Color(0xFFDFF5EA),
+    successMuted = Color(0xFF1E5E47),
+    error = Color(0xFFC53D3D),
+    errorPanel = Color(0xFFFBE3E3),
+    errorMuted = Color(0xFF7C2525),
+    scanOuter = Color(0xFFD5E0EE),
+    scanInner = Color(0xFFE7EEF7),
+)
+
+private object SelfServiceThemeState {
+    var displayMode by mutableStateOf(SelfServiceDisplayMode.Night)
+
+    val colors: SelfServiceColors
+        get() = when (displayMode) {
+            SelfServiceDisplayMode.Night -> selfServiceNightColors
+            SelfServiceDisplayMode.Day -> selfServiceDayColors
+        }
+}
+
+object SelfServiceDisplayModeManager {
+    private const val preferencesName = "self_service_display_mode"
+    private const val displayModeKey = "display_mode"
+
+    fun currentDisplayMode(context: Context): SelfServiceDisplayMode {
+        val preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        return SelfServiceDisplayMode.fromPersistedValue(preferences.getString(displayModeKey, null))
+    }
+
+    fun persistDisplayMode(context: Context, mode: SelfServiceDisplayMode) {
+        context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+            .edit()
+            .putString(displayModeKey, mode.persistedValue)
+            .apply()
+    }
+
+    internal fun key(): String = displayModeKey
+    internal fun preferences(context: Context) =
+        context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+}
+
 object SelfServicePalette {
-    val backgroundTop = TfPayBluePalette.backgroundTop
-    val backgroundBottom = TfPayBluePalette.backgroundBottom
-    val panel = TfPayBluePalette.panel
-    val panelMuted = TfPayBluePalette.panelMuted
-    val panelBorder = TfPayBluePalette.panelBorder
-    val interactivePanel = TfPayBluePalette.interactivePanel
-    val title = TfPayBluePalette.title
-    val subtitle = TfPayBluePalette.subtitle
-    val accent = Color(0xFFFFB547)
-    val success = Color(0xFF1FC892)
-    val successMuted = Color(0xFFD8FFF2)
-    val error = Color(0xFFFF6B6B)
-    val errorPanel = Color(0xFF4B1F2C)
-    val errorMuted = Color(0xFFFFC8C8)
+    val backgroundTop get() = SelfServiceThemeState.colors.backgroundTop
+    val backgroundBottom get() = SelfServiceThemeState.colors.backgroundBottom
+    val panel get() = SelfServiceThemeState.colors.panel
+    val panelMuted get() = SelfServiceThemeState.colors.panelMuted
+    val panelBorder get() = SelfServiceThemeState.colors.panelBorder
+    val interactivePanel get() = SelfServiceThemeState.colors.interactivePanel
+    val highlightedPanel get() = SelfServiceThemeState.colors.highlightedPanel
+    val title get() = SelfServiceThemeState.colors.title
+    val subtitle get() = SelfServiceThemeState.colors.subtitle
+    val accent get() = SelfServiceThemeState.colors.accent
+    val accentText get() = SelfServiceThemeState.colors.accentText
+    val success get() = SelfServiceThemeState.colors.success
+    val successPanel get() = SelfServiceThemeState.colors.successPanel
+    val successMuted get() = SelfServiceThemeState.colors.successMuted
+    val error get() = SelfServiceThemeState.colors.error
+    val errorPanel get() = SelfServiceThemeState.colors.errorPanel
+    val errorMuted get() = SelfServiceThemeState.colors.errorMuted
+    val scanOuter get() = SelfServiceThemeState.colors.scanOuter
+    val scanInner get() = SelfServiceThemeState.colors.scanInner
+}
+
+object SelfServiceDisplayModeState {
+    val current: SelfServiceDisplayMode
+        get() = SelfServiceThemeState.displayMode
+}
+
+@Composable
+fun ObserveSelfServiceDisplayMode() {
+    val context = LocalContext.current.applicationContext
+
+    DisposableEffect(context) {
+        val preferences = SelfServiceDisplayModeManager.preferences(context)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == null || key == SelfServiceDisplayModeManager.key()) {
+                SelfServiceThemeState.displayMode = SelfServiceDisplayModeManager.currentDisplayMode(context)
+            }
+        }
+
+        SelfServiceThemeState.displayMode = SelfServiceDisplayModeManager.currentDisplayMode(context)
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+
+        onDispose {
+            preferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
 }
 
 @Composable
@@ -145,7 +293,7 @@ fun SelfServiceLanguageSelector(modifier: Modifier = Modifier) {
             Text(
                 text = language.shortLabel,
                 color = if (selected) {
-                    SelfServicePalette.backgroundTop
+                    SelfServicePalette.accentText
                 } else {
                     SelfServicePalette.subtitle
                 },
@@ -175,6 +323,49 @@ fun SelfServiceLanguageSelector(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SelfServiceDisplayModeToggle(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val currentMode = SelfServiceDisplayModeState.current
+    val nextMode = if (currentMode == SelfServiceDisplayMode.Day) {
+        SelfServiceDisplayMode.Night
+    } else {
+        SelfServiceDisplayMode.Day
+    }
+    val contentDescription = if (nextMode == SelfServiceDisplayMode.Day) {
+        stringResource(R.string.settings_selfservice_display_day)
+    } else {
+        stringResource(R.string.settings_selfservice_display_night)
+    }
+
+    Card(
+        modifier = modifier,
+        backgroundColor = SelfServicePalette.panelMuted,
+        shape = RoundedCornerShape(16.dp),
+        elevation = 0.dp,
+    ) {
+        Box(
+            modifier = Modifier.border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(16.dp))
+        ) {
+            IconButton(
+                onClick = {
+                    SelfServiceDisplayModeManager.persistDisplayMode(context, nextMode)
+                }
+            ) {
+                Icon(
+                    imageVector = if (currentMode == SelfServiceDisplayMode.Day) {
+                        Icons.Filled.Brightness2
+                    } else {
+                        Icons.Filled.WbSunny
+                    },
+                    contentDescription = contentDescription,
+                    tint = SelfServicePalette.title,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun SelfServiceSectionHeader(
     title: String,
     subtitle: String,
@@ -182,18 +373,23 @@ fun SelfServiceSectionHeader(
     titleFontSize: androidx.compose.ui.unit.TextUnit = 42.sp,
     subtitleFontSize: androidx.compose.ui.unit.TextUnit = 19.sp,
     showLanguageSelector: Boolean = true,
+    headerAction: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        if (showLanguageSelector) {
+        if (showLanguageSelector || headerAction != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                SelfServiceLanguageSelector()
+                if (showLanguageSelector) {
+                    SelfServiceLanguageSelector()
+                }
+                headerAction?.invoke()
             }
         }
 
@@ -246,7 +442,7 @@ fun SelfServiceCountdownCard(
 @Composable
 fun selfServicePrimaryButtonColors(): ButtonColors = ButtonDefaults.buttonColors(
     backgroundColor = SelfServicePalette.accent,
-    contentColor = SelfServicePalette.backgroundTop,
+    contentColor = SelfServicePalette.accentText,
     disabledBackgroundColor = SelfServicePalette.panelBorder,
     disabledContentColor = SelfServicePalette.subtitle
 )

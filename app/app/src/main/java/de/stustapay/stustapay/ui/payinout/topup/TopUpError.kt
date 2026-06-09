@@ -83,7 +83,7 @@ fun TopUpError(
                 SelfServicePanel(
                     modifier = Modifier.fillMaxWidth(),
                     borderColor = SelfServicePalette.error,
-                    backgroundColor = Color(0xFF4B1F2C)
+                    backgroundColor = SelfServicePalette.errorPanel
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
