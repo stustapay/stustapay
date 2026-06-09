@@ -154,6 +154,17 @@ class RevenuePrediction(BaseModel):
     visitor_based_prediction: Optional[float]  # Alternative prediction: expected_visitors * historical_revenue_per_visitor
 
 
+USER_DEFINED_REVENUE_SCOPE_SQL = (
+    "FROM ordr o "
+    "JOIN scope_tills st ON st.id = o.till_id "
+    "JOIN line_item li ON li.order_id = o.id "
+    "JOIN product p ON p.id = li.product_id "
+    "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
+    "  AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id) "
+    "  AND p.type = 'user_defined' "
+)
+
+
 def get_selected_date_ranges(
     query: TimeseriesStatsQuery, event: Optional[PublicEventSettings]
 ) -> list[tuple[datetime, datetime]]:
@@ -956,21 +967,14 @@ class OrderStatsService(Service[Config]):
                 f"      {selected_date_filter} "
                 "), "
                 "revenue_orders AS MATERIALIZED ("
-                "    SELECT o.id "
-                "    FROM ordr o "
-                "    JOIN scope_tills st ON st.id = o.till_id "
-                "    WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
-                "      AND o.order_type = 'sale' "
-                "      AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id) "
+                "    SELECT li.total_price "
+                f"    {USER_DEFINED_REVENUE_SCOPE_SQL}"
                 "      AND ($4::int IS NULL OR o.till_id = $4) "
                 f"      {selected_date_filter} "
                 "), "
                 "filtered_revenue AS MATERIALIZED ("
-                "    SELECT COALESCE(ROUND(SUM(li.total_price), 2), 0) AS total_revenue "
-                "    FROM revenue_orders ro "
-                "    JOIN line_item li ON li.order_id = ro.id "
-                "    JOIN product p ON p.id = li.product_id "
-                "    WHERE p.type = 'user_defined'"
+                "    SELECT COALESCE(ROUND(SUM(total_price), 2), 0) AS total_revenue "
+                "    FROM revenue_orders"
                 "), "
                 "guests_completed_accounts AS MATERIALIZED ("
                 "    SELECT DISTINCT customer_account_id AS account_id "
@@ -1067,12 +1071,13 @@ class OrderStatsService(Service[Config]):
                 "FROM ordr o "
                 "JOIN till t ON o.till_id = t.id "
                 "JOIN scope_tills st ON st.id = t.id "
-                "LEFT JOIN line_item li ON li.order_id = o.id "
+                "JOIN line_item li ON li.order_id = o.id "
+                "JOIN product p ON p.id = li.product_id "
                 "WHERE o.booked_at >= $1 AND o.booked_at <= $2 "
                 "AND ($4::int IS NULL OR o.till_id = $4) "
                 f"{selected_date_filter} "
-                "AND o.order_type = 'sale' "
                 "AND NOT EXISTS (SELECT 1 FROM ordr c WHERE c.cancels_order = o.id) "
+                "AND p.type = 'user_defined' "
                 "AND t.is_virtual IS NOT TRUE "
                 "AND t.name <> 'CheckTerminal' "
                 "GROUP BY t.id, t.name "

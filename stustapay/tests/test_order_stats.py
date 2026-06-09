@@ -107,6 +107,14 @@ async def _set_event_time_range(
     )
 
 
+async def _set_cancel_order_booked_at(db_connection: Connection, original_order_id: int, booked_at: datetime) -> None:
+    await db_connection.execute(
+        "update ordr set booked_at = $2 where cancels_order = $1",
+        original_order_id,
+        booked_at,
+    )
+
+
 async def test_get_product_stats_returns_hourly_and_overall_breakdowns(
     db_connection: Connection,
     order_service: OrderService,
@@ -414,6 +422,96 @@ async def test_dashboard_overview_excludes_cancelled_sales_from_guest_count(
 
     assert overview.total_revenue == 0.0
     assert overview.guests_with_orders == 0
+
+
+async def test_dashboard_overview_uses_net_revenue_scope_with_cancel_orders(
+    db_connection: Connection,
+    order_service: OrderService,
+    product_service: ProductService,
+    event_node: Node,
+    event_admin_token: str,
+    tax_rate_ust: TaxRate,
+    cashier: Cashier,
+    till,
+    create_random_user_tag,
+):
+    await _set_event_time_range(
+        db_connection,
+        event_node,
+        start_date=datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+        end_date=datetime(2026, 1, 2, 23, 59, tzinfo=UTC),
+        daily_end_time=time(0, 0),
+    )
+
+    product = await product_service.create_product(
+        token=event_admin_token,
+        node_id=event_node.id,
+        product=NewProduct(
+            name="Net Revenue Product",
+            price=5.0,
+            tax_rate_id=tax_rate_ust.id,
+            fixed_price=True,
+            restrictions=[],
+            is_locked=True,
+            is_returnable=False,
+        ),
+    )
+    customer_account_id = await _create_customer_account(db_connection, event_node, create_random_user_tag)
+
+    await _create_sale_order(
+        db_connection=db_connection,
+        event_node=event_node,
+        cashier=cashier,
+        till_id=till.id,
+        customer_account_id=customer_account_id,
+        product=product,
+        quantity=3,
+        booked_at=datetime(2026, 1, 1, 10, 0, tzinfo=UTC),
+    )
+    cancelled_order_id = await _create_sale_order(
+        db_connection=db_connection,
+        event_node=event_node,
+        cashier=cashier,
+        till_id=till.id,
+        customer_account_id=customer_account_id,
+        product=product,
+        quantity=2,
+        booked_at=datetime(2026, 1, 1, 11, 0, tzinfo=UTC),
+    )
+    await order_service.cancel_sale_admin(token=event_admin_token, node_id=event_node.id, order_id=cancelled_order_id)
+    await _set_cancel_order_booked_at(
+        db_connection,
+        cancelled_order_id,
+        datetime(2026, 1, 1, 12, 0, tzinfo=UTC),
+    )
+
+    query = TimeseriesStatsQuery(
+        from_time=datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+        to_time=datetime(2026, 1, 1, 23, 59, tzinfo=UTC),
+    )
+    overview = await order_service.stats.get_dashboard_overview(
+        token=event_admin_token,
+        node_id=event_node.id,
+        query=query,
+    )
+    product_stats = await order_service.stats.get_product_stats(
+        token=event_admin_token,
+        node_id=event_node.id,
+        query=query,
+    )
+    counter_stats = await order_service.stats.get_revenue_by_counter(
+        token=event_admin_token,
+        node_id=event_node.id,
+        query=query,
+    )
+
+    product_revenue_total = sum(row.revenue for row in product_stats.product_overall_stats) + sum(
+        row.revenue for row in product_stats.deposit_overall_stats
+    )
+
+    assert overview.total_revenue == 5.0
+    assert product_revenue_total == 5.0
+    assert counter_stats.total_revenue == 5.0
 
 
 async def test_dashboard_overview_counts_only_guests_fully_paid_out(
