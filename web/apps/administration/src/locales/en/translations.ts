@@ -304,6 +304,7 @@ export const translations = {
     update: "Update product",
     delete: "Delete Product",
     deleteDescription: "Confirm product deletion",
+    createTillButton: "Create till button",
   },
   sumup: {
     sumup: "SumUp",

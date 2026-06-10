@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
+from sftkit.error import InvalidArgument
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
@@ -57,11 +58,15 @@ async def create_user(
     user_service: ContextUserService,
     node_id: int,
 ):
-    user_tag_uid = (
-        int(new_user.user_tag_uid_hex, 16)
-        if new_user.user_tag_uid_hex is not None and new_user.user_tag_uid_hex != ""
-        else None
-    )
+    user_tag_uid = None
+    if new_user.user_tag_uid_hex:
+        try:
+            user_tag_uid = int(new_user.user_tag_uid_hex, 16)
+        except ValueError as e:
+            raise InvalidArgument(
+                f"Invalid user tag uid: {new_user.user_tag_uid_hex}. Expected a hexadecimal number."
+            ) from e
+
     return await user_service.create_user(
         token=token,
         new_user=NewUser(
@@ -93,9 +98,15 @@ async def update_user(
     user_service: ContextUserService,
     node_id: int,
 ):
-    user_tag_uid = (
-        int(user.user_tag_uid_hex, 16) if user.user_tag_uid_hex is not None and user.user_tag_uid_hex != "" else None
-    )
+    user_tag_uid = None
+    if user.user_tag_uid_hex:
+        try:
+            user_tag_uid = int(user.user_tag_uid_hex, 16)
+        except ValueError as e:
+            raise InvalidArgument(
+                f"Invalid user tag uid: {user.user_tag_uid_hex}. Expected a hexadecimal number."
+            ) from e
+
     updated_user = await user_service.update_user(
         token=token,
         user_id=user_id,

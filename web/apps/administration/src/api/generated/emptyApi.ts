@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 
-import { adminApiBaseQuery } from "@/api/common";
+import { adminApiBaseQuery } from "@/api/baseQuery";
 
 /**
  * This is the base template for generated api slices

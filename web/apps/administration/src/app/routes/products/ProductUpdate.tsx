@@ -35,7 +35,10 @@ export const ProductUpdate: React.FC = withPrivilegeGuard("node_administration",
     <EditLayout
       title={t("product.update")}
       successRoute={ProductRoutes.detail(product.id)}
-      initialValues={product}
+      initialValues={{
+        ...product,
+        price_in_vouchers: product.price_in_vouchers || null,
+      }}
       validationSchema={ProductSchema}
       onSubmit={(p) => updateProduct({ nodeId: currentNode.id, productId: product.id, newProduct: p })}
       form={ProductForm}

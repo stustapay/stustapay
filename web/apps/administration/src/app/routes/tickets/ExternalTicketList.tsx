@@ -29,7 +29,7 @@ export const ExternalTicketList: React.FC = () => {
     {
       field: "external_reference",
       headerName: t("externalTicket.externalReference"),
-      type: "boolean",
+      type: "string",
       flex: 1,
       renderCell: ({ row: { external_reference, external_link } }) => {
         if (external_link) {
