@@ -1,23 +1,31 @@
-import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
-import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+type EventDesign = {
+  bon_logo_blob_id: string | null;
+};
 
-import { type CustomerPortalApiConfig } from "@/api";
-import { RootState, selectAuthToken } from "@/store";
+type CustomerPortalApiConfig = {
+  test_mode: boolean;
+  test_mode_message: string;
+  event_name: string;
+  data_privacy_url: string;
+  contact_email: string;
+  about_page_url: string;
+  payout_enabled: boolean;
+  currency_identifier: string;
+  sumup_topup_enabled: boolean;
+  allowed_country_codes: string[] | null;
+  translation_texts: {
+    [key: string]: {
+      [key: string]: string;
+    };
+  };
+  event_design: EventDesign;
+  node_id: number;
+  feedback_url?: string | null;
+};
 
 const siteHost = window.location.host;
 const siteProtocol = window.location.protocol;
 const customerApiBaseUrl = `${siteProtocol}//${siteHost}/api`;
-
-const prepareAuthHeaders = (
-  headers: Headers,
-  { getState }: Pick<BaseQueryApi, "getState" | "extra" | "endpoint" | "type" | "forced">
-) => {
-  const token = selectAuthToken(getState() as RootState);
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
-};
 
 export interface Config {
   customerApiBaseUrl: string;
@@ -46,14 +54,4 @@ export const fetchConfig = async (): Promise<Config> => {
   const c = generateConfig(publicConfig);
   config = c;
   return c;
-};
-
-export const customerApiBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
-  args,
-  api,
-  extraOptions
-) => {
-  const baseUrl = config.customerApiBaseUrl;
-  const rawBaseQuery = fetchBaseQuery({ baseUrl, prepareHeaders: prepareAuthHeaders });
-  return rawBaseQuery(args, api, extraOptions);
 };
