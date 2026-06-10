@@ -104,14 +104,14 @@ const BonHeader: React.FC<{ bon: IBon }> = ({ bon: { order, config } }) => {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="h2" textAlign="center">
+      <Typography variant="h2" sx={{ textAlign: "center" }}>
         {t("invoice")}
       </Typography>
-      <Typography variant="h5" display="flex" justifyContent="space-between">
+      <Typography variant="h5" sx={{ display: "flex", justifyContent: "space-between" }}>
         <div>{t("bonHeader", { orderId: order.id.toString().padStart(10, "0") })}</div>
         <div>{new Date(order.booked_at).toLocaleDateString()}</div>
       </Typography>
-      <Box display="flex" justifyContent="end">
+      <Box sx={{ display: "flex", justifyContent: "end" }}>
         <Typography>
           {config.issuer}
           <br />
@@ -130,9 +130,12 @@ const BonTotal: React.FC<{ bon: IBon }> = ({ bon }) => {
   const formatCurrency = useCurrencyFormatter(bon);
 
   return (
-    <Box display="flex" justifyContent="end">
+    <Box sx={{ display: "flex", justifyContent: "end" }}>
       <Typography variant="h5">
-        {t("bonTotal", { total: formatCurrency(order.total_price), currencyId: currency_identifier })}
+        {t("bonTotal", {
+          total: formatCurrency(order.total_price),
+          currencyId: currency_identifier,
+        })}
       </Typography>
     </Box>
   );
@@ -276,8 +279,8 @@ const SignatureDetails: React.FC<{ bon: IBon }> = ({ bon: { order } }) => {
         </Table>
       </TableContainer>
 
-      <Box display="flex" justifyContent="center" alignItems="center" marginTop={3}>
-        <Box maxWidth="400px">
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: 3 }}>
+        <Box sx={{ maxWidth: "400px" }}>
           <QRCode
             size={256}
             style={{ height: "auto", width: "100%" }}

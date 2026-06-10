@@ -119,7 +119,7 @@ export const Login: React.FC = () => {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Stack alignItems="center" justifyContent="center">
+      <Stack sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Avatar sx={{ margin: 1, backgroundColor: "primary.main" }}>
           <LockOutlinedIcon />
         </Avatar>

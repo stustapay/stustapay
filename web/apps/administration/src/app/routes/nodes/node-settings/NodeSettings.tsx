@@ -121,7 +121,7 @@ export const NodeSettings: React.FC = () => {
   return (
     <Container maxWidth="md">
       <Stack spacing={2}>
-        <Stack direction="row" justifyContent="center" spacing={2}>
+        <Stack direction="row" sx={{ display: "flex", justifyContent: "center", spacing: 2 }}>
           {currentNode.event_node_id == null && (
             <Button variant="outlined" component={RouterLink} to={`/node/${currentNode.id}/create-event`}>
               {t("settings.createEvent.link")}

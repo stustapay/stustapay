@@ -178,7 +178,12 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
   };
 
   const actions: LayoutAction[] = [
-    { label: t("account.disable"), onClick: handleDisableAccount, color: "error", icon: <RemoveCircleIcon /> },
+    {
+      label: t("account.disable"),
+      onClick: handleDisableAccount,
+      color: "error",
+      icon: <RemoveCircleIcon />,
+    },
   ];
 
   if (canManagePayoutsAtNode(currentNode.id) && customer.payout == null) {
@@ -199,7 +204,7 @@ export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, 
 
   return (
     <DetailLayout title={`Customer Account ${customer.id}`} routes={AccountRoutes} actions={actions}>
-      <Grid container spacing={1} display="grid" alignItems="stretch" gridTemplateColumns="1fr 1fr">
+      <Grid container spacing={1} sx={{ display: "grid", alignItems: "stretch", gridTemplateColumns: "1fr 1fr" }}>
         <Grid>
           <DetailView sx={{ height: "100%" }}>
             <DetailField label={t("account.id")} value={customer.id} />

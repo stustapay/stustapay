@@ -78,7 +78,7 @@ export const TerminalDetail: React.FC = () => {
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
         deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-          navigate(TerminalRoutes.list()),
+          navigate(TerminalRoutes.list())
         );
         return true;
       },
@@ -204,10 +204,7 @@ export const TerminalDetail: React.FC = () => {
               </>
             )}
             {terminal.registration_uuid != null && (
-              <DetailField
-                label={t("terminal.registrationUUID")}
-                value={terminal.registration_uuid}
-              />
+              <DetailField label={t("terminal.registrationUUID")} value={terminal.registration_uuid} />
             )}
             <DetailBoolField label={t("terminal.loggedIn")} value={terminal.session_uuid != null} />
             {terminal.mdm_device_id != null && (
@@ -237,10 +234,7 @@ export const TerminalDetail: React.FC = () => {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={encodeTerminalRegistrationQrCode(
-                    config.terminalApiBaseUrl,
-                    terminal.registration_uuid,
-                  )}
+                  value={encodeTerminalRegistrationQrCode(config.terminalApiBaseUrl, terminal.registration_uuid)}
                   viewBox={`0 0 256 256`}
                 />
               </Box>
@@ -253,11 +247,7 @@ export const TerminalDetail: React.FC = () => {
           <TerminalMap mdmDeviceId={terminal.mdm_device_id} label={terminal.name} />
         </Paper>
       )}
-      <TerminalSwitchTill
-        open={switchTillOpen}
-        terminalId={terminal.id}
-        onClose={() => setSwitchTillOpen(false)}
-      />
+      <TerminalSwitchTill open={switchTillOpen} terminalId={terminal.id} onClose={() => setSwitchTillOpen(false)} />
     </DetailLayout>
   );
 };

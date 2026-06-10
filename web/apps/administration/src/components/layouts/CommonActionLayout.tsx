@@ -34,8 +34,8 @@ export const CommonActionLayout: React.FC<CommonActionLayoutProps> = ({ title, c
 
   return (
     <Stack spacing={2}>
-      <Grid container spacing={1} justifyContent="space-between">
-        <Grid display="flex" alignItems="center">
+      <Grid container spacing={1} sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Grid sx={{ display: "flex", alignItems: "center" }}>
           <IconButton onClick={() => navigate(-1)}>
             <ChevronLeft />
           </IconButton>

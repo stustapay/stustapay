@@ -9,7 +9,6 @@ import { TillLayoutRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, LinearProgress, Paper, Tab, Typography } from "@mui/material";
-import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/react/index";
 import { Loading } from "@stustapay/components";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -19,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { TillLayoutDesigner } from "./TillLayoutDesigner";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/query";
 
 export interface TillChangeProps<T extends NewTillLayout> {
   headerTitle: string;
@@ -74,7 +74,7 @@ export function TillLayoutChange<T extends NewTillLayout>({
         setSubmitting(false);
         navigate(TillLayoutRoutes.list());
       })
-      .catch((err) => {
+      .catch((err: any) => {
         setSubmitting(false);
         console.warn("error in till update", err);
       });
@@ -112,7 +112,11 @@ export function TillLayoutChange<T extends NewTillLayout>({
                 <TillLayoutDesigner
                   selectedIds={formik.values.ticket_ids == null ? [] : formik.values.ticket_ids}
                   onChange={(ticketIds) => formik.setFieldValue("ticket_ids", ticketIds)}
-                  selectables={tickets.map((t) => ({ id: t.id, name: t.name, price: t.total_price }))}
+                  selectables={tickets.map((t) => ({
+                    id: t.id,
+                    name: t.name,
+                    price: t.total_price,
+                  }))}
                 />
               </TabPanel>
             </TabContext>

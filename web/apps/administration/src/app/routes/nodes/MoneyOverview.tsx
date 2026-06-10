@@ -19,7 +19,15 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ amount, label, actions }) => 
   return (
     <Card>
       <CardContent>
-        <Grid container alignItems="center" justifyContent="center" direction="column">
+        <Grid
+          container
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
           <Grid>
             <Typography variant="h6" component="div">
               {label}

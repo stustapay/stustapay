@@ -37,7 +37,7 @@ export const PayoutRunCreate: React.FC = () => {
         setSubmitting(false);
         navigate(PayoutRunRoutes.list());
       })
-      .catch((err) => {
+      .catch((_err) => {
         setSubmitting(false);
       });
   };
@@ -63,7 +63,7 @@ export const PayoutRunCreate: React.FC = () => {
   return (
     <Stack spacing={2}>
       <Grid container spacing={1}>
-        <Grid display="flex" alignItems="center">
+        <Grid sx={{ display: "flex", alignItems: "center" }}>
           <IconButton onClick={() => navigate(-1)}>
             <ChevronLeft />
           </IconButton>

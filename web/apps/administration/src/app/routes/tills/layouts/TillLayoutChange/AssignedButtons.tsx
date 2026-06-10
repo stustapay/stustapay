@@ -28,7 +28,7 @@ export const AssignedButtons: React.FC<AssignedButtonsProps> = ({
     if (oldIndex === oldHoveredIndex + addMode) {
       return;
     }
-    const newButtons = [...assignedButtonIds.filter((id) => id !== buttonId)];
+    const newButtons = assignedButtonIds.filter((id) => id !== buttonId);
     const hoveredIndex = newButtons.findIndex((id) => id === hoveredButtonId);
     newButtons.splice(hoveredIndex + addMode, 0, buttonId);
     setAssignedButtonIds(newButtons);

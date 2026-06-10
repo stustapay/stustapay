@@ -100,7 +100,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
     const file = event.target.files[0];
 
     const reader = new FileReader();
-    reader.onload = (loadedFile) => {
+    reader.addEventListener("load", (loadedFile) => {
       const res = loadedFile.target?.result;
       if (!res) {
         toast.error("Error uploading file");
@@ -114,7 +114,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
       if (tags) {
         setFieldValue("tags", tags);
       }
-    };
+    });
     reader.readAsText(file);
   };
 

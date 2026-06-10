@@ -1,3 +1,4 @@
+import * as React from "react";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Link } from "@mui/material";
 import { useTranslation } from "react-i18next";

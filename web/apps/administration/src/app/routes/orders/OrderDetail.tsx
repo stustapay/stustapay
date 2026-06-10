@@ -66,7 +66,7 @@ export const OrderDetail: React.FC = () => {
         cancelSale({ orderId: order.id, nodeId: currentNode.id })
           .unwrap()
           .then(() => toast.success(t("order.cancelSuccessful")))
-          .catch((err) => undefined); // to avoid uncaught promise errors
+          .catch(() => undefined); // to avoid uncaught promise errors
         return true;
       },
     });

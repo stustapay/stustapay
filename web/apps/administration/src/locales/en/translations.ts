@@ -349,8 +349,7 @@ export const translations = {
     deleteNode: {
       button: "Delete node",
       confirmTitle: "Confirm delete node",
-      confirmContent:
-        'Are you sure you want to delete the node "{{nodeName}}". This is irreversible!!!!!!!',
+      confirmContent: 'Are you sure you want to delete the node "{{nodeName}}". This is irreversible!!!!!!!',
       success: "Sucessfully deleted node",
       error: "Error while deleting node",
     },
@@ -442,12 +441,9 @@ export const translations = {
       sepa_allowed_country_codes: "Allowed country codes for payout",
       payout_done_subject: "Subject of mail sent upon setting a payout to done",
       payout_done_message: "Message of mail sent upon setting a payout to done",
-      payout_registered_subject:
-        "Subject of mail sent when a customer enters their payout information",
-      payout_registered_message:
-        "Message of mail sent when a customer enters their payout information",
-      payout_sender:
-        "E-Mail sender of all payout related emails. If empty the event email sender will be used",
+      payout_registered_subject: "Subject of mail sent when a customer enters their payout information",
+      payout_registered_message: "Message of mail sent when a customer enters their payout information",
+      payout_sender: "E-Mail sender of all payout related emails. If empty the event email sender will be used",
     },
     mdm: {
       tabLabel: "MDM Integration",
@@ -672,8 +668,7 @@ export const translations = {
     maxNumPayoutsMustBeSmallerThanEventDefault:
       "Max number of payouts must be smaller than the default configured for an event: {{maxNumPayoutsAtEvent}}",
     downloadCsv: "CSV",
-    createNewSepaXmlInfo:
-      "This will regenerate the sepa xml of this payout run with the given execution date set.",
+    createNewSepaXmlInfo: "This will regenerate the sepa xml of this payout run with the given execution date set.",
     downloadPreviousSepa: "Previous SEPA XML",
     downloadSepa: "SEPA XML",
     done: "Done",
@@ -739,8 +734,7 @@ export const translations = {
       changeMappingFailed: "Failed to update MDM device mapping",
       locationLoadFailed: "Failed to load MDM device location",
       showLocation: "Show location",
-      headwindDisabled:
-        "Headwind integration is disabled. Please configure it in the event settings first.",
+      headwindDisabled: "Headwind integration is disabled. Please configure it in the event settings first.",
     },
     till: "Till",
     id: "ID",

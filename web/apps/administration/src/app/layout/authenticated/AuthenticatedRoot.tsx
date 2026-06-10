@@ -59,7 +59,7 @@ const BreadcrumbHeader: React.FC = () => {
       .filter(Boolean)
       .join(" / ");
     document.title = breadcrumbPath ? `SSP - ${breadcrumbPath}` : t("StuStaPay");
-  }, [nodes, t]);
+  }, [nodes, t, currentNode.event_node_id]);
 
   return (
     <Stack sx={{ flexGrow: 1, alignItems: "center" }} direction="row" spacing={3}>

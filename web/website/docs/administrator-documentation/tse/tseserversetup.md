@@ -14,8 +14,6 @@ centos7 requires cgroupsv1, (if you use centos10, this might no longer be requir
 GRUB_CMDLINE_LINUX_DEFAULT="quiet systemd.unified_cgroup_hierarchy=false"
 ```
 
-
-
 as `root`:
 
 ```bash

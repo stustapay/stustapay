@@ -29,7 +29,7 @@ export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administrat
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" sx={{ display: "flex", alignItems: "center", spacing: 2 }}>
           <DateTimePicker
             label={t("overview.fromTimestamp")}
             value={fromTimestamp}

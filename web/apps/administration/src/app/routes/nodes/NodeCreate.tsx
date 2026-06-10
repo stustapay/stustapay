@@ -69,7 +69,7 @@ export const NodeCreate: React.FC = withPrivilegeGuard("node_administration", ()
 
   return (
     <Container maxWidth="md">
-      <Typography variant="h4" textAlign="center">
+      <Typography variant="h4" sx={{ textAlign: "center" }}>
         {t("settings.createNode.heading", { parentNodeName: currentNode.name })}
       </Typography>
       <Formik

@@ -12,6 +12,7 @@ const resources = {
   de: { translations: translationsDe, common: common_de },
 } as const;
 
+// oxlint-disable-next-line import/no-named-as-default-member
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

@@ -34,10 +34,11 @@ const RegisterOrderList: React.FC<{ register: CashRegister }> = ({ register }) =
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
         transactions: data
-          ? selectTransactionAll(data).map((transaction) => ({
-              ...transaction,
-              amount: transaction.target_account === register.account_id ? transaction.amount : -transaction.amount,
-            }))
+          ? selectTransactionAll(data).map((transaction) => {
+              const amount =
+                transaction.target_account === register.account_id ? transaction.amount : -transaction.amount;
+              return Object.assign(transaction, { amount });
+            })
           : undefined,
       }),
     }
@@ -127,7 +128,12 @@ export const CashRegisterDetail: React.FC = () => {
             onClick: () => navigate(`${CashRegistersRoutes.detail(register.id)}/transfer`),
             disabled: register.current_cashier_id == null,
           },
-          { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+          {
+            label: t("delete"),
+            onClick: openConfirmDeleteDialog,
+            color: "error",
+            icon: <DeleteIcon />,
+          },
         ]}
       >
         <DetailView>

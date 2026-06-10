@@ -15,15 +15,22 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ label, value, on
   const { t } = useTranslation();
 
   return (
-    <Box display="grid" gridTemplateColumns={showPreview ? "repeat(2, 1fr)" : "auto"} gap={2} width="100%">
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: showPreview ? "repeat(2, 1fr)" : "auto",
+        gap: 2,
+        width: "100%",
+      }}
+    >
       <Stack>
         <Typography variant="body1">{label}</Typography>
         <TextField multiline fullWidth value={value} onChange={(evt) => onChange(evt.target.value)} minRows={10} />
       </Stack>
       {showPreview && (
-        <Box display="grid" gridTemplateRows="min-content auto">
+        <Box sx={{ display: "grid", gridTemplateRows: "min-content auto" }}>
           <Typography variant="body1">{t("preview")}</Typography>
-          <Box border={1} borderColor="divider" padding={1}>
+          <Box sx={{ border: 1, borderColor: "divider", padding: 1 }}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
           </Box>
         </Box>

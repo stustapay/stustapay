@@ -25,7 +25,7 @@ const IndividualProductStats: React.FC<{
   hourly_intervals: ProductTimeseries[];
   overall_stats: ProductOverallStats[];
   useRevenue: boolean;
-}> = ({ hourly_intervals, overall_stats, nodeId, useRevenue }) => {
+}> = ({ hourly_intervals, overall_stats, nodeId: _nodeId, useRevenue }) => {
   const hourlyData = React.useMemo(() => {
     return hourly_intervals.map((productData) => ({
       id: productData.product_name,
@@ -40,7 +40,7 @@ const IndividualProductStats: React.FC<{
 
   return (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 9 }} height={300}>
+      <Grid size={{ xs: 9 }} sx={{ height: 300 }}>
         <ResponsiveLine
           animate={false}
           data={hourlyData}
@@ -172,10 +172,10 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
             Total revenue through sales
           </Typography>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 9 }} height={300}>
+            <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
               <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={true} data={productStats} />
             </Grid>
-            <Grid size={{ xs: 12, md: 3 }} height={300}>
+            <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
               <DailyStatsTable data={productStats} useRevenue={true} />
             </Grid>
           </Grid>

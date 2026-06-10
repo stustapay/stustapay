@@ -3,7 +3,7 @@ on:
   workflow_call:
   pull_request:
     paths:
-    - "web/**"
+      - "web/**"
 
 jobs:
   lint:
@@ -20,7 +20,10 @@ jobs:
         run: npm ci
         working-directory: ./web
       - name: Lint
-        run: npx nx run-many --target=lint
+        run: npx nx oxlint
+        working-directory: ./web
+      - name: Lint
+        run: npx nx oxfmt --check
         working-directory: ./web
 
   build:

@@ -65,7 +65,10 @@ export const PretixSettingsSchema = z
 
 export type PretixSettings = z.infer<typeof PretixSettingsSchema>;
 
-const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({ nodeId, formik }) => {
+const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({
+  nodeId,
+  formik,
+}) => {
   const { t, i18n } = useTranslation();
   const languageBaseCode = i18n.language.split("-")[0];
   const [products, setProducts] = React.useState<PretixProduct[]>([]);
@@ -130,10 +133,10 @@ const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<Preti
   );
 };
 
-export const PretixSettingsForm: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({
-  nodeId,
-  formik,
-}) => {
+export const PretixSettingsForm: React.FC<{
+  nodeId: number;
+  formik: FormikProps<PretixSettings>;
+}> = ({ nodeId, formik }) => {
   const { t } = useTranslation();
 
   return (

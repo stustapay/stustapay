@@ -1,3 +1,4 @@
+import * as React from "react";
 import { NewProduct } from "@/api";
 import { RestrictionSelect, TaxRateSelect } from "@/components/features";
 import { FormCheckbox, FormCurrencyInput, FormNumericInput, FormTextField } from "@stustapay/form-components";

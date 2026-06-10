@@ -1,3 +1,4 @@
+import * as React from "react";
 import { NewTill, Terminal, selectTerminalAll, useListTerminalsQuery } from "@/api";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";

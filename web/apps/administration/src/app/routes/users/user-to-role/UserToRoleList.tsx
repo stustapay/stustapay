@@ -11,7 +11,7 @@ import { UserRoleRoutes, UserRoutes, UserToRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Box, Link } from "@mui/material";
+import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -27,7 +27,9 @@ export const UserToRoleList: React.FC = () => {
 
   const { data: userToRoles, isLoading } = useListUserToRoleQuery({ nodeId: currentNode.id });
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: userRoles, isLoading: isUserRolesLoading } = useListUserRolesQuery({ nodeId: currentNode.id });
+  const { data: userRoles, isLoading: isUserRolesLoading } = useListUserRolesQuery({
+    nodeId: currentNode.id,
+  });
   const [updateUserToRoles] = useUpdateUserToRolesMutation();
   const { dataGridNodeColumn } = useRenderNode();
   const openModal = useOpenModal();

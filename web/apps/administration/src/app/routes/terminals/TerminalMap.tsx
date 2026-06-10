@@ -18,11 +18,7 @@ export const TerminalMap: React.FC<TerminalMapProps> = ({ mdmDeviceId, label }) 
   const { currentNode } = useCurrentNode();
   const [popupShown, setPopupShown] = React.useState(false);
 
-  const {
-    data: location,
-    isLoading,
-    error,
-  } = useGetMdmDeviceLocationQuery({ nodeId: currentNode.id, mdmDeviceId });
+  const { data: location, isLoading, error } = useGetMdmDeviceLocationQuery({ nodeId: currentNode.id, mdmDeviceId });
 
   if (isLoading) {
     return <Skeleton variant="rounded" width="100%" height={MAP_HEIGHT} />;
@@ -64,9 +60,7 @@ export const TerminalMap: React.FC<TerminalMapProps> = ({ mdmDeviceId, label }) 
           onClose={() => setPopupShown(false)}
         >
           <Typography variant="h6">{label}</Typography>
-          {location.last_update != null && (
-            <Typography variant="body2">{location.last_update}</Typography>
-          )}
+          {location.last_update != null && <Typography variant="body2">{location.last_update}</Typography>}
         </Popup>
       )}
     </Map>

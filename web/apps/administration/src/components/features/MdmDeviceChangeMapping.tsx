@@ -20,9 +20,7 @@ export type MdmDeviceChangeMappingProps = {
 };
 
 const getSelectableTerminals = (terminals: Terminal[], device: MdmDeviceWithMapping, mappedTerminalIds: Set<number>) =>
-  terminals.filter(
-    (terminal) => !mappedTerminalIds.has(terminal.id) || terminal.id === device.mapping?.terminal_id
-  );
+  terminals.filter((terminal) => !mappedTerminalIds.has(terminal.id) || terminal.id === device.mapping?.terminal_id);
 
 const getDefaultTerminal = (
   terminals: Terminal[],
@@ -39,8 +37,7 @@ const getDefaultTerminal = (
   return (
     terminals.find(
       (terminal) =>
-        !mappedTerminalIds.has(terminal.id) &&
-        terminal.name.toLowerCase() === device.device.device_id.toLowerCase()
+        !mappedTerminalIds.has(terminal.id) && terminal.name.toLowerCase() === device.device.device_id.toLowerCase()
     ) ?? null
   );
 };

@@ -89,8 +89,13 @@ export const CashierCloseOut: React.FC = () => {
   const { schema, initialValues } = useCloseOutSchema(denominations);
 
   const [closeOut] = useCloseOutCashierMutation();
-  const { data: cashier, isLoading } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
-  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
+  const { data: cashier, isLoading } = useGetCashierQuery({
+    nodeId: currentNode.id,
+    cashierId: Number(cashierId),
+  });
+  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({
+    nodeId: currentNode.id,
+  });
 
   if (!cashier || isLoading || !terminals || isTerminalsLoading) {
     return <Loading />;
@@ -119,7 +124,7 @@ export const CashierCloseOut: React.FC = () => {
         setSubmitting(false);
         navigate(CashierRoutes.detail(cashierId));
       })
-      .catch((err) => {
+      .catch((_err) => {
         setSubmitting(false);
       });
   };

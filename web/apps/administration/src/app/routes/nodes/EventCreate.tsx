@@ -214,7 +214,7 @@ export const EventCreate: React.FC = withPrivilegeGuard("node_administration", (
   return (
     <Container maxWidth="md">
       <Stack spacing={2}>
-        <Typography variant="h4" textAlign="center">
+        <Typography variant="h4" sx={{ textAlign: "center" }}>
           {t("settings.createEvent.heading", { parentNodeName: currentNode.name })}
         </Typography>
         <StepperForm steps={steps} onSubmit={handleSubmit} />

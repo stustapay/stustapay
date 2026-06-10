@@ -1,7 +1,7 @@
-import { Container, Link } from "@mui/material";
+import * as React from "react";
+import { Container } from "@mui/material";
 import { Box } from "@mui/system";
-import { Trans, useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

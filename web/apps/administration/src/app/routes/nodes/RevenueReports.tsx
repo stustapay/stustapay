@@ -28,7 +28,7 @@ async function openReportPreview<T>(args: T, generationFunction: (args: T) => Pr
       window.open(pdfUrl);
     }
   } catch (e) {
-    toast.error("Error generating report");
+    toast.error(`Error generating report: ${e}`);
   }
 }
 

@@ -38,11 +38,11 @@ export const BonSettingsForm: React.FC<FormikProps<BonSettings>> = (formik) => {
   );
 };
 
-const BonPreviewPopup: React.FC<{ bon: BonJsonRead | null; nodeId: number; closePreview: () => void }> = ({
-  bon,
-  nodeId,
-  closePreview,
-}) => {
+const BonPreviewPopup: React.FC<{
+  bon: BonJsonRead | null;
+  nodeId: number;
+  closePreview: () => void;
+}> = ({ bon, nodeId, closePreview }) => {
   const { t } = useTranslation();
   const { data: eventDesign } = useGetEventDesignQuery({ nodeId });
   return (
@@ -113,7 +113,7 @@ export const TabBon: React.FC<{ nodeId: number; eventSettings: RestrictedEventSe
         window.open(pdfUrl);
       }
     } catch (e) {
-      toast.error("Error generating report preview");
+      toast.error(`Error generating report preview: ${e}`);
     }
   };
 

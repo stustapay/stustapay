@@ -1,6 +1,6 @@
 import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
-import { FormSelect, FormSwitch, FormTextField } from "@stustapay/form-components";
+import { FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import * as React from "react";
@@ -49,17 +49,9 @@ export const MdmSettingsForm: React.FC<FormikProps<MdmSettings>> = (formik) => {
 
   return (
     <>
-      <FormSwitch
-        label={t("settings.mdm.headwindEnabled")}
-        name="headwind_enabled"
-        formik={formik}
-      />
+      <FormSwitch label={t("settings.mdm.headwindEnabled")} name="headwind_enabled" formik={formik} />
       <FormTextField label={t("settings.mdm.headwindUrl")} name="headwind_url" formik={formik} />
-      <FormTextField
-        label={t("settings.mdm.headwindUsername")}
-        name="headwind_username"
-        formik={formik}
-      />
+      <FormTextField label={t("settings.mdm.headwindUsername")} name="headwind_username" formik={formik} />
       <FormTextField
         label={t("settings.mdm.headwindPassword")}
         name="headwind_password"

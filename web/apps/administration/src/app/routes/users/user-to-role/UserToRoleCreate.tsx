@@ -35,7 +35,7 @@ const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, e
         }
       }
     },
-    [userToRoles, setFieldValue]
+    [userToRoles, setFieldValue, currentNode.id]
   );
   return (
     <>

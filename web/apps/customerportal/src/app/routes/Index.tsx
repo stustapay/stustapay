@@ -53,7 +53,16 @@ export const Index: React.FC = () => {
   }
 
   return (
-    <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
+    <Grid
+      container
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        spacing: 2,
+        paddingX: 0.5,
+      }}
+    >
       {config.sumup_topup_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="info" onClick={() => navigate("/topup")} sx={{ cursor: "pointer" }}>
@@ -63,7 +72,7 @@ export const Index: React.FC = () => {
         </Grid>
       )}
       <Grid size={{ xs: 12, sm: 8 }} sx={{ mt: 2 }}>
-        <Grid container justifyContent="center">
+        <Grid container sx={{ display: "flex", justifyContent: "center" }}>
           <Paper
             sx={{
               paddingX: 8,

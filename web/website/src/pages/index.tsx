@@ -20,6 +20,7 @@ function HomepageHeader() {
           </Link>
           <span className={styles.indexCtasGitHubButtonWrapper}>
             <iframe
+              sandbox=""
               className={styles.indexCtasGitHubButton}
               src="https://ghbtns.com/github-btn.html?user=stustapay&amp;repo=stustapay&amp;type=star&amp;count=true&amp;size=large"
               width={160}
@@ -33,7 +34,7 @@ function HomepageHeader() {
   );
 }
 
-export default function Home(): JSX.Element {
+export default function Home() {
   return (
     <Layout title="Home">
       <HomepageHeader />

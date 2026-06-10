@@ -36,7 +36,7 @@ export const Settings: React.FC = () => {
 
   return (
     <TabContext value={activeTab}>
-      <Box display="grid" gridTemplateColumns="min-content auto">
+      <Box sx={{ display: "grid", gridTemplateColumns: "min-content auto" }}>
         <Box sx={{ borderRight: 1, borderColor: "divider" }}>
           <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
             <Tab label={t("settings.general.tabLabel")} value="general" />

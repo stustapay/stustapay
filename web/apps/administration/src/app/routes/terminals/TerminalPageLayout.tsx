@@ -1,9 +1,6 @@
 import { useNode } from "@/api/nodes";
 import { TerminalMdmRoutes, TerminalRoutes } from "@/app/routes";
-import {
-  Smartphone as SmartphoneIcon,
-  PhonelinkSetup as PhonelinkSetupIcon,
-} from "@mui/icons-material";
+import { Smartphone as SmartphoneIcon, PhonelinkSetup as PhonelinkSetupIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";

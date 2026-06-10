@@ -14,7 +14,14 @@ export interface ListLayoutProps {
   additionalActions?: LayoutAction[];
 }
 
-export const ListLayout: React.FC<ListLayoutProps> = ({ title, children, routes, additionalActions = [] }) => {
+const DEFAULT_ADDITIONAL_ACTIONS: LayoutAction[] = [];
+
+export const ListLayout: React.FC<ListLayoutProps> = ({
+  title,
+  children,
+  routes,
+  additionalActions = DEFAULT_ADDITIONAL_ACTIONS,
+}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const hasPrivilege = useCurrentUserHasPrivilege(routes?.privilege);
@@ -23,7 +30,12 @@ export const ListLayout: React.FC<ListLayoutProps> = ({ title, children, routes,
   const actions = React.useMemo(() => {
     const a: LayoutAction[] = [];
     if (routes && hasPrivilege && allowsObject) {
-      a.push({ label: t("add"), onClick: () => navigate(routes.add()), color: "primary", icon: <AddIcon /> });
+      a.push({
+        label: t("add"),
+        onClick: () => navigate(routes.add()),
+        color: "primary",
+        icon: <AddIcon />,
+      });
     }
 
     return [...a, ...additionalActions];
