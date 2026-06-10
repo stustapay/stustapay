@@ -1,3 +1,4 @@
+import enum
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.user import Privilege, UserRole
+from stustapay.mdm.mdm_provider import DeviceStatus
 
 
 class NewTerminal(BaseModel):
@@ -22,6 +24,7 @@ class Terminal(NewTerminal):
     active_user_id: Optional[int] = None
     active_user_role_id: Optional[int] = None
     last_seen: datetime
+    mdm_device_id: str | None = None
 
 
 class UserTagSecret(BaseModel):
@@ -98,3 +101,45 @@ class CurrentTerminal(BaseModel):
     active_user_id: int | None
     active_user_role_id: int | None
     till: Till | None
+
+
+class MdmType(enum.Enum):
+    headwind = "headwind"
+
+
+class UpdateMdmDeviceMapping(BaseModel):
+    terminal_id: int
+    type: MdmType
+    mdm_device_id: str
+
+
+class MdmDeviceMapping(UpdateMdmDeviceMapping):
+    created_at: datetime
+    updated_at: datetime
+
+
+class MdmDeviceMappingWithTerminal(MdmDeviceMapping):
+    terminal_name: str
+    terminal_description: str | None = None
+
+
+class MdmDevice(BaseModel):
+    device_id: str
+    serial: str | None = None
+    imei: str | None = None
+    description: str | None = None
+    last_update: datetime | None = None
+    ip_address: str | None = None
+    model: str | None = None
+    status: DeviceStatus
+
+
+class MdmDeviceWithMapping(BaseModel):
+    device: MdmDevice
+    mapping: MdmDeviceMappingWithTerminal | None
+
+
+class MdmDeviceLocation(BaseModel):
+    latitude: float
+    longitude: float
+    last_update: datetime | None

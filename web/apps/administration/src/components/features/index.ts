@@ -9,4 +9,5 @@ export * from "./TaxRateSelect";
 export * from "./CurrencyIdentifierSelect";
 export * from "./TillSwitchTerminal";
 export * from "./TerminalSwitchTill";
+export * from "./MdmDeviceChangeMapping";
 export * from "./TransactionTable";

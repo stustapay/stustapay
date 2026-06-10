@@ -14,14 +14,14 @@ import { CashierRoutes, TerminalRoutes, TillRoutes } from "@/app/routes";
 import { TerminalSwitchTill } from "@/components/features";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
-import { useCurrentNode } from "@/hooks";
+import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Logout as LogoutIcon,
   PointOfSale as PointOfSaleIcon,
 } from "@mui/icons-material";
-import { Box, Button, ListItem, Paper } from "@mui/material";
+import { Box, Button, Grid, ListItem, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -30,11 +30,13 @@ import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { TerminalMap } from "./TerminalMap";
 
 export const TerminalDetail: React.FC = () => {
   const { t } = useTranslation();
   const { terminalId } = useParams();
   const { currentNode } = useCurrentNode();
+  const { eventSettings } = useCurrentEventSettings();
   const navigate = useNavigate();
 
   const [forceLogoutUser] = useForceLogoutUserMutation();
@@ -76,7 +78,7 @@ export const TerminalDetail: React.FC = () => {
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
         deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-          navigate(TerminalRoutes.list())
+          navigate(TerminalRoutes.list()),
         );
         return true;
       },
@@ -160,59 +162,102 @@ export const TerminalDetail: React.FC = () => {
           icon: <LogoutIcon />,
           hidden: terminal.session_uuid == null,
         },
-        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+        {
+          label: t("delete"),
+          onClick: openConfirmDeleteDialog,
+          color: "error",
+          icon: <DeleteIcon />,
+        },
       ]}
     >
-      <DetailView>
-        <DetailField label={t("terminal.id")} value={terminal.id} />
-        <DetailField label={t("common.name")} value={terminal.name} />
-        <DetailField label={t("common.description")} value={terminal.description} />
-        <DetailField label={t("terminal.lastSeen")} value={terminal.last_seen} />
-        {till != null && (
-          <DetailField linkTo={TillRoutes.detail(till.id, till.node_id)} label={t("terminal.till")} value={till.name} />
-        )}
-        {terminal.active_user_id != null && (
-          <>
-            <DetailField
-              label={t("till.activeUser")}
-              linkTo={CashierRoutes.detail(terminal.active_user_id)}
-              value={renderUser(terminal.active_user_id)}
-            />
-            <ListItem>
-              <Button color="error" variant="contained" onClick={openConfirmLogoutDialog} startIcon={<LogoutIcon />}>
-                {t("till.forceLogoutUser")}
-              </Button>
-            </ListItem>
-          </>
-        )}
-        {terminal.registration_uuid != null && (
-          <DetailField label={t("terminal.registrationUUID")} value={terminal.registration_uuid} />
-        )}
-        <DetailBoolField label={t("terminal.loggedIn")} value={terminal.session_uuid != null} />
-      </DetailView>
-      {terminal.registration_uuid != null && (
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: terminal.registration_uuid != null ? 6 : 12 }}>
+          <DetailView>
+            <DetailField label={t("terminal.id")} value={terminal.id} />
+            <DetailField label={t("common.name")} value={terminal.name} />
+            <DetailField label={t("common.description")} value={terminal.description} />
+            <DetailField label={t("terminal.lastSeen")} value={terminal.last_seen} />
+            {till != null && (
+              <DetailField
+                linkTo={TillRoutes.detail(till.id, till.node_id)}
+                label={t("terminal.till")}
+                value={till.name}
+              />
+            )}
+            {terminal.active_user_id != null && (
+              <>
+                <DetailField
+                  label={t("till.activeUser")}
+                  linkTo={CashierRoutes.detail(terminal.active_user_id)}
+                  value={renderUser(terminal.active_user_id)}
+                />
+                <ListItem>
+                  <Button
+                    color="error"
+                    variant="contained"
+                    onClick={openConfirmLogoutDialog}
+                    startIcon={<LogoutIcon />}
+                  >
+                    {t("till.forceLogoutUser")}
+                  </Button>
+                </ListItem>
+              </>
+            )}
+            {terminal.registration_uuid != null && (
+              <DetailField
+                label={t("terminal.registrationUUID")}
+                value={terminal.registration_uuid}
+              />
+            )}
+            <DetailBoolField label={t("terminal.loggedIn")} value={terminal.session_uuid != null} />
+            {terminal.mdm_device_id != null && (
+              <DetailField label={t("terminal.mdm.deviceId")} value={terminal.mdm_device_id} />
+            )}
+          </DetailView>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          {terminal.registration_uuid != null && (
+            <Paper
+              sx={{
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Box
+                sx={{
+                  padding: 2,
+                  backgroundColor: "white",
+                  margin: "0 auto",
+                  maxWidth: "20em",
+                  width: "100%",
+                }}
+              >
+                <QRCode
+                  size={256}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  value={encodeTerminalRegistrationQrCode(
+                    config.terminalApiBaseUrl,
+                    terminal.registration_uuid,
+                  )}
+                  viewBox={`0 0 256 256`}
+                />
+              </Box>
+            </Paper>
+          )}
+        </Grid>
+      </Grid>
+      {terminal.mdm_device_id != null && eventSettings.headwind_enabled && (
         <Paper>
-          <Box
-            sx={{
-              padding: 2,
-              backgroundColor: "white",
-              height: "auto",
-              margin: "0 auto",
-              maxWidth: "20em",
-              width: "100%",
-              mt: 2,
-            }}
-          >
-            <QRCode
-              size={256}
-              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-              value={encodeTerminalRegistrationQrCode(config.terminalApiBaseUrl, terminal.registration_uuid)}
-              viewBox={`0 0 256 256`}
-            />
-          </Box>
+          <TerminalMap mdmDeviceId={terminal.mdm_device_id} label={terminal.name} />
         </Paper>
       )}
-      <TerminalSwitchTill open={switchTillOpen} terminalId={terminal.id} onClose={() => setSwitchTillOpen(false)} />
+      <TerminalSwitchTill
+        open={switchTillOpen}
+        terminalId={terminal.id}
+        onClose={() => setSwitchTillOpen(false)}
+      />
     </DetailLayout>
   );
 };

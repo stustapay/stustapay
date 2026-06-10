@@ -1336,6 +1336,35 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["terminals"],
       }),
+      listMdmDevices: build.query<ListMdmDevicesApiResponse, ListMdmDevicesApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/mdm-devices`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["terminals"],
+      }),
+      changeMdmDeviceMapping: build.mutation<ChangeMdmDeviceMappingApiResponse, ChangeMdmDeviceMappingApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/mdm-devices/change-device-to-terminal-mapping`,
+          method: "POST",
+          body: queryArg.changeMdmDeviceMappingPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["terminals"],
+      }),
+      getMdmDeviceLocation: build.query<GetMdmDeviceLocationApiResponse, GetMdmDeviceLocationApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/mdm-devices/${queryArg.mdmDeviceId}/location`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["terminals"],
+      }),
       getTerminal: build.query<GetTerminalApiResponse, GetTerminalApiArg>({
         query: (queryArg) => ({
           url: `/terminal/${queryArg.terminalId}`,
@@ -2117,6 +2146,20 @@ export type CreateTerminalApiResponse = /** status 200 Successful Response */ Te
 export type CreateTerminalApiArg = {
   nodeId: number;
   newTerminal: NewTerminal;
+};
+export type ListMdmDevicesApiResponse = /** status 200 Successful Response */ MdmDeviceWithMapping[];
+export type ListMdmDevicesApiArg = {
+  nodeId: number;
+};
+export type ChangeMdmDeviceMappingApiResponse = /** status 200 Successful Response */ any;
+export type ChangeMdmDeviceMappingApiArg = {
+  nodeId: number;
+  changeMdmDeviceMappingPayload: ChangeMdmDeviceMappingPayload;
+};
+export type GetMdmDeviceLocationApiResponse = /** status 200 Successful Response */ MdmDeviceLocation;
+export type GetMdmDeviceLocationApiArg = {
+  mdmDeviceId: string;
+  nodeId: number;
 };
 export type GetTerminalApiResponse = /** status 200 Successful Response */ Terminal;
 export type GetTerminalApiArg = {
@@ -3233,6 +3276,7 @@ export type PublicEventSettings = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
+  headwind_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3301,6 +3345,9 @@ export type NewEvent = {
   sumup_oauth_client_secret?: string;
   pretix_api_key: string | null;
   email_smtp_password?: string | null;
+  headwind_url?: string | null;
+  headwind_username?: string | null;
+  headwind_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -3339,6 +3386,7 @@ export type NewEvent = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
+  headwind_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3357,6 +3405,9 @@ export type UpdateEvent = {
   sumup_oauth_client_secret?: string;
   pretix_api_key: string | null;
   email_smtp_password?: string | null;
+  headwind_url?: string | null;
+  headwind_username?: string | null;
+  headwind_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -3395,6 +3446,7 @@ export type UpdateEvent = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
+  headwind_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3416,6 +3468,9 @@ export type RestrictedEventSettings = {
   sumup_oauth_client_secret?: string;
   pretix_api_key: string | null;
   email_smtp_password?: string | null;
+  headwind_url?: string | null;
+  headwind_username?: string | null;
+  headwind_password?: string | null;
   currency_identifier: string;
   max_account_balance: number;
   start_date?: string | null;
@@ -3454,6 +3509,7 @@ export type RestrictedEventSettings = {
   payout_registered_subject?: string | null;
   payout_registered_message?: string | null;
   payout_sender?: string | null;
+  headwind_enabled?: boolean;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -3598,6 +3654,7 @@ export type Terminal = {
   active_user_id?: number | null;
   active_user_role_id?: number | null;
   last_seen: string;
+  mdm_device_id?: string | null;
 };
 export type NormalizedListTerminalInt = {
   ids: number[];
@@ -3608,6 +3665,40 @@ export type NormalizedListTerminalInt = {
 export type NewTerminal = {
   name: string;
   description?: string | null;
+};
+export type DeviceStatus = "online" | "offline" | "unknown";
+export type MdmDevice = {
+  device_id: string;
+  serial?: string | null;
+  imei?: string | null;
+  description?: string | null;
+  last_update?: string | null;
+  ip_address?: string | null;
+  model?: string | null;
+  status: DeviceStatus;
+};
+export type MdmType = "headwind";
+export type MdmDeviceMappingWithTerminal = {
+  terminal_id: number;
+  type: MdmType;
+  mdm_device_id: string;
+  created_at: string;
+  updated_at: string;
+  terminal_name: string;
+  terminal_description?: string | null;
+};
+export type MdmDeviceWithMapping = {
+  device: MdmDevice;
+  mapping: MdmDeviceMappingWithTerminal | null;
+};
+export type ChangeMdmDeviceMappingPayload = {
+  mdm_device_id: string;
+  terminal_id: number;
+};
+export type MdmDeviceLocation = {
+  latitude: number;
+  longitude: number;
+  last_update: string | null;
 };
 export type SwitchTillPayload = {
   new_till_id: number;
@@ -3816,6 +3907,11 @@ export const {
   useListTerminalsQuery,
   useLazyListTerminalsQuery,
   useCreateTerminalMutation,
+  useListMdmDevicesQuery,
+  useLazyListMdmDevicesQuery,
+  useChangeMdmDeviceMappingMutation,
+  useGetMdmDeviceLocationQuery,
+  useLazyGetMdmDeviceLocationQuery,
   useGetTerminalQuery,
   useLazyGetTerminalQuery,
   useUpdateTerminalMutation,

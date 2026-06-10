@@ -11,6 +11,11 @@ from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.terminal import (
     CurrentTerminal,
+    MdmDevice,
+    MdmDeviceLocation,
+    MdmDeviceMapping,
+    MdmDeviceMappingWithTerminal,
+    MdmDeviceWithMapping,
     NewTerminal,
     Terminal,
     TerminalButton,
@@ -50,15 +55,33 @@ from stustapay.core.service.tree.common import (
     fetch_restricted_event_settings_for_node,
 )
 from stustapay.core.service.user import list_assignable_roles_for_user_at_node
+from stustapay.mdm.headwind_provider import HeadwindProvider
+from stustapay.mdm.mdm_provider import DeviceInfo, MdmProvider
 from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
 
 logger = logging.getLogger(__name__)
 
 
+def _device_info_to_mdm_device(device: DeviceInfo) -> MdmDevice:
+    return MdmDevice(
+        device_id=device.device_id,
+        serial=device.serial,
+        imei=device.imei,
+        description=device.description,
+        last_update=device.last_update,
+        ip_address=device.ip_address,
+        model=device.model,
+        status=device.status,
+    )
+
+
 async def _fetch_terminal(conn: Connection, node: Node, terminal_id: int) -> Terminal | None:
     return await conn.fetch_maybe_one(
         Terminal,
-        "select t.*, till.id as till_id from terminal t left join till on t.id = till.terminal_id "
+        "select t.*, till.id as till_id, tdm.mdm_device_id "
+        "from terminal t "
+        "left join till on t.id = till.terminal_id "
+        "left join terminal_mdm_device_mapping tdm on tdm.terminal_id = t.id "
         "where t.id = $1 and t.node_id = any($2)",
         terminal_id,
         node.ids_to_root,
@@ -101,7 +124,10 @@ class TerminalService(Service[Config]):
     async def list_terminals(self, *, conn: Connection, node: Node) -> list[Terminal]:
         return await conn.fetch_many(
             Terminal,
-            "select t.*, till.id as till_id from terminal t left join till on t.id = till.terminal_id "
+            "select t.*, till.id as till_id, tdm.mdm_device_id "
+            "from terminal t "
+            "left join till on t.id = till.terminal_id "
+            "left join terminal_mdm_device_mapping tdm on tdm.terminal_id = t.id "
             "where t.node_id = any($1) order by t.name",
             node.ids_to_root,
         )
@@ -603,3 +629,186 @@ class TerminalService(Service[Config]):
 
         info.assigned_roles = assigned_roles
         return info
+
+    async def _get_mdm_provider(self, conn: Connection, node: Node) -> MdmProvider:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
+        if (
+            event_settings.headwind_enabled
+            and event_settings.headwind_url is not None
+            and event_settings.headwind_username is not None
+            and event_settings.headwind_password is not None
+        ):
+            return HeadwindProvider(
+                url=event_settings.headwind_url,
+                username=event_settings.headwind_username,
+                password=event_settings.headwind_password,
+            )
+        raise InvalidArgument("No MDM provider configured for this node")
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def list_mdm_devices_with_mappings(self, *, conn: Connection, node: Node) -> list[MdmDeviceWithMapping]:
+        mdm_provider = await self._get_mdm_provider(conn=conn, node=node)
+        devices = await mdm_provider.list_devices()
+
+        mdm_mappings = await conn.fetch_many(
+            MdmDeviceMappingWithTerminal,
+            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
+            "from terminal_mdm_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "join node n on t.node_id = n.id "
+            "where n.id = any($1)",
+            node.ids_to_root,
+        )
+
+        mdm_mappings_by_device_id = {m.mdm_device_id: m for m in mdm_mappings}
+        return [
+            MdmDeviceWithMapping(
+                device=_device_info_to_mdm_device(device),
+                mapping=mdm_mappings_by_device_id.get(device.device_id),
+            )
+            for device in devices
+        ]
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user([Privilege.node_administration])
+    async def get_mdm_device_location(self, *, conn: Connection, node: Node, mdm_device_id: str) -> MdmDeviceLocation:
+        mdm_provider = await self._get_mdm_provider(conn=conn, node=node)
+        location = await mdm_provider.get_device_location(mdm_device_id)
+        return MdmDeviceLocation(
+            latitude=location.latitude,
+            longitude=location.longitude,
+            last_update=location.last_update,
+        )
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def change_mdm_device_to_terminal_mapping(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        mdm_device_id: str,
+        terminal_id: int,
+    ):
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        existing_for_device = await conn.fetch_maybe_one(
+            MdmDeviceMapping,
+            "select * from terminal_mdm_device_mapping where mdm_device_id = $1",
+            mdm_device_id,
+        )
+        if existing_for_device and existing_for_device.terminal_id == terminal_id:
+            return
+
+        existing_for_terminal = await conn.fetch_maybe_one(
+            MdmDeviceMapping,
+            "select * from terminal_mdm_device_mapping where terminal_id = $1",
+            terminal_id,
+        )
+
+        if existing_for_device:
+            await conn.execute(
+                "delete from terminal_mdm_device_mapping where mdm_device_id = $1",
+                mdm_device_id,
+            )
+        if existing_for_terminal and (
+            existing_for_device is None or existing_for_terminal.terminal_id != existing_for_device.terminal_id
+        ):
+            await conn.execute(
+                "delete from terminal_mdm_device_mapping where terminal_id = $1",
+                terminal_id,
+            )
+
+        await conn.fetchrow(
+            "insert into terminal_mdm_device_mapping (terminal_id, mdm_device_id, type) values ($1, $2, 'headwind') returning *",
+            terminal_id,
+            mdm_device_id,
+        )
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def delete_mdm_mapping(self, *, conn: Connection, node: Node, terminal_id: int) -> bool:
+        mapping = await conn.fetch_maybe_one(
+            MdmDeviceMapping,
+            "select tdm.* "
+            "from terminal_mdm_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "join node n on t.node_id = n.id "
+            "where tdm.terminal_id = $1 and n.id = any($2)",
+            terminal_id,
+            node.ids_to_root,
+        )
+        if mapping is None:
+            return False
+        deleted = await conn.fetchrow(
+            "delete from terminal_mdm_device_mapping where id = $1 returning id",
+            mapping.id,
+        )
+        return deleted is not None
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def issue_mdm_terminal_token(self, *, conn: Connection, node: Node, terminal_id: int) -> tuple[str, Terminal]:
+        terminal = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
+        if terminal is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        session_uuid = await conn.fetchval(
+            "update terminal set session_uuid = gen_random_uuid(), registration_uuid = null "
+            "where id = $1 returning session_uuid",
+            terminal_id,
+        )
+        if session_uuid is None:
+            raise NotFound(element_type="terminal", element_id=terminal_id)
+
+        token = self.auth_service.create_terminal_access_token(
+            TerminalTokenMetadata(terminal_id=terminal_id, session_uuid=session_uuid)
+        )
+        return token, terminal
+
+    @with_db_transaction
+    @requires_node(object_types=[ObjectType.terminal])
+    @requires_user([Privilege.node_administration])
+    async def record_mdm_push_result(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        mapping_id: int,
+        success: bool,
+        error_message: str | None,
+    ) -> MdmDeviceMapping:
+        status = "success" if success else "error"
+        mapping = await conn.fetch_maybe_one(
+            MdmDeviceMapping,
+            "select tdm.* "
+            "from terminal_mdm_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "join node n on t.node_id = n.id "
+            "where tdm.id = $1 and n.id = any($2)",
+            mapping_id,
+            node.ids_to_root,
+        )
+        if mapping is None:
+            raise NotFound(element_type="headwind_mapping", element_id=mapping_id)
+        return await conn.fetch_one(
+            MdmDeviceMapping,
+            "update terminal_mdm_device_mapping "
+            "set last_token_pushed_at = now(), "
+            "    last_push_status = $2, "
+            "    last_push_error = $3, "
+            "    updated_at = now() "
+            "where id = $1 "
+            "returning *",
+            mapping.id,
+            status,
+            error_message,
+        )

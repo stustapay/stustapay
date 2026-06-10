@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTerminalService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.terminal import NewTerminal, Terminal
+from stustapay.core.schema.terminal import MdmDeviceLocation, MdmDeviceWithMapping, NewTerminal, Terminal
 
 router = APIRouter(
     prefix="/terminal",
@@ -26,6 +26,49 @@ async def create_terminal(
     node_id: int,
 ):
     return await terminal_service.create_terminal(token=token, terminal=terminal, node_id=node_id)
+
+
+@router.get("/mdm-devices", response_model=list[MdmDeviceWithMapping])
+async def list_mdm_devices(
+    token: CurrentAuthToken,
+    terminal_service: ContextTerminalService,
+    node_id: int,
+):
+    return await terminal_service.list_mdm_devices_with_mappings(token=token, node_id=node_id)
+
+
+class ChangeMdmDeviceMappingPayload(BaseModel):
+    mdm_device_id: str
+    terminal_id: int
+
+
+@router.post("/mdm-devices/change-device-to-terminal-mapping")
+async def change_mdm_device_mapping(
+    token: CurrentAuthToken,
+    terminal_service: ContextTerminalService,
+    node_id: int,
+    payload: ChangeMdmDeviceMappingPayload,
+):
+    return await terminal_service.change_mdm_device_to_terminal_mapping(
+        token=token,
+        node_id=node_id,
+        mdm_device_id=payload.mdm_device_id,
+        terminal_id=payload.terminal_id,
+    )
+
+
+@router.get("/mdm-devices/{mdm_device_id}/location", response_model=MdmDeviceLocation)
+async def get_mdm_device_location(
+    mdm_device_id: str,
+    token: CurrentAuthToken,
+    terminal_service: ContextTerminalService,
+    node_id: int,
+):
+    return await terminal_service.get_mdm_device_location(
+        token=token,
+        node_id=node_id,
+        mdm_device_id=mdm_device_id,
+    )
 
 
 @router.get("/{terminal_id}", response_model=Terminal)

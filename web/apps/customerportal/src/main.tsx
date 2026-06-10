@@ -16,15 +16,15 @@ import App from "./app/App";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(
-  <React.StrictMode>
-    <StoreProvider store={store}>
-      <PersistGate persistor={persistor} loading={null}>
-        <React.Suspense>
-          <ModalProvider>
-            <App />
-          </ModalProvider>
-        </React.Suspense>
-      </PersistGate>
-    </StoreProvider>
-  </React.StrictMode>
+  // <React.StrictMode>
+  <StoreProvider store={store}>
+    <PersistGate persistor={persistor} loading={null}>
+      <React.Suspense>
+        <ModalProvider>
+          <App />
+        </ModalProvider>
+      </React.Suspense>
+    </PersistGate>
+  </StoreProvider>
+  // </React.StrictMode>
 );

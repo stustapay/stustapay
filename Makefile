@@ -34,3 +34,9 @@ generate-openapi:
 	uv run stustapay -c ./etc/config.yaml customerportal-api --show-openapi > api/customer_portal.json
 	uv run stustapay -c ./etc/config.yaml administration-api --show-openapi > api/administration.json
 	uv run stustapay -c ./etc/config.yaml terminalserver-api --show-openapi > api/terminalserver.json
+
+.PHONY: sync-contract
+sync-contract: generate-openapi
+	cd web && npx nx run administration:generate-openapi
+	cd web && npx nx run customerportal:generate-openapi
+	cd app && ./gradlew api
