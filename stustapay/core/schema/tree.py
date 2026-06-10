@@ -66,6 +66,8 @@ class _BaseEvent(BaseModel):
     payout_registered_message: str | None = None
     payout_sender: str | None = None
 
+    headwind_enabled: bool = False
+
     # map of lang_code -> [text type -> text content]
     translation_texts: dict[Language, dict[str, str]] = {}
 
@@ -98,6 +100,10 @@ class _RestrictedEventMetadata(BaseModel):
     pretix_api_key: str | None
 
     email_smtp_password: str | None = None
+
+    headwind_url: str | None = None
+    headwind_username: str | None = None
+    headwind_password: str | None = None
 
 
 class UpdateEvent(_BaseEvent, _RestrictedEventMetadata):

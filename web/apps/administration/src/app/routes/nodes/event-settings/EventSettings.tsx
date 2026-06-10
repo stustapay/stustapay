@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import { NodeConfiguration } from "../node-settings";
 import { TabPretix } from "./TabPretix";
 import { TabDesign } from "./TabDesign";
+import { TabMdm } from "./TabMdm";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -86,6 +87,7 @@ export const EventSettings: React.FC = () => {
               <Tab label={t("settings.payout.tabLabel")} value="payout" />
               <Tab label={t("settings.bon.tabLabel")} value="bon" />
               <Tab label={t("settings.email.tabLabel")} value="email" />
+              <Tab label={t("settings.mdm.tabLabel")} value="mdm" />
             </TabList>
           </Box>
           <TabPanel value="node">
@@ -123,6 +125,9 @@ export const EventSettings: React.FC = () => {
           </TabPanel>
           <TabPanel value="email">
             <TabMail nodeId={currentNode.id} eventSettings={eventSettings} />
+          </TabPanel>
+          <TabPanel value="mdm">
+            <TabMdm nodeId={currentNode.id} eventSettings={eventSettings} />
           </TabPanel>
         </Box>
       </TabContext>

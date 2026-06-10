@@ -29,18 +29,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param name 
- * @param id 
- * @param nodeId 
- * @param tillId 
- * @param sessionUuid 
- * @param registrationUuid 
- * @param lastSeen 
- * @param description 
- * @param activeUserId 
- * @param activeUserRoleId 
+ *
+ * @param name
+ * @param id
+ * @param nodeId
+ * @param tillId
+ * @param sessionUuid
+ * @param registrationUuid
+ * @param lastSeen
+ * @param description
+ * @param activeUserId
+ * @param activeUserRoleId
+ * @param mdmDeviceId
  */
 @Serializable
 
@@ -74,10 +75,12 @@ data class Terminal (
     val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "active_user_role_id")
-    val activeUserRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
+    val activeUserRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
+
+    @SerialName(value = "mdm_device_id")
+    val mdmDeviceId: kotlin.String? = null
 
 ) {
 
 
 }
-

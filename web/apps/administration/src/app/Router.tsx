@@ -79,7 +79,14 @@ import {
 import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, CustomerSearch } from "./routes/customers";
-import { TerminalCreate, TerminalDetail, TerminalList, TerminalUpdate } from "./routes/terminals";
+import {
+  MdmDeviceList,
+  TerminalCreate,
+  TerminalDetail,
+  TerminalList,
+  TerminalPageLayout,
+  TerminalUpdate,
+} from "./routes/terminals";
 import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { NodeProvider } from "./provider";
 import { AuditLogList, AuditLogDetail } from "./routes/nodes/audit-logs";
@@ -371,10 +378,15 @@ const router = createBrowserRouter([
           },
           {
             path: "terminals",
+            element: <TerminalPageLayout />,
             children: [
               {
                 index: true,
                 element: <TerminalList />,
+              },
+              {
+                path: "mdm",
+                element: <MdmDeviceList />,
               },
               {
                 path: "new",

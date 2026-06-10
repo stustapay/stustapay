@@ -8256,6 +8256,177 @@
         }
       }
     },
+    "/terminal/mdm-devices": {
+      "get": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "List Mdm Devices",
+        "operationId": "list_mdm_devices",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MdmDeviceWithMapping"
+                  },
+                  "title": "Response List Mdm Devices Terminal Mdm Devices Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/terminal/mdm-devices/change-device-to-terminal-mapping": {
+      "post": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "Change Mdm Device Mapping",
+        "operationId": "change_mdm_device_mapping",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeMdmDeviceMappingPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/terminal/mdm-devices/{mdm_device_id}/location": {
+      "get": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "Get Mdm Device Location",
+        "operationId": "get_mdm_device_location",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mdm_device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mdm Device Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdmDeviceLocation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/terminal/{terminal_id}": {
       "get": {
         "tags": [
@@ -9495,6 +9666,24 @@
         ],
         "title": "CashierShiftStats"
       },
+      "ChangeMdmDeviceMappingPayload": {
+        "properties": {
+          "mdm_device_id": {
+            "type": "string",
+            "title": "Mdm Device Id"
+          },
+          "terminal_id": {
+            "type": "integer",
+            "title": "Terminal Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mdm_device_id",
+          "terminal_id"
+        ],
+        "title": "ChangeMdmDeviceMappingPayload"
+      },
       "ChangePasswordPayload": {
         "properties": {
           "old_password": {
@@ -10131,6 +10320,15 @@
         ],
         "title": "Customer"
       },
+      "DeviceStatus": {
+        "type": "string",
+        "enum": [
+          "online",
+          "offline",
+          "unknown"
+        ],
+        "title": "DeviceStatus"
+      },
       "EditSaleProducts": {
         "properties": {
           "uuid": {
@@ -10489,6 +10687,201 @@
         ],
         "title": "LoginPayload"
       },
+      "MdmDevice": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "imei": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imei"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "last_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Update"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DeviceStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id",
+          "status"
+        ],
+        "title": "MdmDevice"
+      },
+      "MdmDeviceLocation": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "last_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Update"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude",
+          "last_update"
+        ],
+        "title": "MdmDeviceLocation"
+      },
+      "MdmDeviceMappingWithTerminal": {
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "title": "Terminal Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MdmType"
+          },
+          "mdm_device_id": {
+            "type": "string",
+            "title": "Mdm Device Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "terminal_name": {
+            "type": "string",
+            "title": "Terminal Name"
+          },
+          "terminal_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terminal Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terminal_id",
+          "type",
+          "mdm_device_id",
+          "created_at",
+          "updated_at",
+          "terminal_name"
+        ],
+        "title": "MdmDeviceMappingWithTerminal"
+      },
+      "MdmDeviceWithMapping": {
+        "properties": {
+          "device": {
+            "$ref": "#/components/schemas/MdmDevice"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MdmDeviceMappingWithTerminal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "device",
+          "mapping"
+        ],
+        "title": "MdmDeviceWithMapping"
+      },
+      "MdmType": {
+        "type": "string",
+        "enum": [
+          "headwind"
+        ],
+        "title": "MdmType"
+      },
       "MoneyOverview": {
         "properties": {
           "system_accounts": {
@@ -10682,6 +11075,39 @@
               }
             ],
             "title": "Email Smtp Password"
+          },
+          "headwind_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Url"
+          },
+          "headwind_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Username"
+          },
+          "headwind_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Password"
           },
           "currency_identifier": {
             "type": "string",
@@ -10980,6 +11406,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "headwind_enabled": {
+            "type": "boolean",
+            "title": "Headwind Enabled",
+            "default": false
           },
           "translation_texts": {
             "additionalProperties": {
@@ -13784,6 +14215,11 @@
             ],
             "title": "Payout Sender"
           },
+          "headwind_enabled": {
+            "type": "boolean",
+            "title": "Headwind Enabled",
+            "default": false
+          },
           "translation_texts": {
             "additionalProperties": {
               "additionalProperties": {
@@ -13890,6 +14326,39 @@
               }
             ],
             "title": "Email Smtp Password"
+          },
+          "headwind_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Url"
+          },
+          "headwind_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Username"
+          },
+          "headwind_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Password"
           },
           "currency_identifier": {
             "type": "string",
@@ -14181,6 +14650,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "headwind_enabled": {
+            "type": "boolean",
+            "title": "Headwind Enabled",
+            "default": false
           },
           "translation_texts": {
             "additionalProperties": {
@@ -14660,6 +15134,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Last Seen"
+          },
+          "mdm_device_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mdm Device Id"
           }
         },
         "type": "object",
@@ -15421,6 +15906,39 @@
             ],
             "title": "Email Smtp Password"
           },
+          "headwind_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Url"
+          },
+          "headwind_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Username"
+          },
+          "headwind_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headwind Password"
+          },
           "currency_identifier": {
             "type": "string",
             "title": "Currency Identifier"
@@ -15718,6 +16236,11 @@
               }
             ],
             "title": "Payout Sender"
+          },
+          "headwind_enabled": {
+            "type": "boolean",
+            "title": "Headwind Enabled",
+            "default": false
           },
           "translation_texts": {
             "additionalProperties": {

@@ -38,10 +38,8 @@ def get_config(
         int,
         typer.Option("--verbose", "-v", count=True, help="increase program verbosity"),
     ] = 0,
-    debug: Annotated[bool, typer.Option(help="enable asyncio debugging")] = False,
 ):
     log_setup(verbose - quiet)
-    asyncio.get_event_loop().set_debug(debug)
 
     if not config_path.exists():
         sys.stderr.write(f"Config file does not exist: {config_path}")
