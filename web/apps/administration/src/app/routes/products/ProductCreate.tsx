@@ -1,12 +1,14 @@
-import { useCreateProductMutation } from "@/api";
-import { ProductRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewProduct, NewProductSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { ProductForm } from "./ProductForm";
+
+import { useCreateProductMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { ProductRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { ProductForm } from "./ProductForm";
 
 const initialValues: NewProduct = {
   name: "",

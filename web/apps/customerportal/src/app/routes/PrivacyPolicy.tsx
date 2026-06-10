@@ -1,10 +1,11 @@
-import { Container, Link } from "@mui/material";
+import { Container } from "@mui/material";
 import { Box } from "@mui/system";
-import { Trans, useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 export const PrivacyPolicy = () => {
   const config = usePublicConfig();

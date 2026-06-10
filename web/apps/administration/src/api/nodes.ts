@@ -1,6 +1,7 @@
-import { useGetTreeForCurrentUserQuery } from "./api";
 import { NodeSeenByUser } from "@/api";
 import { useCurrentUser } from "@/hooks";
+
+import { useGetTreeForCurrentUserQuery } from "./api";
 
 export const findNode = (nodeId: number, startNode: NodeSeenByUser): NodeSeenByUser | undefined => {
   const currNode = startNode;

@@ -1,8 +1,3 @@
-import { useLogoutMutation } from "@/api";
-import { config } from "@/api/common";
-import { LanguageSelect, Layout } from "@/components";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import {
   AppBar,
@@ -21,6 +16,12 @@ import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+
+import { useLogoutMutation } from "@/api";
+import { config } from "@/api/common";
+import { LanguageSelect, Layout } from "@/components";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();

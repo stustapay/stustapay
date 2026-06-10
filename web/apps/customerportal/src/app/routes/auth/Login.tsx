@@ -1,7 +1,3 @@
-import { useLoginMutation, useLogoutMutation } from "@/api";
-import { config } from "@/api/common";
-import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Stack, Typography } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
@@ -9,10 +5,15 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { useLoginMutation, useLogoutMutation } from "@/api";
+import { config } from "@/api/common";
+import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
 import i18n from "@/i18n";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 
 const validationSchema = z.object({
   userTagPin: z.string({ error: i18n.t("pinRequired") }),
@@ -58,7 +59,7 @@ export const Login: React.FC = () => {
       .catch((err) => {
         toast.error(t("loginFailed", { reason: err.error }));
       });
-  }, [query, isLoggedIn, loginToken, login, t]);
+  }, [query, isLoggedIn, loginToken, login, logout, setQuery, t]);
 
   if (isLoggedIn && !loginToken) {
     const next = query.get("next");
@@ -83,7 +84,7 @@ export const Login: React.FC = () => {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Stack alignItems="center" justifyContent="center">
+      <Stack sx={{ alignItems: "center", justifyContent: "center" }}>
         <Avatar sx={{ margin: 1, backgroundColor: "primary.main" }}>
           <LockOutlinedIcon />
         </Avatar>

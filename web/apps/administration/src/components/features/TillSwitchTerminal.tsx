@@ -1,9 +1,10 @@
-import { Terminal, selectTerminalAll, useListTerminalsQuery, useSwitchTerminalMutation } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { Loading, Select } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { Terminal, selectTerminalAll, useListTerminalsQuery, useSwitchTerminalMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export type TillSwitchTerminalProps = {
   tillId: number;

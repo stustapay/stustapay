@@ -1,6 +1,3 @@
-import { useCreatePayoutRunMutation } from "@/api";
-import { PayoutRunRoutes } from "@/app/routes";
-import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { FormCurrencyInput, FormNumericInput } from "@stustapay/form-components";
@@ -10,6 +7,11 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+
+import { useCreatePayoutRunMutation } from "@/api";
+import { PayoutRunRoutes } from "@/app/routes";
+import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
+
 import { PendingPayoutDetail } from "./PendingPayoutDetail";
 
 const NewPayoutRunSchema = z.object({
@@ -37,7 +39,7 @@ export const PayoutRunCreate: React.FC = () => {
         setSubmitting(false);
         navigate(PayoutRunRoutes.list());
       })
-      .catch((err) => {
+      .catch((_err) => {
         setSubmitting(false);
       });
   };
@@ -63,7 +65,7 @@ export const PayoutRunCreate: React.FC = () => {
   return (
     <Stack spacing={2}>
       <Grid container spacing={1}>
-        <Grid display="flex" alignItems="center">
+        <Grid sx={{ display: "flex", alignItems: "center" }}>
           <IconButton onClick={() => navigate(-1)}>
             <ChevronLeft />
           </IconButton>

@@ -1,7 +1,8 @@
-import * as React from "react";
-import i18n from "@/i18n";
 import { useCurrencyIdentifier } from "@stustapay/framework";
 import { CurrencyIdentifier } from "@stustapay/models";
+import * as React from "react";
+
+import i18n from "@/i18n";
 
 export type CurrencyDenomination = {
   key: string;

@@ -4,18 +4,20 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
+import { ModalProvider } from "@stustapay/modal-provider";
 import * as React from "react";
+import { DndProvider } from "react-dnd";
+
+import "react-toastify/dist/ReactToastify.css";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
+import "./i18n";
 import * as ReactDOM from "react-dom/client";
 import { Provider as StoreProvider } from "react-redux";
-import "react-toastify/dist/ReactToastify.css";
 import { PersistGate } from "redux-persist/integration/react";
-import "./i18n";
-import { persistor, store } from "./store";
-import { ModalProvider } from "@stustapay/modal-provider";
 
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import { App } from "./app/App";
+import { persistor, store } from "./store";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(

@@ -1,14 +1,15 @@
-import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery, TillButton } from "@/api";
-import { TillButtonsRoutes } from "@/app/routes";
-import { ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+
+import { selectTillButtonAll, useDeleteTillButtonMutation, useListTillButtonsQuery, TillButton } from "@/api";
+import { TillButtonsRoutes } from "@/app/routes";
+import { ListLayout } from "@/components";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TillButtonList: React.FC = () => {
   const { t } = useTranslation();

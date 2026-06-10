@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useCurrencyIdentifier } from "./CurrencyProvider";
+
 import { createCurrencyFormatter, CurrencyFormatter } from "./createCurrencyFormatter";
+import { useCurrencyIdentifier } from "./CurrencyProvider";
 
 export const useCurrencyFormatter = (): CurrencyFormatter => {
   const currency = useCurrencyIdentifier();

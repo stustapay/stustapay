@@ -1,6 +1,7 @@
 import { ListItem, ListItemProps, ListItemText } from "@mui/material";
-import { ListItemLink } from "@/components";
 import * as React from "react";
+
+import { ListItemLink } from "@/components";
 
 export type DetailFieldProps = {
   label: string;

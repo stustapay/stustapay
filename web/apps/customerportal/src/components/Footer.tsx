@@ -1,11 +1,13 @@
-import * as React from "react";
-import { useAppSelector, selectIsAuthenticated } from "@/store";
 import { Box, Link, useTheme } from "@mui/material";
-import { LoggedInFooter } from "./LoggedInFooter";
-import { LoggedOutFooter } from "./LoggedOutFooter";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { useAppSelector, selectIsAuthenticated } from "@/store";
+
+import { LoggedInFooter } from "./LoggedInFooter";
+import { LoggedOutFooter } from "./LoggedOutFooter";
 
 export const Footer = () => {
   const theme = useTheme();

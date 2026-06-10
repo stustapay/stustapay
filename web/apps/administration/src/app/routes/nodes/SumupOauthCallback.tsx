@@ -1,10 +1,11 @@
-import { useConfigureSumupTokenMutation } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Alert } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Loading } from "@stustapay/components";
+
+import { useConfigureSumupTokenMutation } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export const SumupOauthCallback = () => {
   const { currentNode } = useCurrentNode();

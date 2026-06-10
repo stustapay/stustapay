@@ -1,13 +1,15 @@
-import { useGetTillLayoutQuery, useUpdateTillLayoutMutation } from "@/api";
-import { TillLayoutRoutes } from "@/app/routes";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { TillLayoutSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TillLayoutChange } from "./TillLayoutChange";
+
+import { useGetTillLayoutQuery, useUpdateTillLayoutMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillLayoutRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
+
+import { TillLayoutChange } from "./TillLayoutChange";
 
 export const TillLayoutUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

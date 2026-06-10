@@ -1,14 +1,16 @@
-import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@/api";
-import { TillButtonsRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillButtonSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TillButtonForm } from "./TillButtonForm";
+
+import { useGetTillButtonQuery, useUpdateTillButtonMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillButtonsRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TillButtonForm } from "./TillButtonForm";
 
 export const TillButtonUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

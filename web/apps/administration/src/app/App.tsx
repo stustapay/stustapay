@@ -1,6 +1,3 @@
-import { fetchConfig } from "@/api/common";
-import { useAppSelector } from "@/store";
-import { selectTheme } from "@/store/uiSlice";
 import {
   Alert,
   AlertTitle,
@@ -15,6 +12,11 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer } from "react-toastify";
+
+import { fetchConfig } from "@/api/common";
+import { useAppSelector } from "@/store";
+import { selectTheme } from "@/store/uiSlice";
+
 import { UnauthenticatedLayout } from "./layout/UnauthenticatedLayout";
 import { Router } from "./Router";
 

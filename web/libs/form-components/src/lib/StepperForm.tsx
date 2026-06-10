@@ -26,7 +26,7 @@ export function StepperForm<T extends object, S extends readonly FormStep[]>({
   const initialValues = React.useMemo<T>(() => {
     return steps.reduce(
       (agg, { initialValues }) => ({
-        ...agg,
+        ...Object.assign(agg, initialValues),
         ...initialValues,
       }),
       {}
@@ -85,7 +85,7 @@ export function StepperForm<T extends object, S extends readonly FormStep[]>({
             <Divider />
             <CurrentForm {...formik} />
             <Divider />
-            <Box display="flex" flexDirection="row" justifyContent="space-between">
+            <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
               <Button disabled={activeStep === 0 || formik.isSubmitting} onClick={handlePrev}>
                 Previous
               </Button>

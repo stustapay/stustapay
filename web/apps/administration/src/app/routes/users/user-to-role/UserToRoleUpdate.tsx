@@ -1,15 +1,16 @@
-import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } from "@/api";
-import { UserToRoleRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { Loading } from "@stustapay/components";
+import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
-import { FormikProps } from "formik";
-import { RoleSelect } from "@/components/features";
-import { withPrivilegeGuard } from "@/app/layout";
 import { useParams } from "react-router-dom";
-import { Loading } from "@stustapay/components";
+import { z } from "zod";
+
+import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
+import { UserToRoleRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { RoleSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
 
 const UpdateUserToRolesSchema = z.object({
   user_id: z.number().int(),

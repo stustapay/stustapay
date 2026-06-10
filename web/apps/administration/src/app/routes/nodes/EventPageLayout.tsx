@@ -1,5 +1,3 @@
-import { Node } from "@/api";
-import { PayoutRunRoutes, TaxRateRoutes } from "@/app/routes";
 import {
   Dashboard as DashboardIcon,
   Leaderboard as LeaderboardIcon,
@@ -14,6 +12,9 @@ import { Box, Tab, Tabs } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
+
+import { Node } from "@/api";
+import { PayoutRunRoutes, TaxRateRoutes } from "@/app/routes";
 
 const getActiveTab = (nodeId: number, location: string) => {
   if (location.startsWith(`/node/${nodeId}/stats`)) {

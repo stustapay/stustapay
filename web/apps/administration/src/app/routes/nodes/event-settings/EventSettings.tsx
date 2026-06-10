@@ -1,27 +1,29 @@
-import { useArchiveNodeMutation, useGetRestrictedEventSettingsQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Alert, AlertTitle, Box, Button, Stack, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { useQueryVar } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import { useArchiveNodeMutation, useGetRestrictedEventSettingsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+
+import { NodeConfiguration } from "../node-settings";
 import { TabAgb } from "./TabAgb";
-import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
 import { TabBon } from "./TabBon";
 import { TabCustomerPortal } from "./TabCustomerPortal";
+import { TabDesign } from "./TabDesign";
 import { TabFaq } from "./TabFaq";
 import { TabGeneral } from "./TabGeneral";
 import { TabMail } from "./TabMail";
-import { TabPayout } from "./TabPayout";
-import { TabSumUp } from "./TabSumUp";
-import { Link as RouterLink } from "react-router-dom";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { toast } from "react-toastify";
-import { NodeConfiguration } from "../node-settings";
-import { TabPretix } from "./TabPretix";
-import { TabDesign } from "./TabDesign";
 import { TabMdm } from "./TabMdm";
+import { TabPayout } from "./TabPayout";
+import { TabPretix } from "./TabPretix";
+import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
+import { TabSumUp } from "./TabSumUp";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -63,7 +65,7 @@ export const EventSettings: React.FC = () => {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" spacing={2} justifyContent="center">
+      <Stack direction="row" sx={{ display: "flex", justifyContent: "center", spacing: 2 }}>
         <Button variant="outlined" component={RouterLink} to={`/node/${currentNode.id}/create-node`}>
           {t("settings.createNode.link")}
         </Button>
@@ -72,7 +74,7 @@ export const EventSettings: React.FC = () => {
         </Button>
       </Stack>
       <TabContext value={activeTab}>
-        <Box display="grid" gridTemplateColumns="min-content auto">
+        <Box sx={{ display: "grid", gridTemplateColumns: "min-content auto" }}>
           <Box sx={{ borderRight: 1, borderColor: "divider" }}>
             <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
               <Tab label={t("common.node")} value="node" />

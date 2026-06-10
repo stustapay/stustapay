@@ -1,10 +1,12 @@
+import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+
 import { useGetCustomersWithBlockedPayoutQuery } from "@/api";
 import { DetailLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
+
 import { CustomerTable } from "./components/CustomerTable";
-import { Loading } from "@stustapay/components";
 
 export const CustomersWithBlockedPayout: React.FC = () => {
   const { t } = useTranslation();

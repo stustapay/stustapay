@@ -1,11 +1,12 @@
-import { Account, AccountRead, AccountType, useGetMoneyOverviewQuery } from "@/api";
-import { AccountRoutes } from "@/app/routes";
-import { ButtonLink } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Card, CardActions, CardContent, Grid, Typography, useTheme } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { Account, AccountRead, AccountType, useGetMoneyOverviewQuery } from "@/api";
+import { AccountRoutes } from "@/app/routes";
+import { ButtonLink } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
 interface BalanceCardProps {
   amount: number;
@@ -19,7 +20,15 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ amount, label, actions }) => 
   return (
     <Card>
       <CardContent>
-        <Grid container alignItems="center" justifyContent="center" direction="column">
+        <Grid
+          container
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
           <Grid>
             <Typography variant="h6" component="div">
               {label}

@@ -1,3 +1,11 @@
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Loading } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
+import { useOpenModal } from "@stustapay/modal-provider";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+
 import {
   CashRegisterStocking,
   selectCashRegisterStockingAll,
@@ -7,13 +15,6 @@ import {
 import { TillStockingsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
 export const CashRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();

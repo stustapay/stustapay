@@ -1,6 +1,7 @@
-import { ProductRestriction } from "@/api";
 import { Select, SelectProps } from "@stustapay/components";
 import { ProductRestrictions } from "@stustapay/models";
+
+import { ProductRestriction } from "@/api";
 
 export type RestrictionSelectProps<Multiple extends boolean> = Omit<
   SelectProps<ProductRestriction, Multiple>,

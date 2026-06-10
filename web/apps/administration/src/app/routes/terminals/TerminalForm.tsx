@@ -1,8 +1,9 @@
-import * as React from "react";
-import { NewTerminal } from "@/api";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { NewTerminal } from "@/api";
 
 export type TerminalFormProps<T extends NewTerminal> = FormikProps<T>;
 

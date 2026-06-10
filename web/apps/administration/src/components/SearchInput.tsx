@@ -1,6 +1,6 @@
-import * as React from "react";
 import { Search as SearchIcon } from "@mui/icons-material";
 import { InputAdornment, TextField, TextFieldProps } from "@mui/material";
+import * as React from "react";
 
 export type SearchInputProps = TextFieldProps;
 

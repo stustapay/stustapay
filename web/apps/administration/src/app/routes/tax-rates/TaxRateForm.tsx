@@ -1,6 +1,7 @@
 import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { TaxRate } from "@stustapay/models";
 import { FormikProps } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 export type TaxRateFormProps<T extends TaxRate> = FormikProps<T>;

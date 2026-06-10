@@ -1,3 +1,12 @@
+import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import { Paper, Typography } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { formatUserTagUid, getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   selectCashierShiftAll,
   selectCashRegisterById,
@@ -10,14 +19,7 @@ import {
 import { CashierRoutes, CashRegistersRoutes, TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
-import { Paper, Typography } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import { formatUserTagUid, getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+
 import { CashierShiftTable } from "./CashierShiftTable";
 
 export const CashierDetail: React.FC = () => {

@@ -1,4 +1,3 @@
-import { useChangePasswordMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -7,6 +6,9 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { useChangePasswordMutation } from "@/api";
+
 import i18n from "../../../../i18n";
 
 const validationSchema = z

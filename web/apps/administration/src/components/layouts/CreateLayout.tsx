@@ -1,4 +1,6 @@
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
 import { ChangeLayout, ChangeLayoutProps } from "./ChangeLayout";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

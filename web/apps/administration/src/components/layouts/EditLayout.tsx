@@ -1,4 +1,6 @@
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
 import { ChangeLayout, ChangeLayoutProps } from "./ChangeLayout";
 
 export type EditLayoutProps<T extends Record<string, any>> = Omit<ChangeLayoutProps<T>, "submitLabel">;

@@ -1,5 +1,6 @@
 import { ListItem, ListItemProps, ListItemText } from "@mui/material";
 import * as React from "react";
+
 import { useCurrencyFormatter } from "@/hooks";
 
 export type DetailNumberFieldProps = {

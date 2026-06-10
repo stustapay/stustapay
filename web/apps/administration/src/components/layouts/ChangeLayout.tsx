@@ -1,6 +1,6 @@
 import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, LinearProgress, Paper, Stack, Typography } from "@mui/material";
-import { MutationActionCreatorResult } from "@reduxjs/toolkit/dist/query/react/index";
+import { MutationActionCreatorResult } from "@reduxjs/toolkit/query";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
 import * as React from "react";
@@ -39,7 +39,7 @@ export function ChangeLayout<T extends Record<string, any>>({
 
     onSubmit(submittingValues)
       .unwrap()
-      .then((result) => {
+      .then((result: any) => {
         setSubmitting(false);
         if (isAddAnother) {
           resetForm();
@@ -47,7 +47,7 @@ export function ChangeLayout<T extends Record<string, any>>({
           navigate(typeof successRoute === "function" ? successRoute(result) : successRoute);
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         setSubmitting(false);
         console.warn("error in change", err);
       });
@@ -56,7 +56,7 @@ export function ChangeLayout<T extends Record<string, any>>({
   return (
     <Stack spacing={2}>
       <Grid container spacing={1}>
-        <Grid display="flex" alignItems="center">
+        <Grid sx={{ display: "flex", alignItems: "center" }}>
           <IconButton onClick={() => navigate(-1)}>
             <ChevronLeft />
           </IconButton>

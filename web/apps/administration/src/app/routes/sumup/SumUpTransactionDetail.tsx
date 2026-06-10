@@ -1,12 +1,13 @@
-import { useListSumupTransactionsQuery } from "@/api";
-import { SumUpTransactionRoutes } from "@/app/routes";
-import { DetailLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { List, ListItem, ListItemText, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+
+import { useListSumupTransactionsQuery } from "@/api";
+import { SumUpTransactionRoutes } from "@/app/routes";
+import { DetailLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 export const SumUpTransactionDetail: React.FC = () => {
   const { t } = useTranslation();

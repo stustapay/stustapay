@@ -1,23 +1,24 @@
-import { RestrictedEventSettings, useGetEventDesignQuery, useUpdateBonLogoMutation } from "@/api";
-import { getBlobUrl } from "@/core/blobs";
-import { useCurrentNode } from "@/hooks";
 import { Button, Card, Grid, Stack, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
+import { RestrictedEventSettings, useGetEventDesignQuery, useUpdateBonLogoMutation } from "@/api";
+import { getBlobUrl } from "@/core/blobs";
+import { useCurrentNode } from "@/hooks";
+
 const toBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
+    reader.addEventListener("load", () => resolve(reader.result as string));
+    reader.addEventListener("error", reject);
     reader.readAsDataURL(file);
   });
 };
 
 export const TabDesign: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
-  nodeId,
-  eventSettings,
+  nodeId: _nodeId,
+  eventSettings: _eventSettings,
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
@@ -40,7 +41,7 @@ export const TabDesign: React.FC<{ nodeId: number; eventSettings: RestrictedEven
         newBlob: { data: imageAsBase64.split(",")[1], mime_type: file.type }, // TODO: remove the ugly hack
       });
     } catch (e) {
-      toast.error("Error uploading logo");
+      toast.error(`Error uploading logo: ${e}`);
     }
   };
 

@@ -1,12 +1,13 @@
-import { selectUserRoleById, useListUserRolesQuery } from "@/api";
-import { UserRoleRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Edit as EditIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+
+import { selectUserRoleById, useListUserRolesQuery } from "@/api";
+import { UserRoleRoutes } from "@/app/routes";
+import { DetailField, DetailLayout, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 export const UserRoleDetail: React.FC = () => {
   const { t } = useTranslation();

@@ -1,7 +1,8 @@
-import { CreateUserPayload } from "@/api";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
+
+import { CreateUserPayload } from "@/api";
 
 export type UserCreateFormProps<T extends CreateUserPayload> = FormikProps<T>;
 

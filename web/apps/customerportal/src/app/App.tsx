@@ -1,13 +1,15 @@
-import * as React from "react";
 import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline } from "@mui/material";
-import { Router } from "./Router";
-import { ToastContainer } from "react-toastify";
-import { useAppSelector, selectTheme } from "@/store";
 import { Loading } from "@stustapay/components";
-import { config, fetchConfig } from "@/api/common";
 import { CurrencyProvider } from "@stustapay/framework";
-import { ConfigLoadErrorPage } from "./ConfigLoadErrorPage";
 import { CurrencyIdentifier } from "@stustapay/models";
+import * as React from "react";
+import { ToastContainer } from "react-toastify";
+
+import { config, fetchConfig } from "@/api/common";
+import { useAppSelector, selectTheme } from "@/store";
+
+import { ConfigLoadErrorPage } from "./ConfigLoadErrorPage";
+import { Router } from "./Router";
 
 export function App() {
   const [state, setState] = React.useState<"loading" | "loaded" | "error">("loading");

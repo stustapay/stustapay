@@ -1,6 +1,3 @@
-import { MarkdownEditor } from "@/components";
-import * as React from "react";
-import { Language, RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import {
   Button,
   LinearProgress,
@@ -13,8 +10,13 @@ import {
 } from "@mui/material";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+
+import { Language, RestrictedEventSettings, useUpdateEventMutation } from "@/api";
+import { MarkdownEditor } from "@/components";
+
 import { TranslationTextsSchema, TranslationTexts, updateTranslationTexts } from "./common";
 import { LanguageDropdown } from "./LanguageDropdown";
 

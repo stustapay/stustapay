@@ -1,5 +1,7 @@
-import { useCurrentNode } from "@/hooks";
 import * as React from "react";
+
+import { useCurrentNode } from "@/hooks";
+
 import { EventOverview } from "../event-overview";
 
 export const NodeOverview: React.FC = () => {

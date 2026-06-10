@@ -1,6 +1,7 @@
-import * as React from "react";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { DateTime } from "luxon";
+import * as React from "react";
+
 import { TimeseriesStats } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 

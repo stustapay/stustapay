@@ -1,3 +1,13 @@
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { TillButton } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+
 import {
   Ticket,
   selectTicketById,
@@ -10,15 +20,6 @@ import {
 import { TillLayoutRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { TillButton } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TillLayoutDetail: React.FC = () => {
   const { t } = useTranslation();

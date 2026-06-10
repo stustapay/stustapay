@@ -1,7 +1,8 @@
-import { Language, RestrictedEventSettings } from "@/api";
-import * as React from "react";
 import { Select } from "@stustapay/components";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { Language, RestrictedEventSettings } from "@/api";
 
 export interface LanguageDropdownProps {
   value: Language;

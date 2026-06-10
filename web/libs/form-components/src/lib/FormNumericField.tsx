@@ -1,6 +1,6 @@
-import * as React from "react";
 import { NumericInput, NumericInputProps } from "@stustapay/components";
 import { FormikProps } from "formik";
+import * as React from "react";
 
 export interface FormNumericInputProps<Name extends string, Values> extends Omit<
   NumericInputProps,

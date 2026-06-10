@@ -1,6 +1,6 @@
+import { Box, SvgIconProps, Typography, useTheme } from "@mui/material";
 import { TreeItem, TreeItemProps } from "@mui/x-tree-view";
 import * as React from "react";
-import { Box, SvgIconProps, Typography, useTheme } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
 declare module "react" {

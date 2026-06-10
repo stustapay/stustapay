@@ -1,5 +1,6 @@
 import { FormControl, FormControlLabel, FormHelperText, Switch, SwitchProps } from "@mui/material";
 import { FormikProps } from "formik";
+import * as React from "react";
 
 export interface FormSwitchProps<Name extends string, Values> extends Omit<
   SwitchProps,

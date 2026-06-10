@@ -1,11 +1,3 @@
-import {
-  PretixProduct,
-  RestrictedEventSettings,
-  useCheckPretixConnectionMutation,
-  useFetchPretixProductsMutation,
-  useGenerateWebhookUrlMutation,
-  useUpdateEventMutation,
-} from "@/api";
 import { ContentCopy as ContentCopyIcon } from "@mui/icons-material";
 import { Button, IconButton, LinearProgress, ListItem, ListItemText, Stack } from "@mui/material";
 import { FormSelect, FormSwitch, FormTextField } from "@stustapay/form-components";
@@ -15,6 +7,15 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import {
+  PretixProduct,
+  RestrictedEventSettings,
+  useCheckPretixConnectionMutation,
+  useFetchPretixProductsMutation,
+  useGenerateWebhookUrlMutation,
+  useUpdateEventMutation,
+} from "@/api";
 
 const requiredIssue = {
   code: z.ZodIssueCode.custom,
@@ -65,7 +66,10 @@ export const PretixSettingsSchema = z
 
 export type PretixSettings = z.infer<typeof PretixSettingsSchema>;
 
-const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({ nodeId, formik }) => {
+const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({
+  nodeId,
+  formik,
+}) => {
   const { t, i18n } = useTranslation();
   const languageBaseCode = i18n.language.split("-")[0];
   const [products, setProducts] = React.useState<PretixProduct[]>([]);
@@ -130,10 +134,10 @@ const PretixProductSelects: React.FC<{ nodeId: number; formik: FormikProps<Preti
   );
 };
 
-export const PretixSettingsForm: React.FC<{ nodeId: number; formik: FormikProps<PretixSettings> }> = ({
-  nodeId,
-  formik,
-}) => {
+export const PretixSettingsForm: React.FC<{
+  nodeId: number;
+  formik: FormikProps<PretixSettings>;
+}> = ({ nodeId, formik }) => {
   const { t } = useTranslation();
 
   return (

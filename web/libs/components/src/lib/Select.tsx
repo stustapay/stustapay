@@ -29,8 +29,8 @@ export function Select<Option, Multiple extends boolean>({
   checkboxes,
   formatOption,
   multiple,
-  chips,
-  helperText,
+  chips: _chips,
+  helperText: _helperText,
   onChange,
   ...props
 }: SelectProps<Option, Multiple>) {

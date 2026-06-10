@@ -1,5 +1,6 @@
 import { FormControl, FormControlLabel, FormHelperText, Checkbox, CheckboxProps } from "@mui/material";
 import { FormikProps } from "formik";
+import * as React from "react";
 
 export interface FormCheckboxProps<Name extends string, Values> extends Omit<
   CheckboxProps,

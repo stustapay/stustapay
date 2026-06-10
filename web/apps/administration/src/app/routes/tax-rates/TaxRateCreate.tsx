@@ -1,10 +1,12 @@
+import { TaxRate, TaxRateSchema } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+
 import { useCreateTaxRateMutation } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { TaxRate, TaxRateSchema } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
+
 import { TaxRateForm } from "./TaxRateForm";
 
 const initialValues: TaxRate = {

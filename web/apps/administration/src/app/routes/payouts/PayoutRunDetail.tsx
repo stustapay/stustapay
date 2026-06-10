@@ -1,3 +1,14 @@
+import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { Link, Alert } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { formatUserTagUid, getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useParams, Link as RouterLink } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   selectPayoutRunById,
   useListPayoutRunsQuery,
@@ -12,19 +23,10 @@ import {
 } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
-import { useCurrentNode } from "@/hooks";
-import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { Link, Alert } from "@mui/material";
-import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
-import { Loading } from "@stustapay/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useParams, Link as RouterLink } from "react-router-dom";
-import { toast } from "react-toastify";
-import { DownloadSepaXMLModal } from "./DownloadSepaXMLModal";
-import { formatUserTagUid, getUserName } from "@stustapay/models";
 import { LayoutAction } from "@/components/layouts/types";
-import { useOpenModal } from "@stustapay/modal-provider";
+import { useCurrentNode } from "@/hooks";
+
+import { DownloadSepaXMLModal } from "./DownloadSepaXMLModal";
 
 export const PayoutRunDetail: React.FC = () => {
   const { t } = useTranslation();

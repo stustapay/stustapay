@@ -1,5 +1,7 @@
 import * as React from "react";
+
 import { Privilege } from "@/api";
+
 import { useCurrentNode } from "./useCurrentNode";
 
 export const useCurrentUserHasPrivilege = (privilege?: Privilege): boolean => {

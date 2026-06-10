@@ -1,12 +1,13 @@
+import { FormTextField } from "@stustapay/form-components";
+import { FormikProps } from "formik";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
+
 import { useCreateUserTagSecretMutation } from "@/api";
 import { UserTagRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
-import { FormTextField } from "@stustapay/form-components";
-import { FormikProps } from "formik";
 
 const NewUserTagSecretSchema = z.object({
   key0: z

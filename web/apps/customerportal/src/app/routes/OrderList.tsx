@@ -1,11 +1,3 @@
-import {
-  OrderWithBon,
-  OrderWithBonRead,
-  PayoutTransaction,
-  useGetOrdersQuery,
-  useGetPayoutTransactionsQuery,
-} from "@/api";
-import { useCurrencyFormatter } from "@/hooks";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
   Accordion,
@@ -25,6 +17,15 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import {
+  OrderWithBon,
+  OrderWithBonRead,
+  PayoutTransaction,
+  useGetOrdersQuery,
+  useGetPayoutTransactionsQuery,
+} from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
 
 const normalizeOrderPrice = (order: OrderWithBon) => {
   if (order.order_type !== "top_up") {

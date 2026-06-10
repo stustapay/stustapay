@@ -1,14 +1,4 @@
-import * as React from "react";
-import { UserTagSecret, useCreateUserTagsMutation, useListUserTagSecretsQuery } from "@/api";
-import { UserTagRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
-import { ProductRestrictionSchema } from "@stustapay/models";
-import { useTranslation } from "react-i18next";
-import { z } from "zod";
-import { RestrictionSelect } from "@/components/features";
-import { FormikProps } from "formik";
-import { Select } from "@stustapay/components";
+import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import {
   Alert,
   Box,
@@ -22,9 +12,20 @@ import {
   Typography,
   styled,
 } from "@mui/material";
-import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
-import { toast } from "react-toastify";
+import { Select } from "@stustapay/components";
+import { ProductRestrictionSchema } from "@stustapay/models";
+import { FormikProps } from "formik";
 import * as Papa from "papaparse";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { z } from "zod";
+
+import { UserTagSecret, useCreateUserTagsMutation, useListUserTagSecretsQuery } from "@/api";
+import { UserTagRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { RestrictionSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -100,7 +101,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
     const file = event.target.files[0];
 
     const reader = new FileReader();
-    reader.onload = (loadedFile) => {
+    reader.addEventListener("load", (loadedFile) => {
       const res = loadedFile.target?.result;
       if (!res) {
         toast.error("Error uploading file");
@@ -114,7 +115,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
       if (tags) {
         setFieldValue("tags", tags);
       }
-    };
+    });
     reader.readAsText(file);
   };
 

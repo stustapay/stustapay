@@ -1,8 +1,9 @@
-import { Privilege, User, selectUserAll, useListUsersQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
+
+import { Privilege, User, selectUserAll, useListUsersQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export type UserSelectProps = {
   value: number;

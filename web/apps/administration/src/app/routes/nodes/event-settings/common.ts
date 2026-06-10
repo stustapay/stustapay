@@ -1,5 +1,6 @@
-import { Language, RestrictedEventSettings } from "@/api";
 import { z } from "zod";
+
+import { Language, RestrictedEventSettings } from "@/api";
 
 export const TranslationTextsSchema = z.object({
   translation_texts: z.record(z.string(), z.record(z.string(), z.string())),

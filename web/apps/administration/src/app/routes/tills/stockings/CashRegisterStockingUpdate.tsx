@@ -1,18 +1,20 @@
-import {
-  selectCashRegisterStockingById,
-  useListRegisterStockingsQuery,
-  useUpdateRegisterStockingMutation,
-} from "@/api";
-import { TillStockingsRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateCashRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
+
+import {
+  selectCashRegisterStockingById,
+  useListRegisterStockingsQuery,
+  useUpdateRegisterStockingMutation,
+} from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillStockingsRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
 
 export const CashRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

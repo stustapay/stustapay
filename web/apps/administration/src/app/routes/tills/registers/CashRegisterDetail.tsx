@@ -1,3 +1,13 @@
+import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { Paper, Stack, Tab } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+
 import {
   CashRegister,
   selectCashierById,
@@ -15,15 +25,7 @@ import { CashierRoutes, CashRegistersRoutes, TillRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { TransactionTable } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Paper, Stack, Tab } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+
 import { CashierShiftTable } from "../../cashiers";
 
 const RegisterOrderList: React.FC<{ register: CashRegister }> = ({ register }) => {
@@ -34,10 +36,11 @@ const RegisterOrderList: React.FC<{ register: CashRegister }> = ({ register }) =
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
         transactions: data
-          ? selectTransactionAll(data).map((transaction) => ({
-              ...transaction,
-              amount: transaction.target_account === register.account_id ? transaction.amount : -transaction.amount,
-            }))
+          ? selectTransactionAll(data).map((transaction) => {
+              const amount =
+                transaction.target_account === register.account_id ? transaction.amount : -transaction.amount;
+              return Object.assign(transaction, { amount });
+            })
           : undefined,
       }),
     }
@@ -127,7 +130,12 @@ export const CashRegisterDetail: React.FC = () => {
             onClick: () => navigate(`${CashRegistersRoutes.detail(register.id)}/transfer`),
             disabled: register.current_cashier_id == null,
           },
-          { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+          {
+            label: t("delete"),
+            onClick: openConfirmDeleteDialog,
+            color: "error",
+            icon: <DeleteIcon />,
+          },
         ]}
       >
         <DetailView>

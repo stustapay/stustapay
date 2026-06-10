@@ -1,5 +1,7 @@
-import { api, CurrentUser } from "@/api";
 import { createSlice } from "@reduxjs/toolkit";
+
+import { api, CurrentUser } from "@/api";
+
 import { RootState } from "./store";
 
 interface AuthState {

@@ -1,9 +1,11 @@
-import * as React from "react";
-import { DateTime } from "luxon";
 import { Card, CardContent, Grid, Skeleton, Typography } from "@mui/material";
+import { DateTime } from "luxon";
+import * as React from "react";
+
 import { useGetEntryStatsQuery, useGetPayOutStatsQuery, useGetTopUpStatsQuery } from "@/api";
 import { DailyStatsTable, HourlyGraph } from "@/components";
 import { useCurrentNode } from "@/hooks";
+
 import { VoucherStatsCard } from "../event-overview/VoucherStatsCard";
 
 const EntryStats: React.FC<{
@@ -25,10 +27,10 @@ const EntryStats: React.FC<{
       <>
         <Typography variant="h5">Entry Stats</Typography>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 10 }} height={300}>
+          <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }} height={300}>
+          <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
         </Grid>
@@ -40,16 +42,15 @@ const EntryStats: React.FC<{
     <>
       <Typography variant="h5">Entry Stats</Typography>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 10 }} height={300}>
+        <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
           <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
         </Grid>
-        <Grid size={{ xs: 12, md: 2 }} height={300}>
+        <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
           <DailyStatsTable data={data} useRevenue={useRevenue} />
         </Grid>
       </Grid>
     </>
   );
-  return;
 };
 
 const TopUpStats: React.FC<{
@@ -71,10 +72,10 @@ const TopUpStats: React.FC<{
       <>
         <Typography variant="h5">Top Up Stats</Typography>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 9 }} height={300}>
+          <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }} height={300}>
+          <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
         </Grid>
@@ -86,10 +87,10 @@ const TopUpStats: React.FC<{
     <>
       <Typography variant="h5">Top Up Stats</Typography>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 9 }} height={300}>
+        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
           <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }} height={300}>
+        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
           <DailyStatsTable data={data} useRevenue={useRevenue} />
         </Grid>
       </Grid>
@@ -116,10 +117,10 @@ const PayOutStats: React.FC<{
       <>
         <Typography variant="h5">Pay out Stats</Typography>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 9 }} height={300}>
+          <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }} height={300}>
+          <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
             <Skeleton variant="rounded" height={300} />
           </Grid>
         </Grid>
@@ -131,10 +132,10 @@ const PayOutStats: React.FC<{
     <>
       <Typography variant="h5">Pay Out Stats</Typography>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 9 }} height={300}>
+        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
           <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }} height={300}>
+        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
           <DailyStatsTable data={data} useRevenue={useRevenue} />
         </Grid>
       </Grid>

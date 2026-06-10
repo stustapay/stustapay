@@ -1,10 +1,12 @@
-import { DraggableItemTypes } from "@/core";
+import { Box, Typography } from "@mui/material";
 import { Identifier } from "dnd-core";
 import * as React from "react";
 import { useDrop } from "react-dnd";
-import { DragButton } from "./DraggableButton";
-import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+
+import { DraggableItemTypes } from "@/core";
+
+import { DragButton } from "./DraggableButton";
 
 export interface EmptyDragProps {
   moveButton: (buttonId: number) => void;
@@ -19,14 +21,14 @@ export const DragArea: React.FC<EmptyDragProps> = ({ moveButton }) => {
         handlerId: monitor.getHandlerId(),
       };
     },
-    hover(item: DragButton, monitor) {
+    hover(item: DragButton, _monitor) {
       moveButton(item.id);
     },
   });
 
   return (
     // TODO: fix the type issue with the ref, currently we need to cast it to any
-    <Box ref={drop as any} minHeight="200px" display="flex" alignItems="center" justifyContent="center">
+    <Box ref={drop as any} sx={{ minHeight: "200px", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <Typography>{t("button.dragButtonHere")}</Typography>
     </Box>
   );

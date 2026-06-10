@@ -1,7 +1,8 @@
-import * as React from "react";
-import { FormNumericInput, FormNumericInputProps } from "./FormNumericField";
 import { InputAdornment } from "@mui/material";
 import { useCurrencySymbol } from "@stustapay/framework";
+import * as React from "react";
+
+import { FormNumericInput, FormNumericInputProps } from "./FormNumericField";
 
 export type FormCurrencyInputProps<Name extends string, Values> = FormNumericInputProps<Name, Values>;
 

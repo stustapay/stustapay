@@ -1,7 +1,3 @@
-import { CashierRead, selectCashierAll, selectTerminalById, useListCashiersQuery, useListTerminalsQuery } from "@/api";
-import { CashierRoutes, TerminalRoutes, UserTagRoutes } from "@/app/routes";
-import { ListLayout } from "@/components";
-import { useCurrentNode, useRenderNode } from "@/hooks";
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@stustapay/framework";
@@ -11,6 +7,11 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { z } from "zod";
+
+import { CashierRead, selectCashierAll, selectTerminalById, useListCashiersQuery, useListTerminalsQuery } from "@/api";
+import { CashierRoutes, TerminalRoutes, UserTagRoutes } from "@/app/routes";
+import { ListLayout } from "@/components";
+import { useCurrentNode, useRenderNode } from "@/hooks";
 
 const FilterOptionsSchema = z.object({
   showZeroBalance: StringyBoolean,

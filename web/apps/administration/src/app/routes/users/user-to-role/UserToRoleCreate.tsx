@@ -1,13 +1,14 @@
-import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } from "@/api";
-import { UserToRoleRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
+import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { withPrivilegeGuard } from "@/app/layout";
 import { z } from "zod";
-import { FormikProps } from "formik";
+
+import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
+import { UserToRoleRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
 import { UserSelect, RoleSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
 
 const NewUserToRoleSchema = z.object({
   user_id: z.number().int(),
@@ -35,7 +36,7 @@ const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, e
         }
       }
     },
-    [userToRoles, setFieldValue]
+    [userToRoles, setFieldValue, currentNode.id]
   );
   return (
     <>

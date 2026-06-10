@@ -1,12 +1,14 @@
-import { useCreateUserMutation } from "@/api";
-import { UserRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewUser, NewUserSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { UserCreateForm } from "./UserCreateForm";
+
+import { useCreateUserMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { UserRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { UserCreateForm } from "./UserCreateForm";
 
 const initialValues: NewUser = {
   login: "",

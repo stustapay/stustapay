@@ -37,7 +37,7 @@ export const SumUpCardMock: SumUpCard = {
           htmlElement = null;
         }
       },
-      update: (cfg) => undefined,
+      update: () => undefined,
     };
   },
 };

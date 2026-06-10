@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { ProductRestrictionSchema } from "./product";
 
 export const NewTicketSchema = z.object({

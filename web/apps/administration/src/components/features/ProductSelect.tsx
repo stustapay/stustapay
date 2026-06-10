@@ -1,7 +1,8 @@
-import { Product, selectProductAll, useListProductsQuery } from "@/api";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
+
+import { Product, selectProductAll, useListProductsQuery } from "@/api";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
 export type ProductSelectProps = Omit<SelectProps<Product, false>, "options" | "formatOption" | "multiple">;
 

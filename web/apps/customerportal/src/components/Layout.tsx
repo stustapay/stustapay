@@ -1,5 +1,6 @@
 import { Stack, Box } from "@mui/material";
 import * as React from "react";
+
 import { Footer } from "./Footer";
 
 export interface LayoutProps {

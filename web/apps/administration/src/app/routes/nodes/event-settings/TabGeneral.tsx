@@ -1,14 +1,15 @@
-import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, InputAdornment, LinearProgress, Stack } from "@mui/material";
 import { FormNumericInput, FormTextField, FormDateTimePicker, FormTimePicker } from "@stustapay/form-components";
+import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { CurrencyIdentifierSelect } from "@/components/features";
-import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
 import i18n from "@/i18n";
 
 const GeneralSettingsSchema = z

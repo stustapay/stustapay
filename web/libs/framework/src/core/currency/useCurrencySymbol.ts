@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
 import { useCurrencyIdentifier } from "./CurrencyProvider";
 
 export const useCurrencySymbol = (): string => {

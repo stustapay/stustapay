@@ -1,4 +1,3 @@
-import { useNode } from "@/api";
 import {
   Dashboard as DashboardIcon,
   Leaderboard as LeaderboardIcon,
@@ -11,6 +10,9 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+
+import { useNode } from "@/api";
+
 import { EventPageLayout } from "./EventPageLayout";
 
 const getActiveTab = (nodeId: number, location: string) => {

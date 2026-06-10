@@ -1,4 +1,20 @@
 import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Logout as LogoutIcon,
+  PointOfSale as PointOfSaleIcon,
+} from "@mui/icons-material";
+import { Box, Button, Grid, ListItem, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import QRCode from "react-qr-code";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import {
   selectTillById,
   selectUserById,
   useDeleteTerminalMutation,
@@ -15,21 +31,7 @@ import { TerminalSwitchTill } from "@/components/features";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Logout as LogoutIcon,
-  PointOfSale as PointOfSaleIcon,
-} from "@mui/icons-material";
-import { Box, Button, Grid, ListItem, Paper } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import QRCode from "react-qr-code";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+
 import { TerminalMap } from "./TerminalMap";
 
 export const TerminalDetail: React.FC = () => {
@@ -78,7 +80,7 @@ export const TerminalDetail: React.FC = () => {
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
         deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-          navigate(TerminalRoutes.list()),
+          navigate(TerminalRoutes.list())
         );
         return true;
       },
@@ -204,10 +206,7 @@ export const TerminalDetail: React.FC = () => {
               </>
             )}
             {terminal.registration_uuid != null && (
-              <DetailField
-                label={t("terminal.registrationUUID")}
-                value={terminal.registration_uuid}
-              />
+              <DetailField label={t("terminal.registrationUUID")} value={terminal.registration_uuid} />
             )}
             <DetailBoolField label={t("terminal.loggedIn")} value={terminal.session_uuid != null} />
             {terminal.mdm_device_id != null && (
@@ -237,10 +236,7 @@ export const TerminalDetail: React.FC = () => {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={encodeTerminalRegistrationQrCode(
-                    config.terminalApiBaseUrl,
-                    terminal.registration_uuid,
-                  )}
+                  value={encodeTerminalRegistrationQrCode(config.terminalApiBaseUrl, terminal.registration_uuid)}
                   viewBox={`0 0 256 256`}
                 />
               </Box>
@@ -253,11 +249,7 @@ export const TerminalDetail: React.FC = () => {
           <TerminalMap mdmDeviceId={terminal.mdm_device_id} label={terminal.name} />
         </Paper>
       )}
-      <TerminalSwitchTill
-        open={switchTillOpen}
-        terminalId={terminal.id}
-        onClose={() => setSwitchTillOpen(false)}
-      />
+      <TerminalSwitchTill open={switchTillOpen} terminalId={terminal.id} onClose={() => setSwitchTillOpen(false)} />
     </DetailLayout>
   );
 };

@@ -1,11 +1,12 @@
-import React from "react";
-import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import Layout from "@theme/Layout";
 import HomepageFeatures from "@site/src/components/homepage-features";
-import styles from "./index.module.css";
 import Logo from "@site/static/img/logo.svg";
+import Layout from "@theme/Layout";
+import clsx from "clsx";
+import React from "react";
+
+import styles from "./index.module.css";
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -20,6 +21,7 @@ function HomepageHeader() {
           </Link>
           <span className={styles.indexCtasGitHubButtonWrapper}>
             <iframe
+              sandbox=""
               className={styles.indexCtasGitHubButton}
               src="https://ghbtns.com/github-btn.html?user=stustapay&amp;repo=stustapay&amp;type=star&amp;count=true&amp;size=large"
               width={160}
@@ -33,7 +35,7 @@ function HomepageHeader() {
   );
 }
 
-export default function Home(): JSX.Element {
+export default function Home() {
   return (
     <Layout title="Home">
       <HomepageHeader />

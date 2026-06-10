@@ -1,11 +1,12 @@
-import { useGetBonQuery } from "@/api";
-import { config } from "@/api/common";
-import { usePublicConfig } from "@/hooks";
 import { Alert } from "@mui/material";
 import { BonDisplay, Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+
+import { useGetBonQuery } from "@/api";
+import { config } from "@/api/common";
+import { usePublicConfig } from "@/hooks";
 
 const getBlobUrl = (blobId?: string | null) => {
   if (!blobId) {

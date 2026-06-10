@@ -1,9 +1,10 @@
-import * as React from "react";
 import { List, Typography } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { DraggableButton } from "./DraggableButton";
-import { DragArea } from "./DragArea";
 import { TillButton } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+
+import { DragArea } from "./DragArea";
+import { DraggableButton } from "./DraggableButton";
 import { Selectable } from "./types";
 
 export interface AssignedButtonsProps {
@@ -28,7 +29,7 @@ export const AssignedButtons: React.FC<AssignedButtonsProps> = ({
     if (oldIndex === oldHoveredIndex + addMode) {
       return;
     }
-    const newButtons = [...assignedButtonIds.filter((id) => id !== buttonId)];
+    const newButtons = assignedButtonIds.filter((id) => id !== buttonId);
     const hoveredIndex = newButtons.findIndex((id) => id === hoveredButtonId);
     newButtons.splice(hoveredIndex + addMode, 0, buttonId);
     setAssignedButtonIds(newButtons);

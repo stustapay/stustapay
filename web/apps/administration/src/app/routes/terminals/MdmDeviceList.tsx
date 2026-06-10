@@ -1,8 +1,3 @@
-import { MdmDeviceWithMapping, useListMdmDevicesQuery } from "@/api";
-import { TerminalRoutes } from "@/app/routes";
-import { MdmDeviceChangeMapping } from "@/components/features";
-import { ListLayout } from "@/components";
-import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Edit as EditIcon, Map as MapIcon } from "@mui/icons-material";
 import {
   Alert,
@@ -15,11 +10,18 @@ import {
   DialogTitle,
   Link,
 } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { MdmDeviceWithMapping, useListMdmDevicesQuery } from "@/api";
+import { TerminalRoutes } from "@/app/routes";
+import { ListLayout } from "@/components";
+import { MdmDeviceChangeMapping } from "@/components/features";
+import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+
 import { TerminalMap } from "./TerminalMap";
 
 export const MdmDeviceList: React.FC = () => {
@@ -29,17 +31,14 @@ export const MdmDeviceList: React.FC = () => {
   const canManageTerminals = useCurrentUserHasPrivilege(TerminalRoutes.privilege);
   const { data, isLoading, error } = useListMdmDevicesQuery(
     { nodeId: currentNode.id },
-    { skip: !eventSettings.headwind_enabled },
+    { skip: !eventSettings.headwind_enabled }
   );
   const [selectedDevice, setSelectedDevice] = React.useState<MdmDeviceWithMapping | null>(null);
   const [mapDevice, setMapDevice] = React.useState<MdmDeviceWithMapping | null>(null);
 
   const mappedTerminalIds = React.useMemo(
-    () =>
-      new Set(
-        (data ?? []).flatMap((device) => (device.mapping ? [device.mapping.terminal_id] : [])),
-      ),
-    [data],
+    () => new Set((data ?? []).flatMap((device) => (device.mapping ? [device.mapping.terminal_id] : []))),
+    [data]
   );
 
   if (!eventSettings.headwind_enabled) {
@@ -170,9 +169,7 @@ export const MdmDeviceList: React.FC = () => {
         />
       )}
       <Dialog open={mapDevice != null} onClose={() => setMapDevice(null)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {mapDevice?.mapping?.terminal_name ?? mapDevice?.device.device_id}
-        </DialogTitle>
+        <DialogTitle>{mapDevice?.mapping?.terminal_name ?? mapDevice?.device.device_id}</DialogTitle>
         <DialogContent>
           {mapDevice && (
             <TerminalMap

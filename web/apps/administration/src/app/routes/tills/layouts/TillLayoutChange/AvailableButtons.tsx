@@ -1,8 +1,9 @@
-import * as React from "react";
 import { List, TextField, Typography } from "@mui/material";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { DraggableButton } from "./DraggableButton";
+
 import { DragArea } from "./DragArea";
+import { DraggableButton } from "./DraggableButton";
 import { Selectable } from "./types";
 
 export interface AvailableButtonsProps {

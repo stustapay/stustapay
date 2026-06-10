@@ -1,14 +1,16 @@
-import { useGetTicketQuery, useUpdateTicketMutation } from "@/api";
-import { TicketRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { NewTicketSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TicketForm } from "./TicketForm";
+
+import { useGetTicketQuery, useUpdateTicketMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TicketRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TicketForm } from "./TicketForm";
 
 export const TicketUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

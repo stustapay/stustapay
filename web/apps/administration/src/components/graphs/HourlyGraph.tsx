@@ -1,6 +1,7 @@
-import * as React from "react";
-import { DateTime } from "luxon";
 import { ResponsiveLine } from "@nivo/line";
+import { DateTime } from "luxon";
+import * as React from "react";
+
 import { TimeseriesStats } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 
@@ -51,10 +52,13 @@ const transformHourlyEntryStats = (
       }
       const formatted = `${firstDate.plus({ days: toPrevDay ? 1 : 0 }).toISODate()}T${t.toISOTime()}`;
       const modifiedT = DateTime.fromISO(formatted);
-      series[d].data.push({ x: modifiedT.toJSDate(), y: useRevenue ? interval.revenue : interval.count });
+      series[d].data.push({
+        x: modifiedT.toJSDate(),
+        y: useRevenue ? interval.revenue : interval.count,
+      });
     }
 
-    return Object.values(series).reverse();
+    return Object.values(series).toReversed();
   } else {
     return [
       {

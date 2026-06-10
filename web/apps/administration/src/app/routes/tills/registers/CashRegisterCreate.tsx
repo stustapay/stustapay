@@ -1,12 +1,14 @@
-import { useCreateRegisterMutation } from "@/api";
-import { CashRegistersRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewCashRegister, NewCashRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { CashRegisterForm } from "./CashRegisterForm";
+
+import { useCreateRegisterMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { CashRegistersRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { CashRegisterForm } from "./CashRegisterForm";
 
 const initialValues: NewCashRegister = {
   name: "",

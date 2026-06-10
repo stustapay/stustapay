@@ -1,8 +1,9 @@
-import { useGetPresaleStatsQuery } from "@/api";
-import { useCurrentNode, useCurrencyFormatter } from "@/hooks";
 import { Card, CardContent, Grid, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { useGetPresaleStatsQuery } from "@/api";
+import { useCurrentNode, useCurrencyFormatter } from "@/hooks";
 
 export const PresaleStatsCard: React.FC = () => {
   const { t } = useTranslation();

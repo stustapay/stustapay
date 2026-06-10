@@ -1,3 +1,3 @@
 describe("dummy test", () => {
-    it("should pass", () => {})
-})
+  it("should pass", () => {});
+});

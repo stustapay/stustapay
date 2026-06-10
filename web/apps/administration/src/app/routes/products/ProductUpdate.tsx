@@ -1,14 +1,16 @@
-import { useGetProductQuery, useUpdateProductMutation } from "@/api";
-import { ProductRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { ProductSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { ProductForm } from "./ProductForm";
+
+import { useGetProductQuery, useUpdateProductMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { ProductRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { ProductForm } from "./ProductForm";
 
 export const ProductUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

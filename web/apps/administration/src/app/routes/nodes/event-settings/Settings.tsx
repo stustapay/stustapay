@@ -1,19 +1,21 @@
-import { useGetRestrictedEventSettingsQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Alert, AlertTitle, Box, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useQueryVar } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { useGetRestrictedEventSettingsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+
 import { TabAgb } from "./TabAgb";
-import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
 import { TabBon } from "./TabBon";
 import { TabCustomerPortal } from "./TabCustomerPortal";
 import { TabFaq } from "./TabFaq";
 import { TabGeneral } from "./TabGeneral";
 import { TabMail } from "./TabMail";
 import { TabPayout } from "./TabPayout";
+import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
 import { TabSumUp } from "./TabSumUp";
 
 export const Settings: React.FC = () => {
@@ -36,7 +38,7 @@ export const Settings: React.FC = () => {
 
   return (
     <TabContext value={activeTab}>
-      <Box display="grid" gridTemplateColumns="min-content auto">
+      <Box sx={{ display: "grid", gridTemplateColumns: "min-content auto" }}>
         <Box sx={{ borderRight: 1, borderColor: "divider" }}>
           <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
             <Tab label={t("settings.general.tabLabel")} value="general" />

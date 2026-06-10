@@ -1,7 +1,8 @@
-import { findNode, useNodeTree } from "@/api";
 import { GridColDef } from "@stustapay/framework";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+
+import { findNode, useNodeTree } from "@/api";
 
 export const useRenderNode = () => {
   const { t } = useTranslation();

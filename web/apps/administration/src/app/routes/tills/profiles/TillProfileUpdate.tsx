@@ -1,14 +1,16 @@
-import { useGetTillProfileQuery, useUpdateTillProfileMutation } from "@/api";
-import { TillProfileRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { TillProfileSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TillProfileForm } from "./TillProfileForm";
+
+import { useGetTillProfileQuery, useUpdateTillProfileMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillProfileRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TillProfileForm } from "./TillProfileForm";
 
 export const TillProfileUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

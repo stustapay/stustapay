@@ -1,7 +1,8 @@
-import * as React from "react";
 import { Grid } from "@mui/material";
-import { AvailableButtons } from "./AvailableButtons";
+import * as React from "react";
+
 import { AssignedButtons } from "./AssignedButtons";
+import { AvailableButtons } from "./AvailableButtons";
 import { Selectable } from "./types";
 
 export interface TillLayoutDesignerProps {

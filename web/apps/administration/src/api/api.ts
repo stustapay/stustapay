@@ -1,4 +1,5 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
+
 import {
   AccountRead,
   CashRegister,
@@ -19,7 +20,6 @@ import {
   UserRole,
   UserTagDetailRead,
   api as generatedApi,
-  GenerateTestBonApiArg,
   GenerateTestRevenueReportApiArg,
   Terminal,
   GenerateRevenueReportApiArg,
@@ -62,7 +62,9 @@ const cashierShiftAdapter = createEntityAdapter<CashierShift>({
 
 const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id - a.id });
 
-const transactionAdapter = createEntityAdapter<Transaction>({ sortComparer: (a, b) => b.id - a.id });
+const transactionAdapter = createEntityAdapter<Transaction>({
+  sortComparer: (a, b) => b.id - a.id,
+});
 
 const taxRateAdapter = createEntityAdapter<TaxRate>({
   sortComparer: (a, b) => a.name.localeCompare(b.name),

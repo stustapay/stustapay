@@ -1,10 +1,11 @@
-import { config } from "@/api/common";
-import { LanguageSelect, Layout } from "@/components";
 import { AppBar, Box, Button, CircularProgress, Container, CssBaseline, Toolbar, Typography } from "@mui/material";
 import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink } from "react-router-dom";
+
+import { config } from "@/api/common";
+import { LanguageSelect, Layout } from "@/components";
 
 export const UnauthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();

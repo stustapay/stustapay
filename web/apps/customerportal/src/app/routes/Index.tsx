@@ -1,6 +1,3 @@
-import { useGetCustomerQuery, usePayoutInfoQuery } from "@/api";
-import { useCurrencyFormatter } from "@/hooks";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Alert, AlertTitle, Grid, Link, Paper, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
@@ -8,6 +5,11 @@ import * as React from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { useGetCustomerQuery, usePayoutInfoQuery } from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
+
 import { OrderList } from "./OrderList";
 
 export const Index: React.FC = () => {
@@ -53,7 +55,16 @@ export const Index: React.FC = () => {
   }
 
   return (
-    <Grid container justifyItems="center" justifyContent="center" spacing={2} sx={{ paddingX: 0.5 }}>
+    <Grid
+      container
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        spacing: 2,
+        paddingX: 0.5,
+      }}
+    >
       {config.sumup_topup_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
           <Alert severity="info" onClick={() => navigate("/topup")} sx={{ cursor: "pointer" }}>
@@ -63,7 +74,7 @@ export const Index: React.FC = () => {
         </Grid>
       )}
       <Grid size={{ xs: 12, sm: 8 }} sx={{ mt: 2 }}>
-        <Grid container justifyContent="center">
+        <Grid container sx={{ display: "flex", justifyContent: "center" }}>
           <Paper
             sx={{
               paddingX: 8,

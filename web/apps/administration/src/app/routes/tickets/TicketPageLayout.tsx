@@ -1,11 +1,12 @@
-import { useNode } from "@/api/nodes";
-import { ExternalTicketRoutes, TicketRoutes } from "@/app/routes";
 import { ConfirmationNumber as ConfirmationNumberIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+
+import { useNode } from "@/api/nodes";
+import { ExternalTicketRoutes, TicketRoutes } from "@/app/routes";
 
 const getActiveTab = (location: string) => {
   if (location.startsWith(ExternalTicketRoutes.list())) {

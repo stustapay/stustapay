@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { Privilege, useNodeTree, findNode } from "@/api";
 
 export const useCurrentUserHasPrivilegeAtNode = (privilege?: Privilege): ((nodeId: number) => boolean) => {

@@ -1,10 +1,11 @@
-import { usePendingPayoutDetailQuery } from "@/api";
-import { DetailField, DetailNumberField, DetailView } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { usePendingPayoutDetailQuery } from "@/api";
+import { DetailField, DetailNumberField, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 export const PendingPayoutDetail: React.FC = () => {
   const { t } = useTranslation();

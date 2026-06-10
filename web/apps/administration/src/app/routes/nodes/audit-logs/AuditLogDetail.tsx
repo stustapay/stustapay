@@ -1,28 +1,14 @@
-import {
-  AuditLog,
-  Terminal,
-  selectTerminalAll,
-  selectTillById,
-  selectUserById,
-  useDeleteTerminalMutation,
-  useGetAuditLogQuery,
-  useListAuditLogsQuery,
-  useListTerminalsQuery,
-  useListTillsQuery,
-  useListUsersQuery,
-} from "@/api";
-import { TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView, ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Link, ListItem, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
+import { ListItem } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
+import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { getUserName } from "@stustapay/models";
+import { useParams } from "react-router-dom";
+
+import { selectUserById, useGetAuditLogQuery, useListUsersQuery } from "@/api";
+import { UserRoutes } from "@/app/routes";
+import { DetailField, DetailLayout, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 export const AuditLogDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -34,7 +20,6 @@ export const AuditLogDetail: React.FC = () => {
     auditLogId: Number(auditLogId),
   });
   const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
-  const { dataGridNodeColumn } = useRenderNode();
 
   if (!auditLog || !users) {
     return <Loading />;

@@ -1,19 +1,20 @@
-import { useCurrentNode } from "@/hooks";
-import * as React from "react";
-import { Stack } from "@mui/material";
 import { Receipt as ReceiptIcon } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+import { Stack } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers";
+import { DateTime } from "luxon";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+
 import {
   NodeSeenByUser,
   useGenerateDailyReportMutation,
   useGeneratePayoutReportMutation,
   useGenerateRevenueReportMutation,
 } from "@/api";
-import { LoadingButton } from "@mui/lab";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { NodeMultiSelect } from "@/components";
-import { DatePicker } from "@mui/x-date-pickers";
-import { DateTime } from "luxon";
+import { useCurrentNode } from "@/hooks";
 
 async function openReportPreview<T>(args: T, generationFunction: (args: T) => Promise<any>) {
   try {
@@ -28,7 +29,7 @@ async function openReportPreview<T>(args: T, generationFunction: (args: T) => Pr
       window.open(pdfUrl);
     }
   } catch (e) {
-    toast.error("Error generating report");
+    toast.error(`Error generating report: ${e}`);
   }
 }
 

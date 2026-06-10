@@ -1,12 +1,13 @@
-import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
-import { ProductRoutes } from "@/app/routes";
-import { useCurrentNode } from "@/hooks";
 import { Tooltip } from "@mui/material";
-import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
+import { ProductRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
 
 export interface LineItemTableProps {
   lineItems: LineItem[];

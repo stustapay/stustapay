@@ -1,14 +1,16 @@
-import { useGetTerminalQuery, useUpdateTerminalMutation } from "@/api";
-import { TerminalRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTerminalSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TerminalForm } from "./TerminalForm";
+
+import { useGetTerminalQuery, useUpdateTerminalMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TerminalRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TerminalForm } from "./TerminalForm";
 
 export const TerminalUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

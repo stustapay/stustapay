@@ -1,9 +1,11 @@
-import { useGetMdmDeviceLocationQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Alert, AlertTitle, Skeleton, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import Map, { Marker, Popup } from "react-map-gl/maplibre";
+
+import { useGetMdmDeviceLocationQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+
 import "maplibre-gl/dist/maplibre-gl.css";
 
 export type TerminalMapProps = {
@@ -18,11 +20,7 @@ export const TerminalMap: React.FC<TerminalMapProps> = ({ mdmDeviceId, label }) 
   const { currentNode } = useCurrentNode();
   const [popupShown, setPopupShown] = React.useState(false);
 
-  const {
-    data: location,
-    isLoading,
-    error,
-  } = useGetMdmDeviceLocationQuery({ nodeId: currentNode.id, mdmDeviceId });
+  const { data: location, isLoading, error } = useGetMdmDeviceLocationQuery({ nodeId: currentNode.id, mdmDeviceId });
 
   if (isLoading) {
     return <Skeleton variant="rounded" width="100%" height={MAP_HEIGHT} />;
@@ -64,9 +62,7 @@ export const TerminalMap: React.FC<TerminalMapProps> = ({ mdmDeviceId, label }) 
           onClose={() => setPopupShown(false)}
         >
           <Typography variant="h6">{label}</Typography>
-          {location.last_update != null && (
-            <Typography variant="body2">{location.last_update}</Typography>
-          )}
+          {location.last_update != null && <Typography variant="body2">{location.last_update}</Typography>}
         </Popup>
       )}
     </Map>

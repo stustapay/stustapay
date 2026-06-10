@@ -1,5 +1,7 @@
 import * as React from "react";
+
 import { ObjectType } from "@/api";
+
 import { useCurrentNode } from "./useCurrentNode";
 
 export const useCurrentNodeAllowsObject = (objectType?: ObjectType): boolean => {
