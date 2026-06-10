@@ -55,6 +55,21 @@ export const TillRoutes = new RouteBuilder("tills", "node_administration", "till
 export const TillLayoutRoutes = new RouteBuilder("tills/layouts", "node_administration", "till");
 export const TillProfileRoutes = new RouteBuilder("tills/profiles", "node_administration", "till");
 export const TillButtonsRoutes = new RouteBuilder("tills/buttons", "node_administration", "till");
+
+export type TillButtonCreateFromProductState = {
+  productId: number;
+  productName: string;
+};
+
+export const tillButtonCreateFromProduct = (product: {
+  id: number;
+  name: string;
+  node_id: number;
+}): { to: string; state: TillButtonCreateFromProductState } => ({
+  to: TillButtonsRoutes.add(product.node_id),
+  state: { productId: product.id, productName: product.name },
+});
+
 export const CashRegistersRoutes = new RouteBuilder("tills/registers", "node_administration", "till");
 export const TillStockingsRoutes = new RouteBuilder("tills/stockings", "node_administration", "till");
 export const UserRoutes = new RouteBuilder("users", "user_management", "user");

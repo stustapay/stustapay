@@ -4,6 +4,7 @@ import {
   Edit as EditIcon,
   Lock as LockIcon,
   LockOpen as UnlockIcon,
+  SmartButton as SmartButtonIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -23,7 +24,7 @@ import {
   useListTaxRatesQuery,
   useUpdateProductMutation,
 } from "@/api";
-import { ProductRoutes } from "@/app/routes";
+import { ProductRoutes, tillButtonCreateFromProduct, TillButtonsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
@@ -32,6 +33,7 @@ export const ProductList: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const canManageProducts = useCurrentUserHasPrivilege(ProductRoutes.privilege);
   const canManageProductsAtNode = useCurrentUserHasPrivilegeAtNode(ProductRoutes.privilege);
+  const canCreateTillButtonAtNode = useCurrentUserHasPrivilegeAtNode(TillButtonsRoutes.privilege);
   const navigate = useNavigate();
   const openModal = useOpenModal();
 
@@ -153,7 +155,7 @@ export const ProductList: React.FC = () => {
       field: "actions",
       type: "actions",
       headerName: t("actions"),
-      width: 150,
+      minWidth: 180,
       getActions: (params) =>
         canManageProductsAtNode(params.row.node_id)
           ? [
@@ -169,6 +171,24 @@ export const ProductList: React.FC = () => {
                 label={t("copy")}
                 onClick={() => copyProduct(params.row)}
               />,
+              ...(canCreateTillButtonAtNode(params.row.node_id)
+                ? [
+                    <GridActionsCellItem
+                      key="create-till-button"
+                      icon={
+                        <Tooltip title={t("product.createTillButton")}>
+                          <SmartButtonIcon />
+                        </Tooltip>
+                      }
+                      color="primary"
+                      label={t("product.createTillButton")}
+                      onClick={() => {
+                        const { to, state } = tillButtonCreateFromProduct(params.row);
+                        navigate(to, { state });
+                      }}
+                    />,
+                  ]
+                : []),
               <GridActionsCellItem
                 icon={
                   params.row.is_locked ? (
