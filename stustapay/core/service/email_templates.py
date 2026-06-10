@@ -28,7 +28,9 @@ Ihr Benutzername ist: {{ username }}
 Um Ihr Konto zu aktivieren, klicken Sie bitte auf den folgenden Link und setzen Sie Ihr Passwort:
 {{ invitation_url }}
 
-Nach dem Setzen Ihres Passworts melden Sie sich mit Ihrem Benutzernamen und dem gerade erstellten Passwort im Portal an.
+Bitte vergeben Sie ein Passwort mit mindestens 8 Zeichen.
+
+Nun koennen Sie sich mit Ihrem Benutzernamen {{ username }} und Ihrem Passwort im Portal anmelden.
 
 Diese Einladung ist gueltig bis {{ expires_at }}.
 
@@ -69,7 +71,8 @@ DEFAULT_INVITATION_HTML_BODIES = {
       text-decoration:none;font-weight:700;border-radius:999px;"
   >Einladung annehmen</a>
 </p>
-<p>Nach dem Setzen Ihres Passworts melden Sie sich mit Ihrem Benutzernamen und dem gerade erstellten Passwort im Portal an.</p>
+<p>Bitte vergeben Sie ein Passwort mit mindestens 8 Zeichen.</p>
+<p>Nun koennen Sie sich mit Ihrem Benutzernamen <strong>{{ username }}</strong> und Ihrem Passwort im Portal anmelden.</p>
 <p>Diese Einladung ist gueltig bis {{ expires_at }}.</p>
 <p>Falls Sie diese Einladung nicht erwartet haben, ignorieren Sie bitte diese E-Mail.</p>
 <p>Viele Gruesse<br />Ihr teamfestlichPay-Team</p>

@@ -271,13 +271,16 @@ async def test_invitation_falls_back_to_builtin_text_when_template_is_missing(
     assert "Fallback User" in mail["text_message"]
     assert user.login in mail["text_message"]
     assert "teamfestlichPay administration portal" in mail["text_message"]
-    assert "Nach dem Setzen Ihres Passworts" in mail["text_message"]
+    assert "Passwort mit mindestens 8 Zeichen" in mail["text_message"]
+    assert f"mit Ihrem Benutzernamen {user.login} und Ihrem Passwort" in mail["text_message"]
     assert "After setting your password" in mail["text_message"]
     assert "Hallo Fallback User" in mail["html_message"]
     assert "Hello Fallback User" in mail["html_message"]
     assert user.login in mail["html_message"]
     assert "teamfestlichPay" in mail["html_message"]
     assert "Accept invitation" in mail["html_message"]
+    assert "Passwort mit mindestens 8 Zeichen" in mail["html_message"]
+    assert f"mit Ihrem Benutzernamen <strong>{user.login}</strong> und Ihrem Passwort" in mail["html_message"]
     assert "sign in to the portal with your username" in mail["html_message"]
 
 
