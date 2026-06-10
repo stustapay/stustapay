@@ -1,9 +1,10 @@
-import * as React from "react";
-import { NewProduct } from "@/api";
-import { RestrictionSelect, TaxRateSelect } from "@/components/features";
 import { FormCheckbox, FormCurrencyInput, FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { NewProduct } from "@/api";
+import { RestrictionSelect, TaxRateSelect } from "@/components/features";
 
 export type ProductFormProps<T extends NewProduct> = FormikProps<T>;
 

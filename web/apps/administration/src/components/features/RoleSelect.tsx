@@ -1,7 +1,8 @@
-import { UserRole, selectUserRoleAll, useListUserRolesQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
+
+import { UserRole, selectUserRoleAll, useListUserRolesQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export type RoleSelectProps = { value: number[]; onChange: (roleIds: number[]) => void } & Omit<
   SelectProps<UserRole, true>,

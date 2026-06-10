@@ -1,8 +1,3 @@
-import { findNode, useGetTreeForCurrentUserQuery, useLogoutMutation, useTreeForCurrentUser } from "@/api";
-import { config } from "@/api/common";
-import { AppBar, DrawerHeader, Main } from "@/components";
-import { drawerWidth } from "@/components/layouts/constants";
-import { selectCurrentUser, useAppSelector } from "@/store";
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
@@ -29,8 +24,15 @@ import { Loading, TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-import { NavigationTree } from "./navigation-tree";
+
+import { findNode, useGetTreeForCurrentUserQuery, useLogoutMutation, useTreeForCurrentUser } from "@/api";
+import { config } from "@/api/common";
+import { AppBar, DrawerHeader, Main } from "@/components";
+import { drawerWidth } from "@/components/layouts/constants";
 import { useCurrentNode } from "@/hooks";
+import { selectCurrentUser, useAppSelector } from "@/store";
+
+import { NavigationTree } from "./navigation-tree";
 
 const BreadcrumbHeader: React.FC = () => {
   const { t } = useTranslation();

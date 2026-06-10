@@ -1,7 +1,8 @@
-import { NewCashRegisterStocking } from "@/api";
 import { FormNumericInput, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
+
+import { NewCashRegisterStocking } from "@/api";
 
 export type CashRegisterStockingFormProps<T extends NewCashRegisterStocking> = FormikProps<T>;
 

@@ -1,5 +1,3 @@
-import { useLoginMutation, UserLoginResult } from "@/api";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import {
   Stack,
@@ -21,6 +19,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { useLoginMutation, UserLoginResult } from "@/api";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 
 const validationSchema = z.object({
   username: z.string(),

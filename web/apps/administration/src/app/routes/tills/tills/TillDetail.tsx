@@ -1,3 +1,11 @@
+import { Delete as DeleteIcon, Edit as EditIcon, Smartphone as SmartphoneIcon } from "@mui/icons-material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   selectOrderAll,
   selectTerminalById,
@@ -13,13 +21,6 @@ import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { OrderTable, TillSwitchTerminal } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon, Smartphone as SmartphoneIcon } from "@mui/icons-material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
 
 export const TillDetail: React.FC = () => {
   const { t } = useTranslation();

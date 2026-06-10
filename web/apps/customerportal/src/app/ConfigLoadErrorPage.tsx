@@ -1,6 +1,7 @@
 import { Container, Stack, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
 import StuStaPayLogo from "../favicon.svg";
 
 export const ConfigLoadErrorPage: React.FC = () => {

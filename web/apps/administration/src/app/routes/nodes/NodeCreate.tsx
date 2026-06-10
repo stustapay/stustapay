@@ -1,16 +1,18 @@
-import { useCreateNodeMutation } from "@/api";
-import { isErrorResp } from "@/api/utils";
-import { useCurrentNode } from "@/hooks";
 import { Button, Container, LinearProgress, Stack, Typography } from "@mui/material";
 import { FormSelect, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { NodeSettingsSchema, ObjectTypes, type NodeSettingsSchemaType } from "./types";
-import { withPrivilegeGuard } from "@/app/layout";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import { useCreateNodeMutation } from "@/api";
+import { isErrorResp } from "@/api/utils";
+import { withPrivilegeGuard } from "@/app/layout";
+import { useCurrentNode } from "@/hooks";
+
+import { NodeSettingsSchema, ObjectTypes, type NodeSettingsSchemaType } from "./types";
 
 const initialValues: NodeSettingsSchemaType = {
   name: "",

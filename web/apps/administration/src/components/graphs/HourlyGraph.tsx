@@ -1,6 +1,7 @@
-import * as React from "react";
-import { DateTime } from "luxon";
 import { ResponsiveLine } from "@nivo/line";
+import { DateTime } from "luxon";
+import * as React from "react";
+
 import { TimeseriesStats } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 

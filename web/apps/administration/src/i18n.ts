@@ -1,9 +1,10 @@
+import { common_en, common_de } from "@stustapay/translations";
 import { createInstance } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
+
 import translationsDe from "./locales/de/translations";
 import translationsEn from "./locales/en/translations";
-import { common_en, common_de } from "@stustapay/translations";
 
 export const defaultNS = "translations";
 

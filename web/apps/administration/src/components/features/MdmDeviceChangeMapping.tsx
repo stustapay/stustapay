@@ -1,3 +1,9 @@
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { Loading, Select } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+
 import {
   MdmDeviceWithMapping,
   Terminal,
@@ -6,11 +12,6 @@ import {
   useListTerminalsQuery,
 } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
-import { Loading, Select } from "@stustapay/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 
 export type MdmDeviceChangeMappingProps = {
   device: MdmDeviceWithMapping;

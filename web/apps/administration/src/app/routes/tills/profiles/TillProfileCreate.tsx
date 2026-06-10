@@ -1,12 +1,14 @@
-import { NewTillProfile, useCreateTillProfileMutation } from "@/api";
-import { TillProfileRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewTillProfileSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TillProfileForm } from "./TillProfileForm";
+
+import { NewTillProfile, useCreateTillProfileMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillProfileRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TillProfileForm } from "./TillProfileForm";
 
 const initialValues: NewTillProfile = {
   name: "",

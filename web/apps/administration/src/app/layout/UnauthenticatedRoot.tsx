@@ -1,10 +1,12 @@
-import { config } from "@/api/common";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { Button, CircularProgress, Typography } from "@mui/material";
 import { TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, Link as RouterLink, useSearchParams } from "react-router-dom";
+
+import { config } from "@/api/common";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
+
 import { UnauthenticatedLayout } from "./UnauthenticatedLayout";
 
 export const UnauthenticatedRoot: React.FC = () => {

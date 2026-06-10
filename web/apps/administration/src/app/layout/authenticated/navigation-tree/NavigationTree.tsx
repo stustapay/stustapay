@@ -1,3 +1,14 @@
+import {
+  ChevronRight as ChevronRightIcon,
+  ExpandMore as ExpandMoreIcon,
+  Folder as FolderIcon,
+  Event as EventIcon,
+  EditOff as EditOffIcon,
+} from "@mui/icons-material";
+import { SimpleTreeView, TreeViewItemId } from "@mui/x-tree-view";
+import * as React from "react";
+import { useLocation } from "react-router-dom";
+
 import { Node, NodeSeenByUser } from "@/api";
 import { findNode, useTreeForCurrentUser } from "@/api/nodes";
 import { nodeUrlBaseRegex } from "@/app/routes";
@@ -10,16 +21,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@/store";
-import {
-  ChevronRight as ChevronRightIcon,
-  ExpandMore as ExpandMoreIcon,
-  Folder as FolderIcon,
-  Event as EventIcon,
-  EditOff as EditOffIcon,
-} from "@mui/icons-material";
-import { SimpleTreeView, TreeViewItemId } from "@mui/x-tree-view";
-import * as React from "react";
-import { useLocation } from "react-router-dom";
+
 import { NavigationTreeItem } from "./NavigationTreeItem";
 import { NodeMenu, isMenuEntryValidAtNode, nodeMenuEntryDefinitions } from "./NodeMenu";
 

@@ -1,10 +1,11 @@
-import { RestrictedEventSettings, useGetEventDesignQuery, useUpdateBonLogoMutation } from "@/api";
-import { getBlobUrl } from "@/core/blobs";
-import { useCurrentNode } from "@/hooks";
 import { Button, Card, Grid, Stack, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+
+import { RestrictedEventSettings, useGetEventDesignQuery, useUpdateBonLogoMutation } from "@/api";
+import { getBlobUrl } from "@/core/blobs";
+import { useCurrentNode } from "@/hooks";
 
 const toBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {

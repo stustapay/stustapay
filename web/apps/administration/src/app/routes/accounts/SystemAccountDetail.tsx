@@ -1,8 +1,9 @@
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+
 import { Account } from "@/api";
 import { AccountRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
 
 export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();

@@ -1,9 +1,11 @@
 import { Alert, AlertTitle, List, ListItem, ListItemText, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { PasswordChange } from "./PasswordChange";
-import { useCurrentUser } from "@/hooks";
+
 import { ThemeSelect } from "@/components/features";
+import { useCurrentUser } from "@/hooks";
+
+import { PasswordChange } from "./PasswordChange";
 
 export const Profile: React.FC = () => {
   const { t } = useTranslation();

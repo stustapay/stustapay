@@ -1,4 +1,3 @@
-import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import { Button, LinearProgress, Stack } from "@mui/material";
 import { FormSelect, FormSwitch, FormTextField, zodExtension } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -8,6 +7,8 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 import i18n from "@/i18n";
 
 const requiredIssue = {

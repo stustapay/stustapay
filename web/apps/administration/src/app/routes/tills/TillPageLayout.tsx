@@ -1,3 +1,10 @@
+import { Folder as FolderIcon, Gamepad as GamepadIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import { Box, Tab, Tabs } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+
 import { useNode } from "@/api/nodes";
 import {
   TillButtonsRoutes,
@@ -7,12 +14,6 @@ import {
   TillRoutes,
   TillStockingsRoutes,
 } from "@/app/routes";
-import { Folder as FolderIcon, Gamepad as GamepadIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
-import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
 
 const getActiveTab = (location: string) => {
   if (location.startsWith(TillProfileRoutes.list())) {

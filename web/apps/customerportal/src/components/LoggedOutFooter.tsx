@@ -1,7 +1,8 @@
-import * as React from "react";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Link } from "@mui/material";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 export const LoggedOutFooter: React.FC = () => {
   const config = usePublicConfig();

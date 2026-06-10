@@ -1,5 +1,3 @@
-import { AccountRead } from "@/api";
-import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 import { Link } from "@mui/material";
 import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
@@ -7,6 +5,9 @@ import { ArrayElement } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { AccountRead } from "@/api";
+import { AccountRoutes, UserTagRoutes } from "@/app/routes";
 
 type History = AccountRead["tag_history"];
 type HistoryEntry = ArrayElement<History>;

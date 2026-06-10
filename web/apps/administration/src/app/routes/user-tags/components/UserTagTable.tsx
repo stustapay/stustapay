@@ -1,11 +1,12 @@
-import { UserTagDetailRead } from "@/api";
-import { AccountRoutes, UserTagRoutes } from "@/app/routes";
-import { useRenderNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { UserTagDetailRead } from "@/api";
+import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { useRenderNode } from "@/hooks";
 
 export interface UserTagTableProps {
   userTags: UserTagDetailRead[];

@@ -1,7 +1,8 @@
-import { Theme, selectTheme, setTheme, useAppDispatch, useAppSelector } from "@/store";
 import { MenuItem, Select, SelectChangeEvent, SelectProps } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { Theme, selectTheme, setTheme, useAppDispatch, useAppSelector } from "@/store";
 
 export type ThemeSelectProps = Omit<SelectProps, "value" | "onChange">;
 

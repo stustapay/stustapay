@@ -1,14 +1,15 @@
-import { SumUpCheckout, useListSumupCheckoutsQuery } from "@/api";
-import { withPrivilegeGuard } from "@/app/layout";
-import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
-import { ListLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { Privilege } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { SumUpCheckout, useListSumupCheckoutsQuery } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
+import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
+import { ListLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
   const { t } = useTranslation();

@@ -1,4 +1,3 @@
-import { Node, NodeSeenByUser, ObjectType, Privilege } from "@/api";
 import {
   AccountBalance as AccountBalanceIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
@@ -11,7 +10,8 @@ import {
   Smartphone as SmartphoneIcon,
 } from "@mui/icons-material";
 import * as React from "react";
-import { NavigationTreeItem } from "./NavigationTreeItem";
+
+import { Node, NodeSeenByUser, ObjectType, Privilege } from "@/api";
 import {
   CashierRoutes,
   CustomerRoutes,
@@ -26,6 +26,8 @@ import {
   UserToRoleRoutes,
 } from "@/app/routes";
 import { i18n } from "@/i18n";
+
+import { NavigationTreeItem } from "./NavigationTreeItem";
 
 type NodeMenuItem = {
   route: (node: Node) => string;

@@ -1,6 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { RootState } from "./store";
+
 import { api } from "@/api";
+
+import { RootState } from "./store";
 
 interface AuthState {
   token: string | null;

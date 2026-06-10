@@ -1,7 +1,3 @@
-import { useLoginMutation, useLogoutMutation } from "@/api";
-import { config } from "@/api/common";
-import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
-import { selectIsAuthenticated, useAppSelector } from "@/store";
 import { LockOutlined as LockOutlinedIcon } from "@mui/icons-material";
 import { Avatar, Box, Button, Container, CssBaseline, LinearProgress, Stack, Typography } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
@@ -12,7 +8,12 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { useLoginMutation, useLogoutMutation } from "@/api";
+import { config } from "@/api/common";
+import PinUidHowToImg from "@/assets/img/pin_uid_howto.svg";
 import i18n from "@/i18n";
+import { selectIsAuthenticated, useAppSelector } from "@/store";
 
 const validationSchema = z.object({
   userTagPin: z.string({ error: i18n.t("pinRequired") }),

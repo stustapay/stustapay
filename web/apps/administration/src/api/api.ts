@@ -1,4 +1,5 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
+
 import {
   AccountRead,
   CashRegister,

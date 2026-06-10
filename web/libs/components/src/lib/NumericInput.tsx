@@ -1,5 +1,5 @@
-import * as React from "react";
 import { TextField, TextFieldProps } from "@mui/material";
+import * as React from "react";
 
 export type NumericInputProps = {
   onChange: (value: number | null) => void;

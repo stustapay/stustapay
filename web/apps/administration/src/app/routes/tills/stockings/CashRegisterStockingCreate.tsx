@@ -1,12 +1,14 @@
-import { useCreateRegisterStockingMutation } from "@/api";
-import { TillStockingsRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewCashRegisterStocking, NewCashRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
+
+import { useCreateRegisterStockingMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillStockingsRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
 
 const initialValues: NewCashRegisterStocking = {
   name: "",

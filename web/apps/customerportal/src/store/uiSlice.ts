@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
 import { RootState } from "./store";
 
 export type Theme = "light" | "dark" | "browser";

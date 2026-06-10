@@ -7,7 +7,11 @@
     "generate-openapi": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx @rtk-query/codegen-openapi apps/customerportal/openapi-config.js"
+        "command": [
+          "npx @rtk-query/codegen-openapi apps/customerportal/openapi-config.js",
+          "npx oxfmt apps/customerportal/src/api/generated"
+        ],
+        "parallel": false
       }
     }
   },

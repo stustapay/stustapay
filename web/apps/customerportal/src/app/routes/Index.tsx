@@ -1,6 +1,3 @@
-import { useGetCustomerQuery, usePayoutInfoQuery } from "@/api";
-import { useCurrencyFormatter } from "@/hooks";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Alert, AlertTitle, Grid, Link, Paper, Stack, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
@@ -8,6 +5,11 @@ import * as React from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { useGetCustomerQuery, usePayoutInfoQuery } from "@/api";
+import { useCurrencyFormatter } from "@/hooks";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
+
 import { OrderList } from "./OrderList";
 
 export const Index: React.FC = () => {

@@ -1,5 +1,12 @@
-import { withPrivilegeGuard } from "@/app/layout";
+import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
+import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
+import { Loading } from "@stustapay/components";
 import { Privilege, formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   Customer,
   selectOrderAll,
@@ -10,6 +17,7 @@ import {
   usePreventCustomerPayoutMutation,
   useUpdateAccountCommentMutation,
 } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import {
   DetailBoolField,
@@ -20,18 +28,12 @@ import {
   EditableListItem,
 } from "@/components";
 import { OrderTable } from "@/components/features";
+import { LayoutAction } from "@/components/layouts/types";
 import { useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
-import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
-import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+
 import { AccountTagHistoryTable } from "../accounts/components/AccountTagHistoryTable";
 import { EditAccountBalanceModal } from "../accounts/components/EditAccountBalanceModal";
 import { EditAccountVoucherAmountModal } from "../accounts/components/EditAccountVoucherAmountModal";
-import { LayoutAction } from "@/components/layouts/types";
 
 const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
   const { t } = useTranslation();

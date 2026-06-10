@@ -1,8 +1,9 @@
-import { NewUserRole } from "@/api";
-import { PrivilegeSelect } from "@/components/features";
+import { FormCheckbox, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
-import { FormCheckbox, FormTextField } from "@stustapay/form-components";
+
+import { NewUserRole } from "@/api";
+import { PrivilegeSelect } from "@/components/features";
 
 export type UserRoleFormProps<T extends NewUserRole> = FormikProps<T>;
 

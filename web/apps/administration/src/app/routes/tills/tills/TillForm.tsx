@@ -1,11 +1,12 @@
-import * as React from "react";
-import { NewTill, Terminal, selectTerminalAll, useListTerminalsQuery } from "@/api";
+import { Select } from "@stustapay/components";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { NewTill, Terminal, selectTerminalAll, useListTerminalsQuery } from "@/api";
 import { TillProfile, selectTillProfileAll, useListTillProfilesQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import { Select } from "@stustapay/components";
 
 export type TillFormProps<T extends NewTill> = FormikProps<T>;
 

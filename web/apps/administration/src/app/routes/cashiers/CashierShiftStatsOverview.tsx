@@ -1,12 +1,13 @@
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { Box, Tab } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+
 import { CashierProductStats, useGetCashierShiftStatsQuery } from "@/api";
 import { OrderTable } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Tab } from "@mui/material";
-import { DataGrid, GridColDef } from "@stustapay/framework";
-import { Loading } from "@stustapay/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
 
 export interface CashierShiftStatsOverview {
   cashierId: number;

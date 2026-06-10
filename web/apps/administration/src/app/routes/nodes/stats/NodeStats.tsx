@@ -1,11 +1,13 @@
-import * as React from "react";
-import { withPrivilegeGuard } from "@/app/layout";
+import { Alert, AlertTitle, Divider, FormControlLabel, Grid, Stack, Switch } from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers";
 import { Privilege } from "@stustapay/models";
 import { DateTime } from "luxon";
-import { DateTimePicker } from "@mui/x-date-pickers";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, AlertTitle, Divider, FormControlLabel, Grid, Stack, Switch } from "@mui/material";
+
+import { withPrivilegeGuard } from "@/app/layout";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
+
 import { EventStats } from "./EventStats";
 import { NodeSpecificStats } from "./NodeSpecificStats";
 

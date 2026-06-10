@@ -1,5 +1,3 @@
-import * as React from "react";
-import { DateTime } from "luxon";
 import {
   Alert,
   AlertTitle,
@@ -15,10 +13,13 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
-import { DailyStatsTable, HourlyGraph, NodeSelect } from "@/components";
-import { useGetProductStatsQuery, ProductTimeseries, ProductOverallStats } from "@/api";
 import { ResponsiveLine } from "@nivo/line";
+import { DateTime } from "luxon";
+import * as React from "react";
+
+import { useGetProductStatsQuery, ProductTimeseries, ProductOverallStats } from "@/api";
+import { DailyStatsTable, HourlyGraph, NodeSelect } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
 const IndividualProductStats: React.FC<{
   nodeId: number;

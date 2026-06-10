@@ -1,6 +1,3 @@
-import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
-import { config } from "@/api/common";
-import { useCurrentNode } from "@/hooks";
 import { Button, LinearProgress, Stack, Typography, ListItem, ListItemText, Alert } from "@mui/material";
 import { FormSwitch, FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -9,6 +6,10 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
+import { config } from "@/api/common";
+import { useCurrentNode } from "@/hooks";
 
 const requiredIssue = {
   code: z.ZodIssueCode.custom,

@@ -1,7 +1,8 @@
-import { type CustomerPortalApiConfig } from "@/api";
-import { RootState, selectAuthToken } from "@/store";
 import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+import { type CustomerPortalApiConfig } from "@/api";
+import { RootState, selectAuthToken } from "@/store";
 
 const siteHost = window.location.host;
 const siteProtocol = window.location.protocol;

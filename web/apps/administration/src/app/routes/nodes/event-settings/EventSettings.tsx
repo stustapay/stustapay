@@ -1,27 +1,29 @@
-import { useArchiveNodeMutation, useGetRestrictedEventSettingsQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Alert, AlertTitle, Box, Button, Stack, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { useQueryVar } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import { useArchiveNodeMutation, useGetRestrictedEventSettingsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+
+import { NodeConfiguration } from "../node-settings";
 import { TabAgb } from "./TabAgb";
-import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
 import { TabBon } from "./TabBon";
 import { TabCustomerPortal } from "./TabCustomerPortal";
+import { TabDesign } from "./TabDesign";
 import { TabFaq } from "./TabFaq";
 import { TabGeneral } from "./TabGeneral";
 import { TabMail } from "./TabMail";
-import { TabPayout } from "./TabPayout";
-import { TabSumUp } from "./TabSumUp";
-import { Link as RouterLink } from "react-router-dom";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { toast } from "react-toastify";
-import { NodeConfiguration } from "../node-settings";
-import { TabPretix } from "./TabPretix";
-import { TabDesign } from "./TabDesign";
 import { TabMdm } from "./TabMdm";
+import { TabPayout } from "./TabPayout";
+import { TabPretix } from "./TabPretix";
+import { TabPrivacyPolicy } from "./TabPrivacyPolicy";
+import { TabSumUp } from "./TabSumUp";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();

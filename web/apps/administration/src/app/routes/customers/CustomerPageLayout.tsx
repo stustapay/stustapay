@@ -1,11 +1,12 @@
-import { useNode } from "@/api/nodes";
-import { CustomerRoutes } from "@/app/routes";
 import { Search as SearchIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+
+import { useNode } from "@/api/nodes";
+import { CustomerRoutes } from "@/app/routes";
 
 const getActiveTab = (location: string) => {
   if (location.startsWith(CustomerRoutes.action("blocked-payout"))) {

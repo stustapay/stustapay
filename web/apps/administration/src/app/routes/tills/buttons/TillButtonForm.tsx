@@ -1,12 +1,13 @@
-import { NewTillButton, Product, selectProductById, useListProductsQuery } from "@/api";
-import { ProductSelect } from "@/components/features";
-import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { IconButton, List, ListItem, ListItemText } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { NewTillButton, Product, selectProductById, useListProductsQuery } from "@/api";
+import { ProductSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
 
 interface ProductSelectProps {
   productIds: number[];

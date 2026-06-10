@@ -1,9 +1,11 @@
-import { useGetMdmDeviceLocationQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Alert, AlertTitle, Skeleton, Typography } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import Map, { Marker, Popup } from "react-map-gl/maplibre";
+
+import { useGetMdmDeviceLocationQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
+
 import "maplibre-gl/dist/maplibre-gl.css";
 
 export type TerminalMapProps = {

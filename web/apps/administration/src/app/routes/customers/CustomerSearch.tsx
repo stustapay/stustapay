@@ -1,6 +1,3 @@
-import { useFindCustomersMutation } from "@/api";
-import { DetailLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Button, LinearProgress, Paper } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { toFormikValidationSchema, useQueryVar } from "@stustapay/utils";
@@ -9,6 +6,11 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { useFindCustomersMutation } from "@/api";
+import { DetailLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
 import { CustomerTable } from "./components/CustomerTable";
 
 const SearchFormSchema = z.object({

@@ -1,8 +1,3 @@
-import { MdmDeviceWithMapping, useListMdmDevicesQuery } from "@/api";
-import { TerminalRoutes } from "@/app/routes";
-import { MdmDeviceChangeMapping } from "@/components/features";
-import { ListLayout } from "@/components";
-import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 import { Edit as EditIcon, Map as MapIcon } from "@mui/icons-material";
 import {
   Alert,
@@ -15,11 +10,18 @@ import {
   DialogTitle,
   Link,
 } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { Loading } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { MdmDeviceWithMapping, useListMdmDevicesQuery } from "@/api";
+import { TerminalRoutes } from "@/app/routes";
+import { ListLayout } from "@/components";
+import { MdmDeviceChangeMapping } from "@/components/features";
+import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
+
 import { TerminalMap } from "./TerminalMap";
 
 export const MdmDeviceList: React.FC = () => {

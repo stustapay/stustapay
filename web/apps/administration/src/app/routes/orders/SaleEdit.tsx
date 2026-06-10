@@ -1,14 +1,16 @@
-import { useGetOrderQuery } from "@/api";
-import { ListItemLink } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Alert, List, ListItem, ListItemText, Paper, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { LineItemEdit } from "./LineItemEdit";
+
+import { useGetOrderQuery } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { ListItemLink } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { LineItemEdit } from "./LineItemEdit";
 
 export const SaleEdit: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

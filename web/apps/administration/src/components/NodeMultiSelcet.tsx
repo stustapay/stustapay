@@ -1,7 +1,8 @@
-import { NodeSeenByUser } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Select } from "@stustapay/components";
 import * as React from "react";
+
+import { NodeSeenByUser } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export type NodeMultiSelectProps = {
   label: string;

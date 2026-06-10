@@ -11,10 +11,11 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import * as React from "react";
 import { createCurrencyFormatter } from "@stustapay/framework";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
+
 import styles from "./BonDisplay.module.css";
 
 type BonConfig = {

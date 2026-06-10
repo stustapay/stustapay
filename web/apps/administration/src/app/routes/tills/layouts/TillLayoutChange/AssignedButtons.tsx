@@ -1,9 +1,10 @@
-import * as React from "react";
 import { List, Typography } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { DraggableButton } from "./DraggableButton";
-import { DragArea } from "./DragArea";
 import { TillButton } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+
+import { DragArea } from "./DragArea";
+import { DraggableButton } from "./DraggableButton";
 import { Selectable } from "./types";
 
 export interface AssignedButtonsProps {

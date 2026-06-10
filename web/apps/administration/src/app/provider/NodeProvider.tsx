@@ -1,9 +1,10 @@
-import * as React from "react";
 import { CurrencyProvider } from "@stustapay/framework";
-import { useCurrentNode } from "@/hooks";
-import { findNode, useNodeTree } from "@/api";
-import { Outlet } from "react-router-dom";
 import { CurrencyIdentifier } from "@stustapay/models";
+import * as React from "react";
+import { Outlet } from "react-router-dom";
+
+import { findNode, useNodeTree } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export const NodeProvider: React.FC = () => {
   const { root } = useNodeTree();

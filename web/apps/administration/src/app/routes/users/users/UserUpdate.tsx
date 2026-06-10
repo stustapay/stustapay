@@ -1,14 +1,16 @@
-import { useGetUserQuery, useUpdateUserMutation } from "@/api";
-import { UserRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UserSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { UserUpdateForm } from "./UserUpdateForm";
+
+import { useGetUserQuery, useUpdateUserMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { UserRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { UserUpdateForm } from "./UserUpdateForm";
 
 export const UserUpdate: React.FC = withPrivilegeGuard("user_management", () => {
   const { t } = useTranslation();

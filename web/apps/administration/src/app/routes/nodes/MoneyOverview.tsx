@@ -1,11 +1,12 @@
-import { Account, AccountRead, AccountType, useGetMoneyOverviewQuery } from "@/api";
-import { AccountRoutes } from "@/app/routes";
-import { ButtonLink } from "@/components";
-import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 import { Card, CardActions, CardContent, Grid, Typography, useTheme } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { Account, AccountRead, AccountType, useGetMoneyOverviewQuery } from "@/api";
+import { AccountRoutes } from "@/app/routes";
+import { ButtonLink } from "@/components";
+import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
 interface BalanceCardProps {
   amount: number;

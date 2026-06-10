@@ -1,3 +1,9 @@
+import { Loading } from "@stustapay/components";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
+
 import {
   selectCashierShiftById,
   selectCashRegisterById,
@@ -7,15 +13,11 @@ import {
   useListCashRegistersAdminQuery,
   useListUsersQuery,
 } from "@/api";
+import { CashierRoutes, CashRegistersRoutes, UserRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Loading } from "@stustapay/components";
-import { getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
-import { CashierRoutes, CashRegistersRoutes, UserRoutes } from "@/app/routes";
 
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();

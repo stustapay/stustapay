@@ -1,3 +1,10 @@
+import { Loading } from "@stustapay/components";
+import { DataGrid, GridColDef } from "@stustapay/framework";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router-dom";
+
 import {
   CashierShift,
   selectCashRegisterById,
@@ -7,12 +14,6 @@ import {
 } from "@/api";
 import { CashierRoutes, CashRegistersRoutes, UserRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
-import { Loading } from "@stustapay/components";
-import { DataGrid, GridColDef } from "@stustapay/framework";
-import { getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink } from "react-router-dom";
 
 export const CashierShiftTable: React.FC<{
   cashierShifts: CashierShift[];

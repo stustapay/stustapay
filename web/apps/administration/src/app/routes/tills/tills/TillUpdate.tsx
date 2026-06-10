@@ -1,14 +1,16 @@
-import { useGetTillQuery, useUpdateTillMutation } from "@/api";
-import { TillRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTillSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { TillForm } from "./TillForm";
+
+import { useGetTillQuery, useUpdateTillMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TillForm } from "./TillForm";
 
 export const TillUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

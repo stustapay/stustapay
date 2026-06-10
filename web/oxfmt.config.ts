@@ -5,4 +5,5 @@ export default defineConfig({
   singleQuote: false,
   trailingComma: "es5",
   printWidth: 120,
+  sortImports: true,
 });

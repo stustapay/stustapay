@@ -1,12 +1,14 @@
-import { useCreateTillMutation } from "@/api";
-import { TillRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewTill, NewTillSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TillForm } from "./TillForm";
+
+import { useCreateTillMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TillRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TillForm } from "./TillForm";
 
 const initialValues: NewTill = {
   name: "",

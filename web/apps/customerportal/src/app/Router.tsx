@@ -1,16 +1,17 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
 import { ErrorPage } from "./ErrorPage";
-import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
+import { Agb } from "./routes/Agb";
 import { Login } from "./routes/auth/Login";
-import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
+import { AuthenticatedRoot } from "./routes/AuthenticatedRoot";
+import { Bon } from "./routes/Bon";
+import { Faq } from "./routes/Faq";
 import { Index } from "./routes/Index";
 import { PayoutInfo } from "./routes/PayoutInfo";
-import { TopUp } from "./routes/topup";
-import { Faq } from "./routes/Faq";
-import { Agb } from "./routes/Agb";
 import { PrivacyPolicy } from "./routes/PrivacyPolicy";
-import { Bon } from "./routes/Bon";
+import { TopUp } from "./routes/topup";
+import { UnauthenticatedRoot } from "./routes/UnauthenticatedRoot";
 
 const router = createBrowserRouter([
   {

@@ -1,4 +1,19 @@
 import {
+  ContentCopy as ContentCopyIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Lock as LockIcon,
+  LockOpen as UnlockIcon,
+} from "@mui/icons-material";
+import { Link, Tooltip } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
+import { useOpenModal } from "@stustapay/modal-provider";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+
+import {
   Product,
   selectProductAll,
   selectTaxRateById,
@@ -10,21 +25,7 @@ import {
 } from "@/api";
 import { ProductRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  ContentCopy as ContentCopyIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Lock as LockIcon,
-  LockOpen as UnlockIcon,
-} from "@mui/icons-material";
-import { Link, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
-import { Loading } from "@stustapay/components";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
-import { useOpenModal } from "@stustapay/modal-provider";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();

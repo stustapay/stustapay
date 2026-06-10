@@ -1,7 +1,8 @@
-import { ObjectType } from "@/api";
-import { useCurrentNodeAllowsObject } from "@/hooks";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
+
+import { ObjectType } from "@/api";
+import { useCurrentNodeAllowsObject } from "@/hooks";
 
 export interface TreeObjectGuardProps {
   objectType: ObjectType;

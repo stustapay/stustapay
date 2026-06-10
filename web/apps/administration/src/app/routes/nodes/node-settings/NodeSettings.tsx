@@ -1,17 +1,19 @@
-import { useDeleteNodeMutation, useUpdateNodeMutation } from "@/api";
-import { isErrorResp } from "@/api/utils";
-import { useCurrentNode } from "@/hooks";
 import { Button, Container, LinearProgress, Stack } from "@mui/material";
 import { FormSelect, FormTextField } from "@stustapay/form-components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { useDeleteNodeMutation, useUpdateNodeMutation } from "@/api";
+import { isErrorResp } from "@/api/utils";
+import { useCurrentNode } from "@/hooks";
+
 import { EventSettings } from "../event-settings";
 import { NodeSettingsSchema, ObjectTypes, type NodeSettingsSchemaType } from "../types";
-import { useOpenModal } from "@stustapay/modal-provider";
 
 export const NodeConfiguration: React.FC = () => {
   const { t } = useTranslation();

@@ -1,9 +1,10 @@
-import * as React from "react";
-import { useGetCustomerQuery } from "@/api";
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Link } from "@mui/material";
 import { formatUserTagUid } from "@stustapay/models";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+
+import { useGetCustomerQuery } from "@/api";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 export const LoggedInFooter: React.FC = () => {
   const { data: customer, error: customerError, isLoading: isCustomerLoading } = useGetCustomerQuery();

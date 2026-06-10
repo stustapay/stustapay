@@ -1,6 +1,3 @@
-import { selectTillById, selectUserById, Transaction, useListTillsQuery, useListUsersQuery } from "@/api";
-import { CashierRoutes, OrderRoutes, TillRoutes, TransactionRoutes } from "@/app/routes";
-import { useCurrentNode } from "@/hooks";
 import {
   AddCard as AddCardIcon,
   ShoppingCart as ShoppingCartIcon,
@@ -14,6 +11,10 @@ import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { selectTillById, selectUserById, Transaction, useListTillsQuery, useListUsersQuery } from "@/api";
+import { CashierRoutes, OrderRoutes, TillRoutes, TransactionRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
 
 export interface TransactionTableProps {
   transactions: Transaction[];

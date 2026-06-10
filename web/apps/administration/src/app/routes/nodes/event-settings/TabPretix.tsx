@@ -1,11 +1,3 @@
-import {
-  PretixProduct,
-  RestrictedEventSettings,
-  useCheckPretixConnectionMutation,
-  useFetchPretixProductsMutation,
-  useGenerateWebhookUrlMutation,
-  useUpdateEventMutation,
-} from "@/api";
 import { ContentCopy as ContentCopyIcon } from "@mui/icons-material";
 import { Button, IconButton, LinearProgress, ListItem, ListItemText, Stack } from "@mui/material";
 import { FormSelect, FormSwitch, FormTextField } from "@stustapay/form-components";
@@ -15,6 +7,15 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import {
+  PretixProduct,
+  RestrictedEventSettings,
+  useCheckPretixConnectionMutation,
+  useFetchPretixProductsMutation,
+  useGenerateWebhookUrlMutation,
+  useUpdateEventMutation,
+} from "@/api";
 
 const requiredIssue = {
   code: z.ZodIssueCode.custom,

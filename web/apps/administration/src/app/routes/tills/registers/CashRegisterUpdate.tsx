@@ -1,14 +1,16 @@
-import { selectCashRegisterById, useListCashRegistersAdminQuery, useUpdateRegisterMutation } from "@/api";
-import { CashRegistersRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateCashRegisterSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
-import { CashRegisterForm } from "./CashRegisterForm";
+
+import { selectCashRegisterById, useListCashRegistersAdminQuery, useUpdateRegisterMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { CashRegistersRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { CashRegisterForm } from "./CashRegisterForm";
 
 export const CashRegisterUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();

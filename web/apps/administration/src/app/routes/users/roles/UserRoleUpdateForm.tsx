@@ -1,9 +1,10 @@
-import { PrivilegeSelect } from "@/components/features";
 import { FormCheckbox } from "@stustapay/form-components";
 import { PrivilegeSchema } from "@stustapay/models";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+
+import { PrivilegeSelect } from "@/components/features";
 
 export const UserRoleUpdateSchema = z.object({
   id: z.number(),

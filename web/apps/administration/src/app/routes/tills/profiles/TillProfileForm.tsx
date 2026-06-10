@@ -1,10 +1,11 @@
-import { NewTillProfile } from "@/api";
+import { Select } from "@stustapay/components";
 import { FormCheckbox, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
+
+import { NewTillProfile } from "@/api";
 import { TillLayout, selectTillLayoutAll, useListTillLayoutsQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
-import { Select } from "@stustapay/components";
 
 export type TillProfileFormProps<T extends NewTillProfile> = FormikProps<T>;
 

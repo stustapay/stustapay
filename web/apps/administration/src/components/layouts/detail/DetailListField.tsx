@@ -1,6 +1,7 @@
-import { DetailField } from "@/components";
 import { Chip } from "@mui/material";
 import * as React from "react";
+
+import { DetailField } from "@/components";
 
 export type DetailListFieldProps = {
   label: string;

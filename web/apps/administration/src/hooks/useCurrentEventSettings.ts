@@ -1,4 +1,5 @@
 import { PublicEventSettings, findNode, useNodeTree } from "@/api";
+
 import { useCurrentNode } from "./useCurrentNode";
 
 export const useCurrentEventSettings = (): { eventSettings: PublicEventSettings } => {

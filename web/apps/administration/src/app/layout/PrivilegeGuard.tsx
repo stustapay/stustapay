@@ -1,7 +1,8 @@
-import { Privilege } from "@/api";
-import { useCurrentUserHasPrivilege } from "@/hooks";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
+
+import { Privilege } from "@/api";
+import { useCurrentUserHasPrivilege } from "@/hooks";
 
 export interface PrivilegeGuardProps {
   privilege: Privilege;

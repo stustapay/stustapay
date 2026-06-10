@@ -1,6 +1,3 @@
-import { Order, selectTillById, selectUserById, useListTillsQuery, useListUsersQuery } from "@/api";
-import { CashierRoutes, OrderRoutes, TillRoutes } from "@/app/routes";
-import { useCurrentNode } from "@/hooks";
 import {
   AddCard as AddCardIcon,
   ShoppingCart as ShoppingCartIcon,
@@ -14,6 +11,10 @@ import { getUserName } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+import { Order, selectTillById, selectUserById, useListTillsQuery, useListUsersQuery } from "@/api";
+import { CashierRoutes, OrderRoutes, TillRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
 
 export interface OrderListProps {
   orders: Order[];

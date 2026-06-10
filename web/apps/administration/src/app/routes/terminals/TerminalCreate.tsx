@@ -1,12 +1,14 @@
-import { useCreateTerminalMutation } from "@/api";
-import { TerminalRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { NewTerminal, NewTerminalSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TerminalForm } from "./TerminalForm";
+
+import { useCreateTerminalMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
+import { TerminalRoutes } from "@/app/routes";
+import { CreateLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
+import { TerminalForm } from "./TerminalForm";
 
 const initialValues: NewTerminal = {
   name: "",

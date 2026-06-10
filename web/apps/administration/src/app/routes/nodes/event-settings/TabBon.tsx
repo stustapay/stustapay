@@ -1,3 +1,15 @@
+import { Receipt as ReceiptIcon } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+import { Button, LinearProgress, Stack, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import { BonDisplay } from "@stustapay/components";
+import { FormTextField } from "@stustapay/form-components";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Form, Formik, FormikHelpers, FormikProps } from "formik";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { z } from "zod";
+
 import {
   BonJsonRead,
   RestrictedEventSettings,
@@ -6,17 +18,6 @@ import {
   useGetEventDesignQuery,
   useUpdateEventMutation,
 } from "@/api";
-import { Button, LinearProgress, Stack, Dialog, DialogTitle, DialogContent } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
-import { FormTextField } from "@stustapay/form-components";
-import { BonDisplay } from "@stustapay/components";
-import { toFormikValidationSchema } from "@stustapay/utils";
-import { Form, Formik, FormikHelpers, FormikProps } from "formik";
-import { Receipt as ReceiptIcon } from "@mui/icons-material";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { z } from "zod";
 import { getBlobUrl } from "@/core/blobs";
 
 export const BonSettingsSchema = z.object({

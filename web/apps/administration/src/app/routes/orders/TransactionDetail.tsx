@@ -1,3 +1,9 @@
+import { Loading } from "@stustapay/components";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+
 import {
   selectAccountById,
   selectUserById,
@@ -8,11 +14,6 @@ import {
 import { AccountRoutes, OrderRoutes, TransactionRoutes, UserRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Loading } from "@stustapay/components";
-import { getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
 
 export const TransactionDetail: React.FC = () => {
   const { t } = useTranslation();

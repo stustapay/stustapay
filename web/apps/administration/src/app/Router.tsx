@@ -1,10 +1,13 @@
 import * as React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
+import { NodeProvider } from "./provider";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
+import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, CustomerSearch } from "./routes/customers";
 import {
   EventCreate,
   NodeOverview,
@@ -14,11 +17,23 @@ import {
   NodeCreate,
   RevenueReports,
 } from "./routes/nodes";
+import { AuditLogList, AuditLogDetail } from "./routes/nodes/audit-logs";
+import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 import { NodeStats } from "./routes/nodes/stats";
+import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
 import { OrderBon, OrderDetail, SaleEdit, TransactionDetail } from "./routes/orders";
 import { PayoutRunCreate, PayoutRunDetail, PayoutRunList } from "./routes/payouts";
 import { ProductCreate, ProductDetail, ProductList, ProductUpdate } from "./routes/products";
+import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
 import { TaxRateCreate, TaxRateList, TaxRateUpdate } from "./routes/tax-rates";
+import {
+  MdmDeviceList,
+  TerminalCreate,
+  TerminalDetail,
+  TerminalList,
+  TerminalPageLayout,
+  TerminalUpdate,
+} from "./routes/terminals";
 import {
   ExternalTicketList,
   TicketCreate,
@@ -76,20 +91,6 @@ import {
   UserRoleDetail,
   UserToRoleUpdate,
 } from "./routes/users";
-import { SumUpCheckoutList, SumUpPageLayout, SumUpTransactionList, SumUpTransactionDetail } from "./routes/sumup";
-import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
-import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, CustomerSearch } from "./routes/customers";
-import {
-  MdmDeviceList,
-  TerminalCreate,
-  TerminalDetail,
-  TerminalList,
-  TerminalPageLayout,
-  TerminalUpdate,
-} from "./routes/terminals";
-import { SumupOauthCallback } from "./routes/nodes/SumupOauthCallback";
-import { NodeProvider } from "./provider";
-import { AuditLogList, AuditLogDetail } from "./routes/nodes/audit-logs";
 
 const router = createBrowserRouter([
   {

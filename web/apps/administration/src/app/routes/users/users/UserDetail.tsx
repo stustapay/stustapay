@@ -1,13 +1,14 @@
-import { useDeleteUserMutation, useGetUserQuery } from "@/api";
-import { UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+
+import { useDeleteUserMutation, useGetUserQuery } from "@/api";
+import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import { DetailField, DetailLayout, DetailView } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 export const UserDetail: React.FC = () => {
   const { t } = useTranslation();

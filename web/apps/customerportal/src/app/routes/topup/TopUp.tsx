@@ -1,6 +1,3 @@
-import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
-import { usePublicConfig } from "@/hooks";
-import i18n from "@/i18n";
 import { Cancel as CancelIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import { Alert, AlertTitle, Box, Button, Grid, LinearProgress, Link, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -12,6 +9,11 @@ import { Trans, useTranslation } from "react-i18next";
 import { Navigate, Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
+
+import { useCheckCheckoutMutation, useCreateCheckoutMutation, useGetCustomerQuery } from "@/api";
+import { usePublicConfig } from "@/hooks";
+import i18n from "@/i18n";
+
 import type { SumUpCard, SumUpCardInstance, SumUpResponseType } from "./SumUpCard";
 
 const TopUpSchema = z.object({

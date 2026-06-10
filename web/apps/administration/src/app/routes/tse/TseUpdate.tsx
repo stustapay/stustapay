@@ -1,12 +1,14 @@
-import { selectTseById, useListTsesQuery, useUpdateTseMutation } from "@/api";
-import { TseRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
-import { useCurrentNode } from "@/hooks";
 import { Loading } from "@stustapay/components";
 import { UpdateTseSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
+
+import { selectTseById, useListTsesQuery, useUpdateTseMutation } from "@/api";
+import { TseRoutes } from "@/app/routes";
+import { EditLayout } from "@/components";
+import { useCurrentNode } from "@/hooks";
+
 import { UpdateTseForm } from "./UpdateTseForm";
 
 export const TseUpdate: React.FC = () => {

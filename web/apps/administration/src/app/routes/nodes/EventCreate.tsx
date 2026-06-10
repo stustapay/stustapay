@@ -1,4 +1,4 @@
-import * as React from "react";
+import { Container, InputAdornment, Stack, Typography } from "@mui/material";
 import {
   StepperForm,
   FormStep,
@@ -7,27 +7,29 @@ import {
   FormDateTimePicker,
   FormTimePicker,
 } from "@stustapay/form-components";
-import { z } from "zod";
+import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
 import { FormikProps } from "formik";
-import { Container, InputAdornment, Stack, Typography } from "@mui/material";
-import { useCreateEventMutation } from "@/api";
-import { useCurrentNode } from "@/hooks";
-import { SumUpSettings, SumUpSettingsSchema, SumupSettingsForm } from "./event-settings/TabSumUp";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
+
+import { useCreateEventMutation } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
+import { CurrencyIdentifierSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
+import i18n from "@/i18n";
+
 import { BonSettingsForm, BonSettings, BonSettingsSchema } from "./event-settings/TabBon";
 import {
   CustomerPortalSettings,
   CustomerPortalSettingsForm,
   CustomerPortalSettingsSchema,
 } from "./event-settings/TabCustomerPortal";
-import { PayoutSettings, PayoutSettingsForm, PayoutSettingsSchema } from "./event-settings/TabPayout";
-import { CurrencyIdentifierSchema, getCurrencySymbolForIdentifier } from "@stustapay/models";
-import { CurrencyIdentifierSelect } from "@/components/features";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { withPrivilegeGuard } from "@/app/layout";
-import i18n from "@/i18n";
 import { MailSettings, MailSettingsForm, MailSettingsSchema } from "./event-settings/TabMail";
+import { PayoutSettings, PayoutSettingsForm, PayoutSettingsSchema } from "./event-settings/TabPayout";
+import { SumUpSettings, SumUpSettingsSchema, SumupSettingsForm } from "./event-settings/TabSumUp";
 
 const GeneralFormSchema = z
   .object({

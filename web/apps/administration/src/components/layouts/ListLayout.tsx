@@ -1,11 +1,13 @@
-import { IRouteBuilder } from "@/app/routes";
 import { Add as AddIcon } from "@mui/icons-material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+
+import { IRouteBuilder } from "@/app/routes";
+import { useCurrentNodeAllowsObject, useCurrentUserHasPrivilege } from "@/hooks";
+
 import { CommonActionLayout } from "./CommonActionLayout";
 import { LayoutAction } from "./types";
-import { useCurrentNodeAllowsObject, useCurrentUserHasPrivilege } from "@/hooks";
 
 export interface ListLayoutProps {
   title: string;

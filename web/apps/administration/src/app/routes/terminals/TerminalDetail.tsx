@@ -1,4 +1,20 @@
 import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Logout as LogoutIcon,
+  PointOfSale as PointOfSaleIcon,
+} from "@mui/icons-material";
+import { Box, Button, Grid, ListItem, Paper } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import QRCode from "react-qr-code";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import {
   selectTillById,
   selectUserById,
   useDeleteTerminalMutation,
@@ -15,21 +31,7 @@ import { TerminalSwitchTill } from "@/components/features";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Logout as LogoutIcon,
-  PointOfSale as PointOfSaleIcon,
-} from "@mui/icons-material";
-import { Box, Button, Grid, ListItem, Paper } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import QRCode from "react-qr-code";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+
 import { TerminalMap } from "./TerminalMap";
 
 export const TerminalDetail: React.FC = () => {

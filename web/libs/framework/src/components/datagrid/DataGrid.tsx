@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import * as React from "react";
 import {
   DataGrid as MuiDataGrid,
   GridValidRowModel,
@@ -8,8 +6,11 @@ import {
   GridColTypeDef,
 } from "@mui/x-data-grid";
 import { GridBaseColDef } from "@mui/x-data-grid/internals";
-import { useOptionalCurrencyIdentifier } from "../../core/currency/CurrencyProvider";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as React from "react";
+
 import { createCurrencyFormatter } from "../../core/currency/createCurrencyFormatter";
+import { useOptionalCurrencyIdentifier } from "../../core/currency/CurrencyProvider";
 
 export { GridActionsCellItem } from "@mui/x-data-grid";
 

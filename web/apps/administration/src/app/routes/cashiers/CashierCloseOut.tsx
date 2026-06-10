@@ -1,7 +1,3 @@
-import { selectTerminalById, useCloseOutCashierMutation, useGetCashierQuery, useListTerminalsQuery } from "@/api";
-import { CashierRoutes, TerminalRoutes } from "@/app/routes";
-import { UserSelect } from "@/components/features";
-import { useCurrencyFormatter, useCurrentNode, useCurrentUser } from "@/hooks";
 import {
   Alert,
   AlertTitle,
@@ -27,6 +23,12 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
+
+import { selectTerminalById, useCloseOutCashierMutation, useGetCashierQuery, useListTerminalsQuery } from "@/api";
+import { CashierRoutes, TerminalRoutes } from "@/app/routes";
+import { UserSelect } from "@/components/features";
+import { useCurrencyFormatter, useCurrentNode, useCurrentUser } from "@/hooks";
+
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 import { CurrencyDenomination, useDenomination } from "./denominations";
 

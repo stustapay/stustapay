@@ -1,8 +1,3 @@
-import { selectCashRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
-import { withPrivilegeGuard } from "@/app/layout";
-import { CashRegistersRoutes } from "@/app/routes";
-import { UserSelect } from "@/components/features";
-import { useCurrentNode } from "@/hooks";
 import { Alert, AlertTitle, Button, LinearProgress, Paper, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -11,6 +6,12 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
+
+import { selectCashRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
+import { CashRegistersRoutes } from "@/app/routes";
+import { UserSelect } from "@/components/features";
+import { useCurrentNode } from "@/hooks";
 
 const TillTransferSchema = z.object({
   target_cashier_id: z.number().int(),

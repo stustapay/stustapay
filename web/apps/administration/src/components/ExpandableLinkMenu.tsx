@@ -1,6 +1,6 @@
-import * as React from "react";
-import { ListItemButton, ListItemText, ListItemIcon, Collapse } from "@mui/material";
 import { ExpandLess as ExpandLessIcon, ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import { ListItemButton, ListItemText, ListItemIcon, Collapse } from "@mui/material";
+import * as React from "react";
 
 export interface ExpandableLinkMenuProps {
   label: string;

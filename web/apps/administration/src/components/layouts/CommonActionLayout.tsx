@@ -2,6 +2,7 @@ import { ChevronLeft } from "@mui/icons-material";
 import { Button, Grid, IconButton, Stack, Typography } from "@mui/material";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+
 import { LayoutAction } from "./types";
 
 export interface CommonActionLayoutProps {

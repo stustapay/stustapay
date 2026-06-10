@@ -1,3 +1,12 @@
+import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui/icons-material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { formatUserTagUid, getUserName } from "@stustapay/models";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   selectCashRegisterById,
   selectTillById,
@@ -19,14 +28,6 @@ import {
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
-import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui/icons-material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import { formatUserTagUid, getUserName } from "@stustapay/models";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
 
 export const OrderDetail: React.FC = () => {
   const { t } = useTranslation();

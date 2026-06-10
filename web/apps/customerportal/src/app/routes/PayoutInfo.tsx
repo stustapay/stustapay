@@ -1,4 +1,16 @@
+import { Alert, Box, Button, Grid, Link, Stack, Typography } from "@mui/material";
+import { Loading } from "@stustapay/components";
+import { FormCheckbox, FormCurrencyInput, FormTextField } from "@stustapay/form-components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import { toFormikValidationSchema } from "@stustapay/utils";
+import { Formik, FormikHelpers } from "formik";
+import iban from "iban";
 import * as React from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { Navigate, useNavigate, Link as RouterLink } from "react-router-dom";
+import { toast } from "react-toastify";
+import { z } from "zod";
+
 import {
   useGetCustomerQuery,
   usePayoutInfoQuery,
@@ -7,17 +19,6 @@ import {
 } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
-import { Alert, Box, Button, Grid, Link, Stack, Typography } from "@mui/material";
-import { Loading } from "@stustapay/components";
-import { FormCheckbox, FormCurrencyInput, FormTextField } from "@stustapay/form-components";
-import { toFormikValidationSchema } from "@stustapay/utils";
-import { Formik, FormikHelpers } from "formik";
-import iban from "iban";
-import { Trans, useTranslation } from "react-i18next";
-import { Navigate, useNavigate, Link as RouterLink } from "react-router-dom";
-import { toast } from "react-toastify";
-import { z } from "zod";
-import { useOpenModal } from "@stustapay/modal-provider";
 
 export const PayoutInfo: React.FC = () => {
   const { t } = useTranslation();

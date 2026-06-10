@@ -1,7 +1,8 @@
-import { TillLayout, selectTillLayoutAll, useListTillLayoutsQuery } from "@/api";
-import { useCurrentNode } from "@/hooks";
 import { Select, SelectProps } from "@stustapay/components";
 import * as React from "react";
+
+import { TillLayout, selectTillLayoutAll, useListTillLayoutsQuery } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 export type TillLayoutSelectProps = Omit<SelectProps<TillLayout, false>, "options" | "formatOption" | "multiple">;
 

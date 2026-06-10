@@ -1,3 +1,10 @@
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Loading } from "@stustapay/components";
+import { useOpenModal } from "@stustapay/modal-provider";
+import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+
 import {
   selectTillLayoutById,
   useDeleteTillProfileMutation,
@@ -7,12 +14,6 @@ import {
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Loading } from "@stustapay/components";
-import { useOpenModal } from "@stustapay/modal-provider";
-import * as React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const TillProfileDetail: React.FC = () => {
   const { t } = useTranslation();

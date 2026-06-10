@@ -1,10 +1,11 @@
-import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { Container, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 export const Faq: React.FC = () => {
   const config = usePublicConfig();
