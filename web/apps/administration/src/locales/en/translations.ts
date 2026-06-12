@@ -623,11 +623,71 @@ export const translations = {
     },
     cashierDetails: "Cashier Details",
   },
+  privilege: {
+    noneAssigned: "No privileges assigned",
+    types: {
+      customer_management: {
+        name: "Customer management",
+        description: "View and manage customer accounts in the administration portal and on terminals.",
+      },
+      payout_management: {
+        name: "Payout management",
+        description: "Create and manage payout runs, process customer payouts, and download SEPA exports.",
+      },
+      create_user: {
+        name: "Create users",
+        description: "Create new users in the administration portal and on terminals.",
+      },
+      cash_transport: {
+        name: "Cash transport",
+        description: "Stock up and transfer cash between cash registers on terminals.",
+      },
+      terminal_login: {
+        name: "Terminal login",
+        description: "Log in to POS terminals independently without requiring a supervisor.",
+      },
+      supervised_terminal_login: {
+        name: "Supervised terminal login",
+        description: "Log in to POS terminals when a supervisor with terminal login is already logged in.",
+      },
+      grant_free_tickets: {
+        name: "Grant free tickets",
+        description: "Grant free tickets to customer accounts from a terminal.",
+      },
+      grant_vouchers: {
+        name: "Grant vouchers",
+        description: "Grant vouchers to customer accounts from a terminal.",
+      },
+      node_administration: {
+        name: "Node administration",
+        description:
+          "Manage all configuration and data for this node and its child nodes in the administration portal.",
+      },
+      allow_privileged_role_assignment: {
+        name: "Assign privileged roles",
+        description: "Assign privileged roles to users. This is an extension of the assign roles privilege.",
+      },
+      allow_role_assignment: {
+        name: "Assign roles",
+        description: "Assign or remove role associations for users.",
+      },
+      view_node_stats: {
+        name: "View node statistics",
+        description: "View sales, order, and revenue statistics for this node and its descendants.",
+      },
+      can_book_orders: {
+        name: "Book orders",
+        description: "Create and process orders on terminals. Available order types depend on the till profile.",
+      },
+    },
+  },
   userRole: {
     name: "Name",
     create: "Create new user role",
     update: "Update user role",
     isPrivileged: "Is privileged",
+    isPrivilegedDescription:
+      "Privileged roles can only be assigned by users with the assign privileged roles node privilege.",
     createError: "Error while creating user role: {{what}}",
     updateError: "Error while updating user role: {{what}}",
     privileges: "Privileges",

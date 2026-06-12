@@ -1,3 +1,4 @@
+import { FormGroup, FormHelperText } from "@mui/material";
 import { FormCheckbox, FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
@@ -13,7 +14,10 @@ export function UserRoleForm<T extends NewUserRole>(props: UserRoleFormProps<T>)
   return (
     <>
       <FormTextField autoFocus name="name" label={t("userRole.name")} formik={props} />
-      <FormCheckbox label={t("userRole.isPrivileged")} name="is_privileged" formik={props} />
+      <FormGroup>
+        <FormCheckbox label={t("userRole.isPrivileged")} name="is_privileged" formik={props} />
+        <FormHelperText>{t("userRole.isPrivilegedDescription")}</FormHelperText>
+      </FormGroup>
 
       <EventPrivilegeSelect
         label={t("userRole.eventPrivileges")}

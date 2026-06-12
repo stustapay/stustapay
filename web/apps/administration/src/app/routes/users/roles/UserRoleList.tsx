@@ -12,6 +12,8 @@ import { UserRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
+import { PrivilegeOverviewCell } from "./components/PrivilegeOverviewCell";
+
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
   const canManageUsers = useCurrentUserHasPrivilege(UserRoleRoutes.privilege);
@@ -63,17 +65,21 @@ export const UserRoleList: React.FC = () => {
     {
       field: "is_privileged",
       headerName: t("userRole.isPrivileged"),
+      description: t("userRole.isPrivilegedDescription"),
       type: "boolean",
     },
     {
-      field: "node_privileges",
-      headerName: t("userRole.nodePrivileges"),
+      field: "privileges",
+      headerName: t("userRole.privileges"),
       flex: 1,
-    },
-    {
-      field: "event_privileges",
-      headerName: t("userRole.eventPrivileges"),
-      flex: 1,
+      sortable: false,
+      valueGetter: (_, row) => [...row.event_privileges, ...row.node_privileges].join(", "),
+      renderCell: (params) => (
+        <PrivilegeOverviewCell
+          eventPrivileges={params.row.event_privileges}
+          nodePrivileges={params.row.node_privileges}
+        />
+      ),
     },
     dataGridNodeColumn,
   ];

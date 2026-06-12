@@ -1,3 +1,4 @@
+import { FormGroup, FormHelperText } from "@mui/material";
 import { FormCheckbox } from "@stustapay/form-components";
 import { EventPrivilegeSchema, NodePrivilegeSchema } from "@stustapay/models";
 import { FormikProps } from "formik";
@@ -22,7 +23,10 @@ export function UserRoleUpdateForm<T extends UserRoleUpdate>(props: UserRoleUpda
   const { values, touched, errors, setFieldValue } = props;
   return (
     <>
-      <FormCheckbox name="is_privileged" label={t("userRole.isPrivileged")} formik={props} />
+      <FormGroup>
+        <FormCheckbox name="is_privileged" label={t("userRole.isPrivileged")} formik={props} />
+        <FormHelperText>{t("userRole.isPrivilegedDescription")}</FormHelperText>
+      </FormGroup>
 
       <EventPrivilegeSelect
         label={t("userRole.eventPrivileges")}

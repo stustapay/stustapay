@@ -10,6 +10,8 @@ import { UserRoleRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
+import { PrivilegeDetailSection } from "./components/PrivilegeDetailSection";
+
 export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
@@ -48,10 +50,14 @@ export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration"
     >
       <DetailView>
         <DetailField label={t("userRole.name")} value={role.name} />
-        <DetailField label={t("userRole.isPrivileged")} value={role.is_privileged ? t("common.yes") : t("common.no")} />
-        <DetailField label={t("userRole.eventPrivileges")} value={role.event_privileges.join(", ")} />
-        <DetailField label={t("userRole.nodePrivileges")} value={role.node_privileges.join(", ")} />
+        <DetailField
+          label={t("userRole.isPrivileged")}
+          helpText={t("userRole.isPrivilegedDescription")}
+          value={role.is_privileged ? t("common.yes") : t("common.no")}
+        />
       </DetailView>
+      <PrivilegeDetailSection title={t("userRole.eventPrivileges")} privileges={role.event_privileges} />
+      <PrivilegeDetailSection title={t("userRole.nodePrivileges")} privileges={role.node_privileges} />
     </DetailLayout>
   );
 });

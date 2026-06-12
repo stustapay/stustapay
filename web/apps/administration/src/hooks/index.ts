@@ -6,3 +6,4 @@ export * from "./useRenderNode";
 export * from "./useCurrentUserHasPrivilege";
 export * from "./useCurrentNodeAllowsObject";
 export * from "./useCurrentUserHasPrivilegeAtNode";
+export * from "./usePrivilegeTranslations";
