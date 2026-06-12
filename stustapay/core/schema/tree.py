@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr
 
 from stustapay.core.config import CoreConfig
 from stustapay.core.schema.config import SEPAConfig, SMTPConfig
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import EventPrivilege, NodePrivilege
 
 ROOT_NODE_ID = 0
 INITIAL_EVENT_NODE_ID = 1
@@ -191,5 +191,6 @@ class NewEvent(NewNode, UpdateEvent):
 
 
 class NodeSeenByUser(Node):
-    privileges_at_node: set[Privilege]
+    event_privileges_at_node: set[EventPrivilege]
+    node_privileges_at_node: set[NodePrivilege]
     children: list["NodeSeenByUser"]  # type: ignore

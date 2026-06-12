@@ -29,51 +29,27 @@ import kotlinx.serialization.Serializable
 
 
 /**
- * 
  *
- * Values: node_administration,customer_management,payout_management,create_user,allow_privileged_role_assignment,user_management,view_node_stats,cash_transport,terminal_login,supervised_terminal_login,can_book_orders,grant_free_tickets,grant_vouchers
+ *
+ * Values: node_administration,allow_privileged_role_assignment,allow_role_assignment,view_node_stats,can_book_orders
  */
 @Serializable
-enum class Privilege(val value: kotlin.String) {
+enum class NodePrivilege(val value: kotlin.String) {
 
     @SerialName(value = "node_administration")
     node_administration("node_administration"),
 
-    @SerialName(value = "customer_management")
-    customer_management("customer_management"),
-
-    @SerialName(value = "payout_management")
-    payout_management("payout_management"),
-
-    @SerialName(value = "create_user")
-    create_user("create_user"),
-
     @SerialName(value = "allow_privileged_role_assignment")
     allow_privileged_role_assignment("allow_privileged_role_assignment"),
 
-    @SerialName(value = "user_management")
-    user_management("user_management"),
+    @SerialName(value = "allow_role_assignment")
+    allow_role_assignment("allow_role_assignment"),
 
     @SerialName(value = "view_node_stats")
     view_node_stats("view_node_stats"),
 
-    @SerialName(value = "cash_transport")
-    cash_transport("cash_transport"),
-
-    @SerialName(value = "terminal_login")
-    terminal_login("terminal_login"),
-
-    @SerialName(value = "supervised_terminal_login")
-    supervised_terminal_login("supervised_terminal_login"),
-
     @SerialName(value = "can_book_orders")
-    can_book_orders("can_book_orders"),
-
-    @SerialName(value = "grant_free_tickets")
-    grant_free_tickets("grant_free_tickets"),
-
-    @SerialName(value = "grant_vouchers")
-    grant_vouchers("grant_vouchers");
+    can_book_orders("can_book_orders");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -88,12 +64,12 @@ enum class Privilege(val value: kotlin.String) {
         /**
          * Converts the provided [data] to a [String] on success, null otherwise.
          */
-        fun encode(data: kotlin.Any?): kotlin.String? = if (data is Privilege) "$data" else null
+        fun encode(data: kotlin.Any?): kotlin.String? = if (data is NodePrivilege) "$data" else null
 
         /**
-         * Returns a valid [Privilege] for [data], null otherwise.
+         * Returns a valid [NodePrivilege] for [data], null otherwise.
          */
-        fun decode(data: kotlin.Any?): Privilege? = data?.let {
+        fun decode(data: kotlin.Any?): NodePrivilege? = data?.let {
           val normalizedData = "$it".lowercase()
           entries.firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()
@@ -101,5 +77,3 @@ enum class Privilege(val value: kotlin.String) {
         }
     }
 }
-
-

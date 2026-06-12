@@ -36,7 +36,7 @@ val startpageItems = listOf(
     StartpageItem(iconId = de.stustapay.libssp.R.drawable.account_circle_24,
         label = R.string.management_title,
         navDestination = RootNavDests.cashier,
-        canAccess = { u, t -> Access.canManageCashiers(u) or Access.canViewCashier(u) or Access.canPayOut(t, u) or Access.canTopUp(t, u) or Access.canSellTicket(t, u) }),
+        canAccess = { u, t -> Access.canManageCashiers(u) or u.cashRegisterId != null },
     StartpageItem(iconId = de.stustapay.libssp.R.drawable.money_bag_24,
         label = R.string.management_vault_title,
         navDestination = RootNavDests.vault,

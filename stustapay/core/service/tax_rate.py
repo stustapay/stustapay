@@ -8,7 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
@@ -34,7 +34,7 @@ class TaxRateService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_tax_rate(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate: NewTaxRate
     ) -> TaxRate:
@@ -72,7 +72,7 @@ class TaxRateService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_tax_rate(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate_id: int, tax_rate: NewTaxRate
     ) -> TaxRate:
@@ -100,7 +100,7 @@ class TaxRateService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tax_rate], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_tax_rate(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate_id: int
     ) -> bool:

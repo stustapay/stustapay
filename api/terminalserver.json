@@ -2561,12 +2561,19 @@
             ],
             "title": "Active Role Name"
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "description": {
             "anyOf": [
@@ -2629,8 +2636,7 @@
           "node_id",
           "id",
           "login",
-          "display_name",
-          "privileges"
+          "display_name"
         ],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
@@ -2792,6 +2798,20 @@
           "customer_tag_uid_hex"
         ],
         "title": "DetailedOrder"
+      },
+      "EventPrivilege": {
+        "type": "string",
+        "enum": [
+          "customer_management",
+          "payout_management",
+          "create_user",
+          "cash_transport",
+          "terminal_login",
+          "supervised_terminal_login",
+          "grant_free_tickets",
+          "grant_vouchers"
+        ],
+        "title": "EventPrivilege"
       },
       "GrantVoucherPayload": {
         "properties": {
@@ -3071,6 +3091,17 @@
           "customer_tag_uid"
         ],
         "title": "NewTopUp"
+      },
+      "NodePrivilege": {
+        "type": "string",
+        "enum": [
+          "node_administration",
+          "allow_privileged_role_assignment",
+          "allow_role_assignment",
+          "view_node_stats",
+          "can_book_orders"
+        ],
+        "title": "NodePrivilege"
       },
       "Order": {
         "properties": {
@@ -3512,25 +3543,6 @@
           "new_balance"
         ],
         "title": "PendingTopUp"
-      },
-      "Privilege": {
-        "type": "string",
-        "enum": [
-          "node_administration",
-          "customer_management",
-          "payout_management",
-          "create_user",
-          "allow_privileged_role_assignment",
-          "user_management",
-          "view_node_stats",
-          "cash_transport",
-          "terminal_login",
-          "supervised_terminal_login",
-          "can_book_orders",
-          "grant_free_tickets",
-          "grant_vouchers"
-        ],
-        "title": "Privilege"
       },
       "Product": {
         "properties": {
@@ -4007,11 +4019,11 @@
             "type": "array",
             "title": "Available Roles"
           },
-          "user_privileges": {
+          "user_event_privileges": {
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/Privilege"
+                  "$ref": "#/components/schemas/EventPrivilege"
                 },
                 "type": "array"
               },
@@ -4019,7 +4031,21 @@
                 "type": "null"
               }
             ],
-            "title": "User Privileges"
+            "title": "User Event Privileges"
+          },
+          "user_node_privileges": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NodePrivilege"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Node Privileges"
           },
           "secrets": {
             "anyOf": [
@@ -4058,7 +4084,8 @@
           "event_name",
           "active_user_id",
           "available_roles",
-          "user_privileges",
+          "user_event_privileges",
+          "user_node_privileges",
           "secrets",
           "till",
           "test_mode",
@@ -4785,12 +4812,19 @@
             "title": "Is Privileged",
             "default": false
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "id": {
             "type": "integer",
@@ -4804,7 +4838,8 @@
         "type": "object",
         "required": [
           "name",
-          "privileges",
+          "event_privileges",
+          "node_privileges",
           "id",
           "node_id"
         ],
@@ -4824,12 +4859,19 @@
             "type": "boolean",
             "title": "Is Privileged"
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "node_id": {
             "type": "integer",
@@ -4849,7 +4891,8 @@
           "id",
           "name",
           "is_privileged",
-          "privileges",
+          "event_privileges",
+          "node_privileges",
           "node_id",
           "node_name",
           "is_at_current_node"

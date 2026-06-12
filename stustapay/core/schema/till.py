@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from stustapay.core.schema.user import Privilege, User
+from stustapay.core.schema.user import EventPrivilege, NodePrivilege, User
 
 
 class NewTillButton(BaseModel):
@@ -109,7 +109,8 @@ class UserRoleInfo(BaseModel):
     id: int
     name: str
     is_privileged: bool
-    privileges: list[Privilege]
+    event_privileges: list[EventPrivilege]
+    node_privileges: list[NodePrivilege]
 
     node_id: int
     node_name: str

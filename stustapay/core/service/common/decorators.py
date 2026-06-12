@@ -1,6 +1,5 @@
 from functools import wraps
 from inspect import Parameter, signature
-from itertools import chain
 from typing import Awaitable, Callable, Optional, TypeVar
 
 from sftkit.database import Connection
@@ -8,7 +7,11 @@ from sftkit.database import Connection
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import (
+    CurrentUser,
+    EventPrivilege,
+    NodePrivilege,
+)
 from stustapay.core.service.common.error import (
     AccessDenied,
     EventRequired,
@@ -43,6 +46,43 @@ def _add_arg_to_signature(original_func, new_func, name: str):
     new_parameters = tuple(sig.parameters.values()) + (Parameter(name, kind=Parameter.KEYWORD_ONLY, annotation=Node),)
     sig = sig.replace(parameters=new_parameters)
     new_func.__signature__ = sig  # type: ignore
+
+
+def _parse_event_privileges(names: list[str]) -> list[EventPrivilege]:
+    return [EventPrivilege(name) for name in names]
+
+
+def _parse_node_privileges(names: list[str]) -> list[NodePrivilege]:
+    return [NodePrivilege(name) for name in names]
+
+
+async def _fetch_user_privileges_at_node(
+    conn: Connection, *, user_id: int, node_id: int
+) -> tuple[list[EventPrivilege], list[NodePrivilege]]:
+    row = await conn.fetchrow(
+        "select event_privileges_at_node, node_privileges_at_node from user_privileges_at_node($1) where node_id = $2",
+        user_id,
+        node_id,
+    )
+    if row is None:
+        return [], []
+    return _parse_event_privileges(row["event_privileges_at_node"]), _parse_node_privileges(
+        row["node_privileges_at_node"]
+    )
+
+
+async def _fetch_terminal_user_privileges(
+    conn: Connection, *, user_id: int, role_id: int, till_node_id: int | None
+) -> tuple[list[EventPrivilege], list[NodePrivilege]]:
+    row = await conn.fetchrow(
+        "select event_privileges, node_privileges from terminal_user_privileges($1, $2, $3)",
+        user_id,
+        role_id,
+        till_node_id,
+    )
+    if row is None:
+        return [], []
+    return _parse_event_privileges(row["event_privileges"]), _parse_node_privileges(row["node_privileges"])
 
 
 def requires_node(
@@ -99,7 +139,9 @@ def requires_node(
 
 
 def requires_user(
-    privileges: list[Privilege] | None = None,
+    *,
+    event_privileges: list[EventPrivilege] | None = None,
+    node_privileges: list[NodePrivilege] | None = None,
     node_required: bool = True,
 ) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
@@ -140,20 +182,21 @@ def requires_user(
                 node: Node | None = kwargs.get("node")
                 if node is None:
                     raise RuntimeError("requires_user needs requires_node to be placed before it")
-                role_privileges = await conn.fetch(
-                    "select privileges "
-                    "from user_to_role utr join user_role_with_privileges urwp on utr.role_id = urwp.id "
-                    "where utr.node_id = any($1) and urwp.node_id = any($1) and utr.user_id = $2",
-                    node.ids_to_root,
-                    user.id,
+                user_event_privileges, user_node_privileges = await _fetch_user_privileges_at_node(
+                    conn, user_id=user.id, node_id=node.id
                 )
-                user_privileges = set(chain.from_iterable(row["privileges"] for row in role_privileges))
-                user.privileges = list(user_privileges)
+                user.event_privileges = user_event_privileges
+                user.node_privileges = user_node_privileges
 
-                if privileges:
-                    if not any([p.value in user_privileges for p in privileges]):
+                if event_privileges:
+                    if not any(p in user.event_privileges for p in event_privileges):
                         raise AccessDenied(
-                            f"user does not have any of the required privileges: {[p.value for p in privileges]}"
+                            f"user does not have any of the required event privileges: {[p.value for p in event_privileges]}"
+                        )
+                if node_privileges:
+                    if not any(p in user.node_privileges for p in node_privileges):
+                        raise AccessDenied(
+                            f"user does not have any of the required node privileges: {[p.value for p in node_privileges]}"
                         )
 
             if "current_user" in original_signature.parameters:
@@ -237,8 +280,9 @@ def requires_customer(func: Callable[..., Awaitable[R]]) -> Callable[..., Awaita
 
 
 def requires_terminal(
-    user_privileges: Optional[list[Privilege]] = None,
-    requires_event_privileges=False,
+    *,
+    event_privileges: Optional[list[EventPrivilege]] = None,
+    node_privileges: Optional[list[NodePrivilege]] = None,
     requires_till=True,
 ) -> Callable[[Callable[..., Awaitable[R]]], Callable[..., Awaitable[R]]]:
     """
@@ -300,35 +344,53 @@ def requires_terminal(
                 "select "
                 "   usr.*, "
                 "   ut.uid as user_tag_uid, "
-                "   urwp.privileges as privileges, "
                 "   $2::bigint as active_role_id, "
                 "   urwp.name as active_role_name "
                 "from usr "
                 "join user_tag ut on usr.user_tag_id = ut.id "
-                "join user_to_role utr on utr.user_id = usr.id "
-                "join user_role_with_privileges urwp on urwp.id = utr.role_id "
-                "where usr.id = $1 and utr.role_id = $2 and utr.node_id = any($3)",
+                "left join user_role urwp on urwp.id = $2 "
+                "where usr.id = $1",
                 terminal.active_user_id,
                 terminal.active_user_role_id,
-                event_node.ids_to_root if requires_event_privileges else node.ids_to_root,
             )
+
+            if logged_in_user is not None and terminal.active_user_role_id is not None:
+                till_node_id = till.node_id if till is not None else None
+                user_event_privileges, user_node_privileges = await _fetch_terminal_user_privileges(
+                    conn,
+                    user_id=logged_in_user.id,
+                    role_id=terminal.active_user_role_id,
+                    till_node_id=till_node_id,
+                )
+                logged_in_user.event_privileges = user_event_privileges
+                logged_in_user.node_privileges = user_node_privileges
+
+                def check_privileges(required_privs, user_privs, priv_type: str):
+                    if required_privs is not None:
+                        stringified_privileges = ", ".join(map(lambda x: x.name, required_privs))
+
+                        if logged_in_user is None:
+                            raise AccessDenied(
+                                f"no user is logged into this terminal but "
+                                f"the following {priv_type} privileges are required {stringified_privileges}"
+                            )
+
+                        if not any(p.value in {x.value for x in user_privs} for p in required_privs):
+                            raise AccessDenied(
+                                f"user does not have any of the required {priv_type} privileges: {stringified_privileges}"
+                            )
+
+                check_privileges(
+                    event_privileges, getattr(logged_in_user, "event_privileges", []) if logged_in_user else [], "event"
+                )
+                check_privileges(
+                    node_privileges, getattr(logged_in_user, "node_privileges", []) if logged_in_user else [], "node"
+                )
 
             if "current_user" in signature_params:
                 kwargs["current_user"] = logged_in_user
             elif "current_user" in kwargs:
                 kwargs.pop("current_user")
-
-            if user_privileges is not None:
-                stringified_privileges = ", ".join(map(lambda x: x.name, user_privileges))
-
-                if logged_in_user is None:
-                    raise AccessDenied(
-                        f"no user is logged into this terminal but "
-                        f"the following privileges are required {stringified_privileges}"
-                    )
-
-                if not any([p in user_privileges for p in logged_in_user.privileges]):
-                    raise AccessDenied(f"user does not have any of the required privileges: {stringified_privileges}")
 
             if not func_is_read_only and node.read_only:
                 raise NodeIsReadOnly(f"{node.name} is read only")

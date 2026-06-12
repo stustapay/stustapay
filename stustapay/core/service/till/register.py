@@ -16,7 +16,7 @@ from stustapay.core.schema.till import (
     Till,
 )
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, EventPrivilege, NodePrivilege
 from stustapay.core.service.account import (
     get_account_by_id,
     get_system_account_for_node,
@@ -116,7 +116,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_cash_register_stockings(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, stocking: NewCashRegisterStocking
     ) -> CashRegisterStocking:
@@ -157,7 +157,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_cash_register_stockings(
         self,
         *,
@@ -206,7 +206,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_cash_register_stockings(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, stocking_id: int
     ):
@@ -224,7 +224,7 @@ class TillRegisterService(Service[Config]):
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=True)
-    @requires_terminal([Privilege.node_administration])
+    @requires_terminal(node_privileges=[NodePrivilege.node_administration])
     async def list_cash_registers_terminal(
         self, *, conn: Connection, current_till: Till, hide_assigned_registers=False
     ) -> list[CashRegister]:
@@ -248,7 +248,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_cash_register(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_register: NewCashRegister
     ) -> CashRegister:
@@ -264,7 +264,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_cash_register(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, register_id: int, register: NewCashRegister
     ) -> CashRegister:
@@ -288,7 +288,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_cash_register(self, *, conn: Connection, node: Node, current_user: CurrentUser, register_id: int):
         result = await conn.execute("delete from cash_register where id = $1 and node_id = $2", register_id, node.id)
         # TODO: AUDIT_DELETE
@@ -302,7 +302,7 @@ class TillRegisterService(Service[Config]):
         return result != "DELETE 0"
 
     @with_db_transaction(read_only=False)
-    @requires_terminal([Privilege.cash_transport])
+    @requires_terminal(event_privileges=[EventPrivilege.cash_transport])
     async def stock_up_cash_register(
         self,
         *,
@@ -379,7 +379,7 @@ class TillRegisterService(Service[Config]):
         return True
 
     @with_db_transaction(read_only=False)
-    @requires_terminal([Privilege.cash_transport])
+    @requires_terminal(event_privileges=[EventPrivilege.cash_transport])
     async def modify_cashier_account_balance(
         self,
         *,
@@ -452,7 +452,7 @@ class TillRegisterService(Service[Config]):
         )
 
     @with_db_transaction(read_only=False)
-    @requires_terminal([Privilege.cash_transport])
+    @requires_terminal(event_privileges=[EventPrivilege.cash_transport])
     async def modify_transport_account_balance(
         self,
         *,
@@ -562,7 +562,7 @@ class TillRegisterService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def transfer_cash_register_admin(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, source_cashier_id: int, target_cashier_id: int
     ) -> CashRegister:

@@ -23,22 +23,24 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.Privilege
+import de.stustapay.api.models.EventPrivilege
+import de.stustapay.api.models.NodePrivilege
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param id 
- * @param name 
- * @param isPrivileged 
- * @param privileges 
- * @param nodeId 
- * @param nodeName 
- * @param isAtCurrentNode 
+ *
+ * @param id
+ * @param name
+ * @param isPrivileged
+ * @param eventPrivileges
+ * @param nodePrivileges
+ * @param nodeId
+ * @param nodeName
+ * @param isAtCurrentNode
  */
 @Serializable
 
@@ -53,8 +55,11 @@ data class UserRoleInfo (
     @SerialName(value = "is_privileged")
     val isPrivileged: kotlin.Boolean,
 
-    @SerialName(value = "privileges")
-    val privileges: kotlin.collections.List<@Contextual Privilege>,
+    @SerialName(value = "event_privileges")
+    val eventPrivileges: kotlin.collections.List<@Contextual EventPrivilege>,
+
+    @SerialName(value = "node_privileges")
+    val nodePrivileges: kotlin.collections.List<@Contextual NodePrivilege>,
 
     @SerialName(value = "node_id")
     val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
@@ -69,4 +74,3 @@ data class UserRoleInfo (
 
 
 }
-

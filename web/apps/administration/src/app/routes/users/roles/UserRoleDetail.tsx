@@ -5,11 +5,12 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { selectUserRoleById, useListUserRolesQuery } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
 import { UserRoleRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
-export const UserRoleDetail: React.FC = () => {
+export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { roleId } = useParams();
@@ -48,8 +49,9 @@ export const UserRoleDetail: React.FC = () => {
       <DetailView>
         <DetailField label={t("userRole.name")} value={role.name} />
         <DetailField label={t("userRole.isPrivileged")} value={role.is_privileged ? t("common.yes") : t("common.no")} />
-        <DetailField label={t("userRole.privileges")} value={role.privileges.join(", ")} />
+        <DetailField label={t("userRole.eventPrivileges")} value={role.event_privileges.join(", ")} />
+        <DetailField label={t("userRole.nodePrivileges")} value={role.node_privileges.join(", ")} />
       </DetailView>
     </DetailLayout>
   );
-};
+});

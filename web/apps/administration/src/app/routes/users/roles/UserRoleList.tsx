@@ -66,8 +66,13 @@ export const UserRoleList: React.FC = () => {
       type: "boolean",
     },
     {
-      field: "privileges",
-      headerName: t("userPrivileges"),
+      field: "node_privileges",
+      headerName: t("userRole.nodePrivileges"),
+      flex: 1,
+    },
+    {
+      field: "event_privileges",
+      headerName: t("userRole.eventPrivileges"),
       flex: 1,
     },
     dataGridNodeColumn,

@@ -1,7 +1,7 @@
-import { ObjectType, Privilege } from "@/api";
+import { EventPrivilege, NodePrivilege, ObjectType } from "@/api";
 
 export interface IRouteBuilder {
-  readonly privilege: Privilege;
+  readonly privilege: EventPrivilege | NodePrivilege;
   readonly objectType?: ObjectType;
   list: (nodeId?: number) => string;
   add: (nodeId?: number) => string;
@@ -14,7 +14,7 @@ export const nodeUrlBaseRegex = /^\/node\/(?<nodeId>[\d]+)/;
 class RouteBuilder implements IRouteBuilder {
   constructor(
     private resourceUrl: string,
-    public privilege: Privilege,
+    public privilege: EventPrivilege | NodePrivilege,
     public objectType?: ObjectType
   ) {}
 
@@ -72,8 +72,8 @@ export const tillButtonCreateFromProduct = (product: {
 
 export const CashRegistersRoutes = new RouteBuilder("tills/registers", "node_administration", "till");
 export const TillStockingsRoutes = new RouteBuilder("tills/stockings", "node_administration", "till");
-export const UserRoutes = new RouteBuilder("users", "user_management", "user");
-export const UserRoleRoutes = new RouteBuilder("users/roles", "user_management", "user_role");
+export const UserRoutes = new RouteBuilder("users", "node_administration", "user");
+export const UserRoleRoutes = new RouteBuilder("users/roles", "node_administration", "user_role");
 export const UserToRoleRoutes = new RouteBuilder("user-to-roles", "node_administration");
 export const TicketRoutes = new RouteBuilder("tickets", "node_administration", "ticket");
 export const ExternalTicketRoutes = new RouteBuilder("tickets/external-tickets", "node_administration", "ticket");

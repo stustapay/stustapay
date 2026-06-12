@@ -335,7 +335,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/Privilege"
+                  "$ref": "#/components/schemas/EventPrivilege"
+                },
+                {
+                  "$ref": "#/components/schemas/NodePrivilege"
                 },
                 {
                   "type": "null"
@@ -10030,12 +10033,19 @@
             ],
             "title": "Active Role Name"
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "description": {
             "anyOf": [
@@ -10098,8 +10108,7 @@
           "node_id",
           "id",
           "login",
-          "display_name",
-          "privileges"
+          "display_name"
         ],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
@@ -10382,6 +10391,20 @@
           "bon_logo_blob_id"
         ],
         "title": "EventDesign"
+      },
+      "EventPrivilege": {
+        "type": "string",
+        "enum": [
+          "customer_management",
+          "payout_management",
+          "create_user",
+          "cash_transport",
+          "terminal_login",
+          "supervised_terminal_login",
+          "grant_free_tickets",
+          "grant_vouchers"
+        ],
+        "title": "EventPrivilege"
       },
       "ExternalTicket": {
         "properties": {
@@ -11954,18 +11977,26 @@
             "title": "Is Privileged",
             "default": false
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "privileges"
+          "event_privileges",
+          "node_privileges"
         ],
         "title": "NewUserRole"
       },
@@ -12193,6 +12224,17 @@
         ],
         "title": "NodeChoice"
       },
+      "NodePrivilege": {
+        "type": "string",
+        "enum": [
+          "node_administration",
+          "allow_privileged_role_assignment",
+          "allow_role_assignment",
+          "view_node_stats",
+          "can_book_orders"
+        ],
+        "title": "NodePrivilege"
+      },
       "NodeSeenByUser": {
         "properties": {
           "id": {
@@ -12296,13 +12338,21 @@
             "type": "array",
             "title": "Children"
           },
-          "privileges_at_node": {
+          "event_privileges_at_node": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
             "uniqueItems": true,
-            "title": "Privileges At Node"
+            "title": "Event Privileges At Node"
+          },
+          "node_privileges_at_node": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Node Privileges At Node"
           }
         },
         "type": "object",
@@ -12322,7 +12372,8 @@
           "forbidden_objects_in_subtree",
           "computed_forbidden_objects_in_subtree",
           "children",
-          "privileges_at_node"
+          "event_privileges_at_node",
+          "node_privileges_at_node"
         ],
         "title": "NodeSeenByUser"
       },
@@ -13649,25 +13700,6 @@
           "default_price"
         ],
         "title": "PretixProduct"
-      },
-      "Privilege": {
-        "type": "string",
-        "enum": [
-          "node_administration",
-          "customer_management",
-          "payout_management",
-          "create_user",
-          "allow_privileged_role_assignment",
-          "user_management",
-          "view_node_stats",
-          "cash_transport",
-          "terminal_login",
-          "supervised_terminal_login",
-          "can_book_orders",
-          "grant_free_tickets",
-          "grant_vouchers"
-        ],
-        "title": "Privilege"
       },
       "Product": {
         "properties": {
@@ -16385,18 +16417,26 @@
             "type": "boolean",
             "title": "Is Privileged"
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           }
         },
         "type": "object",
         "required": [
           "is_privileged",
-          "privileges"
+          "event_privileges",
+          "node_privileges"
         ],
         "title": "UpdateUserRolePrivilegesPayload"
       },
@@ -16571,12 +16611,19 @@
             "title": "Is Privileged",
             "default": false
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "id": {
             "type": "integer",
@@ -16590,7 +16637,8 @@
         "type": "object",
         "required": [
           "name",
-          "privileges",
+          "event_privileges",
+          "node_privileges",
           "id",
           "node_id"
         ],

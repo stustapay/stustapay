@@ -11,7 +11,7 @@ from stustapay.core.schema.order import DetailedOrder
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.till import NewTill, Till
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, NodePrivilege, format_user_tag_uid
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import (
     requires_node,
@@ -85,7 +85,7 @@ class TillService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_till(self, *, conn: Connection, node: Node, current_user: CurrentUser, till: NewTill) -> Till:
         new_till = await create_till(conn=conn, node_id=node.id, till=till)
         await create_audit_log(
@@ -118,7 +118,7 @@ class TillService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_till(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int, till: NewTill
     ) -> Till:
@@ -149,7 +149,7 @@ class TillService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_till(self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int) -> bool:
         result = await conn.execute("delete from till where id = $1 and node_id = $2", till_id, node.id)
         # TODO: AUDIT_DELETE
@@ -164,7 +164,7 @@ class TillService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def remove_from_terminal(self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int):
         await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=till_id)
         await create_audit_log(
@@ -177,7 +177,7 @@ class TillService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def switch_terminal(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int, new_terminal_id: int
     ):

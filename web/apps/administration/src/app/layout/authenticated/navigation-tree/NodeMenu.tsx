@@ -11,7 +11,7 @@ import {
 } from "@mui/icons-material";
 import * as React from "react";
 
-import { Node, NodeSeenByUser, ObjectType, Privilege } from "@/api";
+import { EventPrivilege, Node, NodePrivilege, NodeSeenByUser, ObjectType } from "@/api";
 import {
   CashierRoutes,
   CustomerRoutes,
@@ -34,7 +34,7 @@ type NodeMenuItem = {
   icon: React.FC;
   label: string;
   requiresEvent?: boolean;
-  requiredPrivileges?: Privilege[];
+  requiredPrivileges?: (EventPrivilege | NodePrivilege)[];
   requiresOneOfObjectType?: ObjectType[];
   additionalRequirements?: (node: Node) => boolean;
 };
@@ -138,7 +138,11 @@ export const isMenuEntryValidAtNode = (entry: NodeMenuItem, node: NodeSeenByUser
   if (
     entry.requiredPrivileges != null &&
     entry.requiredPrivileges.length > 0 &&
-    !entry.requiredPrivileges.every((privilege) => node.privileges_at_node.includes(privilege))
+    !entry.requiredPrivileges.every(
+      (privilege) =>
+        node.node_privileges_at_node.includes(privilege as NodePrivilege) ||
+        node.event_privileges_at_node.includes(privilege as EventPrivilege)
+    )
   ) {
     return false;
   }

@@ -16,7 +16,7 @@ from stustapay.core.schema.tree import (
     ObjectType,
     RestrictedEventSettings,
 )
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log, fetch_audit_log, fetch_audit_logs
 from stustapay.core.service.common.decorators import requires_node, requires_user
@@ -369,7 +369,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node()
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_node(self, conn: Connection, node: Node, current_user: CurrentUser, new_node: NewNode) -> Node:
         created_node = await create_node(conn=conn, parent_id=node.id, new_node=new_node)
         await create_audit_log(
@@ -383,7 +383,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node()
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_node(self, conn: Connection, node: Node, current_user: CurrentUser, updated_node: NewNode) -> Node:
         await conn.execute(
             "update node set name = $2, description = $3 where id = $1",
@@ -410,7 +410,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node()
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_event(self, conn: Connection, node: Node, current_user: CurrentUser, event: NewEvent) -> Node:
         new_node = await create_event(conn=conn, parent_id=node.id, event=event)
         await create_audit_log(
@@ -424,7 +424,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_event(self, conn: Connection, node: Node, current_user: CurrentUser, event: NewEvent) -> Node:
         updated_node = await update_event(conn=conn, node=node, event=event)
         await create_audit_log(
@@ -438,7 +438,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_bon_logo(self, conn: Connection, node: Node, image: NewBlob):
         if image.mime_type != MimeType.svg.value:
             raise InvalidArgument("Only svg logos are supported")
@@ -457,19 +457,19 @@ class TreeService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_restricted_event_settings(self, *, conn: Connection, node: Node) -> RestrictedEventSettings:
         return await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[])
+    @requires_user(node_privileges=[])
     async def get_event_design(self, *, conn: Connection, node: Node) -> EventDesign:
         return await fetch_event_design(conn=conn, node_id=node.id)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def generate_test_bon(self, *, conn: Connection, node: Node) -> BonJson:
         assert node.event_node_id is not None
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
@@ -477,14 +477,14 @@ class TreeService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def check_pretix_connection(self, *, conn: Connection, node: Node) -> BonJson:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         return await pretix.check_connection(event)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def generate_test_revenue_report(self, *, conn: Connection, node: Node) -> bytes:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         logo = await fetch_event_logo(conn=conn, node_id=node.id)
@@ -492,13 +492,13 @@ class TreeService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def generate_revenue_report(self, *, conn: Connection, node: Node) -> bytes:
         return await generate_revenue_report(conn=conn, node=node)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def generate_test_daily_report(self, *, conn: Connection, node: Node) -> bytes:
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
         logo = await fetch_event_logo(conn=conn, node_id=node.id)
@@ -506,7 +506,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def generate_daily_report(
         self, *, conn: Connection, node: Node, relevant_node_ids: list[int], report_date: date
     ) -> bytes:
@@ -522,13 +522,13 @@ class TreeService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def generate_payout_report(self, *, conn: Connection, node: Node) -> bytes:
         return await generate_payout_report(conn=conn, node=node)
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def archive_node(self, *, conn: Connection, node: Node, current_user: CurrentUser):
         if node.read_only:
             raise InvalidArgument("Node is already read only")
@@ -565,7 +565,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node()
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_node(self, *, conn: Connection, node: Node, current_user: CurrentUser):
         await conn.execute("delete from node where id = $1", node.id)
         # TODO: AUDIT_DELETE
@@ -579,7 +579,7 @@ class TreeService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def sumup_auth_code_flow(self, *, conn: Connection, node: Node, authorization_code: str):
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
 
@@ -595,12 +595,12 @@ class TreeService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_audit_logs(self, *, conn: Connection, node: Node) -> list[AuditLog]:
         return await fetch_audit_logs(conn=conn, node=node)
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user(privileges=[Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_audit_log(self, *, conn: Connection, node: Node, audit_log_id: int) -> AuditLogDetail:
         return await fetch_audit_log(conn=conn, node=node, audit_log_id=audit_log_id)

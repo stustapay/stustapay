@@ -31,7 +31,7 @@ async def test_user_creation(
     test_role1: UserRole = await user_service.create_user_role(
         token=event_admin_token,
         node_id=event_node.id,
-        new_role=NewUserRole(name="test-role-1", is_privileged=False, privileges=[]),
+        new_role=NewUserRole(name="test-role-1", is_privileged=False, event_privileges=[], node_privileges=[]),
     )
     user = await user_service.create_user_terminal(
         token=terminal_token,

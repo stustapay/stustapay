@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import { Privilege } from "@/api";
+import { EventPrivilege, NodePrivilege } from "@/api";
 
 import { PrivilegeGuard } from "./PrivilegeGuard";
 
-export function withPrivilegeGuard<P>(privilege: Privilege, Component: React.FC<P>): React.FC<P> {
+export function withPrivilegeGuard<P>(privilege: EventPrivilege | NodePrivilege, Component: React.FC<P>): React.FC<P> {
   const Wrapper: React.FC<P> = (props) => {
     return (
       <PrivilegeGuard privilege={privilege}>

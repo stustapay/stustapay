@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field
 
 from stustapay.core.schema.user_tag import UserTag, format_user_tag_uid
 
@@ -9,17 +9,12 @@ ADMIN_ROLE_ID = 0
 ADMIN_ROLE_NAME = "admin"
 
 
-class Privilege(enum.Enum):
+class EventPrivilege(enum.Enum):
     # general management privileges
-    node_administration = "node_administration"
     customer_management = "customer_management"
     payout_management = "payout_management"
 
     create_user = "create_user"
-    allow_privileged_role_assignment = "allow_privileged_role_assignment"
-    user_management = "user_management"
-
-    view_node_stats = "view_node_stats"
 
     # festival workflow privileges
     cash_transport = "cash_transport"
@@ -28,15 +23,33 @@ class Privilege(enum.Enum):
 
     # festival order / ticket / voucher flow privileges
     # which orders are available (sale, ticket, ...) is determined by the terminal profile
-    can_book_orders = "can_book_orders"
     grant_free_tickets = "grant_free_tickets"
     grant_vouchers = "grant_vouchers"
+
+
+class NodePrivilege(enum.Enum):
+    # general management privileges
+    node_administration = "node_administration"
+
+    allow_privileged_role_assignment = "allow_privileged_role_assignment"
+    allow_role_assignment = "allow_role_assignment"
+
+    view_node_stats = "view_node_stats"
+
+    # festival order / ticket / voucher flow privileges
+    # which orders are available (sale, ticket, ...) is determined by the terminal profile
+    can_book_orders = "can_book_orders"
+
+
+EVENT_PRIVILEGE_NAMES = frozenset(p.value for p in EventPrivilege)
+NODE_PRIVILEGE_NAMES = frozenset(p.value for p in NodePrivilege)
 
 
 class NewUserRole(BaseModel):
     name: str
     is_privileged: bool = False
-    privileges: list[Privilege]
+    event_privileges: list[EventPrivilege]
+    node_privileges: list[NodePrivilege]
 
 
 class UserRole(NewUserRole):
@@ -107,7 +120,8 @@ class CurrentUser(BaseModel):
     display_name: str
     active_role_id: Optional[int] = None
     active_role_name: Optional[str] = None
-    privileges: list[Privilege]
+    event_privileges: list[EventPrivilege] = Field(default_factory=list)
+    node_privileges: list[NodePrivilege] = Field(default_factory=list)
     description: Optional[str] = None
     user_tag_id: Optional[int] = None
     user_tag_uid: Optional[int] = None

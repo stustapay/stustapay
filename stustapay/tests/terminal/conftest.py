@@ -21,10 +21,11 @@ from stustapay.core.schema.till import (
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
+    EventPrivilege,
     NewUser,
     NewUserRole,
     NewUserToRoles,
-    Privilege,
+    NodePrivilege,
     User,
     UserRole,
     UserTag,
@@ -238,13 +239,17 @@ async def finanzorga(
         new_role=NewUserRole(
             name="finanzorga",
             is_privileged=True,
-            privileges=[
-                Privilege.node_administration,
-                Privilege.terminal_login,
-                Privilege.user_management,
-                Privilege.grant_free_tickets,
-                Privilege.grant_vouchers,
-                Privilege.cash_transport,
+            event_privileges=[
+                EventPrivilege.terminal_login,
+                EventPrivilege.grant_free_tickets,
+                EventPrivilege.grant_vouchers,
+                EventPrivilege.cash_transport,
+            ],
+            node_privileges=[
+                NodePrivilege.node_administration,
+                NodePrivilege.allow_role_assignment,
+                NodePrivilege.allow_privileged_role_assignment,
+                NodePrivilege.view_node_stats,
             ],
         ),
     )

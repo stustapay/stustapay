@@ -102,7 +102,7 @@ fun CashierView(
 
                     when (uiState.nav) {
                         CashierNavState.Scan, CashierNavState.Root, CashierNavState.Transfer -> {
-                            CloseContent(iconId = if (uiState.canViewCashier) {
+                            CloseContent(iconId = if (uiState.canManageCashiers) {
                                 de.stustapay.libssp.R.drawable.close_24
                             } else {
                                 de.stustapay.libssp.R.drawable.refresh_24
@@ -462,7 +462,7 @@ fun CashierView(
                                 Button(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 5.dp),
-                                    enabled = hasRegister and uiState.canViewCashier,
+                                    enabled = hasRegister,
                                     onClick = {
                                         scope.launch {
                                             viewModel.transfer()

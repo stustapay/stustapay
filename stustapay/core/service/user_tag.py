@@ -8,7 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
@@ -90,7 +90,7 @@ class UserTagService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_user_tag_secret(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_secret: NewUserTagSecret
     ) -> UserTagSecret:
@@ -106,7 +106,7 @@ class UserTagService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_user_tag_secrets(self, *, conn: Connection, node: Node) -> list[UserTagSecret]:
         return await conn.fetch_many(
             UserTagSecret,
@@ -117,7 +117,7 @@ class UserTagService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_user_tags(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_user_tags: list[NewUserTag]
     ):
@@ -132,7 +132,7 @@ class UserTagService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_user_tag_detail(self, *, conn: Connection, node: Node, user_tag_id: int) -> Optional[UserTagDetail]:
         return await conn.fetch_maybe_one(
             UserTagDetail,
@@ -143,7 +143,7 @@ class UserTagService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_user_tag_comment(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, user_tag_id: int, comment: str
     ) -> UserTagDetail:
@@ -171,7 +171,7 @@ class UserTagService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def find_user_tags(self, *, conn: Connection, node: Node, search_term: str) -> list[UserTagDetail]:
         search_term = search_term.strip()
         search_term = search_term.lstrip("0")

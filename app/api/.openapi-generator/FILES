@@ -34,6 +34,7 @@ src/main/kotlin/de/stustapay/api/models/CompletedTopUp.kt
 src/main/kotlin/de/stustapay/api/models/CreateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/CurrentUser.kt
 src/main/kotlin/de/stustapay/api/models/DetailedOrder.kt
+src/main/kotlin/de/stustapay/api/models/EventPrivilege.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
 src/main/kotlin/de/stustapay/api/models/HTTPValidationError.kt
 src/main/kotlin/de/stustapay/api/models/LineItem.kt
@@ -45,6 +46,7 @@ src/main/kotlin/de/stustapay/api/models/NewSale.kt
 src/main/kotlin/de/stustapay/api/models/NewTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/NewTicketScan.kt
 src/main/kotlin/de/stustapay/api/models/NewTopUp.kt
+src/main/kotlin/de/stustapay/api/models/NodePrivilege.kt
 src/main/kotlin/de/stustapay/api/models/Order.kt
 src/main/kotlin/de/stustapay/api/models/OrderType.kt
 src/main/kotlin/de/stustapay/api/models/PaymentMethod.kt
@@ -53,7 +55,6 @@ src/main/kotlin/de/stustapay/api/models/PendingPayOut.kt
 src/main/kotlin/de/stustapay/api/models/PendingSale.kt
 src/main/kotlin/de/stustapay/api/models/PendingTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/PendingTopUp.kt
-src/main/kotlin/de/stustapay/api/models/Privilege.kt
 src/main/kotlin/de/stustapay/api/models/Product.kt
 src/main/kotlin/de/stustapay/api/models/ProductRestriction.kt
 src/main/kotlin/de/stustapay/api/models/ProductType.kt

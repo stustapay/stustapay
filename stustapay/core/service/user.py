@@ -12,10 +12,11 @@ from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import (
     CurrentUser,
+    EventPrivilege,
     NewUser,
     NewUserRole,
     NewUserToRoles,
-    Privilege,
+    NodePrivilege,
     RoleToNode,
     User,
     UserRole,
@@ -105,24 +106,33 @@ async def list_user_roles(*, conn: Connection, node: Node) -> list[UserRole]:
     )
 
 
-async def get_user_privileges_at_node(*, conn: Connection, user_id: int, node_id: int) -> set[Privilege]:
-    text_privileges = await conn.fetchval(
-        "select privileges_at_node from user_privileges_at_node($1) where node_id = $2", user_id, node_id
+async def get_user_privileges_at_node(
+    *, conn: Connection, user_id: int, node_id: int
+) -> tuple[set[EventPrivilege], set[NodePrivilege]]:
+    row = await conn.fetchrow(
+        "select event_privileges_at_node, node_privileges_at_node from user_privileges_at_node($1) where node_id = $2",
+        user_id,
+        node_id,
     )
-    privileges = set(Privilege[p] for p in text_privileges)
-    return privileges
+    if row is None:
+        return {}
+    return set(EventPrivilege[val] for val in row["event_privileges_at_node"]), set(
+        NodePrivilege[val] for val in row["node_privileges_at_node"]
+    )
 
 
 async def list_assignable_roles_for_user_at_node(*, conn: Connection, node: Node, user_id: int) -> list[UserRole]:
     all_roles = await list_user_roles(conn=conn, node=node)
-    privileges = await get_user_privileges_at_node(conn=conn, node_id=node.id, user_id=user_id)
-    allow_privileged_roles = Privilege.allow_privileged_role_assignment in privileges
+    event_privileges, node_privileges = await get_user_privileges_at_node(conn=conn, node_id=node.id, user_id=user_id)
+    allow_privileged_roles = NodePrivilege.allow_privileged_role_assignment in node_privileges
     valid_roles = []
     for role in all_roles:
         if role.is_privileged and not allow_privileged_roles:
             continue
 
-        if len(set(role.privileges).difference(privileges)) > 0 and not allow_privileged_roles:
+        if len(set(role.node_privileges).difference(node_privileges)) > 0 and not allow_privileged_roles:
+            continue
+        if len(set(role.event_privileges).difference(event_privileges)) > 0 and not allow_privileged_roles:
             continue
 
         valid_roles.append(role)
@@ -149,7 +159,8 @@ async def associate_user_to_role(
     assert user_node is not None
 
     role = await conn.fetchrow(
-        "select node_id, is_privileged, privileges from user_role_with_privileges where id = $1 and node_id = any($2)",
+        "select node_id, is_privileged, event_privileges, node_privileges from user_role_with_privileges "
+        "where id = $1 and node_id = any($2)",
         role_id,
         user_node.ids_to_root,
     )
@@ -157,24 +168,28 @@ async def associate_user_to_role(
         raise NotFound(element_type="user_role", element_id=role_id)
 
     if current_user_id is not None:  # we actually do permission checks
-        privileges = await get_user_privileges_at_node(conn=conn, node_id=node.id, user_id=current_user_id)
-        if Privilege.user_management not in privileges:
-            raise AccessDenied("Privilege user_management is required to change user roles")
+        event_privileges, node_privileges = await get_user_privileges_at_node(
+            conn=conn, node_id=node.id, user_id=current_user_id
+        )
+        if NodePrivilege.allow_role_assignment not in node_privileges:
+            raise AccessDenied(f"Privilege {NodePrivilege.allow_role_assignment.name} is required to change user roles")
 
-        can_assign_all_roles = Privilege.allow_privileged_role_assignment in privileges
+        can_assign_all_roles = NodePrivilege.allow_privileged_role_assignment in node_privileges
 
         if role["is_privileged"] and not can_assign_all_roles:
             raise AccessDenied(
-                f"Assigning privileged roles requires the {Privilege.allow_privileged_role_assignment} privilege"
+                f"Assigning privileged roles requires the {NodePrivilege.allow_privileged_role_assignment} privilege"
             )
 
         if not can_assign_all_roles:
-            role_privileges = set(Privilege[p] for p in role["privileges"])
-            missing_user_roles = role_privileges.difference(privileges)
-            if len(missing_user_roles) > 0:
+            role_event_privileges = set(EventPrivilege[p] for p in role["event_privileges"])
+            role_node_privileges = set(NodePrivilege[p] for p in role["node_privileges"])
+            missing_user_event_privileges = role_event_privileges.difference(event_privileges)
+            missing_user_node_privileges = role_node_privileges.difference(node_privileges)
+            if len(missing_user_event_privileges) > 0 or len(missing_user_node_privileges) > 0:
                 raise AccessDenied(
                     f"Assigning a role requires the assigning user to have all privileges of the new role. "
-                    f"User is missing {missing_user_roles} privileges"
+                    f"User is missing {missing_user_event_privileges} event privileges and {missing_user_node_privileges} node privileges"
                 )
 
     await conn.execute(
@@ -206,7 +221,7 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user_role])
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.allow_role_assignment])
     async def create_user_role(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_role: NewUserRole
     ) -> UserRole:
@@ -216,9 +231,17 @@ class UserService(Service[Config]):
             new_role.name,
             new_role.is_privileged,
         )
-        for privilege in new_role.privileges:
+        for privilege in new_role.event_privileges:
             await conn.execute(
-                "insert into user_role_to_privilege (role_id, privilege) values ($1, $2)", role_id, privilege.name
+                "insert into user_role_to_event_privilege (role_id, privilege) values ($1, $2)",
+                role_id,
+                privilege.name,
+            )
+        for privilege in new_role.node_privileges:
+            await conn.execute(
+                "insert into user_role_to_node_privilege (role_id, privilege) values ($1, $2)",
+                role_id,
+                privilege.name,
             )
 
         assert role_id is not None
@@ -235,7 +258,7 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user_role])
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_user_role_privileges(
         self,
         *,
@@ -244,7 +267,8 @@ class UserService(Service[Config]):
         current_user: CurrentUser,
         role_id: int,
         is_privileged: bool,
-        privileges: list[Privilege],
+        event_privileges: list[EventPrivilege],
+        node_privileges: list[NodePrivilege],
     ) -> UserRole:
         role = await _get_user_role(conn=conn, role_id=role_id)
         if role is None or role.node_id not in node.ids_to_root:
@@ -252,10 +276,19 @@ class UserService(Service[Config]):
 
         await conn.execute("update user_role set is_privileged = $2 where id = $1", role_id, is_privileged)
 
-        await conn.execute("delete from user_role_to_privilege where role_id = $1", role_id)
-        for privilege in privileges:
+        await conn.execute("delete from user_role_to_event_privilege where role_id = $1", role_id)
+        await conn.execute("delete from user_role_to_node_privilege where role_id = $1", role_id)
+        for privilege in event_privileges:
             await conn.execute(
-                "insert into user_role_to_privilege (role_id, privilege) values ($1, $2)", role_id, privilege.name
+                "insert into user_role_to_event_privilege (role_id, privilege) values ($1, $2)",
+                role_id,
+                privilege.name,
+            )
+        for privilege in node_privileges:
+            await conn.execute(
+                "insert into user_role_to_node_privilege (role_id, privilege) values ($1, $2)",
+                role_id,
+                privilege.name,
             )
 
         role = await _get_user_role(conn=conn, role_id=role_id)
@@ -271,7 +304,7 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user_role])
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_user_role(self, *, conn: Connection, node: Node, current_user: CurrentUser, role_id: int) -> bool:
         result = await conn.execute(
             "delete from user_role where id = $1 and node_id = any($2)", role_id, node.ids_to_root
@@ -380,7 +413,7 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.create_user, Privilege.user_management])
+    @requires_user(event_privileges=[EventPrivilege.create_user, NodePrivilege.allow_role_assignment])
     async def create_user(
         self,
         *,
@@ -399,7 +432,7 @@ class UserService(Service[Config]):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.create_user, Privilege.user_management], requires_till=False)
+    @requires_terminal(event_privileges=[EventPrivilege.create_user], requires_till=False)
     async def create_user_terminal(
         self,
         *,
@@ -423,7 +456,7 @@ class UserService(Service[Config]):
         )
 
     @with_db_transaction
-    @requires_terminal([Privilege.user_management], requires_till=False)
+    @requires_terminal(node_privileges=[NodePrivilege.allow_role_assignment], requires_till=False)
     async def update_user_roles_terminal(
         self,
         *,
@@ -472,7 +505,7 @@ class UserService(Service[Config]):
     @requires_node()
     @requires_user()
     async def list_users(
-        self, *, conn: Connection, node: Node, filter_privilege: Privilege | None = None
+        self, *, conn: Connection, node: Node, filter_privilege: EventPrivilege | NodePrivilege | None = None
     ) -> list[User]:
         if filter_privilege is None:
             return await conn.fetch_many(
@@ -496,19 +529,19 @@ class UserService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_user(self, *, conn: Connection, node: Node, user_id: int) -> Optional[User]:
         return await fetch_user(conn=conn, node=node, user_id=user_id)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_user(self, *, conn: Connection, node: Node, user_id: int, user: UserWithoutId) -> Optional[User]:
         return await update_user(conn=conn, node=node, user_id=user_id, user=user)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def change_user_password(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, user_id: int, new_password: str
     ) -> Optional[User]:
@@ -534,7 +567,7 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_user(self, *, conn: Connection, node: Node, current_user: CurrentUser, user_id: int) -> bool:
         result = await conn.execute(
             "delete from usr where id = $1 and node_id = $2",
@@ -561,7 +594,7 @@ class UserService(Service[Config]):
 
     @with_db_transaction
     @requires_node()
-    @requires_user([Privilege.user_management])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.allow_role_assignment])
     async def update_user_to_roles(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, user_to_roles: NewUserToRoles
     ) -> UserToRoles:

@@ -15,7 +15,7 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import NodePrivilege
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -327,8 +327,8 @@ class Simulator:
             await asyncio.sleep(0.1)  # to avoid overloading the database
 
             assert terminal.config.till is not None
-            if terminal.config.active_user_id is not None and terminal.config.user_privileges is not None:
-                if Privilege.can_book_orders in terminal.config.user_privileges:
+            if terminal.config.active_user_id is not None and terminal.config.user_node_privileges is not None:
+                if NodePrivilege.can_book_orders in terminal.config.user_node_privileges:
                     self.logger.info("Terminal already has a logged in cashier")
                     terminals.append(terminal)
                     continue

@@ -1,17 +1,35 @@
 import { Select, SelectProps } from "@stustapay/components";
-import { Privilege, PrivilegeSchema } from "@stustapay/models";
+import { EventPrivilege, EventPrivilegeSchema, NodePrivilege, NodePrivilegeSchema } from "@stustapay/models";
 import * as React from "react";
 
-export type PrivilegeSelectProps = Omit<SelectProps<Privilege, true>, "options" | "formatOption" | "multiple">;
+export type EventPrivilegeSelectProps = Omit<
+  SelectProps<EventPrivilege, true>,
+  "options" | "formatOption" | "multiple"
+>;
 
-export const PrivilegeSelect: React.FC<PrivilegeSelectProps> = (props) => {
+export const EventPrivilegeSelect: React.FC<EventPrivilegeSelectProps> = (props) => {
   return (
     <Select
       multiple={true}
       checkboxes={true}
       chips={true}
-      options={PrivilegeSchema.options}
-      formatOption={(privilege: Privilege) => privilege}
+      options={EventPrivilegeSchema.options}
+      formatOption={(privilege: EventPrivilege) => privilege}
+      {...props}
+    />
+  );
+};
+
+export type NodePrivilegeSelectProps = Omit<SelectProps<NodePrivilege, true>, "options" | "formatOption" | "multiple">;
+
+export const NodePrivilegeSelect: React.FC<NodePrivilegeSelectProps> = (props) => {
+  return (
+    <Select
+      multiple={true}
+      checkboxes={true}
+      chips={true}
+      options={NodePrivilegeSchema.options}
+      formatOption={(privilege: NodePrivilege) => privilege}
       {...props}
     />
   );

@@ -65,7 +65,7 @@ class AccountViewModel @Inject constructor(
     val commentVisible = userRepository.userState.mapState(false, viewModelScope) {
         when (it) {
             is UserState.LoggedIn -> {
-                Access.canReadUserComment(it.user)
+                Access.canReadAccountComment(it.user)
             }
 
             is UserState.NoLogin -> {

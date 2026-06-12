@@ -1,11 +1,11 @@
+import { EventPrivilege, NodePrivilege } from "@stustapay/models";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-import { Privilege } from "@/api";
 import { useCurrentUserHasPrivilege } from "@/hooks";
 
 export interface PrivilegeGuardProps {
-  privilege: Privilege;
+  privilege: EventPrivilege | NodePrivilege;
   /*
    * whether to hide children instead of redirecting to the root route
    * default is redirect

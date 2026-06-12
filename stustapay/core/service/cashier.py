@@ -12,7 +12,7 @@ from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftSta
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege, User
+from stustapay.core.schema.user import CurrentUser, NodePrivilege, User
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.order.booking import (
@@ -51,7 +51,7 @@ class CashierService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
         return await conn.fetch_many(
             Cashier, "select * from cashier where node_id = any($1) order by login", node.ids_to_event_node
@@ -59,7 +59,7 @@ class CashierService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
         return await conn.fetch_maybe_one(
             Cashier, "select * from cashier where id = $1 and node_id = any($2)", cashier_id, node.ids_to_event_node
@@ -73,7 +73,7 @@ class CashierService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_cashier_shifts(
         self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
     ) -> list[CashierShift]:
@@ -87,7 +87,7 @@ class CashierService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_cashier_shifts_for_cash_register(
         self, *, conn: Connection, cash_register_id: int
     ) -> list[CashierShift]:
@@ -109,7 +109,7 @@ class CashierService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_cashier_shift_stats(
         self,
         *,
@@ -169,7 +169,7 @@ class CashierService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True, object_types=[ObjectType.user])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def close_out_cashier(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, cashier_id: int, close_out: CloseOut
     ) -> CloseOutResult:

@@ -1482,7 +1482,7 @@ export type DeleteProductApiArg = {
 export type ListUsersApiResponse = /** status 200 Successful Response */ NormalizedListUserInt;
 export type ListUsersApiArg = {
   nodeId: number;
-  filterPrivilege?: Privilege | null;
+  filterPrivilege?: EventPrivilege | NodePrivilege | null;
 };
 export type CreateUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type CreateUserApiArg = {
@@ -2279,20 +2279,21 @@ export type NormalizedListUserInt = {
     [key: string]: User;
   };
 };
-export type Privilege =
-  | "node_administration"
+export type EventPrivilege =
   | "customer_management"
   | "payout_management"
   | "create_user"
-  | "allow_privileged_role_assignment"
-  | "user_management"
-  | "view_node_stats"
   | "cash_transport"
   | "terminal_login"
   | "supervised_terminal_login"
-  | "can_book_orders"
   | "grant_free_tickets"
   | "grant_vouchers";
+export type NodePrivilege =
+  | "node_administration"
+  | "allow_privileged_role_assignment"
+  | "allow_role_assignment"
+  | "view_node_stats"
+  | "can_book_orders";
 export type CreateUserPayload = {
   login: string;
   display_name: string;
@@ -2314,7 +2315,8 @@ export type ChangeUserPasswordPayload = {
 export type UserRole = {
   name: string;
   is_privileged?: boolean;
-  privileges: Privilege[];
+  event_privileges: EventPrivilege[];
+  node_privileges: NodePrivilege[];
   id: number;
   node_id: number;
 };
@@ -2327,11 +2329,13 @@ export type NormalizedListUserRoleInt = {
 export type NewUserRole = {
   name: string;
   is_privileged?: boolean;
-  privileges: Privilege[];
+  event_privileges: EventPrivilege[];
+  node_privileges: NodePrivilege[];
 };
 export type UpdateUserRolePrivilegesPayload = {
   is_privileged: boolean;
-  privileges: Privilege[];
+  event_privileges: EventPrivilege[];
+  node_privileges: NodePrivilege[];
 };
 export type UserToRoles = {
   user_id: number;
@@ -2369,7 +2373,8 @@ export type CurrentUser = {
   display_name: string;
   active_role_id?: number | null;
   active_role_name?: string | null;
-  privileges: Privilege[];
+  event_privileges?: EventPrivilege[];
+  node_privileges?: NodePrivilege[];
   description?: string | null;
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
@@ -3312,7 +3317,8 @@ export type NodeSeenByUser = {
   forbidden_objects_in_subtree: ObjectType[];
   computed_forbidden_objects_in_subtree: ObjectType[];
   children: NodeSeenByUser[];
-  privileges_at_node: Privilege[];
+  event_privileges_at_node: EventPrivilege[];
+  node_privileges_at_node: NodePrivilege[];
 };
 export type Node = {
   id: number;

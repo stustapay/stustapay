@@ -8,10 +8,11 @@ from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
+    EventPrivilege,
     NewUser,
     NewUserRole,
     NewUserToRoles,
-    Privilege,
+    NodePrivilege,
     User,
     UserRole,
     UserToRoles,
@@ -32,7 +33,7 @@ async def list_users(
     token: CurrentAuthToken,
     user_service: ContextUserService,
     node_id: int,
-    filter_privilege: Privilege | None = None,
+    filter_privilege: EventPrivilege | NodePrivilege | None = None,
 ):
     return normalize_list(
         await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
@@ -166,7 +167,8 @@ async def create_user_role(
 
 class UpdateUserRolePrivilegesPayload(BaseModel):
     is_privileged: bool
-    privileges: list[Privilege]
+    event_privileges: list[EventPrivilege]
+    node_privileges: list[NodePrivilege]
 
 
 @user_role_router.post("/{user_role_id}", response_model=UserRole)
@@ -181,7 +183,8 @@ async def update_user_role(
         token=token,
         role_id=user_role_id,
         is_privileged=updated_role.is_privileged,
-        privileges=updated_role.privileges,
+        event_privileges=updated_role.event_privileges,
+        node_privileges=updated_role.node_privileges,
         node_id=node_id,
     )
     if role is None:

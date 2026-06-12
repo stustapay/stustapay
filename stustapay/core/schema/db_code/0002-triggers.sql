@@ -145,7 +145,7 @@ $$
     transport_account_id  bigint;
 begin
     select
-        ur.privileges
+        ur.event_privileges
     into locals.role_privileges
     from
         user_role_with_privileges ur

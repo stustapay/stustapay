@@ -23,7 +23,8 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.Privilege
+import de.stustapay.api.models.EventPrivilege
+import de.stustapay.api.models.NodePrivilege
 import de.stustapay.api.models.TerminalTillConfig
 import de.stustapay.api.models.TerminalUserTagSecrets
 import de.stustapay.api.models.UserRole
@@ -33,19 +34,20 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param id 
- * @param name 
- * @param description 
- * @param eventName 
- * @param activeUserId 
- * @param availableRoles 
- * @param userPrivileges 
- * @param secrets 
- * @param till 
- * @param testMode 
- * @param testModeMessage 
+ *
+ * @param id
+ * @param name
+ * @param description
+ * @param eventName
+ * @param activeUserId
+ * @param availableRoles
+ * @param userEventPrivileges
+ * @param userNodePrivileges
+ * @param secrets
+ * @param till
+ * @param testMode
+ * @param testModeMessage
  */
 @Serializable
 
@@ -69,8 +71,11 @@ data class TerminalConfig (
     @SerialName(value = "available_roles")
     val availableRoles: kotlin.collections.List<UserRole>,
 
-    @SerialName(value = "user_privileges")
-    val userPrivileges: kotlin.collections.List<@Contextual Privilege>?,
+    @SerialName(value = "user_event_privileges")
+    val userEventPrivileges: kotlin.collections.List<@Contextual EventPrivilege>?,
+
+    @SerialName(value = "user_node_privileges")
+    val userNodePrivileges: kotlin.collections.List<@Contextual NodePrivilege>?,
 
     @SerialName(value = "secrets")
     val secrets: TerminalUserTagSecrets?,
@@ -88,4 +93,3 @@ data class TerminalConfig (
 
 
 }
-

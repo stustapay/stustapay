@@ -19,7 +19,7 @@ const initialValues: NewUser = {
   user_tag_pin: undefined,
 };
 
-export const UserCreate: React.FC = withPrivilegeGuard("user_management", () => {
+export const UserCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [createUser] = useCreateUserMutation();
