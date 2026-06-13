@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -36,22 +35,38 @@ export const UserToRoleList: React.FC = () => {
   const openModal = useOpenModal();
   const navigate = useNavigate();
 
-  if (isLoading || isUsersLoading || isUserRolesLoading) {
-    return <Loading />;
-  }
+  const getUserDisplayName = (userId: number) => {
+    const user = users ? selectUserById(users, userId) : undefined;
+    return user ? getUserName(user) : String(userId);
+  };
 
-  const openConfirmDeleteDialog = (userToRoles: UserToRoles) => {
-    if (userToRoles.node_id !== currentNode.id) {
+  const getRoleNames = (roleIds: number[]) => {
+    if (!userRoles) {
+      return "";
+    }
+    return roleIds
+      .map((id) => selectUserRoleById(userRoles, id)?.name)
+      .filter((name): name is string => name != null)
+      .toSorted((lhs, rhs) => lhs.toLowerCase().localeCompare(rhs.toLowerCase()))
+      .join(", ");
+  };
+
+  const openConfirmDeleteDialog = (userToRole: UserToRoles) => {
+    if (userToRole.node_id !== currentNode.id) {
       return;
     }
     openModal({
       type: "confirm",
       title: t("userToRole.deleteAssociation"),
-      content: t("userToRole.deleteAssociationDescription"),
+      content: t("userToRole.deleteAssociationDescription", {
+        userName: getUserDisplayName(userToRole.user_id),
+        nodeName: currentNode.name,
+        roles: getRoleNames(userToRole.role_ids),
+      }),
       onConfirm: () => {
         updateUserToRoles({
           nodeId: currentNode.id,
-          newUserToRoles: { user_id: userToRoles.user_id, role_ids: [] },
+          newUserToRoles: { user_id: userToRole.user_id, role_ids: [] },
         })
           .unwrap()
           .catch(() => undefined);
@@ -79,16 +94,14 @@ export const UserToRoleList: React.FC = () => {
     if (!userRoles) {
       return "";
     }
-    const roles = ids.map((id) => selectUserRoleById(userRoles, id));
-    roles.sort((lhs, rhs) =>
-      lhs !== undefined && rhs && undefined ? lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()) : -1
-    );
-
-    const visibleRoles = roles.filter((role) => role != null);
+    const roles = ids
+      .map((id) => selectUserRoleById(userRoles, id))
+      .filter((role) => role != null)
+      .toSorted((lhs, rhs) => lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()));
 
     return (
       <div>
-        {visibleRoles.map((role, index) => (
+        {roles.map((role, index) => (
           <React.Fragment key={role.id}>
             {index > 0 ? ", " : null}
             <Link component={RouterLink} to={UserRoleRoutes.detail(role.id, role.node_id)}>
@@ -145,6 +158,7 @@ export const UserToRoleList: React.FC = () => {
     <ListLayout title={t("userToRoles")} routes={UserToRoleRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading || isUsersLoading || isUserRolesLoading}
         getRowId={(row) => `${row.node_id}-${row.user_id}`}
         rows={userToRoles ?? []}
         columns={columns}

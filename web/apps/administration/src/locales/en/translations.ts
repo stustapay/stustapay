@@ -703,8 +703,9 @@ export const translations = {
     role: "Role",
     terminalOnly: "Terminal only",
     create: "Associate a user to a role for node {{node}}",
-    deleteAssociation: "Remove Role association",
-    deleteAssociationDescription: "Remove association",
+    deleteAssociation: "Remove role association",
+    deleteAssociationDescription:
+      'Remove all role assignments for user "{{userName}}" at node "{{nodeName}}"? The following roles will be removed: {{roles}}.',
   },
   tse: {
     tses: "TSE",
