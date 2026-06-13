@@ -12,6 +12,8 @@ import { CreateLayout } from "@/components";
 import { RoleSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 
+import { UserRoleAssignmentsSection } from "./UserRoleAssignmentsSection";
+
 const UpdateUserToRolesSchema = z.object({
   user_id: z.number().int(),
   role_ids: z.array(z.number().int()),
@@ -20,13 +22,16 @@ const UpdateUserToRolesSchema = z.object({
 const UserToRoleUpdateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors, setFieldValue, touched }) => {
   const { t } = useTranslation();
   return (
-    <RoleSelect
-      label={t("user.roles")}
-      value={values.role_ids}
-      onChange={(val) => setFieldValue("role_ids", val)}
-      error={touched.role_ids && !!errors.role_ids}
-      helperText={(touched.role_ids && errors.role_ids) as string}
-    />
+    <>
+      <RoleSelect
+        label={t("user.roles")}
+        value={values.role_ids}
+        onChange={(val) => setFieldValue("role_ids", val)}
+        error={touched.role_ids && !!errors.role_ids}
+        helperText={(touched.role_ids && errors.role_ids) as string}
+      />
+      {values.user_id > 0 && <UserRoleAssignmentsSection userId={values.user_id} />}
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -73,7 +74,9 @@ export const UserDetail: React.FC = () => {
           <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
         )}
       </DetailView>
-      <UserRoleAssignmentsSection userId={Number(userId)} />
+      <Paper sx={{ p: 1 }}>
+        <UserRoleAssignmentsSection userId={Number(userId)} />
+      </Paper>
     </DetailLayout>
   );
 };

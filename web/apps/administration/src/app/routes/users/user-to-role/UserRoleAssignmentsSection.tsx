@@ -1,4 +1,4 @@
-import { Link, Paper, Typography } from "@mui/material";
+import { Link, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -51,7 +51,7 @@ export const UserRoleAssignmentsSection: React.FC<{ userId: number }> = ({ userI
   ];
 
   return (
-    <Paper sx={{ p: 1, mt: 2 }}>
+    <>
       <Typography variant="body1" sx={{ p: 1 }}>
         {t("user.roleAssignments")}
       </Typography>
@@ -71,6 +71,6 @@ export const UserRoleAssignmentsSection: React.FC<{ userId: number }> = ({ userI
           noRowsLabel: t("user.noRoleAssignments"),
         }}
       />
-    </Paper>
+    </>
   );
 };

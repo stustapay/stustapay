@@ -10,6 +10,8 @@ import { CreateLayout } from "@/components";
 import { UserSelect, RoleSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 
+import { UserRoleAssignmentsSection } from "./UserRoleAssignmentsSection";
+
 const NewUserToRoleSchema = z.object({
   user_id: z.number().int(),
   role_ids: z.array(z.number().int()),
@@ -28,7 +30,6 @@ const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, e
       setFieldValue("user_id", userId);
       if (userId != null) {
         const userRoles = userToRoles.find((u) => u.node_id === currentNode.id && u.user_id === userId);
-        console.log("user roles", userRoles);
         if (userRoles) {
           setFieldValue("role_ids", userRoles.role_ids);
         } else {
@@ -54,6 +55,7 @@ const UserToRoleCreateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, e
         error={touched.role_ids && !!errors.role_ids}
         helperText={(touched.role_ids && errors.role_ids) as string}
       />
+      {values.user_id > 0 && <UserRoleAssignmentsSection userId={values.user_id} />}
     </>
   );
 };
