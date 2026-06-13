@@ -213,6 +213,7 @@ describe("TopUp", () => {
     expect(screen.getByRole("button", { name: "10 EUR" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "20 EUR" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "50 EUR" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "100 EUR" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
   });
 

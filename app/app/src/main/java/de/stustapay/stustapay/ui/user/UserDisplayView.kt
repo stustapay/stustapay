@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
-import de.stustapay.stustapay.ui.chipscan.PencilOperatorScanContent
+import de.stustapay.stustapay.ui.chipscan.PencilCustomerDisplayScanContent
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.tagIDtoString
 import kotlinx.coroutines.launch
@@ -55,9 +55,10 @@ fun UserDisplayView(viewModel: UserViewModel, goToUserUpdateView: () -> Unit) {
                             }
                         },
                         content = { scanStatus ->
-                            PencilOperatorScanContent(
+                            PencilCustomerDisplayScanContent(
                                 scanStatus = scanStatus,
-                                subtitle = stringResource(R.string.nfc_scan_description)
+                                title = stringResource(R.string.nfc_scan_prompt),
+                                subtitle = stringResource(R.string.nfc_scan_description),
                             )
                         },
                     )

@@ -21,7 +21,7 @@ const TopUpSchema = z.object({
 
 const EXTENDED_CHECKOUT_POLL_INTERVAL_MS = 30 * 1000;
 const STALLED_CHECKOUT_TIMEOUT_MS = 2 * 60 * 1000;
-const QUICK_TOPUP_AMOUNTS = [10, 20, 50];
+const QUICK_TOPUP_AMOUNTS = [10, 20, 50, 100];
 
 type FormVal = z.infer<typeof TopUpSchema>;
 

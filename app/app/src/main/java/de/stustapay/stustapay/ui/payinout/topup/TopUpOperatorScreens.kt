@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
@@ -57,6 +58,11 @@ import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorRailSummaryRow
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.common.operator.OperatorStatePanel
+import de.stustapay.stustapay.ui.common.selfservice.SelfServiceActionButton
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
+import de.stustapay.stustapay.ui.common.selfservice.SelfServicePanel
+import de.stustapay.libssp.ui.theme.MoneyAmountStyle
+import de.stustapay.stustapay.ui.common.selfservice.selfServiceSecondaryButtonColors
 import de.stustapay.stustapay.ui.common.pay.CashECSelectionViewModel
 import kotlinx.coroutines.launch
 
@@ -437,6 +443,7 @@ fun TopUpAmountDialog(
     amount: UInt,
     onAmountUpdate: (UInt) -> Unit,
     onClear: () -> Unit,
+    selfServiceStyle: Boolean = false,
     onClose: () -> Unit = {},
 ) {
     if (!state.isOpen()) {
@@ -450,15 +457,17 @@ fun TopUpAmountDialog(
     }
 
     Dialog(onDismissRequest = closeDialog) {
-        OperatorPanel(modifier = Modifier.fillMaxWidth()) {
+        val titleColor = if (selfServiceStyle) SelfServicePalette.title else OperatorPalette.title
+        val keyboardColors = if (selfServiceStyle) selfServiceSecondaryButtonColors() else ButtonDefaults.buttonColors()
+        val content: @Composable () -> Unit = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
                     text = stringResource(R.string.selfservice_custom_amount),
-                    color = OperatorPalette.title,
+                    color = titleColor,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
                 )
-                CompositionLocalProvider(LocalContentColor provides OperatorPalette.title) {
+                CompositionLocalProvider(LocalContentColor provides titleColor) {
                     AmountSelection(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -470,20 +479,50 @@ fun TopUpAmountDialog(
                             onClear()
                         },
                         config = AmountConfig.Money(limit = maxAmount, cents = false),
+                        amountTextStyle = MoneyAmountStyle.copy(color = titleColor),
+                        keyboardButtonColors = keyboardColors,
+                        keyboardTextColor = titleColor,
                     )
                 }
-                OperatorActionButton(
-                    text = stringResource(R.string.check_ok),
-                    onClick = {
-                        onAmountUpdate(currentAmount)
-                        closeDialog()
-                    },
-                )
-                OperatorActionButton(
-                    text = stringResource(R.string.arrow_back),
-                    onClick = closeDialog,
-                    primary = false,
-                )
+                if (selfServiceStyle) {
+                    SelfServiceActionButton(
+                        text = stringResource(R.string.check_ok),
+                        onClick = {
+                            onAmountUpdate(currentAmount)
+                            closeDialog()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    SelfServiceActionButton(
+                        text = stringResource(R.string.arrow_back),
+                        onClick = closeDialog,
+                        modifier = Modifier.fillMaxWidth(),
+                        primary = false,
+                    )
+                } else {
+                    OperatorActionButton(
+                        text = stringResource(R.string.check_ok),
+                        onClick = {
+                            onAmountUpdate(currentAmount)
+                            closeDialog()
+                        },
+                    )
+                    OperatorActionButton(
+                        text = stringResource(R.string.arrow_back),
+                        onClick = closeDialog,
+                        primary = false,
+                    )
+                }
+            }
+        }
+
+        if (selfServiceStyle) {
+            SelfServicePanel(modifier = Modifier.fillMaxWidth()) {
+                content()
+            }
+        } else {
+            OperatorPanel(modifier = Modifier.fillMaxWidth()) {
+                content()
             }
         }
     }

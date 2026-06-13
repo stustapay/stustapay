@@ -156,7 +156,7 @@
     <string name="pay_cash">🪙\nBar</string>
     <string name="pay_card">💳\nKarte</string>
     <string name="selfservice_scan_pay">Scannen &amp; Bezahlen</string>
-    <string name="topup_scan_instruction">Chip auf das Lesegerät legen</string>
+    <string name="topup_scan_instruction">Chip ruhig auf das Lesegerät halten, bis die Bestätigung erscheint</string>
     <string name="topup_payment_instruction">Zahlung wird über Kartenterminal abgewickelt</string>
     <string name="topup_step_amount">Schritt 1: Betrag eingeben</string>
     <string name="topup_step_scan">Schritt 2: Chip scannen</string>
@@ -252,7 +252,8 @@
     <string name="nfc_waiting_for_tag">Warte auf Chip...</string>
     <string name="nfc_scan_success">Scan erfolgreich!</string>
     <string name="nfc_error_reading_tag_s">Fehler beim Lesen: %s</string>
-    <string name="nfc_try_again_s">Nochmal scannen! %s</string>
+    <string name="nfc_try_again_s">Erneut scannen. %s</string>
+    <string name="nfc_rescan_hold_still">Chip ruhig auf dem Lesegerät halten, bis der Scan abgeschlossen ist.</string>
     <string name="nfc_signature_mismatch">Signatur falsch!</string>
     <string name="customer_restriction">Beschränkung</string>
     <string name="under_18_years">Unter 18</string>
@@ -282,6 +283,7 @@
     <string name="sale_check_your_order">Bestellung prüfen</string>
     <string name="sale_compact_title">Verkauf</string>
     <string name="book_order">Buchen ✓</string>
+    <string name="sale_auto_book_countdown">Automatisches Buchen in %1$d s</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Prüfen \u0026 zahlen</string>
     <string name="sale_ec_payment">EC-Zahlung</string>
@@ -289,7 +291,7 @@
     <string name="sale_empty_desc">Diesem Terminal sind aktuell keine Produkte oder Gutscheine für den Verkauf zugeordnet.</string>
     <string name="sale_empty_hint">Gehen Sie zurück ins Menü und prüfen Sie die Kassenkonfiguration, bevor Sie Zahlungen annehmen.</string>
     <string name="pay_no_payment_method_configured">Keine Zahlungsart konfiguriert</string>
-    <string name="nfc_scan_description">Halten Sie Ihr Bändchen oder Ihre Cash-Karte an das Lesegerät.\nNicht die EC-Karte.</string>
+    <string name="nfc_scan_description">Halten Sie Ihr Bändchen oder Ihre Cash-Karte ruhig an das Lesegerät.\nNicht bewegen, bis die Bestätigung erscheint.\nNicht die EC-Karte.</string>
     <string name="content_desc_rotate_screen">Bildschirm drehen</string>
     <string name="content_desc_terminal_info">Terminalinformationen</string>
     <string name="content_desc_receipt_qr">Bon-QR-Code</string>

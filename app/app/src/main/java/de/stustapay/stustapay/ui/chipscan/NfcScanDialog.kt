@@ -8,16 +8,18 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -26,12 +28,15 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.rounded.Contactless
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -62,7 +67,6 @@ fun rememberNfcScanDialogState(): DialogDisplayState {
 
 enum class NfcScanDialogVariant {
     Default,
-    Sale,
     Operator,
 }
 
@@ -117,8 +121,6 @@ fun NfcScanDialog(
             showClarification -> 430.dp
             variant == NfcScanDialogVariant.Default && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Default -> 430.dp
-            variant == NfcScanDialogVariant.Sale && effectiveSmallScreen -> 380.dp
-            variant == NfcScanDialogVariant.Sale -> 430.dp
             variant == NfcScanDialogVariant.Operator && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Operator -> 430.dp
             else -> (350 * deviceConfig.nfcScanDialogScale).dp
@@ -130,8 +132,6 @@ fun NfcScanDialog(
             showClarification -> 440.dp
             variant == NfcScanDialogVariant.Default && effectiveSmallScreen -> 300.dp
             variant == NfcScanDialogVariant.Default -> 360.dp
-            variant == NfcScanDialogVariant.Sale && effectiveSmallScreen -> 300.dp
-            variant == NfcScanDialogVariant.Sale -> 360.dp
             variant == NfcScanDialogVariant.Operator && effectiveSmallScreen -> 380.dp
             variant == NfcScanDialogVariant.Operator -> 440.dp
             else -> (350 * deviceConfig.nfcScanDialogScale).dp
@@ -195,28 +195,19 @@ fun NfcScanDialog(
                         modifier = scanCardModifier,
                         viewModel = viewModel,
                         showCloseButton = true,
-                        border = if (variant != NfcScanDialogVariant.Sale) {
-                            border ?: BorderStroke(
-                                2.dp,
-                                if (variant == NfcScanDialogVariant.Operator) {
-                                    OperatorPalette.panelBorder
-                                } else {
-                                    SelfServicePalette.panelBorder
-                                }
-                            )
-                        } else {
-                            border
-                        },
+                        border = border ?: BorderStroke(
+                            2.dp,
+                            if (variant == NfcScanDialogVariant.Operator) {
+                                OperatorPalette.panelBorder
+                            } else {
+                                SelfServicePalette.panelBorder
+                            }
+                        ),
                         backgroundColor = when (variant) {
-                            NfcScanDialogVariant.Sale -> SelfServicePalette.panelMuted
                             NfcScanDialogVariant.Operator -> OperatorPalette.panelMuted
                             NfcScanDialogVariant.Default -> OperatorPalette.panelMuted
                         },
-                        shape = if (variant != NfcScanDialogVariant.Sale) {
-                            RoundedCornerShape(if (effectiveSmallScreen) 18.dp else 22.dp)
-                        } else {
-                            RoundedCornerShape(10.dp)
-                        },
+                        shape = RoundedCornerShape(if (effectiveSmallScreen) 18.dp else 22.dp),
                         checkScan = checkScan,
                         showStatus = false,
                         onScan = { tag ->
@@ -231,10 +222,6 @@ fun NfcScanDialog(
                         content = { status ->
                             when (variant) {
                                 NfcScanDialogVariant.Default -> content(status, effectiveSmallScreen)
-                                NfcScanDialogVariant.Sale -> PencilSaleScanContent(
-                                    isSmallScreen = effectiveSmallScreen,
-                                    scanStatus = status
-                                )
                                 NfcScanDialogVariant.Operator -> PencilOperatorScanContent(
                                     isSmallScreen = effectiveSmallScreen,
                                     scanStatus = status,
@@ -432,94 +419,6 @@ private fun PencilScanChipContent(
 }
 
 @Composable
-private fun PencilSaleScanContent(
-    isSmallScreen: Boolean,
-    scanStatus: String,
-) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.92f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(900),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-
-    val centerSize = if (isSmallScreen) 120.dp else 168.dp
-    val outerPadding = if (isSmallScreen) 22.dp else 26.dp
-    val midPadding = if (isSmallScreen) 20.dp else 22.dp
-    val nearIconSize = if (isSmallScreen) 24.dp else 32.dp
-    val panelShape = RoundedCornerShape(if (isSmallScreen) 20.dp else 24.dp)
-    val statusText = scanStatus.ifBlank { stringResource(R.string.nfc_scan_ready) }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 14.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.nfc_scan_title_plain),
-            color = SelfServicePalette.title,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = if (isSmallScreen) 28.sp else 34.sp,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = stringResource(R.string.nfc_scan_description),
-            color = SelfServicePalette.subtitle,
-            fontWeight = FontWeight.Medium,
-            fontSize = if (isSmallScreen) 12.sp else 15.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(SelfServicePalette.panel, panelShape)
-                .border(1.5.dp, SelfServicePalette.panelBorder, panelShape)
-                .padding(if (isSmallScreen) 18.dp else 22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 14.dp)
-        ) {
-            PencilScanRadar(
-                centerSize = centerSize,
-                outerPadding = outerPadding,
-                midPadding = midPadding,
-                nearIconSize = nearIconSize,
-                pulseScale = pulseScale
-            )
-            if (!isSmallScreen) {
-                Text(
-                    text = stringResource(R.string.selfservice_scan_balance_title),
-                    color = SelfServicePalette.title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(SelfServicePalette.panelMuted, RoundedCornerShape(16.dp))
-                .border(1.5.dp, SelfServicePalette.panelBorder, RoundedCornerShape(16.dp))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = statusText,
-                color = SelfServicePalette.subtitle,
-                fontWeight = FontWeight.Medium,
-                fontSize = if (isSmallScreen) 13.sp else 16.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
 fun PencilOperatorScanContent(
     scanStatus: String,
     title: String = stringResource(R.string.nfc_scan_title_plain),
@@ -605,6 +504,94 @@ fun PencilOperatorScanContent(
                     fontWeight = FontWeight.Medium,
                     fontSize = if (compact) 13.sp else 16.sp,
                     textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PencilCustomerDisplayScanContent(
+    scanStatus: String,
+    title: String = stringResource(R.string.nfc_scan_title_plain),
+    subtitle: String = stringResource(R.string.nfc_scan_description),
+    isSmallScreen: Boolean = false,
+) {
+    val statusText = scanStatus.ifBlank { stringResource(R.string.topup_ready_to_scan) }
+    val outerShape = RoundedCornerShape(if (isSmallScreen) 20.dp else 24.dp)
+    val cardShape = RoundedCornerShape(if (isSmallScreen) 18.dp else 22.dp)
+    val iconPanelShape = RoundedCornerShape(if (isSmallScreen) 20.dp else 24.dp)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFFF9FBFF), Color(0xFFE2ECFF))
+                ),
+                shape = outerShape
+            )
+            .padding(if (isSmallScreen) 18.dp else 24.dp),
+        verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, cardShape)
+                .border(2.dp, Color(0xFFBFD1F3), cardShape)
+                .padding(if (isSmallScreen) 18.dp else 26.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 18.dp else 32.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 16.dp)
+            ) {
+                Text(
+                    text = "CUSTOMER DISPLAY",
+                    color = Color(0xFF44556B),
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (isSmallScreen) 12.sp else 14.sp,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = title,
+                    color = Color(0xFF0D1B2A),
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (isSmallScreen) 26.sp else 34.sp,
+                    lineHeight = if (isSmallScreen) 28.sp else 36.sp
+                )
+                Text(
+                    text = subtitle,
+                    color = Color(0xFF44556B),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = if (isSmallScreen) 14.sp else 18.sp,
+                    lineHeight = if (isSmallScreen) 18.sp else 24.sp
+                )
+                Text(
+                    text = statusText,
+                    color = Color(0xFF44556B),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = if (isSmallScreen) 13.sp else 16.sp,
+                    lineHeight = if (isSmallScreen) 18.sp else 22.sp
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(if (isSmallScreen) 110.dp else 150.dp)
+                    .height(if (isSmallScreen) 150.dp else 210.dp)
+                    .background(Color(0xFF0D1B2A), iconPanelShape)
+                    .padding(if (isSmallScreen) 18.dp else 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Contactless,
+                    contentDescription = stringResource(R.string.nfc_icon_description),
+                    tint = Color(0xFFFF9F1C),
+                    modifier = Modifier.size(if (isSmallScreen) 56.dp else 84.dp)
                 )
             }
         }

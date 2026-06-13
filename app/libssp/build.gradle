@@ -51,4 +51,5 @@ dependencies {
     implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
     implementation "com.ionspin.kotlin:bignum:$bignum_version"
     implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:$bignum_version"
+    testImplementation 'junit:junit:4.13.2'
 }

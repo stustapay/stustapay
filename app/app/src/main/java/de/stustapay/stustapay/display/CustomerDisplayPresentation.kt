@@ -2,9 +2,14 @@ package de.stustapay.stustapay.display
 
 import android.app.Presentation
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.Display
+import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import de.stustapay.stustapay.R
@@ -206,107 +211,121 @@ class CustomerDisplayPresentation(
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
-            setPadding(40, 32, 40, 32)
+            setPadding(dp(28), dp(28), dp(28), dp(24))
             background = android.graphics.drawable.GradientDrawable().apply {
                 orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
                 colors = intArrayOf(
-                    android.graphics.Color.parseColor("#F4F8FF"),
-                    android.graphics.Color.parseColor("#DFEAFF")
+                    android.graphics.Color.parseColor("#F9FBFF"),
+                    android.graphics.Color.parseColor("#E2ECFF")
                 )
             }
         }
 
-        val badge = android.widget.TextView(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 24)
-            }
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(android.graphics.Color.parseColor("#2D5FD3"))
-                cornerRadius = 18f
-            }
-            text = text(R.string.customer_title)
-            textSize = 24f
-            setTextColor(android.graphics.Color.WHITE)
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-            gravity = android.view.Gravity.CENTER
-            setPadding(24, 12, 24, 12)
-        }
-
-        val titleText = android.widget.TextView(context).apply {
-            text = text(R.string.customer_display_scan_title)
-            textSize = 34f
-            setTextColor(android.graphics.Color.parseColor("#18386F"))
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-            gravity = android.view.Gravity.CENTER
+        val card = android.widget.LinearLayout(context).apply {
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 18)
+                setMargins(0, 0, 0, 0)
+            }
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.WHITE)
+                cornerRadius = dp(26).toFloat()
+                setStroke(dp(2), android.graphics.Color.parseColor("#BFD1F3"))
+            }
+            setPadding(dp(26), dp(26), dp(26), dp(26))
+        }
+
+        val copyColumn = android.widget.LinearLayout(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            orientation = android.widget.LinearLayout.VERTICAL
+        }
+
+        val titleText = android.widget.TextView(context).apply {
+            text = text(R.string.customer_display_scan_title)
+            textSize = 38f
+            setTextColor(android.graphics.Color.parseColor("#18386F"))
+            typeface = Typeface.DEFAULT_BOLD
+            setLineSpacing(0f, 1.02f)
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, dp(16))
             }
         }
 
         val instructionsText = android.widget.TextView(context).apply {
             text = text(R.string.customer_display_scan_instruction)
-            textSize = 24f
-            setTextColor(android.graphics.Color.parseColor("#5A6B85"))
-            gravity = android.view.Gravity.CENTER
+            textSize = 20f
+            setTextColor(android.graphics.Color.parseColor("#44556B"))
+            setLineSpacing(0f, 1.2f)
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 28)
+                setMargins(0, 0, 0, dp(12))
             }
         }
 
-        val scanPanel = android.widget.LinearLayout(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(40, 0, 40, 0)
+        copyColumn.addView(titleText)
+        copyColumn.addView(instructionsText)
+
+        val iconPanel = android.widget.FrameLayout(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(dp(311), dp(445)).apply {
+                setMargins(dp(32), 0, 0, 0)
             }
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
             background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(android.graphics.Color.parseColor("#182238"))
-                cornerRadius = 28f
-                setStroke(3, android.graphics.Color.parseColor("#314A7A"))
-            }
-            setPadding(48, 42, 48, 42)
-        }
-
-        val scanIcon = android.widget.TextView(context).apply {
-            text = "◎"
-            textSize = 68f
-            setTextColor(android.graphics.Color.parseColor("#FFB74D"))
-            gravity = android.view.Gravity.CENTER
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 12)
+                setColor(android.graphics.Color.parseColor("#0D1B2A"))
+                cornerRadius = dp(24).toFloat()
             }
         }
 
-        val scanHint = android.widget.TextView(context).apply {
-            text = text(R.string.customer_display_scan_instruction)
-            textSize = 22f
-            setTextColor(android.graphics.Color.WHITE)
-            gravity = android.view.Gravity.CENTER
-        }
+        iconPanel.addView(NfcSymbolView(context).apply {
+            layoutParams = FrameLayout.LayoutParams(dp(148), dp(148), android.view.Gravity.CENTER)
+        })
 
-        scanPanel.addView(scanIcon)
-        scanPanel.addView(scanHint)
-
-        container.addView(badge)
-        container.addView(titleText)
-        container.addView(instructionsText)
-        container.addView(scanPanel)
+        card.addView(copyColumn)
+        card.addView(iconPanel)
+        container.addView(card)
         rootView?.addView(container)
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * context.resources.displayMetrics.density).toInt()
+    }
+
+    private inner class NfcSymbolView(context: Context) : View(context) {
+        private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.parseColor("#FFB74D")
+            style = Paint.Style.FILL
+        }
+
+        private val arrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.parseColor("#0D1B2A")
+            style = Paint.Style.FILL
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+
+            val centerX = width / 2f
+            val centerY = height / 2f
+            val radius = minOf(width, height) * 0.34f
+            canvas.drawCircle(centerX, centerY, radius, circlePaint)
+
+            val path = Path().apply {
+                moveTo(centerX - radius * 0.28f, centerY - radius * 0.10f)
+                lineTo(centerX + radius * 0.38f, centerY - radius * 0.42f)
+                lineTo(centerX + radius * 0.08f, centerY + radius * 0.36f)
+                lineTo(centerX - radius * 0.02f, centerY + radius * 0.08f)
+                lineTo(centerX - radius * 0.30f, centerY - radius * 0.02f)
+                close()
+            }
+            canvas.drawPath(path, arrowPaint)
+        }
     }
 
     private fun formatAmount(amount: Double): String {
@@ -338,26 +357,6 @@ class CustomerDisplayPresentation(
                     android.graphics.Color.parseColor("#D9E7FF")
                 )
             }
-        }
-
-        val titleBadge = android.widget.TextView(context).apply {
-            text = text(R.string.customer_title)
-            textSize = 26f
-            setTextColor(android.graphics.Color.WHITE)
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-            gravity = android.view.Gravity.CENTER
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(android.graphics.Color.parseColor("#2D5FD3"))
-                cornerRadius = 18f
-            }
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 28)
-                gravity = android.view.Gravity.CENTER_HORIZONTAL
-            }
-            setPadding(28, 16, 28, 16)
         }
 
         val balanceCard = android.widget.LinearLayout(context).apply {
@@ -439,11 +438,9 @@ class CustomerDisplayPresentation(
                 }
                 setPadding(24, 14, 24, 14)
             }
-            container.addView(titleBadge)
             container.addView(balanceCard)
             container.addView(voucherText)
         } ?: run {
-            container.addView(titleBadge)
             container.addView(balanceCard)
         }
 

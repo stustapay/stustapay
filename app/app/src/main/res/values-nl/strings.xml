@@ -49,7 +49,7 @@
     <string name="new_balance">Nieuw saldo</string>
     <string name="error">Fout</string>
     <string name="selfservice_scan_pay">Scannen &amp; betalen</string>
-    <string name="topup_scan_instruction">Houd uw chip tegen de lezer</string>
+    <string name="topup_scan_instruction">Houd uw chip stil op de lezer tot de bevestiging verschijnt</string>
     <string name="topup_payment_instruction">De betaling wordt verwerkt via de kaartterminal</string>
     <string name="topup_step_amount">Stap 1: Bedrag invoeren</string>
     <string name="topup_step_scan">Stap 2: Chip scannen</string>
@@ -71,7 +71,7 @@
     <string name="nfc_scan_title_plain">Chip scannen</string>
     <string name="nfc_scan_ready">Klaar om te scannen</string>
     <string name="nfc_scan_success">Scannen gelukt</string>
-    <string name="nfc_scan_description">Houd uw polsbandje of cashkaart tegen de lezer.\nNiet uw bankkaart.</string>
+    <string name="nfc_scan_description">Houd uw polsbandje of cashkaart stil tegen de lezer.\nBeweeg niet tot de bevestiging verschijnt.\nNiet uw bankkaart.</string>
 
     <string name="failed_fetching">Ophalen mislukt</string>
     <string name="payout">Payout</string>
@@ -247,7 +247,8 @@
     <string name="nfc_no_scan_active">No scan active.</string>
     <string name="nfc_waiting_for_tag">Waiting for tag...</string>
     <string name="nfc_error_reading_tag_s">Error reading tag: %s</string>
-    <string name="nfc_try_again_s">Try again! %s</string>
+    <string name="nfc_try_again_s">Probeer opnieuw. %s</string>
+    <string name="nfc_rescan_hold_still">Houd de tag stil op de lezer tot de scan is afgerond.</string>
     <string name="nfc_signature_mismatch">Signature mismatch!</string>
     <string name="under_18_years">Under 18</string>
     <string name="under_16_years">Under 16</string>
@@ -275,6 +276,7 @@
     <string name="sale_check_your_order">Check your order</string>
     <string name="sale_compact_title">Sale</string>
     <string name="book_order">Book ✓</string>
+    <string name="sale_auto_book_countdown">Automatisch boeken over %1$d s</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Review \u0026 pay</string>
     <string name="sale_ec_payment">Kaartbetaling</string>

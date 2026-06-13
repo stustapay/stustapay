@@ -24,11 +24,14 @@ import de.stustapay.stustapay.repository.TerminalConfigState
 import de.stustapay.stustapay.display.CustomerDisplayManager
 import de.stustapay.stustapay.display.CustomerDisplayState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
@@ -42,6 +45,7 @@ internal data class InsufficientFundsDetails(
 private val insufficientFundsPrefix = Regex("Not enough funds available", RegexOption.IGNORE_CASE)
 private val neededAmountRegex = Regex("Needed: ([0-9.]+)")
 private val availableAmountRegex = Regex("Available: ([0-9.]+)")
+private const val SALE_AUTO_BOOK_SECONDS = 10
 
 internal fun parseInsufficientFundsDetails(message: String): InsufficientFundsDetails? {
     if (!insufficientFundsPrefix.containsMatchIn(message)) {
@@ -58,6 +62,62 @@ internal fun parseInsufficientFundsDetails(message: String): InsufficientFundsDe
         )
     } else {
         null
+    }
+}
+
+internal enum class SaleAutoBookMode {
+    Hidden,
+    Running,
+}
+
+internal data class SaleAutoBookState(
+    val mode: SaleAutoBookMode = SaleAutoBookMode.Hidden,
+    val remainingSeconds: Int = 0,
+    val totalSeconds: Int = SALE_AUTO_BOOK_SECONDS,
+) {
+    val isActive: Boolean get() = mode == SaleAutoBookMode.Running
+    val progress: Float get() = if (totalSeconds <= 0) 0f else remainingSeconds.toFloat() / totalSeconds.toFloat()
+}
+
+internal class SaleAutoBookCountdownController(
+    private val totalSeconds: Int = SALE_AUTO_BOOK_SECONDS,
+    private val onFinished: () -> Unit,
+) {
+    private val _state = MutableStateFlow(SaleAutoBookState(totalSeconds = totalSeconds))
+    val state: StateFlow<SaleAutoBookState> = _state.asStateFlow()
+
+    private var completionSent = false
+
+    fun start() {
+        completionSent = false
+        _state.value = SaleAutoBookState(
+            mode = SaleAutoBookMode.Running,
+            remainingSeconds = totalSeconds,
+            totalSeconds = totalSeconds,
+        )
+    }
+
+    fun tick() {
+        val current = _state.value
+        if (!current.isActive) {
+            return
+        }
+
+        if (current.remainingSeconds <= 1) {
+            _state.value = SaleAutoBookState(totalSeconds = totalSeconds)
+            if (!completionSent) {
+                completionSent = true
+                onFinished()
+            }
+            return
+        }
+
+        _state.value = current.copy(remainingSeconds = current.remainingSeconds - 1)
+    }
+
+    fun clear() {
+        completionSent = false
+        _state.value = SaleAutoBookState(totalSeconds = totalSeconds)
     }
 }
 
@@ -101,6 +161,13 @@ class SaleViewModel @Inject constructor(
             maximumFractionDigits = 2
         }
     }
+    private val bookingInProgress = AtomicBoolean(false)
+    private val autoBookCountdown = SaleAutoBookCountdownController {
+        viewModelScope.launch {
+            _autoBookRequests.emit(Unit)
+        }
+    }
+    private var autoBookCountdownJob: kotlinx.coroutines.Job? = null
 
     // navigation in views
     private val _navState = MutableStateFlow(SalePage.ProductSelect)
@@ -122,6 +189,14 @@ class SaleViewModel @Inject constructor(
     // status message
     private val _status = MutableStateFlow("")
     val status = _status.asStateFlow()
+
+    private val _autoBookRequests = MutableSharedFlow<Unit>()
+    val autoBookRequests: SharedFlow<Unit> = _autoBookRequests
+
+    internal val autoBookState: StateFlow<SaleAutoBookState> = autoBookCountdown.state
+
+    private val _booking = MutableStateFlow(false)
+    val booking = _booking.asStateFlow()
 
     // error popup
     private val _error = MutableStateFlow<String?>(null)
@@ -190,10 +265,12 @@ class SaleViewModel @Inject constructor(
 
     /** called when clicking "back" after the order preview */
     suspend fun editOrder() {
+        clearAutoBookCountdown()
         _navState.update { SalePage.ProductSelect }
     }
 
     suspend fun clearSale(success: Boolean = false) {
+        clearAutoBookCountdown()
         _saleStatus.update { SaleStatus() }
         scanTarget.update { ScanTarget.None }
         _navState.update { SalePage.ProductSelect }
@@ -242,11 +319,16 @@ class SaleViewModel @Inject constructor(
         _enableScan.update { false }
     }
 
+    fun saleFlowDismissed() {
+        clearAutoBookCountdown()
+    }
+
     fun errorPopupDismissed() {
         _error.update { null }
     }
 
     fun errorPageDismissed() {
+        clearAutoBookCountdown()
         // Reset customer display to welcome state
         customerDisplayManager.updateState(CustomerDisplayState.Welcome)
         
@@ -255,6 +337,7 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun checkSale() {
+        clearAutoBookCountdown()
         // important to check for the list entries
         // and not fold them and check if sum == 0
         // because one can have negative returnable items!
@@ -327,11 +410,12 @@ class SaleViewModel @Inject constructor(
                         products = productsList
                     )
                 )
-                
+                startAutoBookCountdown()
                 _navState.update { SalePage.Confirm }
             }
 
             is Response.Error.Service -> {
+                clearAutoBookCountdown()
                 val insufficientFundsDetails = parseInsufficientFundsDetails(response.msg())
 
                 if (insufficientFundsDetails != null) {
@@ -352,12 +436,14 @@ class SaleViewModel @Inject constructor(
             }
 
             is Response.Error -> {
+                clearAutoBookCountdown()
                 _status.update { localizeSaleErrorMessage(response.msg()) }
             }
         }
     }
 
     suspend fun checkSaleCash() {
+        clearAutoBookCountdown()
         if (_saleStatus.value.buttonSelection.isEmpty()) {
             _status.update { context.getString(R.string.sale_status_nothing_ordered) }
             return
@@ -377,10 +463,12 @@ class SaleViewModel @Inject constructor(
                     newSale
                 }
                 _status.update { context.getString(R.string.sale_status_order_validated) }
+                startAutoBookCountdown()
                 _navState.update { SalePage.Confirm }
             }
 
             is Response.Error.Service -> {
+                clearAutoBookCountdown()
                 // maybe only clear tag for some errors.
                 clearScannedTag()
                 val localizedMessage = localizeSaleErrorMessage(response.msg())
@@ -389,12 +477,14 @@ class SaleViewModel @Inject constructor(
             }
 
             is Response.Error -> {
+                clearAutoBookCountdown()
                 _status.update { localizeSaleErrorMessage(response.msg()) }
             }
         }
     }
 
     suspend fun checkSaleCard() {
+        clearAutoBookCountdown()
         if (_saleStatus.value.buttonSelection.isEmpty()) {
             _status.update { context.getString(R.string.sale_status_nothing_ordered) }
             return
@@ -414,10 +504,12 @@ class SaleViewModel @Inject constructor(
                     newSale
                 }
                 _status.update { context.getString(R.string.sale_status_order_validated) }
+                startAutoBookCountdown()
                 _navState.update { SalePage.Confirm }
             }
 
             is Response.Error.Service -> {
+                clearAutoBookCountdown()
                 // maybe only clear tag for some errors.
                 clearScannedTag()
                 val localizedMessage = localizeSaleErrorMessage(response.msg())
@@ -426,6 +518,7 @@ class SaleViewModel @Inject constructor(
             }
 
             is Response.Error -> {
+                clearAutoBookCountdown()
                 _status.update { localizeSaleErrorMessage(response.msg()) }
             }
         }
@@ -455,6 +548,13 @@ class SaleViewModel @Inject constructor(
     }
 
     suspend fun bookSale(context: Activity) {
+        if (!bookingInProgress.compareAndSet(false, true)) {
+            return
+        }
+        _booking.update { true }
+        clearAutoBookCountdown()
+
+        try {
         val tag = _saleStatus.value.tag
         val sale = _saleStatus.value.checkedSale
         if (sale == null) {
@@ -479,12 +579,14 @@ class SaleViewModel @Inject constructor(
                 }
 
                 is Response.Error.Service -> {
+                    clearAutoBookCountdown()
                     _status.update { registerResponse.msg() }
                     _navState.update { SalePage.Error }
                     return
                 }
 
                 is Response.Error -> {
+                    clearAutoBookCountdown()
                     _status.update { registerResponse.msg() }
                     return
                 }
@@ -531,6 +633,7 @@ class SaleViewModel @Inject constructor(
             }
 
             is Response.Error.Service -> {
+                clearAutoBookCountdown()
                 clearScannedTag()
                 _navState.update { SalePage.Error }
                 _status.update { response.msg() }
@@ -540,11 +643,16 @@ class SaleViewModel @Inject constructor(
             }
 
             is Response.Error -> {
+                clearAutoBookCountdown()
                 _status.update { response.msg() }
                 
                 // Reset customer display to welcome state on error
                 customerDisplayManager.updateState(CustomerDisplayState.Welcome)
             }
+        }
+        } finally {
+            _booking.update { false }
+            bookingInProgress.set(false)
         }
     }
 
@@ -620,5 +728,22 @@ class SaleViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun startAutoBookCountdown() {
+        autoBookCountdownJob?.cancel()
+        autoBookCountdown.start()
+        autoBookCountdownJob = viewModelScope.launch {
+            repeat(SALE_AUTO_BOOK_SECONDS) {
+                delay(1000)
+                autoBookCountdown.tick()
+            }
+        }
+    }
+
+    private fun clearAutoBookCountdown() {
+        autoBookCountdownJob?.cancel()
+        autoBookCountdownJob = null
+        autoBookCountdown.clear()
     }
 }

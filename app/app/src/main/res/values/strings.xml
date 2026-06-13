@@ -157,7 +157,7 @@
     <string name="pay_cash">🪙\nCash</string>
     <string name="pay_card">💳\nCard</string>
     <string name="selfservice_scan_pay">Scan &amp; Pay</string>
-    <string name="topup_scan_instruction">Place your chip on the reader</string>
+    <string name="topup_scan_instruction">Hold your chip still on the reader until confirmed</string>
     <string name="topup_payment_instruction">Payment will be processed via card terminal</string>
     <string name="topup_step_amount">Step 1: Enter Amount</string>
     <string name="topup_step_scan">Step 2: Scan Chip</string>
@@ -253,7 +253,8 @@
     <string name="nfc_waiting_for_tag">Waiting for tag...</string>
     <string name="nfc_scan_success">Scan success!</string>
     <string name="nfc_error_reading_tag_s">Error reading tag: %s</string>
-    <string name="nfc_try_again_s">Try again! %s</string>
+    <string name="nfc_try_again_s">Try again. %s</string>
+    <string name="nfc_rescan_hold_still">Hold the tag still on the reader until the scan finishes.</string>
     <string name="nfc_signature_mismatch">Signature mismatch!</string>
     <string name="customer_restriction">Restriction</string>
     <string name="under_18_years">Under 18</string>
@@ -283,6 +284,7 @@
     <string name="sale_check_your_order">Check your order</string>
     <string name="sale_compact_title">Sale</string>
     <string name="book_order">Book ✓</string>
+    <string name="sale_auto_book_countdown">Booking automatically in %1$d s</string>
     <string name="pay_stustapay">🛜\nSSP</string>
     <string name="sale_review_and_pay">Review \u0026 pay</string>
     <string name="sale_ec_payment">Card payment</string>
@@ -290,7 +292,7 @@
     <string name="sale_empty_desc">This terminal currently has no products or vouchers assigned for sale.</string>
     <string name="sale_empty_hint">Return to the menu and review the till setup before taking payment.</string>
     <string name="pay_no_payment_method_configured">No payment method configured</string>
-    <string name="nfc_scan_description">Hold your NFC wristband or NFC card to the reader.\nNot your credit card!</string>
+    <string name="nfc_scan_description">Hold your NFC wristband or NFC card still on the reader.\nDo not move it until the confirmation appears.\nNot your credit card!</string>
     <string name="content_desc_rotate_screen">Rotate screen</string>
     <string name="content_desc_terminal_info">Terminal info</string>
     <string name="content_desc_receipt_qr">Receipt QR code</string>

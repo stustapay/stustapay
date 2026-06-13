@@ -72,9 +72,15 @@ fun SaleView(
         }
     }
 
+    LaunchedEffect(viewModel, context) {
+        viewModel.autoBookRequests.collect {
+            viewModel.bookSale(context)
+        }
+    }
+
     NfcScanDialog(
         state = scanState,
-        variant = NfcScanDialogVariant.Sale,
+        variant = NfcScanDialogVariant.Operator,
         onScan = { uid ->
             scope.launch {
                 viewModel.tagScanned(uid)
@@ -93,6 +99,7 @@ fun SaleView(
     }
 
     BackHandler {
+        viewModel.saleFlowDismissed()
         leaveView()
     }
 

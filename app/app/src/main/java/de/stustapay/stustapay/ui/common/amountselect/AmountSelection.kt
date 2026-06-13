@@ -4,18 +4,22 @@ package de.stustapay.stustapay.ui.common.amountselect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.stustapay.stustapay.ui.common.NumberKeyboard
 import de.stustapay.libssp.ui.theme.MoneyAmountStyle
+import de.stustapay.libssp.ui.theme.NumberKeyboardStyle
 
 
 @Composable
@@ -28,6 +32,8 @@ fun AmountSelection(
     onClear: () -> Unit,
     viewModel: AmountSelectionViewModel = hiltViewModel(),
     amountTextStyle: TextStyle = MoneyAmountStyle,
+    keyboardButtonColors: ButtonColors = ButtonDefaults.buttonColors(),
+    keyboardTextColor: Color = NumberKeyboardStyle.color,
     title: @Composable () -> Unit = {},
 ) {
     val currentAmount by viewModel.amount.collectAsStateWithLifecycle()
@@ -77,6 +83,8 @@ fun AmountSelection(
                 viewModel.clear()
                 onClear()
             },
+            buttonColors = keyboardButtonColors,
+            textColor = keyboardTextColor,
         )
     }
 }

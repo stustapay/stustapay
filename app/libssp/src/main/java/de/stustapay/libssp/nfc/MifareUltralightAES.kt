@@ -1,6 +1,7 @@
 package de.stustapay.libssp.nfc
 
 import android.nfc.Tag
+import android.nfc.TagLostException
 import android.nfc.tech.NfcA
 import android.nfc.tech.TagTechnology
 import com.ionspin.kotlin.bignum.integer.toBigInteger
@@ -52,8 +53,10 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             if (!rndAResp.equals(rndA.rotl(8uL))) {
                 throw TagAuthException("Key mismatch")
             }
+        } catch (e: TagLostException) {
+            throw TagTransientException("Tag moved during authentication", e)
         } catch (e: IOException) {
-            throw TagAuthException("Auth failed")
+            throw TagTransientException("Tag connection interrupted during authentication", e)
         }
 
         sessionKey = genSessionKey(key, rndA, rndB)
@@ -158,8 +161,10 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
             if (!rndAResp.equals(rndA.rotl(8uL))) {
                 throw TagAuthException("Key mismatch")
             }
+        } catch (e: TagLostException) {
+            throw TagTransientException("Tag moved during authentication", e)
         } catch (e: IOException) {
-            throw TagAuthException("Auth failed")
+            throw TagTransientException("Tag connection interrupted during authentication", e)
         }
 
         chipState = type.state
@@ -368,23 +373,27 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     override fun connect() {
-        nfcaTag.connect()
+        try {
+            nfcaTag.connect()
+            nfcaTag.timeout = NFC_A_TIMEOUT_MS
+        } catch (e: TagLostException) {
+            throw TagTransientException("Tag moved before the scan could start", e)
+        } catch (e: IOException) {
+            throw TagTransientException("Failed to connect to the tag", e)
+        }
 
-        val resp = cmdGetVersion(nfcaTag)
-        if (!(resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv) ||
-                    resp.equals(0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv))) {
+        val resp = try {
+            cmdGetVersion(nfcaTag)
+        } catch (e: TagLostException) {
+            throw TagTransientException("Tag moved while reading the chip version", e)
+        } catch (e: IOException) {
+            throw TagTransientException("Failed to read the chip version", e)
+        }
+        if (!(resp.equals(MIFARE_ULTRALIGHT_AES_21_VERSION) || resp.equals(MIFARE_ULTRALIGHT_AES_22_VERSION))) {
             throw TagIncompatibleException("Not a Mifare Ultralight AES chip")
         }
 
         chipState = ChipState.ACTIVE
-
-        auth0State = try {
-            cmdRead(0x29u, nfcaTag).gbe(3uL)
-        } catch (e: IOException) {
-            null
-        } catch (e: ArrayIndexOutOfBoundsException) {
-            null
-        }
     }
 
     override fun close() {
@@ -410,4 +419,12 @@ class MifareUltralightAES(private val rawTag: Tag) : TagTechnology {
     }
 
     enum class ChipState { IDLE, ACTIVE, TRACEABLE, AUTHENTICATED }
+
+    private companion object {
+        const val NFC_A_TIMEOUT_MS = 500
+        val MIFARE_ULTRALIGHT_AES_21_VERSION =
+            0x00.bv + 0x04.bv + 0x03.bv + 0x01.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv
+        val MIFARE_ULTRALIGHT_AES_22_VERSION =
+            0x00.bv + 0x04.bv + 0x03.bv + 0x02.bv + 0x04.bv + 0x00.bv + 0x0f.bv + 0x03.bv
+    }
 }

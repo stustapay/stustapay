@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -49,6 +50,8 @@ fun SaleConfirm(
     val saleDraft by viewModel.saleStatus.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val saleConfig by viewModel.saleConfig.collectAsStateWithLifecycle()
+    val autoBookState by viewModel.autoBookState.collectAsStateWithLifecycle()
+    val booking by viewModel.booking.collectAsStateWithLifecycle()
     val config = saleConfig
 
     val checkedSale = saleDraft.checkedSale
@@ -87,6 +90,8 @@ fun SaleConfirm(
                     checkedSale = checkedSale,
                     status = status,
                     ready = config is SaleConfig.Ready,
+                    autoBookState = autoBookState,
+                    booking = booking,
                     onEdit = onEdit,
                     onConfirm = onConfirm,
                 )
@@ -199,6 +204,8 @@ private fun ColumnScope.SaleConfirmRail(
     checkedSale: de.stustapay.api.models.PendingSale,
     status: String,
     ready: Boolean,
+    autoBookState: SaleAutoBookState,
+    booking: Boolean,
     onEdit: () -> Unit,
     onConfirm: () -> Unit,
 ) {
@@ -215,16 +222,56 @@ private fun ColumnScope.SaleConfirmRail(
                 fontWeight = FontWeight.Medium,
             )
 
+            if (autoBookState.isActive) {
+                SaleAutoBookCountdownCard(
+                    remainingSeconds = autoBookState.remainingSeconds,
+                    progress = autoBookState.progress,
+                )
+            }
+
             OperatorActionButton(
                 text = stringResource(R.string.book_order),
                 onClick = onConfirm,
-                enabled = ready,
+                enabled = ready && !booking,
             )
             OperatorActionButton(
                 text = stringResource(R.string.edit),
                 onClick = onEdit,
-                enabled = ready,
+                enabled = ready && !booking,
                 primary = false,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SaleAutoBookCountdownCard(
+    remainingSeconds: Int,
+    progress: Float,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = OperatorPalette.panel,
+        border = BorderStroke(1.5.dp, OperatorPalette.panelBorder),
+        elevation = 0.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.sale_auto_book_countdown, remainingSeconds),
+                color = OperatorPalette.title,
+                fontSize = 16.sp,
+                lineHeight = 22.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            LinearProgressIndicator(
+                progress = progress.coerceIn(0f, 1f),
+                modifier = Modifier.fillMaxWidth(),
+                color = OperatorPalette.accent,
+                backgroundColor = OperatorPalette.panelBorder,
             )
         }
     }

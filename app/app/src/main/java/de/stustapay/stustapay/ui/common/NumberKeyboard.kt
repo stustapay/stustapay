@@ -8,13 +8,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import de.stustapay.libssp.ui.theme.NumberKeyboardStyle
 
@@ -23,10 +27,11 @@ fun NumberKeyboardButton(
     modifier: Modifier,
     text: String,
     onClick: () -> Unit,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    textStyle: TextStyle = NumberKeyboardStyle,
 ) {
     val buttonHeight = 75.dp
     val buttonPadding = 5.dp
-    val buttonContentStyle = NumberKeyboardStyle
     val buttonContentPadding = PaddingValues(
         horizontal = 8.dp,
         vertical = 2.dp,
@@ -37,9 +42,10 @@ fun NumberKeyboardButton(
             .height(buttonHeight)
             .padding(buttonPadding),
         contentPadding = buttonContentPadding,
+        colors = colors,
         onClick = onClick,
     ) {
-        Text(text, style = buttonContentStyle)
+        Text(text, style = textStyle)
     }
 }
 
@@ -49,8 +55,11 @@ fun NumberKeyboardButton(
 fun NumberKeyboard(
     onDigitEntered: (UInt) -> Unit = {},
     onClear: () -> Unit = {},
+    buttonColors: ButtonColors = ButtonDefaults.buttonColors(),
+    textColor: Color = NumberKeyboardStyle.color,
 ) {
     val haptic = LocalHapticFeedback.current
+    val textStyle = NumberKeyboardStyle.copy(color = textColor)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -71,7 +80,9 @@ fun NumberKeyboard(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onDigitEntered(nr)
                         },
-                        text = nr.toString()
+                        text = nr.toString(),
+                        colors = buttonColors,
+                        textStyle = textStyle,
                     )
                 }
             }
@@ -90,6 +101,8 @@ fun NumberKeyboard(
                     onDigitEntered(0u)
                 },
                 text = "00",
+                colors = buttonColors,
+                textStyle = textStyle,
             )
             NumberKeyboardButton(
                 modifier = Modifier
@@ -99,6 +112,8 @@ fun NumberKeyboard(
                     onDigitEntered(0u)
                 },
                 text = "0",
+                colors = buttonColors,
+                textStyle = textStyle,
             )
             NumberKeyboardButton(
                 modifier = Modifier
@@ -108,6 +123,8 @@ fun NumberKeyboard(
                     onClear()
                 },
                 text = "❌",
+                colors = buttonColors,
+                textStyle = textStyle,
             )
         }
     }

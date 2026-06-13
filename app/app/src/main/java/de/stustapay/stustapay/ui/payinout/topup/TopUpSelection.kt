@@ -280,6 +280,7 @@ private fun SelfServiceTopUpContent(
         amount = amount,
         onAmountUpdate = onAmountUpdate,
         onClear = onClear,
+        selfServiceStyle = true,
         onClose = onCustomAmountDialogClose,
     )
 
