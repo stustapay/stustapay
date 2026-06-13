@@ -146,7 +146,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         sx={{ maxWidth: 400 }}
       >
         {t("userTag.uploadPinCsv")}
-        <VisuallyHiddenInput type="file" onChange={(event) => handleCsvUpload(event)} />
+        <VisuallyHiddenInput type="file" accept="text/csv" onChange={(event) => handleCsvUpload(event)} />
       </Button>
 
       {values.tags.length > 0 && (
