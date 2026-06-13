@@ -23,7 +23,7 @@ class NfcHandler @Inject constructor(
     private val dataSource: NfcDataSource
 ) {
     private data class ReaderConfig(
-        val presenceCheckDelayMs: Int = 750,
+        val presenceCheckDelayMs: Int = 300,
         val maxReadAttempts: Int = 4
     )
 
