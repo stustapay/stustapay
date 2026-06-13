@@ -36,7 +36,7 @@ export const translations = {
   tillProfiles: "Till Profiles",
   registerStockings: "Cash Register Stockings",
   registers: "Cash Registers",
-  userToRoles: "User to Roles",
+  userToRoles: "Role Assignments",
   common: {
     id: "ID",
     node: "Node",
