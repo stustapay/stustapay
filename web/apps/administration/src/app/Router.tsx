@@ -86,7 +86,6 @@ import {
   UserRoleUpdate,
   UserUpdate,
   UserToRoleList,
-  UserToRoleCreate,
   UserRoleDetail,
   UserToRoleUpdate,
 } from "./routes/users";
@@ -528,7 +527,7 @@ const router = createBrowserRouter([
               },
               {
                 path: "new",
-                element: <UserToRoleCreate />,
+                element: <UserToRoleUpdate />,
               },
               {
                 path: ":userId/edit",

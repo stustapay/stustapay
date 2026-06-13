@@ -9,20 +9,53 @@ import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } 
 import { withPrivilegeGuard } from "@/app/layout";
 import { UserToRoleRoutes } from "@/app/routes";
 import { CreateLayout } from "@/components";
-import { RoleSelect } from "@/components/features";
+import { RoleSelect, UserSelect } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
 
 import { UserRoleAssignmentsSection } from "./UserRoleAssignmentsSection";
 
-const UpdateUserToRolesSchema = z.object({
+const UserToRoleSchema = z.object({
   user_id: z.number().int(),
   role_ids: z.array(z.number().int()),
 });
 
-const UserToRoleUpdateForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors, setFieldValue, touched }) => {
+const emptyInitialValues: NewUserToRoles = {
+  user_id: undefined as unknown as number,
+  role_ids: [],
+};
+
+const UserToRoleForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors, setFieldValue, touched }) => {
   const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
+  const { data: userToRoles } = useListUserToRoleQuery({ nodeId: currentNode.id });
+
+  const changeUserId = React.useCallback(
+    (userId: number | undefined) => {
+      if (!userToRoles) {
+        return;
+      }
+      setFieldValue("user_id", userId);
+      if (userId != null) {
+        const userRoles = userToRoles.find((u) => u.node_id === currentNode.id && u.user_id === userId);
+        if (userRoles) {
+          setFieldValue("role_ids", userRoles.role_ids);
+        } else {
+          setFieldValue("role_ids", []);
+        }
+      }
+    },
+    [userToRoles, setFieldValue, currentNode.id]
+  );
+
   return (
     <>
+      <UserSelect
+        label={t("user.user")}
+        value={values.user_id}
+        onChange={changeUserId}
+        error={touched.user_id && !!errors.user_id}
+        helperText={(touched.user_id && errors.user_id) as string}
+      />
       <RoleSelect
         label={t("user.roles")}
         value={values.role_ids}
@@ -39,38 +72,38 @@ export const UserToRoleUpdate: React.FC = withPrivilegeGuard("node_administratio
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [updateUserToRoles] = useUpdateUserToRolesMutation();
-  const { userId: userIdP } = useParams();
-  const userId = Number(userIdP);
-  const { userToRoles } = useListUserToRoleQuery(
+  const { userId: userIdParam } = useParams();
+  const userIdFromRoute = userIdParam != null ? Number(userIdParam) : undefined;
+  const isEditMode = userIdFromRoute != null && Number.isFinite(userIdFromRoute);
+  const { data: userToRolesList, isLoading } = useListUserToRoleQuery(
     { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        userToRoles: data
-          ? (data.find((u) => u.node_id === currentNode.id && u.user_id === userId) ?? {
-              user_id: userId,
-              node_id: currentNode.id,
-              role_ids: [],
-            })
-          : undefined,
-      }),
-    }
+    { skip: !isEditMode }
   );
 
-  if (!userToRoles) {
+  if (isEditMode && isLoading) {
     return <Loading />;
   }
+
+  const initialValues: NewUserToRoles = isEditMode
+    ? (() => {
+        const existing = userToRolesList?.find(
+          (u) => u.node_id === currentNode.id && u.user_id === userIdFromRoute
+        );
+        return {
+          user_id: userIdFromRoute,
+          role_ids: existing?.role_ids ?? [],
+        };
+      })()
+    : emptyInitialValues;
 
   return (
     <CreateLayout
       title={t("userToRole.create", { node: currentNode.name })}
-      initialValues={userToRoles}
-      validationSchema={UpdateUserToRolesSchema}
+      initialValues={initialValues}
+      validationSchema={UserToRoleSchema}
       successRoute={UserToRoleRoutes.list()}
-      onSubmit={(u) =>
-        updateUserToRoles({ nodeId: currentNode.id, newUserToRoles: { user_id: userId, role_ids: u.role_ids } })
-      }
-      form={UserToRoleUpdateForm}
+      onSubmit={(u) => updateUserToRoles({ nodeId: currentNode.id, newUserToRoles: u })}
+      form={UserToRoleForm}
     />
   );
 });
