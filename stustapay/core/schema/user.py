@@ -65,11 +65,18 @@ class RoleToNode(BaseModel):
 class NewUserToRoles(BaseModel):
     user_id: int
     role_ids: list[int]
-    terminal_only: bool = False
 
 
 class UserToRoles(NewUserToRoles):
     node_id: int
+
+
+class UserRoleAssignment(BaseModel):
+    user_id: int
+    node_id: int
+    node_name: str
+    role_ids: list[int]
+    roles: list[UserRole]
 
 
 class CheckLoginResult(BaseModel):

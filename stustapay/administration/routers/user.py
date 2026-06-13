@@ -15,6 +15,7 @@ from stustapay.core.schema.user import (
     NodePrivilege,
     User,
     UserRole,
+    UserRoleAssignment,
     UserToRoles,
 )
 
@@ -89,6 +90,13 @@ async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextU
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return user
+
+
+@user_router.get("/{user_id}/role-assignments", response_model=list[UserRoleAssignment])
+async def list_user_role_assignments(
+    user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: int
+):
+    return await user_service.list_role_assignments_for_user(token=token, user_id=user_id, node_id=node_id)
 
 
 @user_router.post("/{user_id}", response_model=User)

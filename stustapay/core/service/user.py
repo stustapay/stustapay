@@ -20,6 +20,7 @@ from stustapay.core.schema.user import (
     RoleToNode,
     User,
     UserRole,
+    UserRoleAssignment,
     UserToRoles,
     UserWithoutId,
     format_user_tag_uid,
@@ -56,7 +57,7 @@ async def fetch_user_to_roles(*, conn: Connection, node: Node, user_id: int) -> 
         UserToRoles, "select * from user_to_roles_aggregated where node_id = $1 and user_id = $2", node.id, user_id
     )
     if curr_user_to_role is None:
-        return UserToRoles(node_id=node.id, user_id=user_id, role_ids=[], terminal_only=False)
+        return UserToRoles(node_id=node.id, user_id=user_id, role_ids=[])
     return curr_user_to_role
 
 
@@ -591,6 +592,54 @@ class UserService(Service[Config]):
         return await conn.fetch_many(
             UserToRoles, "select * from user_to_roles_aggregated where node_id = any($1)", node.ids_to_root
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
+    async def list_role_assignments_for_user(
+        self, *, conn: Connection, node: Node, user_id: int
+    ) -> list[UserRoleAssignment]:
+        # fetch the user to ensure it exists and is visible from the node we are querying for
+        await fetch_user(conn=conn, node=node, user_id=user_id)
+
+        class UserToRolesWithNodeName(UserToRoles):
+            node_name: str
+
+        assignments = await conn.fetch_many(
+            UserToRolesWithNodeName,
+            "select utr.*, n.name as node_name "
+            "from user_to_roles_aggregated utr "
+            "join node n on n.id = utr.node_id "
+            "where utr.user_id = $1 "
+            "order by n.path",
+            user_id,
+        )
+        if len(assignments) == 0:
+            return []
+
+        role_ids = {role_id for assignment in assignments for role_id in assignment.role_ids}
+        roles_by_id: dict[int, UserRole] = {}
+        if len(role_ids) > 0:
+            roles = await conn.fetch_many(
+                UserRole,
+                "select * from user_role_with_privileges where id = any($1)",
+                list(role_ids),
+            )
+            roles_by_id = {role.id: role for role in roles}
+
+        return [
+            UserRoleAssignment(
+                user_id=assignment.user_id,
+                node_id=assignment.node_id,
+                node_name=assignment.node_name,
+                role_ids=assignment.role_ids,
+                roles=sorted(
+                    (roles_by_id[role_id] for role_id in assignment.role_ids if role_id in roles_by_id),
+                    key=lambda role: role.name.lower(),
+                ),
+            )
+            for assignment in assignments
+        ]
 
     @with_db_transaction
     @requires_node()

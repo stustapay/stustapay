@@ -614,6 +614,69 @@
         }
       }
     },
+    "/users/{user_id}/role-assignments": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List User Role Assignments",
+        "operationId": "list_user_role_assignments",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserRoleAssignment"
+                  },
+                  "title": "Response List User Role Assignments Users  User Id  Role Assignments Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/{user_id}/change-password": {
       "post": {
         "tags": [
@@ -12063,11 +12126,6 @@
             },
             "type": "array",
             "title": "Role Ids"
-          },
-          "terminal_only": {
-            "type": "boolean",
-            "title": "Terminal Only",
-            "default": false
           }
         },
         "type": "object",
@@ -16644,6 +16702,45 @@
         ],
         "title": "UserRole"
       },
+      "UserRoleAssignment": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
+          "role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Role Ids"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/UserRole"
+            },
+            "type": "array",
+            "title": "Roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "node_id",
+          "node_name",
+          "role_ids",
+          "roles"
+        ],
+        "title": "UserRoleAssignment"
+      },
       "UserTagAccountAssociation": {
         "properties": {
           "account_id": {
@@ -16862,11 +16959,6 @@
             },
             "type": "array",
             "title": "Role Ids"
-          },
-          "terminal_only": {
-            "type": "boolean",
-            "title": "Terminal Only",
-            "default": false
           },
           "node_id": {
             "type": "integer",

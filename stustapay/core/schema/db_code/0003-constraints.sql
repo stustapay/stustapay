@@ -363,25 +363,3 @@ alter table event add constraint end_date_gt_start_date
 
 alter table customer_info add constraint account_name_charset
     check ( account_name ~ '^[a-zA-Z0-9\.''\:\?,\-\(\)\/ ÄäÖöÜüßÉéèàùâáêėîíôóûÇğçčćëİïÁϋğÑñãŞÇşı&\$%]+$' );
-
-create or replace function check_user_to_role_terminals_only_at_event_node(
-    node_id bigint,
-    terminal_only bool
-) returns boolean as
-$$
-<<locals>> declare
-    is_event_node bool;
-begin
-    if not terminal_only then
-        return true;
-    end if;
-
-    select n.event_id is not null into locals.is_event_node
-    from node n
-    where n.id = check_user_to_role_terminals_only_at_event_node.node_id;
-
-    return locals.is_event_node;
-end
-$$ language plpgsql
-    set search_path = "$user", public;
-alter table user_to_role add constraint user_to_role_terminals_only_at_event_node check(check_user_to_role_terminals_only_at_event_node(node_id, terminal_only));

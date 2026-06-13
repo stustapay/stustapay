@@ -60,11 +60,10 @@ create view user_to_roles_aggregated as
     select
         utr.user_id,
         utr.node_id,
-        utr.terminal_only,
         array_agg(utr.role_id) as role_ids
     from
         user_to_role utr
-    group by utr.user_id, utr.node_id, utr.terminal_only;
+    group by utr.user_id, utr.node_id;
 
 create view account_with_history as
     select

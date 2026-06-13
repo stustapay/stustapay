@@ -43,3 +43,5 @@ update user_role_to_node_privilege set privilege = 'allow_role_assignment'
 where privilege = 'user_management';
 
 delete from privilege where name = 'user_management';
+
+alter table user_to_role drop column terminal_only;

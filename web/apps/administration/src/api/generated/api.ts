@@ -136,6 +136,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      listUserRoleAssignments: build.query<ListUserRoleAssignmentsApiResponse, ListUserRoleAssignmentsApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/role-assignments`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["users"],
+      }),
       changeUserPassword: build.mutation<ChangeUserPasswordApiResponse, ChangeUserPasswordApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}/change-password`,
@@ -1505,6 +1514,11 @@ export type DeleteUserApiArg = {
   userId: number;
   nodeId: number;
 };
+export type ListUserRoleAssignmentsApiResponse = /** status 200 Successful Response */ UserRoleAssignment[];
+export type ListUserRoleAssignmentsApiArg = {
+  userId: number;
+  nodeId: number;
+};
 export type ChangeUserPasswordApiResponse = /** status 200 Successful Response */ UserRead;
 export type ChangeUserPasswordApiArg = {
   userId: number;
@@ -2309,9 +2323,6 @@ export type UpdateUserPayload = {
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
 };
-export type ChangeUserPasswordPayload = {
-  new_password: string;
-};
 export type UserRole = {
   name: string;
   is_privileged?: boolean;
@@ -2319,6 +2330,16 @@ export type UserRole = {
   node_privileges: NodePrivilege[];
   id: number;
   node_id: number;
+};
+export type UserRoleAssignment = {
+  user_id: number;
+  node_id: number;
+  node_name: string;
+  role_ids: number[];
+  roles: UserRole[];
+};
+export type ChangeUserPasswordPayload = {
+  new_password: string;
 };
 export type NormalizedListUserRoleInt = {
   ids: number[];
@@ -2340,13 +2361,11 @@ export type UpdateUserRolePrivilegesPayload = {
 export type UserToRoles = {
   user_id: number;
   role_ids: number[];
-  terminal_only?: boolean;
   node_id: number;
 };
 export type NewUserToRoles = {
   user_id: number;
   role_ids: number[];
-  terminal_only?: boolean;
 };
 export type TaxRate = {
   name: string;
@@ -3724,6 +3743,8 @@ export const {
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useListUserRoleAssignmentsQuery,
+  useLazyListUserRoleAssignmentsQuery,
   useChangeUserPasswordMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,

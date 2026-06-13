@@ -7,6 +7,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
 import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import { UserRoleAssignmentsSection } from "@/app/routes/users";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
@@ -72,6 +73,7 @@ export const UserDetail: React.FC = () => {
           <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
         )}
       </DetailView>
+      <UserRoleAssignmentsSection userId={Number(userId)} />
     </DetailLayout>
   );
 };

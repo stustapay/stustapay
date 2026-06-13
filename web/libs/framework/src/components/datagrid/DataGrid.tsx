@@ -6,7 +6,6 @@ import {
   GridColTypeDef,
 } from "@mui/x-data-grid";
 import { GridBaseColDef } from "@mui/x-data-grid/internals";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
 
 import { createCurrencyFormatter } from "../../core/currency/createCurrencyFormatter";
@@ -53,7 +52,6 @@ export const DataGrid = <R extends GridValidRowModel = any>({ columns, ...props 
       disableColumnSelector
       disableDensitySelector
       showToolbar
-      // slots={{ toolbar: Toolbar }}
       columns={modifiedColumns}
       {...props}
     />

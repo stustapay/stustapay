@@ -616,6 +616,8 @@ export const translations = {
     description: "Description",
     tagId: "User Tag ID",
     noTagAssigned: "No Tag assigned",
+    roleAssignments: "Role Assignments",
+    noRoleAssignments: "No role assignments",
     changePassword: {
       title: "Change password",
       new_password: "New Password",
@@ -699,6 +701,7 @@ export const translations = {
   userToRole: {
     user: "User",
     role: "Role",
+    terminalOnly: "Terminal only",
     create: "Associate a user to a role for node {{node}}",
     deleteAssociation: "Remove Role association",
     deleteAssociationDescription: "Remove association",
