@@ -66,7 +66,7 @@ export const PayoutInfo: React.FC = () => {
         });
       }
     }),
-    email: z.string().email(),
+    email: z.string().email({ pattern: z.regexes.html5Email }),
     privacy_policy: z.boolean().refine((val) => val, {
       message: t("payout.mustAcceptPrivacyPolicy"),
     }),
