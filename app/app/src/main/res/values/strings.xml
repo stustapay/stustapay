@@ -48,6 +48,8 @@
     <string name="customer_display_select_action">Please make a selection</string>
     <string name="customer_display_scan_title">Please scan your chip/tag</string>
     <string name="customer_display_scan_instruction">Hold your chip to the reader</string>
+    <string name="customer_display_scan_reader_right">Hold your chip against the right side</string>
+    <string name="customer_display_scan_here">HERE</string>
     <string name="customer_display_insufficient_funds_title">⚠️ INSUFFICIENT BALANCE ⚠️</string>
     <string name="customer_display_required_amount">Required amount: %1$.2f €</string>
     <string name="customer_display_available_balance">Available balance: %1$.2f €</string>
@@ -164,6 +166,8 @@
     <string name="topup_step_payment">Step 3: Card Payment</string>
     <string name="topup_ready_to_scan">Ready to scan your chip</string>
     <string name="topup_please_wait">Please wait while payment is processing...</string>
+    <string name="topup_prepare_card_title">Preparing card payment</string>
+    <string name="topup_prepare_card_message">Please wait a moment. The card terminal is opening.</string>
     <string name="topup_press_scan_pay">Now start card payment</string>
     <string name="selfservice_custom_amount">Custom amount</string>
     <string name="topup_success_title">Top-up successful</string>

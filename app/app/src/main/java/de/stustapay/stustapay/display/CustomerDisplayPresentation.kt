@@ -211,7 +211,7 @@ class CustomerDisplayPresentation(
             )
             orientation = android.widget.LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER
-            setPadding(dp(28), dp(28), dp(28), dp(24))
+            setPadding(dp(28), dp(28), 0, dp(24))
             background = android.graphics.drawable.GradientDrawable().apply {
                 orientation = android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM
                 colors = intArrayOf(
@@ -230,12 +230,14 @@ class CustomerDisplayPresentation(
             }
             orientation = android.widget.LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
+            clipChildren = false
+            clipToPadding = false
             background = android.graphics.drawable.GradientDrawable().apply {
                 setColor(android.graphics.Color.WHITE)
                 cornerRadius = dp(26).toFloat()
                 setStroke(dp(2), android.graphics.Color.parseColor("#BFD1F3"))
             }
-            setPadding(dp(26), dp(26), dp(26), dp(26))
+            setPadding(dp(26), dp(26), 0, dp(26))
         }
 
         val copyColumn = android.widget.LinearLayout(context).apply {
@@ -273,9 +275,22 @@ class CustomerDisplayPresentation(
         copyColumn.addView(titleText)
         copyColumn.addView(instructionsText)
 
+        val arrowText = android.widget.TextView(context).apply {
+            text = "→"
+            textSize = 72f
+            setTextColor(android.graphics.Color.parseColor("#FFB74D"))
+            typeface = Typeface.DEFAULT_BOLD
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(dp(18), 0, dp(10), 0)
+            }
+        }
+
         val iconPanel = android.widget.FrameLayout(context).apply {
             layoutParams = android.widget.LinearLayout.LayoutParams(dp(311), dp(445)).apply {
-                setMargins(dp(32), 0, 0, 0)
+                setMargins(0, 0, -dp(52), 0)
             }
             background = android.graphics.drawable.GradientDrawable().apply {
                 setColor(android.graphics.Color.parseColor("#0D1B2A"))
@@ -284,10 +299,17 @@ class CustomerDisplayPresentation(
         }
 
         iconPanel.addView(NfcSymbolView(context).apply {
-            layoutParams = FrameLayout.LayoutParams(dp(148), dp(148), android.view.Gravity.CENTER)
+            layoutParams = FrameLayout.LayoutParams(
+                dp(148),
+                dp(148),
+                android.view.Gravity.CENTER
+            ).apply {
+                setMargins(0, 0, dp(18), 0)
+            }
         })
 
         card.addView(copyColumn)
+        card.addView(arrowText)
         card.addView(iconPanel)
         container.addView(card)
         rootView?.addView(container)

@@ -25,6 +25,8 @@
     <string name="customer_display_select_action">Maak een keuze</string>
     <string name="customer_display_scan_title">Scan uw chip of tag</string>
     <string name="customer_display_scan_instruction">Houd uw chip tegen de lezer</string>
+    <string name="customer_display_scan_reader_right">Houd uw chip rechts tegen het display</string>
+    <string name="customer_display_scan_here">HIER</string>
     <string name="customer_display_insufficient_funds_title">⚠️ ONVOLDOENDE SALDO ⚠️</string>
     <string name="customer_display_required_amount">Benodigd bedrag: %1$.2f €</string>
     <string name="customer_display_available_balance">Beschikbaar saldo: %1$.2f €</string>
@@ -56,6 +58,8 @@
     <string name="topup_step_payment">Stap 3: Kaartbetaling</string>
     <string name="topup_ready_to_scan">Klaar om uw chip te scannen</string>
     <string name="topup_please_wait">Even geduld, de betaling wordt verwerkt...</string>
+    <string name="topup_prepare_card_title">Kaartbetaling wordt voorbereid</string>
+    <string name="topup_prepare_card_message">Wacht even. De kaartterminal wordt geopend.</string>
     <string name="topup_press_scan_pay">Start nu de kaartbetaling</string>
     <string name="selfservice_custom_amount">Eigen bedrag</string>
     <string name="topup_success_title">Opwaarderen gelukt</string>

@@ -47,6 +47,8 @@
     <string name="customer_display_select_action">Bitte treffen Sie eine Auswahl</string>
     <string name="customer_display_scan_title">Bitte scannen Sie Ihren Chip oder Tag</string>
     <string name="customer_display_scan_instruction">Halten Sie Ihren Chip an das Lesegerät</string>
+    <string name="customer_display_scan_reader_right">Chip rechts am Display anhalten</string>
+    <string name="customer_display_scan_here">HIER</string>
     <string name="customer_display_insufficient_funds_title">⚠️ NICHT GENUG GUTHABEN ⚠️</string>
     <string name="customer_display_required_amount">Benötigter Betrag: %1$.2f €</string>
     <string name="customer_display_available_balance">Verfügbares Guthaben: %1$.2f €</string>
@@ -163,6 +165,8 @@
     <string name="topup_step_payment">Schritt 3: Kartenzahlung</string>
     <string name="topup_ready_to_scan">Bereit zum Scannen Ihres Chips</string>
     <string name="topup_please_wait">Bitte warten, Zahlung wird verarbeitet...</string>
+    <string name="topup_prepare_card_title">Kartenzahlung wird vorbereitet</string>
+    <string name="topup_prepare_card_message">Bitte warten Sie einen Moment. Das Kartenterminal wird geöffnet.</string>
     <string name="topup_press_scan_pay">Nun EC-Zahlung starten</string>
     <string name="selfservice_custom_amount">Eigener Betrag</string>
     <string name="topup_success_title">Aufladung erfolgreich</string>

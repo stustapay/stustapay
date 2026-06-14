@@ -72,6 +72,8 @@ class TopUpViewModel @Inject constructor(
     val topUpState = _topUpState.asStateFlow()
     private val _uiLocked = MutableStateFlow(false)
     val uiLocked = _uiLocked.asStateFlow()
+    private val _waitingForSumUpLaunch = MutableStateFlow(false)
+    val waitingForSumUpLaunch = _waitingForSumUpLaunch.asStateFlow()
 
     // when we finished a sale
     private val _topUpCompleted = MutableStateFlow<CompletedTopUp?>(null)
@@ -137,6 +139,7 @@ class TopUpViewModel @Inject constructor(
         _topUpState.update { TopUpState() }
         _status.update { context.getString(R.string.operator_status_ready) }
         _uiLocked.update { false }
+        _waitingForSumUpLaunch.update { false }
         
         // Reset customer display to welcome state
         customerDisplayManager.updateState(CustomerDisplayState.Welcome)
@@ -258,12 +261,14 @@ class TopUpViewModel @Inject constructor(
             }
 
             _status.update { context.getString(R.string.topup_status_remove_chip_start_ec) }
+            _waitingForSumUpLaunch.update { true }
 
             // workaround so the sumup activity is not in foreground too quickly.
             // when it's active, nfc intents are no longer captured by us, apparently,
             // and then the system nfc handler spawns the default handler (e.g. stustapay) again.
             // https://stackoverflow.com/questions/60868912
             delay(800)
+            _waitingForSumUpLaunch.update { false }
 
             // perform ec transaction
             when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
@@ -286,6 +291,7 @@ class TopUpViewModel @Inject constructor(
             bookTopUp(topUpTypeCard(), newTopUp)
         } finally {
             _uiLocked.update { false }
+            _waitingForSumUpLaunch.update { false }
         }
     }
 
@@ -405,6 +411,7 @@ class TopUpViewModel @Inject constructor(
 
     fun dismissFailure() {
         _uiLocked.update { false }
+        _waitingForSumUpLaunch.update { false }
         navigateTo(TopUpPage.Selection)
     }
 

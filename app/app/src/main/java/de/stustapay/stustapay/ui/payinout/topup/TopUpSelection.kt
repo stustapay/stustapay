@@ -20,6 +20,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -74,6 +75,7 @@ fun TopUpSelection(
     val topUpConfig by viewModel.terminalLoginState.collectAsStateWithLifecycle()
     val requestActive by viewModel.requestActive.collectAsStateWithLifecycle()
     val uiLocked by viewModel.uiLocked.collectAsStateWithLifecycle()
+    val waitingForSumUpLaunch by viewModel.waitingForSumUpLaunch.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val isSelfServiceTopUp = topUpConfig.hasOnlyTopUpPrivilege()
@@ -113,6 +115,11 @@ fun TopUpSelection(
         val resetIdleTimer = {
             setLastActivityTimestamp(SystemClock.elapsedRealtime())
         }
+
+        if (waitingForSumUpLaunch) {
+            SelfServiceTopUpPreparingPaymentDialog()
+        }
+
         val leaveSelfService = {
             paymentSelectionViewModel.resetCustomerDisplay()
             scanState.close()
@@ -249,6 +256,50 @@ private fun SelfServiceTopUpErrorDialog(
                     modifier = Modifier.fillMaxWidth(),
                     primary = false,
                     fontSize = profile.buttonTextSize
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelfServiceTopUpPreparingPaymentDialog() {
+    val profile = rememberSelfServiceDeviceProfile()
+
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+        )
+    ) {
+        SelfServicePanel(
+            modifier = Modifier.widthIn(min = 320.dp, max = 560.dp),
+            borderColor = SelfServicePalette.accent,
+            backgroundColor = SelfServicePalette.highlightedPanel
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(if (profile.isSmallScreen) 34.dp else 42.dp)
+                        .border(4.dp, SelfServicePalette.accent, CircleShape)
+                )
+                Text(
+                    text = stringResource(R.string.topup_prepare_card_title),
+                    color = SelfServicePalette.title,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = if (profile.isSmallScreen) 22.sp else 28.sp,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = stringResource(R.string.topup_prepare_card_message),
+                    color = SelfServicePalette.subtitle,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = if (profile.isSmallScreen) 16.sp else 18.sp,
+                    textAlign = TextAlign.Center
                 )
             }
         }
