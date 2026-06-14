@@ -38,7 +38,7 @@ export const PayoutSettingsSchema = z
     payout_done_message: zodExtension.undefineableString(),
     payout_registered_subject: zodExtension.undefineableString(),
     payout_registered_message: zodExtension.undefineableString(),
-    payout_sender: z.string().email().optional(),
+    payout_sender: z.string().email({ pattern: z.regexes.html5Email }).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.sepa_enabled) {

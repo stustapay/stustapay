@@ -17,7 +17,7 @@ const requiredIssue = {
 export const MailSettingsSchema = z
   .object({
     email_enabled: z.boolean(),
-    email_default_sender: z.string().email().optional().nullable(),
+    email_default_sender: z.string().email({ pattern: z.regexes.html5Email }).optional().nullable(),
     email_smtp_host: z.string().optional().nullable(),
     email_smtp_port: z.number().int().optional().nullable(),
     email_smtp_username: z.string().optional().nullable(),

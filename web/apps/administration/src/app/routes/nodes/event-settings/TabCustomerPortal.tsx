@@ -11,7 +11,7 @@ import { RestrictedEventSettings, useUpdateEventMutation } from "@/api";
 
 export const CustomerPortalSettingsSchema = z.object({
   customer_portal_url: z.string().url(),
-  customer_portal_contact_email: z.string().email(),
+  customer_portal_contact_email: z.string().email({ pattern: z.regexes.html5Email }),
   customer_portal_about_page_url: z.string().url(),
   customer_portal_data_privacy_url: z.string().url(),
   customer_portal_feedback_url: z.string().url().optional(),
