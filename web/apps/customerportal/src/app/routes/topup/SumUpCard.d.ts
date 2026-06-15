@@ -17,3 +17,7 @@ export interface SumUpCardInstance {
 export interface SumUpCard {
   mount: (cfg: CardOptions) => SumUpCardInstance;
 }
+
+declare global {
+  const SumUpCard: SumUpCard;
+}

@@ -4,12 +4,11 @@ import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from hashlib import sha256
 
 import asyncpg
 from pydantic import BaseModel
 from sftkit.database import Connection
-from sftkit.error import AccessDenied, InvalidArgument
+from sftkit.error import InvalidArgument
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -27,10 +26,12 @@ from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_customer
+from stustapay.core.service.customer.common import fetch_shared_topup_link
 from stustapay.core.service.order.pending_order import (
     fetch_order_by_uuid_for_update,
     fetch_pending_online_topup_for_customer,
     fetch_pending_orders,
+    is_shared_topup_order,
     load_pending_sale,
     load_pending_ticket_sale,
     load_pending_topup,
@@ -57,14 +58,11 @@ from stustapay.payment.sumup.api import (
 SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
 SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 SUMUP_PENDING_ORDER_TIMEOUT = timedelta(minutes=5)  # Time after which pending orders are considered failed
+MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK = 5
 
 
 class CreateCheckout(BaseModel):
     amount: float
-
-
-def hash_shared_topup_token(token: str) -> str:
-    return sha256(token.encode("utf-8")).hexdigest()
 
 
 def validate_shared_topup_contributor_name(contributor_name: str) -> str:
@@ -149,68 +147,6 @@ class SumupService(Service[Config]):
 
         self.logger.error(f"Could not confirm local booking for paid order {pending_order.uuid}")
         return SumUpCheckoutStatus.PENDING
-
-    async def _fetch_shared_topup_link(
-        self,
-        *,
-        conn: Connection,
-        token: str,
-        customer_portal_base_url: str | None = None,
-    ):
-        link = await conn.fetchrow(
-            "select stl.*, c.node_id, c.user_tag_uid, c.balance, c.is_vip, n.event_node_id "
-            "from shared_topup_link stl "
-            "join customer c on c.id = stl.customer_account_id "
-            "join node n on n.id = c.node_id "
-            "where stl.token_hash = $1 "
-            "  and stl.revoked_at is null "
-            "  and (stl.expires_at is null or stl.expires_at > now())",
-            hash_shared_topup_token(token),
-        )
-        if link is None:
-            raise AccessDenied("Invalid shared topup link")
-
-        if customer_portal_base_url is not None:
-            portal_event_node_id = await conn.fetchval(
-                "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1",
-                customer_portal_base_url,
-            )
-            if portal_event_node_id is None or portal_event_node_id != link["event_node_id"]:
-                raise AccessDenied("Shared topup link does not match current customer portal")
-
-        return link
-
-    async def _fetch_shared_topup_link_for_order(
-        self,
-        *,
-        conn: Connection,
-        token: str,
-        order_uuid: uuid.UUID,
-        customer_portal_base_url: str | None = None,
-    ):
-        link = await conn.fetchrow(
-            "select stl.*, sto.customer_account_id, c.node_id, c.user_tag_uid, c.balance, c.is_vip, n.event_node_id "
-            "from shared_topup_order sto "
-            "join shared_topup_link stl on stl.id = sto.link_id "
-            "join customer c on c.id = sto.customer_account_id "
-            "join node n on n.id = c.node_id "
-            "where stl.token_hash = $1 "
-            "  and sto.order_uuid = $2",
-            hash_shared_topup_token(token),
-            order_uuid,
-        )
-        if link is None:
-            raise AccessDenied("Invalid shared topup link")
-
-        if customer_portal_base_url is not None:
-            portal_event_node_id = await conn.fetchval(
-                "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1",
-                customer_portal_base_url,
-            )
-            if portal_event_node_id is None or portal_event_node_id != link["event_node_id"]:
-                raise AccessDenied("Shared topup link does not match current customer portal")
-
-        return link
 
     async def get_available_payment_methods_for_node(self, conn: Connection, node_id: int) -> list[str]:
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
@@ -407,6 +343,8 @@ class SumupService(Service[Config]):
             topup = load_pending_topup(pending_order)
             if topup.customer_account_id != current_customer.id:
                 raise InvalidArgument("Invalid order uuid")
+            if await is_shared_topup_order(conn=conn, order_uuid=order_uuid):
+                return SumUpCheckoutStatus.FAILED
             if pending_order.status == PendingOrderStatus.booked:
                 return SumUpCheckoutStatus.PAID
             if pending_order.status == PendingOrderStatus.cancelled:
@@ -586,7 +524,7 @@ class SumupService(Service[Config]):
         customer_portal_base_url: str | None = None,
     ) -> tuple[SumUpCheckout, uuid.UUID]:
         contributor_name = validate_shared_topup_contributor_name(contributor_name)
-        link = await self._fetch_shared_topup_link(
+        link = await fetch_shared_topup_link(
             conn=conn,
             token=token,
             customer_portal_base_url=customer_portal_base_url,
@@ -610,6 +548,17 @@ class SumupService(Service[Config]):
             raise InvalidArgument("Cent amounts are not allowed")
 
         await conn.fetchval("select id from account where id = $1 for update", link["customer_account_id"])
+        pending_checkout_count = await conn.fetchval(
+            "select count(*) "
+            "from shared_topup_order sto "
+            "join pending_sumup_order pso on pso.uuid = sto.order_uuid "
+            "where sto.link_id = $1 and pso.status = $2",
+            link["id"],
+            PendingOrderStatus.pending.value,
+        )
+        if pending_checkout_count >= MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK:
+            raise InvalidArgument("Too many pending shared topup checkouts")
+
         customer = await conn.fetch_one(
             Customer,
             "select c.* from customer c where c.id = $1",
@@ -669,7 +618,7 @@ class SumupService(Service[Config]):
         order_uuid: uuid.UUID,
         customer_portal_base_url: str | None = None,
     ) -> SumUpCheckoutStatus:
-        link = await self._fetch_shared_topup_link_for_order(
+        link = await fetch_shared_topup_link(
             conn=conn,
             token=token,
             order_uuid=order_uuid,
@@ -688,6 +637,17 @@ class SumupService(Service[Config]):
         if pending_order.status == PendingOrderStatus.booked:
             return SumUpCheckoutStatus.PAID
         if pending_order.status == PendingOrderStatus.cancelled:
+            try:
+                sumup_checkout = await self._fetch_checkout_for_pending_order(conn=conn, pending_order=pending_order)
+            except SumUpError:
+                self.logger.exception("SumUp API error while checking cancelled shared topup order %s", order_uuid)
+                return SumUpCheckoutStatus.FAILED
+            except Exception:
+                self.logger.exception("Unexpected error checking cancelled shared topup order %s", order_uuid)
+                return SumUpCheckoutStatus.FAILED
+
+            if sumup_checkout and sumup_checkout.status == SumUpCheckoutStatus.PAID:
+                return await self._book_paid_online_topup_for_checkout(conn=conn, pending_order=pending_order)
             return SumUpCheckoutStatus.FAILED
 
         current_time = datetime.now(timezone.utc)

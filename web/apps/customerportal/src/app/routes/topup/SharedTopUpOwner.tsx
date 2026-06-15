@@ -6,8 +6,9 @@ import {
 } from "@/api";
 import { PageContainer } from "@/components";
 import { useCurrencyFormatter } from "@/hooks";
-import { ContentCopy as ContentCopyIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { ContentCopy as ContentCopyIcon, Delete as DeleteIcon, Sync as SyncIcon } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   IconButton,
@@ -40,28 +41,36 @@ export const SharedTopUpOwner: React.FC = () => {
   );
 
   const [newSharedTopupLink, setNewSharedTopupLink] = React.useState<{ linkId: number; url: string } | null>(null);
+  const [linkLabel, setLinkLabel] = React.useState("");
 
   const copySharedTopupUrl = (url: string) => {
-    navigator.clipboard.writeText(url)
+    navigator.clipboard
+      .writeText(url)
       .then(() => toast.success(t("topup.shared.copied")))
       .catch(() => toast.error(t("topup.shared.copyFailed")));
   };
 
-  const createSharedLink = () => {
-    createSharedTopupLink({ createSharedTopupLinkPayload: {} })
+  const createSharedLink = (label = linkLabel, notify = true) => {
+    const trimmedLabel = label.trim();
+    return createSharedTopupLink({ createSharedTopupLinkPayload: { label: trimmedLabel === "" ? null : trimmedLabel } })
       .unwrap()
       .then((link) => {
         if (!link.token) {
-          return;
+          return null;
         }
         const url = `${window.location.origin}/shared-topup/${link.token}`;
         setNewSharedTopupLink({ linkId: link.id, url });
+        setLinkLabel("");
         void navigator.clipboard.writeText(url).catch(() => undefined);
-        toast.success(t("topup.shared.created"));
+        if (notify) {
+          toast.success(t("topup.shared.created"));
+        }
+        return link;
       })
       .catch((error) => {
         console.error(error);
         toast.error(t("topup.shared.createFailed"));
+        return null;
       });
   };
 
@@ -80,16 +89,40 @@ export const SharedTopUpOwner: React.FC = () => {
       });
   };
 
+  const replaceSharedLink = (linkId: number, label: string | null) => {
+    revokeSharedTopupLink({ linkId })
+      .unwrap()
+      .then(() => createSharedLink(label ?? "", false))
+      .then((link) => {
+        if (link !== null) {
+          toast.success(t("topup.shared.replaced"));
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(t("topup.shared.replaceFailed"));
+      });
+  };
+
   return (
     <PageContainer title={t("topup.shared.ownerTitle")}>
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">{t("topup.shared.ownerDescription")}</Typography>
-        <Button variant="outlined" onClick={createSharedLink}>
-          {t("topup.shared.createLink")}
-        </Button>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <TextField
+            label={t("topup.shared.label")}
+            value={linkLabel}
+            onChange={(event) => setLinkLabel(event.target.value)}
+            fullWidth
+          />
+          <Button variant="outlined" onClick={() => void createSharedLink()} sx={{ flexShrink: 0 }}>
+            {t("topup.shared.createLink")}
+          </Button>
+        </Stack>
 
         {newSharedTopupLink && (
           <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
+            <Alert severity="info">{t("topup.shared.oneTimeLinkNotice")}</Alert>
             <Box sx={{ p: 2, bgcolor: "background.paper", border: "1px solid", borderColor: "divider", width: 180 }}>
               <QRCode value={newSharedTopupLink.url} size={144} />
             </Box>
@@ -110,6 +143,7 @@ export const SharedTopUpOwner: React.FC = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
+                  <TableCell>{t("topup.shared.label")}</TableCell>
                   <TableCell>{t("topup.shared.createdAt")}</TableCell>
                   <TableCell>{t("topup.shared.status")}</TableCell>
                   <TableCell align="right">{t("topup.shared.actions")}</TableCell>
@@ -118,13 +152,23 @@ export const SharedTopUpOwner: React.FC = () => {
               <TableBody>
                 {sharedLinks.map((link) => (
                   <TableRow key={link.id}>
+                    <TableCell>{link.label || t("topup.shared.noLabel")}</TableCell>
                     <TableCell>{new Date(link.created_at).toLocaleString()}</TableCell>
                     <TableCell>{link.revoked_at ? t("topup.shared.revokedStatus") : t("topup.shared.activeStatus")}</TableCell>
                     <TableCell align="right">
                       {!link.revoked_at && (
-                        <IconButton aria-label={t("topup.shared.revoke")} onClick={() => revokeSharedLink(link.id)} size="small">
-                          <DeleteIcon />
-                        </IconButton>
+                        <>
+                          <IconButton
+                            aria-label={t("topup.shared.replace")}
+                            onClick={() => replaceSharedLink(link.id, link.label)}
+                            size="small"
+                          >
+                            <SyncIcon />
+                          </IconButton>
+                          <IconButton aria-label={t("topup.shared.revoke")} onClick={() => revokeSharedLink(link.id)} size="small">
+                            <DeleteIcon />
+                          </IconButton>
+                        </>
                       )}
                     </TableCell>
                   </TableRow>

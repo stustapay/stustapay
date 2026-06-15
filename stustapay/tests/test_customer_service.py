@@ -22,10 +22,15 @@ from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, Node
 from stustapay.core.service.customer.common import fetch_customer
-from stustapay.core.service.customer.customer import CustomerBank, CustomerService
+from stustapay.core.service.customer.customer import (
+    MAX_ACTIVE_SHARED_TOPUP_LINKS_PER_CUSTOMER,
+    CustomerBank,
+    CustomerService,
+)
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order.booking import NewLineItem, book_order
 from stustapay.core.service.order.order import fetch_order
+from stustapay.core.service.order.sumup import MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tree.service import create_event
 from stustapay.payment.sumup.api import SumUpCheckout, SumUpCheckoutStatus, SumUpError
@@ -803,6 +808,47 @@ async def test_shared_topup_link_lifecycle_and_contributor_validation(
         await customer_service.get_shared_topup_public_info(token=link.token)
 
 
+async def test_shared_topup_link_is_scoped_to_customer_portal_base_url(
+    customer_service: CustomerService,
+    db_connection: Connection,
+    test_customer: Customer,
+    event_node: Node,
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    other_event = await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=_new_customer_portal_event("Other portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+    )
+    assert other_event.id != event_node.id
+
+    await customer_service.get_shared_topup_public_info(
+        token=link.token,
+        customer_portal_base_url="http://localhost:4300",
+    )
+    with pytest.raises(AccessDenied, match="Shared topup link does not match current customer portal"):
+        await customer_service.get_shared_topup_public_info(
+            token=link.token,
+            customer_portal_base_url="http://localhost:4400",
+        )
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+    with pytest.raises(AccessDenied, match="Shared topup link does not match current customer portal"):
+        await customer_service.sumup.create_shared_topup_checkout(
+            token=link.token,
+            amount=5,
+            contributor_name="Alice",
+            customer_portal_base_url="http://localhost:4400",
+        )
+
+
 async def test_shared_topup_checkout_books_contributor_without_reserving_pending_balance(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
@@ -875,6 +921,186 @@ async def test_shared_topup_checkout_books_contributor_without_reserving_pending
     orders = await customer_service.get_orders_with_bon(token=auth.token)
     shared_topup_order = next(order for order in orders if order.uuid == first_order_uuid)
     assert shared_topup_order.shared_topup_contributor_name == "Alice"
+
+
+async def test_shared_topup_checkout_books_late_paid_checkout_after_local_cancellation(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_shared_topup_checkout(
+        token=link.token,
+        amount=20,
+        contributor_name="Alice",
+    )
+    await db_connection.execute(
+        "update pending_sumup_order set status = $1 where uuid = $2",
+        PendingOrderStatus.cancelled.value,
+        order_uuid,
+    )
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
+
+    assert (
+        await customer_service.sumup.check_shared_topup_checkout(
+            token=link.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval(
+        "select status from pending_sumup_order where uuid = $1",
+        order_uuid,
+    ) == PendingOrderStatus.booked.value
+    assert await db_connection.fetchval("select count(*) from ordr where uuid = $1", order_uuid) == 1
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
+
+
+async def test_shared_topup_checkout_returns_failed_for_cancelled_unpaid_checkout(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_shared_topup_checkout(
+        token=link.token,
+        amount=20,
+        contributor_name="Alice",
+    )
+    await db_connection.execute(
+        "update pending_sumup_order set status = $1 where uuid = $2",
+        PendingOrderStatus.cancelled.value,
+        order_uuid,
+    )
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.FAILED
+
+    assert (
+        await customer_service.sumup.check_shared_topup_checkout(
+            token=link.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.FAILED
+    )
+    assert await db_connection.fetchval("select count(*) from ordr where uuid = $1", order_uuid) == 0
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 120
+
+
+async def test_shared_topup_link_active_link_cap(
+    customer_service: CustomerService, test_customer: Customer, event_node: Node
+):
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+
+    links = [
+        await customer_service.create_shared_topup_link(token=auth.token, label=f"Link {i}")
+        for i in range(MAX_ACTIVE_SHARED_TOPUP_LINKS_PER_CUSTOMER)
+    ]
+    with pytest.raises(InvalidArgument, match="Too many active shared topup links"):
+        await customer_service.create_shared_topup_link(token=auth.token)
+
+    await customer_service.revoke_shared_topup_link(token=auth.token, link_id=links[0].id)
+    replacement = await customer_service.create_shared_topup_link(token=auth.token)
+    assert replacement.token is not None
+
+
+async def test_shared_topup_checkout_pending_checkout_cap(
+    customer_service: CustomerService, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    for i in range(MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK):
+        await customer_service.sumup.create_shared_topup_checkout(
+            token=link.token,
+            amount=1,
+            contributor_name=f"Contributor {i}",
+        )
+
+    with pytest.raises(InvalidArgument, match="Too many pending shared topup checkouts"):
+        await customer_service.sumup.create_shared_topup_checkout(
+            token=link.token,
+            amount=1,
+            contributor_name="Contributor Overflow",
+        )
+
+
+async def test_personal_topup_checkout_ignores_pending_shared_topup_order(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    assert auth is not None
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    shared_checkout, shared_order_uuid = await customer_service.sumup.create_shared_topup_checkout(
+        token=link.token,
+        amount=20,
+        contributor_name="Alice",
+    )
+    personal_checkout, personal_order_uuid = await customer_service.sumup.create_online_topup_checkout(
+        token=auth.token,
+        amount=10,
+    )
+
+    assert personal_order_uuid != shared_order_uuid
+    assert personal_checkout.id != shared_checkout.id
+    assert "/topup?order_uuid=" in personal_checkout.redirect_url
+    assert f"/shared-topup/{link.token}?order_uuid=" in shared_checkout.redirect_url
+    assert sumup_api.create_calls == 2
+    assert await db_connection.fetchval(
+        "select exists(select 1 from shared_topup_order where order_uuid = $1)",
+        shared_order_uuid,
+    )
+    assert not await db_connection.fetchval(
+        "select exists(select 1 from shared_topup_order where order_uuid = $1)",
+        personal_order_uuid,
+    )
+
+    assert (
+        await customer_service.sumup.check_online_topup_checkout(
+            token=auth.token,
+            order_uuid=shared_order_uuid,
+        )
+        == SumUpCheckoutStatus.FAILED
+    )
+
+    sumup_api.checkouts[shared_order_uuid].status = SumUpCheckoutStatus.PAID
+    assert (
+        await customer_service.sumup.check_shared_topup_checkout(
+            token=link.token,
+            order_uuid=shared_order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
 
 
 async def test_shared_topup_checkout_can_be_finalized_after_link_revocation(

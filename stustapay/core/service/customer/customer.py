@@ -2,8 +2,8 @@
 # pylint: disable=unused-argument
 import logging
 import re
-from email.utils import formataddr
 import secrets
+from email.utils import formataddr
 from typing import Optional
 
 import asyncpg
@@ -28,15 +28,21 @@ from stustapay.core.schema.language import Language
 from stustapay.core.service.auth import AuthService, CustomerTokenMetadata
 from stustapay.core.service.common.decorators import requires_customer
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer.common import fetch_customer_portal_event_node_id
+from stustapay.core.service.customer.common import (
+    fetch_customer_portal_event_node_id,
+    fetch_shared_topup_link,
+    hash_shared_topup_token,
+)
 from stustapay.core.service.customer.payout import PayoutService
 from stustapay.core.service.email_templates import render_plain_text_payout_html
 from stustapay.core.service.mail import MailService
-from stustapay.core.service.order.sumup import SumupService, hash_shared_topup_token
+from stustapay.core.service.order.sumup import SumupService
 from stustapay.core.service.tree.common import (
     fetch_event_node_for_node,
     fetch_restricted_event_settings_for_node,
 )
+
+MAX_ACTIVE_SHARED_TOPUP_LINKS_PER_CUSTOMER = 10
 
 
 def validate_name(name: str) -> bool:
@@ -94,37 +100,6 @@ class CustomerService(Service[Config]):
     def hash_shared_topup_token(token: str) -> str:
         return hash_shared_topup_token(token)
 
-    async def _fetch_shared_topup_link(
-        self,
-        *,
-        conn: Connection,
-        token: str,
-        customer_portal_base_url: str | None = None,
-    ):
-        token_hash = self.hash_shared_topup_token(token)
-        link = await conn.fetchrow(
-            "select stl.*, c.node_id, n.event_node_id "
-            "from shared_topup_link stl "
-            "join customer c on c.id = stl.customer_account_id "
-            "join node n on n.id = c.node_id "
-            "where stl.token_hash = $1 "
-            "  and stl.revoked_at is null "
-            "  and (stl.expires_at is null or stl.expires_at > now())",
-            token_hash,
-        )
-        if link is None:
-            raise AccessDenied("Invalid shared topup link")
-
-        if customer_portal_base_url is not None:
-            portal_event_node_id = await fetch_customer_portal_event_node_id(
-                conn=conn,
-                base_url=customer_portal_base_url,
-            )
-            if portal_event_node_id is None or portal_event_node_id != link["event_node_id"]:
-                raise AccessDenied("Shared topup link does not match current customer portal")
-
-        return link
-
     @with_db_transaction
     @requires_customer
     async def create_shared_topup_link(
@@ -135,6 +110,18 @@ class CustomerService(Service[Config]):
         label: str | None = None,
         customer_portal_base_url: str | None = None,
     ) -> SharedTopupLink:
+        await conn.fetchval("select id from account where id = $1 for update", current_customer.id)
+        active_link_count = await conn.fetchval(
+            "select count(*) "
+            "from shared_topup_link "
+            "where customer_account_id = $1 "
+            "  and revoked_at is null "
+            "  and (expires_at is null or expires_at > now())",
+            current_customer.id,
+        )
+        if active_link_count >= MAX_ACTIVE_SHARED_TOPUP_LINKS_PER_CUSTOMER:
+            raise InvalidArgument("Too many active shared topup links")
+
         token = secrets.token_urlsafe(32)
         link = await conn.fetchrow(
             "insert into shared_topup_link (customer_account_id, token_hash, label) "
@@ -233,6 +220,19 @@ class CustomerService(Service[Config]):
             event_name=event_node.name,
             currency_identifier=event_node.event.currency_identifier,
             payment_methods=payment_methods,
+        )
+
+    async def _fetch_shared_topup_link(
+        self,
+        *,
+        conn: Connection,
+        token: str,
+        customer_portal_base_url: str | None = None,
+    ):
+        return await fetch_shared_topup_link(
+            conn=conn,
+            token=token,
+            customer_portal_base_url=customer_portal_base_url,
         )
 
     @with_db_transaction

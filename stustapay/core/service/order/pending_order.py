@@ -49,17 +49,22 @@ async def fetch_pending_order(conn: Connection, uuid: UUID) -> PendingOrder:
 async def fetch_pending_online_topup_for_customer(conn: Connection, customer_account_id: int) -> PendingOrder | None:
     pending_orders = await conn.fetch_many(
         PendingOrder,
-        "select * from pending_sumup_order "
-        "where status = 'pending' "
-        "  and order_type = 'topup' "
-        "  and cashier_id is null "
-        "order by created_at desc",
+        "select pso.* from pending_sumup_order pso "
+        "where pso.status = 'pending' "
+        "  and pso.order_type = 'topup' "
+        "  and pso.cashier_id is null "
+        "  and not exists (select 1 from shared_topup_order sto where sto.order_uuid = pso.uuid) "
+        "order by pso.created_at desc",
     )
     for pending_order in pending_orders:
         topup = load_pending_topup(pending_order)
         if topup.payment_method == PaymentMethod.sumup_online and topup.customer_account_id == customer_account_id:
             return pending_order
     return None
+
+
+async def is_shared_topup_order(conn: Connection, order_uuid: UUID) -> bool:
+    return await conn.fetchval("select exists(select 1 from shared_topup_order where order_uuid = $1)", order_uuid)
 
 
 async def fetch_order_by_uuid(conn: Connection, uuid: UUID) -> PendingOrder:

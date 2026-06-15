@@ -25,7 +25,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Navigate, Link as RouterLink, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
-import type { SumUpCard, SumUpCardInstance, SumUpResponseType } from "./SumUpCard";
+import type { SumUpCardInstance, SumUpResponseType } from "./SumUpCard";
 
 const TopUpSchema = z.object({
   amount: z.number().int(i18n.t("topup.errorAmountMustBeIntegral")).positive(i18n.t("topup.errorAmountGreaterZero")),
@@ -38,10 +38,6 @@ const QUICK_TOPUP_AMOUNTS = [10, 20, 50, 100];
 type FormVal = z.infer<typeof TopUpSchema>;
 
 const initialValues: FormVal = { amount: 0 };
-
-declare global {
-  const SumUpCard: SumUpCard;
-}
 
 type TopUpState =
   | { stage: "initial" }
