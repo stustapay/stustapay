@@ -1072,6 +1072,12 @@ export const translations: NestedPartialAsStrings<Translations> = {
       exit: "Auslass",
     },
     selfService: "Self-Service-Terminal",
+    appDisplayMode: {
+      label: "Anzeigemodus",
+      localDefault: "Lokaler Standard",
+      day: "Tagmodus",
+      night: "Nachtmodus",
+    },
     till: "Kasse",
     switchTill: "Kasse wechseln",
     removeTill: "Kasse entfernen",

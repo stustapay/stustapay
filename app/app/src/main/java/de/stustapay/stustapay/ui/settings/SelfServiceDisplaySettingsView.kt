@@ -30,6 +30,7 @@ fun SelfServiceDisplaySettingsView(
 ) {
     val context = LocalContext.current
     val currentMode = AppDisplayModeState.current
+    val isManaged = AppDisplayModeState.isManaged
     val currentModeLabel = when (currentMode) {
         AppDisplayMode.Day -> stringResource(R.string.settings_selfservice_display_day)
         AppDisplayMode.Night -> stringResource(R.string.settings_selfservice_display_night)
@@ -37,12 +38,24 @@ fun SelfServiceDisplaySettingsView(
 
     OperatorScaffold(
         title = stringResource(R.string.settings_selfservice_display_title),
-        subtitle = stringResource(R.string.settings_selfservice_display_subtitle),
+        subtitle = stringResource(
+            if (isManaged) {
+                R.string.settings_selfservice_display_subtitle_managed
+            } else {
+                R.string.settings_selfservice_display_subtitle
+            }
+        ),
         icon = Icons.Filled.WbSunny,
         terminalLabel = stringResource(R.string.settings_selfservice_display_terminal_label),
         footerHint = stringResource(R.string.settings_selfservice_display_footer_hint),
         footerSection = stringResource(R.string.settings_selfservice_display_footer_section),
-        footerStatus = stringResource(R.string.settings_selfservice_display_footer_status),
+        footerStatus = stringResource(
+            if (isManaged) {
+                R.string.settings_selfservice_display_footer_status_managed
+            } else {
+                R.string.settings_selfservice_display_footer_status
+            }
+        ),
         onBack = navigateBack,
     ) {
         Column(
@@ -58,7 +71,13 @@ fun SelfServiceDisplaySettingsView(
                     color = OperatorPalette.title,
                 )
                 Text(
-                    text = stringResource(R.string.settings_selfservice_display_footer_hint),
+                    text = stringResource(
+                        if (isManaged) {
+                            R.string.settings_selfservice_display_remote_notice
+                        } else {
+                            R.string.settings_selfservice_display_footer_hint
+                        }
+                    ),
                     color = OperatorPalette.subtitle,
                 )
             }
@@ -68,8 +87,12 @@ fun SelfServiceDisplaySettingsView(
                 description = stringResource(R.string.settings_selfservice_display_day_desc),
                 icon = Icons.Filled.WbSunny,
                 emphasized = currentMode == AppDisplayMode.Day,
-                onClick = {
-                    AppDisplayModeManager.persistDisplayMode(context, AppDisplayMode.Day)
+                onClick = if (isManaged) {
+                    null
+                } else {
+                    {
+                        AppDisplayModeManager.persistDisplayMode(context, AppDisplayMode.Day)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -79,8 +102,12 @@ fun SelfServiceDisplaySettingsView(
                 description = stringResource(R.string.settings_selfservice_display_night_desc),
                 icon = Icons.Filled.Brightness2,
                 emphasized = currentMode == AppDisplayMode.Night,
-                onClick = {
-                    AppDisplayModeManager.persistDisplayMode(context, AppDisplayMode.Night)
+                onClick = if (isManaged) {
+                    null
+                } else {
+                    {
+                        AppDisplayModeManager.persistDisplayMode(context, AppDisplayMode.Night)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

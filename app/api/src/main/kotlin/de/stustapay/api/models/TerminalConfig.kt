@@ -15,6 +15,7 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.AppDisplayMode
 import de.stustapay.api.models.EntryAreaConfig
 import de.stustapay.api.models.Privilege
 import de.stustapay.api.models.TerminalMode
@@ -35,6 +36,7 @@ import kotlinx.serialization.Contextual
  * @param mode 
  * @param entryArea 
  * @param selfService 
+ * @param appDisplayMode
  * @param eventName 
  * @param activeUserId 
  * @param availableRoles 
@@ -66,6 +68,9 @@ data class TerminalConfig (
     @SerialName(value = "self_service")
     val selfService: kotlin.Boolean,
 
+    @Contextual @SerialName(value = "app_display_mode")
+    val appDisplayMode: AppDisplayMode?,
+
     @SerialName(value = "event_name")
     val eventName: kotlin.String,
 
@@ -94,4 +99,3 @@ data class TerminalConfig (
 
 
 }
-

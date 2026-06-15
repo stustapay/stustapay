@@ -16,12 +16,18 @@ class TerminalMode(enum.Enum):
     exit = "exit"
 
 
+class AppDisplayMode(enum.Enum):
+    day = "day"
+    night = "night"
+
+
 class NewTerminal(BaseModel):
     name: str
     description: str | None = None
     mode: TerminalMode = TerminalMode.till
     entry_area_id: int | None = None
     self_service: bool = False
+    app_display_mode: AppDisplayMode | None = None
 
 
 class Terminal(NewTerminal):
@@ -105,6 +111,7 @@ class TerminalConfig(BaseModel):
     mode: TerminalMode
     entry_area: EntryAreaConfig | None
     self_service: bool
+    app_display_mode: AppDisplayMode | None
 
     event_name: str
     active_user_id: Optional[int]
@@ -131,6 +138,7 @@ class CurrentTerminal(BaseModel):
     mode: TerminalMode
     entry_area_id: int | None
     self_service: bool
+    app_display_mode: AppDisplayMode | None
     active_user_id: int | None
     active_user_role_id: int | None
     till: Till | None

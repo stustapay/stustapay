@@ -2,6 +2,7 @@ import { NewTerminal, selectEntryAreaAll, useListEntryAreasQuery } from "@/api";
 import { useCurrentNode } from "@/hooks";
 import { FormCheckbox, FormSelect, FormTextField } from "@stustapay/form-components";
 import { Select } from "@stustapay/components";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect } from "@mui/material";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
@@ -29,7 +30,12 @@ export function TerminalForm<T extends NewTerminal>(props: TerminalFormProps<T>)
     if (values.mode !== "till" && values.self_service) {
       setFieldValue("self_service", false);
     }
+    if (values.mode !== "till" || !values.self_service) {
+      setFieldValue("app_display_mode", null);
+    }
   }, [values.mode, values.entry_area_id, values.self_service, setFieldValue]);
+
+  const showDisplayMode = values.mode === "till" && values.self_service;
 
   return (
     <>
@@ -58,6 +64,24 @@ export function TerminalForm<T extends NewTerminal>(props: TerminalFormProps<T>)
         formik={props}
         disabled={values.mode !== "till"}
       />
+      {showDisplayMode && (
+        <FormControl fullWidth>
+          <InputLabel id="terminal-app-display-mode-label">{t("terminal.appDisplayMode.label")}</InputLabel>
+          <MuiSelect
+            labelId="terminal-app-display-mode-label"
+            label={t("terminal.appDisplayMode.label")}
+            value={values.app_display_mode ?? ""}
+            onChange={(event) => {
+              const nextValue = event.target.value as "" | "day" | "night";
+              setFieldValue("app_display_mode", nextValue === "" ? null : nextValue);
+            }}
+          >
+            <MenuItem value="">{t("terminal.appDisplayMode.localDefault")}</MenuItem>
+            <MenuItem value="day">{t("terminal.appDisplayMode.day")}</MenuItem>
+            <MenuItem value="night">{t("terminal.appDisplayMode.night")}</MenuItem>
+          </MuiSelect>
+        </FormControl>
+      )}
     </>
   );
 }

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.api.models.AppDisplayMode as RemoteAppDisplayMode
 import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 import de.stustapay.stustapay.locale.AppLanguage
@@ -54,6 +56,14 @@ enum class AppDisplayMode(val persistedValue: String) {
     companion object {
         fun fromPersistedValue(value: String?): AppDisplayMode {
             return entries.firstOrNull { it.persistedValue == value } ?: Night
+        }
+
+        fun fromRemoteMode(mode: RemoteAppDisplayMode?): AppDisplayMode? {
+            return when (mode) {
+                RemoteAppDisplayMode.day -> Day
+                RemoteAppDisplayMode.night -> Night
+                null -> null
+            }
         }
     }
 }
@@ -127,7 +137,14 @@ private val selfServiceDayColors = SelfServiceColors(
 )
 
 private object SelfServiceThemeState {
-    var displayMode by mutableStateOf(AppDisplayMode.Night)
+    var localDisplayMode by mutableStateOf(AppDisplayMode.Night)
+    var managedDisplayMode by mutableStateOf<AppDisplayMode?>(null)
+
+    val displayMode: AppDisplayMode
+        get() = resolveEffectiveMode(localDisplayMode, managedDisplayMode)
+
+    val isManaged: Boolean
+        get() = managedDisplayMode != null
 
     val colors: SelfServiceColors
         get() = when (displayMode) {
@@ -202,6 +219,8 @@ object SelfServicePalette {
 object AppDisplayModeState {
     val current: AppDisplayMode
         get() = SelfServiceThemeState.displayMode
+    val isManaged: Boolean
+        get() = SelfServiceThemeState.isManaged
 }
 
 object SelfServiceDisplayModeState {
@@ -210,19 +229,23 @@ object SelfServiceDisplayModeState {
 }
 
 @Composable
-fun ObserveAppDisplayMode() {
+fun ObserveAppDisplayMode(managedDisplayMode: AppDisplayMode? = null) {
     val context = LocalContext.current.applicationContext
+
+    SideEffect {
+        SelfServiceThemeState.managedDisplayMode = managedDisplayMode
+    }
 
     DisposableEffect(context) {
         val preferences = AppDisplayModeManager.preferences(context)
         val legacyPreferences = AppDisplayModeManager.legacyPreferences(context)
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == null || key == AppDisplayModeManager.key()) {
-                SelfServiceThemeState.displayMode = AppDisplayModeManager.currentDisplayMode(context)
+                SelfServiceThemeState.localDisplayMode = AppDisplayModeManager.currentDisplayMode(context)
             }
         }
 
-        SelfServiceThemeState.displayMode = AppDisplayModeManager.currentDisplayMode(context)
+        SelfServiceThemeState.localDisplayMode = AppDisplayModeManager.currentDisplayMode(context)
         preferences.registerOnSharedPreferenceChangeListener(listener)
         legacyPreferences.registerOnSharedPreferenceChangeListener(listener)
 
@@ -236,6 +259,10 @@ fun ObserveAppDisplayMode() {
 @Composable
 fun ObserveSelfServiceDisplayMode() {
     ObserveAppDisplayMode()
+}
+
+fun resolveEffectiveMode(localMode: AppDisplayMode, managedMode: AppDisplayMode?): AppDisplayMode {
+    return managedMode ?: localMode
 }
 
 @Composable

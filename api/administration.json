@@ -13627,6 +13627,14 @@
         ],
         "title": "AccountType"
       },
+      "AppDisplayMode": {
+        "type": "string",
+        "enum": [
+          "day",
+          "night"
+        ],
+        "title": "AppDisplayMode"
+      },
       "AssignRegisterPayload": {
         "properties": {
           "cashier_id": {
@@ -17172,6 +17180,16 @@
             "type": "boolean",
             "title": "Self Service",
             "default": false
+          },
+          "app_display_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppDisplayMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -21015,6 +21033,16 @@
             "title": "Self Service",
             "default": false
           },
+          "app_display_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppDisplayMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -23091,6 +23119,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",

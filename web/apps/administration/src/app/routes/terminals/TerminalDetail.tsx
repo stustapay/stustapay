@@ -203,6 +203,16 @@ export const TerminalDetail: React.FC = () => {
         <DetailField label={t("common.description")} value={terminal.description} />
         <DetailField label={t("terminal.mode.label")} value={t(`terminal.mode.${terminal.mode}`)} />
         <DetailBoolField label={t("terminal.selfService")} value={terminal.self_service ?? false} />
+        {terminal.mode === "till" && terminal.self_service && (
+          <DetailField
+            label={t("terminal.appDisplayMode.label")}
+            value={
+              terminal.app_display_mode == null
+                ? t("terminal.appDisplayMode.localDefault")
+                : t(`terminal.appDisplayMode.${terminal.app_display_mode}`)
+            }
+          />
+        )}
         {entryArea != null && <DetailField label={t("entry.area")} value={entryArea.name} />}
         {till != null && (
           <DetailField linkTo={TillRoutes.detail(till.id, till.node_id)} label={t("terminal.till")} value={till.name} />

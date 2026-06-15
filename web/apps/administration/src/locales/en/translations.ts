@@ -1096,6 +1096,12 @@ export const translations = {
       exit: "Exit",
     },
     selfService: "Self-service terminal",
+    appDisplayMode: {
+      label: "Display mode",
+      localDefault: "Local default",
+      day: "Day mode",
+      night: "Night mode",
+    },
     till: "Till",
     switchTill: "Switch Till",
     removeTill: "Remove Till",

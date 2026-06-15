@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from sftkit.database import Connection
 
 from stustapay.core.schema.entry import NewEntryArea
-from stustapay.core.schema.terminal import NewTerminal, Terminal, TerminalMode
+from stustapay.core.schema.terminal import AppDisplayMode, NewTerminal, Terminal, TerminalMode
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.entry import EntryService
 from stustapay.core.service.terminal import TerminalService
@@ -39,10 +39,16 @@ async def test_terminal_self_service_roundtrip(
     terminal = await terminal_service.create_terminal(
         token=event_admin_token,
         node_id=event_node.id,
-        terminal=NewTerminal(name="Self Service", description="", self_service=True),
+        terminal=NewTerminal(
+            name="Self Service",
+            description="",
+            self_service=True,
+            app_display_mode=AppDisplayMode.day,
+        ),
     )
 
     assert terminal.self_service is True
+    assert terminal.app_display_mode == AppDisplayMode.day
 
     fetched_terminal = await terminal_service.get_terminal(
         token=event_admin_token,
@@ -52,15 +58,17 @@ async def test_terminal_self_service_roundtrip(
 
     assert fetched_terminal is not None
     assert fetched_terminal.self_service is True
+    assert fetched_terminal.app_display_mode == AppDisplayMode.day
 
     updated_terminal = await terminal_service.update_terminal(
         token=event_admin_token,
         node_id=event_node.id,
         terminal_id=terminal.id,
-        terminal=NewTerminal(name="Self Service", description="", self_service=False),
+        terminal=NewTerminal(name="Self Service", description="", self_service=False, app_display_mode=AppDisplayMode.night),
     )
 
     assert updated_terminal.self_service is False
+    assert updated_terminal.app_display_mode is None
 
 
 async def test_terminal_config_exposes_self_service_flag(
@@ -74,14 +82,21 @@ async def test_terminal_config_exposes_self_service_flag(
         token=event_admin_token,
         node_id=event_node.id,
         terminal_id=terminal.id,
-        terminal=NewTerminal(name="Test Terminal", description="", self_service=True),
+        terminal=NewTerminal(
+            name="Test Terminal",
+            description="",
+            self_service=True,
+            app_display_mode=AppDisplayMode.night,
+        ),
     )
 
     assert updated_terminal.self_service is True
+    assert updated_terminal.app_display_mode == AppDisplayMode.night
 
     terminal_config = await terminal_service.get_terminal_config(token=terminal_token)
     assert terminal_config is not None
     assert terminal_config.self_service is True
+    assert terminal_config.app_display_mode == AppDisplayMode.night
 
 
 async def test_terminal_config_exposes_resolved_sumup_merchant_code(
@@ -150,10 +165,12 @@ async def test_entry_and_exit_terminals_clear_self_service(
             mode=TerminalMode.entry,
             entry_area_id=area.id,
             self_service=True,
+            app_display_mode=AppDisplayMode.day,
         ),
     )
 
     assert entry_terminal.self_service is False
+    assert entry_terminal.app_display_mode is None
 
     exit_terminal = await terminal_service.create_terminal(
         token=event_admin_token,
@@ -164,7 +181,9 @@ async def test_entry_and_exit_terminals_clear_self_service(
             mode=TerminalMode.exit,
             entry_area_id=area.id,
             self_service=True,
+            app_display_mode=AppDisplayMode.night,
         ),
     )
 
     assert exit_terminal.self_service is False
+    assert exit_terminal.app_display_mode is None

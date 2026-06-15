@@ -2056,6 +2056,14 @@
         ],
         "title": "AccountType"
       },
+      "AppDisplayMode": {
+        "type": "string",
+        "enum": [
+          "day",
+          "night"
+        ],
+        "title": "AppDisplayMode"
+      },
       "Button": {
         "properties": {
           "till_button_id": {
@@ -3968,6 +3976,16 @@
             "title": "Self Service",
             "default": false
           },
+          "app_display_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppDisplayMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -4156,6 +4174,16 @@
             "type": "boolean",
             "title": "Self Service"
           },
+          "app_display_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppDisplayMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "event_name": {
             "type": "string",
             "title": "Event Name"
@@ -4229,6 +4257,7 @@
           "mode",
           "entry_area",
           "self_service",
+          "app_display_mode",
           "event_name",
           "active_user_id",
           "available_roles",
@@ -5347,6 +5376,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",

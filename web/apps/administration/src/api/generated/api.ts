@@ -3204,6 +3204,8 @@ export type ValidationError = {
   loc: (string | number)[];
   msg: string;
   type: string;
+  input?: any;
+  ctx?: object;
 };
 export type HttpValidationError = {
   detail?: ValidationError[];
@@ -4633,7 +4635,7 @@ export type SumUpTokenPayload = {
   redirect_uri: string;
 };
 export type BodyUploadEventBannerTreeEventsNodeIdBannerPost = {
-  file: Blob;
+  file: string;
 };
 export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type SumUpTransaction = {
@@ -4742,12 +4744,14 @@ export type SwapCustomerTagPayload = {
   block_source_tag?: boolean;
 };
 export type TerminalMode = "till" | "entry" | "exit";
+export type AppDisplayMode = "day" | "night";
 export type Terminal = {
   name: string;
   description?: string | null;
   mode?: TerminalMode;
   entry_area_id?: number | null;
   self_service?: boolean;
+  app_display_mode?: AppDisplayMode | null;
   id: number;
   node_id: number;
   till_id: number | null;
@@ -4768,6 +4772,7 @@ export type NewTerminal = {
   mode?: TerminalMode;
   entry_area_id?: number | null;
   self_service?: boolean;
+  app_display_mode?: AppDisplayMode | null;
 };
 export type SwitchTillPayload = {
   new_till_id: number;

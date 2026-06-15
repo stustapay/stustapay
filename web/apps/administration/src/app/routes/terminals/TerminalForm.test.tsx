@@ -95,6 +95,7 @@ describe("TerminalForm", () => {
     mode: "till" | "entry" | "exit";
     entry_area_id: number | null;
     self_service: boolean;
+    app_display_mode: "day" | "night" | null;
   }) =>
     render(
       <Formik initialValues={initialValues} onSubmit={jest.fn()}>
@@ -113,6 +114,7 @@ describe("TerminalForm", () => {
       mode: "till",
       entry_area_id: null,
       self_service: true,
+      app_display_mode: "day",
     });
 
     const checkbox = screen.getByLabelText("terminal.selfService") as HTMLInputElement;
@@ -127,6 +129,7 @@ describe("TerminalForm", () => {
       mode: "till",
       entry_area_id: null,
       self_service: true,
+      app_display_mode: "night",
     });
 
     fireEvent.change(screen.getByLabelText("terminal.mode.label"), { target: { value: "entry" } });
@@ -135,6 +138,20 @@ describe("TerminalForm", () => {
       const checkbox = screen.getByLabelText("terminal.selfService") as HTMLInputElement;
       expect(checkbox.disabled).toBe(true);
       expect(checkbox.checked).toBe(false);
+      expect(screen.queryByLabelText("terminal.appDisplayMode.label")).toBeNull();
     });
+  });
+
+  test("shows display mode selector only for self-service till terminals", () => {
+    renderForm({
+      name: "Terminal",
+      description: null,
+      mode: "till",
+      entry_area_id: null,
+      self_service: true,
+      app_display_mode: null,
+    });
+
+    expect(screen.getByLabelText("terminal.appDisplayMode.label")).toBeTruthy();
   });
 });

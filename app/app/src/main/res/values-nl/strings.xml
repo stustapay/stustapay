@@ -443,11 +443,14 @@
     <string name="settings_selfservice_display_desc">Kies of deze terminal in de hele app de heldere dagmodus of de standaard nachtmodus gebruikt.</string>
     <string name="settings_selfservice_display_title">Weergavemodus</string>
     <string name="settings_selfservice_display_subtitle">Lokale app-brede weergavemodus alleen voor deze terminal.</string>
+    <string name="settings_selfservice_display_subtitle_managed">App-brede weergavemodus wordt voor deze terminal op afstand beheerd.</string>
     <string name="settings_selfservice_display_terminal_label">Weergavemodus</string>
     <string name="settings_selfservice_display_footer_hint">Gebruik de dagmodus in felle omgevingen en de nachtmodus voor het bestaande donkere app-ontwerp.</string>
     <string name="settings_selfservice_display_footer_section">Weergave</string>
     <string name="settings_selfservice_display_footer_status">Alleen lokaal</string>
+    <string name="settings_selfservice_display_footer_status_managed">Op afstand beheerd</string>
     <string name="settings_selfservice_display_current">Huidige modus: %1$s</string>
+    <string name="settings_selfservice_display_remote_notice">Deze modus wordt op afstand beheerd vanuit de administratie en kan op deze terminal niet worden gewijzigd.</string>
     <string name="settings_selfservice_display_day">Dagmodus</string>
     <string name="settings_selfservice_display_day_desc">Lichte achtergrond met donkere tekst voor maximale leesbaarheid in direct zonlicht.</string>
     <string name="settings_selfservice_display_night">Nachtmodus</string>

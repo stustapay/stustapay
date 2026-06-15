@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.repository
 
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.AppDisplayMode
 import de.stustapay.api.models.TerminalConfig
 import de.stustapay.api.models.TerminalMode
 import de.stustapay.api.models.TerminalSecrets
@@ -125,6 +126,7 @@ class TerminalConfigRepositoryTest {
             mode = TerminalMode.till,
             entryArea = null,
             selfService = false,
+            appDisplayMode = AppDisplayMode.day,
             eventName = "Test Event",
             activeUserId = null,
             availableRoles = emptyList(),

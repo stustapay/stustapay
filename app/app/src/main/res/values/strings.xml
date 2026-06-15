@@ -452,11 +452,14 @@
     <string name="settings_selfservice_display_desc">Choose whether this terminal uses the bright day mode or the default night mode across the app.</string>
     <string name="settings_selfservice_display_title">Display Mode</string>
     <string name="settings_selfservice_display_subtitle">Local app-wide display mode for this terminal.</string>
+    <string name="settings_selfservice_display_subtitle_managed">App-wide display mode controlled remotely for this terminal.</string>
     <string name="settings_selfservice_display_terminal_label">Display Mode</string>
     <string name="settings_selfservice_display_footer_hint">Use day mode in bright environments and night mode for the original dark app design.</string>
     <string name="settings_selfservice_display_footer_section">Display</string>
     <string name="settings_selfservice_display_footer_status">Local only</string>
+    <string name="settings_selfservice_display_footer_status_managed">Remote managed</string>
     <string name="settings_selfservice_display_current">Current mode: %1$s</string>
+    <string name="settings_selfservice_display_remote_notice">This mode is managed remotely from the administration UI and cannot be changed on this terminal.</string>
     <string name="settings_selfservice_display_day">Day mode</string>
     <string name="settings_selfservice_display_day_desc">Bright background with dark text for maximum readability in direct sunlight.</string>
     <string name="settings_selfservice_display_night">Night mode</string>

@@ -10,7 +10,6 @@ import de.stustapay.stustapay.ui.root.RootView
 import de.stustapay.stustapay.ui.root.RootWrapper
 import de.stustapay.stustapay.ui.common.selfservice.AppDisplayMode
 import de.stustapay.stustapay.ui.common.selfservice.AppDisplayModeState
-import de.stustapay.stustapay.ui.common.selfservice.ObserveAppDisplayMode
 import de.stustapay.libssp.ui.theme.Theme
 import de.stustapay.libssp.util.SysUiController
 
@@ -18,7 +17,6 @@ import de.stustapay.libssp.util.SysUiController
 @Preview(showBackground = true)
 @Composable
 fun Main(uictrl: SysUiController? = null) {
-    ObserveAppDisplayMode()
     Theme(darkTheme = AppDisplayModeState.current == AppDisplayMode.Night) {
         Surface(
             modifier = Modifier.fillMaxSize(),

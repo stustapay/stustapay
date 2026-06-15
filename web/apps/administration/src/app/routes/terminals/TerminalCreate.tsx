@@ -14,6 +14,7 @@ const initialValues: NewTerminal = {
   mode: "till",
   entry_area_id: null,
   self_service: false,
+  app_display_mode: null,
 };
 
 export const TerminalCreate: React.FC = withPrivilegeGuard("node_administration", () => {

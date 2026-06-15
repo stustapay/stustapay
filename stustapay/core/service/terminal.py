@@ -11,6 +11,7 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.entry import EntryArea, EntryAreaConfig
 from stustapay.core.schema.terminal import (
+    AppDisplayMode,
     CurrentTerminal,
     HeadwindDeviceMapping,
     HeadwindDeviceMappingWithTerminal,
@@ -111,6 +112,12 @@ def _normalize_self_service(terminal: NewTerminal) -> bool:
     return terminal.mode == TerminalMode.till and terminal.self_service
 
 
+def _normalize_app_display_mode(terminal: NewTerminal) -> AppDisplayMode | None:
+    if terminal.mode == TerminalMode.till and terminal.self_service:
+        return terminal.app_display_mode
+    return None
+
+
 class TerminalService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -131,14 +138,15 @@ class TerminalService(Service[Config]):
             await _ensure_entry_area(conn=conn, node=node, entry_area_id=terminal.entry_area_id)
 
         terminal_id = await conn.fetchval(
-            "insert into terminal (node_id, name, description, mode, entry_area_id, self_service) "
-            "values ($1, $2, $3, $4, $5, $6) returning id",
+            "insert into terminal (node_id, name, description, mode, entry_area_id, self_service, app_display_mode) "
+            "values ($1, $2, $3, $4, $5, $6, $7) returning id",
             node.id,
             terminal.name,
             terminal.description,
             terminal.mode.value,
             terminal.entry_area_id,
             _normalize_self_service(terminal),
+            _normalize_app_display_mode(terminal).value if _normalize_app_display_mode(terminal) is not None else None,
         )
         t = await _fetch_terminal(conn=conn, node=node, terminal_id=terminal_id)
         assert t is not None
@@ -188,13 +196,14 @@ class TerminalService(Service[Config]):
                 await remove_terminal_from_till(conn=conn, till_id=existing_terminal.till_id)
 
         term_id = await conn.fetchval(
-            "update terminal set name = $1, description = $2, mode = $3, entry_area_id = $4, self_service = $5 "
-            "where id = $6 and node_id = $7 returning id",
+            "update terminal set name = $1, description = $2, mode = $3, entry_area_id = $4, self_service = $5, "
+            "app_display_mode = $6 where id = $7 and node_id = $8 returning id",
             terminal.name,
             terminal.description,
             terminal.mode.value,
             terminal.entry_area_id,
             _normalize_self_service(terminal),
+            _normalize_app_display_mode(terminal).value if _normalize_app_display_mode(terminal) is not None else None,
             terminal_id,
             existing_terminal.node_id,
         )
@@ -556,6 +565,7 @@ class TerminalService(Service[Config]):
             mode=current_terminal.mode,
             entry_area=entry_area,
             self_service=current_terminal.self_service,
+            app_display_mode=current_terminal.app_display_mode,
             user_privileges=user_privileges,
             available_roles=available_roles,
             active_user_id=current_terminal.active_user_id,

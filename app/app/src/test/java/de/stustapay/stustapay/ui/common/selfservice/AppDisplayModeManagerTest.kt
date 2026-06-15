@@ -33,4 +33,24 @@ class AppDisplayModeManagerTest {
 
         assertEquals(AppDisplayMode.Night, resolved)
     }
+
+    @Test
+    fun `resolve effective mode prefers managed mode`() {
+        val resolved = resolveEffectiveMode(
+            localMode = AppDisplayMode.Day,
+            managedMode = AppDisplayMode.Night,
+        )
+
+        assertEquals(AppDisplayMode.Night, resolved)
+    }
+
+    @Test
+    fun `resolve effective mode falls back to local mode when unmanaged`() {
+        val resolved = resolveEffectiveMode(
+            localMode = AppDisplayMode.Day,
+            managedMode = null,
+        )
+
+        assertEquals(AppDisplayMode.Day, resolved)
+    }
 }

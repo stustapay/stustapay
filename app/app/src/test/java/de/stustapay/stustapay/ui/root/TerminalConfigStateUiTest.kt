@@ -1,6 +1,7 @@
 package de.stustapay.stustapay.ui.root
 
 import com.ionspin.kotlin.bignum.integer.toBigInteger
+import de.stustapay.api.models.AppDisplayMode
 import de.stustapay.api.models.TerminalConfig
 import de.stustapay.api.models.TerminalMode
 import de.stustapay.stustapay.model.UserState
@@ -46,6 +47,7 @@ class TerminalConfigStateUiTest {
             mode = TerminalMode.till,
             entryArea = null,
             selfService = false,
+            appDisplayMode = AppDisplayMode.day,
             eventName = "Test Event",
             activeUserId = null,
             availableRoles = emptyList(),
