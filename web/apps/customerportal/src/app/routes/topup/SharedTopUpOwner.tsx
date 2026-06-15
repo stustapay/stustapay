@@ -39,7 +39,7 @@ export const SharedTopUpOwner: React.FC = () => {
     [sharedContributions],
   );
 
-  const [newSharedTopupUrl, setNewSharedTopupUrl] = React.useState<string | null>(null);
+  const [newSharedTopupLink, setNewSharedTopupLink] = React.useState<{ linkId: number; url: string } | null>(null);
 
   const copySharedTopupUrl = (url: string) => {
     navigator.clipboard.writeText(url)
@@ -55,7 +55,7 @@ export const SharedTopUpOwner: React.FC = () => {
           return;
         }
         const url = `${window.location.origin}/shared-topup/${link.token}`;
-        setNewSharedTopupUrl(url);
+        setNewSharedTopupLink({ linkId: link.id, url });
         void navigator.clipboard.writeText(url).catch(() => undefined);
         toast.success(t("topup.shared.created"));
       })
@@ -69,8 +69,8 @@ export const SharedTopUpOwner: React.FC = () => {
     revokeSharedTopupLink({ linkId })
       .unwrap()
       .then(() => {
-        if (sharedLinks?.some((link) => link.id === linkId && link.token && newSharedTopupUrl?.includes(link.token))) {
-          setNewSharedTopupUrl(null);
+        if (newSharedTopupLink?.linkId === linkId) {
+          setNewSharedTopupLink(null);
         }
         toast.success(t("topup.shared.revoked"));
       })
@@ -88,18 +88,18 @@ export const SharedTopUpOwner: React.FC = () => {
           {t("topup.shared.createLink")}
         </Button>
 
-        {newSharedTopupUrl && (
+        {newSharedTopupLink && (
           <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
             <Box sx={{ p: 2, bgcolor: "background.paper", border: "1px solid", borderColor: "divider", width: 180 }}>
-              <QRCode value={newSharedTopupUrl} size={144} />
+              <QRCode value={newSharedTopupLink.url} size={144} />
             </Box>
             <TextField
               label={t("topup.shared.link")}
-              value={newSharedTopupUrl}
+              value={newSharedTopupLink.url}
               fullWidth
               slotProps={{ input: { readOnly: true } }}
             />
-            <Button startIcon={<ContentCopyIcon />} onClick={() => copySharedTopupUrl(newSharedTopupUrl)}>
+            <Button startIcon={<ContentCopyIcon />} onClick={() => copySharedTopupUrl(newSharedTopupLink.url)}>
               {t("topup.shared.copy")}
             </Button>
           </Stack>

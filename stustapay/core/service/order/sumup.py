@@ -137,6 +137,38 @@ class SumupService(Service[Config]):
 
         return link
 
+    async def _fetch_shared_topup_link_for_order(
+        self,
+        *,
+        conn: Connection,
+        token: str,
+        order_uuid: uuid.UUID,
+        customer_portal_base_url: str | None = None,
+    ):
+        link = await conn.fetchrow(
+            "select stl.*, sto.customer_account_id, c.node_id, c.user_tag_uid, c.balance, c.is_vip, n.event_node_id "
+            "from shared_topup_order sto "
+            "join shared_topup_link stl on stl.id = sto.link_id "
+            "join customer c on c.id = sto.customer_account_id "
+            "join node n on n.id = c.node_id "
+            "where stl.token_hash = $1 "
+            "  and sto.order_uuid = $2",
+            hash_shared_topup_token(token),
+            order_uuid,
+        )
+        if link is None:
+            raise AccessDenied("Invalid shared topup link")
+
+        if customer_portal_base_url is not None:
+            portal_event_node_id = await conn.fetchval(
+                "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1",
+                customer_portal_base_url,
+            )
+            if portal_event_node_id is None or portal_event_node_id != link["event_node_id"]:
+                raise AccessDenied("Shared topup link does not match current customer portal")
+
+        return link
+
     async def _fetch_pending_online_topup_amount_for_customer(
         self,
         *,
@@ -653,22 +685,12 @@ class SumupService(Service[Config]):
         order_uuid: uuid.UUID,
         customer_portal_base_url: str | None = None,
     ) -> SumUpCheckoutStatus:
-        link = await self._fetch_shared_topup_link(
+        link = await self._fetch_shared_topup_link_for_order(
             conn=conn,
             token=token,
+            order_uuid=order_uuid,
             customer_portal_base_url=customer_portal_base_url,
         )
-        shared_order_exists = await conn.fetchval(
-            "select exists("
-            "  select 1 from shared_topup_order "
-            "  where order_uuid = $1 and link_id = $2 and customer_account_id = $3"
-            ")",
-            order_uuid,
-            link["id"],
-            link["customer_account_id"],
-        )
-        if not shared_order_exists:
-            raise InvalidArgument("Invalid order uuid")
 
         pending_order = await fetch_order_by_uuid_for_update(conn=conn, uuid=order_uuid)
         if not pending_order:

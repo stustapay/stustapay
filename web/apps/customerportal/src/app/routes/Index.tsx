@@ -68,25 +68,6 @@ export const Index: React.FC = () => {
           </Alert>
         </Grid>
       )}
-      {config.sumup_topup_enabled && (
-        <Grid size={{ xs: 12, sm: 8 }}>
-          <Alert
-            severity="info"
-            variant="outlined"
-            className="glass-alert"
-            onClick={() => navigate("/topup/shared")}
-            sx={{ cursor: "pointer" }}
-          >
-            <AlertTitle>{t("topup.shared.ownerTitle")}</AlertTitle>
-            <Typography variant="body2" color="text.secondary">
-              <Trans
-                i18nKey="index.sharedTopupHint"
-                components={{ 1: <Link component={RouterLink} to="/topup/shared" color="inherit" fontWeight="medium" /> }}
-              />
-            </Typography>
-          </Alert>
-        </Grid>
-      )}
       <Grid size={{ xs: 12, sm: 8 }} sx={{ mt: 2 }}>
         <Grid container justifyContent="center">
           <Paper
@@ -164,6 +145,26 @@ export const Index: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {config.sumup_topup_enabled && (
+        <Grid size={{ xs: 12, sm: 8 }}>
+          <Alert
+            severity="info"
+            variant="outlined"
+            className="glass-alert"
+            onClick={() => navigate("/topup/shared")}
+            sx={{ cursor: "pointer" }}
+          >
+            <AlertTitle>{t("topup.shared.ownerTitle")}</AlertTitle>
+            <Typography variant="body2" color="text.secondary">
+              <Trans
+                i18nKey="index.sharedTopupHint"
+                components={{ 1: <Link component={RouterLink} to="/topup/shared" color="inherit" fontWeight="medium" /> }}
+              />
+            </Typography>
+          </Alert>
+        </Grid>
+      )}
 
       {config.payout_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>

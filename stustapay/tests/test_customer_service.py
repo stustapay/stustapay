@@ -705,6 +705,38 @@ async def test_shared_topup_checkout_books_contributor_and_reserves_pending_bala
     assert shared_topup_order.shared_topup_contributor_name == "Alice"
 
 
+async def test_shared_topup_checkout_can_be_finalized_after_link_revocation(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_shared_topup_checkout(
+        token=link.token,
+        amount=20,
+        contributor_name="Alice",
+    )
+    await customer_service.revoke_shared_topup_link(token=auth.token, link_id=link.id)
+
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
+
+    assert (
+        await customer_service.sumup.check_shared_topup_checkout(
+            token=link.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
+
+
 async def test_get_orders_with_bon(
     customer_service: CustomerService, order_with_bon: Order, test_customer: Customer, event_node: Node
 ):
