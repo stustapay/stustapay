@@ -3,12 +3,9 @@ package de.stustapay.stustapay.ui.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
@@ -22,8 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,7 +27,6 @@ import de.stustapay.stustapay.R
 import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
 import de.stustapay.stustapay.ui.nav.NavDest
-import de.stustapay.stustapay.ui.root.TerminalConfigViewModel
 
 
 object SettingsNavDest {
@@ -49,10 +43,7 @@ fun SettingsRootView(
     navController: NavHostController,
     navigateBack: () -> Unit,
     onOpenUserManagement: () -> Unit,
-    terminalConfigViewModel: TerminalConfigViewModel = hiltViewModel(),
 ) {
-    val loginState = terminalConfigViewModel.uiState.collectAsStateWithLifecycle()
-
     OperatorScaffold(
         title = stringResource(R.string.root_item_settings),
         subtitle = stringResource(R.string.settings_subtitle),
@@ -88,20 +79,16 @@ fun SettingsRootView(
                         onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    if (loginState.value.isSelfServiceTerminal()) {
-                        OperatorActionCard(
-                            title = stringResource(R.string.settings_selfservice_display),
-                            description = stringResource(R.string.settings_selfservice_display_desc),
-                            icon = Icons.Filled.WbSunny,
-                            onClick = { navController.navigate(SettingsNavDest.display.route) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                    OperatorActionCard(
+                        title = stringResource(R.string.settings_selfservice_display),
+                        description = stringResource(R.string.settings_selfservice_display_desc),
+                        icon = Icons.Filled.WbSunny,
+                        onClick = { navController.navigate(SettingsNavDest.display.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 } else {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         OperatorActionCard(
@@ -109,9 +96,7 @@ fun SettingsRootView(
                             description = stringResource(R.string.settings_core_connection_desc),
                             icon = Icons.Filled.Link,
                             onClick = { navController.navigate(SettingsNavDest.connection.route) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
+                            modifier = Modifier.weight(1f),
                             emphasized = true,
                         )
                         OperatorActionCard(
@@ -119,20 +104,16 @@ fun SettingsRootView(
                             description = stringResource(R.string.settings_ec_reader_desc),
                             icon = Icons.Filled.ShoppingCart,
                             onClick = { navController.navigate(SettingsNavDest.ecreader.route) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
+                            modifier = Modifier.weight(1f),
                         )
                     }
-                    if (loginState.value.isSelfServiceTerminal()) {
-                        OperatorActionCard(
-                            title = stringResource(R.string.settings_selfservice_display),
-                            description = stringResource(R.string.settings_selfservice_display_desc),
-                            icon = Icons.Filled.WbSunny,
-                            onClick = { navController.navigate(SettingsNavDest.display.route) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                    OperatorActionCard(
+                        title = stringResource(R.string.settings_selfservice_display),
+                        description = stringResource(R.string.settings_selfservice_display_desc),
+                        icon = Icons.Filled.WbSunny,
+                        onClick = { navController.navigate(SettingsNavDest.display.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
 
                 OperatorActionCard(

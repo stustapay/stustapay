@@ -19,9 +19,9 @@ import de.stustapay.stustapay.ui.common.operator.OperatorActionCard
 import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceDisplayMode
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceDisplayModeManager
-import de.stustapay.stustapay.ui.common.selfservice.SelfServiceDisplayModeState
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayMode
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayModeManager
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayModeState
 
 @Preview
 @Composable
@@ -29,10 +29,10 @@ fun SelfServiceDisplaySettingsView(
     navigateBack: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val currentMode = SelfServiceDisplayModeState.current
+    val currentMode = AppDisplayModeState.current
     val currentModeLabel = when (currentMode) {
-        SelfServiceDisplayMode.Day -> stringResource(R.string.settings_selfservice_display_day)
-        SelfServiceDisplayMode.Night -> stringResource(R.string.settings_selfservice_display_night)
+        AppDisplayMode.Day -> stringResource(R.string.settings_selfservice_display_day)
+        AppDisplayMode.Night -> stringResource(R.string.settings_selfservice_display_night)
     }
 
     OperatorScaffold(
@@ -67,9 +67,9 @@ fun SelfServiceDisplaySettingsView(
                 title = stringResource(R.string.settings_selfservice_display_day),
                 description = stringResource(R.string.settings_selfservice_display_day_desc),
                 icon = Icons.Filled.WbSunny,
-                emphasized = currentMode == SelfServiceDisplayMode.Day,
+                emphasized = currentMode == AppDisplayMode.Day,
                 onClick = {
-                    SelfServiceDisplayModeManager.persistDisplayMode(context, SelfServiceDisplayMode.Day)
+                    AppDisplayModeManager.persistDisplayMode(context, AppDisplayMode.Day)
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -78,9 +78,9 @@ fun SelfServiceDisplaySettingsView(
                 title = stringResource(R.string.settings_selfservice_display_night),
                 description = stringResource(R.string.settings_selfservice_display_night_desc),
                 icon = Icons.Filled.Brightness2,
-                emphasized = currentMode == SelfServiceDisplayMode.Night,
+                emphasized = currentMode == AppDisplayMode.Night,
                 onClick = {
-                    SelfServiceDisplayModeManager.persistDisplayMode(context, SelfServiceDisplayMode.Night)
+                    AppDisplayModeManager.persistDisplayMode(context, AppDisplayMode.Night)
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

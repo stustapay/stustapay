@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,26 +41,86 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayMode
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayModeState
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 
+private data class OperatorColors(
+    val backgroundTop: Color,
+    val backgroundBottom: Color,
+    val panel: Color,
+    val panelMuted: Color,
+    val panelBorder: Color,
+    val interactivePanel: Color,
+    val highlightedPanel: Color,
+    val title: Color,
+    val subtitle: Color,
+    val accentText: Color,
+    val successPanel: Color,
+    val dangerPanel: Color,
+    val dangerMuted: Color,
+    val pill: Color,
+)
+
+private val operatorNightColors = OperatorColors(
+    backgroundTop = TfPayBluePalette.backgroundTop,
+    backgroundBottom = TfPayBluePalette.backgroundBottom,
+    panel = TfPayBluePalette.panel,
+    panelMuted = TfPayBluePalette.panelMuted,
+    panelBorder = TfPayBluePalette.panelBorder,
+    interactivePanel = TfPayBluePalette.interactivePanel,
+    highlightedPanel = Color(0xFF223553),
+    title = TfPayBluePalette.title,
+    subtitle = TfPayBluePalette.subtitle,
+    accentText = TfPayBluePalette.backgroundTop,
+    successPanel = Color(0xFF16342A),
+    dangerPanel = Color(0xFF3A1D25),
+    dangerMuted = Color(0xFFFFB6B6),
+    pill = TfPayBluePalette.elevated,
+)
+
+private val operatorDayColors = OperatorColors(
+    backgroundTop = Color(0xFFF7FAFD),
+    backgroundBottom = Color(0xFFE6EDF5),
+    panel = Color(0xFFFFFFFF),
+    panelMuted = Color(0xFFF0F4F8),
+    panelBorder = Color(0xFFB5C4D6),
+    interactivePanel = Color(0xFFE3EBF4),
+    highlightedPanel = Color(0xFFDCE8F7),
+    title = Color(0xFF122033),
+    subtitle = Color(0xFF44586F),
+    accentText = Color(0xFF122033),
+    successPanel = Color(0xFFDFF5EA),
+    dangerPanel = Color(0xFFFBE3E3),
+    dangerMuted = Color(0xFF7C2525),
+    pill = Color(0xFFE7EEF7),
+)
+
 object OperatorPalette {
-    val backgroundTop = TfPayBluePalette.backgroundTop
-    val backgroundBottom = TfPayBluePalette.backgroundBottom
-    val panel = TfPayBluePalette.panel
-    val panelMuted = TfPayBluePalette.panelMuted
-    val panelBorder = TfPayBluePalette.panelBorder
-    val interactivePanel = TfPayBluePalette.interactivePanel
-    val title = TfPayBluePalette.title
-    val subtitle = TfPayBluePalette.subtitle
+    private val colors: OperatorColors
+        get() = when (AppDisplayModeState.current) {
+            AppDisplayMode.Day -> operatorDayColors
+            AppDisplayMode.Night -> operatorNightColors
+        }
+
+    val backgroundTop get() = colors.backgroundTop
+    val backgroundBottom get() = colors.backgroundBottom
+    val panel get() = colors.panel
+    val panelMuted get() = colors.panelMuted
+    val panelBorder get() = colors.panelBorder
+    val interactivePanel get() = colors.interactivePanel
+    val highlightedPanel get() = colors.highlightedPanel
+    val title get() = colors.title
+    val subtitle get() = colors.subtitle
     val accent = SelfServicePalette.accent
-    val accentText = backgroundTop
+    val accentText get() = colors.accentText
     val success = SelfServicePalette.success
-    val successPanel = Color(0xFF16342A)
+    val successPanel get() = colors.successPanel
     val danger = Color(0xFFFF6B6B)
-    val dangerPanel = Color(0xFF3A1D25)
-    val dangerMuted = Color(0xFFFFB6B6)
-    val pill = TfPayBluePalette.elevated
+    val dangerPanel get() = colors.dangerPanel
+    val dangerMuted get() = colors.dangerMuted
+    val pill get() = colors.pill
 }
 
 /**
@@ -409,8 +470,10 @@ fun OperatorHeader(
                 }
             } else {
                 Row(
-                    modifier = Modifier.padding(horizontal = horizontalPadding, vertical = verticalPadding),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(
@@ -434,7 +497,10 @@ fun OperatorHeader(
                             containerSize = if (iconPainter != null) 56.dp else 48.dp,
                             iconSize = if (iconPainter != null) 56.dp else 24.dp,
                         )
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
                             Text(
                                 text = title,
                                 color = OperatorPalette.title,
@@ -455,6 +521,7 @@ fun OperatorHeader(
                     }
                     if (headerPills.isNotEmpty()) {
                         Row(
+                            modifier = Modifier.wrapContentWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -463,7 +530,14 @@ fun OperatorHeader(
                             }
                         }
                     }
-                    headerAction?.invoke()
+                    if (headerAction != null) {
+                        Box(
+                            modifier = Modifier.width(104.dp),
+                            contentAlignment = Alignment.CenterEnd,
+                        ) {
+                            headerAction()
+                        }
+                    }
                 }
             }
         }
@@ -570,7 +644,7 @@ fun OperatorActionCard(
         modifier = modifier.then(
             if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
         ),
-        backgroundColor = if (emphasized) Color(0xFF223553) else OperatorPalette.panel,
+        backgroundColor = if (emphasized) OperatorPalette.highlightedPanel else OperatorPalette.panel,
         borderColor = if (emphasized) OperatorPalette.accent else OperatorPalette.panelBorder,
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {

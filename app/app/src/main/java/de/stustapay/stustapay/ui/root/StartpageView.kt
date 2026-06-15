@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,12 +34,14 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.runtime.Composable
@@ -55,6 +58,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +78,9 @@ import de.stustapay.stustapay.ui.common.operator.OperatorInfoCard
 import de.stustapay.stustapay.ui.common.operator.OperatorPalette
 import de.stustapay.stustapay.ui.common.operator.OperatorPanel
 import de.stustapay.stustapay.ui.common.operator.OperatorScaffold
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayMode
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayModeManager
+import de.stustapay.stustapay.ui.common.selfservice.AppDisplayModeState
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceDisplayModeToggle
 import de.stustapay.stustapay.ui.common.selfservice.SelfServicePalette
 import de.stustapay.stustapay.ui.common.selfservice.SelfServiceSectionHeader
@@ -339,26 +346,33 @@ private fun OperatorLanding(
         },
         showFooter = false,
         headerAction = {
-            IconButton(
-                onClick = onRotateScreen,
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = OperatorPalette.accent,
-                        shape = RoundedCornerShape(14.dp),
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        color = Color.White.copy(alpha = 0.18f),
-                        shape = RoundedCornerShape(14.dp),
-                    ),
+            Row(
+                modifier = Modifier.width(104.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Filled.ScreenRotation,
-                    contentDescription = stringResource(R.string.content_desc_rotate_screen),
-                    tint = OperatorPalette.backgroundTop,
-                    modifier = Modifier.size(22.dp),
-                )
+                OperatorDisplayModeToggleButton()
+                IconButton(
+                    onClick = onRotateScreen,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = OperatorPalette.accent,
+                            shape = RoundedCornerShape(14.dp),
+                        )
+                        .border(
+                            width = 1.5.dp,
+                            color = Color.White.copy(alpha = 0.18f),
+                            shape = RoundedCornerShape(14.dp),
+                        ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ScreenRotation,
+                        contentDescription = stringResource(R.string.content_desc_rotate_screen),
+                        tint = OperatorPalette.backgroundTop,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
             }
         },
     ) {
@@ -510,6 +524,47 @@ private fun OperatorLanding(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun OperatorDisplayModeToggleButton(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val currentMode = AppDisplayModeState.current
+    val nextMode = if (currentMode == AppDisplayMode.Day) {
+        AppDisplayMode.Night
+    } else {
+        AppDisplayMode.Day
+    }
+
+    IconButton(
+        onClick = { AppDisplayModeManager.persistDisplayMode(context, nextMode) },
+        modifier = modifier
+            .size(48.dp)
+            .background(
+                color = OperatorPalette.accent,
+                shape = RoundedCornerShape(14.dp),
+            )
+            .border(
+                width = 1.5.dp,
+                color = Color.White.copy(alpha = 0.18f),
+                shape = RoundedCornerShape(14.dp),
+            ),
+    ) {
+        Icon(
+            imageVector = if (currentMode == AppDisplayMode.Day) {
+                Icons.Filled.Brightness2
+            } else {
+                Icons.Filled.WbSunny
+            },
+            contentDescription = if (nextMode == AppDisplayMode.Day) {
+                stringResource(R.string.settings_selfservice_display_day)
+            } else {
+                stringResource(R.string.settings_selfservice_display_night)
+            },
+            tint = OperatorPalette.backgroundTop,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 

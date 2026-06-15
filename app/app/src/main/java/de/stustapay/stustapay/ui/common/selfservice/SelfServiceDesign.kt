@@ -47,16 +47,18 @@ import de.stustapay.stustapay.ui.common.theme.TfPayBluePalette
 import de.stustapay.stustapay.locale.AppLanguage
 import de.stustapay.stustapay.locale.AppLocaleManager
 
-enum class SelfServiceDisplayMode(val persistedValue: String) {
+enum class AppDisplayMode(val persistedValue: String) {
     Night("night"),
     Day("day");
 
     companion object {
-        fun fromPersistedValue(value: String?): SelfServiceDisplayMode {
+        fun fromPersistedValue(value: String?): AppDisplayMode {
             return entries.firstOrNull { it.persistedValue == value } ?: Night
         }
     }
 }
+
+typealias SelfServiceDisplayMode = AppDisplayMode
 
 private data class SelfServiceColors(
     val backgroundTop: Color,
@@ -125,34 +127,54 @@ private val selfServiceDayColors = SelfServiceColors(
 )
 
 private object SelfServiceThemeState {
-    var displayMode by mutableStateOf(SelfServiceDisplayMode.Night)
+    var displayMode by mutableStateOf(AppDisplayMode.Night)
 
     val colors: SelfServiceColors
         get() = when (displayMode) {
-            SelfServiceDisplayMode.Night -> selfServiceNightColors
-            SelfServiceDisplayMode.Day -> selfServiceDayColors
+            AppDisplayMode.Night -> selfServiceNightColors
+            AppDisplayMode.Day -> selfServiceDayColors
         }
 }
 
-object SelfServiceDisplayModeManager {
-    private const val preferencesName = "self_service_display_mode"
+object AppDisplayModeManager {
+    private const val preferencesName = "app_display_mode"
+    private const val legacyPreferencesName = "self_service_display_mode"
     private const val displayModeKey = "display_mode"
 
-    fun currentDisplayMode(context: Context): SelfServiceDisplayMode {
-        val preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
-        return SelfServiceDisplayMode.fromPersistedValue(preferences.getString(displayModeKey, null))
+    fun currentDisplayMode(context: Context): AppDisplayMode {
+        val appPreferences = preferences(context)
+        val legacyPreferences = legacyPreferences(context)
+        return resolveStoredMode(
+            storedValue = appPreferences.getString(displayModeKey, null),
+            legacyValue = legacyPreferences.getString(displayModeKey, null),
+        )
     }
 
-    fun persistDisplayMode(context: Context, mode: SelfServiceDisplayMode) {
-        context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+    fun persistDisplayMode(context: Context, mode: AppDisplayMode) {
+        preferences(context)
+            .edit()
+            .putString(displayModeKey, mode.persistedValue)
+            .apply()
+        legacyPreferences(context)
             .edit()
             .putString(displayModeKey, mode.persistedValue)
             .apply()
     }
 
+    fun resolveStoredMode(storedValue: String?, legacyValue: String?): AppDisplayMode {
+        return AppDisplayMode.fromPersistedValue(storedValue ?: legacyValue)
+    }
+
     internal fun key(): String = displayModeKey
     internal fun preferences(context: Context) =
         context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+    internal fun legacyPreferences(context: Context) =
+        context.applicationContext.getSharedPreferences(legacyPreferencesName, Context.MODE_PRIVATE)
+}
+
+object SelfServiceDisplayModeManager {
+    fun currentDisplayMode(context: Context): AppDisplayMode = AppDisplayModeManager.currentDisplayMode(context)
+    fun persistDisplayMode(context: Context, mode: AppDisplayMode) = AppDisplayModeManager.persistDisplayMode(context, mode)
 }
 
 object SelfServicePalette {
@@ -177,30 +199,43 @@ object SelfServicePalette {
     val scanInner get() = SelfServiceThemeState.colors.scanInner
 }
 
-object SelfServiceDisplayModeState {
-    val current: SelfServiceDisplayMode
+object AppDisplayModeState {
+    val current: AppDisplayMode
         get() = SelfServiceThemeState.displayMode
+}
+
+object SelfServiceDisplayModeState {
+    val current: AppDisplayMode
+        get() = AppDisplayModeState.current
+}
+
+@Composable
+fun ObserveAppDisplayMode() {
+    val context = LocalContext.current.applicationContext
+
+    DisposableEffect(context) {
+        val preferences = AppDisplayModeManager.preferences(context)
+        val legacyPreferences = AppDisplayModeManager.legacyPreferences(context)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == null || key == AppDisplayModeManager.key()) {
+                SelfServiceThemeState.displayMode = AppDisplayModeManager.currentDisplayMode(context)
+            }
+        }
+
+        SelfServiceThemeState.displayMode = AppDisplayModeManager.currentDisplayMode(context)
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+        legacyPreferences.registerOnSharedPreferenceChangeListener(listener)
+
+        onDispose {
+            preferences.unregisterOnSharedPreferenceChangeListener(listener)
+            legacyPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
 }
 
 @Composable
 fun ObserveSelfServiceDisplayMode() {
-    val context = LocalContext.current.applicationContext
-
-    DisposableEffect(context) {
-        val preferences = SelfServiceDisplayModeManager.preferences(context)
-        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == null || key == SelfServiceDisplayModeManager.key()) {
-                SelfServiceThemeState.displayMode = SelfServiceDisplayModeManager.currentDisplayMode(context)
-            }
-        }
-
-        SelfServiceThemeState.displayMode = SelfServiceDisplayModeManager.currentDisplayMode(context)
-        preferences.registerOnSharedPreferenceChangeListener(listener)
-
-        onDispose {
-            preferences.unregisterOnSharedPreferenceChangeListener(listener)
-        }
-    }
+    ObserveAppDisplayMode()
 }
 
 @Composable
