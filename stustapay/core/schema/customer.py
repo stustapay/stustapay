@@ -53,3 +53,27 @@ class CustomerCheckout(BaseModel):
     last_checked: Optional[datetime.datetime]
     check_interval: int
     customer_account_id: int
+
+
+class SharedTopupLink(BaseModel):
+    id: int
+    token: str | None = None
+    created_at: datetime.datetime
+    expires_at: datetime.datetime | None
+    revoked_at: datetime.datetime | None
+    label: str | None
+
+
+class SharedTopupPublicInfo(BaseModel):
+    event_name: str
+    currency_identifier: str
+    payment_methods: list[str]
+
+
+class SharedTopupContribution(BaseModel):
+    order_uuid: uuid.UUID
+    contributor_name: str
+    amount: float
+    status: str
+    created_at: datetime.datetime
+    booked_at: datetime.datetime | None

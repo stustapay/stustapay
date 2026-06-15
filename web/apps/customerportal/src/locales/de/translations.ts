@@ -31,6 +31,10 @@ export const translations: NestedPartialAsStrings<Translations> = {
     error: "Fehler",
     currentlyUnavailable: "Das TeamFestlichPay Kundenportal ist aktuell nicht verfügbar",
   },
+  index: {
+    sharedTopupHint:
+      "Auf der Seite <1>Gruppen Aufladung</1> kannst du einen teilbaren Link erstellen, damit andere Guthaben auf diesen Chip laden können.",
+  },
   transaction:
   {
     sepaExit: "Auszahlung (SEPA)"
@@ -55,6 +59,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     total: "Summe",
     viewReceipt: "Beleg anzeigen",
     bookedAt: "Gebucht um: {{date}}",
+    sharedTopupContributor: "Aufladung von: {{name}}",
     orderType: {
       sale: "Kauf",
       cancel_sale: "Stornierter Kauf",
@@ -128,6 +133,40 @@ export const translations: NestedPartialAsStrings<Translations> = {
     paymentTakingTooLong:
       "Die Zahlung dauert etwas länger als üblich. Bitte bleibe auf dieser Seite, während wir den Status automatisch weiter prüfen.",
     unexpectedError: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später noch einmal.",
+    next: "Weiter",
+    shared: {
+      title: "Gruppen-Aufladung",
+      description: "Lade das gemeinsame Guthaben für {{eventName}} auf.",
+      ownerTitle: "Gruppen-Aufladung",
+      ownerDescription: "Erstelle einen reinen Auflade-Link für Personen, die Geld auf diesen Chip laden sollen. Sie können nur ihren Namen und einen Betrag eingeben und bezahlen.",
+      createLink: "Link erstellen",
+      createFailed: "Link konnte nicht erstellt werden.",
+      created: "Link wurde erstellt und kopiert.",
+      link: "Link zur Gruppen-Aufladung",
+      copy: "Link kopieren",
+      copied: "Link kopiert.",
+      copyFailed: "Link konnte nicht kopiert werden.",
+      revoke: "Link sperren",
+      revoked: "Link wurde gesperrt.",
+      revokeFailed: "Link konnte nicht gesperrt werden.",
+      createdAt: "Erstellt",
+      status: "Status",
+      actions: "Aktionen",
+      activeStatus: "Aktiv",
+      revokedStatus: "Gesperrt",
+      contributionsTitle: "Gruppen Aufladungen",
+      noContributions: "Noch keine Aufladungen.",
+      name: "Dein Name",
+      nameRequired: "Name ist erforderlich",
+      nameTooLong: "Name ist zu lang",
+      invalidLink: "Dieser Link zur Gruppen-Aufladung ist ungültig oder wurde gesperrt.",
+      success: "Das gemeinsame Chip-Guthaben wurde aufgeladen.",
+      contributionStatus: {
+        pending: "Ausstehend",
+        booked: "Bezahlt",
+        cancelled: "Abgebrochen",
+      },
+    },
     success: {
       title: "Aufladung erfolgreich",
       message: "Bitte gehe weiter zur <1>Übersichtsseite</1>.",

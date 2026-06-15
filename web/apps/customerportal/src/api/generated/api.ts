@@ -1,5 +1,5 @@
 import { emptySplitApi as api } from "./emptyApi";
-export const addTagTypes = ["auth", "base", "sumup"] as const;
+export const addTagTypes = ["auth", "base", "shared-topup", "sumup"] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
     addTagTypes,
@@ -58,6 +58,49 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/banner/${queryArg.nodeId}` }),
         providesTags: ["base"],
       }),
+      listSharedTopupLinks: build.query<ListSharedTopupLinksApiResponse, ListSharedTopupLinksApiArg>({
+        query: () => ({ url: `/shared-topup/links` }),
+        providesTags: ["shared-topup"],
+      }),
+      createSharedTopupLink: build.mutation<CreateSharedTopupLinkApiResponse, CreateSharedTopupLinkApiArg>({
+        query: (queryArg) => ({
+          url: `/shared-topup/links`,
+          method: "POST",
+          body: queryArg.createSharedTopupLinkPayload,
+        }),
+        invalidatesTags: ["shared-topup"],
+      }),
+      revokeSharedTopupLink: build.mutation<RevokeSharedTopupLinkApiResponse, RevokeSharedTopupLinkApiArg>({
+        query: (queryArg) => ({ url: `/shared-topup/links/${queryArg.linkId}`, method: "DELETE" }),
+        invalidatesTags: ["shared-topup"],
+      }),
+      listSharedTopupContributions: build.query<
+        ListSharedTopupContributionsApiResponse,
+        ListSharedTopupContributionsApiArg
+      >({
+        query: () => ({ url: `/shared-topup/contributions` }),
+        providesTags: ["shared-topup"],
+      }),
+      getSharedTopupPublicInfo: build.query<GetSharedTopupPublicInfoApiResponse, GetSharedTopupPublicInfoApiArg>({
+        query: (queryArg) => ({ url: `/shared-topup/${queryArg.sharedTopupToken}` }),
+        providesTags: ["shared-topup"],
+      }),
+      createSharedTopupCheckout: build.mutation<CreateSharedTopupCheckoutApiResponse, CreateSharedTopupCheckoutApiArg>({
+        query: (queryArg) => ({
+          url: `/shared-topup/${queryArg.sharedTopupToken}/create-checkout`,
+          method: "POST",
+          body: queryArg.createSharedTopupCheckoutPayload,
+        }),
+        invalidatesTags: ["shared-topup"],
+      }),
+      checkSharedTopupCheckout: build.mutation<CheckSharedTopupCheckoutApiResponse, CheckSharedTopupCheckoutApiArg>({
+        query: (queryArg) => ({
+          url: `/shared-topup/${queryArg.sharedTopupToken}/check-checkout`,
+          method: "POST",
+          body: queryArg.checkSharedTopupCheckoutPayload,
+        }),
+        invalidatesTags: ["shared-topup"],
+      }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
         query: (queryArg) => ({ url: `/sumup/create-checkout`, method: "POST", body: queryArg.createCheckoutPayload }),
         invalidatesTags: ["sumup"],
@@ -101,6 +144,34 @@ export type GetBonApiArg = {
 export type GetBannerApiResponse = /** status 200 Successful Response */ any;
 export type GetBannerApiArg = {
   nodeId: number;
+};
+export type ListSharedTopupLinksApiResponse = /** status 200 Successful Response */ SharedTopupLink[];
+export type ListSharedTopupLinksApiArg = void;
+export type CreateSharedTopupLinkApiResponse = /** status 200 Successful Response */ SharedTopupLink;
+export type CreateSharedTopupLinkApiArg = {
+  createSharedTopupLinkPayload: CreateSharedTopupLinkPayload;
+};
+export type RevokeSharedTopupLinkApiResponse = unknown;
+export type RevokeSharedTopupLinkApiArg = {
+  linkId: number;
+};
+export type ListSharedTopupContributionsApiResponse = /** status 200 Successful Response */ SharedTopupContribution[];
+export type ListSharedTopupContributionsApiArg = void;
+export type GetSharedTopupPublicInfoApiResponse = /** status 200 Successful Response */ SharedTopupPublicInfo;
+export type GetSharedTopupPublicInfoApiArg = {
+  sharedTopupToken: string;
+};
+export type CreateSharedTopupCheckoutApiResponse =
+  /** status 200 Successful Response */ CreateSharedTopupCheckoutResponse;
+export type CreateSharedTopupCheckoutApiArg = {
+  sharedTopupToken: string;
+  createSharedTopupCheckoutPayload: CreateSharedTopupCheckoutPayload;
+};
+export type CheckSharedTopupCheckoutApiResponse =
+  /** status 200 Successful Response */ CheckSharedTopupCheckoutResponse;
+export type CheckSharedTopupCheckoutApiArg = {
+  sharedTopupToken: string;
+  checkSharedTopupCheckoutPayload: CheckSharedTopupCheckoutPayload;
 };
 export type CreateCheckoutApiResponse = /** status 200 Successful Response */ CreateCheckoutResponse;
 export type CreateCheckoutApiArg = {
@@ -311,6 +382,7 @@ export type OrderWithBon = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItem[];
   bon_generated: boolean | null;
 };
@@ -330,6 +402,7 @@ export type OrderWithBonRead = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItemRead[];
   bon_generated: boolean | null;
   customer_tag_uid_hex: string | null;
@@ -391,6 +464,7 @@ export type OrderWithTse = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItem[];
   signature_status: string;
   transaction_process_type?: string | null;
@@ -421,6 +495,7 @@ export type OrderWithTseRead = {
   customer_account_id: number | null;
   customer_tag_uid: number | null;
   customer_tag_id: number | null;
+  shared_topup_contributor_name?: string | null;
   line_items: LineItemRead[];
   signature_status: string;
   transaction_process_type?: string | null;
@@ -462,6 +537,45 @@ export type BonJsonRead = {
   config: BonConfig;
   currency_identifier: string;
 };
+export type SharedTopupLink = {
+  id: number;
+  token?: string | null;
+  created_at: string;
+  expires_at: string | null;
+  revoked_at: string | null;
+  label: string | null;
+};
+export type CreateSharedTopupLinkPayload = {
+  label?: string | null;
+};
+export type SharedTopupContribution = {
+  order_uuid: string;
+  contributor_name: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  booked_at: string | null;
+};
+export type SharedTopupPublicInfo = {
+  event_name: string;
+  currency_identifier: string;
+  payment_methods: string[];
+};
+export type CreateSharedTopupCheckoutResponse = {
+  checkout_id: string;
+  order_uuid: string;
+};
+export type CreateSharedTopupCheckoutPayload = {
+  amount: number;
+  contributor_name: string;
+};
+export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
+export type CheckSharedTopupCheckoutResponse = {
+  status: SumUpCheckoutStatus;
+};
+export type CheckSharedTopupCheckoutPayload = {
+  order_uuid: string;
+};
 export type CreateCheckoutResponse = {
   checkout_id: string;
   order_uuid: string;
@@ -469,7 +583,6 @@ export type CreateCheckoutResponse = {
 export type CreateCheckoutPayload = {
   amount: number;
 };
-export type SumUpCheckoutStatus = "PENDING" | "FAILED" | "PAID";
 export type CheckCheckoutResponse = {
   status: SumUpCheckoutStatus;
 };
@@ -495,6 +608,16 @@ export const {
   useLazyGetBonQuery,
   useGetBannerQuery,
   useLazyGetBannerQuery,
+  useListSharedTopupLinksQuery,
+  useLazyListSharedTopupLinksQuery,
+  useCreateSharedTopupLinkMutation,
+  useRevokeSharedTopupLinkMutation,
+  useListSharedTopupContributionsQuery,
+  useLazyListSharedTopupContributionsQuery,
+  useGetSharedTopupPublicInfoQuery,
+  useLazyGetSharedTopupPublicInfoQuery,
+  useCreateSharedTopupCheckoutMutation,
+  useCheckSharedTopupCheckoutMutation,
   useCreateCheckoutMutation,
   useCheckCheckoutMutation,
 } = injectedRtkApi;
