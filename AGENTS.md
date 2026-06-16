@@ -25,6 +25,7 @@
 - Prefer typed functions; keep business logic in core modules and leave I/O at the edges.
 - Module/file names use `snake_case`; classes `PascalCase`; functions/variables `snake_case`.
 - Lint/format with Ruff; type-check with MyPy; PyLint is configured to ignore most style nitpicks but respect warnings/errors.
+- Database migrations in `stustapay/core/schema/db/` must start with `-- migration: <id>` and `-- requires: <id>` (or `-- requires: null` for the base migration). Use migration ids, not SQL filenames, in `requires`.
 
 ## Testing Guidelines
 - Framework: `pytest` with asyncio support; coverage source is `stustapay`.
