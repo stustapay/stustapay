@@ -13,7 +13,6 @@
     --portal-success: #2e7d32;
     --portal-warning: #b26a00;
     --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-bg-dark: rgba(30, 30, 30, 0.85);
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.1);
     --shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.15);
     --border-glass: 1px solid rgba(255, 255, 255, 0.18);
@@ -33,18 +32,6 @@ html {
 body {
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
     min-height: 100vh;
-}
-
-/* Dark mode body */
-@media (prefers-color-scheme: dark) {
-    body {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    }
-
-    :root {
-        --glass-bg: rgba(30, 30, 30, 0.85);
-        --border-glass: 1px solid rgba(255, 255, 255, 0.08);
-    }
 }
 
 /* Glassmorphism card effect */

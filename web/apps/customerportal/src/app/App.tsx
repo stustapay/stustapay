@@ -1,13 +1,11 @@
 import * as React from "react";
-import { useMediaQuery, PaletteMode, createTheme, ThemeProvider, CssBaseline } from "@mui/material";
+import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { Router } from "./Router";
 import { ToastContainer } from "react-toastify";
 import {
   forceLogout,
-  selectTheme,
   shouldResetPersistedPortalAuth,
   store,
-  useAppSelector,
 } from "@/store";
 import { Loading } from "@stustapay/components";
 import { api } from "@/api";
@@ -18,10 +16,7 @@ import { CurrencyIdentifier } from "@stustapay/models";
 
 export function App() {
   const [state, setState] = React.useState<"loading" | "loaded" | "error">("loading");
-  const darkModeSystem = useMediaQuery("(prefers-color-scheme: dark)");
-  const themeModeStore = useAppSelector(selectTheme);
-
-  const themeMode: PaletteMode = themeModeStore === "browser" ? (darkModeSystem ? "dark" : "light") : themeModeStore;
+  const themeMode = "light";
 
   const theme = React.useMemo(
     () =>

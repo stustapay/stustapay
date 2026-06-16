@@ -5,16 +5,8 @@
  width="1361.902273pt" height="849.586680pt" viewBox="0 0 1361.902273 849.586680"
  preserveAspectRatio="xMidYMid meet">
  <style>
-    :root {
-        --fill-color: #000000;
-    }
-    @media (prefers-color-scheme: dark) {
-        :root {
-            --fill-color: #FFFFFF;
-        }
-    }
     path {
-        fill: var(--fill-color);
+        fill: #000000;
     }
 </style>
 <metadata>

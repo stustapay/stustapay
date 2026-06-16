@@ -54,23 +54,48 @@ type SumupPaymentMethodsProps = {
   paymentMethods?: string[];
 };
 
+const paymentMethodTextSx = {
+  color: "var(--portal-card-text)",
+};
+
+const paymentMethodCaptionSx = {
+  color: "var(--portal-card-muted)",
+  letterSpacing: 0.6,
+  textTransform: "uppercase",
+};
+
+const paymentMethodChipSx = {
+  color: "var(--portal-card-text)",
+  borderColor: "rgba(82, 101, 124, 0.75)",
+  backgroundColor: "rgba(255, 255, 255, 0.72)",
+  "& .MuiChip-label": {
+    color: "inherit",
+  },
+};
+
 export const SumupPaymentMethods: React.FC<SumupPaymentMethodsProps> = ({ paymentMethods }) => {
   const { t } = useTranslation();
   const normalizedPaymentMethods = normalizePaymentMethods(paymentMethods);
 
   return (
     <Stack spacing={1}>
-      <Typography variant="body2" component="div">
+      <Typography variant="body2" component="div" sx={paymentMethodTextSx}>
         {t("topup.description")}
       </Typography>
       {normalizedPaymentMethods.length > 0 && (
         <Stack spacing={1}>
-          <Typography variant="caption" component="div" sx={{ letterSpacing: 0.6, opacity: 0.8, textTransform: "uppercase" }}>
+          <Typography variant="caption" component="div" sx={paymentMethodCaptionSx}>
             {t("topup.availablePaymentMethods")}
           </Typography>
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
             {normalizedPaymentMethods.map((paymentMethod) => (
-              <Chip key={paymentMethod} label={getSumupPaymentMethodLabel(t, paymentMethod)} size="small" variant="outlined" />
+              <Chip
+                key={paymentMethod}
+                label={getSumupPaymentMethodLabel(t, paymentMethod)}
+                size="small"
+                variant="outlined"
+                sx={paymentMethodChipSx}
+              />
             ))}
           </Stack>
         </Stack>
