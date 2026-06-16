@@ -5,6 +5,13 @@
     /* Color palette */
     --primary-gradient: linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%);
     --accent-gradient: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+    --primary-main: #1976d2;
+    --portal-card-bg: rgba(255, 255, 255, 0.94);
+    --portal-card-border: rgba(25, 118, 210, 0.18);
+    --portal-card-text: #132238;
+    --portal-card-muted: #52657c;
+    --portal-success: #2e7d32;
+    --portal-warning: #b26a00;
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-bg-dark: rgba(30, 30, 30, 0.85);
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -196,9 +203,44 @@ a {
     color: var(--primary-main) !important;
 }
 
+.glass-alert .MuiAlert-message,
+.glass-alert .MuiAlert-action,
+.glass-alert .MuiAlertTitle-root,
+.glass-alert a {
+    color: var(--portal-card-text) !important;
+}
+
+.glass-alert .MuiTypography-root {
+    color: inherit;
+}
+
 .glass-alert b,
 .glass-alert strong {
-    color: #0d47a1 !important;
+    color: var(--primary-main) !important;
+}
+
+.portal-alert-info .MuiAlert-icon,
+.portal-alert-info b,
+.portal-alert-info strong {
+    color: var(--primary-main) !important;
+}
+
+.portal-alert-info,
+.portal-alert-warning {
+    background: var(--portal-card-bg) !important;
+    border-color: var(--portal-card-border) !important;
+}
+
+.portal-alert-warning .MuiAlert-icon,
+.portal-alert-warning b,
+.portal-alert-warning strong {
+    color: var(--portal-warning) !important;
+}
+
+.portal-alert-warning .MuiAlert-message,
+.portal-alert-warning .MuiAlertTitle-root,
+.portal-alert-warning a {
+    color: var(--portal-card-text) !important;
 }
 
 /* Override browser autofill blue background */

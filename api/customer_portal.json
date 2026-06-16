@@ -1430,6 +1430,10 @@
             "type": "boolean",
             "title": "Sumup Topup Enabled"
           },
+          "group_topup_enabled": {
+            "type": "boolean",
+            "title": "Group Topup Enabled"
+          },
           "sumup_topup_payment_methods": {
             "items": {
               "type": "string"
@@ -1528,6 +1532,7 @@
           "donation_enabled",
           "currency_identifier",
           "sumup_topup_enabled",
+          "group_topup_enabled",
           "allowed_country_codes",
           "translation_texts",
           "event_name",

@@ -162,6 +162,7 @@ export const translations = {
       name: "Your name",
       nameRequired: "Name is required",
       nameTooLong: "Name is too long",
+      disabled: "Group top-up is disabled for this event.",
       invalidLink: "This group top-up link is invalid or has been revoked.",
       success: "The group chip balance has been topped up.",
       contributionStatus: {

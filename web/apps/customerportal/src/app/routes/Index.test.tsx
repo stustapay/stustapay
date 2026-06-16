@@ -19,6 +19,8 @@ const mockUsePublicConfig = jest.fn();
 const translations: Record<string, string> = {
   errorLoadingCustomer: "Error loading customer",
   "payout.onlyDuringEvent": "Fallback payout disabled notice",
+  "topup.onlineTopUp": "Online Top Up",
+  "topup.shared.ownerTitle": "Group Top-Up",
 };
 
 jest.mock("@/api", () => ({
@@ -92,6 +94,7 @@ describe("Index payout disabled notice", () => {
     mockUsePublicConfig.mockReturnValue({
       payout_enabled: false,
       sumup_topup_enabled: false,
+      group_topup_enabled: false,
       sumup_topup_payment_methods: [],
       translation_texts: {},
     });
@@ -108,6 +111,7 @@ describe("Index payout disabled notice", () => {
     mockUsePublicConfig.mockReturnValue({
       payout_enabled: false,
       sumup_topup_enabled: false,
+      group_topup_enabled: false,
       sumup_topup_payment_methods: [],
       translation_texts: {
         "en-US": {
@@ -125,5 +129,35 @@ describe("Index payout disabled notice", () => {
     renderIndex();
 
     expect(screen.getByText("Fallback payout disabled notice")).toBeTruthy();
+  });
+
+  test("shows the personal top-up action when only personal top-up is enabled", () => {
+    mockUsePublicConfig.mockReturnValue({
+      payout_enabled: false,
+      sumup_topup_enabled: true,
+      group_topup_enabled: false,
+      sumup_topup_payment_methods: ["card"],
+      translation_texts: {},
+    });
+
+    renderIndex();
+
+    expect(screen.getByText("Online Top Up")).toBeTruthy();
+    expect(screen.queryByText("Group Top-Up")).toBeNull();
+  });
+
+  test("shows the group top-up action when only group top-up is enabled", () => {
+    mockUsePublicConfig.mockReturnValue({
+      payout_enabled: false,
+      sumup_topup_enabled: false,
+      group_topup_enabled: true,
+      sumup_topup_payment_methods: ["card"],
+      translation_texts: {},
+    });
+
+    renderIndex();
+
+    expect(screen.queryByText("Online Top Up")).toBeNull();
+    expect(screen.getByText("Group Top-Up")).toBeTruthy();
   });
 });

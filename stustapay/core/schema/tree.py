@@ -26,6 +26,7 @@ class _BaseEvent(BaseModel):
     post_payment_allowed: bool = False
 
     sumup_topup_enabled: bool
+    group_topup_enabled: bool = False
     sumup_payment_enabled: bool
 
     customer_portal_url: str
@@ -79,6 +80,9 @@ class _BaseEvent(BaseModel):
 
     def is_sumup_topup_enabled(self, cfg: CoreConfig):
         return self.sumup_topup_enabled and cfg.sumup_enabled
+
+    def is_group_topup_enabled(self, cfg: CoreConfig):
+        return self.group_topup_enabled and cfg.sumup_enabled
 
     def is_sumup_payment_enabled(self, cfg: CoreConfig):
         return self.sumup_payment_enabled and cfg.sumup_enabled

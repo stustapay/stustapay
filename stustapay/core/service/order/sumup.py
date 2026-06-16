@@ -59,6 +59,7 @@ SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
 SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 SUMUP_PENDING_ORDER_TIMEOUT = timedelta(minutes=5)  # Time after which pending orders are considered failed
 MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK = 5
+GROUP_TOPUP_DISABLED_MESSAGE = "Group top-up is currently disabled"
 
 
 class CreateCheckout(BaseModel):
@@ -532,8 +533,8 @@ class SumupService(Service[Config]):
         event_node = await fetch_event_node_for_node(conn=conn, node_id=link["node_id"])
         assert event_node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=link["node_id"])
-        if not event_settings.is_sumup_topup_enabled(self.config.core):
-            raise InvalidArgument("Online Top Up is currently disabled")
+        if not event_settings.is_group_topup_enabled(self.config.core):
+            raise InvalidArgument(GROUP_TOPUP_DISABLED_MESSAGE)
 
         resolved = await create_sumup_api_for_node(
             conn=conn, node_id=event_node.id, api_factory=self._create_sumup_api

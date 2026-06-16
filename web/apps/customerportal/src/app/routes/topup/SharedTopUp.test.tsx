@@ -34,6 +34,7 @@ const translations: Record<string, string> = {
   "topup.error.title": "Top-up failed",
   "topup.error.message": "An unknown error occurred.",
   "topup.errorWhileCreatingCheckout": "Error while trying to create sumup checkout",
+  "topup.shared.disabled": "Group top-up is disabled for this event.",
   "topup.cancelled.defaultMessage": "The payment was cancelled or timed out. You can try again.",
   "topup.tryAgain": "Try again",
 };
@@ -115,6 +116,7 @@ jest.mock("react-toastify", () => ({
 }));
 
 const { MemoryRouter, Route, Routes } = require("react-router-dom");
+const { toast } = require("react-toastify");
 const { SharedTopUp } = require("./SharedTopUp");
 
 describe("SharedTopUp", () => {
@@ -126,7 +128,7 @@ describe("SharedTopUp", () => {
     });
   };
 
-  const renderSharedTopUp = (initialEntry = "/shared-topup/shared-token") =>
+  const renderSharedTopUp = (initialEntry: string | { pathname: string; search?: string } = "/shared-topup/shared-token") =>
     render(
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
@@ -202,6 +204,7 @@ describe("SharedTopUp", () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    window.history.replaceState({}, "", "/");
   });
 
   test("continues polling automatically when the shared checkout takes longer than expected", async () => {
@@ -235,5 +238,36 @@ describe("SharedTopUp", () => {
     await advanceTimersByTime(30 * 1000);
 
     await screen.findByText("Top-up successful");
+  });
+
+  test("shows a disabled notice when the backend reports the feature is disabled", () => {
+    mockGetSharedTopupPublicInfo.mockReturnValue({
+      data: undefined,
+      error: { data: { detail: "Group top-up is currently disabled" } },
+      isLoading: false,
+    });
+
+    renderSharedTopUp();
+
+    expect(screen.getByText("Group top-up is disabled for this event.")).toBeTruthy();
+  });
+
+  test("shows a disabled toast when checkout creation is blocked by the event setting", async () => {
+    mockCreateSharedTopupCheckout.mockReturnValue({
+      unwrap: () => Promise.reject({ data: { detail: "Group top-up is currently disabled" } }),
+    });
+
+    renderSharedTopUp();
+
+    fireEvent.change(screen.getByLabelText("Your name"), { target: { value: "Alice" } });
+    fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "20" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(toast.error).toHaveBeenCalledWith("Group top-up is disabled for this event.");
   });
 });

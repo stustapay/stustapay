@@ -86,6 +86,7 @@ def _new_customer_portal_event(name: str, customer_portal_url: str, merchant_cod
         bon_address="",
         max_account_balance=150,
         sumup_topup_enabled=True,
+        group_topup_enabled=True,
         sumup_payment_enabled=True,
         sumup_affiliate_key="test_affiliate",
         sumup_api_key=f"test_api_key_{merchant_code}",
@@ -108,6 +109,14 @@ def _new_customer_portal_event(name: str, customer_portal_url: str, merchant_cod
         pretix_organizer=None,
         pretix_shop_url=None,
         pretix_ticket_ids=None,
+    )
+
+
+async def _set_group_topup_enabled(conn: Connection, event_node: Node, enabled: bool) -> None:
+    await conn.execute(
+        "update event set group_topup_enabled = $1 where id = (select event_id from node where id = $2)",
+        enabled,
+        event_node.id,
     )
 
 
@@ -371,6 +380,7 @@ async def test_get_api_config_includes_sumup_payment_methods(
     config = await customer_service.get_api_config(base_url=base_url)
 
     assert config.sumup_topup_enabled is True
+    assert config.group_topup_enabled is False
     assert config.sumup_topup_payment_methods == ["card", "apple_pay", "ideal"]
 
 
@@ -395,6 +405,7 @@ async def test_get_api_config_returns_empty_payment_methods_on_sumup_error(
     config = await customer_service.get_api_config(base_url=base_url)
 
     assert config.sumup_topup_enabled is True
+    assert config.group_topup_enabled is False
     assert config.sumup_topup_payment_methods == []
 
 
@@ -419,6 +430,7 @@ async def test_get_api_config_skips_payment_methods_when_sumup_topup_disabled(
     config = await customer_service.get_api_config(base_url=base_url)
 
     assert config.sumup_topup_enabled is False
+    assert config.group_topup_enabled is False
     assert config.sumup_topup_payment_methods == []
 
 
@@ -780,8 +792,9 @@ async def test_concurrent_check_online_topup_checkout_books_paid_checkout_once(
 
 
 async def test_shared_topup_link_lifecycle_and_contributor_validation(
-    customer_service: CustomerService, test_customer: Customer, event_node: Node
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
     )
@@ -814,6 +827,7 @@ async def test_shared_topup_link_is_scoped_to_customer_portal_base_url(
     test_customer: Customer,
     event_node: Node,
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
@@ -852,6 +866,7 @@ async def test_shared_topup_link_is_scoped_to_customer_portal_base_url(
 async def test_shared_topup_checkout_books_contributor_without_reserving_pending_balance(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     await db_connection.execute(
         "update event set max_account_balance = 145, vip_max_account_balance = 145 "
         "where id = (select event_id from node where id = $1)",
@@ -926,6 +941,7 @@ async def test_shared_topup_checkout_books_contributor_without_reserving_pending
 async def test_shared_topup_checkout_books_late_paid_checkout_after_local_cancellation(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
@@ -966,6 +982,7 @@ async def test_shared_topup_checkout_books_late_paid_checkout_after_local_cancel
 async def test_shared_topup_checkout_returns_failed_for_cancelled_unpaid_checkout(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
@@ -1000,8 +1017,9 @@ async def test_shared_topup_checkout_returns_failed_for_cancelled_unpaid_checkou
 
 
 async def test_shared_topup_link_active_link_cap(
-    customer_service: CustomerService, test_customer: Customer, event_node: Node
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
     )
@@ -1019,8 +1037,9 @@ async def test_shared_topup_link_active_link_cap(
 
 
 async def test_shared_topup_checkout_pending_checkout_cap(
-    customer_service: CustomerService, test_customer: Customer, event_node: Node
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
@@ -1049,6 +1068,7 @@ async def test_shared_topup_checkout_pending_checkout_cap(
 async def test_personal_topup_checkout_ignores_pending_shared_topup_order(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
@@ -1106,6 +1126,7 @@ async def test_personal_topup_checkout_ignores_pending_shared_topup_order(
 async def test_shared_topup_checkout_can_be_finalized_after_link_revocation(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
+    await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
@@ -1123,6 +1144,50 @@ async def test_shared_topup_checkout_can_be_finalized_after_link_revocation(
     )
     await customer_service.revoke_shared_topup_link(token=auth.token, link_id=link.id)
 
+    sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
+
+    assert (
+        await customer_service.sumup.check_shared_topup_checkout(
+            token=link.token,
+            order_uuid=order_uuid,
+        )
+        == SumUpCheckoutStatus.PAID
+    )
+    assert await db_connection.fetchval("select balance from account where id = $1", test_customer.id) == 140
+
+
+async def test_shared_topup_is_disabled_by_event_flag(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    await _set_group_topup_enabled(db_connection, event_node, False)
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+
+    with pytest.raises(InvalidArgument, match="Group top-up is currently disabled"):
+        await customer_service.create_shared_topup_link(token=auth.token)
+
+
+async def test_shared_topup_checkout_can_be_finalized_after_event_feature_is_disabled(
+    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+):
+    await _set_group_topup_enabled(db_connection, event_node, True)
+    customer_service.sumup.config.core.sumup_enabled = True
+    auth = await customer_service.login_customer(
+        uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
+    )
+    link = await customer_service.create_shared_topup_link(token=auth.token)
+    assert link.token is not None
+
+    sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
+    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+
+    _, order_uuid = await customer_service.sumup.create_shared_topup_checkout(
+        token=link.token,
+        amount=20,
+        contributor_name="Alice",
+    )
+    await _set_group_topup_enabled(db_connection, event_node, False)
     sumup_api.checkouts[order_uuid].status = SumUpCheckoutStatus.PAID
 
     assert (

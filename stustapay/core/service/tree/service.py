@@ -87,6 +87,7 @@ COPY_EVENT_SUMUP_RESET_VALUES = {
     "sumup_oauth_client_id": "",
     "sumup_oauth_client_secret": "",
     "sumup_topup_enabled": False,
+    "group_topup_enabled": False,
     "sumup_payment_enabled": False,
 }
 
@@ -102,6 +103,7 @@ def _build_event_db_values(event: NewEvent, available_columns: set[str]) -> list
     values: list[tuple[str, object]] = [
         ("currency_identifier", event.currency_identifier),
         ("sumup_topup_enabled", event.sumup_topup_enabled),
+        ("group_topup_enabled", event.group_topup_enabled),
         ("max_account_balance", event.max_account_balance),
         ("vip_max_account_balance", event.vip_max_account_balance),
         ("ust_id", event.ust_id),
@@ -1439,6 +1441,7 @@ class TreeService(Service[Config]):
                 max_account_balance=150.0,
                 vip_max_account_balance=300.0,
                 sumup_topup_enabled=False,
+                group_topup_enabled=False,
                 sumup_payment_enabled=False,
                 customer_portal_url="",
                 customer_portal_about_page_url="",

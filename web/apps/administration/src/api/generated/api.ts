@@ -4309,6 +4309,7 @@ export type PublicEventSettings = {
   expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
+  group_topup_enabled?: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
@@ -4425,6 +4426,7 @@ export type NewEvent = {
   expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
+  group_topup_enabled?: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
@@ -4505,6 +4507,7 @@ export type UpdateEvent = {
   expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
+  group_topup_enabled?: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;
@@ -4574,6 +4577,7 @@ export type RestrictedEventSettings = {
   expected_visitors_per_day?: number | null;
   post_payment_allowed?: boolean;
   sumup_topup_enabled: boolean;
+  group_topup_enabled?: boolean;
   sumup_payment_enabled: boolean;
   customer_portal_url: string;
   customer_portal_about_page_url: string;

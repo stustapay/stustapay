@@ -21,12 +21,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param sumupAffiliateKey
- * @param sumupApiKey
- * @param sumupMerchantCode
- * @param sumupApiKeyExpiresAt
+ * @param sumupAffiliateKey 
+ * @param sumupApiKey 
+ * @param sumupMerchantCode 
+ * @param sumupApiKeyExpiresAt 
  */
 @Serializable
 
@@ -48,3 +48,4 @@ data class TerminalSumupSecrets (
 
 
 }
+

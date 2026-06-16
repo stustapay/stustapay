@@ -613,6 +613,7 @@ export const translations = {
       globalTabLabel: "Global App",
       sumup_payment_enabled: "SumUp Payment Enabled",
       sumup_topup_enabled: "SumUp Top Up Enabled",
+      group_topup_enabled: "Group Top Up Enabled",
       sumup_api_key: "SumUp API Key",
       sumup_merchant_code: "SumUp Merchant Code",
       sumup_affiliate_key: "SumUp Affiliate Key",

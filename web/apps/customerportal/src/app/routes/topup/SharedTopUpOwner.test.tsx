@@ -65,6 +65,7 @@ jest.mock("@/components", () => ({
 
 jest.mock("@/hooks", () => ({
   useCurrencyFormatter: () => (amount: number) => `${amount.toFixed(2)} EUR`,
+  usePublicConfig: () => ({ group_topup_enabled: true }),
 }));
 
 jest.mock("react-i18next", () => ({

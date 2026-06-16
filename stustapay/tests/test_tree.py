@@ -32,6 +32,7 @@ def _build_source_event(name: str = "Original Event", description: str = "Event 
         description=description,
         currency_identifier="CHF",
         sumup_topup_enabled=True,
+        group_topup_enabled=True,
         sumup_payment_enabled=True,
         max_account_balance=123.45,
         vip_max_account_balance=456.78,
@@ -205,6 +206,7 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
     assert f"/0/{event_node.id}" == event_node.path
     assert list_equals([0], event_node.parent_ids)
     assert 0 == event_node.parent
+    assert event_node.event.group_topup_enabled is False
 
     child_node: Node = await tree_service.create_node(
         token=global_admin_token,
@@ -673,6 +675,7 @@ async def test_copy_event(
         "sumup_oauth_client_secret",
         "sumup_oauth_refresh_token",
         "sumup_topup_enabled",
+        "group_topup_enabled",
         "sumup_payment_enabled",
     }
     assert copied_settings.model_dump(exclude=sumup_enrichment_exclude) == original_settings.model_dump(
@@ -688,6 +691,7 @@ async def test_copy_event(
     assert copied_settings.sumup_oauth_client_secret == ""
     assert copied_settings.sumup_oauth_refresh_token == ""
     assert copied_settings.sumup_topup_enabled is False
+    assert copied_settings.group_topup_enabled is False
     assert copied_settings.sumup_payment_enabled is False
 
     copied_banner = await db_connection.fetchrow(

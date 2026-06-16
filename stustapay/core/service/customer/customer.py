@@ -60,6 +60,7 @@ class CustomerPortalApiConfig(BaseModel):
     donation_enabled: bool
     currency_identifier: str
     sumup_topup_enabled: bool
+    group_topup_enabled: bool
     sumup_topup_payment_methods: list[str] = Field(default_factory=list)
     allowed_country_codes: Optional[list[str]]
     translation_texts: dict[Language, dict[str, str]]
@@ -100,6 +101,14 @@ class CustomerService(Service[Config]):
     def hash_shared_topup_token(token: str) -> str:
         return hash_shared_topup_token(token)
 
+    @staticmethod
+    def _raise_group_topup_disabled() -> None:
+        raise InvalidArgument("Group top-up is currently disabled")
+
+    def _require_group_topup_enabled(self, event_settings) -> None:
+        if not event_settings.is_group_topup_enabled(self.config.core):
+            self._raise_group_topup_disabled()
+
     @with_db_transaction
     @requires_customer
     async def create_shared_topup_link(
@@ -110,6 +119,8 @@ class CustomerService(Service[Config]):
         label: str | None = None,
         customer_portal_base_url: str | None = None,
     ) -> SharedTopupLink:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
+        self._require_group_topup_enabled(event_settings)
         await conn.fetchval("select id from account where id = $1 for update", current_customer.id)
         active_link_count = await conn.fetchval(
             "select count(*) "
@@ -142,6 +153,8 @@ class CustomerService(Service[Config]):
         current_customer: Customer,
         customer_portal_base_url: str | None = None,
     ) -> list[SharedTopupLink]:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
+        self._require_group_topup_enabled(event_settings)
         rows = await conn.fetch(
             "select id, null::text as token, created_at, expires_at, revoked_at, label "
             "from shared_topup_link "
@@ -161,6 +174,8 @@ class CustomerService(Service[Config]):
         link_id: int,
         customer_portal_base_url: str | None = None,
     ) -> None:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
+        self._require_group_topup_enabled(event_settings)
         result = await conn.execute(
             "update shared_topup_link set revoked_at = now() "
             "where id = $1 and customer_account_id = $2 and revoked_at is null",
@@ -179,6 +194,8 @@ class CustomerService(Service[Config]):
         current_customer: Customer,
         customer_portal_base_url: str | None = None,
     ) -> list[SharedTopupContribution]:
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=current_customer.node_id)
+        self._require_group_topup_enabled(event_settings)
         return await conn.fetch_many(
             SharedTopupContribution,
             "select "
@@ -212,6 +229,7 @@ class CustomerService(Service[Config]):
         event_node = await fetch_event_node_for_node(conn=conn, node_id=link["node_id"])
         if event_node is None or event_node.event is None:
             raise AccessDenied("Invalid shared topup link")
+        self._require_group_topup_enabled(event_node.event)
         payment_methods = await self.sumup.get_available_payment_methods_for_node(
             conn=conn,
             node_id=event_node.id,
@@ -570,6 +588,7 @@ class CustomerService(Service[Config]):
         )
         banner_image_url = f"/api/banner/{node_id}" if has_banner else None
         sumup_topup_enabled = self.config.core.sumup_enabled and node.event.sumup_topup_enabled
+        group_topup_enabled = self.config.core.sumup_enabled and node.event.group_topup_enabled
         sumup_topup_payment_methods: list[str] = []
         if sumup_topup_enabled:
             try:
@@ -590,6 +609,7 @@ class CustomerService(Service[Config]):
             payout_enabled=node.event.sepa_enabled,
             donation_enabled=node.event.donation_enabled,
             sumup_topup_enabled=sumup_topup_enabled,
+            group_topup_enabled=group_topup_enabled,
             sumup_topup_payment_methods=sumup_topup_payment_methods,
             translation_texts=node.event.translation_texts,
             currency_identifier=node.event.currency_identifier,

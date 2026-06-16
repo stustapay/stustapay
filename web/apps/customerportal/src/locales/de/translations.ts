@@ -165,6 +165,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       name: "Dein Name",
       nameRequired: "Name ist erforderlich",
       nameTooLong: "Name ist zu lang",
+      disabled: "Die Gruppen-Aufladung ist für dieses Event deaktiviert.",
       invalidLink: "Dieser Link zur Gruppen-Aufladung ist ungültig oder wurde gesperrt.",
       success: "Das gemeinsame Chip-Guthaben wurde aufgeladen.",
       contributionStatus: {

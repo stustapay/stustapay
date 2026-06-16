@@ -596,6 +596,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       globalTabLabel: "Globale App",
       sumup_payment_enabled: "SumUp-Zahlung aktiviert",
       sumup_topup_enabled: "SumUp-Aufladung aktiviert",
+      group_topup_enabled: "Gruppen-Aufladung aktiviert",
       sumup_api_key: "SumUp-API-Schlüssel",
       sumup_merchant_code: "SumUp-Händlercode",
       sumup_affiliate_key: "SumUp-Affiliate-Schlüssel",

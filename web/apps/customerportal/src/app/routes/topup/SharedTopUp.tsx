@@ -13,12 +13,21 @@ import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useParams, useSearchParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import type { SumUpCardInstance, SumUpResponseType } from "./SumUpCard";
 
 const EXTENDED_CHECKOUT_POLL_INTERVAL_MS = 30 * 1000;
+const GROUP_TOPUP_DISABLED_MESSAGE = "Group top-up is currently disabled";
+
+const getRedirectOrderUUID = (locationSearch: string, tokenSearch?: string): string | null => {
+  const queryValue = new URLSearchParams(locationSearch || tokenSearch || window.location.search || "").get("order_uuid");
+  if (queryValue) {
+    return queryValue;
+  }
+  return new URLSearchParams(window.location.href.split("?", 2)[1] ?? "").get("order_uuid");
+};
 
 const SharedTopUpSchema = z.object({
   contributor_name: z.string().trim().min(1, i18n.t("topup.shared.nameRequired")).max(80, i18n.t("topup.shared.nameTooLong")),
@@ -58,18 +67,36 @@ const reducer = (state: SharedTopUpState, action: SharedTopUpAction): SharedTopU
   }
 };
 
+const isGroupTopupDisabledError = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null || !("data" in error)) {
+    return false;
+  }
+  const data = (error as { data?: unknown }).data;
+  if (typeof data !== "object" || data === null || !("detail" in data)) {
+    return false;
+  }
+  return (data as { detail?: unknown }).detail === GROUP_TOPUP_DISABLED_MESSAGE;
+};
+
 export const SharedTopUp: React.FC = () => {
   const { t, i18n: reactI18n } = useTranslation();
   const { sharedTopupToken } = useParams();
-  const [searchParams] = useSearchParams();
-  const token = sharedTopupToken ?? "";
+  const location = useLocation();
+  const [token, tokenSearch] = (sharedTopupToken ?? "").split("?", 2);
+  const orderUUIDFromRedirect = React.useMemo(
+    () => getRedirectOrderUUID(location.search, tokenSearch),
+    [location.search, tokenSearch]
+  );
   const { data: publicInfo, error: publicInfoError, isLoading: isPublicInfoLoading } = useGetSharedTopupPublicInfoQuery(
     { sharedTopupToken: token },
     { skip: token.length === 0 }
   );
   const [createCheckout] = useCreateSharedTopupCheckoutMutation();
   const [checkCheckout] = useCheckSharedTopupCheckoutMutation();
-  const [state, dispatch] = React.useReducer(reducer, { stage: "initial" });
+  const initialState: SharedTopUpState = orderUUIDFromRedirect
+    ? { stage: "sumup", orderUUID: orderUUIDFromRedirect }
+    : { stage: "initial" };
+  const [state, dispatch] = React.useReducer(reducer, initialState);
   const [sumupMessage, setSumupMessage] = React.useState<string | null>(null);
   const sumupCard = React.useRef<SumUpCardInstance | undefined>(undefined);
   const pollTimeout = React.useRef<number | null>(null);
@@ -92,12 +119,11 @@ export const SharedTopUp: React.FC = () => {
   };
 
   React.useEffect(() => {
-    const orderUUID = searchParams.get("order_uuid");
-    if (orderUUID) {
-      dispatch({ type: "redirect-checkout", orderUUID });
+    if (orderUUIDFromRedirect) {
+      dispatch({ type: "redirect-checkout", orderUUID: orderUUIDFromRedirect });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [searchParams]);
+  }, [orderUUIDFromRedirect]);
 
   React.useEffect(() => {
     return () => {
@@ -254,10 +280,14 @@ export const SharedTopUp: React.FC = () => {
     return <Loading />;
   }
 
-  if (publicInfoError || !publicInfo) {
+  const isCheckingExistingCheckout = state.stage === "sumup" && !state.checkoutId;
+
+  if ((publicInfoError || !publicInfo) && !isCheckingExistingCheckout) {
     return (
       <PageContainer title={t("topup.shared.title")}>
-        <Alert severity="error">{t("topup.shared.invalidLink")}</Alert>
+        <Alert severity={isGroupTopupDisabledError(publicInfoError) ? "warning" : "error"}>
+          {isGroupTopupDisabledError(publicInfoError) ? t("topup.shared.disabled") : t("topup.shared.invalidLink")}
+        </Alert>
       </PageContainer>
     );
   }
@@ -274,7 +304,7 @@ export const SharedTopUp: React.FC = () => {
       })
       .catch((error) => {
         console.error(error);
-        toast.error(t("topup.errorWhileCreatingCheckout"));
+        toast.error(isGroupTopupDisabledError(error) ? t("topup.shared.disabled") : t("topup.errorWhileCreatingCheckout"));
       })
       .finally(() => setSubmitting(false));
   };
@@ -285,9 +315,9 @@ export const SharedTopUp: React.FC = () => {
         <PageContainer title={t("topup.shared.title")}>
           <Stack spacing={2}>
             <Alert severity="info" variant="outlined">
-              {t("topup.shared.description", { eventName: publicInfo.event_name })}
+              {t("topup.shared.description", { eventName: publicInfo?.event_name ?? "" })}
               <Box sx={{ mt: 1 }}>
-                <SumupPaymentMethods paymentMethods={publicInfo.payment_methods} />
+                <SumupPaymentMethods paymentMethods={publicInfo?.payment_methods ?? []} />
               </Box>
             </Alert>
             <Formik

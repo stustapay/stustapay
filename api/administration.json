@@ -16650,6 +16650,11 @@
             "type": "boolean",
             "title": "Sumup Topup Enabled"
           },
+          "group_topup_enabled": {
+            "type": "boolean",
+            "title": "Group Topup Enabled",
+            "default": false
+          },
           "sumup_payment_enabled": {
             "type": "boolean",
             "title": "Sumup Payment Enabled"
@@ -19645,6 +19650,11 @@
             "type": "boolean",
             "title": "Sumup Topup Enabled"
           },
+          "group_topup_enabled": {
+            "type": "boolean",
+            "title": "Group Topup Enabled",
+            "default": false
+          },
           "sumup_payment_enabled": {
             "type": "boolean",
             "title": "Sumup Payment Enabled"
@@ -20151,6 +20161,11 @@
           "sumup_topup_enabled": {
             "type": "boolean",
             "title": "Sumup Topup Enabled"
+          },
+          "group_topup_enabled": {
+            "type": "boolean",
+            "title": "Group Topup Enabled",
+            "default": false
           },
           "sumup_payment_enabled": {
             "type": "boolean",
@@ -22061,6 +22076,11 @@
           "sumup_topup_enabled": {
             "type": "boolean",
             "title": "Sumup Topup Enabled"
+          },
+          "group_topup_enabled": {
+            "type": "boolean",
+            "title": "Group Topup Enabled",
+            "default": false
           },
           "sumup_payment_enabled": {
             "type": "boolean",

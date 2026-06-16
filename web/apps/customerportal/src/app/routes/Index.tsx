@@ -75,7 +75,12 @@ export const Index: React.FC = () => {
     <Grid container justifyItems="center" justifyContent="center" spacing={2}>
       {config.sumup_topup_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
-          <Alert severity="info" onClick={() => navigate("/topup")} className="glass-alert" sx={{ cursor: "pointer" }}>
+          <Alert
+            severity="info"
+            onClick={() => navigate("/topup")}
+            className="glass-alert portal-alert-info"
+            sx={{ cursor: "pointer" }}
+          >
             <AlertTitle>{t("topup.onlineTopUp")}</AlertTitle>
             <SumupPaymentMethods paymentMethods={config.sumup_topup_payment_methods} />
           </Alert>
@@ -159,12 +164,12 @@ export const Index: React.FC = () => {
         </Grid>
       </Grid>
 
-      {config.sumup_topup_enabled && (
+      {config.group_topup_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
           <Alert
             severity="info"
             variant="outlined"
-            className="glass-alert"
+            className="glass-alert portal-alert-info"
             onClick={() => navigate("/topup/shared")}
             sx={{ cursor: "pointer" }}
           >
@@ -181,7 +186,12 @@ export const Index: React.FC = () => {
 
       {config.payout_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
-          <Alert severity="info" variant="outlined" className="glass-alert" style={{ marginBottom: "1em", width: "100%" }}>
+          <Alert
+            severity="info"
+            variant="outlined"
+            className="glass-alert portal-alert-info"
+            style={{ marginBottom: "1em", width: "100%" }}
+          >
             {payout_info}
           </Alert>
         </Grid>
@@ -189,7 +199,12 @@ export const Index: React.FC = () => {
 
       {!config.payout_enabled && (
         <Grid size={{ xs: 12, sm: 8 }}>
-          <Alert severity="warning" variant="outlined" className="glass-alert" style={{ marginBottom: "1em", width: "100%" }}>
+          <Alert
+            severity="warning"
+            variant="outlined"
+            className="glass-alert portal-alert-warning"
+            style={{ marginBottom: "1em", width: "100%" }}
+          >
             <b>{payoutDisabledNotice}</b>
           </Alert>
         </Grid>

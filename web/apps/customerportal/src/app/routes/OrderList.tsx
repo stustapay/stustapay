@@ -12,6 +12,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
+  Box,
   Link,
   Table,
   TableBody,
@@ -25,6 +26,37 @@ import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
+
+const accordionSx = {
+  mb: 1.5,
+  overflow: "hidden",
+  borderRadius: 3,
+  border: "1px solid var(--portal-card-border)",
+  backgroundColor: "var(--portal-card-bg)",
+  color: "var(--portal-card-text)",
+  boxShadow: "var(--shadow-soft)",
+  "&::before": {
+    display: "none",
+  },
+};
+
+const accordionSummarySx = {
+  minHeight: 72,
+  "& .MuiAccordionSummary-content": {
+    alignItems: "center",
+    my: 1.5,
+  },
+  "& .MuiAccordionSummary-expandIconWrapper": {
+    color: "var(--portal-card-text)",
+  },
+};
+
+const amountTypographySx = {
+  textAlign: "right",
+  flexGrow: 1,
+  marginRight: "0.5em",
+  fontWeight: 700,
+};
 
 const normalizeOrderPrice = (order: OrderWithBon) => {
   if (order.order_type !== "top_up") {
@@ -68,11 +100,9 @@ export const OrderList: React.FC = () => {
     }
     return (
       <Typography
-        style={{
-          textAlign: "right",
-          flexGrow: 1,
-          marginRight: "0.5em",
-          color: price >= 0 ? "green" : "inherit",
+        sx={{
+          ...amountTypographySx,
+          color: price >= 0 ? "var(--portal-success)" : "var(--portal-card-text)",
         }}
       >
         {formatCurrency(price)}
@@ -95,22 +125,20 @@ export const OrderList: React.FC = () => {
   const payout_transactions = payoutTransactions
     .filter((payoutTransaction) => payoutTransaction.amount > 0)
     .map((payoutTransaction) => (
-      <Accordion key={`transaction-${payoutTransaction.transaction_id}`}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1-content" id="panel1-header">
+      <Accordion key={`transaction-${payoutTransaction.transaction_id}`} sx={accordionSx}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1-content"
+          id="panel1-header"
+          sx={accordionSummarySx}
+        >
           <Typography>{getTransactionName(payoutTransaction)}</Typography>
-          <Typography
-            style={{
-              textAlign: "right",
-              flexGrow: 1,
-              marginRight: "0.5em",
-              color: "inherit",
-            }}
-          >
+          <Typography sx={{ ...amountTypographySx, color: "var(--portal-card-text)" }}>
             {formatCurrency(-payoutTransaction.amount)}
           </Typography>
         </AccordionSummary>
-        <AccordionDetails>
-          <Typography variant="subtitle2">
+        <AccordionDetails sx={{ color: "var(--portal-card-muted)" }}>
+          <Typography variant="subtitle2" color="inherit">
             {t("order.bookedAt", { date: new Date(payoutTransaction.booked_at).toLocaleString() })}
           </Typography>
         </AccordionDetails>
@@ -118,31 +146,38 @@ export const OrderList: React.FC = () => {
     ));
 
   return (
-    <>
+    <Box
+      sx={{
+        maxHeight: { xs: "55vh", md: "60vh" },
+        overflowY: "auto",
+        pr: 0.5,
+      }}
+    >
       {payout_transactions}
       {orders.map((order) => (
-        <Accordion key={order.id}>
+        <Accordion key={order.id} sx={accordionSx}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
             aria-controls={`panel${order.id}a-content`}
             id={`panel${order.id}a-header`}
+            sx={accordionSummarySx}
           >
             <Typography>{t(`order.orderType.${order.order_type}` as const)}</Typography>
             {formatOrderTotal(order)}
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails sx={{ color: "var(--portal-card-text)" }}>
             <div style={{ width: "100%" }}>
               <div style={{ marginBottom: "0.5em" }}>
-                <Typography variant="subtitle2">
+                <Typography variant="subtitle2" sx={{ color: "var(--portal-card-muted)" }}>
                   {t("order.bookedAt", { date: new Date(order.booked_at).toLocaleString() })}
                 </Typography>
                 {order.shared_topup_contributor_name && (
-                  <Typography variant="subtitle2">
+                  <Typography variant="subtitle2" sx={{ color: "var(--portal-card-muted)" }}>
                     {t("order.sharedTopupContributor", { name: order.shared_topup_contributor_name })}
                   </Typography>
                 )}
                 {order.bon_generated && (
-                  <Link component={RouterLink} target="_blank" to={`/bon/${order.uuid}`}>
+                  <Link component={RouterLink} target="_blank" to={`/bon/${order.uuid}`} sx={{ color: "var(--primary-main)" }}>
                     {t("order.viewReceipt")}
                   </Link>
                 )}
@@ -152,19 +187,35 @@ export const OrderList: React.FC = () => {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell align="left">{t("order.productName")}</TableCell>
-                        <TableCell align="right">{t("order.productPrice")}</TableCell>
-                        <TableCell align="right">{t("order.quantity")}</TableCell>
-                        <TableCell align="right">{t("order.total")}</TableCell>
+                        <TableCell align="left" sx={{ color: "var(--portal-card-muted)" }}>
+                          {t("order.productName")}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: "var(--portal-card-muted)" }}>
+                          {t("order.productPrice")}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: "var(--portal-card-muted)" }}>
+                          {t("order.quantity")}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: "var(--portal-card-muted)" }}>
+                          {t("order.total")}
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {order.line_items.map((item) => (
                         <TableRow key={item.item_id}>
-                          <TableCell align="left">{item.product.name}</TableCell>
-                          <TableCell align="right">{formatCurrency(item.product_price)}</TableCell>
-                          <TableCell align="right">{item.quantity}</TableCell>
-                          <TableCell align="right">{formatCurrency(item.total_price)}</TableCell>
+                          <TableCell align="left" sx={{ color: "var(--portal-card-text)" }}>
+                            {item.product.name}
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: "var(--portal-card-text)" }}>
+                            {formatCurrency(item.product_price)}
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: "var(--portal-card-text)" }}>
+                            {item.quantity}
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: "var(--portal-card-text)" }}>
+                            {formatCurrency(item.total_price)}
+                          </TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
@@ -181,6 +232,6 @@ export const OrderList: React.FC = () => {
           </AccordionDetails>
         </Accordion>
       ))}
-    </>
+    </Box>
   );
 };

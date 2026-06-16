@@ -36,7 +36,7 @@ import kotlinx.serialization.Contextual
  * @param mode 
  * @param entryArea 
  * @param selfService 
- * @param appDisplayMode
+ * @param appDisplayMode 
  * @param eventName 
  * @param activeUserId 
  * @param availableRoles 
@@ -99,3 +99,4 @@ data class TerminalConfig (
 
 
 }
+

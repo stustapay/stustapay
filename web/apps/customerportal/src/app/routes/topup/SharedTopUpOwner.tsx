@@ -5,7 +5,7 @@ import {
   useRevokeSharedTopupLinkMutation,
 } from "@/api";
 import { PageContainer } from "@/components";
-import { useCurrencyFormatter } from "@/hooks";
+import { useCurrencyFormatter, usePublicConfig } from "@/hooks";
 import { ContentCopy as ContentCopyIcon, Delete as DeleteIcon, Sync as SyncIcon } from "@mui/icons-material";
 import {
   Alert,
@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 export const SharedTopUpOwner: React.FC = () => {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
+  const publicConfig = usePublicConfig();
 
   const { data: sharedLinks } = useListSharedTopupLinksQuery();
   const { data: sharedContributions } = useListSharedTopupContributionsQuery();
@@ -42,6 +43,14 @@ export const SharedTopUpOwner: React.FC = () => {
 
   const [newSharedTopupLink, setNewSharedTopupLink] = React.useState<{ linkId: number; url: string } | null>(null);
   const [linkLabel, setLinkLabel] = React.useState("");
+
+  if (!publicConfig.group_topup_enabled) {
+    return (
+      <PageContainer title={t("topup.shared.ownerTitle")}>
+        <Alert severity="warning">{t("topup.shared.disabled")}</Alert>
+      </PageContainer>
+    );
+  }
 
   const copySharedTopupUrl = (url: string) => {
     navigator.clipboard

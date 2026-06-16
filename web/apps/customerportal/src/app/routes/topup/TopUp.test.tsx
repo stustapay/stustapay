@@ -65,6 +65,7 @@ jest.mock("@/components", () => ({
 
 jest.mock("@/hooks", () => ({
   usePublicConfig: () => ({
+    group_topup_enabled: false,
     sumup_topup_enabled: true,
     sumup_topup_payment_methods: ["card"],
   }),

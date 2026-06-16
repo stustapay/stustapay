@@ -14,6 +14,7 @@ import { z } from "zod";
 
 export const EventSumUpSettingsSchema = z.object({
   sumup_topup_enabled: z.boolean(),
+  group_topup_enabled: z.boolean(),
   sumup_payment_enabled: z.boolean(),
 });
 
@@ -27,6 +28,12 @@ export const EventSumupSettingsForm: React.FC<FormikProps<EventSumUpSettings>> =
         disabled={!config.sumupTopupEnabledGlobally}
         label={t("settings.sumup.sumup_topup_enabled")}
         name="sumup_topup_enabled"
+        formik={formik}
+      />
+      <FormSwitch
+        disabled={!config.sumupTopupEnabledGlobally}
+        label={t("settings.sumup.group_topup_enabled")}
+        name="group_topup_enabled"
         formik={formik}
       />
       <FormSwitch
