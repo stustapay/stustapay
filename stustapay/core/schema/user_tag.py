@@ -3,7 +3,6 @@ from typing import Optional
 from pydantic import BaseModel
 
 from stustapay.core.schema.product import ProductRestriction
-from stustapay.core.schema.user_tag_models import UserTagDetail
 
 
 def format_user_tag_uid(uid: Optional[int]) -> Optional[str]:

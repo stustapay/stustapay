@@ -11,7 +11,6 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-
 DEVICE_MATRIX_COLUMNS = [
     "serial",
     "manufacturer",
@@ -106,8 +105,8 @@ def run_command(command: list[str]) -> str:
 def list_connected_devices(adb_path: str) -> list[str]:
     output = run_command([adb_path, "devices"])
     serials: list[str] = []
-    for line in output.splitlines():
-        line = line.strip()
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
         if not line or line.startswith("List of devices attached"):
             continue
         parts = line.split()
@@ -118,8 +117,8 @@ def list_connected_devices(adb_path: str) -> list[str]:
 
 def parse_getprop_output(output: str) -> dict[str, str]:
     props: dict[str, str] = {}
-    for line in output.splitlines():
-        line = line.strip()
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
         if not line.startswith("[") or "]: [" not in line:
             continue
         key, value = line.split("]: [", 1)
@@ -187,7 +186,7 @@ def main() -> int:
         if not serials:
             raise RuntimeError("No adb devices in 'device' state were found")
         records = [load_device_record(args.adb, serial) for serial in serials]
-    except FileNotFoundError as exc:
+    except FileNotFoundError:
         print(f"adb executable not found: {args.adb}", file=sys.stderr)
         return 1
     except subprocess.CalledProcessError as exc:

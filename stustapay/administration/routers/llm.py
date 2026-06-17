@@ -8,8 +8,8 @@ from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import (
     ContextProductService,
     ContextTaxRateService,
-    ContextTillService,
     ContextTerminalService,
+    ContextTillService,
     ContextTreeService,
 )
 from stustapay.core.schema.product import NewProduct, Product
@@ -21,10 +21,10 @@ from stustapay.core.schema.till import (
     NewTill,
     NewTillButton,
     NewTillLayout,
+    NewTillProfile,
     Till,
     TillButton,
     TillLayout,
-    NewTillProfile,
     TillProfile,
 )
 from stustapay.core.schema.tree import EventSummary, NewNode, Node, NodeSeenByUser

@@ -14,8 +14,7 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
-from stustapay.core.schema.user import ADMIN_ROLE_ID
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import ADMIN_ROLE_ID, Privilege
 from stustapay.festivalsimulator.common import SimulatorEvent, fetch_simulator_events
 
 

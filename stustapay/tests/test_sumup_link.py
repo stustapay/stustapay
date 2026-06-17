@@ -1,4 +1,5 @@
 # pylint: disable=missing-kwoa,unexpected-keyword-arg,no-value-for-parameter
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -10,7 +11,6 @@ from stustapay.core.service.sumup_link import create_sumup_api_for_node, resolve
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 from stustapay.core.service.tree.service import TreeService
 from stustapay.payment.sumup.api import SumUpMerchantProfile, SumUpOAuthToken
-
 
 GLOBAL_SUMUP_CONFIG_KEYS = (
     "sumup.affiliate_key",
@@ -56,13 +56,15 @@ async def _set_global_sumup_config(conn: Connection):
 
 async def _copy_event_under_parent(conn: Connection, tree_service: TreeService, token: str, template_event_node: Node, parent_id: int) -> Node:
     template = await fetch_restricted_event_settings_for_node(conn=conn, node_id=template_event_node.id)
+    template_payload = template.model_dump(exclude={"id", "languages", "sumup_oauth_refresh_token"})
+    template_payload["customer_portal_url"] = f"http://localhost:4300/{secrets.token_hex(8)}"
     return await tree_service.create_event(
         token=token,
         node_id=parent_id,
         event=NewEvent(
             name=f"{template_event_node.name}-child",
             description=template_event_node.description,
-            **template.model_dump(exclude={"id", "languages", "sumup_oauth_refresh_token"}),
+            **template_payload,
         ),
     )
 

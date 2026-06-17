@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserTagService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.user_tag import (
     CreateAccountsPayload,
     CreateAccountsResponse,
@@ -13,6 +12,7 @@ from stustapay.core.schema.user_tag import (
     UpdateAccountCreationBlockedPayload,
     UserTagSecret,
 )
+from stustapay.core.schema.user_tag_models import UserTagDetail
 
 router = APIRouter(
     prefix="",
@@ -166,4 +166,3 @@ async def update_user_tag_account_creation_blocked(
         account_creation_blocked=payload.account_creation_blocked,
         node_id=node_id,
     )
-

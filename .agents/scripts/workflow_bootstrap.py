@@ -9,7 +9,6 @@ from pathlib import Path
 from changed_surfaces import add_path_arguments, analyze_paths, resolve_paths
 from required_checks import build_checks
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 STATE_DIR = REPO_ROOT / ".agents" / "state"
 STAGE_TO_STATE_FILE = {

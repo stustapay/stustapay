@@ -233,6 +233,7 @@ class CustomerService(Service[Config]):
         payment_methods = await self.sumup.get_available_payment_methods_for_node(
             conn=conn,
             node_id=event_node.id,
+            allow_group_topup=True,
         )
         return SharedTopupPublicInfo(
             event_name=event_node.name,
@@ -402,8 +403,9 @@ class CustomerService(Service[Config]):
         customer_bank: CustomerBank,
         mail_service: MailService,
         customer_portal_base_url: str | None = None,
-    ) -> None:
+    ) -> dict | None:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
+        assert event_node is not None
         if event_node.event is None:
             raise InvalidArgument("Invalid event node")
 
@@ -420,8 +422,8 @@ class CustomerService(Service[Config]):
         try:
             iban_obj = IBAN(iban)
             iban = str(iban_obj)
-        except ValueError:
-            raise InvalidArgument("IBAN is not valid")
+        except ValueError as exc:
+            raise InvalidArgument("IBAN is not valid") from exc
 
         account_name = customer_bank.account_name
         if account_name is not None:
@@ -500,11 +502,12 @@ class CustomerService(Service[Config]):
             res_config = await fetch_restricted_event_settings_for_node(conn, updated_customer.node_id)
             if res_config.email_enabled and res_config.payout_registered_message is not None:
                 message = res_config.payout_registered_message.format(**updated_customer.model_dump())
+                subject = res_config.payout_registered_subject or ""
                 payout_sender = res_config.payout_sender or res_config.email_default_sender
                 email_to_send = {
-                    "subject": res_config.payout_registered_subject,
+                    "subject": subject,
                     "message": message,
-                    "html_message": render_plain_text_payout_html(message, res_config.payout_registered_subject),
+                    "html_message": render_plain_text_payout_html(message, subject),
                     "from_addr": (
                         formataddr((f"{event_node.name} Auszahlung", payout_sender))
                         if payout_sender
@@ -558,6 +561,7 @@ class CustomerService(Service[Config]):
         customer_portal_base_url: str | None = None,
     ) -> None:
         event_node = await fetch_event_node_for_node(conn=conn, node_id=current_customer.node_id)
+        assert event_node is not None
         if event_node.event is None:
             raise InvalidArgument("Invalid event node")
         

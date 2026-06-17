@@ -23,6 +23,7 @@ from stustapay.core.schema.tree import (
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
+from stustapay.core.service.config import fetch_global_sumup_config
 from stustapay.core.service.sumup_link import (
     delete_node_sumup_link,
     enrich_event_sumup_settings,
@@ -35,7 +36,6 @@ from stustapay.core.service.tree.common import (
     get_tree_for_current_user,
 )
 from stustapay.payment.sumup.api import fetch_merchant_profile, fetch_refresh_token_from_auth_code
-from stustapay.core.service.config import fetch_global_sumup_config
 
 EVENT_SYSTEM_ACCOUNT_TYPES = {
     AccountType.cash_entry.value,
@@ -1430,7 +1430,12 @@ class TreeService(Service[Config]):
         if request.options.copy_event_settings:
             copied_event_payload = source_event.model_dump(exclude=COPY_EVENT_SETTINGS_MODEL_EXCLUDES)
             copied_event_payload.update(
-                {"name": request.name, "description": request.description, **COPY_EVENT_SUMUP_RESET_VALUES}
+                {
+                    "name": request.name,
+                    "description": request.description,
+                    "customer_portal_url": "",
+                    **COPY_EVENT_SUMUP_RESET_VALUES,
+                }
             )
             new_event_data = NewEvent.model_validate(copied_event_payload)
         else:

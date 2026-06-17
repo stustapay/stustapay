@@ -31,7 +31,6 @@ def _make_node() -> Node:
 
 
 def _make_line_item(product_name: str, quantity: int, unit_price: float) -> LineItem:
-    total_price = quantity * unit_price
     return LineItem(
         item_id=quantity,
         quantity=quantity,

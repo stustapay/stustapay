@@ -74,7 +74,7 @@ def get_test_db_config() -> DatabaseConfig:
         user=os.environ.get("TEST_DB_USER", "stustapay_test"),
         password=os.environ.get("TEST_DB_PASSWORD", "stustapay_test"),
         host=os.environ.get("TEST_DB_HOST", "localhost"),
-        port=int(os.environ.get("TEST_DB_PORT", 0)) or 5434,
+        port=int(os.environ.get("TEST_DB_PORT", "0")) or 5434,
         dbname=os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
     )
 
@@ -126,6 +126,7 @@ def event_loop():
 
 @pytest.fixture(scope="session", autouse=True)
 async def setup_test_db_pool(config: Config, event_loop) -> asyncpg.Pool:
+    del event_loop
     db = get_database(config.database)
     try:
         # Add a timeout to fail fast if database is not available
@@ -162,7 +163,7 @@ async def event_node(db_connection: Connection) -> Node:
         event=NewEvent(
             name=secrets.token_hex(16),
             description="",
-            customer_portal_url="http://localhost:4300",
+            customer_portal_url=f"http://localhost:4300/{secrets.token_hex(8)}",
             customer_portal_contact_email="test@test.support.test.com",
             customer_portal_about_page_url="",
             customer_portal_data_privacy_url="",

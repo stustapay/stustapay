@@ -149,9 +149,14 @@ class SumupService(Service[Config]):
         self.logger.error(f"Could not confirm local booking for paid order {pending_order.uuid}")
         return SumUpCheckoutStatus.PENDING
 
-    async def get_available_payment_methods_for_node(self, conn: Connection, node_id: int) -> list[str]:
+    async def get_available_payment_methods_for_node(
+        self, conn: Connection, node_id: int, *, allow_group_topup: bool = False
+    ) -> list[str]:
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node_id)
-        if not event_settings.is_sumup_topup_enabled(self.config.core):
+        if not (
+            event_settings.is_sumup_topup_enabled(self.config.core)
+            or (allow_group_topup and event_settings.is_group_topup_enabled(self.config.core))
+        ):
             return []
 
         resolved = await create_sumup_api_for_node(conn=conn, node_id=node_id, api_factory=self._create_sumup_api)
@@ -242,6 +247,7 @@ class SumupService(Service[Config]):
             self.logger.error(f"Found a pending order without a matching till: {pending_order.uuid}")
             raise InvalidArgument("Found a pending order without a matching till")
 
+        result: CompletedSale | CompletedTicketSale | CompletedTopUp
         if pending_order.order_type == PendingOrderType.topup:
             topup = load_pending_topup(pending_order)
             result = await self._process_topup(

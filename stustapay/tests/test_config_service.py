@@ -1,6 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import pytest
-
 from sftkit.error import AccessDenied, InvalidArgument
 
 from stustapay.core.schema.config import ConfigEntry, GlobalEmailConfig, GlobalSumUpConfig

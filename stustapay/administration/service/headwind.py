@@ -352,6 +352,7 @@ class HeadwindClient:
         Returns the full device object if found, None otherwise.
         """
         # Convert to int if it's a string that looks like a number
+        numeric_id: int | str
         try:
             numeric_id = int(device_id)
         except (ValueError, TypeError):
@@ -372,6 +373,8 @@ class HeadwindClient:
         # Find the device with matching ID
         for device in devices:
             device_id_value = device.get("id")
+            if device_id_value is None:
+                continue
             try:
                 if int(device_id_value) == int(numeric_id):
                     return device
@@ -406,6 +409,7 @@ class HeadwindClient:
         """
         
         # Convert to int if it's a string that looks like a number
+        numeric_id: int | str
         try:
             numeric_id = int(device_id)
         except (ValueError, TypeError):

@@ -542,7 +542,7 @@ async def test_create_till_rejects_cross_node_terminal_assignment(
     event_admin_token: str,
     event_node: Node,
 ):
-    child_node, first_terminal, _, _ = await _create_node_local_till_setup(
+    _, first_terminal, _, _ = await _create_node_local_till_setup(
         tree_service=tree_service,
         terminal_service=terminal_service,
         till_service=till_service,

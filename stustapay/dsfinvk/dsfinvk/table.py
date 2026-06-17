@@ -11,9 +11,11 @@ from .fields import Field
 
 class BaseTableMeta(type):
     @classmethod
-    def __prepare__(self, name, bases):
+    def __prepare__(mcls, name: str, bases: tuple[type, ...], **kwargs: object):  # type: ignore[override]
+        del mcls
         del name  # make pylint happy
         del bases
+        del kwargs
         return collections.OrderedDict()
 
     @no_type_check

@@ -4,14 +4,13 @@ from datetime import UTC, datetime, time
 from sftkit.database import Connection
 
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.order import OrderType, PaymentMethod
+from stustapay.core.schema.order import OrderType, PaymentMethod, get_source_account, get_target_account
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
-from stustapay.core.service.order.order import get_source_account, get_target_account
 from stustapay.core.service.order.stats import TimeseriesStatsQuery, get_daily_stats, get_hourly_sales_stats
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tree.common import fetch_event_for_node
@@ -80,7 +79,7 @@ async def _create_sale_order(
             BookingIdentifier(
                 source_account_id=get_source_account(OrderType.sale, customer_account_id),
                 target_account_id=get_target_account(OrderType.sale, product, sale_exit_acc.id),
-            ): product.price * quantity
+            ): (product.price or 0) * quantity
         },
         customer_account_id=customer_account_id,
     )
@@ -277,6 +276,8 @@ async def test_sales_stats_and_product_breakdowns_exclude_cancelled_sales(
         to_time=datetime(2026, 1, 1, 23, 59, tzinfo=UTC),
     )
     event = await fetch_event_for_node(conn=db_connection, node=event_node)
+    assert query.from_time is not None
+    assert query.to_time is not None
     hourly_sales_stats = await get_hourly_sales_stats(
         conn=db_connection,
         node=event_node,

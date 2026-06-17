@@ -5,13 +5,13 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument
 
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import CurrentUser
 from stustapay.core.service.account import get_system_account_for_node
-from sftkit.error import InvalidArgument
 from stustapay.core.service.product import fetch_money_difference_product, fetch_money_transfer_product
 from stustapay.core.service.till.common import fetch_virtual_till, get_cash_register_account_id
 from stustapay.core.service.transaction import book_transaction

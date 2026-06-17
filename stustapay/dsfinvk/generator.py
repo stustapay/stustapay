@@ -296,6 +296,7 @@ class Generator:
                 e.AGENTUR_ID = 0  # Agenturen noch nicht implementiert
 
                 # finde den Geschäftsvorfalltyp dieses "Artikels" heraus...
+                gvtyp = "Umsatz"
                 if row["order_type"] == "top_up" or row["order_type"] == "pay_out":
                     gvtyp = "MehrzweckgutscheinKauf"
                 elif row["order_type"] == "money_transfer":

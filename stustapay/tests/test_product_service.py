@@ -2,12 +2,12 @@
 import pytest
 from asyncpg import RaiseError
 from sftkit.database import Connection
+from sftkit.error import AccessDenied
 
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import NewTillButton
 from stustapay.core.schema.tree import NewNode, Node
-from sftkit.error import AccessDenied
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till.till import TillService
 

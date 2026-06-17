@@ -62,6 +62,7 @@ async def _build_custom3_for_terminal(
     node_id: int,
     terminal_name: str,
 ) -> str:
+    assert context.tree_service is not None
     event_settings = await context.tree_service.get_restricted_event_settings(token=token, node_id=node_id)
     return build_headwind_custom3(
         terminal_name=terminal_name,

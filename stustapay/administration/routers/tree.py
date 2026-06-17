@@ -1,12 +1,13 @@
 import logging
 
-from fastapi import APIRouter, Response, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
 from stustapay.administration.service import HeadwindError, build_headwind_custom3, get_headwind_client
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import Context, ContextTreeService, get_context
+from stustapay.core.schema.sumup import NodeSumUpConnectionStatus
 from stustapay.core.schema.tree import (
     CopyEventRequest,
     NewEvent,
@@ -16,7 +17,6 @@ from stustapay.core.schema.tree import (
     RestrictedEventSettings,
     UpdateEvent,
 )
-from stustapay.core.schema.sumup import NodeSumUpConnectionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,7 @@ async def update_event(
         return updated_node
 
     headwind_client = get_headwind_client(context.config)
+    assert context.terminal_service is not None
     mappings = await context.terminal_service.list_headwind_mappings(token=token, node_id=node_id)
 
     for mapping in mappings:

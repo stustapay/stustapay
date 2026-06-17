@@ -110,7 +110,7 @@ async def fetch_visible_node_ids_for_user(
         f"{scope_node.path}/%",
     )
 
-    visible_node_ids: set[int] = set(scope_node.parent_ids) if include_ancestor_context else set()
+    visible_node_ids = set(scope_node.parent_ids) if include_ancestor_context else set()
     for node in subtree_nodes:
         if any(
             node.path == assigned_path

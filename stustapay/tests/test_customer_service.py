@@ -5,6 +5,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import asyncpg
 import pytest
 from dateutil.parser import parse
 from sftkit.database import Connection
@@ -35,6 +36,17 @@ from stustapay.core.service.product import ProductService
 from stustapay.core.service.tree.service import create_event
 from stustapay.payment.sumup.api import SumUpCheckout, SumUpCheckoutStatus, SumUpError
 from stustapay.tests.conftest import Cashier, CreateRandomUserTag
+
+
+@pytest.fixture(autouse=True)
+def reset_customer_sumup_state(customer_service: CustomerService):
+    for attr in ("_create_sumup_api", "get_available_payment_methods_for_node"):
+        customer_service.sumup.__dict__.pop(attr, None)
+    customer_service.sumup.config.core.sumup_enabled = False
+    yield
+    for attr in ("_create_sumup_api", "get_available_payment_methods_for_node"):
+        customer_service.sumup.__dict__.pop(attr, None)
+    customer_service.sumup.config.core.sumup_enabled = False
 
 
 class OnlineTopUpSumUpApiMock:
@@ -118,6 +130,44 @@ async def _set_group_topup_enabled(conn: Connection, event_node: Node, enabled: 
         enabled,
         event_node.id,
     )
+
+
+def _customer_portal_url(event_node: Node) -> str:
+    assert event_node.event is not None
+    return event_node.event.customer_portal_url
+
+
+def _mock_sumup_api(customer_service: CustomerService, monkeypatch: pytest.MonkeyPatch, sumup_api):
+    monkeypatch.setattr(
+        customer_service.sumup,
+        "_create_sumup_api",
+        lambda merchant_code, api_key: sumup_api,
+    )
+
+
+async def test_customer_portal_url_rejects_duplicate_non_empty(db_connection: Connection, event_node: Node):
+    with pytest.raises(asyncpg.UniqueViolationError):
+        await create_event(
+            conn=db_connection,
+            parent_id=ROOT_NODE_ID,
+            event=_new_customer_portal_event(
+                "Duplicate portal",
+                _customer_portal_url(event_node),
+                "TEST_MERCHANT_DUPLICATE",
+            ),
+        )
+
+    first_empty = await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=_new_customer_portal_event("Empty portal one", "", "TEST_MERCHANT_EMPTY_1"),
+    )
+    second_empty = await create_event(
+        conn=db_connection,
+        parent_id=ROOT_NODE_ID,
+        event=_new_customer_portal_event("Empty portal two", "", "TEST_MERCHANT_EMPTY_2"),
+    )
+    assert first_empty.id != second_empty.id
 
 
 @pytest.fixture
@@ -259,7 +309,7 @@ async def test_customer_portal_session_is_bound_to_matching_base_url(
 
     matching_customer = await customer_service.get_customer(
         token=auth.token,
-        customer_portal_base_url="http://localhost:4300",
+        customer_portal_base_url=_customer_portal_url(event_node),
     )
     assert matching_customer is not None
     assert matching_customer.id == test_customer.id
@@ -267,14 +317,16 @@ async def test_customer_portal_session_is_bound_to_matching_base_url(
     other_event = await create_event(
         conn=db_connection,
         parent_id=ROOT_NODE_ID,
-        event=_new_customer_portal_event("Other portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+        event=_new_customer_portal_event(
+            "Other portal", f"http://localhost:4400/{secrets.token_hex(8)}", "TEST_MERCHANT_OTHER"
+        ),
     )
     assert other_event.id != event_node.id
 
     with pytest.raises(Unauthorized):
         await customer_service.get_customer(
             token=auth.token,
-            customer_portal_base_url="http://localhost:4400",
+            customer_portal_base_url=_customer_portal_url(other_event),
         )
 
 
@@ -282,11 +334,14 @@ async def test_customer_portal_login_rejects_node_id_from_other_portal(
     customer_service: CustomerService,
     db_connection: Connection,
     test_customer: Customer,
+    event_node: Node,
 ):
     other_event = await create_event(
         conn=db_connection,
         parent_id=ROOT_NODE_ID,
-        event=_new_customer_portal_event("Other portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+        event=_new_customer_portal_event(
+            "Other portal", f"http://localhost:4400/{secrets.token_hex(8)}", "TEST_MERCHANT_OTHER"
+        ),
     )
 
     with pytest.raises(AccessDenied, match="Login does not match current customer portal"):
@@ -294,7 +349,7 @@ async def test_customer_portal_login_rejects_node_id_from_other_portal(
             uid=test_customer.user_tag_uid,
             pin=test_customer.user_tag_pin,
             node_id=other_event.id,
-            customer_portal_base_url="http://localhost:4300",
+            customer_portal_base_url=_customer_portal_url(event_node),
         )
 
 
@@ -303,6 +358,7 @@ async def test_customer_portal_sumup_session_is_bound_to_matching_base_url(
     db_connection: Connection,
     test_customer: Customer,
     event_node: Node,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid,
@@ -311,26 +367,28 @@ async def test_customer_portal_sumup_session_is_bound_to_matching_base_url(
     )
     customer_service.sumup.config.core.sumup_enabled = True
     sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
-    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+    _mock_sumup_api(customer_service, monkeypatch, sumup_api)
 
     _, order_uuid = await customer_service.sumup.create_online_topup_checkout(
         token=auth.token,
         amount=10,
-        customer_portal_base_url="http://localhost:4300",
+        customer_portal_base_url=_customer_portal_url(event_node),
     )
     await db_connection.execute("delete from pending_sumup_order where uuid = $1", order_uuid)
 
-    await create_event(
+    other_event = await create_event(
         conn=db_connection,
         parent_id=ROOT_NODE_ID,
-        event=_new_customer_portal_event("Other sumup portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+        event=_new_customer_portal_event(
+            "Other sumup portal", f"http://localhost:4400/{secrets.token_hex(8)}", "TEST_MERCHANT_OTHER"
+        ),
     )
 
     with pytest.raises(Unauthorized):
         await customer_service.sumup.create_online_topup_checkout(
             token=auth.token,
             amount=10,
-            customer_portal_base_url="http://localhost:4400",
+            customer_portal_base_url=_customer_portal_url(other_event),
         )
 
 
@@ -356,7 +414,7 @@ async def test_get_api_config_includes_theme_colors(
 
 
 async def test_get_api_config_includes_sumup_payment_methods(
-    customer_service: CustomerService, db_connection: Connection, event_node: Node
+    customer_service: CustomerService, db_connection: Connection, event_node: Node, monkeypatch: pytest.MonkeyPatch
 ):
     assert event_node.event is not None
     base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
@@ -375,7 +433,11 @@ async def test_get_api_config_includes_sumup_payment_methods(
         assert node_id == event_node.id
         return ["card", "apple_pay", "ideal"]
 
-    customer_service.sumup.get_available_payment_methods_for_node = fake_get_available_payment_methods_for_node  # type: ignore[method-assign]
+    monkeypatch.setattr(
+        customer_service.sumup,
+        "get_available_payment_methods_for_node",
+        fake_get_available_payment_methods_for_node,
+    )
 
     config = await customer_service.get_api_config(base_url=base_url)
 
@@ -385,7 +447,7 @@ async def test_get_api_config_includes_sumup_payment_methods(
 
 
 async def test_get_api_config_returns_empty_payment_methods_on_sumup_error(
-    customer_service: CustomerService, db_connection: Connection, event_node: Node
+    customer_service: CustomerService, db_connection: Connection, event_node: Node, monkeypatch: pytest.MonkeyPatch
 ):
     assert event_node.event is not None
     base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
@@ -400,7 +462,11 @@ async def test_get_api_config_returns_empty_payment_methods_on_sumup_error(
         del conn, node_id
         raise SumUpError("unreachable")
 
-    customer_service.sumup.get_available_payment_methods_for_node = fake_get_available_payment_methods_for_node  # type: ignore[method-assign]
+    monkeypatch.setattr(
+        customer_service.sumup,
+        "get_available_payment_methods_for_node",
+        fake_get_available_payment_methods_for_node,
+    )
 
     config = await customer_service.get_api_config(base_url=base_url)
 
@@ -410,7 +476,7 @@ async def test_get_api_config_returns_empty_payment_methods_on_sumup_error(
 
 
 async def test_get_api_config_skips_payment_methods_when_sumup_topup_disabled(
-    customer_service: CustomerService, db_connection: Connection, event_node: Node
+    customer_service: CustomerService, db_connection: Connection, event_node: Node, monkeypatch: pytest.MonkeyPatch
 ):
     assert event_node.event is not None
     base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
@@ -425,7 +491,11 @@ async def test_get_api_config_skips_payment_methods_when_sumup_topup_disabled(
         del conn, node_id
         raise AssertionError("payment methods should not be fetched when top-up is disabled")
 
-    customer_service.sumup.get_available_payment_methods_for_node = fake_get_available_payment_methods_for_node  # type: ignore[method-assign]
+    monkeypatch.setattr(
+        customer_service.sumup,
+        "get_available_payment_methods_for_node",
+        fake_get_available_payment_methods_for_node,
+    )
 
     config = await customer_service.get_api_config(base_url=base_url)
 
@@ -792,9 +862,24 @@ async def test_concurrent_check_online_topup_checkout_books_paid_checkout_once(
 
 
 async def test_shared_topup_link_lifecycle_and_contributor_validation(
-    customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
+    customer_service: CustomerService,
+    db_connection: Connection,
+    test_customer: Customer,
+    event_node: Node,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     await _set_group_topup_enabled(db_connection, event_node, True)
+    customer_service.sumup.config.core.sumup_enabled = True
+
+    async def fake_get_available_payment_methods_for_node(conn: Connection, node_id: int) -> list[str]:
+        del conn, node_id
+        return []
+
+    monkeypatch.setattr(
+        customer_service.sumup,
+        "get_available_payment_methods_for_node",
+        fake_get_available_payment_methods_for_node,
+    )
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
     )
@@ -826,6 +911,7 @@ async def test_shared_topup_link_is_scoped_to_customer_portal_base_url(
     db_connection: Connection,
     test_customer: Customer,
     event_node: Node,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     await _set_group_topup_enabled(db_connection, event_node, True)
     customer_service.sumup.config.core.sumup_enabled = True
@@ -838,28 +924,30 @@ async def test_shared_topup_link_is_scoped_to_customer_portal_base_url(
     other_event = await create_event(
         conn=db_connection,
         parent_id=ROOT_NODE_ID,
-        event=_new_customer_portal_event("Other portal", "http://localhost:4400", "TEST_MERCHANT_OTHER"),
+        event=_new_customer_portal_event(
+            "Other portal", f"http://localhost:4400/{secrets.token_hex(8)}", "TEST_MERCHANT_OTHER"
+        ),
     )
     assert other_event.id != event_node.id
 
     await customer_service.get_shared_topup_public_info(
         token=link.token,
-        customer_portal_base_url="http://localhost:4300",
+        customer_portal_base_url=_customer_portal_url(event_node),
     )
     with pytest.raises(AccessDenied, match="Shared topup link does not match current customer portal"):
         await customer_service.get_shared_topup_public_info(
             token=link.token,
-            customer_portal_base_url="http://localhost:4400",
+            customer_portal_base_url=_customer_portal_url(other_event),
         )
 
     sumup_api = OnlineTopUpSumUpApiMock(api_key="test", merchant_code="merchant")
-    customer_service.sumup._create_sumup_api = lambda merchant_code, api_key: sumup_api  # type: ignore
+    _mock_sumup_api(customer_service, monkeypatch, sumup_api)
     with pytest.raises(AccessDenied, match="Shared topup link does not match current customer portal"):
         await customer_service.sumup.create_shared_topup_checkout(
             token=link.token,
             amount=5,
             contributor_name="Alice",
-            customer_portal_base_url="http://localhost:4400",
+            customer_portal_base_url=_customer_portal_url(other_event),
         )
 
 
@@ -1020,6 +1108,7 @@ async def test_shared_topup_link_active_link_cap(
     customer_service: CustomerService, db_connection: Connection, test_customer: Customer, event_node: Node
 ):
     await _set_group_topup_enabled(db_connection, event_node, True)
+    customer_service.sumup.config.core.sumup_enabled = True
     auth = await customer_service.login_customer(
         uid=test_customer.user_tag_uid, pin=test_customer.user_tag_pin, node_id=event_node.id
     )

@@ -3,12 +3,12 @@ import secrets
 from typing import Any
 
 import pytest
-
-from sftkit.error import AccessDenied, InvalidArgument
 from sftkit.database import Connection
-from stustapay.core.schema.tree import ROOT_NODE_ID, Node
+from sftkit.error import AccessDenied, InvalidArgument
+
 from stustapay.core.schema.config import GlobalEmailConfig
 from stustapay.core.schema.language import Language
+from stustapay.core.schema.tree import ROOT_NODE_ID, Node
 from stustapay.core.schema.user import (
     AcceptInvitationPayload,
     NewUser,

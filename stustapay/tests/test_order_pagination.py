@@ -8,7 +8,15 @@ from sftkit.database import Connection
 from sftkit.error import AccessDenied, InvalidArgument
 
 from stustapay.core.schema.account import AccountType
-from stustapay.core.schema.order import BookedProduct, EditSaleProducts, NewSaleProducts, OrderType, PaymentMethod
+from stustapay.core.schema.order import (
+    BookedProduct,
+    EditSaleProducts,
+    NewSaleProducts,
+    OrderType,
+    PaymentMethod,
+    get_source_account,
+    get_target_account,
+)
 from stustapay.core.schema.product import NewProduct, Product
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import NewCashRegister
@@ -22,7 +30,6 @@ from stustapay.core.service.order.booking import (
     book_cashier_shift_start_order,
     book_order,
 )
-from stustapay.core.service.order.order import get_source_account, get_target_account
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.tax_rate import fetch_tax_rate_none
 from stustapay.core.service.till.common import fetch_virtual_till
@@ -180,7 +187,7 @@ async def _create_sale_order(
           BookingIdentifier(
               source_account_id=get_source_account(OrderType.sale, customer_account_id),
               target_account_id=get_target_account(OrderType.sale, product, sale_exit_acc.id),
-          ): product.price
+          ): product.price or 0
         },
         customer_account_id=customer_account_id,
     )

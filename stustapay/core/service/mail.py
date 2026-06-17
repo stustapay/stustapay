@@ -13,13 +13,13 @@ from email.utils import formataddr, formatdate, make_msgid, parseaddr
 import aiosmtplib
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.mail import Mail
 from stustapay.core.service.config import fetch_global_email_config
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
-from sftkit.error import NotFound
 
 
 class MailService(Service[Config]):

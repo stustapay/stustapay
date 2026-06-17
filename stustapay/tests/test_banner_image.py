@@ -4,9 +4,13 @@ from io import BytesIO
 
 import pytest
 from PIL import Image
-
-from stustapay.core.banner_image import BANNER_MAX_BYTES, http_response_for_stored_banner, validate_and_prepare_banner_upload
 from sftkit.error import InvalidArgument
+
+from stustapay.core.banner_image import (
+    BANNER_MAX_BYTES,
+    http_response_for_stored_banner,
+    validate_and_prepare_banner_upload,
+)
 
 
 def _tiny_png_bytes() -> bytes:
@@ -60,4 +64,6 @@ def test_http_response_octet_stream_for_junk() -> None:
     meta = http_response_for_stored_banner(b"not an image")
     assert meta is not None
     assert meta["mime_type"] == "application/octet-stream"
-    assert "Content-Disposition" in meta["headers"]
+    headers = meta["headers"]
+    assert isinstance(headers, dict)
+    assert "Content-Disposition" in headers

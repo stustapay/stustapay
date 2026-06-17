@@ -6,9 +6,8 @@ import pytest
 from sftkit.database import Connection
 from sftkit.error import AccessDenied, InvalidArgument
 
+from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, Node
 from stustapay.core.schema.user import NewUser, NewUserRole, NewUserToRoles, Privilege
-from stustapay.core.schema.tree import NewEvent, ROOT_NODE_ID
-from stustapay.core.schema.tree import Node
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.tree.service import create_event
 from stustapay.core.service.user import UserService
@@ -412,7 +411,7 @@ async def test_find_accounts_does_not_leak_accounts_from_other_nodes(
         event=NewEvent(
             name="other-event",
             description="",
-            customer_portal_url="http://localhost:4300",
+            customer_portal_url="",
             customer_portal_contact_email="test@test.support.test.com",
             customer_portal_about_page_url="",
             customer_portal_data_privacy_url="",
@@ -538,7 +537,7 @@ async def test_find_customers_does_not_leak_customers_from_other_nodes(
         event=NewEvent(
             name="other-customer-event",
             description="",
-            customer_portal_url="http://localhost:4300",
+            customer_portal_url="",
             customer_portal_contact_email="test@test.support.test.com",
             customer_portal_about_page_url="",
             customer_portal_data_privacy_url="",

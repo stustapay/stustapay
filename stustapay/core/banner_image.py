@@ -6,7 +6,6 @@ from io import BytesIO
 from typing import Final
 
 from PIL import Image, UnidentifiedImageError
-
 from sftkit.error import InvalidArgument
 
 # Upper bound for uploaded banner payloads (decoded image bytes).

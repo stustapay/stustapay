@@ -10,7 +10,11 @@ from sftkit.error import InvalidArgument
 from stustapay.core.schema.sumup import NodeSumUpConnectionStatus, ResolvedSumUpLink, SumUpConnectionSource
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.config import fetch_global_sumup_config
-from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node, fetch_restricted_event_settings_for_node
+from stustapay.core.service.tree.common import (
+    fetch_event_node_for_node,
+    fetch_node,
+    fetch_restricted_event_settings_for_node,
+)
 from stustapay.payment.sumup.api import SumUpApi, fetch_new_oauth_token
 
 
@@ -188,6 +192,8 @@ async def create_sumup_api_for_node(
         return create_api(access.merchant_code, access.api_key), access
     if not access.is_oauth:
         return None
+    assert access.oauth_client_id is not None
+    assert access.oauth_client_secret is not None
     token = await fetch_new_oauth_token(
         client_id=access.oauth_client_id,
         client_secret=access.oauth_client_secret,

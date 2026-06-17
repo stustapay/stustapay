@@ -12,13 +12,13 @@ from stustapay.core.schema.entry import (
     EntryArea,
     EntryAreaGroup,
     EntryAreaGroupAssignPayload,
-    EntryAreaGroupWithGroup,
     EntryAreaGroupWindow,
+    EntryAreaGroupWithGroup,
     EntryDirection,
     EntryGroup,
     EntryGroupMember,
-    EntryGroupMemberAddPayload,
     EntryGroupMemberAddByGroupTagPayload,
+    EntryGroupMemberAddPayload,
     EntryScanLog,
     EntryScanLogQuery,
     EntryScanResult,
@@ -32,7 +32,6 @@ from stustapay.core.schema.user import Privilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_terminal, requires_user
 from stustapay.core.service.tree.common import fetch_event_node_for_node
-
 
 ENTRY_REASON_ALREADY_INSIDE = "already_inside"
 ENTRY_REASON_NOT_INSIDE = "not_inside"

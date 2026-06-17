@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,redefined-outer-name
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,redefined-outer-name,protected-access
 import uuid
 
 from sftkit.database import Connection
@@ -14,6 +14,7 @@ from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.till import NewTill, Till
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.order import OrderService
+from stustapay.core.service.order.order import fetch_order
 from stustapay.core.service.product import ProductService
 from stustapay.core.service.till.common import fetch_virtual_till
 from stustapay.core.service.till.till import TillService
@@ -123,8 +124,6 @@ async def test_edit_order_preserves_till_id(
     )
 
     # Fetch the original order
-    from stustapay.core.service.order.order import fetch_order
-
     original_order = await fetch_order(conn=db_connection, order_id=booking.id)
     assert original_order is not None
     assert original_order.till_id == second_till.id
@@ -158,8 +157,6 @@ async def test_edit_order_preserves_till_id(
 
     # Verify the original order was cancelled (a cancel order should reference it)
     # The original order itself doesn't change type, but a new cancel order is created
-    from stustapay.core.service.order.order import fetch_order
-
     # Check if a cancel order exists that references the original order
     cancel_order_id = await db_connection.fetchval(
         "select id from ordr where cancels_order = $1", original_order.id
@@ -195,12 +192,11 @@ async def test_edit_order_falls_back_to_virtual_till_when_till_not_accessible(
     database constraints, we test the main scenario: till_id preservation.
     This edge case is covered by the code logic in edit_sale_products.
     """
+    del till_service
     from stustapay.core.schema.account import AccountType
     from stustapay.core.schema.order import get_source_account, get_target_account
     from stustapay.core.service.account import get_system_account_for_node
     from stustapay.core.service.order.booking import BookingIdentifier, NewLineItem, book_order
-    from stustapay.core.service.order.order import fetch_order
-
     product = await product_service.create_product(
         token=event_admin_token,
         node_id=event_node.id,

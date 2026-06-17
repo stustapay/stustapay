@@ -2,16 +2,16 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.user import CurrentUser, Privilege
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
+from stustapay.core.schema.user_tag_models import UserTagDetail
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
-from sftkit.error import InvalidArgument, NotFound
 
 
 def _get_search_patterns(search_term: str) -> list[str]:

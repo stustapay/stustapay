@@ -6,7 +6,6 @@ from pydantic import BaseModel, computed_field
 
 from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.user import format_user_tag_uid
-from stustapay.core.schema.user_tag_models import UserTagAccountAssociation, UserTagDetail
 
 
 class AccountType(enum.Enum):

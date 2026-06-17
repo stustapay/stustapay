@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 import pytest
 
 from stustapay.payment.sumup.api import SumUpApi, SumUpError, fetch_merchant_profile
@@ -81,9 +82,9 @@ async def test_fetch_merchant_profile_preserves_api_error_details(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-        def get(self, url: str, timeout: int):
+        def get(self, url: str, timeout):
             assert url.endswith("/me/merchant-profile")
-            assert timeout == 10
+            assert timeout.total == 10
             return FakeResponse()
 
     monkeypatch.setattr("stustapay.payment.sumup.api.aiohttp.ClientSession", FakeClientSession)

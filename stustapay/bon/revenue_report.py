@@ -339,6 +339,7 @@ async def generate_report(conn: Connection, node_id: int, fees=0.0) -> PdfRender
     node = await fetch_node(conn=conn, node_id=node_id)
     assert node is not None
     event = await fetch_event_for_node(conn=conn, node=node)
+    assert node.event_node_id is not None
     event_node = await fetch_node(conn=conn, node_id=node.event_node_id)
     assert event_node is not None
 

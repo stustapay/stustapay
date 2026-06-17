@@ -1,4 +1,6 @@
+# pylint: disable=protected-access
 from datetime import datetime
+from email.message import Message
 from unittest.mock import AsyncMock
 
 import pytest
@@ -68,6 +70,7 @@ async def test_send_mail_sets_delivery_headers(mail_service: MailService, monkey
     await mail_service._send_mail(mail=mail)
 
     message = captured["message"]
+    assert isinstance(message, Message)
     assert message["From"] == "teamfestlichPay <payout@teamfestlichpay.de>"
     assert message["Reply-To"] == "teamfestlichPay <payout@teamfestlichpay.de>"
     assert message["Message-ID"].endswith("@teamfestlichpay.de>")

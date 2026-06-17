@@ -45,7 +45,7 @@ async def test_fetch_simulator_events_returns_only_simulator_events(db_connectio
         event=NewEvent(
             name="Simulator A",
             description="",
-            customer_portal_url="http://localhost:4300",
+            customer_portal_url="",
             customer_portal_contact_email="test@test.support.test.com",
             customer_portal_about_page_url="",
             customer_portal_data_privacy_url="",
@@ -90,7 +90,7 @@ async def test_fetch_simulator_events_returns_only_simulator_events(db_connectio
         event=NewEvent(
             name="Simulator B",
             description="",
-            customer_portal_url="http://localhost:4300",
+            customer_portal_url="",
             customer_portal_contact_email="test@test.support.test.com",
             customer_portal_about_page_url="",
             customer_portal_data_privacy_url="",
@@ -135,7 +135,7 @@ async def test_fetch_simulator_events_returns_only_simulator_events(db_connectio
         event=NewEvent(
             name="Outside Simulator",
             description="",
-            customer_portal_url="http://localhost:4300",
+            customer_portal_url="",
             customer_portal_contact_email="test@test.support.test.com",
             customer_portal_about_page_url="",
             customer_portal_data_privacy_url="",

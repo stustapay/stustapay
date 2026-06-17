@@ -1,4 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,no-value-for-parameter
+import secrets
+
 import pytest
 from asyncpg import RaiseError
 from pydantic import ValidationError
@@ -26,7 +28,12 @@ from stustapay.tests.common import list_equals
 TEST_BANNER_BYTES = b"not-a-real-png-but-good-enough-for-copy-tests"
 
 
+def _unique_customer_portal_url() -> str:
+    return f"https://pay.stustapay.example/{secrets.token_hex(8)}"
+
+
 def _build_source_event(name: str = "Original Event", description: str = "Event to be copied") -> NewEvent:
+    customer_portal_url = _unique_customer_portal_url()
     return NewEvent(
         name=name,
         description=description,
@@ -41,9 +48,9 @@ def _build_source_event(name: str = "Original Event", description: str = "Event 
         daily_end_time="04:30:00",
         expected_visitors_per_day=3210,
         post_payment_allowed=True,
-        customer_portal_url="https://pay.stustapay.example",
-        customer_portal_about_page_url="https://pay.stustapay.example/about",
-        customer_portal_data_privacy_url="https://pay.stustapay.example/privacy",
+        customer_portal_url=customer_portal_url,
+        customer_portal_about_page_url=f"{customer_portal_url}/about",
+        customer_portal_data_privacy_url=f"{customer_portal_url}/privacy",
         customer_portal_contact_email="ops@test.com",
         ust_id="UST-42",
         bon_issuer="StuStaPay Org",
@@ -168,7 +175,7 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
             sumup_topup_enabled=False,
             sumup_payment_enabled=False,
             max_account_balance=100,
-            customer_portal_url="https://pay.stustapay.de",
+            customer_portal_url=_unique_customer_portal_url(),
             customer_portal_about_page_url="https://pay.stustapay.de/about",
             customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
             customer_portal_contact_email="test@test.com",
@@ -229,7 +236,7 @@ async def test_event_creation(tree_service: TreeService, global_admin_token: str
                 sumup_topup_enabled=False,
                 sumup_payment_enabled=False,
                 max_account_balance=100,
-                customer_portal_url="https://pay.stustapay.de",
+                customer_portal_url=_unique_customer_portal_url(),
                 customer_portal_about_page_url="https://pay.stustapay.de/about",
                 customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
                 customer_portal_contact_email="test@test.com",
@@ -322,7 +329,7 @@ async def test_object_rules(tree_service: TreeService, global_admin_token: str):
             sumup_topup_enabled=False,
             sumup_payment_enabled=False,
             max_account_balance=100,
-            customer_portal_url="https://pay.stustapay.de",
+            customer_portal_url=_unique_customer_portal_url(),
             customer_portal_about_page_url="https://pay.stustapay.de/about",
             customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
             customer_portal_contact_email="test@test.com",
@@ -677,6 +684,7 @@ async def test_copy_event(
         "sumup_topup_enabled",
         "group_topup_enabled",
         "sumup_payment_enabled",
+        "customer_portal_url",
     }
     assert copied_settings.model_dump(exclude=sumup_enrichment_exclude) == original_settings.model_dump(
         exclude=sumup_enrichment_exclude
@@ -693,6 +701,7 @@ async def test_copy_event(
     assert copied_settings.sumup_topup_enabled is False
     assert copied_settings.group_topup_enabled is False
     assert copied_settings.sumup_payment_enabled is False
+    assert copied_settings.customer_portal_url == ""
 
     copied_banner = await db_connection.fetchrow(
         "select e.banner_image, e.banner_image_mime_type from event e join node n on n.event_id = e.id where n.id = $1",
@@ -1380,7 +1389,7 @@ def test_update_event_wifi_requires_both_fields():
             vip_max_account_balance=300,
             sumup_topup_enabled=False,
             sumup_payment_enabled=False,
-            customer_portal_url="https://pay.stustapay.de",
+            customer_portal_url=_unique_customer_portal_url(),
             customer_portal_about_page_url="https://pay.stustapay.de/about",
             customer_portal_data_privacy_url="https://pay.stustapay.de/privacy",
             customer_portal_contact_email="test@test.com",

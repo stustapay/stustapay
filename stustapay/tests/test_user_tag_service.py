@@ -7,6 +7,7 @@ from sftkit.database import Connection
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user_tag import NewUserTag
 from stustapay.core.service.user_tag import UserTagService
+
 from .conftest import CreateRandomUserTag
 
 
@@ -80,7 +81,7 @@ async def test_count_tags_without_accounts(
     assert count_after_tag1 == initial_count + 1
 
     # Create another tag without an account
-    tag2 = await create_random_user_tag()
+    await create_random_user_tag()
     count_after_tag2 = await user_tag_service.count_tags_without_accounts(
         token=event_admin_token, node_id=event_node.id
     )

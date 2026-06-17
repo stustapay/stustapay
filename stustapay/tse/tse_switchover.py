@@ -32,6 +32,7 @@ async def draw_meters(meters, db):
     tses = await db.fetch("select * from tse order by id")
     for i in range(len(tses)):
         meters[i].clear()
+        colorscheme = curses.color_pair(0)
         if tses[i]["status"] == "new":
             colorscheme = curses.color_pair(2)
         elif tses[i]["status"] == "active":

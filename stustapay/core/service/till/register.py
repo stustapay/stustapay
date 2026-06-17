@@ -416,6 +416,7 @@ class TillRegisterService(Service[Config]):
         Modify a cashier's cash register balance directly from the admin interface.
         This transfers money between the cash vault and the cashier's cash register.
         """
+        del cashier_tag_uid
         # Get the cashier's cash register
         cash_register_row = await conn.fetchrow(
             "select cr.id, cr.account_id, cr.balance from usr u "

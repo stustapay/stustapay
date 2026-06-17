@@ -3,7 +3,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
-
 CURVE = ec.BrainpoolP384R1()
 COORDINATE_SIZE = CURVE.key_size // 8
 SIGNATURE_SIZE = COORDINATE_SIZE * 2

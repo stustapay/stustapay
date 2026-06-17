@@ -290,7 +290,7 @@ class ConfigService(Service[Config]):
         if not config.email_enabled:
             raise InvalidArgument("Email sending is disabled")
 
-        context = {
+        context: dict[str, object] = {
             "display_name": current_user.display_name,
             "login": current_user.login,
             "username": current_user.login,

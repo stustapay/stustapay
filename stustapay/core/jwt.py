@@ -74,6 +74,8 @@ def decode(token: str, key: str, algorithms: Iterable[str]) -> dict:
         raise InvalidTokenError("Malformed JWT header")
 
     algorithm = header.get("alg")
+    if not isinstance(algorithm, str):
+        raise InvalidTokenError("JWT algorithm missing")
     if algorithm not in algorithms:
         raise InvalidTokenError("JWT algorithm not allowed")
 

@@ -65,7 +65,7 @@ class PretixApi:
     async def _get(self, url: str, query: dict | None = None) -> dict:
         async with aiohttp.ClientSession(trust_env=True, headers=self._get_pretix_auth_headers()) as session:
             try:
-                async with session.get(url, params=query, timeout=10) as response:
+                async with session.get(url, params=query, timeout=aiohttp.ClientTimeout(total=10)) as response:
                     if not response.ok:
                         resp = await response.json()
                         err = _PretixErrorFormat.model_validate(resp)

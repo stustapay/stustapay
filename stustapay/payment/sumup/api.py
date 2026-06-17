@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 import aiohttp
 from pydantic import BaseModel
-
 from sftkit.error import ServiceException
 
 logger = logging.getLogger(__name__)
@@ -128,7 +127,7 @@ async def fetch_refresh_token_from_auth_code(
 
     async with aiohttp.ClientSession(trust_env=True) as session:
         try:
-            async with session.post(url, data=payload, timeout=10) as response:
+            async with session.post(url, data=payload, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if not response.ok:
                     try:
                         resp = await response.json()
@@ -166,7 +165,7 @@ async def fetch_merchant_profile(access_token: str) -> SumUpMerchantProfile:
 
     async with aiohttp.ClientSession(trust_env=True, headers=headers) as session:
         try:
-            async with session.get(url, timeout=10) as response:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if not response.ok:
                     try:
                         resp = await response.json(content_type=None)
@@ -201,7 +200,7 @@ async def fetch_new_oauth_token(client_id: str, client_secret: str, refresh_toke
 
     async with aiohttp.ClientSession(trust_env=True) as session:
         try:
-            async with session.post(url, data=payload, timeout=1) as response:
+            async with session.post(url, data=payload, timeout=aiohttp.ClientTimeout(total=1)) as response:
                 if not response.ok:
                     try:
                         resp = await response.json()
@@ -246,7 +245,7 @@ class SumUpApi:
         async with aiohttp.ClientSession(trust_env=True, headers=self._get_sumup_auth_headers()) as session:
             try:
                 logger.debug(f"Making GET request to SumUp API: {url} with params {query}")
-                async with session.get(url, params=query, timeout=10) as response:
+                async with session.get(url, params=query, timeout=aiohttp.ClientTimeout(total=10)) as response:
                     if not response.ok:
                         resp_text = await response.text()
                         logger.error(f"SumUp API error response: {resp_text}, status: {response.status}")
@@ -258,7 +257,9 @@ class SumUpApi:
                             raise SumUpError(f"SumUp API returned an error: {error_code} - {error_message}")
                         except Exception as parse_err:
                             logger.error(f"Failed to parse SumUp error response: {parse_err}")
-                            raise SumUpError(f"SumUp API returned an error with status {response.status}: {resp_text}")
+                            raise SumUpError(
+                                f"SumUp API returned an error with status {response.status}: {resp_text}"
+                            ) from parse_err
                     return await response.json(content_type=None)
             except asyncio.TimeoutError as e:
                 logger.error(f"SumUp API timeout on GET {url}: {e}")
@@ -276,7 +277,12 @@ class SumUpApi:
         ) as session:
             try:
                 logger.debug(f"Making POST request to SumUp API: {url} with data {data.model_dump()}")
-                async with session.post(url, data=data.model_dump_json(), params=query, timeout=10) as response:
+                async with session.post(
+                    url,
+                    data=data.model_dump_json(),
+                    params=query,
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as response:
                     if not response.ok:
                         resp_text = await response.text()
                         logger.error(f"SumUp API error response: {resp_text}, status: {response.status}")
@@ -288,7 +294,9 @@ class SumUpApi:
                             raise SumUpError(f"SumUp API returned an error: {error_code} - {error_message}")
                         except Exception as parse_err:
                             logger.error(f"Failed to parse SumUp error response: {parse_err}")
-                            raise SumUpError(f"SumUp API returned an error with status {response.status}: {resp_text}")
+                            raise SumUpError(
+                                f"SumUp API returned an error with status {response.status}: {resp_text}"
+                            ) from parse_err
                     # ignore content type as responses may be text/plain
                     return await response.json(content_type=None)
             except asyncio.TimeoutError as e:

@@ -4,6 +4,7 @@ from typing import Optional
 import asyncpg
 from pydantic import BaseModel
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
@@ -16,7 +17,6 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
 )
-from sftkit.error import InvalidArgument
 from stustapay.core.service.product import fetch_pay_out_product, fetch_top_up_product
 from stustapay.core.service.tree.common import fetch_event_for_node, fetch_node
 
@@ -1211,10 +1211,8 @@ class OrderStatsService(Service[Config]):
                 )
             else:
                 today_start = now.replace(hour=daily_end_hour, minute=daily_end_minute, second=0, microsecond=0)
-            today_end = today_start + timedelta(days=1) - timedelta(seconds=1)
         else:
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            today_end = today_start + timedelta(days=1) - timedelta(seconds=1)
 
         # Find customer node (first node after root)
         # parent_ids[0] is root (id=0), parent_ids[1] is customer node

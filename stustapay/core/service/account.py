@@ -2,16 +2,16 @@ from typing import Optional
 
 import asyncpg
 from sftkit.database import Connection
+from sftkit.error import InvalidArgument, NotFound
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.account import Account, AccountType
-from stustapay.core.schema.order import OrderType, PaymentMethod
 from stustapay.core.schema.customer import Customer
-from stustapay.core.schema.order import NewFreeTicketGrant
+from stustapay.core.schema.order import NewFreeTicketGrant, OrderType, PaymentMethod
 from stustapay.core.schema.tree import Node
-from stustapay.core.schema.user_tag import SwapCustomerTagResponse
 from stustapay.core.schema.user import Privilege, User, format_user_tag_uid
+from stustapay.core.schema.user_tag import SwapCustomerTagResponse
 from stustapay.core.schema.user_tag_models import UserTagSwapCandidate
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import (
@@ -19,7 +19,6 @@ from stustapay.core.service.common.decorators import (
     requires_terminal,
     requires_user,
 )
-from sftkit.error import InvalidArgument, NotFound
 from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.user_tag import ensure_private_account_creation_allowed

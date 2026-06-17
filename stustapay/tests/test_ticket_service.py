@@ -1,9 +1,9 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import pytest
+from sftkit.error import AccessDenied
 
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.ticket import NewTicket
-from sftkit.error import AccessDenied
 from stustapay.core.service.ticket import TicketService
 
 from ..core.schema.tree import Node

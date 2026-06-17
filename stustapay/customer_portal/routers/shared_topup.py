@@ -5,8 +5,12 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_customer import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService
-from stustapay.core.schema.customer import SharedTopupContribution, SharedTopupLink, SharedTopupPublicInfo
-from stustapay.core.schema.customer import SumUpCheckoutStatus
+from stustapay.core.schema.customer import (
+    SharedTopupContribution,
+    SharedTopupLink,
+    SharedTopupPublicInfo,
+    SumUpCheckoutStatus,
+)
 from stustapay.customer_portal.routers.common import get_customer_portal_base_url
 
 router = APIRouter(

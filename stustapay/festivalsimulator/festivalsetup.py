@@ -36,7 +36,7 @@ class FestivalSetup:
             except SystemExit as e:
                 # uvicorn calls sys.exit(1) on port binding errors
                 error_msg = f"Service '{service_name}' failed to start"
-                if e.code:
+                if e.code is not None and e.code != 0:
                     if e.code == 1:
                         error_msg += " (likely port already in use - check if service is already running)"
                     else:
@@ -44,9 +44,6 @@ class FestivalSetup:
                 self.logger.error(error_msg)
                 # Convert SystemExit to a regular exception so it can be handled by gather
                 raise RuntimeError(f"{error_msg}") from e
-            except KeyboardInterrupt:
-                # Re-raise KeyboardInterrupt
-                raise
             except asyncio.CancelledError:
                 self.logger.info(f"Service '{service_name}' cancelled")
                 raise
@@ -125,7 +122,7 @@ class FestivalSetup:
                 service_names.extend(["tse-processor", "tse-simulator"])
 
             failed_services = []
-            for i, (name, result) in enumerate(zip(service_names, results)):
+            for name, result in zip(service_names, results):
                 if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
                     self.logger.error(f"Service '{name}' failed: {result}")
                     failed_services.append(name)

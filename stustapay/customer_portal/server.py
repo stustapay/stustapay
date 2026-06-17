@@ -9,8 +9,8 @@ from stustapay.core import database
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
 from stustapay.core.healthcheck import run_healthcheck
-from stustapay.core.http.openapi import ensure_agpl_license_url
 from stustapay.core.http.context import Context
+from stustapay.core.http.openapi import ensure_agpl_license_url
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
 from stustapay.core.service.mail import MailService

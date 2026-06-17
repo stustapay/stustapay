@@ -4,19 +4,19 @@ from itertools import chain
 from typing import Awaitable, Callable, Optional, TypeVar
 
 from sftkit.database import Connection
-
-from stustapay.core.schema.terminal import CurrentTerminal
-from stustapay.core.schema.till import Till
-from stustapay.core.schema.tree import Node, ObjectType, ROOT_NODE_ID
-from stustapay.core.schema.user import CurrentUser, Privilege
-from stustapay.core.service.customer.common import is_customer_bound_to_customer_portal_base_url
-from stustapay.core.service.common.error import EventRequired, NodeIsReadOnly
 from sftkit.error import (
     AccessDenied,
     InvalidArgument,
     ResourceNotAllowed,
     Unauthorized,
 )
+
+from stustapay.core.schema.terminal import CurrentTerminal
+from stustapay.core.schema.till import Till
+from stustapay.core.schema.tree import ROOT_NODE_ID, Node, ObjectType
+from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.service.common.error import EventRequired, NodeIsReadOnly
+from stustapay.core.service.customer.common import is_customer_bound_to_customer_portal_base_url
 from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node
 
 R = TypeVar("R")
