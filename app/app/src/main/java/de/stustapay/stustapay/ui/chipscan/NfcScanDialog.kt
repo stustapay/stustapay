@@ -80,6 +80,8 @@ fun NfcScanDialog(
     checkScan: (NfcTag) -> Boolean = { true },
     onScan: (NfcTag) -> Unit = {},
     showClarification: Boolean = false,
+    dismissOnBackPress: Boolean = true,
+    dismissOnClickOutside: Boolean = true,
     variant: NfcScanDialogVariant = NfcScanDialogVariant.Operator,
     clarificationContent: @Composable (status: String, compactLayout: Boolean) -> Unit = { status, compactLayout ->
         SelfServiceScanPanelContent(
@@ -144,8 +146,8 @@ fun NfcScanDialog(
                 onDismiss()
             },
             properties = DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true,
+                dismissOnBackPress = dismissOnBackPress,
+                dismissOnClickOutside = dismissOnClickOutside,
                 usePlatformDefaultWidth = false
             )
         ) {

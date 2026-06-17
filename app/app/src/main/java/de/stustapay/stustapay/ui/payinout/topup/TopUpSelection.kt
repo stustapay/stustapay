@@ -146,6 +146,8 @@ fun TopUpSelection(
         NfcScanDialog(
             state = scanState,
             showClarification = true,
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
             onDismiss = {
                 paymentSelectionViewModel.resetCustomerDisplay()
                 resetIdleTimer()

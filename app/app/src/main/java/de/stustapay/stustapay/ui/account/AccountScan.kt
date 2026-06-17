@@ -46,6 +46,8 @@ fun AccountScan(
         NfcScanDialog(
             state = selfServiceScanState,
             showClarification = true,
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
             onDismiss = onBack,
             onScan = onScan,
             clarificationContent = { status, compactLayout ->
