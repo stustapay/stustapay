@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -40,10 +39,6 @@ export const TillProfileList: React.FC = () => {
   const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery({ nodeId: currentNode.id });
   const [deleteTillProfile] = useDeleteTillProfileMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isTillsLoading || isLayoutsLoading) {
-    return <Loading />;
-  }
 
   const renderLayout = (id: number) => {
     if (!layouts) {
@@ -141,6 +136,7 @@ export const TillProfileList: React.FC = () => {
     <ListLayout title={t("profile.profiles")} routes={TillProfileRoutes}>
       <DataGrid
         autoHeight
+        loading={isTillsLoading || isLayoutsLoading}
         rows={profiles ?? []}
         columns={columns}
         disableRowSelectionOnClick

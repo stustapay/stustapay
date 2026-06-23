@@ -1,5 +1,4 @@
 import { Link, Tooltip } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -15,10 +14,6 @@ export const ExternalTicketList: React.FC = () => {
   const { currentNode } = useCurrentNode();
 
   const { data: tickets, isLoading: isTicketsLoading } = useListExternalTicketsQuery({ nodeId: currentNode.id });
-
-  if (isTicketsLoading) {
-    return <Loading />;
-  }
 
   const columns: GridColDef<ExternalTicket>[] = [
     {
@@ -111,6 +106,7 @@ export const ExternalTicketList: React.FC = () => {
   return (
     <ListLayout title={t("externalTicket.presaleTickets")}>
       <DataGrid
+        loading={isTicketsLoading}
         rows={tickets ?? []}
         columns={columns}
         disableRowSelectionOnClick

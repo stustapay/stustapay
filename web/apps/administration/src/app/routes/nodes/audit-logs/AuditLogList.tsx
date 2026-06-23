@@ -1,5 +1,4 @@
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -16,12 +15,9 @@ export const AuditLogList: React.FC = () => {
   const { currentNode } = useCurrentNode();
 
   const { data: auditLogs, isLoading } = useListAuditLogsQuery({ nodeId: currentNode.id });
-  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { dataGridNodeColumn } = useRenderNode();
 
-  if (isLoading || !users) {
-    return <Loading />;
-  }
   const renderUser = (id: number | null) => {
     if (!id || !users) {
       return "";
@@ -74,6 +70,7 @@ export const AuditLogList: React.FC = () => {
   return (
     <ListLayout title={t("auditLog.auditLogs")}>
       <DataGrid
+        loading={isLoading || isUsersLoading}
         rows={auditLogs ?? []}
         columns={columns}
         disableRowSelectionOnClick

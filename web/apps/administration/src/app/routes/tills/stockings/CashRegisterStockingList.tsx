@@ -1,5 +1,4 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -35,10 +34,6 @@ export const CashRegisterStockingList: React.FC = () => {
     }
   );
   const [deleteStocking] = useDeleteRegisterStockingMutation();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (stockingId: number) => {
     openModal({
@@ -96,6 +91,7 @@ export const CashRegisterStockingList: React.FC = () => {
     <ListLayout title={t("register.stockings")} routes={TillStockingsRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={stockings ?? []}
         columns={columns}
         disableRowSelectionOnClick

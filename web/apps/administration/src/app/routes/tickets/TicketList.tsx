@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon, LockOpen as UnlockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -41,10 +40,6 @@ export const TicketList: React.FC = () => {
   const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isTicketsLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (ticketId: number) => {
     openModal({
@@ -176,6 +171,7 @@ export const TicketList: React.FC = () => {
     <ListLayout title={t("tickets")} routes={TicketRoutes}>
       <DataGrid
         autoHeight
+        loading={isTicketsLoading}
         rows={tickets ?? []}
         columns={columns}
         disableRowSelectionOnClick

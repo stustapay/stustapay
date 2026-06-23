@@ -5,7 +5,6 @@ import {
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { GridRenderCellParams } from "@mui/x-data-grid";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -41,12 +40,8 @@ export const OrderTable: React.FC<OrderListProps> = ({
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
-
-  if (!users || !tills) {
-    return <Loading />;
-  }
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
 
   const getUsernameForUser = (id?: number | null) => {
     if (id == null || users == null) {
@@ -68,7 +63,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
       renderCell: ({ row }) => {
         let nodeId = null;
         if (row.till_id != null) {
-          nodeId = selectTillById(tills, row.till_id)?.node_id;
+          nodeId = tills ? selectTillById(tills, row.till_id)?.node_id : null;
         }
         return (
           <Link component={RouterLink} to={OrderRoutes.detail(row.id, nodeId)}>
@@ -128,7 +123,9 @@ export const OrderTable: React.FC<OrderListProps> = ({
                 return null;
               }
               return (
-                <RouterLink to={TillRoutes.detail(row.till_id)}>{selectTillById(tills, row.till_id)?.name}</RouterLink>
+                <RouterLink to={TillRoutes.detail(row.till_id)}>
+                  {tills ? selectTillById(tills, row.till_id)?.name : null}
+                </RouterLink>
               );
             },
             width: 200,
@@ -165,6 +162,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
   return (
     <DataGrid
       autoHeight
+      loading={isUsersLoading || isTillsLoading}
       rows={orders ?? []}
       slots={{ toolbar: () => <DataGridTitle title={t("orders")} /> }}
       columns={columns}

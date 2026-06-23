@@ -11,9 +11,10 @@ import { useRenderNode } from "@/hooks";
 
 export interface CustomerTableProps {
   customers: CustomerRead[];
+  loading?: boolean;
 }
 
-export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
+export const CustomerTable: React.FC<CustomerTableProps> = ({ customers, loading = false }) => {
   const { t } = useTranslation();
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -88,6 +89,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
   return (
     <DataGrid
       autoHeight
+      loading={loading}
       rows={customers}
       columns={columns}
       disableRowSelectionOnClick

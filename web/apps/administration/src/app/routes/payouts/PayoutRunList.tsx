@@ -1,6 +1,5 @@
 import { Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -33,11 +32,7 @@ export const PayoutRunList: React.FC = () => {
       }),
     }
   );
-  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
-
-  if (isPayoutRunsLoading) {
-    return <Loading />;
-  }
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
 
   const columns: GridColDef<PayoutRunWithStats>[] = [
     {
@@ -124,6 +119,7 @@ export const PayoutRunList: React.FC = () => {
       <PendingPayoutDetail />
       <DataGrid
         autoHeight
+        loading={isPayoutRunsLoading || isUsersLoading}
         rows={payoutRuns ?? []}
         columns={columns}
         initialState={{

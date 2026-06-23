@@ -15,7 +15,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(NodePrivilege.node
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: checkouts } = useListSumupCheckoutsQuery({ nodeId: currentNode.id });
+  const { data: checkouts, isLoading } = useListSumupCheckoutsQuery({ nodeId: currentNode.id });
 
   const columns: GridColDef<SumUpCheckout>[] = [
     {
@@ -41,6 +41,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(NodePrivilege.node
     <ListLayout title={t("sumup.checkouts")} routes={ProductRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={checkouts ?? []}
         columns={columns}
         disableRowSelectionOnClick

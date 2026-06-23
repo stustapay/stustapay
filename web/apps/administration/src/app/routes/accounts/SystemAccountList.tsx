@@ -1,4 +1,3 @@
-import { Loading } from "@stustapay/components";
 import { NodePrivilege } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -24,13 +23,9 @@ export const SystemAccountList: React.FC = withPrivilegeGuard(NodePrivilege.node
     }
   );
 
-  if (isAccountsLoading) {
-    return <Loading />;
-  }
-
   return (
     <ListLayout title={t("systemAccounts")}>
-      <AccountTable accounts={accounts ?? []} />
+      <AccountTable accounts={accounts ?? []} loading={isAccountsLoading} />
     </ListLayout>
   );
 });

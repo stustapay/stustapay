@@ -11,9 +11,10 @@ import { useRenderNode } from "@/hooks";
 
 export interface AccountTableProps {
   accounts: AccountRead[];
+  loading?: boolean;
 }
 
-export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
+export const AccountTable: React.FC<AccountTableProps> = ({ accounts, loading = false }) => {
   const { t } = useTranslation();
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -68,6 +69,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts }) => {
   return (
     <DataGrid
       autoHeight
+      loading={loading}
       rows={accounts}
       columns={columns}
       disableRowSelectionOnClick

@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -33,10 +32,6 @@ export const UserRoleList: React.FC = () => {
   );
   const [deleteUserRole] = useDeleteUserRoleMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (userRoleId: number) => {
     openModal({
@@ -113,6 +108,7 @@ export const UserRoleList: React.FC = () => {
     <ListLayout title={t("userRoles")} routes={UserRoleRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={userRoles ?? []}
         columns={columns}
         disableRowSelectionOnClick
