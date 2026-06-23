@@ -86,9 +86,7 @@ export const UserToRoleUpdate: React.FC = withPrivilegeGuard("node_administratio
 
   const initialValues: NewUserToRoles = isEditMode
     ? (() => {
-        const existing = userToRolesList?.find(
-          (u) => u.node_id === currentNode.id && u.user_id === userIdFromRoute
-        );
+        const existing = userToRolesList?.find((u) => u.node_id === currentNode.id && u.user_id === userIdFromRoute);
         return {
           user_id: userIdFromRoute,
           role_ids: existing?.role_ids ?? [],

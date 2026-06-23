@@ -314,17 +314,17 @@ class UserService(Service[Config]):
             new_role.name,
             new_role.can_assign_all_roles,
         )
-        for privilege in new_role.event_privileges:
+        for event_privilege in new_role.event_privileges:
             await conn.execute(
                 "insert into user_role_to_event_privilege (role_id, privilege) values ($1, $2)",
                 role_id,
-                privilege.name,
+                event_privilege.name,
             )
-        for privilege in new_role.node_privileges:
+        for node_privilege in new_role.node_privileges:
             await conn.execute(
                 "insert into user_role_to_node_privilege (role_id, privilege) values ($1, $2)",
                 role_id,
-                privilege.name,
+                node_privilege.name,
             )
         if not new_role.can_assign_all_roles:
             for assignable_role_id in set(new_role.assignable_role_ids):
@@ -380,17 +380,17 @@ class UserService(Service[Config]):
 
         await conn.execute("delete from user_role_to_event_privilege where role_id = $1", role_id)
         await conn.execute("delete from user_role_to_node_privilege where role_id = $1", role_id)
-        for privilege in event_privileges:
+        for event_privilege in event_privileges:
             await conn.execute(
                 "insert into user_role_to_event_privilege (role_id, privilege) values ($1, $2)",
                 role_id,
-                privilege.name,
+                event_privilege.name,
             )
-        for privilege in node_privileges:
+        for node_privilege in node_privileges:
             await conn.execute(
                 "insert into user_role_to_node_privilege (role_id, privilege) values ($1, $2)",
                 role_id,
-                privilege.name,
+                node_privilege.name,
             )
 
         role = await _get_user_role(conn=conn, role_id=role_id)

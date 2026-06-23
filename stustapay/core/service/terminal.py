@@ -397,13 +397,17 @@ class TerminalService(Service[Config]):
     async def get_terminal_config(
         self, *, conn: Connection, event_node: Node, current_terminal: CurrentTerminal
     ) -> TerminalConfig | None:
-        event_privileges, node_privileges = await fetch_user_privileges_at_node_for_role(
-            conn=conn,
-            user_id=current_terminal.active_user_id,
-            role_id=current_terminal.active_user_role_id,
-            event_node_id=event_node.id,
-            node_id=current_terminal.till.node_id if current_terminal.till is not None else None,
-        )
+        if current_terminal.active_user_id is None or current_terminal.active_user_role_id is None:
+            event_privileges: set[EventPrivilege] = set()
+            node_privileges: set[NodePrivilege] = set()
+        else:
+            event_privileges, node_privileges = await fetch_user_privileges_at_node_for_role(
+                conn=conn,
+                user_id=current_terminal.active_user_id,
+                role_id=current_terminal.active_user_role_id,
+                event_node_id=event_node.id,
+                node_id=current_terminal.till.node_id if current_terminal.till is not None else None,
+            )
 
         secrets = await self._get_terminal_secrets(conn=conn, event_node=event_node)
 

@@ -24,7 +24,6 @@ async def test_remove_from_terminal_logs_out_user(
     terminal_service: TerminalService,
     till_service: TillService,
     till,
-    terminal,
     terminal_token: str,
     event_admin_token: str,
     event_node: Node,

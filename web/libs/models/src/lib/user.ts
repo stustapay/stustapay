@@ -11,11 +11,7 @@ export const EventPrivilegeSchema = z.enum([
   "grant_vouchers",
 ]);
 
-export const NodePrivilegeSchema = z.enum([
-  "node_administration",
-  "view_node_stats",
-  "can_book_orders",
-]);
+export const NodePrivilegeSchema = z.enum(["node_administration", "view_node_stats", "can_book_orders"]);
 
 export const PrivilegeSchema = z.union([EventPrivilegeSchema, NodePrivilegeSchema]);
 

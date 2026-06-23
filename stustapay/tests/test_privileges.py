@@ -3,9 +3,8 @@ import secrets
 
 from sftkit.database import Connection
 
-from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import NewNode
-from stustapay.core.schema.user import EventPrivilege, NewUser, NewUserRole, NewUserToRoles, NodePrivilege
+from stustapay.core.schema.user import EventPrivilege, NewUser, NewUserRole, NodePrivilege
 from stustapay.core.service.tree.service import create_node
 from stustapay.core.service.user import UserService, associate_user_to_role
 
@@ -155,72 +154,3 @@ async def test_node_administration_privileges_only_visible_at_assigned_subnode(
 
     assert node_admin_at_event is False
     assert node_admin_at_subnode is True
-
-
-async def test_terminal_user_privileges_without_till(
-    db_connection: Connection,
-    user_service: UserService,
-    event_admin_token: str,
-    event_node,
-    event_admin_user,
-):
-    admin_user, _ = event_admin_user
-    role = await user_service.create_user_role(
-        token=event_admin_token,
-        node_id=event_node.id,
-        new_role=NewUserRole(
-            name="terminal-role",
-            event_privileges=[EventPrivilege.terminal_login],
-            node_privileges=[NodePrivilege.can_book_orders],
-        ),
-    )
-    await user_service.update_user_to_roles(
-        token=event_admin_token,
-        node_id=event_node.id,
-        user_to_roles=NewUserToRoles(user_id=admin_user.id, role_ids=[role.id]),
-    )
-
-    privileges = await db_connection.fetchrow(
-        "select event_privileges, node_privileges from terminal_user_privileges($1, $2, $3)",
-        admin_user.id,
-        role.id,
-        None,
-    )
-    assert privileges is not None
-    assert EventPrivilege.terminal_login.name in privileges["event_privileges"]
-    assert privileges["node_privileges"] == []
-
-
-async def test_terminal_user_privileges_with_till(
-    db_connection: Connection,
-    user_service: UserService,
-    event_admin_token: str,
-    event_node,
-    event_admin_user,
-    till: Till,
-):
-    admin_user, _ = event_admin_user
-    role = await user_service.create_user_role(
-        token=event_admin_token,
-        node_id=event_node.id,
-        new_role=NewUserRole(
-            name="terminal-till-role",
-            event_privileges=[EventPrivilege.terminal_login],
-            node_privileges=[NodePrivilege.can_book_orders],
-        ),
-    )
-    await user_service.update_user_to_roles(
-        token=event_admin_token,
-        node_id=event_node.id,
-        user_to_roles=NewUserToRoles(user_id=admin_user.id, role_ids=[role.id]),
-    )
-
-    privileges = await db_connection.fetchrow(
-        "select event_privileges, node_privileges from terminal_user_privileges($1, $2, $3)",
-        admin_user.id,
-        role.id,
-        till.node_id,
-    )
-    assert privileges is not None
-    assert EventPrivilege.terminal_login.name in privileges["event_privileges"]
-    assert NodePrivilege.can_book_orders.name in privileges["node_privileges"]

@@ -5,7 +5,7 @@ from stustapay.core.schema.user import EventPrivilege, NodePrivilege
 
 async def fetch_user_privileges_at_node(
     conn: Connection, *, user_id: int, event_node_id: int | None, node_id: int | None
-) -> tuple[list[EventPrivilege], list[NodePrivilege]]:
+) -> tuple[set[EventPrivilege], set[NodePrivilege]]:
     event_privileges = []
     if event_node_id is not None:
         event_privileges = await conn.fetchval("select user_event_privileges($1, $2)", user_id, event_node_id)
@@ -17,7 +17,7 @@ async def fetch_user_privileges_at_node(
 
 async def fetch_user_privileges_at_node_for_role(
     conn: Connection, *, user_id: int, role_id: int, event_node_id: int | None, node_id: int | None
-) -> tuple[list[EventPrivilege], list[NodePrivilege]]:
+) -> tuple[set[EventPrivilege], set[NodePrivilege]]:
     event_privileges = []
     if event_node_id is not None:
         event_privileges = await conn.fetchval(
