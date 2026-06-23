@@ -17,6 +17,7 @@ from stustapay.core.schema.user import (
     LoginPayload,
     NewUser,
     User,
+    UserRoleAssignmentPayload,
     UserTag,
 )
 
@@ -66,7 +67,7 @@ async def logout_user(
 
 
 class CreateUserPayload(NewUser):
-    role_ids: list[int]
+    role_assignments: list[UserRoleAssignmentPayload]
 
 
 @router.post("/create-user", summary="Create a new user with the given roles", response_model=User)
@@ -75,12 +76,14 @@ async def create_user(
     user_service: ContextUserService,
     new_user: CreateUserPayload,
 ):
-    return await user_service.create_user_terminal(token=token, new_user=new_user, role_ids=new_user.role_ids)
+    return await user_service.create_user_terminal(
+        token=token, new_user=new_user, role_assignments=new_user.role_assignments
+    )
 
 
 class UpdateUserPayload(BaseModel):
     user_tag_uid: int
-    role_ids: list[int]
+    role_assignments: list[UserRoleAssignmentPayload]
 
 
 @router.post("/update-user-roles", summary="Update the roles of a given user", response_model=User)
@@ -90,7 +93,7 @@ async def update_user_roles(
     payload: UpdateUserPayload,
 ):
     return await user_service.update_user_roles_terminal(
-        token=token, user_tag_uid=payload.user_tag_uid, role_ids=payload.role_ids
+        token=token, user_tag_uid=payload.user_tag_uid, role_assignments=payload.role_assignments
     )
 
 

@@ -174,7 +174,8 @@ async def create_user_role(
 
 
 class UpdateUserRolePrivilegesPayload(BaseModel):
-    is_privileged: bool
+    can_assign_all_roles: bool
+    assignable_role_ids: list[int]
     event_privileges: list[EventPrivilege]
     node_privileges: list[NodePrivilege]
 
@@ -190,7 +191,8 @@ async def update_user_role(
     role = await user_service.update_user_role_privileges(
         token=token,
         role_id=user_role_id,
-        is_privileged=updated_role.is_privileged,
+        can_assign_all_roles=updated_role.can_assign_all_roles,
+        assignable_role_ids=updated_role.assignable_role_ids,
         event_privileges=updated_role.event_privileges,
         node_privileges=updated_role.node_privileges,
         node_id=node_id,

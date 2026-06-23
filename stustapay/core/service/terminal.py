@@ -44,6 +44,11 @@ from stustapay.core.service.common.decorators import (
     requires_user,
 )
 from stustapay.core.service.common.error import AccessDenied
+from stustapay.core.service.common.privileges import (
+    fetch_user_privileges_at_node,
+    fetch_user_privileges_at_node_for_role,
+)
+from stustapay.core.service.common.role_assignment import user_can_assign_roles_at_node
 from stustapay.core.service.till.till import (
     assign_cash_register_to_till_if_available,
     assign_till_to_terminal,
@@ -51,11 +56,10 @@ from stustapay.core.service.till.till import (
     remove_terminal_from_till,
 )
 from stustapay.core.service.tree.common import (
-    fetch_event_node_for_node,
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.core.service.user import list_assignable_roles_for_user_at_node
+from stustapay.core.service.user import list_assignable_roles_by_node_for_user
 from stustapay.mdm.headwind_provider import HeadwindProvider
 from stustapay.mdm.mdm_provider import DeviceInfo, MdmProvider
 from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
@@ -245,6 +249,8 @@ class TerminalService(Service[Config]):
         if terminal.till_id is not None:
             till_node_id = await conn.fetchval("select node_id from till where id = $1", terminal.till_id)
             await remove_terminal_from_till(conn=conn, node_id=till_node_id, till_id=terminal.till_id)
+        else:
+            await logout_user_from_terminal(conn=conn, node_id=None, terminal_id=terminal_id)
 
         await assign_till_to_terminal(conn=conn, node=node, till_id=new_till_id, terminal_id=terminal_id)
         await create_audit_log(
@@ -386,38 +392,18 @@ class TerminalService(Service[Config]):
             user_tag_secret=user_tag_secret,
         )
 
-    @staticmethod
-    async def _get_assignable_roles_for_user_at_node(conn: Connection, current_terminal: CurrentTerminal):
-        available_roles = []
-        if current_terminal.till is not None:
-            node = await fetch_node(conn=conn, node_id=current_terminal.till.node_id)
-        else:
-            node = await fetch_node(conn=conn, node_id=current_terminal.node_id)
-        assert node is not None
-
-        if current_terminal.active_user_id is not None:
-            available_roles = await list_assignable_roles_for_user_at_node(
-                conn=conn, node=node, user_id=current_terminal.active_user_id
-            )
-        return available_roles
-
     @with_db_transaction(read_only=True)
     @requires_terminal(requires_till=False)
     async def get_terminal_config(
-        self, *, conn: Connection, current_terminal: CurrentTerminal
+        self, *, conn: Connection, event_node: Node, current_terminal: CurrentTerminal
     ) -> TerminalConfig | None:
-        event_node = await fetch_event_node_for_node(conn=conn, node_id=current_terminal.node_id)
-        assert event_node is not None
-
-        privileges_row = await conn.fetchrow(
-            "select event_privileges, node_privileges from terminal_user_privileges($1, $2, $3)",
-            current_terminal.active_user_id,
-            current_terminal.active_user_role_id,
-            current_terminal.till.node_id if current_terminal.till is not None else None,
+        event_privileges, node_privileges = await fetch_user_privileges_at_node_for_role(
+            conn=conn,
+            user_id=current_terminal.active_user_id,
+            role_id=current_terminal.active_user_role_id,
+            event_node_id=event_node.id,
+            node_id=current_terminal.till.node_id if current_terminal.till is not None else None,
         )
-        assert privileges_row is not None
-        event_privileges = list(EventPrivilege[p] for p in privileges_row["event_privileges"])
-        node_privileges = list(NodePrivilege[p] for p in privileges_row["node_privileges"])
 
         secrets = await self._get_terminal_secrets(conn=conn, event_node=event_node)
 
@@ -426,9 +412,14 @@ class TerminalService(Service[Config]):
             till_config = await self._get_terminal_till_config(
                 conn=conn, terminal_id=current_terminal.id, till=current_terminal.till, event_node=event_node
             )
-        available_roles = await self._get_assignable_roles_for_user_at_node(
-            conn=conn, current_terminal=current_terminal
-        )
+        available_roles_by_node = []
+        if current_terminal.active_user_id is not None and current_terminal.active_user_role_id is not None:
+            available_roles_by_node = await list_assignable_roles_by_node_for_user(
+                conn=conn,
+                event_node=event_node,
+                user_id=current_terminal.active_user_id,
+                active_role_id=current_terminal.active_user_role_id,
+            )
 
         return TerminalConfig(
             id=current_terminal.id,
@@ -437,7 +428,7 @@ class TerminalService(Service[Config]):
             description=current_terminal.description,
             user_event_privileges=event_privileges,
             user_node_privileges=node_privileges,
-            available_roles=available_roles,
+            available_roles_by_node=available_roles_by_node,
             active_user_id=current_terminal.active_user_id,
             secrets=secrets,
             till=till_config,
@@ -450,8 +441,10 @@ class TerminalService(Service[Config]):
     async def check_user_login(
         self,
         *,
+        event_node: Node,
         node: Node,
         conn: Connection,
+        current_terminal: CurrentTerminal,
         current_user: CurrentUser,
         user_tag: UserTag,
     ) -> list[UserRole]:
@@ -460,41 +453,54 @@ class TerminalService(Service[Config]):
         """
 
         # we fetch all roles that contain either the terminal login or supervised terminal login privilege
-        available_roles = await conn.fetch_many(
-            UserRole,
-            "select urwp.* "
-            "from user_role_with_privileges urwp "
-            "join user_to_role urt on urwp.id = urt.role_id "
-            "join usr on urt.user_id = usr.id "
-            "join user_tag ut on usr.user_tag_id = ut.id "
-            "where ut.uid = $1 "
-            "   and ($2 = any(urwp.event_privileges) or $3 = any(urwp.event_privileges)) "
-            "   and urt.node_id = any($4)",
-            user_tag.uid,
-            EventPrivilege.terminal_login.name,
-            EventPrivilege.supervised_terminal_login.name,
-            node.ids_to_root,
-        )
-        if len(available_roles) == 0:
-            raise AccessDenied(
-                "User is not known or does not have any assigned roles or the user does not "
-                "have permission to login at a terminal"
-            )
-
         new_user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
-        assert new_user_id is not None
+        if new_user_id is None:
+            raise InvalidArgument(f"User with tag {format_user_tag_uid(user_tag.uid)} is not known")
 
-        event_node_for_check = await fetch_event_node_for_node(conn=conn, node_id=node.id)
-        assert event_node_for_check is not None
-        new_user_is_supervisor = await conn.fetchval(
-            "select true from user_privileges_at_node($1) where $2 = any(event_privileges_at_node) and node_id = $3",
-            new_user_id,
-            EventPrivilege.terminal_login.name,
-            event_node_for_check.id,
+        event_privileges, _ = await fetch_user_privileges_at_node(
+            conn=conn, user_id=new_user_id, event_node_id=event_node.id, node_id=node.id
         )
-        if not new_user_is_supervisor:
+        has_terminal_login_privilege = EventPrivilege.terminal_login in event_privileges
+        has_supervised_terminal_login_privilege = EventPrivilege.supervised_terminal_login in event_privileges
+
+        if not has_terminal_login_privilege and not has_supervised_terminal_login_privilege:
+            raise AccessDenied("User does not have permission to login at a terminal")
+
+        if not has_terminal_login_privilege and has_supervised_terminal_login_privilege:
             if current_user is None or EventPrivilege.terminal_login not in current_user.event_privileges:
                 raise AccessDenied("You can only be logged in by a supervisor")
+
+        # TODO: Distinguish between non-till mode and till mode.
+        # In non-till mode all roles should be available. In till mode only roles which are visible at the till node should be available.
+        if current_terminal.till is not None:
+            available_roles = await conn.fetch_many(
+                UserRole,
+                "select urwp.* "
+                "from user_role_with_privileges urwp "
+                "join user_to_role urt on urwp.id = urt.role_id "
+                "where urt.user_id = $1 "
+                "   and ($2 = any(urwp.event_privileges) or $3 = any(urwp.event_privileges)) "
+                "   and urt.node_id = any($4)",
+                new_user_id,
+                EventPrivilege.terminal_login.name,
+                EventPrivilege.supervised_terminal_login.name,
+                node.ids_to_event_node,  # node is the till node here
+            )
+        else:
+            available_roles = await conn.fetch_many(
+                UserRole,
+                "select urwp.* "
+                "from user_role_with_privileges urwp "
+                "join user_to_role urt on urwp.id = urt.role_id "
+                "join node n on urt.node_id = n.id "
+                "where urt.user_id = $1 "
+                "   and ($2 = any(urwp.event_privileges) or $3 = any(urwp.event_privileges)) "
+                "   and ($4 = any(n.parent_ids) or $4 = n.id)",
+                new_user_id,
+                EventPrivilege.terminal_login.name,
+                EventPrivilege.supervised_terminal_login.name,
+                node.id,  # node is the event node here
+            )
 
         return available_roles
 
@@ -511,12 +517,6 @@ class TerminalService(Service[Config]):
     ) -> CurrentUser:
         """
         Login a User to the terminal, but only if the correct permissions exists:
-        wants to log in | allowed to log in
-        official        | always
-        cashier         | only if official is logged in
-
-        where officials are admins and finanzorgas
-
         returns the newly logged-in User if successful
         """
         available_roles = await self.check_user_login(  # pylint: disable=missing-kwoa,unexpected-keyword-arg
@@ -593,10 +593,16 @@ class TerminalService(Service[Config]):
     async def get_user_info(
         self, *, conn: Connection, current_user: CurrentUser, node: Node, user_tag_uid: int
     ) -> UserInfo:
+        can_assign_roles = await user_can_assign_roles_at_node(
+            conn=conn,
+            user_id=current_user.id,
+            node=node,
+            active_role_id=current_user.active_role_id,
+        )
         if (
             NodePrivilege.node_administration not in current_user.node_privileges
             and EventPrivilege.create_user not in current_user.event_privileges
-            and NodePrivilege.allow_role_assignment not in current_user.node_privileges
+            and not can_assign_roles
             and user_tag_uid != current_user.user_tag_uid
         ):
             raise AccessDenied("cannot retrieve user info for someone other than yourself")
@@ -629,9 +635,10 @@ class TerminalService(Service[Config]):
             "from user_role_with_privileges ur "
             "join user_to_role utr on ur.id = utr.role_id "
             "join node n on utr.node_id = n.id "
-            "where n.id = any($2) and utr.user_id = $1",
+            "where n.event_node_id = $2 and utr.user_id = $1 "
+            "order by n.path",
             info.id,
-            node.ids_to_root,
+            node.event_node_id,
             node.id,
         )
 

@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from stustapay.core.schema.till import Till
-from stustapay.core.schema.user import EventPrivilege, NodePrivilege, UserRole
+from stustapay.core.schema.user import AssignableUserRolesAtNode, EventPrivilege, NodePrivilege
 from stustapay.mdm.mdm_provider import DeviceStatus
 
 
@@ -78,7 +78,7 @@ class TerminalConfig(BaseModel):
 
     event_name: str
     active_user_id: Optional[int]
-    available_roles: list[UserRole]
+    available_roles_by_node: list[AssignableUserRolesAtNode]
     user_event_privileges: Optional[list[EventPrivilege]]
     user_node_privileges: Optional[list[NodePrivilege]]
     secrets: Optional[TerminalUserTagSecrets]

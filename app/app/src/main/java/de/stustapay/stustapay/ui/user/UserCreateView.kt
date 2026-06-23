@@ -2,10 +2,8 @@ package de.stustapay.stustapay.ui.user
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,11 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
-import androidx.compose.material.Icon
 import androidx.compose.material.ListItem
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
@@ -30,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -45,7 +38,6 @@ import de.stustapay.stustapay.model.UserCreateQRContent
 import de.stustapay.stustapay.ui.chipscan.NfcScanCard
 import de.stustapay.stustapay.ui.chipscan.rememberNfcScanDialogState
 import kotlinx.coroutines.launch
-import androidx.compose.ui.res.painterResource
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -53,10 +45,10 @@ import kotlinx.serialization.json.Json
 fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
-    var roles by remember { mutableStateOf(listOf<ULong>()) }
+    var assignments by remember { mutableStateOf<NodeRoleAssignments>(emptyMap()) }
     var description by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
+    val availableRolesByNode by viewModel.availableRolesByNode.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     var currentTagState: NfcTag? by remember { mutableStateOf(null) }
     val nfcScanState = rememberNfcScanDialogState()
@@ -179,62 +171,11 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        var expanded by remember { mutableStateOf(false) }
-
-                        ExposedDropdownMenuBox(
-                            expanded = expanded, onExpandedChange = { expanded = it }) {
-                            OutlinedTextField(
-                                label = { Text(stringResource(R.string.user_roles)) },
-                                readOnly = true,
-                                value = roles.map { id ->
-                                    availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
-                                }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
-                                onValueChange = {},
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = expanded
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expanded, onDismissRequest = { expanded = false }) {
-                                for (r in availableRoles) {
-                                    if (!r.isPrivileged!!) {
-                                        DropdownMenuItem(onClick = {
-                                            roles = if (roles.contains(r.id.ulongValue())) {
-                                                roles - r.id.ulongValue()
-                                            } else {
-                                                roles + r.id.ulongValue()
-                                            }
-                                            expanded = false
-                                        }) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                Text(r.name)
-                                                if (roles.contains(r.id.ulongValue())) {
-                                                    Icon(
-                                                        painter = painterResource(de.stustapay.libssp.R.drawable.check_24),
-                                                        null
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    NodeRoleAssignmentEditor(
+                        availableRolesByNode = availableRolesByNode,
+                        assignments = assignments,
+                        onAssignmentsChange = { assignments = it },
+                    )
                 }
             }
         }, bottomBar = {
@@ -283,7 +224,7 @@ fun UserCreateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                                 userName,
                                 displayName,
                                 currentTag,
-                                roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id },
+                                assignments.toRoleAssignmentPayloads(),
                                 description
                             )
                             goToUserDisplayView()

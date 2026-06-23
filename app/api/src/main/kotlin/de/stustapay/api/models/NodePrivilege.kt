@@ -31,19 +31,13 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * Values: node_administration,allow_privileged_role_assignment,allow_role_assignment,view_node_stats,can_book_orders
+ * Values: node_administration,view_node_stats,can_book_orders
  */
 @Serializable
 enum class NodePrivilege(val value: kotlin.String) {
 
     @SerialName(value = "node_administration")
     node_administration("node_administration"),
-
-    @SerialName(value = "allow_privileged_role_assignment")
-    allow_privileged_role_assignment("allow_privileged_role_assignment"),
-
-    @SerialName(value = "allow_role_assignment")
-    allow_role_assignment("allow_role_assignment"),
 
     @SerialName(value = "view_node_stats")
     view_node_stats("view_node_stats"),

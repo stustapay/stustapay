@@ -2302,12 +2302,7 @@ export type EventPrivilege =
   | "supervised_terminal_login"
   | "grant_free_tickets"
   | "grant_vouchers";
-export type NodePrivilege =
-  | "node_administration"
-  | "allow_privileged_role_assignment"
-  | "allow_role_assignment"
-  | "view_node_stats"
-  | "can_book_orders";
+export type NodePrivilege = "node_administration" | "view_node_stats" | "can_book_orders";
 export type CreateUserPayload = {
   login: string;
   display_name: string;
@@ -2325,7 +2320,8 @@ export type UpdateUserPayload = {
 };
 export type UserRole = {
   name: string;
-  is_privileged?: boolean;
+  can_assign_all_roles?: boolean;
+  assignable_role_ids?: number[];
   event_privileges: EventPrivilege[];
   node_privileges: NodePrivilege[];
   id: number;
@@ -2349,12 +2345,14 @@ export type NormalizedListUserRoleInt = {
 };
 export type NewUserRole = {
   name: string;
-  is_privileged?: boolean;
+  can_assign_all_roles?: boolean;
+  assignable_role_ids?: number[];
   event_privileges: EventPrivilege[];
   node_privileges: NodePrivilege[];
 };
 export type UpdateUserRolePrivilegesPayload = {
-  is_privileged: boolean;
+  can_assign_all_roles: boolean;
+  assignable_role_ids: number[];
   event_privileges: EventPrivilege[];
   node_privileges: NodePrivilege[];
 };

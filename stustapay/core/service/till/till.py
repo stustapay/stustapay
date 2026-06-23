@@ -122,15 +122,27 @@ class TillService(Service[Config]):
     async def update_till(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, till_id: int, till: NewTill
     ) -> Till:
+        existing_till = await fetch_till(conn=conn, node=node, till_id=till_id)
+        if existing_till is None:
+            raise NotFound(element_type="till", element_id=till_id)
+
+        old_terminal_id = existing_till.terminal_id
+        new_terminal_id = till.terminal_id
+        if old_terminal_id != new_terminal_id:
+            if old_terminal_id is not None:
+                await remove_terminal_from_till(conn=conn, node_id=node.id, till_id=till_id)
+            if new_terminal_id is not None:
+                await logout_user_from_terminal(conn=conn, node_id=None, terminal_id=new_terminal_id)
+                await assign_till_to_terminal(conn=conn, node=node, till_id=till_id, terminal_id=new_terminal_id)
+
         row = await conn.fetchrow(
-            "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5, terminal_id = $6 "
-            "where id = $1 and node_id = $7 returning id",
+            "update till set name = $2, description = $3, active_shift = $4, active_profile_id = $5 "
+            "where id = $1 and node_id = $6 returning id",
             till_id,
             till.name,
             till.description,
             till.active_shift,
             till.active_profile_id,
-            till.terminal_id,
             node.id,
         )
         if row is None:

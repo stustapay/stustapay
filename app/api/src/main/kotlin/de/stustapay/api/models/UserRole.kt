@@ -38,7 +38,8 @@ import kotlinx.serialization.Contextual
  * @param nodePrivileges
  * @param id
  * @param nodeId
- * @param isPrivileged
+ * @param canAssignAllRoles
+ * @param assignableRoleIds
  */
 @Serializable
 
@@ -59,8 +60,11 @@ data class UserRole (
     @SerialName(value = "node_id")
     val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "is_privileged")
-    val isPrivileged: kotlin.Boolean? = false
+    @SerialName(value = "can_assign_all_roles")
+    val canAssignAllRoles: kotlin.Boolean? = false,
+
+    @SerialName(value = "assignable_role_ids")
+    val assignableRoleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>? = null
 
 ) {
 

@@ -13,8 +13,6 @@ export const EventPrivilegeSchema = z.enum([
 
 export const NodePrivilegeSchema = z.enum([
   "node_administration",
-  "allow_privileged_role_assignment",
-  "allow_role_assignment",
   "view_node_stats",
   "can_book_orders",
 ]);
@@ -29,7 +27,8 @@ export type NodePrivilege = z.infer<typeof NodePrivilegeSchema>;
 
 export const NewUserRoleSchema = z.object({
   name: z.string(),
-  is_privileged: z.boolean(),
+  can_assign_all_roles: z.boolean(),
+  assignable_role_ids: z.array(z.number().int()),
   event_privileges: z.array(EventPrivilegeSchema),
   node_privileges: z.array(NodePrivilegeSchema),
 });

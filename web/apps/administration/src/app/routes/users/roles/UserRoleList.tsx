@@ -63,9 +63,9 @@ export const UserRoleList: React.FC = () => {
       minWidth: 200,
     },
     {
-      field: "is_privileged",
-      headerName: t("userRole.isPrivileged"),
-      description: t("userRole.isPrivilegedDescription"),
+      field: "can_assign_all_roles",
+      headerName: t("userRole.canAssignAllRoles"),
+      description: t("userRole.canAssignAllRolesDescription"),
       type: "boolean",
     },
     {

@@ -4,7 +4,7 @@ import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
 import { NewUserRole } from "@/api";
-import { EventPrivilegeSelect, NodePrivilegeSelect } from "@/components/features";
+import { EventPrivilegeSelect, NodePrivilegeSelect, RoleSelect } from "@/components/features";
 
 export type UserRoleFormProps<T extends NewUserRole> = FormikProps<T>;
 
@@ -15,9 +15,27 @@ export function UserRoleForm<T extends NewUserRole>(props: UserRoleFormProps<T>)
     <>
       <FormTextField autoFocus name="name" label={t("userRole.name")} formik={props} />
       <FormGroup>
-        <FormCheckbox label={t("userRole.isPrivileged")} name="is_privileged" formik={props} />
-        <FormHelperText>{t("userRole.isPrivilegedDescription")}</FormHelperText>
+        <FormCheckbox
+          label={t("userRole.canAssignAllRoles")}
+          name="can_assign_all_roles"
+          formik={props}
+          onChange={(_event, checked) => {
+            if (checked) {
+              setFieldValue("assignable_role_ids", []);
+            }
+          }}
+        />
+        <FormHelperText>{t("userRole.canAssignAllRolesDescription")}</FormHelperText>
       </FormGroup>
+
+      <RoleSelect
+        label={t("userRole.assignableRoles")}
+        value={values.assignable_role_ids ?? []}
+        onChange={(roleIds) => setFieldValue("assignable_role_ids", roleIds)}
+        disabled={values.can_assign_all_roles}
+        error={touched.assignable_role_ids && !!errors.assignable_role_ids}
+        helperText={(touched.assignable_role_ids && errors.assignable_role_ids) as string}
+      />
 
       <EventPrivilegeSelect
         label={t("userRole.eventPrivileges")}

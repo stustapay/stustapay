@@ -363,3 +363,42 @@ alter table event add constraint end_date_gt_start_date
 
 alter table customer_info add constraint account_name_charset
     check ( account_name ~ '^[a-zA-Z0-9\.''\:\?,\-\(\)\/ ÄäÖöÜüßÉéèàùâáêėîíôóûÇğçčćëİïÁϋğÑñãŞÇşı&\$%]+$' );
+
+create or replace function check_user_role_assignable_role_insert() returns trigger as
+$$
+begin
+    if exists (
+        select 1
+        from user_role
+        where id = new.assigner_role_id
+          and can_assign_all_roles
+    ) then
+        raise exception 'Cannot add explicit assignable roles when can_assign_all_roles is set';
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger user_role_to_assignable_role_no_explicit_when_all
+    before insert or update on user_role_to_assignable_role
+    for each row execute function check_user_role_assignable_role_insert();
+
+create or replace function check_user_role_can_assign_all_roles() returns trigger as
+$$
+begin
+    if new.can_assign_all_roles and exists (
+        select 1
+        from user_role_to_assignable_role
+        where assigner_role_id = new.id
+    ) then
+        raise exception 'Cannot set can_assign_all_roles when explicit assignable roles exist';
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger user_role_can_assign_all_roles_no_explicit
+    before insert or update of can_assign_all_roles on user_role
+    for each row
+    when (new.can_assign_all_roles)
+    execute function check_user_role_can_assign_all_roles();

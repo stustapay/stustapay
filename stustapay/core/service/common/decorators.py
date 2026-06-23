@@ -20,6 +20,10 @@ from stustapay.core.service.common.error import (
     ResourceNotAllowed,
     Unauthorized,
 )
+from stustapay.core.service.common.privileges import (
+    fetch_user_privileges_at_node,
+    fetch_user_privileges_at_node_for_role,
+)
 from stustapay.core.service.tree.common import fetch_event_node_for_node, fetch_node
 
 R = TypeVar("R")
@@ -46,43 +50,6 @@ def _add_arg_to_signature(original_func, new_func, name: str):
     new_parameters = tuple(sig.parameters.values()) + (Parameter(name, kind=Parameter.KEYWORD_ONLY, annotation=Node),)
     sig = sig.replace(parameters=new_parameters)
     new_func.__signature__ = sig  # type: ignore
-
-
-def _parse_event_privileges(names: list[str]) -> list[EventPrivilege]:
-    return [EventPrivilege(name) for name in names]
-
-
-def _parse_node_privileges(names: list[str]) -> list[NodePrivilege]:
-    return [NodePrivilege(name) for name in names]
-
-
-async def _fetch_user_privileges_at_node(
-    conn: Connection, *, user_id: int, node_id: int
-) -> tuple[list[EventPrivilege], list[NodePrivilege]]:
-    row = await conn.fetchrow(
-        "select event_privileges_at_node, node_privileges_at_node from user_privileges_at_node($1) where node_id = $2",
-        user_id,
-        node_id,
-    )
-    if row is None:
-        return [], []
-    return _parse_event_privileges(row["event_privileges_at_node"]), _parse_node_privileges(
-        row["node_privileges_at_node"]
-    )
-
-
-async def _fetch_terminal_user_privileges(
-    conn: Connection, *, user_id: int, role_id: int, till_node_id: int | None
-) -> tuple[list[EventPrivilege], list[NodePrivilege]]:
-    row = await conn.fetchrow(
-        "select event_privileges, node_privileges from terminal_user_privileges($1, $2, $3)",
-        user_id,
-        role_id,
-        till_node_id,
-    )
-    if row is None:
-        return [], []
-    return _parse_event_privileges(row["event_privileges"]), _parse_node_privileges(row["node_privileges"])
 
 
 def requires_node(
@@ -182,8 +149,8 @@ def requires_user(
                 node: Node | None = kwargs.get("node")
                 if node is None:
                     raise RuntimeError("requires_user needs requires_node to be placed before it")
-                user_event_privileges, user_node_privileges = await _fetch_user_privileges_at_node(
-                    conn, user_id=user.id, node_id=node.id
+                user_event_privileges, user_node_privileges = await fetch_user_privileges_at_node(
+                    conn, user_id=user.id, event_node_id=node.event_node_id, node_id=node.id
                 )
                 user.event_privileges = user_event_privileges
                 user.node_privileges = user_node_privileges
@@ -356,11 +323,12 @@ def requires_terminal(
 
             if logged_in_user is not None and terminal.active_user_role_id is not None:
                 till_node_id = till.node_id if till is not None else None
-                user_event_privileges, user_node_privileges = await _fetch_terminal_user_privileges(
+                user_event_privileges, user_node_privileges = await fetch_user_privileges_at_node_for_role(
                     conn,
                     user_id=logged_in_user.id,
                     role_id=terminal.active_user_role_id,
-                    till_node_id=till_node_id,
+                    event_node_id=event_node.id,
+                    node_id=till_node_id,
                 )
                 logged_in_user.event_privileges = user_event_privileges
                 logged_in_user.node_privileges = user_node_privileges
@@ -411,6 +379,11 @@ def requires_terminal(
                 kwargs["current_terminal"] = terminal
             elif "current_terminal" in kwargs:
                 kwargs.pop("current_terminal")
+
+            if "event_node" in signature_params:
+                kwargs["event_node"] = event_node
+            elif "event_node" in kwargs:
+                kwargs.pop("event_node")
 
             if "token" not in signature_params and "token" in kwargs:
                 kwargs.pop("token")

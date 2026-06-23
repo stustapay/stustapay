@@ -108,7 +108,6 @@ class CashRegisterStocking(NewCashRegisterStocking):
 class UserRoleInfo(BaseModel):
     id: int
     name: str
-    is_privileged: bool
     event_privileges: list[EventPrivilege]
     node_privileges: list[NodePrivilege]
 

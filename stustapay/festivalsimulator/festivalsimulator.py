@@ -110,7 +110,7 @@ class Simulator:
                 "from user_with_tag u "
                 "join user_privileges_at_node(u.id) pr on pr.node_id = $1 "
                 "left join terminal t on u.id = t.active_user_id "
-                "where t.id is null and 'can_book_orders' = any(pr.privileges_at_node) ",
+                "where t.id is null and 'can_book_orders' = any(pr.node_privileges_at_node) ",
                 self.event_node_id,
             )
         ]
@@ -557,7 +557,7 @@ class Simulator:
 
     async def login_customer(self, pin: str) -> str:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
-            async with client.post("/auth/login", json={"pin": pin}) as resp:
+            async with client.post("/auth/login", json={"pin": pin, "node_id": self.event_node_id}) as resp:
                 if resp.status == 503:
                     self.logger.warning(f"Customer with pin {pin} problem logging in, {await resp.text()}")
                     await self.sleep()

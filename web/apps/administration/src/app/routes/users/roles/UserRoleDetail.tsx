@@ -51,10 +51,20 @@ export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration"
       <DetailView>
         <DetailField label={t("userRole.name")} value={role.name} />
         <DetailField
-          label={t("userRole.isPrivileged")}
-          helpText={t("userRole.isPrivilegedDescription")}
-          value={role.is_privileged ? t("common.yes") : t("common.no")}
+          label={t("userRole.canAssignAllRoles")}
+          helpText={t("userRole.canAssignAllRolesDescription")}
+          value={role.can_assign_all_roles ? t("common.yes") : t("common.no")}
         />
+        {!role.can_assign_all_roles && (
+          <DetailField
+            label={t("userRole.assignableRoles")}
+            value={
+              (role.assignable_role_ids ?? []).length > 0
+                ? (role.assignable_role_ids ?? []).join(", ")
+                : t("common.none")
+            }
+          />
+        )}
       </DetailView>
       <PrivilegeDetailSection title={t("userRole.eventPrivileges")} privileges={role.event_privileges} />
       <PrivilegeDetailSection title={t("userRole.nodePrivileges")} privileges={role.node_privileges} />

@@ -390,7 +390,8 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
         token=admin_token,
         node_id=ROOT_NODE_ID,
         role_id=ADMIN_ROLE_ID,
-        is_privileged=True,
+        can_assign_all_roles=True,
+        assignable_role_ids=[],
         event_privileges=[
             EventPrivilege.payout_management,
             EventPrivilege.cash_transport,
@@ -401,8 +402,6 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
             EventPrivilege.create_user,
         ],
         node_privileges=[
-            NodePrivilege.allow_privileged_role_assignment,
-            NodePrivilege.allow_role_assignment,
             NodePrivilege.node_administration,
             NodePrivilege.view_node_stats,
             NodePrivilege.can_book_orders,
@@ -488,7 +487,6 @@ async def cashier(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="cashier",
-            is_privileged=False,
             event_privileges=[EventPrivilege.supervised_terminal_login],
             node_privileges=[NodePrivilege.can_book_orders],
         ),

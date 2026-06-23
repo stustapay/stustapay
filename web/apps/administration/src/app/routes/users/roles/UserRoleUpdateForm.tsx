@@ -5,11 +5,12 @@ import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-import { EventPrivilegeSelect, NodePrivilegeSelect } from "@/components/features";
+import { EventPrivilegeSelect, NodePrivilegeSelect, RoleSelect } from "@/components/features";
 
 export const UserRoleUpdateSchema = z.object({
   id: z.number(),
-  is_privileged: z.boolean(),
+  can_assign_all_roles: z.boolean(),
+  assignable_role_ids: z.array(z.number().int()),
   event_privileges: z.array(EventPrivilegeSchema),
   node_privileges: z.array(NodePrivilegeSchema),
 });
@@ -24,9 +25,27 @@ export function UserRoleUpdateForm<T extends UserRoleUpdate>(props: UserRoleUpda
   return (
     <>
       <FormGroup>
-        <FormCheckbox name="is_privileged" label={t("userRole.isPrivileged")} formik={props} />
-        <FormHelperText>{t("userRole.isPrivilegedDescription")}</FormHelperText>
+        <FormCheckbox
+          name="can_assign_all_roles"
+          label={t("userRole.canAssignAllRoles")}
+          formik={props}
+          onChange={(_event, checked) => {
+            if (checked) {
+              setFieldValue("assignable_role_ids", []);
+            }
+          }}
+        />
+        <FormHelperText>{t("userRole.canAssignAllRolesDescription")}</FormHelperText>
       </FormGroup>
+
+      <RoleSelect
+        label={t("userRole.assignableRoles")}
+        value={values.assignable_role_ids}
+        onChange={(roleIds) => setFieldValue("assignable_role_ids", roleIds)}
+        disabled={values.can_assign_all_roles}
+        error={touched.assignable_role_ids && !!errors.assignable_role_ids}
+        helperText={(touched.assignable_role_ids && errors.assignable_role_ids) as string}
+      />
 
       <EventPrivilegeSelect
         label={t("userRole.eventPrivileges")}

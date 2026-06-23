@@ -12035,10 +12035,17 @@
             "type": "string",
             "title": "Name"
           },
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged",
+            "title": "Can Assign All Roles",
             "default": false
+          },
+          "assignable_role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Assignable Role Ids"
           },
           "event_privileges": {
             "items": {
@@ -12286,8 +12293,6 @@
         "type": "string",
         "enum": [
           "node_administration",
-          "allow_privileged_role_assignment",
-          "allow_role_assignment",
           "view_node_stats",
           "can_book_orders"
         ],
@@ -16471,9 +16476,16 @@
       },
       "UpdateUserRolePrivilegesPayload": {
         "properties": {
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged"
+            "title": "Can Assign All Roles"
+          },
+          "assignable_role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Assignable Role Ids"
           },
           "event_privileges": {
             "items": {
@@ -16492,7 +16504,8 @@
         },
         "type": "object",
         "required": [
-          "is_privileged",
+          "can_assign_all_roles",
+          "assignable_role_ids",
           "event_privileges",
           "node_privileges"
         ],
@@ -16664,10 +16677,17 @@
             "type": "string",
             "title": "Name"
           },
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged",
+            "title": "Can Assign All Roles",
             "default": false
+          },
+          "assignable_role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Assignable Role Ids"
           },
           "event_privileges": {
             "items": {

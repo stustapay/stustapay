@@ -31,9 +31,6 @@ class NodePrivilege(enum.Enum):
     # general management privileges
     node_administration = "node_administration"
 
-    allow_privileged_role_assignment = "allow_privileged_role_assignment"
-    allow_role_assignment = "allow_role_assignment"
-
     view_node_stats = "view_node_stats"
 
     # festival order / ticket / voucher flow privileges
@@ -47,7 +44,8 @@ NODE_PRIVILEGE_NAMES = frozenset(p.value for p in NodePrivilege)
 
 class NewUserRole(BaseModel):
     name: str
-    is_privileged: bool = False
+    can_assign_all_roles: bool = False
+    assignable_role_ids: list[int] = Field(default_factory=list)
     event_privileges: list[EventPrivilege]
     node_privileges: list[NodePrivilege]
 
@@ -77,6 +75,17 @@ class UserRoleAssignment(BaseModel):
     node_name: str
     role_ids: list[int]
     roles: list[UserRole]
+
+
+class AssignableUserRolesAtNode(BaseModel):
+    node_id: int
+    node_name: str
+    roles: list[UserRole]
+
+
+class UserRoleAssignmentPayload(BaseModel):
+    node_id: int
+    role_ids: list[int]
 
 
 class CheckLoginResult(BaseModel):

@@ -23,7 +23,6 @@ async def test_event_privileges_visible_below_event_node(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="event-stats-role",
-            is_privileged=False,
             event_privileges=[EventPrivilege.customer_management],
             node_privileges=[],
         ),
@@ -72,7 +71,6 @@ async def test_node_privileges_visible_below_event_node(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="booking-role",
-            is_privileged=False,
             event_privileges=[],
             node_privileges=[NodePrivilege.can_book_orders],
         ),
@@ -130,7 +128,6 @@ async def test_node_administration_privileges_only_visible_at_assigned_subnode(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="subnode-admin-role",
-            is_privileged=False,
             event_privileges=[],
             node_privileges=[NodePrivilege.node_administration],
         ),
@@ -173,7 +170,6 @@ async def test_terminal_user_privileges_without_till(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="terminal-role",
-            is_privileged=False,
             event_privileges=[EventPrivilege.terminal_login],
             node_privileges=[NodePrivilege.can_book_orders],
         ),
@@ -209,7 +205,6 @@ async def test_terminal_user_privileges_with_till(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="terminal-till-role",
-            is_privileged=False,
             event_privileges=[EventPrivilege.terminal_login],
             node_privileges=[NodePrivilege.can_book_orders],
         ),

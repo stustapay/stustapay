@@ -23,11 +23,11 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.AssignableUserRolesAtNode
 import de.stustapay.api.models.EventPrivilege
 import de.stustapay.api.models.NodePrivilege
 import de.stustapay.api.models.TerminalTillConfig
 import de.stustapay.api.models.TerminalUserTagSecrets
-import de.stustapay.api.models.UserRole
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -41,7 +41,7 @@ import kotlinx.serialization.Contextual
  * @param description
  * @param eventName
  * @param activeUserId
- * @param availableRoles
+ * @param availableRolesByNode
  * @param userEventPrivileges
  * @param userNodePrivileges
  * @param secrets
@@ -68,8 +68,8 @@ data class TerminalConfig (
     @SerialName(value = "active_user_id")
     val activeUserId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger?,
 
-    @SerialName(value = "available_roles")
-    val availableRoles: kotlin.collections.List<UserRole>,
+    @SerialName(value = "available_roles_by_node")
+    val availableRolesByNode: kotlin.collections.List<AssignableUserRolesAtNode>,
 
     @SerialName(value = "user_event_privileges")
     val userEventPrivileges: kotlin.collections.List<@Contextual EventPrivilege>?,

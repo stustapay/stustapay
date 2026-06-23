@@ -32,7 +32,6 @@ async def test_free_ticket_grant_with_vouchers(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="test-role",
-            is_privileged=False,
             event_privileges=[EventPrivilege.supervised_terminal_login, EventPrivilege.grant_free_tickets],
             node_privileges=[],
         ),
@@ -95,7 +94,6 @@ async def test_free_ticket_grant_without_vouchers(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="test-role",
-            is_privileged=False,
             event_privileges=[EventPrivilege.supervised_terminal_login],
             node_privileges=[],
         ),
@@ -139,7 +137,8 @@ async def test_free_ticket_grant_without_vouchers(
         token=event_admin_token,
         node_id=event_node.id,
         role_id=voucher_role.id,
-        is_privileged=False,
+        can_assign_all_roles=False,
+        assignable_role_ids=[],
         event_privileges=[EventPrivilege.grant_free_tickets],
         node_privileges=[],
     )
@@ -159,7 +158,8 @@ async def test_free_ticket_grant_without_vouchers(
         token=event_admin_token,
         node_id=event_node.id,
         role_id=voucher_role.id,
-        is_privileged=False,
+        can_assign_all_roles=False,
+        assignable_role_ids=[],
         event_privileges=[
             EventPrivilege.supervised_terminal_login,
             EventPrivilege.grant_free_tickets,

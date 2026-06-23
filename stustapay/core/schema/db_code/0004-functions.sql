@@ -65,6 +65,86 @@ end;
 $$ language plpgsql
     set search_path = "$user", public;
 
+create or replace function user_event_privileges(
+    user_id bigint,
+    event_node_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urte.privilege), '{}'::text array) from user_role_to_event_privilege urte
+    join user_to_role utr on urte.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_event_privileges.user_id
+    and (n.event_node_id = user_event_privileges.event_node_id
+        or (select exists(select from node where id = user_event_privileges.event_node_id and n.id = any(parent_ids))))
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
+create or replace function user_node_privileges(
+    user_id bigint,
+    node_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urtn.privilege), '{}'::text array) from user_role_to_node_privilege urtn
+    join user_to_role utr on urtn.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_node_privileges.user_id
+    and (
+        n.id = user_node_privileges.node_id
+        or (select exists(select from node where id = user_node_privileges.node_id and n.id = any(parent_ids)))
+    )
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
+create or replace function user_event_privileges_for_role(
+    user_id bigint,
+    event_node_id bigint,
+    user_role_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urte.privilege), '{}'::text array) from user_role_to_event_privilege urte
+    join user_to_role utr on urte.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_event_privileges_for_role.user_id
+    and urte.role_id = user_event_privileges_for_role.user_role_id
+    and (n.event_node_id = user_event_privileges_for_role.event_node_id
+        or (select exists(select from node where id = user_event_privileges_for_role.event_node_id and n.id = any(parent_ids))))
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
+create or replace function user_node_privileges_for_role(
+    user_id bigint,
+    node_id bigint,
+    user_role_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urtn.privilege), '{}'::text array) from user_role_to_node_privilege urtn
+    join user_to_role utr on urtn.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_node_privileges_for_role.user_id
+    and urtn.role_id = user_node_privileges_for_role.user_role_id
+    and (
+        n.id = user_node_privileges_for_role.node_id
+        or (select exists(select from node where id = user_node_privileges_for_role.node_id and n.id = any(parent_ids)))
+    )
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
 create or replace function user_privileges_at_node(
     user_id bigint
 )
@@ -145,40 +225,6 @@ select
     g.event_privileges_at_node,
     g.node_privileges_at_node
 from graph g;
-$$ language sql
-    stable
-    security invoker
-    set search_path = "$user", public;
-
-create or replace function terminal_user_privileges(
-    user_id bigint,
-    role_id bigint,
-    till_node_id bigint
-)
-returns table (
-    event_privileges text array,
-    node_privileges text array
-)
-as
-$$
-select
-    coalesce((
-        select array_agg(urte.privilege)
-        from user_role_to_event_privilege urte
-        where urte.role_id = terminal_user_privileges.role_id
-    ), '{}'::text array) as event_privileges,
-    case
-        when terminal_user_privileges.till_node_id is null then '{}'::text array
-        else coalesce((
-            select array_agg(distinct urtn.privilege)
-            from user_role_to_node_privilege urtn
-            join user_to_role utr on urtn.role_id = utr.role_id
-            join node n on n.id = terminal_user_privileges.till_node_id
-            where utr.user_id = terminal_user_privileges.user_id
-              and utr.role_id = terminal_user_privileges.role_id
-              and utr.node_id = any(n.parent_ids || array[n.id])
-        ), '{}'::text array)
-    end as node_privileges
 $$ language sql
     stable
     security invoker

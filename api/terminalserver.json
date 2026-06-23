@@ -1903,6 +1903,32 @@
         ],
         "title": "AccountType"
       },
+      "AssignableUserRolesAtNode": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/UserRole"
+            },
+            "type": "array",
+            "title": "Roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "node_name",
+          "roles"
+        ],
+        "title": "AssignableUserRolesAtNode"
+      },
       "Button": {
         "properties": {
           "till_button_id": {
@@ -2505,19 +2531,19 @@
             ],
             "title": "Description"
           },
-          "role_ids": {
+          "role_assignments": {
             "items": {
-              "type": "integer"
+              "$ref": "#/components/schemas/UserRoleAssignmentPayload"
             },
             "type": "array",
-            "title": "Role Ids"
+            "title": "Role Assignments"
           }
         },
         "type": "object",
         "required": [
           "login",
           "display_name",
-          "role_ids"
+          "role_assignments"
         ],
         "title": "CreateUserPayload"
       },
@@ -3096,8 +3122,6 @@
         "type": "string",
         "enum": [
           "node_administration",
-          "allow_privileged_role_assignment",
-          "allow_role_assignment",
           "view_node_stats",
           "can_book_orders"
         ],
@@ -4012,12 +4036,12 @@
             ],
             "title": "Active User Id"
           },
-          "available_roles": {
+          "available_roles_by_node": {
             "items": {
-              "$ref": "#/components/schemas/UserRole"
+              "$ref": "#/components/schemas/AssignableUserRolesAtNode"
             },
             "type": "array",
-            "title": "Available Roles"
+            "title": "Available Roles By Node"
           },
           "user_event_privileges": {
             "anyOf": [
@@ -4083,7 +4107,7 @@
           "description",
           "event_name",
           "active_user_id",
-          "available_roles",
+          "available_roles_by_node",
           "user_event_privileges",
           "user_node_privileges",
           "secrets",
@@ -4535,18 +4559,18 @@
             "type": "integer",
             "title": "User Tag Uid"
           },
-          "role_ids": {
+          "role_assignments": {
             "items": {
-              "type": "integer"
+              "$ref": "#/components/schemas/UserRoleAssignmentPayload"
             },
             "type": "array",
-            "title": "Role Ids"
+            "title": "Role Assignments"
           }
         },
         "type": "object",
         "required": [
           "user_tag_uid",
-          "role_ids"
+          "role_assignments"
         ],
         "title": "UpdateUserPayload"
       },
@@ -4807,10 +4831,17 @@
             "type": "string",
             "title": "Name"
           },
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged",
+            "title": "Can Assign All Roles",
             "default": false
+          },
+          "assignable_role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Assignable Role Ids"
           },
           "event_privileges": {
             "items": {
@@ -4845,6 +4876,27 @@
         ],
         "title": "UserRole"
       },
+      "UserRoleAssignmentPayload": {
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Role Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "role_ids"
+        ],
+        "title": "UserRoleAssignmentPayload"
+      },
       "UserRoleInfo": {
         "properties": {
           "id": {
@@ -4854,10 +4906,6 @@
           "name": {
             "type": "string",
             "title": "Name"
-          },
-          "is_privileged": {
-            "type": "boolean",
-            "title": "Is Privileged"
           },
           "event_privileges": {
             "items": {
@@ -4890,7 +4938,6 @@
         "required": [
           "id",
           "name",
-          "is_privileged",
           "event_privileges",
           "node_privileges",
           "node_id",

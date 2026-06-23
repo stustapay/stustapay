@@ -35,7 +35,6 @@ import kotlinx.serialization.Contextual
  *
  * @param id
  * @param name
- * @param isPrivileged
  * @param eventPrivileges
  * @param nodePrivileges
  * @param nodeId
@@ -51,9 +50,6 @@ data class UserRoleInfo (
 
     @SerialName(value = "name")
     val name: kotlin.String,
-
-    @SerialName(value = "is_privileged")
-    val isPrivileged: kotlin.Boolean,
 
     @SerialName(value = "event_privileges")
     val eventPrivileges: kotlin.collections.List<@Contextual EventPrivilege>,

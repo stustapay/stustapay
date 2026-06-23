@@ -88,7 +88,6 @@ async def test_list_role_assignments_for_user_across_node_tree(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="event-role",
-            is_privileged=False,
             event_privileges=[],
             node_privileges=[NodePrivilege.can_book_orders],
         ),
@@ -111,7 +110,6 @@ async def test_list_role_assignments_for_user_across_node_tree(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="subnode-role",
-            is_privileged=False,
             event_privileges=[],
             node_privileges=[NodePrivilege.node_administration],
         ),
@@ -183,7 +181,6 @@ async def test_list_role_assignments_for_user_at_sibling_node_denied(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="sibling-admin-role",
-            is_privileged=False,
             event_privileges=[],
             node_privileges=[NodePrivilege.node_administration],
         ),
@@ -209,7 +206,6 @@ async def test_list_role_assignments_for_user_at_sibling_node_denied(
         node_id=sibling_event.id,
         new_role=NewUserRole(
             name="sibling-user-role",
-            is_privileged=False,
             event_privileges=[],
             node_privileges=[NodePrivilege.can_book_orders],
         ),

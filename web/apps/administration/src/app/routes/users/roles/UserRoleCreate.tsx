@@ -12,7 +12,8 @@ import { UserRoleForm } from "./UserRoleForm";
 
 const initialValues: NewUserRole = {
   name: "",
-  is_privileged: false,
+  can_assign_all_roles: false,
+  assignable_role_ids: [],
   event_privileges: [],
   node_privileges: [],
 };

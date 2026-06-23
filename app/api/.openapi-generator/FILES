@@ -21,6 +21,7 @@ src/main/kotlin/de/stustapay/api/infrastructure/RequestConfig.kt
 src/main/kotlin/de/stustapay/api/infrastructure/RequestMethod.kt
 src/main/kotlin/de/stustapay/api/models/Account.kt
 src/main/kotlin/de/stustapay/api/models/AccountType.kt
+src/main/kotlin/de/stustapay/api/models/AssignableUserRolesAtNode.kt
 src/main/kotlin/de/stustapay/api/models/Button.kt
 src/main/kotlin/de/stustapay/api/models/CancelOrderPayload.kt
 src/main/kotlin/de/stustapay/api/models/CashRegister.kt
@@ -82,6 +83,7 @@ src/main/kotlin/de/stustapay/api/models/User.kt
 src/main/kotlin/de/stustapay/api/models/UserInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserInfoPayload.kt
 src/main/kotlin/de/stustapay/api/models/UserRole.kt
+src/main/kotlin/de/stustapay/api/models/UserRoleAssignmentPayload.kt
 src/main/kotlin/de/stustapay/api/models/UserRoleInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserTag.kt
 src/main/kotlin/de/stustapay/api/models/UserTagHistoryEntry.kt

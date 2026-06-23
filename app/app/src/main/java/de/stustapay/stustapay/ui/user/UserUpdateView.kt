@@ -1,9 +1,9 @@
 package de.stustapay.stustapay.ui.user
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,13 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
-import androidx.compose.material.Icon
 import androidx.compose.material.ListItem
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -27,10 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,12 +34,13 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
-    var roles by remember { mutableStateOf(listOf<ULong>()) }
+    var assignments by remember { mutableStateOf<NodeRoleAssignments>(emptyMap()) }
     val scope = rememberCoroutineScope()
-    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
+    val availableRolesByNode by viewModel.availableRolesByNode.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val currentTag by viewModel.currentTag.collectAsStateWithLifecycle()
+    val isEditingSelf by viewModel.isEditingSelf.collectAsStateWithLifecycle()
     val currentTagV = currentTag
 
     val currentUserV = currentUser
@@ -56,26 +49,24 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
         return
     }
 
-    LaunchedEffect(currentUserV, availableRoles) {
-        /*roles = currentUserV.roleNames.mapNotNull { it ->
-            val role = availableRoles.find { available -> available.name == it }
-            if (role != null && !role.isPrivileged!!) {
-                role.id.toULong()
-            } else {
-                null
-            }
-        }*/
+    val editableNodeIds = availableRolesByNode.map { it.nodeId }.toSet()
+
+    LaunchedEffect(currentUserV, availableRolesByNode) {
+        assignments = nodeRoleAssignmentsFromAssignedRoles(
+            assignedRoles = currentUserV.assignedRoles,
+            editableNodeIds = editableNodeIds,
+        )
     }
 
-    val isPrivileged = false/*currentUserV.roleNames.mapNotNull { role ->
-        availableRoles.find { available -> available.name == role }?.isPrivileged
-    }.contains(true)*/
+    val readOnlyAssignments = currentUserV.assignedRoles.filter { !editableNodeIds.contains(it.nodeId) }
 
     Scaffold(content = { padding ->
         Box(modifier = Modifier.padding(padding)) {
+            val scroll = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(state = scroll)
                     .padding(10.dp)
             ) {
                 ListItem(
@@ -95,69 +86,38 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
                 ListItem(
                     text = { Text(stringResource(R.string.user_displayname)) },
                     secondaryText = { Text(currentUserV.displayName) })
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    var expanded by remember { mutableStateOf(false) }
-
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it }) {
-                        OutlinedTextField(
-                            label = { Text(stringResource(R.string.user_roles)) },
-                            readOnly = true,
-                            value = roles.map { id ->
-                                availableRoles.find { r -> r.id.ulongValue() == id }?.name ?: ""
-                            }.reduceOrNull { acc, r -> "$acc, $r" }.orEmpty(),
-                            onValueChange = {},
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(
-                                    expanded = expanded
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }) {
-                            for (r in availableRoles) {
-                                if (!r.isPrivileged!!) {
-                                    DropdownMenuItem(onClick = {
-                                        roles = if (roles.contains(r.id.ulongValue())) {
-                                            roles - r.id.ulongValue()
-                                        } else {
-                                            roles + r.id.ulongValue()
-                                        }
-                                        expanded = false
-                                    }) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(r.name)
-                                            if (roles.contains(r.id.ulongValue())) {
-                                                Icon(
-                                                    painter = painterResource(de.stustapay.libssp.R.drawable.check_24),
-                                                    null
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
+                if (!currentUserV.description.isNullOrEmpty()) {
                 ListItem(
                     text = { Text(stringResource(R.string.user_description)) },
                     secondaryText = { Text(currentUserV.description ?: "") })
+                }
+
+                if (isEditingSelf) {
+                    Divider(modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                    Text(
+                        text = stringResource(R.string.user_roles),
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    for (role in currentUserV.assignedRoles) {
+                        ListItem(
+                            text = { Text(role.name) },
+                            secondaryText = { Text(role.nodeName) },
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.user_roles_self_read_only),
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                } else {
+                    NodeRoleAssignmentEditor(
+                        availableRolesByNode = availableRolesByNode,
+                        assignments = assignments,
+                        onAssignmentsChange = { assignments = it },
+                        readOnlyAssignments = readOnlyAssignments,
+                    )
+                }
             }
         }
     }, bottomBar = {
@@ -166,51 +126,46 @@ fun UserUpdateView(viewModel: UserViewModel, goToUserDisplayView: () -> Unit) {
             Divider()
             Spacer(modifier = Modifier.height(10.dp))
             Box(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                Column {
-                    val text = when (status) {
-                        is UserRequestState.Idle -> {
-                            stringResource(R.string.common_status_idle)
-                        }
-
-                        is UserRequestState.Fetching -> {
-                            stringResource(R.string.common_status_fetching)
-                        }
-
-                        is UserRequestState.Done -> {
-                            stringResource(R.string.common_status_done)
-                        }
-
-                        is UserRequestState.Failed -> {
-                            (status as UserRequestState.Failed).msg
-                        }
+                val text = when (status) {
+                    is UserRequestState.Idle -> {
+                        stringResource(R.string.common_status_idle)
                     }
-                    Text(text, fontSize = 24.sp)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    if (isPrivileged) {
-                        Text(
-                            stringResource(R.string.user_privileged),
-                            fontSize = 24.sp,
-                            color = Color.Red
-                        )
+
+                    is UserRequestState.Fetching -> {
+                        stringResource(R.string.common_status_fetching)
+                    }
+
+                    is UserRequestState.Done -> {
+                        stringResource(R.string.common_status_done)
+                    }
+
+                    is UserRequestState.Failed -> {
+                        (status as UserRequestState.Failed).msg
                     }
                 }
+                Text(text, fontSize = 24.sp)
+                Spacer(modifier = Modifier.height(10.dp))
             }
             Spacer(modifier = Modifier.height(10.dp))
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                enabled = !isPrivileged,
-                onClick = {
-                    scope.launch {
-                        viewModel.update(
-                            currentTagV,
-                            roles.mapNotNull { roleId -> availableRoles.find { r -> r.id.ulongValue() == roleId }?.id })
-                        goToUserDisplayView()
-                    }
-                }) {
-                Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
+            if (!isEditingSelf) {
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    onClick = {
+                        scope.launch {
+                            if (viewModel.update(
+                                    currentTagV,
+                                    assignments.toRoleAssignmentPayloads(),
+                                )
+                            ) {
+                                goToUserDisplayView()
+                            }
+                        }
+                    }) {
+                    Text(text = stringResource(R.string.common_action_update), fontSize = 24.sp)
+                }
             }
         }
     })

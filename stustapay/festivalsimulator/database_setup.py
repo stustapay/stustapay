@@ -105,7 +105,7 @@ async def _create_tags_and_users(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="finanzorga",
-            is_privileged=True,
+            can_assign_all_roles=True,
             event_privileges=[
                 EventPrivilege.terminal_login,
                 EventPrivilege.cash_transport,
@@ -116,8 +116,6 @@ async def _create_tags_and_users(
             ],
             node_privileges=[
                 NodePrivilege.node_administration,
-                NodePrivilege.allow_role_assignment,
-                NodePrivilege.allow_privileged_role_assignment,
                 NodePrivilege.view_node_stats,
             ],
         ),
@@ -129,7 +127,6 @@ async def _create_tags_and_users(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="godmode",
-            is_privileged=False,
             event_privileges=list(EventPrivilege),
             node_privileges=list(NodePrivilege),
         ),
@@ -729,7 +726,6 @@ class DatabaseSetup:
             node_id=self.event_node_id,
             new_role=NewUserRole(
                 name="cashier",
-                is_privileged=False,
                 event_privileges=[EventPrivilege.supervised_terminal_login],
                 node_privileges=[NodePrivilege.can_book_orders],
             ),

@@ -32,8 +32,7 @@ create view user_role_with_privileges as
         r.*,
         coalesce(event_privs.event_privileges, '{}'::text array) as event_privileges,
         coalesce(node_privs.node_privileges, '{}'::text array) as node_privileges,
-        coalesce(event_privs.event_privileges, '{}'::text array)
-            || coalesce(node_privs.node_privileges, '{}'::text array) as privileges
+        coalesce(assignable.assignable_role_ids, '{}'::bigint array) as assignable_role_ids
     from
         user_role r
         left join (
@@ -45,7 +44,12 @@ create view user_role_with_privileges as
             select ur.role_id, array_agg(ur.privilege) as node_privileges
             from user_role_to_node_privilege ur
             group by ur.role_id
-        ) node_privs on r.id = node_privs.role_id;
+        ) node_privs on r.id = node_privs.role_id
+        left join (
+            select urtar.assigner_role_id, array_agg(urtar.assignable_role_id) as assignable_role_ids
+            from user_role_to_assignable_role urtar
+            group by urtar.assigner_role_id
+        ) assignable on r.id = assignable.assigner_role_id;
 
 create view user_with_tag as
     select

@@ -665,14 +665,6 @@ export const translations = {
         description:
           "Manage all configuration and data for this node and its child nodes in the administration portal.",
       },
-      allow_privileged_role_assignment: {
-        name: "Assign privileged roles",
-        description: "Assign privileged roles to users. This is an extension of the assign roles privilege.",
-      },
-      allow_role_assignment: {
-        name: "Assign roles",
-        description: "Assign or remove role associations for users.",
-      },
       view_node_stats: {
         name: "View node statistics",
         description: "View sales, order, and revenue statistics for this node and its descendants.",
@@ -687,9 +679,10 @@ export const translations = {
     name: "Name",
     create: "Create new user role",
     update: "Update user role",
-    isPrivileged: "Is privileged",
-    isPrivilegedDescription:
-      "Privileged roles can only be assigned by users with the assign privileged roles node privilege.",
+    canAssignAllRoles: "Assign all roles",
+    canAssignAllRolesDescription:
+      "Users with this role can assign any role visible at the target node. Explicit assignable roles are ignored.",
+    assignableRoles: "Assignable roles",
     createError: "Error while creating user role: {{what}}",
     updateError: "Error while updating user role: {{what}}",
     privileges: "Privileges",
