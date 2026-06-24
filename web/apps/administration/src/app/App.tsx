@@ -1,27 +1,21 @@
 import { fetchConfig } from "@/api/common";
 import { useAppSelector } from "@/store";
 import { selectTheme } from "@/store/uiSlice";
-import {
-  Alert,
-  AlertTitle,
-  createTheme,
-  CssBaseline,
-  PaletteMode,
-  ThemeProvider,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
-import { Loading } from "@stustapay/components";
+import { createTheme, CssBaseline, PaletteMode, ThemeProvider, Typography, useMediaQuery } from "@mui/material";
+import { Loading, MaintenancePage } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer } from "react-toastify";
 import { UnauthenticatedLayout } from "./layout/UnauthenticatedLayout";
 import { Router } from "./Router";
 
+const TEAMFESTLICHPAY_LOGO_URL =
+  "https://www.teamfestlichpay.de/fileadmin/user_upload/images/logos/logo_teamfestlichpay_tfpay.png";
+
 export function App() {
   const { t } = useTranslation();
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | undefined>();
+  const [error, setError] = React.useState(false);
   const darkModeSystem = useMediaQuery("(prefers-color-scheme: dark)");
   const themeModeStore = useAppSelector(selectTheme);
 
@@ -45,10 +39,11 @@ export function App() {
       .then(() => {
         setLoading(false);
       })
-      .catch((e) => {
-        setError(t("common.configLoadFailed", { what: e.toString() }));
+      .catch(() => {
+        setError(true);
+        setLoading(false);
       });
-  }, [t]);
+  }, []);
 
   if (error) {
     return (
@@ -61,10 +56,12 @@ export function App() {
             </Typography>
           }
         >
-          <Alert severity="error">
-            <AlertTitle>{t("common.loadingError")}</AlertTitle>
-            {error}
-          </Alert>
+          <MaintenancePage
+            brandName={t("errorPage.brand")}
+            title={t("errorPage.maintenance")}
+            message={t("errorPage.currentlyUnavailable")}
+            logoSrc={TEAMFESTLICHPAY_LOGO_URL}
+          />
         </UnauthenticatedLayout>
       </ThemeProvider>
     );

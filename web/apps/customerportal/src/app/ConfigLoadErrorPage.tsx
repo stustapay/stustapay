@@ -1,25 +1,18 @@
-import { Container, Stack, Typography } from "@mui/material";
+import { MaintenancePage } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import StuStaPayLogo from "../favicon.svg";
+
+const TEAMFESTLICHPAY_LOGO_URL =
+  "https://www.teamfestlichpay.de/fileadmin/user_upload/images/logos/logo_teamfestlichpay_tfpay.png";
 
 export const ConfigLoadErrorPage: React.FC = () => {
   const { t } = useTranslation("translations", { keyPrefix: "errorPage" });
   return (
-    <Container>
-      <Stack justifyContent="center" alignItems="center" spacing={3} marginTop={8}>
-        <img
-          src={StuStaPayLogo}
-          alt="StuStaPay logo"
-          style={{ width: "100%", height: "100%", maxWidth: "200px", minHeight: "200px" }}
-        />
-        <Typography fontSize={34} textAlign="center">
-          {t("error")}
-        </Typography>
-        <Typography fontSize={24} textAlign="center">
-          {t("currentlyUnavailable")}
-        </Typography>
-      </Stack>
-    </Container>
+    <MaintenancePage
+      brandName={t("brand")}
+      title={t("maintenance")}
+      message={t("currentlyUnavailable")}
+      logoSrc={TEAMFESTLICHPAY_LOGO_URL}
+    />
   );
 };

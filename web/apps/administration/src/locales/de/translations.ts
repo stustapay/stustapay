@@ -71,6 +71,11 @@ export const translations: NestedPartialAsStrings<Translations> = {
     actions: "Aktionen",
     delete: "Löschen",
   },
+  errorPage: {
+    brand: "TeamFestlichPay",
+    maintenance: "Wartung",
+    currentlyUnavailable: "Die TeamFestlichPay Administration ist aktuell nicht verfügbar. Bitte versuche es später erneut.",
+  },
   nodes: {
     overview: "Übersicht",
     statistics: "Statistiken",

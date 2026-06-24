@@ -28,8 +28,9 @@ export const translations: NestedPartialAsStrings<Translations> = {
     de: "Deutsch",
   },
   errorPage: {
-    error: "Fehler",
-    currentlyUnavailable: "Das TeamFestlichPay Kundenportal ist aktuell nicht verfügbar",
+    brand: "TeamFestlichPay",
+    maintenance: "Wartung",
+    currentlyUnavailable: "Das TeamFestlichPay Kundenportal ist aktuell nicht verfügbar. Bitte versuche es später erneut.",
   },
   index: {
     sharedTopupHint:

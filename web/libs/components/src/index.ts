@@ -1,5 +1,6 @@
 export * from "./lib/CashingTextField";
 export * from "./lib/Loading";
+export * from "./lib/MaintenancePage";
 export * from "./lib/NumericInput";
 export * from "./lib/Select";
 export * from "./lib/TestModeDisclaimer";

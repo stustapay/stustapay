@@ -33,8 +33,9 @@ export const translations = {
     de: "Deutsch",
   },
   errorPage: {
-    error: "Error",
-    currentlyUnavailable: "The TeamFestlichPay customer portal is currently unavailable",
+    brand: "TeamFestlichPay",
+    maintenance: "Maintenance in progress",
+    currentlyUnavailable: "The TeamFestlichPay customer portal is currently unavailable. Please try again later.",
   },
   index: {
     sharedTopupHint:

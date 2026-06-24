@@ -66,6 +66,11 @@ export const translations = {
     actions: "Actions",
     delete: "Delete",
   },
+  errorPage: {
+    brand: "TeamFestlichPay",
+    maintenance: "Maintenance in progress",
+    currentlyUnavailable: "The TeamFestlichPay administration is currently unavailable. Please try again later.",
+  },
   nodes: {
     overview: "Overview",
     statistics: "Stats",
