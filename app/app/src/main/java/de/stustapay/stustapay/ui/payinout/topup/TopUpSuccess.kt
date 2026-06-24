@@ -21,7 +21,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -109,7 +108,7 @@ fun TopUpSuccess(
                 SelfServicePanel(
                     modifier = Modifier.fillMaxWidth(),
                     borderColor = SelfServicePalette.success,
-                    backgroundColor = Color(0xFF174A39)
+                    backgroundColor = SelfServicePalette.successPanel
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(
