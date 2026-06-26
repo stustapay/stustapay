@@ -8493,6 +8493,60 @@
         }
       }
     },
+    "/terminal/locations": {
+      "get": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "List Terminal Locations",
+        "operationId": "list_terminal_locations",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TerminalLocation"
+                  },
+                  "title": "Response List Terminal Locations Terminal Locations Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/terminal/{terminal_id}": {
       "get": {
         "tags": [
@@ -15253,6 +15307,52 @@
           "last_seen"
         ],
         "title": "Terminal"
+      },
+      "TerminalLocation": {
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "title": "Terminal Id"
+          },
+          "terminal_name": {
+            "type": "string",
+            "title": "Terminal Name"
+          },
+          "mdm_device_id": {
+            "type": "string",
+            "title": "Mdm Device Id"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "last_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Update"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terminal_id",
+          "terminal_name",
+          "mdm_device_id",
+          "latitude",
+          "longitude",
+          "last_update"
+        ],
+        "title": "TerminalLocation"
       },
       "Ticket": {
         "properties": {

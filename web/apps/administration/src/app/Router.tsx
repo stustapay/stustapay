@@ -31,6 +31,7 @@ import {
   TerminalCreate,
   TerminalDetail,
   TerminalList,
+  TerminalOverview,
   TerminalPageLayout,
   TerminalUpdate,
 } from "./routes/terminals";
@@ -381,6 +382,10 @@ const router = createBrowserRouter([
             children: [
               {
                 index: true,
+                element: <TerminalOverview />,
+              },
+              {
+                path: "list",
                 element: <TerminalList />,
               },
               {

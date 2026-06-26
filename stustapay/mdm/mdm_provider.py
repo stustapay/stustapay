@@ -35,5 +35,9 @@ class MdmProvider(abc.ABC):
         """Get the info of a device by its ID."""
 
     @abc.abstractmethod
+    async def list_device_locations(self, device_ids: set[str] | None = None) -> dict[str, DeviceLocation]:
+        """Get the latest known location for each device."""
+
+    @abc.abstractmethod
     async def get_device_location(self, device_id: str) -> DeviceLocation:
         """Get the location of a device by its ID."""

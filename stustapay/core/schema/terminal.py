@@ -144,3 +144,12 @@ class MdmDeviceLocation(BaseModel):
     latitude: float
     longitude: float
     last_update: datetime | None
+
+
+class TerminalLocation(BaseModel):
+    terminal_id: int
+    terminal_name: str
+    mdm_device_id: str
+    latitude: float
+    longitude: float
+    last_update: datetime | None

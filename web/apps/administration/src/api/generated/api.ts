@@ -1374,6 +1374,15 @@ const injectedRtkApi = api
         }),
         providesTags: ["terminals"],
       }),
+      listTerminalLocations: build.query<ListTerminalLocationsApiResponse, ListTerminalLocationsApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/locations`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["terminals"],
+      }),
       getTerminal: build.query<GetTerminalApiResponse, GetTerminalApiArg>({
         query: (queryArg) => ({
           url: `/terminal/${queryArg.terminalId}`,
@@ -2173,6 +2182,10 @@ export type ChangeMdmDeviceMappingApiArg = {
 export type GetMdmDeviceLocationApiResponse = /** status 200 Successful Response */ MdmDeviceLocation;
 export type GetMdmDeviceLocationApiArg = {
   mdmDeviceId: string;
+  nodeId: number;
+};
+export type ListTerminalLocationsApiResponse = /** status 200 Successful Response */ TerminalLocation[];
+export type ListTerminalLocationsApiArg = {
   nodeId: number;
 };
 export type GetTerminalApiResponse = /** status 200 Successful Response */ Terminal;
@@ -3723,6 +3736,14 @@ export type MdmDeviceLocation = {
   longitude: number;
   last_update: string | null;
 };
+export type TerminalLocation = {
+  terminal_id: number;
+  terminal_name: string;
+  mdm_device_id: string;
+  latitude: number;
+  longitude: number;
+  last_update: string | null;
+};
 export type SwitchTillPayload = {
   new_till_id: number;
 };
@@ -3937,6 +3958,8 @@ export const {
   useChangeMdmDeviceMappingMutation,
   useGetMdmDeviceLocationQuery,
   useLazyGetMdmDeviceLocationQuery,
+  useListTerminalLocationsQuery,
+  useLazyListTerminalLocationsQuery,
   useGetTerminalQuery,
   useLazyGetTerminalQuery,
   useUpdateTerminalMutation,

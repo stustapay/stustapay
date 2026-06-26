@@ -57,7 +57,7 @@ export const TerminalDetail: React.FC = () => {
 
   if (terminalError || tillError || userError) {
     toast.error("Error loading terminals or orders");
-    return <Navigate to={TerminalRoutes.list()} />;
+    return <Navigate to={TerminalRoutes.action("list")} />;
   }
 
   const renderUser = (id?: number | null) => {
@@ -80,7 +80,7 @@ export const TerminalDetail: React.FC = () => {
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
         deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-          navigate(TerminalRoutes.list())
+          navigate(TerminalRoutes.action("list"))
         );
         return true;
       },

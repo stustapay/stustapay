@@ -1,4 +1,8 @@
-import { Smartphone as SmartphoneIcon, PhonelinkSetup as PhonelinkSetupIcon } from "@mui/icons-material";
+import {
+  Smartphone as SmartphoneIcon,
+  PhonelinkSetup as PhonelinkSetupIcon,
+  Map as MapIcon,
+} from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -11,6 +15,9 @@ import { TerminalMdmRoutes, TerminalRoutes } from "@/app/routes";
 const getActiveTab = (location: string) => {
   if (location.startsWith(TerminalMdmRoutes.list())) {
     return TerminalMdmRoutes.list();
+  }
+  if (location.startsWith(TerminalRoutes.action("list"))) {
+    return TerminalRoutes.action("list");
   }
   return TerminalRoutes.list();
 };
@@ -37,12 +44,20 @@ export const TerminalPageLayout: React.FC = () => {
         aria-label="Terminals"
       >
         <Tab
+          label={t("terminal.overview")}
+          component={RouterLink}
+          icon={<MapIcon />}
+          iconPosition="start"
+          value={TerminalRoutes.list()}
+          to={TerminalRoutes.list()}
+        />
+        <Tab
           label={t("terminal.terminals")}
           component={RouterLink}
           icon={<SmartphoneIcon />}
           iconPosition="start"
-          value={TerminalRoutes.list()}
-          to={TerminalRoutes.list()}
+          value={TerminalRoutes.action("list")}
+          to={TerminalRoutes.action("list")}
         />
         <Tab
           label={t("terminal.mdmDevices")}

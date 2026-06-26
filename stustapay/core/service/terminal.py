@@ -20,6 +20,7 @@ from stustapay.core.schema.terminal import (
     Terminal,
     TerminalButton,
     TerminalConfig,
+    TerminalLocation,
     TerminalRegistrationSuccess,
     TerminalSumupSecrets,
     TerminalTillConfig,
@@ -701,6 +702,37 @@ class TerminalService(Service[Config]):
             longitude=location.longitude,
             last_update=location.last_update,
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
+    async def list_terminal_locations(self, *, conn: Connection, node: Node) -> list[TerminalLocation]:
+        mdm_provider = await self._get_mdm_provider(conn=conn, node=node)
+        mdm_mappings = await conn.fetch_many(
+            MdmDeviceMappingWithTerminal,
+            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
+            "from terminal_mdm_device_mapping tdm "
+            "join terminal t on t.id = tdm.terminal_id "
+            "join node n on t.node_id = n.id "
+            "where n.id = any($1)",
+            node.ids_to_root,
+        )
+
+        device_ids = {mapping.mdm_device_id for mapping in mdm_mappings}
+        locations_by_device = await mdm_provider.list_device_locations(device_ids)
+
+        return [
+            TerminalLocation(
+                terminal_id=mapping.terminal_id,
+                terminal_name=mapping.terminal_name,
+                mdm_device_id=mapping.mdm_device_id,
+                latitude=location.latitude,
+                longitude=location.longitude,
+                last_update=location.last_update,
+            )
+            for mapping in mdm_mappings
+            if (location := locations_by_device.get(mapping.mdm_device_id)) is not None
+        ]
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])

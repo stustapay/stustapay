@@ -776,6 +776,7 @@ export const translations = {
     donateAll: "Donates all of their remaining balance",
   },
   terminal: {
+    overview: "Overview",
     terminals: "Terminals",
     mdmDevices: "MDM Devices",
     mdm: {
@@ -792,6 +793,9 @@ export const translations = {
       changeMappingSuccess: "MDM device mapping updated",
       changeMappingFailed: "Failed to update MDM device mapping",
       locationLoadFailed: "Failed to load MDM device location",
+      locationsLoadFailed: "Failed to load terminal locations",
+      locationLastUpdate: "Last update: {{lastUpdate}}",
+      noLocationsAvailable: "No terminal locations available",
       showLocation: "Show location",
       headwindDisabled: "Headwind integration is disabled. Please configure it in the event settings first.",
     },
