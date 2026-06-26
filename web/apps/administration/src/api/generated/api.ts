@@ -3712,6 +3712,7 @@ export type MdmDevice = {
   ip_address?: string | null;
   model?: string | null;
   status: DeviceStatus;
+  location_last_update?: string | null;
 };
 export type MdmType = "headwind";
 export type MdmDeviceMappingWithTerminal = {

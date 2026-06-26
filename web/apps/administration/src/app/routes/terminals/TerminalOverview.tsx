@@ -6,7 +6,7 @@ import { useListTerminalLocationsQuery } from "@/api";
 import { ListLayout } from "@/components";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 
-import { TerminalMapView } from "./TerminalMap";
+import { TerminalMapMarker, TerminalMapView } from "./TerminalMap";
 
 export const TerminalOverview: React.FC = () => {
   const { t } = useTranslation();
@@ -33,13 +33,14 @@ export const TerminalOverview: React.FC = () => {
     );
   }
 
-  const markers = (data ?? []).map((location) => ({
+  const markers: TerminalMapMarker[] = (data ?? []).map((location) => ({
     id: location.mdm_device_id,
     label: location.terminal_name,
     latitude: location.latitude,
     longitude: location.longitude,
     lastUpdate: location.last_update,
     subtitle: location.mdm_device_id,
+    terminalId: location.terminal_id,
   }));
 
   return (

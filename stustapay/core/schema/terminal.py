@@ -133,6 +133,7 @@ class MdmDevice(BaseModel):
     ip_address: str | None = None
     model: str | None = None
     status: DeviceStatus
+    location_last_update: datetime | None = None
 
 
 class MdmDeviceWithMapping(BaseModel):

@@ -1,5 +1,6 @@
+import asyncio
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 
 import asyncpg
@@ -61,6 +62,7 @@ from stustapay.core.service.tree.common import (
     fetch_restricted_event_settings_for_node,
 )
 from stustapay.core.service.user import list_assignable_roles_by_node_for_user
+from stustapay.mdm.cache import MdmCache
 from stustapay.mdm.headwind_provider import HeadwindProvider
 from stustapay.mdm.mdm_provider import DeviceInfo, MdmProvider
 from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
@@ -68,7 +70,31 @@ from stustapay.payment.sumup.api import SumUpOAuthToken, fetch_new_oauth_token
 logger = logging.getLogger(__name__)
 
 
-def _device_info_to_mdm_device(device: DeviceInfo) -> MdmDevice:
+def _is_mdm_configured(settings: RestrictedEventSettings) -> bool:
+    return (
+        settings.headwind_enabled
+        and settings.headwind_url is not None
+        and settings.headwind_username is not None
+        and settings.headwind_password is not None
+    )
+
+
+def _create_mdm_provider(settings: RestrictedEventSettings) -> MdmProvider:
+    assert settings.headwind_url is not None
+    assert settings.headwind_username is not None
+    assert settings.headwind_password is not None
+    return HeadwindProvider(
+        url=settings.headwind_url,
+        username=settings.headwind_username,
+        password=settings.headwind_password,
+    )
+
+
+def _device_info_to_mdm_device(
+    device: DeviceInfo,
+    *,
+    location_last_update: datetime | None = None,
+) -> MdmDevice:
     return MdmDevice(
         device_id=device.device_id,
         serial=device.serial,
@@ -78,6 +104,19 @@ def _device_info_to_mdm_device(device: DeviceInfo) -> MdmDevice:
         ip_address=device.ip_address,
         model=device.model,
         status=device.status,
+        location_last_update=location_last_update,
+    )
+
+
+async def _fetch_mdm_mappings(conn: Connection, node: Node) -> list[MdmDeviceMappingWithTerminal]:
+    return await conn.fetch_many(
+        MdmDeviceMappingWithTerminal,
+        "select tdm.*, t.name as terminal_name, t.description as terminal_description "
+        "from terminal_mdm_device_mapping tdm "
+        "join terminal t on t.id = tdm.terminal_id "
+        "join node n on t.node_id = n.id "
+        "where n.id = any($1)",
+        node.ids_to_root,
     )
 
 
@@ -100,6 +139,7 @@ class TerminalService(Service[Config]):
         self.auth_service = auth_service
 
         self.sumup_oauth_cache: dict[int, SumUpOAuthToken] = {}
+        self.mdm_cache = MdmCache()
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.terminal])
@@ -650,42 +690,82 @@ class TerminalService(Service[Config]):
         info.assigned_roles = assigned_roles
         return info
 
-    async def _get_mdm_provider(self, conn: Connection, node: Node) -> MdmProvider:
+    async def _require_mdm_event_node_id(self, conn: Connection, node: Node) -> int:
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=node.id)
-        if (
-            event_settings.headwind_enabled
-            and event_settings.headwind_url is not None
-            and event_settings.headwind_username is not None
-            and event_settings.headwind_password is not None
-        ):
-            return HeadwindProvider(
-                url=event_settings.headwind_url,
-                username=event_settings.headwind_username,
-                password=event_settings.headwind_password,
-            )
-        raise InvalidArgument("No MDM provider configured for this node")
+        if not _is_mdm_configured(event_settings):
+            raise InvalidArgument("No MDM provider configured for this node")
+        if node.event_node_id is None:
+            raise InvalidArgument("No MDM provider configured for this node")
+        return node.event_node_id
+
+    async def _fetch_mdm_event_node_ids(self, *, conn: Connection) -> list[int]:
+        event_node_ids: list[int] | None = await conn.fetchval(
+            "select array_agg(n.id) "
+            "from node n "
+            "join event e on n.event_id = e.id "
+            "where not n.read_only "
+            "  and e.headwind_enabled "
+            "  and e.headwind_url is not null "
+            "  and e.headwind_username is not null "
+            "  and e.headwind_password is not null"
+        )
+        return event_node_ids or []
+
+    async def _poll_mdm_for_event(self, *, conn: Connection, event_node_id: int) -> None:
+        logger.debug("Polling MDM for event node %s", event_node_id)
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=event_node_id)
+        if not _is_mdm_configured(event_settings):
+            return
+
+        provider = _create_mdm_provider(event_settings)
+        try:
+            devices_list = await provider.list_devices()
+            devices = {device.device_id: device for device in devices_list}
+            await self.mdm_cache.update_devices(event_node_id, devices=devices, last_error=None)
+        except Exception as exc:
+            logger.exception("Failed to poll MDM devices for event node %s", event_node_id)
+            await self.mdm_cache.set_last_error(event_node_id, str(exc))
+            return
+
+        for device_id in devices:
+            try:
+                location = await provider.get_device_location(device_id)
+                await self.mdm_cache.update_device_location(event_node_id, device_id, location)
+            except Exception:
+                logger.warning("Failed to fetch location for MDM device %s", device_id, exc_info=True)
+
+    async def run_mdm_polling(self) -> None:
+        logger.info("Starting periodic MDM polling")
+        interval = int(self.config.core.mdm_synchronization_interval.total_seconds())
+        while True:
+            try:
+                async with self.db_pool.acquire() as conn:
+                    event_node_ids = await self._fetch_mdm_event_node_ids(conn=conn)
+                    for event_node_id in event_node_ids:
+                        await self._poll_mdm_for_event(conn=conn, event_node_id=event_node_id)
+            except Exception:
+                logger.exception("MDM polling iteration failed")
+            await asyncio.sleep(interval)
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_mdm_devices_with_mappings(self, *, conn: Connection, node: Node) -> list[MdmDeviceWithMapping]:
-        mdm_provider = await self._get_mdm_provider(conn=conn, node=node)
-        devices = await mdm_provider.list_devices()
+        event_node_id = await self._require_mdm_event_node_id(conn=conn, node=node)
+        snapshot = self.mdm_cache.get_snapshot(event_node_id)
+        devices = list(snapshot.devices.values()) if snapshot is not None else []
+        locations = snapshot.locations if snapshot is not None else {}
 
-        mdm_mappings = await conn.fetch_many(
-            MdmDeviceMappingWithTerminal,
-            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
-            "from terminal_mdm_device_mapping tdm "
-            "join terminal t on t.id = tdm.terminal_id "
-            "join node n on t.node_id = n.id "
-            "where n.id = any($1)",
-            node.ids_to_root,
-        )
-
+        mdm_mappings = await _fetch_mdm_mappings(conn=conn, node=node)
         mdm_mappings_by_device_id = {m.mdm_device_id: m for m in mdm_mappings}
         return [
             MdmDeviceWithMapping(
-                device=_device_info_to_mdm_device(device),
+                device=_device_info_to_mdm_device(
+                    device,
+                    location_last_update=locations[device.device_id].last_update
+                    if device.device_id in locations
+                    else None,
+                ),
                 mapping=mdm_mappings_by_device_id.get(device.device_id),
             )
             for device in devices
@@ -695,8 +775,15 @@ class TerminalService(Service[Config]):
     @requires_node()
     @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_mdm_device_location(self, *, conn: Connection, node: Node, mdm_device_id: str) -> MdmDeviceLocation:
-        mdm_provider = await self._get_mdm_provider(conn=conn, node=node)
-        location = await mdm_provider.get_device_location(mdm_device_id)
+        event_node_id = await self._require_mdm_event_node_id(conn=conn, node=node)
+        snapshot = self.mdm_cache.get_snapshot(event_node_id)
+        if snapshot is None:
+            raise NotFound(element_type="mdm_device", element_id=mdm_device_id)
+
+        location = snapshot.locations.get(mdm_device_id)
+        if location is None:
+            raise NotFound(element_type="mdm_device", element_id=mdm_device_id)
+
         return MdmDeviceLocation(
             latitude=location.latitude,
             longitude=location.longitude,
@@ -707,20 +794,11 @@ class TerminalService(Service[Config]):
     @requires_node()
     @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_terminal_locations(self, *, conn: Connection, node: Node) -> list[TerminalLocation]:
-        mdm_provider = await self._get_mdm_provider(conn=conn, node=node)
-        mdm_mappings = await conn.fetch_many(
-            MdmDeviceMappingWithTerminal,
-            "select tdm.*, t.name as terminal_name, t.description as terminal_description "
-            "from terminal_mdm_device_mapping tdm "
-            "join terminal t on t.id = tdm.terminal_id "
-            "join node n on t.node_id = n.id "
-            "where n.id = any($1)",
-            node.ids_to_root,
-        )
+        event_node_id = await self._require_mdm_event_node_id(conn=conn, node=node)
+        snapshot = self.mdm_cache.get_snapshot(event_node_id)
+        locations_by_device = snapshot.locations if snapshot is not None else {}
 
-        device_ids = {mapping.mdm_device_id for mapping in mdm_mappings}
-        locations_by_device = await mdm_provider.list_device_locations(device_ids)
-
+        mdm_mappings = await _fetch_mdm_mappings(conn=conn, node=node)
         return [
             TerminalLocation(
                 terminal_id=mapping.terminal_id,

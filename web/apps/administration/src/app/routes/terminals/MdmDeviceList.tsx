@@ -129,6 +129,7 @@ export const MdmDeviceList: React.FC = () => {
         icon={<MapIcon />}
         color="primary"
         label={t("terminal.mdm.showLocation")}
+        disabled={params.row.device.location_last_update == null}
         onClick={() => setMapDevice(params.row)}
       />,
       ...(canManageTerminals

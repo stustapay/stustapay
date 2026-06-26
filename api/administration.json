@@ -10902,6 +10902,18 @@
           },
           "status": {
             "$ref": "#/components/schemas/DeviceStatus"
+          },
+          "location_last_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Last Update"
           }
         },
         "type": "object",

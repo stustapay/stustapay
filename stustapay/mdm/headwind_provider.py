@@ -243,20 +243,6 @@ class HeadwindApi:
         response = await self._post(HEADWIND_DEVICE_LOG_ENDPOINT, payload, timeout=30)
         return self._parse_log_search_response(response)
 
-    async def list_device_locations(self, device_ids: set[str] | None = None) -> dict[str, DeviceLocation]:
-        if device_ids is None:
-            devices = await self.list_devices(page=0, page_size=1000, search=None)
-            device_ids = {device.device_id for device in devices}
-
-        locations: dict[str, DeviceLocation] = {}
-        for device_id in device_ids:
-            try:
-                locations[device_id] = await self.get_device_location(device_id)
-            except Exception:
-                logger.warning("Failed to fetch location for MDM device %s", device_id, exc_info=True)
-
-        return locations
-
     async def get_device_location(self, device_id: str) -> DeviceLocation:
         logs, _ = await self.search_device_logs(
             device_id=device_id,
@@ -338,10 +324,6 @@ class HeadwindProvider(MdmProvider):
     async def list_devices(self) -> list[DeviceInfo]:
         api = self._get_api()
         return await api.list_devices(page=0, page_size=1000, search=None)
-
-    async def list_device_locations(self, device_ids: set[str] | None = None) -> dict[str, DeviceLocation]:
-        api = self._get_api()
-        return await api.list_device_locations(device_ids)
 
     async def get_device_location(self, device_id: str) -> DeviceLocation:
         api = self._get_api()

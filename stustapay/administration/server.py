@@ -152,6 +152,7 @@ class Api:
         try:
             self.server.add_task(asyncio.create_task(run_healthcheck(db, service_name="administration")))
             self.server.add_task(asyncio.create_task(mail_service.run_mail_service()))
+            self.server.add_task(asyncio.create_task(terminal_service.run_mdm_polling()))
             await self.server.run(context)
         finally:
             await db_pool.close()

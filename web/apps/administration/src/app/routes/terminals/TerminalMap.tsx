@@ -1,11 +1,13 @@
-import { Alert, AlertTitle, Skeleton, Typography } from "@mui/material";
+import { Alert, AlertTitle, Link, Skeleton, Typography } from "@mui/material";
 import { DateTime } from "luxon";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import Map, { MapRef, Marker, Popup } from "react-map-gl/maplibre";
-import type { Map as MapLibreMap } from "maplibre-gl";
+import { Link as RouterLink } from "react-router-dom";
 
 import { useGetMdmDeviceLocationQuery } from "@/api";
+import { TerminalRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -17,6 +19,7 @@ export type TerminalMapMarker = {
   longitude: number;
   lastUpdate: string | null;
   subtitle?: string;
+  terminalId?: number;
 };
 
 export type TerminalMapViewProps = {
@@ -30,6 +33,7 @@ export type TerminalMapProps = {
 };
 
 const DEFAULT_MAP_HEIGHT = 400;
+const DEFAULT_ZOOM = 17;
 
 const formatLastUpdate = (lastUpdate: string | null) => {
   if (lastUpdate == null) {
@@ -44,7 +48,7 @@ const fitMapToMarkers = (map: MapLibreMap, markers: TerminalMapMarker[]) => {
   }
 
   if (markers.length === 1) {
-    map.flyTo({ center: [markers[0].longitude, markers[0].latitude], zoom: 16 });
+    map.flyTo({ center: [markers[0].longitude, markers[0].latitude], zoom: DEFAULT_ZOOM });
     return;
   }
 
@@ -55,7 +59,7 @@ const fitMapToMarkers = (map: MapLibreMap, markers: TerminalMapMarker[]) => {
       [Math.min(...longitudes), Math.min(...latitudes)],
       [Math.max(...longitudes), Math.max(...latitudes)],
     ],
-    { padding: 40 }
+    { zoom: DEFAULT_ZOOM }
   );
 };
 
@@ -89,7 +93,7 @@ export const TerminalMapView: React.FC<TerminalMapViewProps> = ({ markers, heigh
       initialViewState={{
         longitude: initialMarker.longitude,
         latitude: initialMarker.latitude,
-        zoom: markers.length === 1 ? 16 : 12,
+        zoom: DEFAULT_ZOOM,
       }}
       style={{ width: "100%", height }}
       mapStyle="https://tiles.openfreemap.org/styles/bright"
@@ -124,7 +128,15 @@ export const TerminalMapView: React.FC<TerminalMapViewProps> = ({ markers, heigh
               latitude={marker.latitude}
               onClose={() => setSelectedMarkerId(null)}
             >
-              <Typography variant="h6">{marker.label}</Typography>
+              {marker.terminalId != null ? (
+                <Typography variant="h6">
+                  <Link component={RouterLink} to={TerminalRoutes.detail(marker.terminalId)}>
+                    {marker.label}
+                  </Link>
+                </Typography>
+              ) : (
+                <Typography variant="h6">{marker.label}</Typography>
+              )}
               {formattedLastUpdate != null && (
                 <Typography variant="body2">
                   {t("terminal.mdm.locationLastUpdate", { lastUpdate: formattedLastUpdate })}
