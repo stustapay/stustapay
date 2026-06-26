@@ -251,7 +251,7 @@ class HeadwindApi:
             page_size=1,
         )
         if not logs:
-            raise HeadwindError("No network location update found for device")
+            raise HeadwindError(f"No network location update found for device {device_id}")
 
         location = _parse_location_log(logs[0])
         if location is None:

@@ -46,6 +46,7 @@ class UserTagDetail(BaseModel):
     node_id: int
 
     comment: Optional[str] = None
+    variant: Optional[str] = None
     account_id: Optional[int] = None
     user_id: Optional[int] = None
 

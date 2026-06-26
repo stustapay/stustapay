@@ -13,6 +13,7 @@ import {
   styled,
 } from "@mui/material";
 import { Select } from "@stustapay/components";
+import { FormTextField } from "@stustapay/form-components";
 import { ProductRestrictionSchema } from "@stustapay/models";
 import { FormikProps } from "formik";
 import * as Papa from "papaparse";
@@ -42,12 +43,14 @@ const VisuallyHiddenInput = styled("input")({
 const CsvTagsSchema = z.array(
   z.object({
     pin: z.string(),
+    variant: z.string().optional(),
   })
 );
 
 const NewUserTagsSchema = z.object({
   secret_id: z.number().int(),
   restriction: ProductRestrictionSchema.nullable(),
+  batch_variant: z.string().optional(),
   tags: CsvTagsSchema,
 });
 
@@ -57,10 +60,11 @@ const initialValues: NewUserTags = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   secret_id: null as any,
   restriction: null,
+  batch_variant: "",
   tags: [],
 };
 
-const parseCsv = (csvContent: string): Array<{ pin: string }> | null => {
+const parseCsv = (csvContent: string): Array<{ pin: string; variant?: string }> | null => {
   const parsed = Papa.parse(csvContent, {
     delimiter: ",",
     header: true,
@@ -70,7 +74,6 @@ const parseCsv = (csvContent: string): Array<{ pin: string }> | null => {
     toast.error(`There was an error in the csv file: ${parsed.errors.join(", ")}`);
     return null;
   }
-  console.log(parsed.data);
   const validated = CsvTagsSchema.safeParse(parsed.data);
   if (!validated.success) {
     toast.error(`There was an error in the csv file: ${validated.error.issues}`);
@@ -119,6 +122,15 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
     reader.readAsText(file);
   };
 
+  const resolveVariant = (rowVariant?: string) => {
+    const trimmedRow = rowVariant?.trim();
+    if (trimmedRow) {
+      return trimmedRow;
+    }
+    const trimmedBatch = values.batch_variant?.trim();
+    return trimmedBatch ?? null;
+  };
+
   return (
     <>
       <RestrictionSelect
@@ -134,6 +146,12 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         options={userTagsSecrets}
         formatOption={(secret: UserTagSecret) => secret.description}
         onChange={(secret) => secret && setFieldValue("secret_id", secret.id)}
+      />
+      <FormTextField
+        label={t("userTag.batchVariant")}
+        description={t("userTag.batchVariantDescription")}
+        name="batch_variant"
+        formik={props}
       />
 
       <Typography>{t("userTag.uploadPinCsvDescription")}</Typography>
@@ -158,12 +176,14 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
               <TableHead>
                 <TableRow>
                   <TableCell>{t("userTag.pin")}</TableCell>
+                  <TableCell>{t("userTag.variant")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {values.tags.slice(0, 10).map((t) => (
-                  <TableRow key={t.pin}>
-                    <TableCell>{t.pin}</TableCell>
+                {values.tags.slice(0, 10).map((tag) => (
+                  <TableRow key={tag.pin}>
+                    <TableCell>{tag.pin}</TableCell>
+                    <TableCell>{resolveVariant(tag.variant) ?? ""}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -189,11 +209,16 @@ export const UserTagsCreate: React.FC = () => {
       onSubmit={(userTags) =>
         createUserTags({
           nodeId: currentNode.id,
-          newUserTags: userTags.tags.map((t) => ({
-            pin: t.pin,
-            secret_id: userTags.secret_id,
-            restriction: userTags.restriction,
-          })),
+          newUserTags: userTags.tags.map((tag) => {
+            const rowVariant = tag.variant?.trim();
+            const batchVariant = userTags.batch_variant?.trim();
+            return {
+              pin: tag.pin,
+              secret_id: userTags.secret_id,
+              restriction: userTags.restriction,
+              variant: rowVariant || batchVariant || null,
+            };
+          }),
         })
       }
       form={TagsForm}

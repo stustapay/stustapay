@@ -135,7 +135,7 @@ async def _create_tags_and_users(
     admin_tags = [
         ("admin", NewUserTag(pin="admin", secret_id=secret.id), None, [ADMIN_ROLE_ID, finanzorga_role.id]),
     ]
-    await create_user_tags(conn=conn, node_id=event_node.id, tags=[tag[1] for tag in admin_tags])
+    await create_user_tags(conn=conn, event_node_id=event_node.id, tags=[tag[1] for tag in admin_tags])
     for admin_name, admin_tag, admin_uid, admin_roles in admin_tags:
         node_admin = await user_service.create_user_no_auth(
             conn=conn,
@@ -158,7 +158,7 @@ async def _create_tags_and_users(
             )
 
     finanzorga_tags = [NewUserTag(pin=secrets.token_hex(16), secret_id=secret.id) for _ in range(10, 16)]
-    await create_user_tags(conn=conn, node_id=event_node.id, tags=finanzorga_tags)
+    await create_user_tags(conn=conn, event_node_id=event_node.id, tags=finanzorga_tags)
     for i, finanzorga_tag in enumerate(finanzorga_tags):
         finanzorga_user = await user_service.create_user_no_auth(
             conn=conn,
@@ -186,7 +186,7 @@ async def _create_tags_and_users(
         logger.info(f"Adding {len(custom_tags)} tags")
         customer_tags.extend([NewUserTag(pin=entry.pin, secret_id=secret.id) for entry in custom_tags])
 
-    await create_user_tags(conn=conn, node_id=event_node.id, tags=customer_tags)
+    await create_user_tags(conn=conn, event_node_id=event_node.id, tags=customer_tags)
 
     if custom_tags:
         role_map = {

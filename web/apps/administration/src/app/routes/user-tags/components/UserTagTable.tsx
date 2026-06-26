@@ -56,6 +56,11 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
       headerName: t("userTag.comment"),
       flex: 1,
     },
+    {
+      field: "variant",
+      headerName: t("userTag.variant"),
+      flex: 1,
+    },
     dataGridNodeColumn,
   ];
 

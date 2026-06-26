@@ -8,6 +8,7 @@ export interface FormTextFieldProps<Name extends string, Values> extends Omit<
 > {
   name: Name;
   formik: FormikProps<Values>;
+  description?: string;
 }
 
 const MemoizedTextField = React.memo(TextField);
@@ -16,8 +17,10 @@ const MemoizedTextField = React.memo(TextField);
 export function FormTextField<Name extends string, Values extends Partial<Record<Name, any>>>({
   formik,
   name,
+  description,
   ...props
 }: FormTextFieldProps<Name, Values>) {
+  const helperText = ((formik.touched[name] && formik.errors[name]) ?? description) as string | undefined;
   return (
     <MemoizedTextField
       name={name}
@@ -27,7 +30,7 @@ export function FormTextField<Name extends string, Values extends Partial<Record
       onBlur={formik.handleBlur}
       value={formik.values[name] ?? ""}
       error={formik.touched[name] && !!formik.errors[name]}
-      helperText={(formik.touched[name] && formik.errors[name]) as string}
+      helperText={helperText}
       {...props}
     />
   );

@@ -5695,6 +5695,67 @@
         }
       }
     },
+    "/user-tags/csv-export": {
+      "post": {
+        "tags": [
+          "user_tags"
+        ],
+        "summary": "User Tags Csv Export",
+        "operationId": "user_tags_csv_export",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserTagsCsvExportPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response User Tags Csv Export User Tags Csv Export Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/user-tags/find-user-tags": {
       "post": {
         "tags": [
@@ -12155,6 +12216,17 @@
           "secret_id": {
             "type": "integer",
             "title": "Secret Id"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
           }
         },
         "type": "object",
@@ -16928,6 +17000,17 @@
             ],
             "title": "Comment"
           },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
+          },
           "account_id": {
             "anyOf": [
               {
@@ -17078,6 +17161,17 @@
           "node_id"
         ],
         "title": "UserTagSecret"
+      },
+      "UserTagsCsvExportPayload": {
+        "properties": {
+          "exclude_activated": {
+            "type": "boolean",
+            "title": "Exclude Activated",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "UserTagsCsvExportPayload"
       },
       "UserToRoles": {
         "properties": {

@@ -68,6 +68,7 @@ export const UserTagDetail: React.FC = () => {
       <DetailView>
         <DetailField label={t("userTag.pin")} value={data.pin} />
         <DetailField label={t("userTag.uid")} value={formatUserTagUid(data.uid_hex)} />
+        <DetailField label={t("userTag.variant")} value={data.variant ?? ""} />
         <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
         {data.account_id != null ? (
           <DetailField

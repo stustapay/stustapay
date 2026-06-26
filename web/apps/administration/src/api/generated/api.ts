@@ -971,6 +971,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
+      userTagsCsvExport: build.mutation<UserTagsCsvExportApiResponse, UserTagsCsvExportApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/csv-export`,
+          method: "POST",
+          body: queryArg.userTagsCsvExportPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
       findUserTags: build.mutation<FindUserTagsApiResponse, FindUserTagsApiArg>({
         query: (queryArg) => ({
           url: `/user-tags/find-user-tags`,
@@ -1952,6 +1963,11 @@ export type CreateUserTagsApiResponse = /** status 200 Successful Response */ an
 export type CreateUserTagsApiArg = {
   nodeId: number;
   newUserTags: NewUserTag[];
+};
+export type UserTagsCsvExportApiResponse = /** status 200 Successful Response */ string;
+export type UserTagsCsvExportApiArg = {
+  nodeId: number;
+  userTagsCsvExportPayload: UserTagsCsvExportPayload;
 };
 export type FindUserTagsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
 export type FindUserTagsApiArg = {
@@ -3132,6 +3148,10 @@ export type NewUserTag = {
   pin: string;
   restriction?: ProductRestriction | null;
   secret_id: number;
+  variant?: string | null;
+};
+export type UserTagsCsvExportPayload = {
+  exclude_activated?: boolean;
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -3143,6 +3163,7 @@ export type UserTagDetail = {
   uid: number | null;
   node_id: number;
   comment?: string | null;
+  variant?: string | null;
   account_id?: number | null;
   user_id?: number | null;
   account_history: UserTagAccountAssociation[];
@@ -3153,6 +3174,7 @@ export type UserTagDetailRead = {
   uid: number | null;
   node_id: number;
   comment?: string | null;
+  variant?: string | null;
   account_id?: number | null;
   user_id?: number | null;
   account_history: UserTagAccountAssociation[];
@@ -3891,6 +3913,7 @@ export const {
   useListUserTagSecretsQuery,
   useLazyListUserTagSecretsQuery,
   useCreateUserTagsMutation,
+  useUserTagsCsvExportMutation,
   useFindUserTagsMutation,
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
