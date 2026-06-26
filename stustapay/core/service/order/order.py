@@ -58,7 +58,7 @@ from stustapay.core.schema.ticket import (
 )
 from stustapay.core.schema.till import Till
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
-from stustapay.core.schema.user import CurrentUser, Privilege, User, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, NodePrivilege, User, format_user_tag_uid
 from stustapay.core.service.account import (
     get_account_by_id,
     get_system_account_for_node,
@@ -401,7 +401,7 @@ class OrderService(Service[Config]):
         return account
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_topup(
         self,
         *,
@@ -456,7 +456,7 @@ class OrderService(Service[Config]):
         )
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def book_topup(
         self,
         *,
@@ -526,7 +526,7 @@ class OrderService(Service[Config]):
         return completed_top_up
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_pending_topup(
         self,
         *,
@@ -556,7 +556,7 @@ class OrderService(Service[Config]):
         return None
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def cancel_pending_order(self, *, conn: Connection, current_till: Till, order_uuid: UUID) -> None:
         pending_order = await fetch_pending_order(conn=conn, uuid=order_uuid)
         if pending_order.till_id != current_till.id:
@@ -671,7 +671,7 @@ class OrderService(Service[Config]):
         return order
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_sale(self, *, conn: Connection, current_till: Till, node: Node, new_sale: NewSale) -> PendingSale:
         """
         prepare the given order: checks all requirements.
@@ -709,7 +709,7 @@ class OrderService(Service[Config]):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_sale_products(
         self,
         *,
@@ -877,7 +877,7 @@ class OrderService(Service[Config]):
         return completed_order
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def book_sale(
         self,
         *,
@@ -935,7 +935,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_node()
-    @requires_user([Privilege.can_book_orders])
+    @requires_user(node_privileges=[NodePrivilege.can_book_orders])
     async def book_sale_products(
         self,
         *,
@@ -991,7 +991,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_node()
-    @requires_user([Privilege.can_book_orders])
+    @requires_user(node_privileges=[NodePrivilege.can_book_orders])
     async def edit_sale_products(
         self,
         *,
@@ -1086,19 +1086,19 @@ class OrderService(Service[Config]):
             )
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def cancel_sale(self, *, conn: Connection, current_till: Till, current_user: CurrentUser, order_id: int):
         await self._cancel_sale(conn=conn, till_id=current_till.id, current_user=current_user, order_id=order_id)
 
     @with_db_transaction(read_only=False)
     @requires_node()
-    @requires_user([Privilege.can_book_orders])
+    @requires_user(node_privileges=[NodePrivilege.can_book_orders])
     async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
         virtual_till = await fetch_virtual_till(conn=conn, node=node)
         await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_pay_out(
         self, *, conn: Connection, node: Node, current_till: Till, new_pay_out: NewPayOut
     ) -> PendingPayOut:
@@ -1141,7 +1141,7 @@ class OrderService(Service[Config]):
         )
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def book_pay_out(
         self,
         *,
@@ -1214,7 +1214,7 @@ class OrderService(Service[Config]):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_ticket_scan(
         self, *, conn: Connection, node: Node, current_till: Till, new_ticket_scan: NewTicketScan
     ) -> TicketScanResult:
@@ -1339,7 +1339,7 @@ class OrderService(Service[Config]):
         return TicketScanResult(scanned_tickets=scanned_tickets)
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_ticket_sale(
         self,
         *,
@@ -1426,7 +1426,7 @@ class OrderService(Service[Config]):
         return sale
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def book_ticket_sale(
         self,
         *,
@@ -1496,7 +1496,7 @@ class OrderService(Service[Config]):
         return completed_ticket_sale
 
     @with_db_transaction(read_only=False)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def check_pending_ticket_sale(
         self,
         *,
@@ -1528,7 +1528,7 @@ class OrderService(Service[Config]):
         return None
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def show_order(self, *, conn: Connection, current_user: User, order_id: int) -> Optional[Order]:
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is not None and order.cashier_id == current_user.id:
@@ -1536,7 +1536,7 @@ class OrderService(Service[Config]):
         return None
 
     @with_db_transaction(read_only=True)
-    @requires_terminal([Privilege.can_book_orders])
+    @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
     async def list_orders_terminal(
         self, *, conn: Connection, node: Node, current_user: User, current_terminal: CurrentTerminal
     ) -> list[Order]:
@@ -1551,7 +1551,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_orders(self, *, conn: Connection, node: Node, customer_account_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
@@ -1562,7 +1562,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_orders_by_till(self, *, conn: Connection, node: Node, till_id: int) -> list[Order]:
         return await conn.fetch_many(
             Order,
@@ -1573,7 +1573,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_transactions_by_cash_register(
         self, *, conn: Connection, node: Node, cash_register_id: int
     ) -> list[Transaction]:
@@ -1588,13 +1588,13 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_order(self, *, conn: Connection, order_id: int) -> Optional[Order]:
         return await fetch_order(conn=conn, order_id=order_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_transaction(self, *, conn: Connection, node: Node, transaction_id: int) -> Transaction:
         return await fetch_transaction(conn=conn, node=node, transaction_id=transaction_id)
 

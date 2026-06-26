@@ -8,7 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.product import NewProduct, Product, ProductType
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
@@ -66,7 +66,7 @@ class ProductService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.product], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_product(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, product: NewProduct
     ) -> Product:
@@ -135,7 +135,7 @@ class ProductService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.product], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_product(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, product_id: int, product: NewProduct
     ) -> Product:
@@ -184,7 +184,7 @@ class ProductService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.product], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_product(self, *, conn: Connection, node: Node, current_user: CurrentUser, product_id: int) -> bool:
         result = await conn.execute(
             "delete from product where id = $1 and type = 'user_defined' and node_id = any($2)",

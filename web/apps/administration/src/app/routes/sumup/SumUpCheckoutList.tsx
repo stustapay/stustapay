@@ -1,6 +1,6 @@
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
-import { Privilege } from "@stustapay/models";
+import { NodePrivilege } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
@@ -11,11 +11,11 @@ import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
-export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
+export const SumUpCheckoutList: React.FC = withPrivilegeGuard(NodePrivilege.node_administration, () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: checkouts } = useListSumupCheckoutsQuery({ nodeId: currentNode.id });
+  const { data: checkouts, isLoading } = useListSumupCheckoutsQuery({ nodeId: currentNode.id });
 
   const columns: GridColDef<SumUpCheckout>[] = [
     {
@@ -41,6 +41,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(Privilege.node_adm
     <ListLayout title={t("sumup.checkouts")} routes={ProductRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={checkouts ?? []}
         columns={columns}
         disableRowSelectionOnClick

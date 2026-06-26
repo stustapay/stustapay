@@ -1,5 +1,4 @@
 import { Tooltip } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -22,10 +21,6 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     showAll: true,
   });
   const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
-
-  if (isProductsLoading || isTaxRatesLoading) {
-    return <Loading />;
-  }
 
   const renderProduct = (productId: number | null) => {
     if (productId == null || !products) {
@@ -105,6 +100,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   return (
     <DataGrid
       autoHeight
+      loading={isProductsLoading || isTaxRatesLoading}
       slots={{ toolbar: () => <DataGridTitle title={t("order.lineItems")} /> }}
       rows={lineItems}
       columns={itemColumns}

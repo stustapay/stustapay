@@ -65,20 +65,108 @@ end;
 $$ language plpgsql
     set search_path = "$user", public;
 
+create or replace function user_event_privileges(
+    user_id bigint,
+    event_node_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urte.privilege), '{}'::text array) from user_role_to_event_privilege urte
+    join user_to_role utr on urte.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_event_privileges.user_id
+    and (n.event_node_id = user_event_privileges.event_node_id
+        or (select exists(select from node where id = user_event_privileges.event_node_id and n.id = any(parent_ids))))
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
+create or replace function user_node_privileges(
+    user_id bigint,
+    node_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urtn.privilege), '{}'::text array) from user_role_to_node_privilege urtn
+    join user_to_role utr on urtn.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_node_privileges.user_id
+    and (
+        n.id = user_node_privileges.node_id
+        or (select exists(select from node where id = user_node_privileges.node_id and n.id = any(parent_ids)))
+    )
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
+create or replace function user_event_privileges_for_role(
+    user_id bigint,
+    event_node_id bigint,
+    user_role_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urte.privilege), '{}'::text array) from user_role_to_event_privilege urte
+    join user_to_role utr on urte.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_event_privileges_for_role.user_id
+    and urte.role_id = user_event_privileges_for_role.user_role_id
+    and (n.event_node_id = user_event_privileges_for_role.event_node_id
+        or (select exists(select from node where id = user_event_privileges_for_role.event_node_id and n.id = any(parent_ids))))
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
+create or replace function user_node_privileges_for_role(
+    user_id bigint,
+    node_id bigint,
+    user_role_id bigint
+)
+returns text[]
+as
+$$
+    select coalesce(array_agg(urtn.privilege), '{}'::text array) from user_role_to_node_privilege urtn
+    join user_to_role utr on urtn.role_id = utr.role_id
+    join node n on utr.node_id = n.id
+    where utr.user_id = user_node_privileges_for_role.user_id
+    and urtn.role_id = user_node_privileges_for_role.user_role_id
+    and (
+        n.id = user_node_privileges_for_role.node_id
+        or (select exists(select from node where id = user_node_privileges_for_role.node_id and n.id = any(parent_ids)))
+    )
+$$ language sql
+    stable
+    security invoker
+    set search_path = "$user", public;
+
 create or replace function user_privileges_at_node(
     user_id bigint
 )
 returns table (
     node_id bigint,
     role_ids bigint array,
-    privileges_at_node text array
+    event_privileges_at_node text array,
+    node_privileges_at_node text array
 )
 as
 $$
-with recursive graph (node_id, path, cycle, role_ids, privileges_at_node) as (
-    -- base case: start at the requested node
+with recursive graph (
+    node_id,
+    path,
+    cycle,
+    role_ids,
+    event_privileges_at_node,
+    node_privileges_at_node
+) as (
+    -- base case: start at the root node
     select
-        0::bigint, -- root node ID
+        0::bigint,
         '{0}'::bigint[],
         false,
         coalesce((
@@ -88,11 +176,19 @@ with recursive graph (node_id, path, cycle, role_ids, privileges_at_node) as (
             '{}'::bigint array
         ) as role_ids,
         coalesce((
-            select array_agg(urtp.privilege)
-            from user_role_to_privilege urtp join user_to_role utr2 on urtp.role_id = utr2.role_id
+            select array_agg(urte.privilege)
+            from user_role_to_event_privilege urte
+            join user_to_role utr2 on urte.role_id = utr2.role_id
             where utr2.node_id = 0 and utr2.user_id = user_privileges_at_node.user_id),
             '{}'::text array
-        ) as privileges_at_node
+        ) as event_privileges_at_node,
+        coalesce((
+            select array_agg(urtn.privilege)
+            from user_role_to_node_privilege urtn
+            join user_to_role utr2 on urtn.role_id = utr2.role_id
+            where utr2.node_id = 0 and utr2.user_id = user_privileges_at_node.user_id),
+            '{}'::text array
+        ) as node_privileges_at_node
     union all
     -- add the node's children result set (find the parents for all so-far evaluated nodes)
     select
@@ -104,13 +200,17 @@ with recursive graph (node_id, path, cycle, role_ids, privileges_at_node) as (
             from user_to_role utr2
             where utr2.node_id = node.id and utr2.user_id = user_privileges_at_node.user_id
         )::bigint array,
-        g.privileges_at_node || (
-            select coalesce(array_agg(t.privileges), '{}'::text array)
-            from (
-                select unnest(urwp.privileges) as privileges
-                from user_role_with_privileges urwp join user_to_role utr3 on urwp.id = utr3.role_id
-                where utr3.node_id = node.id and utr3.user_id = user_privileges_at_node.user_id
-            ) t
+        g.event_privileges_at_node || (
+            select coalesce(array_agg(urte.privilege), '{}'::text array)
+            from user_role_to_event_privilege urte
+            join user_to_role utr3 on urte.role_id = utr3.role_id
+            where utr3.node_id = node.id and utr3.user_id = user_privileges_at_node.user_id
+        )::text array,
+        g.node_privileges_at_node || (
+            select coalesce(array_agg(urtn.privilege), '{}'::text array)
+            from user_role_to_node_privilege urtn
+            join user_to_role utr3 on urtn.role_id = utr3.role_id
+            where utr3.node_id = node.id and utr3.user_id = user_privileges_at_node.user_id
         )::text array
     from
         graph g
@@ -122,7 +222,8 @@ with recursive graph (node_id, path, cycle, role_ids, privileges_at_node) as (
 select
     g.node_id,
     g.role_ids,
-    g.privileges_at_node
+    g.event_privileges_at_node,
+    g.node_privileges_at_node
 from graph g;
 $$ language sql
     stable

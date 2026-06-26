@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -31,10 +30,6 @@ export const UserList: React.FC = () => {
   );
   const [deleteUser] = useDeleteUserMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (userId: number) => {
     openModal({
@@ -113,6 +108,7 @@ export const UserList: React.FC = () => {
     <ListLayout title={t("users")} routes={UserRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={users ?? []}
         columns={columns}
         disableRowSelectionOnClick

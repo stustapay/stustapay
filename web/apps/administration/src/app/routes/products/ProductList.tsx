@@ -7,7 +7,6 @@ import {
   SmartButton as SmartButtonIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -51,10 +50,6 @@ export const ProductList: React.FC = () => {
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isProductsLoading || isTaxRatesLoading) {
-    return <Loading />;
-  }
 
   const renderTaxRate = (id: number) => {
     if (!taxRates) {
@@ -220,6 +215,7 @@ export const ProductList: React.FC = () => {
     <ListLayout title={t("products")} routes={ProductRoutes}>
       <DataGrid
         autoHeight
+        loading={isProductsLoading || isTaxRatesLoading}
         rows={products ?? []}
         columns={columns}
         disableRowSelectionOnClick

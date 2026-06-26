@@ -1,4 +1,3 @@
-import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -11,11 +10,11 @@ import { CustomerTable } from "./components/CustomerTable";
 export const CustomersWithBlockedPayout: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: customers } = useGetCustomersWithBlockedPayoutQuery({ nodeId: currentNode.id });
+  const { data: customers, isLoading } = useGetCustomersWithBlockedPayoutQuery({ nodeId: currentNode.id });
 
   return (
     <DetailLayout title={t("customer.customersWithBlockedPayout")}>
-      {customers ? <CustomerTable customers={customers} /> : <Loading />}
+      <CustomerTable customers={customers ?? []} loading={isLoading} />
     </DetailLayout>
   );
 };

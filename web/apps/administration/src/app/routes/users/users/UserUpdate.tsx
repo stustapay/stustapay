@@ -12,7 +12,7 @@ import { useCurrentNode } from "@/hooks";
 
 import { UserUpdateForm } from "./UserUpdateForm";
 
-export const UserUpdate: React.FC = withPrivilegeGuard("user_management", () => {
+export const UserUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { userId } = useParams();

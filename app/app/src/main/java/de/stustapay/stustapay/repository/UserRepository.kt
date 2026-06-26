@@ -5,6 +5,7 @@ import com.ionspin.kotlin.bignum.integer.toBigInteger
 import de.stustapay.api.models.CreateUserPayload
 import de.stustapay.api.models.LoginPayload
 import de.stustapay.api.models.UpdateUserPayload
+import de.stustapay.api.models.UserRoleAssignmentPayload
 import de.stustapay.api.models.UserTag
 import de.stustapay.libssp.model.NfcTag
 import de.stustapay.stustapay.model.UserCreateState
@@ -85,7 +86,7 @@ class UserRepository @Inject constructor(
         login: String,
         displayName: String,
         userTag: NfcTag,
-        roles: List<BigInteger>,
+        roleAssignments: List<UserRoleAssignmentPayload>,
         description: String
     ): UserCreateState {
         return userRemoteDataSource.userCreate(
@@ -95,15 +96,16 @@ class UserRepository @Inject constructor(
                 userTagUid = userTag.uid,
                 userTagPin = userTag.pin,
                 description = description,
-                roleIds = roles
+                roleAssignments = roleAssignments
             )
         )
     }
 
-    suspend fun update(userTag: NfcTag, roles: List<BigInteger>): UserUpdateState {
+    suspend fun update(userTag: NfcTag, roleAssignments: List<UserRoleAssignmentPayload>): UserUpdateState {
         return userRemoteDataSource.userUpdate(
             UpdateUserPayload(
-                userTagUid = userTag.uid, roleIds = roles
+                userTagUid = userTag.uid,
+                roleAssignments = roleAssignments
             )
         )
     }

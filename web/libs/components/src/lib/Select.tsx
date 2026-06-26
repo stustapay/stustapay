@@ -30,7 +30,7 @@ export function Select<Option, Multiple extends boolean>({
   formatOption,
   multiple,
   chips: _chips,
-  helperText: _helperText,
+  helperText,
   onChange,
   ...props
 }: SelectProps<Option, Multiple>) {
@@ -72,7 +72,14 @@ export function Select<Option, Multiple extends boolean>({
         </li>
       )}
       renderInput={(params) => (
-        <TextField variant={variant ?? "standard"} label={label} error={error} margin={margin} {...params} />
+        <TextField
+          variant={variant ?? "standard"}
+          label={label}
+          error={error}
+          margin={margin}
+          helperText={helperText}
+          {...params}
+        />
       )}
       {...props}
     />

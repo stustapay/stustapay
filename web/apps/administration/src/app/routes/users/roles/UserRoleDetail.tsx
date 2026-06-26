@@ -5,11 +5,14 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { selectUserRoleById, useListUserRolesQuery } from "@/api";
+import { withPrivilegeGuard } from "@/app/layout";
 import { UserRoleRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
-export const UserRoleDetail: React.FC = () => {
+import { PrivilegeDetailSection } from "./components/PrivilegeDetailSection";
+
+export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { roleId } = useParams();
@@ -47,9 +50,24 @@ export const UserRoleDetail: React.FC = () => {
     >
       <DetailView>
         <DetailField label={t("userRole.name")} value={role.name} />
-        <DetailField label={t("userRole.isPrivileged")} value={role.is_privileged ? t("common.yes") : t("common.no")} />
-        <DetailField label={t("userRole.privileges")} value={role.privileges.join(", ")} />
+        <DetailField
+          label={t("userRole.canAssignAllRoles")}
+          helpText={t("userRole.canAssignAllRolesDescription")}
+          value={role.can_assign_all_roles ? t("common.yes") : t("common.no")}
+        />
+        {!role.can_assign_all_roles && (
+          <DetailField
+            label={t("userRole.assignableRoles")}
+            value={
+              (role.assignable_role_ids ?? []).length > 0
+                ? (role.assignable_role_ids ?? []).join(", ")
+                : t("common.none")
+            }
+          />
+        )}
       </DetailView>
+      <PrivilegeDetailSection title={t("userRole.eventPrivileges")} privileges={role.event_privileges} />
+      <PrivilegeDetailSection title={t("userRole.nodePrivileges")} privileges={role.node_privileges} />
     </DetailLayout>
   );
-};
+});

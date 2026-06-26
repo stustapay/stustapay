@@ -21,10 +21,11 @@ from stustapay.core.schema.till import (
 from stustapay.core.schema.tree import Node
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
+    EventPrivilege,
     NewUser,
     NewUserRole,
     NewUserToRoles,
-    Privilege,
+    NodePrivilege,
     User,
     UserRole,
     UserTag,
@@ -237,14 +238,16 @@ async def finanzorga(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="finanzorga",
-            is_privileged=True,
-            privileges=[
-                Privilege.node_administration,
-                Privilege.terminal_login,
-                Privilege.user_management,
-                Privilege.grant_free_tickets,
-                Privilege.grant_vouchers,
-                Privilege.cash_transport,
+            can_assign_all_roles=True,
+            event_privileges=[
+                EventPrivilege.terminal_login,
+                EventPrivilege.grant_free_tickets,
+                EventPrivilege.grant_vouchers,
+                EventPrivilege.cash_transport,
+            ],
+            node_privileges=[
+                NodePrivilege.node_administration,
+                NodePrivilege.view_node_stats,
             ],
         ),
     )
@@ -278,7 +281,7 @@ async def finanzorga(
 
 
 class CreateTerminalToken(Protocol):
-    def __call__(self) -> Awaitable[str]: ...
+    def __call__(self, with_till: bool = True) -> Awaitable[str]: ...
 
 
 @pytest.fixture
@@ -289,42 +292,43 @@ async def create_terminal_token(
     event_admin_token: str,
     event_node: Node,
 ) -> CreateTerminalToken:
-    async def func():
-        till_layout = await till_service.layout.create_layout(
-            token=event_admin_token,
-            node_id=event_node.id,
-            layout=NewTillLayout(name=secrets.token_hex(16), description="", button_ids=[]),
-        )
-        till_profile = await till_service.profile.create_profile(
-            token=event_admin_token,
-            node_id=event_node.id,
-            profile=NewTillProfile(
-                name=secrets.token_hex(16),
-                description="",
-                layout_id=till_layout.id,
-                allow_top_up=True,
-                allow_cash_out=True,
-                allow_ticket_sale=True,
-                allow_ticket_vouchers=True,
-                enable_ssp_payment=True,
-                enable_cash_payment=False,
-                enable_card_payment=False,
-            ),
-        )
+    async def func(with_till=True):
         terminal = await terminal_service.create_terminal(
             token=event_admin_token,
             node_id=event_node.id,
             terminal=NewTerminal(name=secrets.token_hex(16), description=""),
         )
-        await till_service.create_till(
-            token=event_admin_token,
-            node_id=event_node.id,
-            till=NewTill(
-                name=secrets.token_hex(16),
-                active_profile_id=till_profile.id,
-                terminal_id=terminal.id,
-            ),
-        )
+        if with_till:
+            till_layout = await till_service.layout.create_layout(
+                token=event_admin_token,
+                node_id=event_node.id,
+                layout=NewTillLayout(name=secrets.token_hex(16), description="", button_ids=[]),
+            )
+            till_profile = await till_service.profile.create_profile(
+                token=event_admin_token,
+                node_id=event_node.id,
+                profile=NewTillProfile(
+                    name=secrets.token_hex(16),
+                    description="",
+                    layout_id=till_layout.id,
+                    allow_top_up=True,
+                    allow_cash_out=True,
+                    allow_ticket_sale=True,
+                    allow_ticket_vouchers=True,
+                    enable_ssp_payment=True,
+                    enable_cash_payment=False,
+                    enable_card_payment=False,
+                ),
+            )
+            await till_service.create_till(
+                token=event_admin_token,
+                node_id=event_node.id,
+                till=NewTill(
+                    name=secrets.token_hex(16),
+                    active_profile_id=till_profile.id,
+                    terminal_id=terminal.id,
+                ),
+            )
         terminal_token = (await terminal_service.register_terminal(registration_uuid=terminal.registration_uuid)).token
         await terminal_service.login_user(
             token=terminal_token, user_tag=UserTag(uid=event_admin_tag.uid), user_role_id=ADMIN_ROLE_ID

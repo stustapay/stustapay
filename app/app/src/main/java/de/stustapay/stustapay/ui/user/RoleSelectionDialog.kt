@@ -24,10 +24,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.toBigInteger
-import de.stustapay.stustapay.R
 import de.stustapay.api.models.UserRole
-import de.stustapay.stustapay.model.UserRolesState
 import de.stustapay.api.models.UserTag
+import de.stustapay.stustapay.R
+import de.stustapay.stustapay.model.UserRolesState
 
 
 @Preview
@@ -42,19 +42,22 @@ fun PreviewRoleSelectionDialog() {
                     UserRole(
                         name = "Crazy Hacker",
                         id = 1.toBigInteger(),
-                        privileges = listOf(),
+                        eventPrivileges = listOf(),
+                        nodePrivileges = listOf(),
                         nodeId = 0.toBigInteger()
                     ),
                     UserRole(
                         name = "Boring Hacker",
                         id = 2.toBigInteger(),
-                        privileges = listOf(),
+                        eventPrivileges = listOf(),
+                        nodePrivileges = listOf(),
                         nodeId = 0.toBigInteger()
                     ),
                     UserRole(
                         name = "Retired Hacker",
                         id = 3.toBigInteger(),
-                        privileges = listOf(),
+                        eventPrivileges = listOf(),
+                        nodePrivileges = listOf(),
                         nodeId = 0.toBigInteger()
                     )
                 ),

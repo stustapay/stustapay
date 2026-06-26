@@ -41,13 +41,6 @@ class CashierViewModel @Inject constructor(
             UserState.NoLogin -> false
         }
     }
-    private val _canViewCashier = userRepository.userState.map {
-        when (it) {
-            is UserState.Error -> false
-            is UserState.LoggedIn -> Access.canViewCashier(it.user)
-            UserState.NoLogin -> false
-        }
-    }
     private val _scanState = MutableStateFlow(DialogDisplayState())
 
     val uiState = combine(
@@ -60,9 +53,8 @@ class CashierViewModel @Inject constructor(
         _stockings.asStateFlow(),
         _registers.asStateFlow(),
         _canManageCashiers,
-        _canViewCashier,
         _scanState.asStateFlow()
-    ) { requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, canManageCashiers, canViewCashier, scanState ->
+    ) { requestState, navState, userInfo, amount, selectedStocking, selectedRegister, stockings, registers, canManageCashiers, scanState ->
         CashierUiState(
             requestState,
             navState,
@@ -73,7 +65,6 @@ class CashierViewModel @Inject constructor(
             stockings,
             registers,
             canManageCashiers,
-            canViewCashier,
             scanState
         )
     }.stateIn(
@@ -114,7 +105,7 @@ class CashierViewModel @Inject constructor(
         _amount.update { 0u }
 
         val userState = userRepository.userState.value
-        if (userState is UserState.LoggedIn && !(Access.canViewCashier(userState.user) || Access.canManageCashiers(userState.user))) {
+        if (userState is UserState.LoggedIn && !Access.canManageCashiers(userState.user)) {
             val tagUid = userState.user.userTagUid
             if (tagUid != null) {
                 fetchTag(NfcTag(tagUid, null))
@@ -300,7 +291,6 @@ data class CashierUiState(
     val stockings: List<CashRegisterStocking> = listOf(),
     val registers: List<CashRegister> = listOf(),
     val canManageCashiers: Boolean = false,
-    val canViewCashier: Boolean = false,
     val scanState: DialogDisplayState = DialogDisplayState()
 )
 

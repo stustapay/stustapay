@@ -13,7 +13,7 @@ from stustapay.core.schema.till import (
     TillLayout,
 )
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.common.error import NotFound
@@ -36,7 +36,7 @@ class TillLayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_button(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, button: NewTillButton
     ) -> TillButton:
@@ -89,7 +89,7 @@ class TillLayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_button(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, button_id: int, button: NewTillButton
     ) -> TillButton:
@@ -122,7 +122,7 @@ class TillLayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_button(self, *, conn: Connection, node: Node, current_user: CurrentUser, button_id: int) -> bool:
         result = await conn.execute("delete from till_button where id = $1 and node_id = $2", button_id, node.id)
         # TODO: AUDIT_DELETE
@@ -137,7 +137,7 @@ class TillLayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_layout(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, layout: NewTillLayout
     ) -> TillLayout:
@@ -194,7 +194,7 @@ class TillLayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_layout(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, layout_id: int, layout: NewTillLayout
     ) -> Optional[TillLayout]:
@@ -240,7 +240,7 @@ class TillLayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_layout(self, *, conn: Connection, node: Node, current_user: CurrentUser, layout_id: int) -> bool:
         result = await conn.execute("delete from till_layout where id = $1 and node_id = $2", layout_id, node.id)
         # TODO: AUDIT_DELETE

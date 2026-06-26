@@ -1,5 +1,4 @@
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { formatUserTagUid } from "@stustapay/models";
 import { StringyBoolean, useQueryState } from "@stustapay/utils";
@@ -48,10 +47,6 @@ export const CashierList: React.FC = () => {
   );
   const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isCashiersLoading || isTerminalsLoading) {
-    return <Loading />;
-  }
 
   const renderTerminals = (ids?: number[] | null) => {
     if (!ids || !terminals) {
@@ -152,6 +147,7 @@ export const CashierList: React.FC = () => {
       </Paper>
       <DataGrid
         autoHeight
+        loading={isCashiersLoading || isTerminalsLoading}
         rows={cashiers ?? []}
         columns={columns}
         disableRowSelectionOnClick

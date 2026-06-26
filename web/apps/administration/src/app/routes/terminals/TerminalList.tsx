@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -43,10 +42,6 @@ export const TerminalList: React.FC = () => {
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const [deleteTerminal] = useDeleteTerminalMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isTerminalsLoading || isTillsLoading || isUsersLoading) {
-    return <Loading />;
-  }
 
   const renderTill = (id: number | null) => {
     if (id == null || !tills) {
@@ -165,6 +160,7 @@ export const TerminalList: React.FC = () => {
   return (
     <ListLayout title={t("terminal.terminals")} routes={TerminalRoutes}>
       <DataGrid
+        loading={isTerminalsLoading || isTillsLoading || isUsersLoading}
         rows={terminals ?? []}
         columns={columns}
         disableRowSelectionOnClick

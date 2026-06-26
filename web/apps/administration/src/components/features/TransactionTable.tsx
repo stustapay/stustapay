@@ -5,7 +5,6 @@ import {
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { GridRenderCellParams } from "@mui/x-data-grid";
-import { Loading } from "@stustapay/components";
 import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -41,12 +40,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
-
-  if (!users || !tills) {
-    return <Loading />;
-  }
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
 
   const getUsernameForUser = (id?: number | null) => {
     if (id == null || users == null) {
@@ -138,7 +133,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               }
               return (
                 <RouterLink to={TillRoutes.detail(row.order.till_id)}>
-                  {selectTillById(tills, row.order.till_id)?.name}
+                  {tills ? selectTillById(tills, row.order.till_id)?.name : null}
                 </RouterLink>
               );
             },
@@ -179,6 +174,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
   return (
     <DataGrid
+      loading={isUsersLoading || isTillsLoading}
       rows={transactions ?? []}
       slots={{ toolbar: () => <DataGridTitle title={t("transactions")} /> }}
       columns={columns}

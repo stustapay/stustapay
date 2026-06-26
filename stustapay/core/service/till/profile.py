@@ -8,7 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.till import NewTillProfile, TillProfile
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.user import AuthService
@@ -30,7 +30,7 @@ class TillProfileService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_profile(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, profile: NewTillProfile
     ) -> TillProfile:
@@ -79,7 +79,7 @@ class TillProfileService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_profile(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, profile_id: int, profile: NewTillProfile
     ) -> Optional[TillProfile]:
@@ -117,7 +117,7 @@ class TillProfileService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.till])
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_profile(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, till_profile_id: int
     ) -> bool:

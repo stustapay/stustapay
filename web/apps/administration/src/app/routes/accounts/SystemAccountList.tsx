@@ -1,5 +1,4 @@
-import { Loading } from "@stustapay/components";
-import { Privilege } from "@stustapay/models";
+import { NodePrivilege } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +9,7 @@ import { useCurrentNode } from "@/hooks";
 
 import { AccountTable } from "./components/AccountTable";
 
-export const SystemAccountList: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
+export const SystemAccountList: React.FC = withPrivilegeGuard(NodePrivilege.node_administration, () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
@@ -24,13 +23,9 @@ export const SystemAccountList: React.FC = withPrivilegeGuard(Privilege.node_adm
     }
   );
 
-  if (isAccountsLoading) {
-    return <Loading />;
-  }
-
   return (
     <ListLayout title={t("systemAccounts")}>
-      <AccountTable accounts={accounts ?? []} />
+      <AccountTable accounts={accounts ?? []} loading={isAccountsLoading} />
     </ListLayout>
   );
 });

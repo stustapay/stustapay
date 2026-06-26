@@ -1,8 +1,10 @@
 import * as React from "react";
 
-import { Privilege, useNodeTree, findNode } from "@/api";
+import { EventPrivilege, NodePrivilege, useNodeTree, findNode } from "@/api";
 
-export const useCurrentUserHasPrivilegeAtNode = (privilege?: Privilege): ((nodeId: number) => boolean) => {
+export const useCurrentUserHasPrivilegeAtNode = (
+  privilege?: EventPrivilege | NodePrivilege
+): ((nodeId: number) => boolean) => {
   const { root } = useNodeTree();
   return React.useCallback(
     (nodeId: number) => {
@@ -14,7 +16,10 @@ export const useCurrentUserHasPrivilegeAtNode = (privilege?: Privilege): ((nodeI
         return false;
       }
 
-      return node.privileges_at_node.includes(privilege);
+      return (
+        node.node_privileges_at_node.includes(privilege as NodePrivilege) ||
+        node.event_privileges_at_node.includes(privilege as EventPrivilege)
+      );
     },
     [root, privilege]
   );

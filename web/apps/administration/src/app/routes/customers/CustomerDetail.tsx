@@ -1,7 +1,7 @@
 import { Edit as EditIcon, RemoveCircle as RemoveCircleIcon } from "@mui/icons-material";
 import { Alert, Button, Grid, IconButton, Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
-import { Privilege, formatUserTagUid } from "@stustapay/models";
+import { NodePrivilege, formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -92,7 +92,7 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
   );
 };
 
-export const CustomerDetail = withPrivilegeGuard(Privilege.node_administration, () => {
+export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administration, () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { customerId } = useParams();

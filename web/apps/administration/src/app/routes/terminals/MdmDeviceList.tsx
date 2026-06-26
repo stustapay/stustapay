@@ -10,7 +10,6 @@ import {
   DialogTitle,
   Link,
 } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -47,10 +46,6 @@ export const MdmDeviceList: React.FC = () => {
         <AlertTitle>{t("terminal.mdm.headwindDisabled")}</AlertTitle>
       </Alert>
     );
-  }
-
-  if (isLoading) {
-    return <Loading />;
   }
 
   if (error) {
@@ -153,6 +148,7 @@ export const MdmDeviceList: React.FC = () => {
     <>
       <ListLayout title={t("terminal.mdmDevices")}>
         <DataGrid
+          loading={isLoading}
           getRowId={(row) => row.device.device_id}
           rows={data ?? []}
           columns={columns}

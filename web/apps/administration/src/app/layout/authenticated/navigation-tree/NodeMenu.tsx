@@ -1,5 +1,6 @@
 import {
   AccountBalance as AccountBalanceIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
   Nfc as NfcIcon,
   Person as PersonIcon,
@@ -11,7 +12,7 @@ import {
 } from "@mui/icons-material";
 import * as React from "react";
 
-import { Node, NodeSeenByUser, ObjectType, Privilege } from "@/api";
+import { EventPrivilege, Node, NodePrivilege, NodeSeenByUser, ObjectType } from "@/api";
 import {
   CashierRoutes,
   CustomerRoutes,
@@ -21,6 +22,7 @@ import {
   TicketRoutes,
   TillRoutes,
   TseRoutes,
+  UserRoleRoutes,
   UserRoutes,
   UserTagRoutes,
   UserToRoleRoutes,
@@ -34,7 +36,7 @@ type NodeMenuItem = {
   icon: React.FC;
   label: string;
   requiresEvent?: boolean;
-  requiredPrivileges?: Privilege[];
+  requiredPrivileges?: (EventPrivilege | NodePrivilege)[];
   requiresOneOfObjectType?: ObjectType[];
   additionalRequirements?: (node: Node) => boolean;
 };
@@ -44,7 +46,18 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => UserRoutes.list(node.id),
     label: i18n.t("users"),
     icon: PersonIcon,
-    requiresOneOfObjectType: ["user", "user_role"],
+    requiresOneOfObjectType: ["user"],
+  },
+  {
+    route: (node) => UserRoleRoutes.list(node.id),
+    label: i18n.t("userRoles"),
+    icon: AdminPanelSettingsIcon,
+    requiresOneOfObjectType: ["user_role"],
+  },
+  {
+    route: (node) => UserToRoleRoutes.list(node.id),
+    label: i18n.t("userToRoles"),
+    icon: AdminPanelSettingsIcon,
   },
   {
     route: (node) => CashierRoutes.list(node.id),
@@ -52,11 +65,6 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     icon: PersonIcon,
     requiresOneOfObjectType: ["user", "user_role"],
     requiresEvent: true,
-  },
-  {
-    route: (node) => UserToRoleRoutes.list(node.id),
-    label: i18n.t("userToRoles"),
-    icon: PersonIcon,
   },
   {
     route: (node) => ProductRoutes.list(node.id),
@@ -138,7 +146,11 @@ export const isMenuEntryValidAtNode = (entry: NodeMenuItem, node: NodeSeenByUser
   if (
     entry.requiredPrivileges != null &&
     entry.requiredPrivileges.length > 0 &&
-    !entry.requiredPrivileges.every((privilege) => node.privileges_at_node.includes(privilege))
+    !entry.requiredPrivileges.every(
+      (privilege) =>
+        node.node_privileges_at_node.includes(privilege as NodePrivilege) ||
+        node.event_privileges_at_node.includes(privilege as EventPrivilege)
+    )
   ) {
     return false;
   }

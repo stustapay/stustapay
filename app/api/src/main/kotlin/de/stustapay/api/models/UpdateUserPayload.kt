@@ -23,16 +23,17 @@
 
 package de.stustapay.api.models
 
+import de.stustapay.api.models.UserRoleAssignmentPayload
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param userTagUid 
- * @param roleIds 
+ *
+ * @param userTagUid
+ * @param roleAssignments
  */
 @Serializable
 
@@ -41,11 +42,10 @@ data class UpdateUserPayload (
     @SerialName(value = "user_tag_uid")
     val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "role_ids")
-    val roleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>
+    @SerialName(value = "role_assignments")
+    val roleAssignments: kotlin.collections.List<UserRoleAssignmentPayload>
 
 ) {
 
 
 }
-

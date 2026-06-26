@@ -1,4 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -7,6 +8,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { useDeleteUserMutation, useGetUserQuery } from "@/api";
 import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import { UserRoleAssignmentsSection } from "@/app/routes/users";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
@@ -72,6 +74,9 @@ export const UserDetail: React.FC = () => {
           <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
         )}
       </DetailView>
+      <Paper sx={{ p: 1 }}>
+        <UserRoleAssignmentsSection userId={Number(userId)} />
+      </Paper>
     </DetailLayout>
   );
 };

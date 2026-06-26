@@ -1,4 +1,3 @@
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
 import * as React from "react";
@@ -22,12 +21,8 @@ export const CashierShiftTable: React.FC<{
 }> = ({ cashierShifts, showCashierColumn = false, showCashRegisterColumn = false }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: registers } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
-
-  if (!users || !registers) {
-    return <Loading />;
-  }
+  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
 
   const getUsernameForUser = (id?: number | null) => {
     if (id == null || users == null) {
@@ -91,10 +86,10 @@ export const CashierShiftTable: React.FC<{
             field: "cash_register_id",
             headerName: t("shift.cashRegister"),
             type: "string",
-            valueGetter: (value: number) => selectCashRegisterById(registers, value)?.name,
+            valueGetter: (value: number) => (registers ? selectCashRegisterById(registers, value)?.name : undefined),
             renderCell: (params: any) => (
               <RouterLink to={CashRegistersRoutes.detail(params.row.cash_register_id)}>
-                {selectCashRegisterById(registers, params.row.cash_register_id)?.name}
+                {registers ? selectCashRegisterById(registers, params.row.cash_register_id)?.name : null}
               </RouterLink>
             ),
             width: 200,
@@ -132,5 +127,13 @@ export const CashierShiftTable: React.FC<{
     },
   ];
 
-  return <DataGrid rows={cashierShifts} columns={columns} disableRowSelectionOnClick sx={{ border: "none" }} />;
+  return (
+    <DataGrid
+      loading={isUsersLoading || isRegistersLoading}
+      rows={cashierShifts}
+      columns={columns}
+      disableRowSelectionOnClick
+      sx={{ border: "none" }}
+    />
+  );
 };

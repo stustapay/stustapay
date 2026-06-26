@@ -1,5 +1,4 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -30,10 +29,6 @@ export const TillButtonList: React.FC = () => {
   );
   const [deleteButton] = useDeleteTillButtonMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (buttonId: number) => {
     openModal({
@@ -92,6 +87,7 @@ export const TillButtonList: React.FC = () => {
     <ListLayout title={t("button.buttons")} routes={TillButtonsRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         getRowId={(row) => row.name}
         rows={buttons ?? []}
         columns={columns}

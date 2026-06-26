@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { TillLayout } from "@stustapay/models";
@@ -31,10 +30,6 @@ export const TillLayoutList: React.FC = () => {
   );
   const [deleteTill] = useDeleteTillLayoutMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isTillsLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (layoutId: number) => {
     openModal({
@@ -94,6 +89,7 @@ export const TillLayoutList: React.FC = () => {
     <ListLayout title={t("layout.layouts")} routes={TillLayoutRoutes}>
       <DataGrid
         autoHeight
+        loading={isTillsLoading}
         rows={layouts ?? []}
         columns={columns}
         disableRowSelectionOnClick

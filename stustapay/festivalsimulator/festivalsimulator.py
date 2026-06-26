@@ -15,7 +15,7 @@ from stustapay.core.database import get_database
 from stustapay.core.schema.order import Button
 from stustapay.core.schema.terminal import Terminal as _Terminal
 from stustapay.core.schema.terminal import TerminalConfig, TerminalRegistrationSuccess
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import NodePrivilege
 
 
 def ith_chunk(lst: list, n_chunks: int, index: int):
@@ -110,7 +110,7 @@ class Simulator:
                 "from user_with_tag u "
                 "join user_privileges_at_node(u.id) pr on pr.node_id = $1 "
                 "left join terminal t on u.id = t.active_user_id "
-                "where t.id is null and 'can_book_orders' = any(pr.privileges_at_node) ",
+                "where t.id is null and 'can_book_orders' = any(pr.node_privileges_at_node) ",
                 self.event_node_id,
             )
         ]
@@ -327,8 +327,8 @@ class Simulator:
             await asyncio.sleep(0.1)  # to avoid overloading the database
 
             assert terminal.config.till is not None
-            if terminal.config.active_user_id is not None and terminal.config.user_privileges is not None:
-                if Privilege.can_book_orders in terminal.config.user_privileges:
+            if terminal.config.active_user_id is not None and terminal.config.user_node_privileges is not None:
+                if NodePrivilege.can_book_orders in terminal.config.user_node_privileges:
                     self.logger.info("Terminal already has a logged in cashier")
                     terminals.append(terminal)
                     continue
@@ -557,7 +557,7 @@ class Simulator:
 
     async def login_customer(self, pin: str) -> str:
         async with aiohttp.ClientSession(base_url=self.customer_api_base_url) as client:
-            async with client.post("/auth/login", json={"pin": pin}) as resp:
+            async with client.post("/auth/login", json={"pin": pin, "node_id": self.event_node_id}) as resp:
                 if resp.status == 503:
                     self.logger.warning(f"Customer with pin {pin} problem logging in, {await resp.text()}")
                     await self.sleep()

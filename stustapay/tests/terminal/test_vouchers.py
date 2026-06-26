@@ -4,7 +4,7 @@ import pytest
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile, Till, TillLayout
 from stustapay.core.schema.tree import Node
-from stustapay.core.schema.user import NewUserRole, NewUserToRoles, Privilege
+from stustapay.core.schema.user import EventPrivilege, NewUserRole, NewUserToRoles
 from stustapay.core.service.account import AccountService
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.till.till import TillService
@@ -31,7 +31,9 @@ async def test_free_ticket_grant_with_vouchers(
         token=event_admin_token,
         node_id=event_node.id,
         new_role=NewUserRole(
-            name="test-role", privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets]
+            name="test-role",
+            event_privileges=[EventPrivilege.supervised_terminal_login, EventPrivilege.grant_free_tickets],
+            node_privileges=[],
         ),
     )
     await till_service.profile.update_profile(
@@ -90,7 +92,11 @@ async def test_free_ticket_grant_without_vouchers(
     voucher_role = await user_service.create_user_role(
         token=event_admin_token,
         node_id=event_node.id,
-        new_role=NewUserRole(name="test-role", is_privileged=False, privileges=[Privilege.supervised_terminal_login]),
+        new_role=NewUserRole(
+            name="test-role",
+            event_privileges=[EventPrivilege.supervised_terminal_login],
+            node_privileges=[],
+        ),
     )
     await user_service.update_user_to_roles(
         token=event_admin_token,
@@ -131,8 +137,10 @@ async def test_free_ticket_grant_without_vouchers(
         token=event_admin_token,
         node_id=event_node.id,
         role_id=voucher_role.id,
-        is_privileged=False,
-        privileges=[Privilege.grant_free_tickets],
+        can_assign_all_roles=False,
+        assignable_role_ids=[],
+        event_privileges=[EventPrivilege.grant_free_tickets],
+        node_privileges=[],
     )
 
     success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
@@ -150,8 +158,14 @@ async def test_free_ticket_grant_without_vouchers(
         token=event_admin_token,
         node_id=event_node.id,
         role_id=voucher_role.id,
-        is_privileged=False,
-        privileges=[Privilege.supervised_terminal_login, Privilege.grant_free_tickets, Privilege.grant_vouchers],
+        can_assign_all_roles=False,
+        assignable_role_ids=[],
+        event_privileges=[
+            EventPrivilege.supervised_terminal_login,
+            EventPrivilege.grant_free_tickets,
+            EventPrivilege.grant_vouchers,
+        ],
+        node_privileges=[],
     )
 
     # let's grant the new volunteer tickets via the extra api

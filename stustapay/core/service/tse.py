@@ -6,7 +6,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.tree import Node, ObjectType
 from stustapay.core.schema.tse import NewTse, Tse, UpdateTse
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
@@ -39,7 +39,7 @@ class TseService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tse], event_only=False)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_tse(self, *, conn: Connection, node: Node, current_user: CurrentUser, new_tse: NewTse) -> Tse:
         tse = await create_tse(conn=conn, node=node, new_tse=new_tse)
         await create_audit_log(
@@ -53,7 +53,7 @@ class TseService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.tse], event_only=False)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_tse(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tse_id: int, updated_tse: UpdateTse
     ) -> Tse:
@@ -82,6 +82,6 @@ class TseService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=False)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_tses(self, *, conn: Connection, node: Node) -> list[Tse]:
         return await list_tses(conn=conn, node=node)

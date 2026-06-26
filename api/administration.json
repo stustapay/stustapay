@@ -335,7 +335,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/Privilege"
+                  "$ref": "#/components/schemas/EventPrivilege"
+                },
+                {
+                  "$ref": "#/components/schemas/NodePrivilege"
                 },
                 {
                   "type": "null"
@@ -592,6 +595,69 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/role-assignments": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List User Role Assignments",
+        "operationId": "list_user_role_assignments",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserRoleAssignment"
+                  },
+                  "title": "Response List User Role Assignments Users  User Id  Role Assignments Get"
+                }
               }
             }
           },
@@ -10030,12 +10096,19 @@
             ],
             "title": "Active Role Name"
           },
-          "privileges": {
+          "event_privileges": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "description": {
             "anyOf": [
@@ -10098,8 +10171,7 @@
           "node_id",
           "id",
           "login",
-          "display_name",
-          "privileges"
+          "display_name"
         ],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
@@ -10382,6 +10454,20 @@
           "bon_logo_blob_id"
         ],
         "title": "EventDesign"
+      },
+      "EventPrivilege": {
+        "type": "string",
+        "enum": [
+          "customer_management",
+          "payout_management",
+          "create_user",
+          "cash_transport",
+          "terminal_login",
+          "supervised_terminal_login",
+          "grant_free_tickets",
+          "grant_vouchers"
+        ],
+        "title": "EventPrivilege"
       },
       "ExternalTicket": {
         "properties": {
@@ -11949,23 +12035,38 @@
             "type": "string",
             "title": "Name"
           },
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged",
+            "title": "Can Assign All Roles",
             "default": false
           },
-          "privileges": {
+          "assignable_role_ids": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "type": "integer"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Assignable Role Ids"
+          },
+          "event_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/EventPrivilege"
+            },
+            "type": "array",
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "privileges"
+          "event_privileges",
+          "node_privileges"
         ],
         "title": "NewUserRole"
       },
@@ -12032,11 +12133,6 @@
             },
             "type": "array",
             "title": "Role Ids"
-          },
-          "terminal_only": {
-            "type": "boolean",
-            "title": "Terminal Only",
-            "default": false
           }
         },
         "type": "object",
@@ -12193,6 +12289,15 @@
         ],
         "title": "NodeChoice"
       },
+      "NodePrivilege": {
+        "type": "string",
+        "enum": [
+          "node_administration",
+          "view_node_stats",
+          "can_book_orders"
+        ],
+        "title": "NodePrivilege"
+      },
       "NodeSeenByUser": {
         "properties": {
           "id": {
@@ -12296,13 +12401,21 @@
             "type": "array",
             "title": "Children"
           },
-          "privileges_at_node": {
+          "event_privileges_at_node": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "$ref": "#/components/schemas/EventPrivilege"
             },
             "type": "array",
             "uniqueItems": true,
-            "title": "Privileges At Node"
+            "title": "Event Privileges At Node"
+          },
+          "node_privileges_at_node": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "title": "Node Privileges At Node"
           }
         },
         "type": "object",
@@ -12322,7 +12435,8 @@
           "forbidden_objects_in_subtree",
           "computed_forbidden_objects_in_subtree",
           "children",
-          "privileges_at_node"
+          "event_privileges_at_node",
+          "node_privileges_at_node"
         ],
         "title": "NodeSeenByUser"
       },
@@ -13649,25 +13763,6 @@
           "default_price"
         ],
         "title": "PretixProduct"
-      },
-      "Privilege": {
-        "type": "string",
-        "enum": [
-          "node_administration",
-          "customer_management",
-          "payout_management",
-          "create_user",
-          "allow_privileged_role_assignment",
-          "user_management",
-          "view_node_stats",
-          "cash_transport",
-          "terminal_login",
-          "supervised_terminal_login",
-          "can_book_orders",
-          "grant_free_tickets",
-          "grant_vouchers"
-        ],
-        "title": "Privilege"
       },
       "Product": {
         "properties": {
@@ -16381,22 +16476,38 @@
       },
       "UpdateUserRolePrivilegesPayload": {
         "properties": {
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged"
+            "title": "Can Assign All Roles"
           },
-          "privileges": {
+          "assignable_role_ids": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "type": "integer"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Assignable Role Ids"
+          },
+          "event_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/EventPrivilege"
+            },
+            "type": "array",
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           }
         },
         "type": "object",
         "required": [
-          "is_privileged",
-          "privileges"
+          "can_assign_all_roles",
+          "assignable_role_ids",
+          "event_privileges",
+          "node_privileges"
         ],
         "title": "UpdateUserRolePrivilegesPayload"
       },
@@ -16566,17 +16677,31 @@
             "type": "string",
             "title": "Name"
           },
-          "is_privileged": {
+          "can_assign_all_roles": {
             "type": "boolean",
-            "title": "Is Privileged",
+            "title": "Can Assign All Roles",
             "default": false
           },
-          "privileges": {
+          "assignable_role_ids": {
             "items": {
-              "$ref": "#/components/schemas/Privilege"
+              "type": "integer"
             },
             "type": "array",
-            "title": "Privileges"
+            "title": "Assignable Role Ids"
+          },
+          "event_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/EventPrivilege"
+            },
+            "type": "array",
+            "title": "Event Privileges"
+          },
+          "node_privileges": {
+            "items": {
+              "$ref": "#/components/schemas/NodePrivilege"
+            },
+            "type": "array",
+            "title": "Node Privileges"
           },
           "id": {
             "type": "integer",
@@ -16590,11 +16715,51 @@
         "type": "object",
         "required": [
           "name",
-          "privileges",
+          "event_privileges",
+          "node_privileges",
           "id",
           "node_id"
         ],
         "title": "UserRole"
+      },
+      "UserRoleAssignment": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
+          "role_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Role Ids"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/UserRole"
+            },
+            "type": "array",
+            "title": "Roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "node_id",
+          "node_name",
+          "role_ids",
+          "roles"
+        ],
+        "title": "UserRoleAssignment"
       },
       "UserTagAccountAssociation": {
         "properties": {
@@ -16814,11 +16979,6 @@
             },
             "type": "array",
             "title": "Role Ids"
-          },
-          "terminal_only": {
-            "type": "boolean",
-            "title": "Terminal Only",
-            "default": false
           },
           "node_id": {
             "type": "integer",

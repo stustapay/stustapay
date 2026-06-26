@@ -23,20 +23,23 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.Privilege
+import de.stustapay.api.models.EventPrivilege
+import de.stustapay.api.models.NodePrivilege
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param name 
- * @param privileges 
- * @param id 
- * @param nodeId 
- * @param isPrivileged 
+ *
+ * @param name
+ * @param eventPrivileges
+ * @param nodePrivileges
+ * @param id
+ * @param nodeId
+ * @param canAssignAllRoles
+ * @param assignableRoleIds
  */
 @Serializable
 
@@ -45,8 +48,11 @@ data class UserRole (
     @SerialName(value = "name")
     val name: kotlin.String,
 
-    @SerialName(value = "privileges")
-    val privileges: kotlin.collections.List<@Contextual Privilege>,
+    @SerialName(value = "event_privileges")
+    val eventPrivileges: kotlin.collections.List<@Contextual EventPrivilege>,
+
+    @SerialName(value = "node_privileges")
+    val nodePrivileges: kotlin.collections.List<@Contextual NodePrivilege>,
 
     @SerialName(value = "id")
     val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
@@ -54,11 +60,13 @@ data class UserRole (
     @SerialName(value = "node_id")
     val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "is_privileged")
-    val isPrivileged: kotlin.Boolean? = false
+    @SerialName(value = "can_assign_all_roles")
+    val canAssignAllRoles: kotlin.Boolean? = false,
+
+    @SerialName(value = "assignable_role_ids")
+    val assignableRoleIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>? = null
 
 ) {
 
 
 }
-

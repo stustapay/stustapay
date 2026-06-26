@@ -21,7 +21,7 @@ from stustapay.core.schema.payout import (
     PendingPayoutDetail,
 )
 from stustapay.core.schema.tree import Node
-from stustapay.core.schema.user import CurrentUser, Privilege, format_user_tag_uid
+from stustapay.core.schema.user import CurrentUser, EventPrivilege, NodePrivilege, format_user_tag_uid
 from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
@@ -172,7 +172,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def get_pending_payout_detail(self, *, conn: Connection, node: Node) -> PendingPayoutDetail:
         pending_detail = await conn.fetch_one(
             PendingPayoutDetail,
@@ -197,7 +197,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def get_payout_run_payouts(self, *, conn: Connection, node: Node, payout_run_id: int) -> list[Payout]:
         # this will error if no payout run with the given id exists for the given node
         await fetch_payout_run(conn=conn, node=node, payout_run_id=payout_run_id)
@@ -207,7 +207,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def get_payout_run_csv(self, *, conn: Connection, node: Node, payout_run_id: int) -> str:
         csv_data = await conn.fetchval(
             "select csv from payout_run where id = $1 and node_id = $2", payout_run_id, node.id
@@ -218,7 +218,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def get_payout_run_sepa_xml(
         self,
         *,
@@ -254,7 +254,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def get_previous_payout_run_sepa_xml(
         self,
         *,
@@ -274,7 +274,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def set_payout_run_as_done(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int, mail_service: MailService
     ):
@@ -353,7 +353,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management])
     async def revoke_payout_run(self, *, conn: Connection, node: Node, current_user: CurrentUser, payout_run_id: int):
         payout = await fetch_payout_run(conn=conn, node=node, payout_run_id=payout_run_id)
         if payout.done:
@@ -374,7 +374,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_payout_run(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, new_payout_run: NewPayoutRun
     ) -> PayoutRunWithStats:
@@ -477,13 +477,13 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_payout_run(self, *, conn: Connection, node: Node, payout_run_id: int) -> PayoutRunWithStats:
         return await fetch_payout_run_with_stats(conn=conn, node=node, payout_run_id=payout_run_id)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_payout_runs(self, *, conn: Connection, node: Node) -> list[PayoutRunWithStats]:
         return await conn.fetch_many(
             PayoutRunWithStats,
@@ -498,7 +498,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management, Privilege.customer_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management, EventPrivilege.customer_management])
     async def prevent_customer_payout(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, customer_id: int
     ):
@@ -526,7 +526,7 @@ class PayoutService(Service[Config]):
 
     @with_db_transaction
     @requires_node(event_only=True)
-    @requires_user([Privilege.payout_management, Privilege.customer_management])
+    @requires_user(event_privileges=[EventPrivilege.payout_management, EventPrivilege.customer_management])
     async def allow_customer_payout(self, *, conn: Connection, node: Node, current_user: CurrentUser, customer_id: int):
         customer = await fetch_customer(conn=conn, node=node, customer_id=customer_id)
         if customer.payout is not None:

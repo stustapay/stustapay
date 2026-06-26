@@ -21,6 +21,7 @@ src/main/kotlin/de/stustapay/api/infrastructure/RequestConfig.kt
 src/main/kotlin/de/stustapay/api/infrastructure/RequestMethod.kt
 src/main/kotlin/de/stustapay/api/models/Account.kt
 src/main/kotlin/de/stustapay/api/models/AccountType.kt
+src/main/kotlin/de/stustapay/api/models/AssignableUserRolesAtNode.kt
 src/main/kotlin/de/stustapay/api/models/Button.kt
 src/main/kotlin/de/stustapay/api/models/CancelOrderPayload.kt
 src/main/kotlin/de/stustapay/api/models/CashRegister.kt
@@ -34,6 +35,7 @@ src/main/kotlin/de/stustapay/api/models/CompletedTopUp.kt
 src/main/kotlin/de/stustapay/api/models/CreateUserPayload.kt
 src/main/kotlin/de/stustapay/api/models/CurrentUser.kt
 src/main/kotlin/de/stustapay/api/models/DetailedOrder.kt
+src/main/kotlin/de/stustapay/api/models/EventPrivilege.kt
 src/main/kotlin/de/stustapay/api/models/GrantVoucherPayload.kt
 src/main/kotlin/de/stustapay/api/models/HTTPValidationError.kt
 src/main/kotlin/de/stustapay/api/models/LineItem.kt
@@ -45,6 +47,7 @@ src/main/kotlin/de/stustapay/api/models/NewSale.kt
 src/main/kotlin/de/stustapay/api/models/NewTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/NewTicketScan.kt
 src/main/kotlin/de/stustapay/api/models/NewTopUp.kt
+src/main/kotlin/de/stustapay/api/models/NodePrivilege.kt
 src/main/kotlin/de/stustapay/api/models/Order.kt
 src/main/kotlin/de/stustapay/api/models/OrderType.kt
 src/main/kotlin/de/stustapay/api/models/PaymentMethod.kt
@@ -53,7 +56,6 @@ src/main/kotlin/de/stustapay/api/models/PendingPayOut.kt
 src/main/kotlin/de/stustapay/api/models/PendingSale.kt
 src/main/kotlin/de/stustapay/api/models/PendingTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/PendingTopUp.kt
-src/main/kotlin/de/stustapay/api/models/Privilege.kt
 src/main/kotlin/de/stustapay/api/models/Product.kt
 src/main/kotlin/de/stustapay/api/models/ProductRestriction.kt
 src/main/kotlin/de/stustapay/api/models/ProductType.kt
@@ -81,6 +83,7 @@ src/main/kotlin/de/stustapay/api/models/User.kt
 src/main/kotlin/de/stustapay/api/models/UserInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserInfoPayload.kt
 src/main/kotlin/de/stustapay/api/models/UserRole.kt
+src/main/kotlin/de/stustapay/api/models/UserRoleAssignmentPayload.kt
 src/main/kotlin/de/stustapay/api/models/UserRoleInfo.kt
 src/main/kotlin/de/stustapay/api/models/UserTag.kt
 src/main/kotlin/de/stustapay/api/models/UserTagHistoryEntry.kt

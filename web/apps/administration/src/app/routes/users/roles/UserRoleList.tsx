@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -11,6 +10,8 @@ import { UserRole, selectUserRoleAll, useDeleteUserRoleMutation, useListUserRole
 import { UserRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
+
+import { PrivilegeOverviewCell } from "./components/PrivilegeOverviewCell";
 
 export const UserRoleList: React.FC = () => {
   const { t } = useTranslation();
@@ -31,10 +32,6 @@ export const UserRoleList: React.FC = () => {
   );
   const [deleteUserRole] = useDeleteUserRoleMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (userRoleId: number) => {
     openModal({
@@ -61,14 +58,23 @@ export const UserRoleList: React.FC = () => {
       minWidth: 200,
     },
     {
-      field: "is_privileged",
-      headerName: t("userRole.isPrivileged"),
+      field: "can_assign_all_roles",
+      headerName: t("userRole.canAssignAllRoles"),
+      description: t("userRole.canAssignAllRolesDescription"),
       type: "boolean",
     },
     {
       field: "privileges",
-      headerName: t("userPrivileges"),
+      headerName: t("userRole.privileges"),
       flex: 1,
+      sortable: false,
+      valueGetter: (_, row) => [...row.event_privileges, ...row.node_privileges].join(", "),
+      renderCell: (params) => (
+        <PrivilegeOverviewCell
+          eventPrivileges={params.row.event_privileges}
+          nodePrivileges={params.row.node_privileges}
+        />
+      ),
     },
     dataGridNodeColumn,
   ];
@@ -102,6 +108,7 @@ export const UserRoleList: React.FC = () => {
     <ListLayout title={t("userRoles")} routes={UserRoleRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={userRoles ?? []}
         columns={columns}
         disableRowSelectionOnClick

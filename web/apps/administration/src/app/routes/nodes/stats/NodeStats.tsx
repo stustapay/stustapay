@@ -1,6 +1,6 @@
 import { Alert, AlertTitle, Divider, FormControlLabel, Grid, Stack, Switch } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers";
-import { Privilege } from "@stustapay/models";
+import { NodePrivilege } from "@stustapay/models";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 import { EventStats } from "./EventStats";
 import { NodeSpecificStats } from "./NodeSpecificStats";
 
-export const NodeStats: React.FC = withPrivilegeGuard(Privilege.node_administration, () => {
+export const NodeStats: React.FC = withPrivilegeGuard(NodePrivilege.node_administration, () => {
   const { t } = useTranslation();
   const { eventSettings } = useCurrentEventSettings();
   const { currentNode } = useCurrentNode();

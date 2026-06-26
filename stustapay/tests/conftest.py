@@ -40,10 +40,11 @@ from stustapay.core.schema.tree import (
 )
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
+    EventPrivilege,
     NewUser,
     NewUserRole,
     NewUserToRoles,
-    Privilege,
+    NodePrivilege,
     RoleToNode,
     User,
     UserRole,
@@ -74,7 +75,7 @@ def get_test_db_config() -> DatabaseConfig:
         user=os.environ.get("TEST_DB_USER", None),
         password=os.environ.get("TEST_DB_PASSWORD", None),
         host=os.environ.get("TEST_DB_HOST", None),
-        port=int(os.environ.get("TEST_DB_PORT", 0)) or None,
+        port=int(os.environ.get("TEST_DB_PORT", "0")) or None,
         dbname=os.environ.get("TEST_DB_DATABASE", "stustapay_test"),
     )
 
@@ -389,20 +390,21 @@ async def global_admin_token(user_service: UserService, global_admin_user: tuple
         token=admin_token,
         node_id=ROOT_NODE_ID,
         role_id=ADMIN_ROLE_ID,
-        is_privileged=True,
-        privileges=[
-            Privilege.user_management,
-            Privilege.payout_management,
-            Privilege.view_node_stats,
-            Privilege.allow_privileged_role_assignment,
-            Privilege.node_administration,
-            Privilege.cash_transport,
-            Privilege.customer_management,
-            Privilege.terminal_login,
-            Privilege.can_book_orders,
-            Privilege.grant_vouchers,
-            Privilege.grant_free_tickets,
-            Privilege.create_user,
+        can_assign_all_roles=True,
+        assignable_role_ids=[],
+        event_privileges=[
+            EventPrivilege.payout_management,
+            EventPrivilege.cash_transport,
+            EventPrivilege.customer_management,
+            EventPrivilege.terminal_login,
+            EventPrivilege.grant_vouchers,
+            EventPrivilege.grant_free_tickets,
+            EventPrivilege.create_user,
+        ],
+        node_privileges=[
+            NodePrivilege.node_administration,
+            NodePrivilege.view_node_stats,
+            NodePrivilege.can_book_orders,
         ],
     )
     return admin_token
@@ -485,8 +487,8 @@ async def cashier(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="cashier",
-            is_privileged=False,
-            privileges=[Privilege.can_book_orders, Privilege.supervised_terminal_login],
+            event_privileges=[EventPrivilege.supervised_terminal_login],
+            node_privileges=[NodePrivilege.can_book_orders],
         ),
     )
     cashier_user: User = await user_service.create_user_no_auth(

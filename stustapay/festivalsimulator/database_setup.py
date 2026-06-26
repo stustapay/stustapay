@@ -28,9 +28,10 @@ from stustapay.core.schema.tree import ROOT_NODE_ID, NewEvent, NewNode, Node, Ob
 from stustapay.core.schema.tse import NewTse, TseType
 from stustapay.core.schema.user import (
     ADMIN_ROLE_ID,
+    EventPrivilege,
     NewUser,
     NewUserRole,
-    Privilege,
+    NodePrivilege,
     RoleToNode,
     User,
     UserRole,
@@ -104,28 +105,30 @@ async def _create_tags_and_users(
         node_id=event_node.id,
         new_role=NewUserRole(
             name="finanzorga",
-            is_privileged=True,
-            privileges=[
-                Privilege.terminal_login,
-                Privilege.node_administration,
-                Privilege.cash_transport,
-                Privilege.grant_vouchers,
-                Privilege.user_management,
-                Privilege.grant_free_tickets,
-                Privilege.customer_management,
+            can_assign_all_roles=True,
+            event_privileges=[
+                EventPrivilege.terminal_login,
+                EventPrivilege.cash_transport,
+                EventPrivilege.grant_vouchers,
+                EventPrivilege.grant_free_tickets,
+                EventPrivilege.customer_management,
+                EventPrivilege.payout_management,
+            ],
+            node_privileges=[
+                NodePrivilege.node_administration,
+                NodePrivilege.view_node_stats,
             ],
         ),
     )
 
-    # very useful for app debugging using the simulator
     godmode: UserRole = await user_service.create_user_role(
         conn=conn,
         token=admin_token,
         node_id=event_node.id,
         new_role=NewUserRole(
             name="godmode",
-            is_privileged=False,
-            privileges=[e.value for e in Privilege],
+            event_privileges=list(EventPrivilege),
+            node_privileges=list(NodePrivilege),
         ),
     )
 
@@ -723,8 +726,8 @@ class DatabaseSetup:
             node_id=self.event_node_id,
             new_role=NewUserRole(
                 name="cashier",
-                is_privileged=False,
-                privileges=[Privilege.supervised_terminal_login, Privilege.can_book_orders],
+                event_privileges=[EventPrivilege.supervised_terminal_login],
+                node_privileges=[NodePrivilege.can_book_orders],
             ),
         )
         for i in range(n_cashiers):

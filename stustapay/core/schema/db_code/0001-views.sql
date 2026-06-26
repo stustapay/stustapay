@@ -30,12 +30,26 @@ create view cash_register_with_cashier as
 create view user_role_with_privileges as
     select
         r.*,
-        coalesce(privs.privileges, '{}'::text array) as privileges
+        coalesce(event_privs.event_privileges, '{}'::text array) as event_privileges,
+        coalesce(node_privs.node_privileges, '{}'::text array) as node_privileges,
+        coalesce(assignable.assignable_role_ids, '{}'::bigint array) as assignable_role_ids
     from
         user_role r
         left join (
-            select ur.role_id, array_agg(ur.privilege) as privileges from user_role_to_privilege ur group by ur.role_id
-        ) privs on r.id = privs.role_id;
+            select ur.role_id, array_agg(ur.privilege) as event_privileges
+            from user_role_to_event_privilege ur
+            group by ur.role_id
+        ) event_privs on r.id = event_privs.role_id
+        left join (
+            select ur.role_id, array_agg(ur.privilege) as node_privileges
+            from user_role_to_node_privilege ur
+            group by ur.role_id
+        ) node_privs on r.id = node_privs.role_id
+        left join (
+            select urtar.assigner_role_id, array_agg(urtar.assignable_role_id) as assignable_role_ids
+            from user_role_to_assignable_role urtar
+            group by urtar.assigner_role_id
+        ) assignable on r.id = assignable.assigner_role_id;
 
 create view user_with_tag as
     select
@@ -50,11 +64,10 @@ create view user_to_roles_aggregated as
     select
         utr.user_id,
         utr.node_id,
-        utr.terminal_only,
         array_agg(utr.role_id) as role_ids
     from
         user_to_role utr
-    group by utr.user_id, utr.node_id, utr.terminal_only;
+    group by utr.user_id, utr.node_id;
 
 create view account_with_history as
     select

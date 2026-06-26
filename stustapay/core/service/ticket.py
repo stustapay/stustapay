@@ -8,7 +8,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.ticket import NewTicket, Ticket
 from stustapay.core.schema.tree import Node, ObjectType
-from stustapay.core.schema.user import CurrentUser, Privilege
+from stustapay.core.schema.user import CurrentUser, NodePrivilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.audit_logs import create_audit_log
 from stustapay.core.service.common.decorators import requires_node, requires_user
@@ -32,7 +32,7 @@ class TicketService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def create_ticket(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, ticket: NewTicket
     ) -> Ticket:
@@ -88,7 +88,7 @@ class TicketService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def update_ticket(
         self, *, conn: Connection, node: Node, current_user: CurrentUser, ticket_id: int, ticket: NewTicket
     ) -> Ticket:
@@ -132,7 +132,7 @@ class TicketService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def delete_ticket(self, *, conn: Connection, node: Node, current_user: CurrentUser, ticket_id: int) -> bool:
         ticket_metadata_id = await conn.fetchval(
             "select ticket_metadata_id from product where id = $1 and node_id = any($2)",
@@ -159,13 +159,13 @@ class TicketService(Service[Config]):
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.ticket], event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def list_external_tickets(self, *, conn: Connection, node: Node) -> list[ExternalTicket]:
         return await fetch_external_tickets(conn=conn, node=node)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_presale_stats(self, *, conn: Connection, node: Node) -> PresaleStats:
         stats = await conn.fetch_one(
             PresaleStats,

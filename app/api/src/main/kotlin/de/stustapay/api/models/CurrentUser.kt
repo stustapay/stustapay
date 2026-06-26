@@ -23,7 +23,8 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.Privilege
+import de.stustapay.api.models.EventPrivilege
+import de.stustapay.api.models.NodePrivilege
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -32,18 +33,19 @@ import kotlinx.serialization.Contextual
 /**
  * Describes a logged-in user in the system
  *
- * @param nodeId 
- * @param id 
- * @param login 
- * @param displayName 
- * @param privileges 
- * @param activeRoleId 
- * @param activeRoleName 
- * @param description 
- * @param userTagId 
- * @param userTagUid 
- * @param transportAccountId 
- * @param cashRegisterId 
+ * @param nodeId
+ * @param id
+ * @param login
+ * @param displayName
+ * @param activeRoleId
+ * @param activeRoleName
+ * @param eventPrivileges
+ * @param nodePrivileges
+ * @param description
+ * @param userTagId
+ * @param userTagUid
+ * @param transportAccountId
+ * @param cashRegisterId
  */
 @Serializable
 
@@ -61,14 +63,17 @@ data class CurrentUser (
     @SerialName(value = "display_name")
     val displayName: kotlin.String,
 
-    @SerialName(value = "privileges")
-    val privileges: kotlin.collections.List<@Contextual Privilege>,
-
     @SerialName(value = "active_role_id")
     val activeRoleId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "active_role_name")
     val activeRoleName: kotlin.String? = null,
+
+    @SerialName(value = "event_privileges")
+    val eventPrivileges: kotlin.collections.List<@Contextual EventPrivilege>? = null,
+
+    @SerialName(value = "node_privileges")
+    val nodePrivileges: kotlin.collections.List<@Contextual NodePrivilege>? = null,
 
     @SerialName(value = "description")
     val description: kotlin.String? = null,
@@ -89,4 +94,3 @@ data class CurrentUser (
 
 
 }
-

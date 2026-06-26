@@ -1,6 +1,5 @@
 import { Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -28,10 +27,6 @@ export const TseList: React.FC = () => {
     }
   );
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isTsesLoading) {
-    return <Loading />;
-  }
 
   const columns: GridColDef<Tse>[] = [
     {
@@ -93,6 +88,7 @@ export const TseList: React.FC = () => {
     <ListLayout title={t("tse.tses")} routes={TseRoutes}>
       <DataGrid
         autoHeight
+        loading={isTsesLoading}
         rows={tses ?? []}
         columns={columns}
         disableRowSelectionOnClick

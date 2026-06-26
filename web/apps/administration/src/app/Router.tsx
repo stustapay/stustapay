@@ -80,14 +80,12 @@ import {
   UserCreate,
   UserDetail,
   UserList,
-  UserPageLayout,
   UserPasswordChange,
   UserRoleCreate,
   UserRoleList,
   UserRoleUpdate,
   UserUpdate,
   UserToRoleList,
-  UserToRoleCreate,
   UserRoleDetail,
   UserToRoleUpdate,
 } from "./routes/users";
@@ -476,7 +474,6 @@ const router = createBrowserRouter([
           },
           {
             path: "users",
-            element: <UserPageLayout />,
             children: [
               {
                 index: true,
@@ -488,19 +485,24 @@ const router = createBrowserRouter([
               },
               {
                 path: "roles",
-                element: <UserRoleList />,
-              },
-              {
-                path: "roles/new",
-                element: <UserRoleCreate />,
-              },
-              {
-                path: "roles/:roleId",
-                element: <UserRoleDetail />,
-              },
-              {
-                path: "roles/:roleId/edit",
-                element: <UserRoleUpdate />,
+                children: [
+                  {
+                    index: true,
+                    element: <UserRoleList />,
+                  },
+                  {
+                    path: "new",
+                    element: <UserRoleCreate />,
+                  },
+                  {
+                    path: ":roleId",
+                    element: <UserRoleDetail />,
+                  },
+                  {
+                    path: ":roleId/edit",
+                    element: <UserRoleUpdate />,
+                  },
+                ],
               },
               {
                 path: ":userId/edit",
@@ -525,7 +527,7 @@ const router = createBrowserRouter([
               },
               {
                 path: "new",
-                element: <UserToRoleCreate />,
+                element: <UserToRoleUpdate />,
               },
               {
                 path: ":userId/edit",

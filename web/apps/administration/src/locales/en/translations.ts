@@ -36,7 +36,7 @@ export const translations = {
   tillProfiles: "Till Profiles",
   registerStockings: "Cash Register Stockings",
   registers: "Cash Registers",
-  userToRoles: "User to Roles",
+  userToRoles: "Role Assignments",
   common: {
     id: "ID",
     node: "Node",
@@ -603,7 +603,6 @@ export const translations = {
   userDisplayName: "Display Name",
   userPassword: "Password",
   userDescription: "Description",
-  userPrivileges: "Privileges",
   userCreateError: "Error while creating user: {{what}}",
   userUpdateError: "Error while updating user: {{what}}",
   deleteUser: "Delete User",
@@ -617,6 +616,8 @@ export const translations = {
     description: "Description",
     tagId: "User Tag ID",
     noTagAssigned: "No Tag assigned",
+    roleAssignments: "Role Assignments",
+    noRoleAssignments: "No role assignments",
     changePassword: {
       title: "Change password",
       new_password: "New Password",
@@ -624,23 +625,80 @@ export const translations = {
     },
     cashierDetails: "Cashier Details",
   },
+  privilege: {
+    noneAssigned: "No privileges assigned",
+    types: {
+      customer_management: {
+        name: "Customer management",
+        description: "View and manage customer accounts in the administration portal and on terminals.",
+      },
+      payout_management: {
+        name: "Payout management",
+        description: "Create and manage payout runs, process customer payouts, and download SEPA exports.",
+      },
+      create_user: {
+        name: "Create users",
+        description: "Create new users in the administration portal and on terminals.",
+      },
+      cash_transport: {
+        name: "Cash transport",
+        description: "Stock up and transfer cash between cash registers on terminals.",
+      },
+      terminal_login: {
+        name: "Terminal login",
+        description: "Log in to POS terminals independently without requiring a supervisor.",
+      },
+      supervised_terminal_login: {
+        name: "Supervised terminal login",
+        description: "Log in to POS terminals when a supervisor with terminal login is already logged in.",
+      },
+      grant_free_tickets: {
+        name: "Grant free tickets",
+        description: "Grant free tickets to customer accounts from a terminal.",
+      },
+      grant_vouchers: {
+        name: "Grant vouchers",
+        description: "Grant vouchers to customer accounts from a terminal.",
+      },
+      node_administration: {
+        name: "Node administration",
+        description:
+          "Manage all configuration and data for this node and its child nodes in the administration portal.",
+      },
+      view_node_stats: {
+        name: "View node statistics",
+        description: "View sales, order, and revenue statistics for this node and its descendants.",
+      },
+      can_book_orders: {
+        name: "Book orders",
+        description: "Create and process orders on terminals. Available order types depend on the till profile.",
+      },
+    },
+  },
   userRole: {
     name: "Name",
     create: "Create new user role",
     update: "Update user role",
-    isPrivileged: "Is privileged",
+    canAssignAllRoles: "Assign all roles",
+    canAssignAllRolesDescription:
+      "Users with this role can assign any role visible at the target node. Explicit assignable roles are ignored.",
+    assignableRoles: "Assignable roles",
     createError: "Error while creating user role: {{what}}",
     updateError: "Error while updating user role: {{what}}",
     privileges: "Privileges",
+    eventPrivileges: "Event privileges",
+    nodePrivileges: "Node privileges",
     delete: "Delete user role",
     deleteDescription: "Confirm user role deletion",
   },
   userToRole: {
     user: "User",
     role: "Role",
+    terminalOnly: "Terminal only",
     create: "Associate a user to a role for node {{node}}",
-    deleteAssociation: "Remove Role association",
-    deleteAssociationDescription: "Remove association",
+    deleteAssociation: "Remove role association",
+    deleteAssociationDescription:
+      'Remove all role assignments for user "{{userName}}" at node "{{nodeName}}"? The following roles will be removed: {{roles}}.',
   },
   tse: {
     tses: "TSE",

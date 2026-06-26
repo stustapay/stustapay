@@ -50,7 +50,7 @@ const initialValues: PasswordChange = {
   new_password_confirm: "",
 };
 
-export const UserPasswordChange: React.FC = withPrivilegeGuard("user_management", () => {
+export const UserPasswordChange: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const { userId } = useParams();

@@ -8,12 +8,14 @@ from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
+    EventPrivilege,
     NewUser,
     NewUserRole,
     NewUserToRoles,
-    Privilege,
+    NodePrivilege,
     User,
     UserRole,
+    UserRoleAssignment,
     UserToRoles,
 )
 
@@ -32,7 +34,7 @@ async def list_users(
     token: CurrentAuthToken,
     user_service: ContextUserService,
     node_id: int,
-    filter_privilege: Privilege | None = None,
+    filter_privilege: EventPrivilege | NodePrivilege | None = None,
 ):
     return normalize_list(
         await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
@@ -88,6 +90,13 @@ async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextU
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return user
+
+
+@user_router.get("/{user_id}/role-assignments", response_model=list[UserRoleAssignment])
+async def list_user_role_assignments(
+    user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: int
+):
+    return await user_service.list_role_assignments_for_user(token=token, user_id=user_id, node_id=node_id)
 
 
 @user_router.post("/{user_id}", response_model=User)
@@ -165,8 +174,10 @@ async def create_user_role(
 
 
 class UpdateUserRolePrivilegesPayload(BaseModel):
-    is_privileged: bool
-    privileges: list[Privilege]
+    can_assign_all_roles: bool
+    assignable_role_ids: list[int]
+    event_privileges: list[EventPrivilege]
+    node_privileges: list[NodePrivilege]
 
 
 @user_role_router.post("/{user_role_id}", response_model=UserRole)
@@ -180,8 +191,10 @@ async def update_user_role(
     role = await user_service.update_user_role_privileges(
         token=token,
         role_id=user_role_id,
-        is_privileged=updated_role.is_privileged,
-        privileges=updated_role.privileges,
+        can_assign_all_roles=updated_role.can_assign_all_roles,
+        assignable_role_ids=updated_role.assignable_role_ids,
+        event_privileges=updated_role.event_privileges,
+        node_privileges=updated_role.node_privileges,
         node_id=node_id,
     )
     if role is None:

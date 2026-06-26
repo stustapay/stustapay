@@ -9,7 +9,7 @@ from sftkit.service import Service, with_db_transaction
 from stustapay.core.config import Config
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, PublicEventSettings
-from stustapay.core.schema.user import Privilege
+from stustapay.core.schema.user import NodePrivilege
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import (
     requires_node,
@@ -290,7 +290,7 @@ class OrderStatsService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_entry_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> TimeseriesStats:
         if node.event is None:
             raise InvalidArgument("Entry stats can only be computed for event nodes")
@@ -309,7 +309,7 @@ class OrderStatsService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_top_up_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> TimeseriesStats:
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
@@ -328,7 +328,7 @@ class OrderStatsService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_pay_out_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> TimeseriesStats:
         if node.event is None:
             raise InvalidArgument("Top up stats can only be computed for event nodes")
@@ -347,7 +347,7 @@ class OrderStatsService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_voucher_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> VoucherStats:
         if node.event is None:
             raise InvalidArgument("voucher stats can only be computed for event nodes")
@@ -374,7 +374,7 @@ class OrderStatsService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node()
-    @requires_user([Privilege.node_administration, Privilege.view_node_stats])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_product_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> ProductStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)
@@ -420,7 +420,7 @@ class OrderStatsService(Service[Config]):
         )
 
     @with_db_transaction(read_only=True)
-    @requires_terminal(user_privileges=[Privilege.view_node_stats])
+    @requires_terminal(node_privileges=[NodePrivilege.view_node_stats])
     async def get_revenue_stats(self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery) -> RevenueStats:
         event = await fetch_event_for_node(conn=conn, node=node)
         from_time, to_time = get_event_time_bounds(query, event)

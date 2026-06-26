@@ -1,5 +1,4 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
@@ -29,10 +28,6 @@ export const TaxRateList: React.FC = () => {
   );
   const [deleteTaxRate] = useDeleteTaxRateMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (taxRateId: number) => {
     openModal({
@@ -96,6 +91,7 @@ export const TaxRateList: React.FC = () => {
     <ListLayout title={t("taxRates")} routes={TaxRateRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         getRowId={(row) => row.name}
         rows={taxRates ?? []}
         columns={columns}

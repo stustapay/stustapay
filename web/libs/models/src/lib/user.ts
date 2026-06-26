@@ -1,36 +1,32 @@
 import { z } from "zod";
 
-export const PrivilegeSchema = z.enum([
-  "node_administration",
+export const EventPrivilegeSchema = z.enum([
   "customer_management",
   "payout_management",
-
   "create_user",
-  "user_management",
-  "allow_privileged_role_assignment",
-
-  "view_node_stats",
-
-  // festival workflow privileges
   "cash_transport",
   "terminal_login",
   "supervised_terminal_login",
-
-  // festival order / ticket / voucher flow privileges
-  // which orders are available (sale, ticket, ...) is determined by the terminal profile
-  "can_book_orders",
   "grant_free_tickets",
   "grant_vouchers",
 ]);
 
-export const Privilege = PrivilegeSchema.enum;
+export const NodePrivilegeSchema = z.enum(["node_administration", "view_node_stats", "can_book_orders"]);
 
-export type Privilege = z.infer<typeof PrivilegeSchema>;
+export const PrivilegeSchema = z.union([EventPrivilegeSchema, NodePrivilegeSchema]);
+
+export const EventPrivilege = EventPrivilegeSchema.enum;
+export const NodePrivilege = NodePrivilegeSchema.enum;
+
+export type EventPrivilege = z.infer<typeof EventPrivilegeSchema>;
+export type NodePrivilege = z.infer<typeof NodePrivilegeSchema>;
 
 export const NewUserRoleSchema = z.object({
   name: z.string(),
-  is_privileged: z.boolean(),
-  privileges: z.array(PrivilegeSchema),
+  can_assign_all_roles: z.boolean(),
+  assignable_role_ids: z.array(z.number().int()),
+  event_privileges: z.array(EventPrivilegeSchema),
+  node_privileges: z.array(NodePrivilegeSchema),
 });
 
 export type NewUserRole = z.infer<typeof NewUserRoleSchema>;
@@ -85,7 +81,8 @@ export const CurrentUserSchema = z.object({
   cashier_account_id: z.number().optional().nullable(),
   active_role_id: z.number().optional(),
   active_role_name: z.string().optional(),
-  privileges: z.array(PrivilegeSchema),
+  event_privileges: z.array(EventPrivilegeSchema),
+  node_privileges: z.array(NodePrivilegeSchema),
 });
 
 export type CurrentUser = z.infer<typeof CurrentUserSchema>;

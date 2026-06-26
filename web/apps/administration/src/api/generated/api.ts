@@ -136,6 +136,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      listUserRoleAssignments: build.query<ListUserRoleAssignmentsApiResponse, ListUserRoleAssignmentsApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/role-assignments`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["users"],
+      }),
       changeUserPassword: build.mutation<ChangeUserPasswordApiResponse, ChangeUserPasswordApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}/change-password`,
@@ -1482,7 +1491,7 @@ export type DeleteProductApiArg = {
 export type ListUsersApiResponse = /** status 200 Successful Response */ NormalizedListUserInt;
 export type ListUsersApiArg = {
   nodeId: number;
-  filterPrivilege?: Privilege | null;
+  filterPrivilege?: EventPrivilege | NodePrivilege | null;
 };
 export type CreateUserApiResponse = /** status 200 Successful Response */ UserRead;
 export type CreateUserApiArg = {
@@ -1502,6 +1511,11 @@ export type UpdateUserApiArg = {
 };
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any;
 export type DeleteUserApiArg = {
+  userId: number;
+  nodeId: number;
+};
+export type ListUserRoleAssignmentsApiResponse = /** status 200 Successful Response */ UserRoleAssignment[];
+export type ListUserRoleAssignmentsApiArg = {
   userId: number;
   nodeId: number;
 };
@@ -2279,20 +2293,16 @@ export type NormalizedListUserInt = {
     [key: string]: User;
   };
 };
-export type Privilege =
-  | "node_administration"
+export type EventPrivilege =
   | "customer_management"
   | "payout_management"
   | "create_user"
-  | "allow_privileged_role_assignment"
-  | "user_management"
-  | "view_node_stats"
   | "cash_transport"
   | "terminal_login"
   | "supervised_terminal_login"
-  | "can_book_orders"
   | "grant_free_tickets"
   | "grant_vouchers";
+export type NodePrivilege = "node_administration" | "view_node_stats" | "can_book_orders";
 export type CreateUserPayload = {
   login: string;
   display_name: string;
@@ -2308,15 +2318,24 @@ export type UpdateUserPayload = {
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
 };
-export type ChangeUserPasswordPayload = {
-  new_password: string;
-};
 export type UserRole = {
   name: string;
-  is_privileged?: boolean;
-  privileges: Privilege[];
+  can_assign_all_roles?: boolean;
+  assignable_role_ids?: number[];
+  event_privileges: EventPrivilege[];
+  node_privileges: NodePrivilege[];
   id: number;
   node_id: number;
+};
+export type UserRoleAssignment = {
+  user_id: number;
+  node_id: number;
+  node_name: string;
+  role_ids: number[];
+  roles: UserRole[];
+};
+export type ChangeUserPasswordPayload = {
+  new_password: string;
 };
 export type NormalizedListUserRoleInt = {
   ids: number[];
@@ -2326,23 +2345,25 @@ export type NormalizedListUserRoleInt = {
 };
 export type NewUserRole = {
   name: string;
-  is_privileged?: boolean;
-  privileges: Privilege[];
+  can_assign_all_roles?: boolean;
+  assignable_role_ids?: number[];
+  event_privileges: EventPrivilege[];
+  node_privileges: NodePrivilege[];
 };
 export type UpdateUserRolePrivilegesPayload = {
-  is_privileged: boolean;
-  privileges: Privilege[];
+  can_assign_all_roles: boolean;
+  assignable_role_ids: number[];
+  event_privileges: EventPrivilege[];
+  node_privileges: NodePrivilege[];
 };
 export type UserToRoles = {
   user_id: number;
   role_ids: number[];
-  terminal_only?: boolean;
   node_id: number;
 };
 export type NewUserToRoles = {
   user_id: number;
   role_ids: number[];
-  terminal_only?: boolean;
 };
 export type TaxRate = {
   name: string;
@@ -2369,7 +2390,8 @@ export type CurrentUser = {
   display_name: string;
   active_role_id?: number | null;
   active_role_name?: string | null;
-  privileges: Privilege[];
+  event_privileges?: EventPrivilege[];
+  node_privileges?: NodePrivilege[];
   description?: string | null;
   user_tag_id?: number | null;
   user_tag_uid?: number | null;
@@ -3312,7 +3334,8 @@ export type NodeSeenByUser = {
   forbidden_objects_in_subtree: ObjectType[];
   computed_forbidden_objects_in_subtree: ObjectType[];
   children: NodeSeenByUser[];
-  privileges_at_node: Privilege[];
+  event_privileges_at_node: EventPrivilege[];
+  node_privileges_at_node: NodePrivilege[];
 };
 export type Node = {
   id: number;
@@ -3718,6 +3741,8 @@ export const {
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useListUserRoleAssignmentsQuery,
+  useLazyListUserRoleAssignmentsQuery,
   useChangeUserPasswordMutation,
   useListUserRolesQuery,
   useLazyListUserRolesQuery,

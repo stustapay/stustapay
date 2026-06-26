@@ -1,6 +1,5 @@
 import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
@@ -43,10 +42,6 @@ export const CashRegisterList: React.FC = () => {
     }
   );
   const [deleteRegister] = useDeleteRegisterMutation();
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   const openConfirmDeleteDialog = (registerId: number) => {
     openModal({
@@ -161,6 +156,7 @@ export const CashRegisterList: React.FC = () => {
     <ListLayout title={t("register.registers")} routes={CashRegistersRoutes}>
       <DataGrid
         autoHeight
+        loading={isLoading}
         rows={registers ?? []}
         columns={columns}
         disableRowSelectionOnClick
