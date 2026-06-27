@@ -8,6 +8,9 @@ tmp
 # dependencies
 node_modules
 
+# playwright tests
+playwright-report/
+
 # IDEs and editors
 /.idea
 .project

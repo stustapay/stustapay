@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "web/**"
+      - "tools/e2e/**"
+      - "etc/config.e2e.yaml"
 
 jobs:
   lint:
@@ -59,3 +61,49 @@ jobs:
       - name: Build
         run: npx nx run-many --target=test
         working-directory: ./web
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: stustapay_test
+          POSTGRES_PASSWORD: stustapay_test
+          POSTGRES_DB: stustapay_test
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install Python project
+        run: uv sync --locked --all-extras --dev
+      - name: Set up Nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: ./web
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: ./web
+      - name: Run customerportal e2e tests
+        run: npx nx e2e customerportal-e2e
+        working-directory: ./web
+        env:
+          CI: true
