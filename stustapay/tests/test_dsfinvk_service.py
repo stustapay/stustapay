@@ -1,4 +1,4 @@
-# pylint: disable=unexpected-keyword-arg,missing-kwoa
+# pylint: disable=unexpected-keyword-arg,missing-kwoa,redefined-outer-name
 
 import zipfile
 from datetime import date

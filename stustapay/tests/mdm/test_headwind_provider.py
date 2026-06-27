@@ -25,7 +25,7 @@ def test_parse_location_log():
 @pytest.mark.asyncio
 async def test_get_device_location_fetches_latest_log():
     api = HeadwindApi(url="https://example.com", username="user", password="pass")
-    api.search_device_logs = AsyncMock(
+    api.search_device_logs = AsyncMock(  # type: ignore
         return_value=(
             [
                 HeadwindDeviceLog.model_validate(
@@ -49,7 +49,7 @@ async def test_get_device_location_fetches_latest_log():
 @pytest.mark.asyncio
 async def test_get_device_location_raises_when_no_log_found():
     api = HeadwindApi(url="https://example.com", username="user", password="pass")
-    api.search_device_logs = AsyncMock(return_value=([], 0))
+    api.search_device_logs = AsyncMock(return_value=([], 0))  # type: ignore
 
     with pytest.raises(HeadwindError, match="No network location update found"):
         await api.get_device_location("device-1")
