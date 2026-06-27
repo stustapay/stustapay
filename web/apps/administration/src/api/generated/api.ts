@@ -1348,6 +1348,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
+      switchCustomerTag: build.mutation<SwitchCustomerTagApiResponse, SwitchCustomerTagApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/switch-tag`,
+          method: "POST",
+          body: queryArg.switchCustomerTagPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
       listTerminals: build.query<ListTerminalsApiResponse, ListTerminalsApiArg>({
         query: (queryArg) => ({
           url: `/terminal`,
@@ -2197,6 +2208,11 @@ export type AllowCustomerPayoutApiResponse = /** status 200 Successful Response 
 export type AllowCustomerPayoutApiArg = {
   customerId: number;
   nodeId: number;
+};
+export type SwitchCustomerTagApiResponse = /** status 200 Successful Response */ any;
+export type SwitchCustomerTagApiArg = {
+  nodeId: number;
+  switchCustomerTagPayload: SwitchCustomerTagPayload;
 };
 export type ListTerminalsApiResponse = /** status 200 Successful Response */ NormalizedListTerminalInt;
 export type ListTerminalsApiArg = {
@@ -3731,6 +3747,11 @@ export type CustomerRead = {
 export type FindCustomerPayload = {
   search_term: string;
 };
+export type SwitchCustomerTagPayload = {
+  old_user_tag_pin: string;
+  new_user_tag_pin: string;
+  comment: string;
+};
 export type Terminal = {
   name: string;
   description?: string | null;
@@ -4006,6 +4027,7 @@ export const {
   useLazyGetCustomersWithBlockedPayoutQuery,
   usePreventCustomerPayoutMutation,
   useAllowCustomerPayoutMutation,
+  useSwitchCustomerTagMutation,
   useListTerminalsQuery,
   useLazyListTerminalsQuery,
   useCreateTerminalMutation,

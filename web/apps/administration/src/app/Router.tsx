@@ -7,7 +7,13 @@ import { NodeProvider } from "./provider";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
-import { CustomerDetail, CustomersWithBlockedPayout, CustomerPageLayout, CustomerSearch } from "./routes/customers";
+import {
+  CustomerDetail,
+  CustomerTagSwap,
+  CustomersWithBlockedPayout,
+  CustomerPageLayout,
+  CustomerSearch,
+} from "./routes/customers";
 import {
   EventCreate,
   NodeOverview,
@@ -205,6 +211,10 @@ const router = createBrowserRouter([
               {
                 path: "blocked-payout",
                 element: <CustomersWithBlockedPayout />,
+              },
+              {
+                path: "swap-tag",
+                element: <CustomerTagSwap />,
               },
               {
                 path: ":customerId",

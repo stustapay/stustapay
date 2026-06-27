@@ -8383,6 +8383,64 @@
         }
       }
     },
+    "/customers/switch-tag": {
+      "post": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Switch Customer Tag",
+        "operationId": "switch_customer_tag",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchCustomerTagPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/terminal": {
       "get": {
         "tags": [
@@ -15338,6 +15396,29 @@
           "REFUNDED"
         ],
         "title": "SumUpTransactionStatus"
+      },
+      "SwitchCustomerTagPayload": {
+        "properties": {
+          "old_user_tag_pin": {
+            "type": "string",
+            "title": "Old User Tag Pin"
+          },
+          "new_user_tag_pin": {
+            "type": "string",
+            "title": "New User Tag Pin"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_user_tag_pin",
+          "new_user_tag_pin",
+          "comment"
+        ],
+        "title": "SwitchCustomerTagPayload"
       },
       "SwitchTerminalPayload": {
         "properties": {

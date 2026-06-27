@@ -241,6 +241,9 @@ export const api = generatedApi.enhanceEndpoints({
       }),
       invalidatesTags: [],
     },
+    switchCustomerTag: {
+      invalidatesTags: ["accounts", "user_tags"],
+    },
   },
 });
 
