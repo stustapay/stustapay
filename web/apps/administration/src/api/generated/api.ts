@@ -872,6 +872,28 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
+      getPaymentMethodStats: build.query<GetPaymentMethodStatsApiResponse, GetPaymentMethodStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/payment-methods`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getFreeTicketStats: build.query<GetFreeTicketStatsApiResponse, GetFreeTicketStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/free-tickets`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
         query: (queryArg) => ({
           url: `/tickets`,
@@ -1936,6 +1958,18 @@ export type GetTopUpStatsApiArg = {
 };
 export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetPayOutStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodStatsResponse;
+export type GetPaymentMethodStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetFreeTicketStatsApiResponse = /** status 200 Successful Response */ FreeTicketStats;
+export type GetFreeTicketStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
@@ -3091,11 +3125,15 @@ export type StatInterval = {
 export type ProductTimeseries = {
   product_id: number;
   product_name: string;
+  node_id: number;
+  node_name: string;
   intervals: StatInterval[];
 };
 export type ProductOverallStats = {
   product_id: number;
   product_name: string;
+  node_id: number;
+  node_name: string;
   count: number;
   revenue: number;
 };
@@ -3118,6 +3156,19 @@ export type TimeseriesStats = {
   to_time: string;
   daily_intervals: StatInterval[];
   hourly_intervals: StatInterval[];
+};
+export type PaymentMethodStats = {
+  payment_method: PaymentMethod;
+  count: number;
+  revenue: number;
+};
+export type PaymentMethodStatsResponse = {
+  from_time: string;
+  to_time: string;
+  stats: PaymentMethodStats[];
+};
+export type FreeTicketStats = {
+  free_tickets_issued: number;
 };
 export type Ticket = {
   name: string;
@@ -3949,6 +4000,10 @@ export const {
   useLazyGetTopUpStatsQuery,
   useGetPayOutStatsQuery,
   useLazyGetPayOutStatsQuery,
+  useGetPaymentMethodStatsQuery,
+  useLazyGetPaymentMethodStatsQuery,
+  useGetFreeTicketStatsQuery,
+  useLazyGetFreeTicketStatsQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

@@ -7,6 +7,7 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
+from stustapay.core.schema.order import PaymentMethod
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, PublicEventSettings
 from stustapay.core.schema.user import NodePrivilege
@@ -28,6 +29,22 @@ class ProductSoldStats(Product):
 class VoucherStats(BaseModel):
     vouchers_issued: int
     vouchers_spent: int
+
+
+class FreeTicketStats(BaseModel):
+    free_tickets_issued: int
+
+
+class PaymentMethodStats(BaseModel):
+    payment_method: PaymentMethod
+    count: int
+    revenue: float
+
+
+class PaymentMethodStatsResponse(BaseModel):
+    from_time: datetime
+    to_time: datetime
+    stats: list[PaymentMethodStats]
 
 
 class OverviewStats(BaseModel):
@@ -62,12 +79,16 @@ class TimeseriesStatsQuery(BaseModel):
 class ProductTimeseries(BaseModel):
     product_id: int
     product_name: str
+    node_id: int
+    node_name: str
     intervals: list[StatInterval]
 
 
 class ProductOverallStats(BaseModel):
     product_id: int
     product_name: str
+    node_id: int
+    node_name: str
     count: int
     revenue: float
 
@@ -209,7 +230,7 @@ async def get_hourly_product_stats(
     *, conn: Connection, node: Node, from_time: datetime, to_time: datetime, returnable=False
 ) -> list[ProductTimeseries]:
     result = await conn.fetch(
-        "select s.*, prod.name as product_name "
+        "select s.*, prod.name as product_name, nod.id as node_id, nod.name as node_name "
         "from (select "
         "   p.id as product_id, "
         "   date_trunc('hour', o.booked_at) as from_time, "
@@ -236,15 +257,44 @@ async def get_hourly_product_stats(
     )
     product_timeseries_map: dict[int, list[StatInterval]] = {}
     product_names: dict[int, str] = {}
+    product_nodes: dict[int, tuple[int, str]] = {}
     for row in result:
         product_timeseries_map.setdefault(row["product_id"], []).append(
             StatInterval(from_time=row["from_time"], to_time=row["to_time"], count=row["count"], revenue=row["revenue"])
         )
         product_names[row["product_id"]] = row["product_name"]
+        product_nodes[row["product_id"]] = (row["node_id"], row["node_name"])
     return [
-        ProductTimeseries(product_id=p_id, intervals=intervals, product_name=product_names[p_id])
+        ProductTimeseries(
+            product_id=p_id,
+            intervals=intervals,
+            product_name=product_names[p_id],
+            node_id=product_nodes[p_id][0],
+            node_name=product_nodes[p_id][1],
+        )
         for p_id, intervals in product_timeseries_map.items()
     ]
+
+
+async def fetch_payment_method_stats(
+    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+) -> list[PaymentMethodStats]:
+    return await conn.fetch_many(
+        PaymentMethodStats,
+        "select "
+        "   o.payment_method as payment_method, "
+        "   count(distinct o.id) as count, "
+        "   round(coalesce(sum(li.total_price), 0), 2) as revenue "
+        "from orders_at_node_and_children($3) o "
+        "join line_item li on o.id = li.order_id "
+        "where o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and o.order_type in ('sale', 'cancel_sale', 'top_up', 'pay_out', 'ticket') "
+        "group by o.payment_method "
+        "order by revenue desc",
+        from_time,
+        to_time,
+        node.id,
+    )
 
 
 async def get_daily_stats(*, hourly_stats: Timeseries, event: PublicEventSettings) -> Timeseries:
@@ -391,7 +441,12 @@ class OrderStatsService(Service[Config]):
         product_overall_stats = []
         for hourly_product in hourly_product_stats:
             s = ProductOverallStats(
-                product_id=hourly_product.product_id, count=0, revenue=0, product_name=hourly_product.product_name
+                product_id=hourly_product.product_id,
+                count=0,
+                revenue=0,
+                product_name=hourly_product.product_name,
+                node_id=hourly_product.node_id,
+                node_name=hourly_product.node_name,
             )
             for interval in hourly_product.intervals:
                 s.count += interval.count  # pylint: disable=no-member
@@ -401,7 +456,12 @@ class OrderStatsService(Service[Config]):
         deposit_overall_stats = []
         for hourly_deposit in hourly_deposit_stats:
             s = ProductOverallStats(
-                product_id=hourly_deposit.product_id, count=0, revenue=0, product_name=hourly_deposit.product_name
+                product_id=hourly_deposit.product_id,
+                count=0,
+                revenue=0,
+                product_name=hourly_deposit.product_name,
+                node_id=hourly_deposit.node_id,
+                node_name=hourly_deposit.node_name,
             )
             for interval in hourly_deposit.intervals:
                 s.count += interval.count  # pylint: disable=no-member
@@ -418,6 +478,39 @@ class OrderStatsService(Service[Config]):
             deposit_hourly_intervals=hourly_deposit_stats,
             deposit_overall_stats=deposit_overall_stats,
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
+    async def get_payment_method_stats(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> PaymentMethodStatsResponse:
+        if node.event is None:
+            raise InvalidArgument("Payment method stats can only be computed for event nodes")
+
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = get_event_time_bounds(query, event)
+        stats = await fetch_payment_method_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
+        return PaymentMethodStatsResponse(from_time=from_time, to_time=to_time, stats=stats)
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True)
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
+    async def get_free_ticket_stats(
+        self, *, conn: Connection, node: Node, query: TimeseriesStatsQuery
+    ) -> FreeTicketStats:
+        if node.event is None:
+            raise InvalidArgument("Free ticket stats can only be computed for event nodes")
+
+        event = await fetch_event_for_node(conn=conn, node=node)
+        from_time, to_time = get_event_time_bounds(query, event)
+        free_tickets_issued = await conn.fetchval(
+            "select count(*) from free_ticket_grant where event_node_id = $1 and granted_at >= $2 and granted_at <= $3",
+            node.event_node_id,
+            from_time,
+            to_time,
+        )
+        return FreeTicketStats(free_tickets_issued=free_tickets_issued or 0)
 
     @with_db_transaction(read_only=True)
     @requires_terminal(node_privileges=[NodePrivilege.view_node_stats])

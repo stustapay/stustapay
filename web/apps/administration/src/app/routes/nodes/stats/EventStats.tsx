@@ -1,12 +1,14 @@
-import { Card, CardContent, Grid, Skeleton, Typography } from "@mui/material";
+import { Grid, Skeleton } from "@mui/material";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 import { useGetEntryStatsQuery, useGetPayOutStatsQuery, useGetTopUpStatsQuery } from "@/api";
-import { DailyStatsTable, HourlyGraph } from "@/components";
+import { CollapsibleStatsPanel, DailyStatsTable, HourlyGraph } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
-import { VoucherStatsCard } from "../event-overview/VoucherStatsCard";
+import { PaymentMethodStatsCard } from "./PaymentMethodStatsCard";
+import { VoucherStatsCard } from "./VoucherStatsCard";
 
 const EntryStats: React.FC<{
   nodeId: number;
@@ -15,41 +17,39 @@ const EntryStats: React.FC<{
   dailyEndTime: string;
   groupByDay: boolean;
   useRevenue: boolean;
-}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue }) => {
-  const { data } = useGetEntryStatsQuery({
-    nodeId: nodeId,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-  });
+  pollingInterval: number;
+}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue, pollingInterval }) => {
+  const { data } = useGetEntryStatsQuery(
+    {
+      nodeId: nodeId,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+    },
+    { pollingInterval }
+  );
 
   if (!data) {
     return (
-      <>
-        <Typography variant="h5">Entry Stats</Typography>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
+          <Skeleton variant="rounded" height={300} />
         </Grid>
-      </>
+        <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
+          <Skeleton variant="rounded" height={300} />
+        </Grid>
+      </Grid>
     );
   }
 
   return (
-    <>
-      <Typography variant="h5">Entry Stats</Typography>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
-          <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
-          <DailyStatsTable data={data} useRevenue={useRevenue} />
-        </Grid>
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
+        <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
       </Grid>
-    </>
+      <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
+        <DailyStatsTable data={data} useRevenue={useRevenue} />
+      </Grid>
+    </Grid>
   );
 };
 
@@ -57,44 +57,42 @@ const TopUpStats: React.FC<{
   nodeId: number;
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
-  groupByDay: boolean;
   dailyEndTime: string;
+  groupByDay: boolean;
   useRevenue: boolean;
-}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue }) => {
-  const { data } = useGetTopUpStatsQuery({
-    nodeId: nodeId,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-  });
+  pollingInterval: number;
+}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue, pollingInterval }) => {
+  const { data } = useGetTopUpStatsQuery(
+    {
+      nodeId: nodeId,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+    },
+    { pollingInterval }
+  );
 
   if (!data) {
     return (
-      <>
-        <Typography variant="h5">Top Up Stats</Typography>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
+          <Skeleton variant="rounded" height={300} />
         </Grid>
-      </>
+        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
+          <Skeleton variant="rounded" height={300} />
+        </Grid>
+      </Grid>
     );
   }
 
   return (
-    <>
-      <Typography variant="h5">Top Up Stats</Typography>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
-          <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
-          <DailyStatsTable data={data} useRevenue={useRevenue} />
-        </Grid>
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
+        <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
       </Grid>
-    </>
+      <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
+        <DailyStatsTable data={data} useRevenue={useRevenue} />
+      </Grid>
+    </Grid>
   );
 };
 
@@ -102,44 +100,42 @@ const PayOutStats: React.FC<{
   nodeId: number;
   fromTimestamp?: DateTime;
   toTimestamp?: DateTime;
-  groupByDay: boolean;
   dailyEndTime: string;
+  groupByDay: boolean;
   useRevenue: boolean;
-}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue }) => {
-  const { data } = useGetPayOutStatsQuery({
-    nodeId: nodeId,
-    fromTimestamp: fromTimestamp?.toISO() ?? undefined,
-    toTimestamp: toTimestamp?.toISO() ?? undefined,
-  });
+  pollingInterval: number;
+}> = ({ nodeId, fromTimestamp, toTimestamp, groupByDay, dailyEndTime, useRevenue, pollingInterval }) => {
+  const { data } = useGetPayOutStatsQuery(
+    {
+      nodeId: nodeId,
+      fromTimestamp: fromTimestamp?.toISO() ?? undefined,
+      toTimestamp: toTimestamp?.toISO() ?? undefined,
+    },
+    { pollingInterval }
+  );
 
   if (!data) {
     return (
-      <>
-        <Typography variant="h5">Pay out Stats</Typography>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
+          <Skeleton variant="rounded" height={300} />
         </Grid>
-      </>
+        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
+          <Skeleton variant="rounded" height={300} />
+        </Grid>
+      </Grid>
     );
   }
 
   return (
-    <>
-      <Typography variant="h5">Pay Out Stats</Typography>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
-          <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
-          <DailyStatsTable data={data} useRevenue={useRevenue} />
-        </Grid>
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
+        <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
       </Grid>
-    </>
+      <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
+        <DailyStatsTable data={data} useRevenue={useRevenue} />
+      </Grid>
+    </Grid>
   );
 };
 
@@ -149,6 +145,7 @@ export type EventStatsProps = {
   dailyEndTime: string;
   groupByDay: boolean;
   useRevenue: boolean;
+  pollingInterval: number;
 };
 
 export const EventStats: React.FC<EventStatsProps> = ({
@@ -157,58 +154,68 @@ export const EventStats: React.FC<EventStatsProps> = ({
   toTimestamp,
   groupByDay,
   useRevenue,
+  pollingInterval,
 }) => {
+  const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
+  const isoFromTimestamp = fromTimestamp?.toISO() ?? undefined;
+  const isoToTimestamp = toTimestamp?.toISO() ?? undefined;
 
   return (
     <>
-      <Grid size={{ xs: 4 }}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <VoucherStatsCard
-          fromTimestamp={fromTimestamp?.toISO() ?? undefined}
-          toTimestamp={toTimestamp?.toISO() ?? undefined}
+          fromTimestamp={isoFromTimestamp}
+          toTimestamp={isoToTimestamp}
+          pollingInterval={pollingInterval}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 4 }}>
+        <PaymentMethodStatsCard
+          fromTimestamp={fromTimestamp}
+          toTimestamp={toTimestamp}
+          useRevenue={useRevenue}
+          pollingInterval={pollingInterval}
         />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <Card>
-          <CardContent>
-            <EntryStats
-              nodeId={currentNode.id}
-              dailyEndTime={dailyEndTime}
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              groupByDay={groupByDay}
-              useRevenue={useRevenue}
-            />
-          </CardContent>
-        </Card>
+        <CollapsibleStatsPanel title={t("overview.entryStats")}>
+          <EntryStats
+            nodeId={currentNode.id}
+            dailyEndTime={dailyEndTime}
+            fromTimestamp={fromTimestamp}
+            toTimestamp={toTimestamp}
+            groupByDay={groupByDay}
+            useRevenue={useRevenue}
+            pollingInterval={pollingInterval}
+          />
+        </CollapsibleStatsPanel>
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <Card>
-          <CardContent>
-            <TopUpStats
-              nodeId={currentNode.id}
-              dailyEndTime={dailyEndTime}
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              groupByDay={groupByDay}
-              useRevenue={useRevenue}
-            />
-          </CardContent>
-        </Card>
+        <CollapsibleStatsPanel title={t("overview.topUpStats")}>
+          <TopUpStats
+            nodeId={currentNode.id}
+            dailyEndTime={dailyEndTime}
+            fromTimestamp={fromTimestamp}
+            toTimestamp={toTimestamp}
+            groupByDay={groupByDay}
+            useRevenue={useRevenue}
+            pollingInterval={pollingInterval}
+          />
+        </CollapsibleStatsPanel>
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <Card>
-          <CardContent>
-            <PayOutStats
-              nodeId={currentNode.id}
-              dailyEndTime={dailyEndTime}
-              fromTimestamp={fromTimestamp}
-              toTimestamp={toTimestamp}
-              groupByDay={groupByDay}
-              useRevenue={useRevenue}
-            />
-          </CardContent>
-        </Card>
+        <CollapsibleStatsPanel title={t("overview.payOutStats")}>
+          <PayOutStats
+            nodeId={currentNode.id}
+            dailyEndTime={dailyEndTime}
+            fromTimestamp={fromTimestamp}
+            toTimestamp={toTimestamp}
+            groupByDay={groupByDay}
+            useRevenue={useRevenue}
+            pollingInterval={pollingInterval}
+          />
+        </CollapsibleStatsPanel>
       </Grid>
     </>
   );

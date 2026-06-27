@@ -5128,6 +5128,174 @@
         }
       }
     },
+    "/stats/payment-methods": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Payment Method Stats",
+        "operationId": "get_payment_method_stats",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodStatsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/free-tickets": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Free Ticket Stats",
+        "operationId": "get_free_ticket_stats",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FreeTicketStats"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tickets": {
       "get": {
         "tags": [
@@ -10946,6 +11114,19 @@
         ],
         "title": "FindUserTagPayload"
       },
+      "FreeTicketStats": {
+        "properties": {
+          "free_tickets_issued": {
+            "type": "integer",
+            "title": "Free Tickets Issued"
+          }
+        },
+        "type": "object",
+        "required": [
+          "free_tickets_issued"
+        ],
+        "title": "FreeTicketStats"
+      },
       "GenerateDailyReportPayload": {
         "properties": {
           "relevant_node_ids": {
@@ -13764,6 +13945,56 @@
         ],
         "title": "PaymentMethod"
       },
+      "PaymentMethodStats": {
+        "properties": {
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "revenue": {
+            "type": "number",
+            "title": "Revenue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_method",
+          "count",
+          "revenue"
+        ],
+        "title": "PaymentMethodStats"
+      },
+      "PaymentMethodStatsResponse": {
+        "properties": {
+          "from_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "From Time"
+          },
+          "to_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "To Time"
+          },
+          "stats": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethodStats"
+            },
+            "type": "array",
+            "title": "Stats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_time",
+          "to_time",
+          "stats"
+        ],
+        "title": "PaymentMethodStatsResponse"
+      },
       "Payout": {
         "properties": {
           "id": {
@@ -14230,6 +14461,14 @@
             "type": "string",
             "title": "Product Name"
           },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
           "count": {
             "type": "integer",
             "title": "Count"
@@ -14243,6 +14482,8 @@
         "required": [
           "product_id",
           "product_name",
+          "node_id",
+          "node_name",
           "count",
           "revenue"
         ],
@@ -14334,6 +14575,14 @@
             "type": "string",
             "title": "Product Name"
           },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
           "intervals": {
             "items": {
               "$ref": "#/components/schemas/StatInterval"
@@ -14346,6 +14595,8 @@
         "required": [
           "product_id",
           "product_name",
+          "node_id",
+          "node_name",
           "intervals"
         ],
         "title": "ProductTimeseries"
