@@ -2787,6 +2787,7 @@ export type Account = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -2801,6 +2802,7 @@ export type AccountRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -3162,6 +3164,7 @@ export type UserTagDetail = {
   pin: string;
   uid: number | null;
   node_id: number;
+  activated_at?: string | null;
   comment?: string | null;
   variant?: string | null;
   account_id?: number | null;
@@ -3173,6 +3176,7 @@ export type UserTagDetailRead = {
   pin: string;
   uid: number | null;
   node_id: number;
+  activated_at?: string | null;
   comment?: string | null;
   variant?: string | null;
   account_id?: number | null;
@@ -3659,6 +3663,7 @@ export type Customer = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -3682,6 +3687,7 @@ export type CustomerRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;

@@ -232,6 +232,7 @@ async def test_ticket_flow_with_one_tag(
 
     customer = await till_service.get_customer(token=terminal_token, customer_tag_uid=unused_tag.uid)
     assert sale_tickets.ticket.initial_top_up_amount == customer.balance
+    assert customer.activated_at is not None
     await assert_account_balance(
         account_id=cash_register_account_id,
         expected_balance=cash_drawer_start_balance + completed_ticket.total_price,

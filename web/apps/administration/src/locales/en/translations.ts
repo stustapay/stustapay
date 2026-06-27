@@ -81,6 +81,7 @@ export const translations = {
     user_tag_uid: "User Tag Uid",
     user_tag_pin: "User Tag Pin",
     vouchers: "Vouchers",
+    activatedAt: "Activation date",
     changeBalance: "Change Balance",
     oldBalance: "Old Balance",
     newBalance: "New Balance",

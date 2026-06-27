@@ -10,3 +10,6 @@ create table user_tag_variant (
 
 alter table user_tag
     add column variant_id bigint references user_tag_variant (id);
+
+alter table account
+    add column activated_at timestamptz;

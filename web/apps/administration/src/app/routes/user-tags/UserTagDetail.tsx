@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api";
 import { CustomerRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
+import { DetailDateField, DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
 type History = UserTagDetailType["account_history"];
@@ -69,6 +69,7 @@ export const UserTagDetail: React.FC = () => {
         <DetailField label={t("userTag.pin")} value={data.pin} />
         <DetailField label={t("userTag.uid")} value={formatUserTagUid(data.uid_hex)} />
         <DetailField label={t("userTag.variant")} value={data.variant ?? ""} />
+        <DetailDateField label={t("account.activatedAt")} value={data.activated_at} />
         <EditableListItem label={t("userTag.comment")} value={data.comment ?? ""} onChange={handleUpdateComment} />
         {data.account_id != null ? (
           <DetailField

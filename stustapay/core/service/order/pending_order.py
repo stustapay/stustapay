@@ -116,17 +116,25 @@ async def make_ticket_sale_bookings(
         customer_account_id: int
         if scanned_ticket.account is None:
             customer_account_id = await conn.fetchval(
-                "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') on conflict (user_tag_id) do update set user_tag_id = $2 returning id",
+                "insert into account (node_id, user_tag_id, type, activated_at) "
+                "values ($1, $2, 'private', $3) "
+                "on conflict (user_tag_id) do update set "
+                "user_tag_id = excluded.user_tag_id, "
+                "activated_at = coalesce(account.activated_at, excluded.activated_at) "
+                "returning id",
                 node.event_node_id,
                 user_tag_id,
+                booked_at,
             )
 
         else:
             customer_account_id = await conn.fetchval(
-                "update account set user_tag_id = $2 where node_id = $1 and id = $3 returning id",
+                "update account set user_tag_id = $2, activated_at = coalesce(activated_at, $4) "
+                "where node_id = $1 and id = $3 returning id",
                 node.event_node_id,
                 user_tag_id,
                 scanned_ticket.account.id,
+                booked_at,
             )
 
         # Mark voucher for Pretix checkin sync (if this was a presale voucher)

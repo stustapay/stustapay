@@ -1,4 +1,5 @@
 export * from "./DetailField";
+export * from "./DetailDateField";
 export * from "./DetailLayout";
 export * from "./DetailView";
 export * from "./DetailBoolField";

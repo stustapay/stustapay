@@ -317,7 +317,7 @@ class AccountService(Service[Config]):
 
         # create a new customer account for the given tag
         account_id = await conn.fetchval(
-            "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
+            "insert into account (node_id, user_tag_id, type, activated_at) values ($1, $2, 'private', now()) returning id",
             node.event_node_id,
             user_tag["user_tag_id"],
         )

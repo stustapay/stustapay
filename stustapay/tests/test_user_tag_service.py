@@ -56,6 +56,7 @@ async def test_create_user_tags_with_variants(
     )
     assert len(detail_with_variant) == 1
     assert detail_with_variant[0].variant == "batch-a"
+    assert detail_with_variant[0].activated_at is None
 
     detail_without_variant = await user_tag_service.find_user_tags(
         token=event_admin_token, node_id=event_node.id, search_term="batch-pin-2"

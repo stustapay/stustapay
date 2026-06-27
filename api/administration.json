@@ -9159,6 +9159,18 @@
             "type": "integer",
             "title": "Vouchers"
           },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
           "user_tag_id": {
             "anyOf": [
               {
@@ -10333,6 +10345,18 @@
           "vouchers": {
             "type": "integer",
             "title": "Vouchers"
+          },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
           },
           "user_tag_id": {
             "anyOf": [
@@ -16988,6 +17012,18 @@
           "node_id": {
             "type": "integer",
             "title": "Node Id"
+          },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
           },
           "comment": {
             "anyOf": [

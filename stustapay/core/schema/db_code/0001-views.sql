@@ -158,6 +158,7 @@ create view user_tag_with_history as
         ut.node_id,
         ut.uid,
         ut.pin,
+        a.activated_at,
         utv.variant_name                             as variant,
         ut.comment,
         a.id                                       as account_id,
