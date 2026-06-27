@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
-from stustapay.core.http.context import ContextTreeService, ContextWebhookService
+from stustapay.core.http.context import ContextDsfinvkService, ContextTreeService, ContextWebhookService
 from stustapay.core.schema.audit_logs import AuditLog, AuditLogDetail
 from stustapay.core.schema.media import EventDesign, NewBlob
 from stustapay.core.schema.tree import (
@@ -208,6 +208,42 @@ async def generate_payout_report(token: CurrentAuthToken, tree_service: ContextT
     content = await tree_service.generate_payout_report(token=token, node_id=node_id)
     headers = {"Content-Disposition": 'inline; filename="payout_report.pdf"'}
     return Response(content, headers=headers, media_type="application/pdf")
+
+
+@router.post(
+    "/events/{node_id}/export-dsfinvk",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/zip": {}},
+        }
+    },
+)
+async def export_dsfinvk(token: CurrentAuthToken, dsfinvk_service: ContextDsfinvkService, node_id: int):
+    content = await dsfinvk_service.export_dsfinvk(token=token, node_id=node_id)
+    headers = {"Content-Disposition": 'attachment; filename="dsfinV_k.zip"'}
+    return Response(content, headers=headers, media_type="application/zip")
+
+
+class Ao146aExportPayload(BaseModel):
+    shutdown_date: date | None = None
+
+
+@router.post(
+    "/events/{node_id}/export-ao146a",
+    responses={
+        "200": {
+            "description": "Successful Response",
+            "content": {"application/xml": {}},
+        }
+    },
+)
+async def export_ao146a(
+    token: CurrentAuthToken, dsfinvk_service: ContextDsfinvkService, node_id: int, payload: Ao146aExportPayload
+):
+    content = await dsfinvk_service.export_ao146a(token=token, node_id=node_id, shutdown_date=payload.shutdown_date)
+    headers = {"Content-Disposition": 'attachment; filename="ao146a.xml"'}
+    return Response(content, headers=headers, media_type="application/xml")
 
 
 class SumUpTokenPayload(BaseModel):

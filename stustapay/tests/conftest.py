@@ -54,6 +54,7 @@ from stustapay.core.service.auth import AuthService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.dsfinvk import DsfinvkService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
@@ -296,6 +297,13 @@ async def user_tag_service(
     setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
 ) -> UserTagService:
     return UserTagService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
+
+
+@pytest.fixture(scope="session")
+async def dsfinvk_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
+) -> DsfinvkService:
+    return DsfinvkService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
 
 
 @pytest.fixture(scope="session")

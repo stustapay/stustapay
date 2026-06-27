@@ -1241,6 +1241,18 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      exportDsfinvk: build.mutation<ExportDsfinvkApiResponse, ExportDsfinvkApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/export-dsfinvk`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      exportAo146A: build.mutation<ExportAo146AApiResponse, ExportAo146AApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/export-ao146a`,
+          method: "POST",
+          body: queryArg.ao146AExportPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
       configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/configure-sumup-token`,
@@ -2125,6 +2137,15 @@ export type GenerateTestDailyReportApiArg = {
 export type GeneratePayoutReportApiResponse = /** status 200 Successful Response */ any;
 export type GeneratePayoutReportApiArg = {
   nodeId: number;
+};
+export type ExportDsfinvkApiResponse = /** status 200 Successful Response */ any;
+export type ExportDsfinvkApiArg = {
+  nodeId: number;
+};
+export type ExportAo146AApiResponse = /** status 200 Successful Response */ any;
+export type ExportAo146AApiArg = {
+  nodeId: number;
+  ao146AExportPayload: Ao146AExportPayload;
 };
 export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ any;
 export type ConfigureSumupTokenApiArg = {
@@ -3605,6 +3626,9 @@ export type GenerateDailyReportPayload = {
   relevant_node_ids: number[];
   report_date: string;
 };
+export type Ao146AExportPayload = {
+  shutdown_date?: string | null;
+};
 export type SumUpTokenPayload = {
   authorization_code: string;
 };
@@ -3962,6 +3986,8 @@ export const {
   useGenerateDailyReportMutation,
   useGenerateTestDailyReportMutation,
   useGeneratePayoutReportMutation,
+  useExportDsfinvkMutation,
+  useExportAo146AMutation,
   useConfigureSumupTokenMutation,
   useListAuditLogsQuery,
   useLazyListAuditLogsQuery,

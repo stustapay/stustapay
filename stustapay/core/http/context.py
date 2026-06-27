@@ -12,6 +12,7 @@ from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.dsfinvk import DsfinvkService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.media import MediaService
 from stustapay.core.service.order import OrderService
@@ -47,6 +48,7 @@ class Context:
     cashier_service: Optional[CashierService] = None
     ticket_service: Optional[TicketService] = None
     user_tag_service: Optional[UserTagService] = None
+    dsfinvk_service: Optional[DsfinvkService] = None
     tse_service: Optional[TseService] = None
     tree_service: Optional[TreeService] = None
     sumup_service: Optional[SumUpService] = None
@@ -104,6 +106,10 @@ def get_user_tag_service(request: Request) -> UserService:
     return request.state.context.user_tag_service
 
 
+def get_dsfinvk_service(request: Request) -> DsfinvkService:
+    return request.state.context.dsfinvk_service
+
+
 def get_tse_service(request: Request) -> TseService:
     return request.state.context.tse_service
 
@@ -141,6 +147,7 @@ ContextTillService = Annotated[TillService, Depends(get_till_service)]
 ContextConfigService = Annotated[ConfigService, Depends(get_config_service)]
 ContextAccountService = Annotated[AccountService, Depends(get_account_service)]
 ContextUserTagService = Annotated[UserTagService, Depends(get_user_tag_service)]
+ContextDsfinvkService = Annotated[DsfinvkService, Depends(get_dsfinvk_service)]
 ContextCashierService = Annotated[CashierService, Depends(get_cashier_service)]
 ContextTicketService = Annotated[TicketService, Depends(get_ticket_service)]
 ContextTseService = Annotated[TseService, Depends(get_tse_service)]

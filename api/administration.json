@@ -7646,6 +7646,114 @@
         }
       }
     },
+    "/tree/events/{node_id}/export-dsfinvk": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Export Dsfinvk",
+        "operationId": "export_dsfinvk",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/zip": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/export-ao146a": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Export Ao146A",
+        "operationId": "export_ao146a",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ao146aExportPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/xml": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/nodes/{node_id}/configure-sumup-token": {
       "post": {
         "tags": [
@@ -9270,6 +9378,24 @@
           "cash_register"
         ],
         "title": "AccountType"
+      },
+      "Ao146aExportPayload": {
+        "properties": {
+          "shutdown_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shutdown Date"
+          }
+        },
+        "type": "object",
+        "title": "Ao146aExportPayload"
       },
       "AuditLog": {
         "properties": {

@@ -14,6 +14,7 @@ from stustapay.core.service.account import AccountService
 from stustapay.core.service.cashier import CashierService
 from stustapay.core.service.config import ConfigService
 from stustapay.core.service.customer.customer import CustomerService
+from stustapay.core.service.dsfinvk import DsfinvkService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.media import MediaService
 from stustapay.core.service.order import OrderService
@@ -136,6 +137,7 @@ class Api:
             order_service=order_service,
             ticket_service=TicketService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             user_tag_service=UserTagService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
+            dsfinvk_service=DsfinvkService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             tse_service=TseService(db_pool=db_pool, config=self.cfg, auth_service=auth_service),
             tree_service=TreeService(
                 db_pool=db_pool, config=self.cfg, auth_service=auth_service, terminal_service=terminal_service
