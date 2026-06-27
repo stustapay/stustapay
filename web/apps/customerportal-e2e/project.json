@@ -1,0 +1,15 @@
+{
+  "name": "customerportal-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/customerportal-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/customerportal-e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

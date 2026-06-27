@@ -14,6 +14,7 @@
 - `make format` / `make check-format` — format with Ruff or verify formatting.
 - `uv run stustapay -c config.yaml administration-api` — example service entrypoint; adjust command for `customerportal-api` or `terminalserver-api`.
 - `npx nx serve customerportal` or `npx nx serve administration` in the `web` subfolder starts the dev loop for the frontend
+- `npx nx e2e customerportal-e2e` in the `web` subfolder runs customer portal Playwright e2e tests (requires test Postgres from `docker compose -f docker/docker-compose.devel.yaml up -d postgres_test`)
 - `make generate-openapi` — regenerate `api/*.json` from the configured services.
 - `make sync-contract` — regenerate backend OpenAPI specs plus web and Android generated clients.
 - `uv run sftkit create-migration <migration-name>` to create a new database migration. Don't forget to update the new `CURRENT_REVISION` in `stustapay/core/database.py`.
