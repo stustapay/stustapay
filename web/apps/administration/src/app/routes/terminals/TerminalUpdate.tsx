@@ -24,7 +24,7 @@ export const TerminalUpdate: React.FC = withPrivilegeGuard("node_administration"
   const [updateTerminal] = useUpdateTerminalMutation();
 
   if (error) {
-    return <Navigate to={TerminalRoutes.list()} />;
+    return <Navigate to={TerminalRoutes.action("list")} />;
   }
 
   if (isLoading || !terminal) {

@@ -47,6 +47,22 @@ class FindUserTagPayload(BaseModel):
     search_term: str
 
 
+class UserTagsCsvExportPayload(BaseModel):
+    exclude_activated: bool = False
+
+
+@router.post("/user-tags/csv-export", response_model=str)
+async def user_tags_csv_export(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    payload: UserTagsCsvExportPayload,
+    node_id: int,
+):
+    return await user_tag_service.get_user_tags_csv(
+        token=token, node_id=node_id, exclude_activated=payload.exclude_activated
+    )
+
+
 @router.post("/user-tags/find-user-tags", response_model=NormalizedList[UserTagDetail, int])
 async def find_user_tags(
     token: CurrentAuthToken,

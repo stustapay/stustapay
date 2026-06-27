@@ -3,6 +3,7 @@ import logging
 import time
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
 from dateutil import parser
 from sftkit.database import Connection
@@ -11,6 +12,7 @@ from stustapay import __version__ as stustapay_version
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
+from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
@@ -36,6 +38,10 @@ from .dsfinvk.models import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+DSFINVK_ASSETS = Path(__file__).parent / "assets"
+DEFAULT_INDEX_XML = DSFINVK_ASSETS / "index.xml"
+DEFAULT_DTD = DSFINVK_ASSETS / "gdpdu-01-09-2004.dtd"
 
 TAXNAME_TO_SCHLUESSELNUMMER = {"ust": 1, "eust": 2, "none": 5, "transparent": 1337}
 ORDERTYPE_TO_KUNDETYP = {
@@ -76,60 +82,63 @@ class Generator:
             db_pool = await db.create_pool(n_connections=2)
             es.push_async_callback(db_pool.close)
             conn: Connection = await es.enter_async_context(db_pool.acquire())
-            node = await fetch_node(conn=conn, node_id=self.node_id)
-            assert node is not None
-            event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=self.node_id)
-
-            # extract address information
-            bon_addr = event_settings.bon_address
-            if "\n" in bon_addr:
-                self.Street = bon_addr.split("\n")[0]
-                self.PLZ = bon_addr.split("\n")[1].split(" ")[0]
-                self.City = bon_addr.split("\n")[1].split(" ")[1]
-            else:
-                self.Street = bon_addr.split(" ")[0] + " " + bon_addr.split(" ")[1]
-                self.PLZ = bon_addr.split(" ")[2]
-                self.City = bon_addr.split(" ")[3]
-
-            # iteriere über alle Kassen Z_KASSE_ID (= KASSE_SERIENNR bei uns)
-            # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
-            for row in await conn.fetch(
-                "select distinct o.till_id "
-                "from ordr o "
-                "   join till t on o.till_id = t.id "
-                "   join node n on t.node_id = n.id "
-                "where n.id = $1 or $1 = any(n.parent_ids) "
-                "order by o.till_id",
-                node.id,
-            ):
-                Z_KASSE_ID: int = row["till_id"]
-
-                # iteriere über Kassenabschlüsse Z_NR dieser Kassen
-                for inner_row in await conn.fetch(
-                    "select z_nr from ordr where till_id = $1 group by z_nr order by z_nr", Z_KASSE_ID
-                ):  # alle Kassenabschlussids
-                    Z_NR: int = inner_row["z_nr"]
-
-                    # hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
-                    last_order_time = await conn.fetchval(
-                        "select booked_at from ordr where till_id = $1 and z_nr = $2 order by id desc", Z_KASSE_ID, Z_NR
-                    )
-                    Z_ERSTELLUNG: datetime = last_order_time
-
-                    # sammle Einzelaufzeichnungsmodul
-                    await self.einzelaufzeichnungsmodul(
-                        conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, event_settings=event_settings
-                    )
-                    # sammle Stammdatenmodul
-                    await self.stammdatenmodul(
-                        conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, node=node, event_settings=event_settings
-                    )
-                    # sammle Kassenabschlussmodul
-                    await self.kassenabschlussmodul(conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, event_settings=event_settings)
-
-            self.finalize()  # schreibe die Datei
+            content = await self.generate(conn)
+            if content is not None:
+                with open(self.filename, "wb") as output_file:
+                    output_file.write(content)
             LOGGER.info(f"Duration: {time.monotonic() - self.starttime:.3f}s")
-            return
+
+    async def generate(self, conn: Connection) -> bytes | None:
+        node = await fetch_node(conn=conn, node_id=self.node_id)
+        assert node is not None
+        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=self.node_id)
+
+        # extract address information
+        bon_addr = event_settings.bon_address
+        if "\n" in bon_addr:
+            self.Street = bon_addr.split("\n")[0]
+            self.PLZ = bon_addr.split("\n")[1].split(" ")[0]
+            self.City = bon_addr.split("\n")[1].split(" ")[1]
+        else:
+            self.Street = bon_addr.split(" ")[0] + " " + bon_addr.split(" ")[1]
+            self.PLZ = bon_addr.split(" ")[2]
+            self.City = bon_addr.split(" ")[3]
+
+        # iteriere über alle Kassen Z_KASSE_ID (= KASSE_SERIENNR bei uns)
+        # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
+        for row in await conn.fetch(
+            "select distinct o.till_id "
+            "from ordr o "
+            "   join till t on o.till_id = t.id "
+            "   join node n on t.node_id = n.id "
+            "where n.id = $1 or $1 = any(n.parent_ids) "
+            "order by o.till_id",
+            node.id,
+        ):
+            Z_KASSE_ID: int = row["till_id"]
+
+            # iteriere über Kassenabschlüsse Z_NR dieser Kassen
+            for inner_row in await conn.fetch(
+                "select z_nr from ordr where till_id = $1 group by z_nr order by z_nr", Z_KASSE_ID
+            ):  # alle Kassenabschlussids
+                Z_NR: int = inner_row["z_nr"]
+
+                # hole alle order dieser Kasse und Kassenabschluss und nimm den Zeitpunkt der letzten für den Kassenabschluss
+                last_order_time = await conn.fetchval(
+                    "select booked_at from ordr where till_id = $1 and z_nr = $2 order by id desc", Z_KASSE_ID, Z_NR
+                )
+                Z_ERSTELLUNG: datetime = last_order_time
+
+                # sammle Einzelaufzeichnungsmodul
+                await self.einzelaufzeichnungsmodul(conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, event_settings=event_settings)
+                # sammle Stammdatenmodul
+                await self.stammdatenmodul(
+                    conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, node=node, event_settings=event_settings
+                )
+                # sammle Kassenabschlussmodul
+                await self.kassenabschlussmodul(conn, Z_NR, Z_ERSTELLUNG, Z_KASSE_ID, event_settings=event_settings)
+
+        return self.finalize()
 
     async def einzelaufzeichnungsmodul(
         self, conn, Z_NR: int, Z_ERSTELLUNG: datetime, Z_KASSE_ID: int, event_settings: RestrictedEventSettings
@@ -520,8 +529,7 @@ class Generator:
                 )
 
         elif len(tses) == 0:
-            print(f"Kasse {Z_KASSE_ID} wurde bei keiner TSE registriert")
-            raise ValueError  # sollte nicht passieren
+            raise InvalidArgument(f"Kasse {Z_KASSE_ID} wurde bei keiner TSE registriert")
         else:
             print(f"KASSE {Z_KASSE_ID} wurde bei mehreren TSEs registriert, nämlich bei {tses}")
             # Fall, dass bei dieser Kasse die TSE gewechselt wurde: Kompliziert :(
@@ -667,11 +675,10 @@ class Generator:
 
     ################################################################################################################
 
-    def finalize(self):
-        if not self.simulate:
-            LOGGER.info("write file")
-            self.c.write(self.filename, self.xml, self.dtd)
-        else:
+    def finalize(self) -> bytes | None:
+        if self.simulate:
             print(self.c)
             LOGGER.info("Simulation; No file written.")
-        return
+            return None
+        LOGGER.info("write file")
+        return self.c.write_bytes(self.xml, self.dtd)

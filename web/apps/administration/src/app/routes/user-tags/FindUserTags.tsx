@@ -1,5 +1,7 @@
-import { Button, LinearProgress, Paper } from "@mui/material";
+import { FileDownload as FileDownloadIcon } from "@mui/icons-material";
+import { Button, Checkbox, FormControlLabel, LinearProgress, Paper } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
+import { useOpenModal } from "@stustapay/modal-provider";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
@@ -7,8 +9,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { z } from "zod";
 
-import { selectUserTagAll, useFindUserTagsMutation } from "@/api";
+import { selectUserTagAll, useFindUserTagsMutation, useUserTagsCsvExportMutation } from "@/api";
 import { DetailLayout } from "@/components";
+import { LayoutAction } from "@/components/layouts/types";
 import { useCurrentNode } from "@/hooks";
 
 import { UserTagTable } from "./components/UserTagTable";
@@ -27,6 +30,8 @@ export const FindUserTags: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const [findUserTags, searchResult] = useFindUserTagsMutation();
+  const [csvExport] = useUserTagsCsvExportMutation();
+  const openModal = useOpenModal();
 
   const handleSubmit = (values: SearchForm, { setSubmitting }: FormikHelpers<SearchForm>) => {
     setSubmitting(true);
@@ -41,8 +46,59 @@ export const FindUserTags: React.FC = () => {
       });
   };
 
+  const downloadCsv = async (excludeActivated: boolean) => {
+    try {
+      const data = await csvExport({
+        nodeId: currentNode.id,
+        userTagsCsvExportPayload: { exclude_activated: excludeActivated },
+      }).unwrap();
+      const url = window.URL.createObjectURL(new Blob([data], { type: "text/csv" }));
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", excludeActivated ? "user_tags_unactivated.csv" : "user_tags.csv");
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("userTag.exportError"));
+    }
+  };
+
+  const handleExport = () => {
+    let excludeActivated = false;
+    openModal({
+      type: "confirm",
+      title: t("userTag.exportCsv"),
+      content: (
+        <FormControlLabel
+          control={
+            <Checkbox
+              defaultChecked={false}
+              onChange={(event) => {
+                excludeActivated = event.target.checked;
+              }}
+            />
+          }
+          label={t("userTag.excludeActivated")}
+        />
+      ),
+      onConfirm: () => {
+        void downloadCsv(excludeActivated);
+        return true;
+      },
+    });
+  };
+
+  const actions: LayoutAction[] = [
+    {
+      label: t("userTag.exportCsv"),
+      onClick: handleExport,
+      icon: <FileDownloadIcon />,
+    },
+  ];
+
   return (
-    <DetailLayout title={t("userTag.find")}>
+    <DetailLayout title={t("userTag.find")} actions={actions}>
       <Paper sx={{ p: 3 }}>
         <Formik
           initialValues={initialValues}

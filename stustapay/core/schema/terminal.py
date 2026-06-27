@@ -133,6 +133,7 @@ class MdmDevice(BaseModel):
     ip_address: str | None = None
     model: str | None = None
     status: DeviceStatus
+    location_last_update: datetime | None = None
 
 
 class MdmDeviceWithMapping(BaseModel):
@@ -141,6 +142,15 @@ class MdmDeviceWithMapping(BaseModel):
 
 
 class MdmDeviceLocation(BaseModel):
+    latitude: float
+    longitude: float
+    last_update: datetime | None
+
+
+class TerminalLocation(BaseModel):
+    terminal_id: int
+    terminal_name: str
+    mdm_device_id: str
     latitude: float
     longitude: float
     last_update: datetime | None

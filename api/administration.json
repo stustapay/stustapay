@@ -5695,6 +5695,67 @@
         }
       }
     },
+    "/user-tags/csv-export": {
+      "post": {
+        "tags": [
+          "user_tags"
+        ],
+        "summary": "User Tags Csv Export",
+        "operationId": "user_tags_csv_export",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserTagsCsvExportPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response User Tags Csv Export User Tags Csv Export Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/user-tags/find-user-tags": {
       "post": {
         "tags": [
@@ -7585,6 +7646,114 @@
         }
       }
     },
+    "/tree/events/{node_id}/export-dsfinvk": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Export Dsfinvk",
+        "operationId": "export_dsfinvk",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/zip": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/events/{node_id}/export-ao146a": {
+      "post": {
+        "tags": [
+          "tree"
+        ],
+        "summary": "Export Ao146A",
+        "operationId": "export_ao146a",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ao146aExportPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/xml": {}
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tree/nodes/{node_id}/configure-sumup-token": {
       "post": {
         "tags": [
@@ -8214,6 +8383,64 @@
         }
       }
     },
+    "/customers/switch-tag": {
+      "post": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Switch Customer Tag",
+        "operationId": "switch_customer_tag",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchCustomerTagPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/terminal": {
       "get": {
         "tags": [
@@ -8473,6 +8700,60 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MdmDeviceLocation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/terminal/locations": {
+      "get": {
+        "tags": [
+          "terminals"
+        ],
+        "summary": "List Terminal Locations",
+        "operationId": "list_terminal_locations",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TerminalLocation"
+                  },
+                  "title": "Response List Terminal Locations Terminal Locations Get"
                 }
               }
             }
@@ -9044,6 +9325,18 @@
             "type": "integer",
             "title": "Vouchers"
           },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
           "user_tag_id": {
             "anyOf": [
               {
@@ -9143,6 +9436,24 @@
           "cash_register"
         ],
         "title": "AccountType"
+      },
+      "Ao146aExportPayload": {
+        "properties": {
+          "shutdown_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shutdown Date"
+          }
+        },
+        "type": "object",
+        "title": "Ao146aExportPayload"
       },
       "AuditLog": {
         "properties": {
@@ -10219,6 +10530,18 @@
             "type": "integer",
             "title": "Vouchers"
           },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
           "user_tag_id": {
             "anyOf": [
               {
@@ -10848,6 +11171,18 @@
           },
           "status": {
             "$ref": "#/components/schemas/DeviceStatus"
+          },
+          "location_last_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Last Update"
           }
         },
         "type": "object",
@@ -12089,6 +12424,17 @@
           "secret_id": {
             "type": "integer",
             "title": "Secret Id"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
           }
         },
         "type": "object",
@@ -15051,6 +15397,29 @@
         ],
         "title": "SumUpTransactionStatus"
       },
+      "SwitchCustomerTagPayload": {
+        "properties": {
+          "old_user_tag_pin": {
+            "type": "string",
+            "title": "Old User Tag Pin"
+          },
+          "new_user_tag_pin": {
+            "type": "string",
+            "title": "New User Tag Pin"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_user_tag_pin",
+          "new_user_tag_pin",
+          "comment"
+        ],
+        "title": "SwitchCustomerTagPayload"
+      },
       "SwitchTerminalPayload": {
         "properties": {
           "new_terminal_id": {
@@ -15253,6 +15622,52 @@
           "last_seen"
         ],
         "title": "Terminal"
+      },
+      "TerminalLocation": {
+        "properties": {
+          "terminal_id": {
+            "type": "integer",
+            "title": "Terminal Id"
+          },
+          "terminal_name": {
+            "type": "string",
+            "title": "Terminal Name"
+          },
+          "mdm_device_id": {
+            "type": "string",
+            "title": "Mdm Device Id"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "last_update": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Update"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terminal_id",
+          "terminal_name",
+          "mdm_device_id",
+          "latitude",
+          "longitude",
+          "last_update"
+        ],
+        "title": "TerminalLocation"
       },
       "Ticket": {
         "properties": {
@@ -16805,6 +17220,18 @@
             "type": "integer",
             "title": "Node Id"
           },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
           "comment": {
             "anyOf": [
               {
@@ -16815,6 +17242,17 @@
               }
             ],
             "title": "Comment"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant"
           },
           "account_id": {
             "anyOf": [
@@ -16966,6 +17404,17 @@
           "node_id"
         ],
         "title": "UserTagSecret"
+      },
+      "UserTagsCsvExportPayload": {
+        "properties": {
+          "exclude_activated": {
+            "type": "boolean",
+            "title": "Exclude Activated",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "UserTagsCsvExportPayload"
       },
       "UserToRoles": {
         "properties": {

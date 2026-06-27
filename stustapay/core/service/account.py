@@ -317,7 +317,7 @@ class AccountService(Service[Config]):
 
         # create a new customer account for the given tag
         account_id = await conn.fetchval(
-            "insert into account (node_id, user_tag_id, type) values ($1, $2, 'private') returning id",
+            "insert into account (node_id, user_tag_id, type, activated_at) values ($1, $2, 'private', now()) returning id",
             node.event_node_id,
             user_tag["user_tag_id"],
         )
@@ -370,14 +370,14 @@ class AccountService(Service[Config]):
         return acc
 
     @staticmethod
-    async def _switch_account_tag_uid(
+    async def _switch_account_tag(
         *,
         conn: Connection,
         node: Node,
         old_user_tag_pin: str,
         new_user_tag_pin: str,
-        new_user_tag_uid: int,
         comment: Optional[str],
+        new_user_tag_uid: Optional[int] = None,
     ):
         row = await conn.fetchrow(
             "select a.id as account_id, u.id as user_tag_id "
@@ -411,8 +411,37 @@ class AccountService(Service[Config]):
         await conn.fetchval(
             "update account set user_tag_id = $2 where id = $1 returning id", account_id, new_user_tag_id
         )
-        await conn.execute("update user_tag set uid = $2 where id = $1", new_user_tag_id, new_user_tag_uid)
+        if new_user_tag_uid is not None:
+            await conn.execute("update user_tag set uid = $2 where id = $1", new_user_tag_id, new_user_tag_uid)
         await conn.execute("update user_tag set comment = $2 where id = $1", old_user_tag_id, comment)
+
+    @with_db_transaction
+    @requires_node(event_only=True)
+    @requires_user(event_privileges=[EventPrivilege.customer_management])
+    async def switch_customer_tag(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        current_user: CurrentUser,
+        old_user_tag_pin: str,
+        new_user_tag_pin: str,
+        comment: Optional[str],
+    ):
+        await self._switch_account_tag(
+            conn=conn,
+            node=node,
+            old_user_tag_pin=old_user_tag_pin,
+            new_user_tag_pin=new_user_tag_pin,
+            comment=comment,
+        )
+        await create_audit_log(
+            conn=conn,
+            log_type=AuditType.account_user_tag_changed,
+            content={"old_user_tag_pin": old_user_tag_pin, "new_user_tag_pin": new_user_tag_pin, "comment": comment},
+            user_id=current_user.id,
+            node_id=node.id,
+        )
 
     @with_db_transaction
     @requires_terminal(event_privileges=[EventPrivilege.customer_management], requires_till=False)
@@ -427,7 +456,7 @@ class AccountService(Service[Config]):
         new_user_tag_uid: int,
         comment: Optional[str],
     ):
-        await self._switch_account_tag_uid(
+        await self._switch_account_tag(
             conn=conn,
             node=node,
             old_user_tag_pin=old_user_tag_pin,

@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 HEADWIND_AUTH_ENDPOINT = "/rest/public/jwt/login"
 HEADWIND_DEVICE_LOG_ENDPOINT = "/rest/plugins/devicelog/log/private/search"
 HEADWIND_DEVICE_INFO_ENDPOINT = "/rest/public/devices"
-HEADWIND_LOG_LOOKBACK = timedelta(hours=100)
+HEADWIND_LOCATION_LOG_MESSAGE_PREFIX = "Network location update:"
+# Headwind wraps messageFilter with % wildcards server-side and matches via ILIKE.
+HEADWIND_LOCATION_LOG_MESSAGE_FILTER = HEADWIND_LOCATION_LOG_MESSAGE_PREFIX
+HEADWIND_LOCATION_LOG_PATTERN = re.compile(r"Network location update: lat=(?P<lat>[\d\.]+), lon=(?P<lon>[\d\.]+)")
+HEADWIND_DEFAULT_LOG_PAGE_SIZE = 1000
 
 
 class HeadwindError(ServiceException):
@@ -42,6 +46,18 @@ def _validate_unix_timestamp(value: int | str | None) -> datetime | None:
             num_value /= 1000
         return datetime.fromtimestamp(num_value)
     raise ValidationError("Invalid Unix timestamp")
+
+
+def _parse_location_log(log: "HeadwindDeviceLog") -> DeviceLocation | None:
+    match = HEADWIND_LOCATION_LOG_PATTERN.match(log.message)
+    if match is None:
+        return None
+
+    return DeviceLocation(
+        latitude=float(match.group("lat")),
+        longitude=float(match.group("lon")),
+        last_update=log.create_time,
+    )
 
 
 class HeadwindDeviceLog(BaseModel):
@@ -197,45 +213,51 @@ class HeadwindApi:
             except Exception as exc:
                 raise HeadwindError(f"Unexpected Headwind API error: {exc}") from exc
 
-    async def get_device_logs(self, device_id: str) -> list[HeadwindDeviceLog]:
-        response = await self._post(
-            HEADWIND_DEVICE_LOG_ENDPOINT,
-            {
-                "deviceFilter": device_id,
-                "pageSize": 1000,
-                "pageNum": 1,
-                "dateFrom": (datetime.now() - HEADWIND_LOG_LOOKBACK).isoformat(),
-            },
-            timeout=10,
-        )
-
+    def _parse_log_search_response(self, response: Any) -> tuple[list[HeadwindDeviceLog], int]:
         if not isinstance(response, dict) or "data" not in response or "items" not in response["data"]:
             raise HeadwindError("Invalid response from Headwind device log endpoint")
 
-        return [HeadwindDeviceLog.model_validate(item) for item in response["data"]["items"]]
+        data = response["data"]
+        logs = [HeadwindDeviceLog.model_validate(item) for item in data["items"]]
+        total_items = data.get("totalItemsCount", len(logs))
+        return logs, total_items
+
+    async def search_device_logs(
+        self,
+        *,
+        device_id: str | None = None,
+        message_filter: str | None = None,
+        page_num: int = 1,
+        page_size: int = HEADWIND_DEFAULT_LOG_PAGE_SIZE,
+    ) -> tuple[list[HeadwindDeviceLog], int]:
+        payload: dict[str, Any] = {
+            "pageSize": page_size,
+            "pageNum": page_num,
+            "sortValue": "createTime",
+        }
+        if device_id:
+            payload["deviceFilter"] = device_id
+        if message_filter:
+            payload["messageFilter"] = message_filter
+
+        response = await self._post(HEADWIND_DEVICE_LOG_ENDPOINT, payload, timeout=30)
+        return self._parse_log_search_response(response)
 
     async def get_device_location(self, device_id: str) -> DeviceLocation:
-        logs = await self.get_device_logs(device_id)
-        sorted_by_time = sorted(logs, key=lambda item: item.create_time, reverse=True)
-        last_log = next(
-            (log for log in sorted_by_time if log.message and log.message.startswith("Network location update:")),
-            None,
+        logs, _ = await self.search_device_logs(
+            device_id=device_id,
+            message_filter=HEADWIND_LOCATION_LOG_MESSAGE_FILTER,
+            page_num=1,
+            page_size=1,
         )
-        if last_log is None:
-            raise HeadwindError("No network location update found for device")
+        if not logs:
+            raise HeadwindError(f"No network location update found for device {device_id}")
 
-        match = re.match(
-            r"Network location update: lat=(?P<lat>[\d\.]+), lon=(?P<lon>[\d\.]+)",
-            last_log.message,
-        )
-        if match is None:
-            raise HeadwindError(f"Failed to parse location from Headwind log message: {last_log.message}")
+        location = _parse_location_log(logs[0])
+        if location is None:
+            raise HeadwindError(f"Failed to parse location from Headwind log message: {logs[0].message}")
 
-        return DeviceLocation(
-            latitude=float(match.group("lat")),
-            longitude=float(match.group("lon")),
-            last_update=last_log.create_time,
-        )
+        return location
 
     async def list_devices(
         self,

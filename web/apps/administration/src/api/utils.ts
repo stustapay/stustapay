@@ -50,3 +50,26 @@ export const isErrorResp = (resp: object): resp is ErrorResp => {
     typeof anyResp.error.data.detail === "string"
   );
 };
+
+async function parseErrorResponse(resp: Response): Promise<unknown> {
+  const contentType = resp.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return await resp.json();
+  }
+  return await resp.text();
+}
+
+export async function blobResponseHandler(resp: Response): Promise<Blob | unknown> {
+  if (!resp.ok) {
+    return parseErrorResponse(resp);
+  }
+  return await resp.blob();
+}
+
+export async function blobUrlResponseHandler(resp: Response): Promise<string | unknown> {
+  const result = await blobResponseHandler(resp);
+  if (result instanceof Blob) {
+    return window.URL.createObjectURL(result);
+  }
+  return result;
+}

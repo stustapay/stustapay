@@ -44,8 +44,10 @@ class UserTagDetail(BaseModel):
     pin: str
     uid: Optional[int]
     node_id: int
+    activated_at: Optional[datetime] = None
 
     comment: Optional[str] = None
+    variant: Optional[str] = None
     account_id: Optional[int] = None
     user_id: Optional[int] = None
 
@@ -80,6 +82,7 @@ class Account(BaseModel):
     comment: Optional[str]
     balance: float
     vouchers: int
+    activated_at: Optional[datetime] = None
 
     # metadata relevant to a tag
     user_tag_id: Optional[int]

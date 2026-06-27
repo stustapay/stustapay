@@ -971,6 +971,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
+      userTagsCsvExport: build.mutation<UserTagsCsvExportApiResponse, UserTagsCsvExportApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tags/csv-export`,
+          method: "POST",
+          body: queryArg.userTagsCsvExportPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
       findUserTags: build.mutation<FindUserTagsApiResponse, FindUserTagsApiArg>({
         query: (queryArg) => ({
           url: `/user-tags/find-user-tags`,
@@ -1230,6 +1241,18 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
+      exportDsfinvk: build.mutation<ExportDsfinvkApiResponse, ExportDsfinvkApiArg>({
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/export-dsfinvk`, method: "POST" }),
+        invalidatesTags: ["tree"],
+      }),
+      exportAo146A: build.mutation<ExportAo146AApiResponse, ExportAo146AApiArg>({
+        query: (queryArg) => ({
+          url: `/tree/events/${queryArg.nodeId}/export-ao146a`,
+          method: "POST",
+          body: queryArg.ao146AExportPayload,
+        }),
+        invalidatesTags: ["tree"],
+      }),
       configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/configure-sumup-token`,
@@ -1325,6 +1348,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
+      switchCustomerTag: build.mutation<SwitchCustomerTagApiResponse, SwitchCustomerTagApiArg>({
+        query: (queryArg) => ({
+          url: `/customers/switch-tag`,
+          method: "POST",
+          body: queryArg.switchCustomerTagPayload,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["accounts"],
+      }),
       listTerminals: build.query<ListTerminalsApiResponse, ListTerminalsApiArg>({
         query: (queryArg) => ({
           url: `/terminal`,
@@ -1368,6 +1402,15 @@ const injectedRtkApi = api
       getMdmDeviceLocation: build.query<GetMdmDeviceLocationApiResponse, GetMdmDeviceLocationApiArg>({
         query: (queryArg) => ({
           url: `/terminal/mdm-devices/${queryArg.mdmDeviceId}/location`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["terminals"],
+      }),
+      listTerminalLocations: build.query<ListTerminalLocationsApiResponse, ListTerminalLocationsApiArg>({
+        query: (queryArg) => ({
+          url: `/terminal/locations`,
           params: {
             node_id: queryArg.nodeId,
           },
@@ -1944,6 +1987,11 @@ export type CreateUserTagsApiArg = {
   nodeId: number;
   newUserTags: NewUserTag[];
 };
+export type UserTagsCsvExportApiResponse = /** status 200 Successful Response */ string;
+export type UserTagsCsvExportApiArg = {
+  nodeId: number;
+  userTagsCsvExportPayload: UserTagsCsvExportPayload;
+};
 export type FindUserTagsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
 export type FindUserTagsApiArg = {
   nodeId: number;
@@ -2101,6 +2149,15 @@ export type GeneratePayoutReportApiResponse = /** status 200 Successful Response
 export type GeneratePayoutReportApiArg = {
   nodeId: number;
 };
+export type ExportDsfinvkApiResponse = /** status 200 Successful Response */ any;
+export type ExportDsfinvkApiArg = {
+  nodeId: number;
+};
+export type ExportAo146AApiResponse = /** status 200 Successful Response */ any;
+export type ExportAo146AApiArg = {
+  nodeId: number;
+  ao146AExportPayload: Ao146AExportPayload;
+};
 export type ConfigureSumupTokenApiResponse = /** status 200 Successful Response */ any;
 export type ConfigureSumupTokenApiArg = {
   nodeId: number;
@@ -2152,6 +2209,11 @@ export type AllowCustomerPayoutApiArg = {
   customerId: number;
   nodeId: number;
 };
+export type SwitchCustomerTagApiResponse = /** status 200 Successful Response */ any;
+export type SwitchCustomerTagApiArg = {
+  nodeId: number;
+  switchCustomerTagPayload: SwitchCustomerTagPayload;
+};
 export type ListTerminalsApiResponse = /** status 200 Successful Response */ NormalizedListTerminalInt;
 export type ListTerminalsApiArg = {
   nodeId: number;
@@ -2173,6 +2235,10 @@ export type ChangeMdmDeviceMappingApiArg = {
 export type GetMdmDeviceLocationApiResponse = /** status 200 Successful Response */ MdmDeviceLocation;
 export type GetMdmDeviceLocationApiArg = {
   mdmDeviceId: string;
+  nodeId: number;
+};
+export type ListTerminalLocationsApiResponse = /** status 200 Successful Response */ TerminalLocation[];
+export type ListTerminalLocationsApiArg = {
   nodeId: number;
 };
 export type GetTerminalApiResponse = /** status 200 Successful Response */ Terminal;
@@ -2758,6 +2824,7 @@ export type Account = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -2772,6 +2839,7 @@ export type AccountRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -3119,6 +3187,10 @@ export type NewUserTag = {
   pin: string;
   restriction?: ProductRestriction | null;
   secret_id: number;
+  variant?: string | null;
+};
+export type UserTagsCsvExportPayload = {
+  exclude_activated?: boolean;
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -3129,7 +3201,9 @@ export type UserTagDetail = {
   pin: string;
   uid: number | null;
   node_id: number;
+  activated_at?: string | null;
   comment?: string | null;
+  variant?: string | null;
   account_id?: number | null;
   user_id?: number | null;
   account_history: UserTagAccountAssociation[];
@@ -3139,7 +3213,9 @@ export type UserTagDetailRead = {
   pin: string;
   uid: number | null;
   node_id: number;
+  activated_at?: string | null;
   comment?: string | null;
+  variant?: string | null;
   account_id?: number | null;
   user_id?: number | null;
   account_history: UserTagAccountAssociation[];
@@ -3566,6 +3642,9 @@ export type GenerateDailyReportPayload = {
   relevant_node_ids: number[];
   report_date: string;
 };
+export type Ao146AExportPayload = {
+  shutdown_date?: string | null;
+};
 export type SumUpTokenPayload = {
   authorization_code: string;
 };
@@ -3624,6 +3703,7 @@ export type Customer = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -3647,6 +3727,7 @@ export type CustomerRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -3665,6 +3746,11 @@ export type CustomerRead = {
 };
 export type FindCustomerPayload = {
   search_term: string;
+};
+export type SwitchCustomerTagPayload = {
+  old_user_tag_pin: string;
+  new_user_tag_pin: string;
+  comment: string;
 };
 export type Terminal = {
   name: string;
@@ -3699,6 +3785,7 @@ export type MdmDevice = {
   ip_address?: string | null;
   model?: string | null;
   status: DeviceStatus;
+  location_last_update?: string | null;
 };
 export type MdmType = "headwind";
 export type MdmDeviceMappingWithTerminal = {
@@ -3719,6 +3806,14 @@ export type ChangeMdmDeviceMappingPayload = {
   terminal_id: number;
 };
 export type MdmDeviceLocation = {
+  latitude: number;
+  longitude: number;
+  last_update: string | null;
+};
+export type TerminalLocation = {
+  terminal_id: number;
+  terminal_name: string;
+  mdm_device_id: string;
   latitude: number;
   longitude: number;
   last_update: string | null;
@@ -3869,6 +3964,7 @@ export const {
   useListUserTagSecretsQuery,
   useLazyListUserTagSecretsQuery,
   useCreateUserTagsMutation,
+  useUserTagsCsvExportMutation,
   useFindUserTagsMutation,
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
@@ -3911,6 +4007,8 @@ export const {
   useGenerateDailyReportMutation,
   useGenerateTestDailyReportMutation,
   useGeneratePayoutReportMutation,
+  useExportDsfinvkMutation,
+  useExportAo146AMutation,
   useConfigureSumupTokenMutation,
   useListAuditLogsQuery,
   useLazyListAuditLogsQuery,
@@ -3929,6 +4027,7 @@ export const {
   useLazyGetCustomersWithBlockedPayoutQuery,
   usePreventCustomerPayoutMutation,
   useAllowCustomerPayoutMutation,
+  useSwitchCustomerTagMutation,
   useListTerminalsQuery,
   useLazyListTerminalsQuery,
   useCreateTerminalMutation,
@@ -3937,6 +4036,8 @@ export const {
   useChangeMdmDeviceMappingMutation,
   useGetMdmDeviceLocationQuery,
   useLazyGetMdmDeviceLocationQuery,
+  useListTerminalLocationsQuery,
+  useLazyListTerminalLocationsQuery,
   useGetTerminalQuery,
   useLazyGetTerminalQuery,
   useUpdateTerminalMutation,

@@ -4,7 +4,13 @@ from pydantic import BaseModel
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTerminalService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.terminal import MdmDeviceLocation, MdmDeviceWithMapping, NewTerminal, Terminal
+from stustapay.core.schema.terminal import (
+    MdmDeviceLocation,
+    MdmDeviceWithMapping,
+    NewTerminal,
+    Terminal,
+    TerminalLocation,
+)
 
 router = APIRouter(
     prefix="/terminal",
@@ -69,6 +75,15 @@ async def get_mdm_device_location(
         node_id=node_id,
         mdm_device_id=mdm_device_id,
     )
+
+
+@router.get("/locations", response_model=list[TerminalLocation])
+async def list_terminal_locations(
+    token: CurrentAuthToken,
+    terminal_service: ContextTerminalService,
+    node_id: int,
+):
+    return await terminal_service.list_terminal_locations(token=token, node_id=node_id)
 
 
 @router.get("/{terminal_id}", response_model=Terminal)

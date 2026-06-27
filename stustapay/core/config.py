@@ -32,6 +32,8 @@ class CoreConfig(BaseModel):
     pretix_enabled: bool = False
     pretix_synchronization_interval: timedelta = timedelta(minutes=5)
 
+    mdm_synchronization_interval: timedelta = timedelta(minutes=5)
+
 
 class CustomerPortalApiConfig(HTTPServerConfig):
     base_url: str

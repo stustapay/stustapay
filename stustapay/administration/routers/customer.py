@@ -16,6 +16,12 @@ class FindCustomerPayload(BaseModel):
     search_term: str
 
 
+class SwitchCustomerTagPayload(BaseModel):
+    old_user_tag_pin: str
+    new_user_tag_pin: str
+    comment: str
+
+
 @router.post("/customers/find-customers", response_model=list[Customer])
 async def find_customers(
     token: CurrentAuthToken,
@@ -50,3 +56,19 @@ async def allow_customer_payout(
     token: CurrentAuthToken, customer_service: ContextCustomerService, customer_id: int, node_id: int
 ):
     return await customer_service.payout.allow_customer_payout(token=token, customer_id=customer_id, node_id=node_id)
+
+
+@router.post("/customers/switch-tag")
+async def switch_customer_tag(
+    token: CurrentAuthToken,
+    account_service: ContextAccountService,
+    payload: SwitchCustomerTagPayload,
+    node_id: int,
+):
+    await account_service.switch_customer_tag(
+        token=token,
+        node_id=node_id,
+        old_user_tag_pin=payload.old_user_tag_pin,
+        new_user_tag_pin=payload.new_user_tag_pin,
+        comment=payload.comment,
+    )

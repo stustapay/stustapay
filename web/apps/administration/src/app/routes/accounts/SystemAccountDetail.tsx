@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Account } from "@/api";
 import { AccountRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { DetailDateField, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 
 export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();
@@ -15,6 +15,7 @@ export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account })
         <DetailField label={t("account.type")} value={account.type} />
         <DetailField label={t("account.name")} value={account.name} />
         <DetailField label={t("account.comment")} value={account.comment} />
+        <DetailDateField label={t("account.activatedAt")} value={account.activated_at} />
         <DetailNumberField label={t("account.balance")} type="currency" value={account.balance} />
         <DetailField label={t("account.vouchers")} value={account.vouchers} />
       </DetailView>

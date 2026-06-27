@@ -158,12 +158,15 @@ create view user_tag_with_history as
         ut.node_id,
         ut.uid,
         ut.pin,
+        a.activated_at,
+        utv.variant_name                             as variant,
         ut.comment,
         a.id                                       as account_id,
         u.id                                       as user_id,
         coalesce(hist.account_history, '[]'::json) as account_history
     from
         user_tag ut
+        left join user_tag_variant utv on ut.variant_id = utv.id
         left join account a on a.user_tag_id = ut.id
         left join usr u on ut.id = u.user_tag_id
         left join (

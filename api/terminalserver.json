@@ -1803,6 +1803,18 @@
             "type": "integer",
             "title": "Vouchers"
           },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
           "user_tag_id": {
             "anyOf": [
               {

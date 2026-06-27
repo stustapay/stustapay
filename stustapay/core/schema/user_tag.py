@@ -43,3 +43,4 @@ class NewUserTag(BaseModel):
     pin: str
     restriction: ProductRestriction | None = None
     secret_id: int
+    variant: str | None = None

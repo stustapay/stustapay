@@ -176,6 +176,7 @@ export type Customer = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
@@ -199,6 +200,7 @@ export type CustomerRead = {
   comment: string | null;
   balance: number;
   vouchers: number;
+  activated_at?: string | null;
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;

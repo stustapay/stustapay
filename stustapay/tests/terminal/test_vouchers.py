@@ -74,6 +74,7 @@ async def test_free_ticket_grant_with_vouchers(
     )
     assert customer is not None
     assert customer.vouchers == 3
+    assert customer.activated_at is not None
 
 
 async def test_free_ticket_grant_without_vouchers(

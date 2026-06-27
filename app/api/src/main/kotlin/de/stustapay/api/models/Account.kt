@@ -32,21 +32,22 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param nodeId 
- * @param id 
- * @param type 
- * @param name 
- * @param comment 
- * @param balance 
- * @param vouchers 
- * @param userTagId 
- * @param userTagUid 
- * @param restriction 
- * @param tagHistory 
- * @param userTagUidHex 
- * @param userTagComment 
+ *
+ * @param nodeId
+ * @param id
+ * @param type
+ * @param name
+ * @param comment
+ * @param balance
+ * @param vouchers
+ * @param userTagId
+ * @param userTagUid
+ * @param restriction
+ * @param tagHistory
+ * @param userTagUidHex
+ * @param activatedAt
+ * @param userTagComment
  */
 @Serializable
 
@@ -88,6 +89,9 @@ data class Account (
     @SerialName(value = "user_tag_uid_hex")
     val userTagUidHex: kotlin.String?,
 
+    @Contextual @SerialName(value = "activated_at")
+    val activatedAt: java.time.OffsetDateTime? = null,
+
     @SerialName(value = "user_tag_comment")
     val userTagComment: kotlin.String? = null
 
@@ -95,4 +99,3 @@ data class Account (
 
 
 }
-

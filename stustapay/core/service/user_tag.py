@@ -1,3 +1,5 @@
+import csv
+from io import StringIO
 from typing import Optional
 
 import asyncpg
@@ -48,17 +50,40 @@ async def create_user_tag_secret(conn: Connection, node_id: int, secret: NewUser
     return result
 
 
-async def create_user_tags(conn: Connection, node_id: int, tags: list[NewUserTag]):
+async def get_or_create_user_tag_variant(conn: Connection, event_node_id: int, variant_name: str) -> int:
+    variant_id = await conn.fetchval(
+        "select id from user_tag_variant where event_node_id = $1 and variant_name = $2",
+        event_node_id,
+        variant_name,
+    )
+    if variant_id is not None:
+        return variant_id
+
+    return await conn.fetchval(
+        "insert into user_tag_variant (event_node_id, variant_name) values ($1, $2) returning id",
+        event_node_id,
+        variant_name,
+    )
+
+
+async def create_user_tags(conn: Connection, event_node_id: int, tags: list[NewUserTag]):
     if len(tags) == 0:
         raise InvalidArgument("List of tags to create is empty")
 
     for tag in tags:
+        variant_id = None
+        if tag.variant is not None:
+            variant_id = await get_or_create_user_tag_variant(
+                conn=conn, event_node_id=event_node_id, variant_name=tag.variant
+            )
+
         await conn.execute(
-            "insert into user_tag (node_id, pin, restriction, secret_id) values ($1, $2, $3, $4)",
-            node_id,
+            "insert into user_tag (node_id, pin, restriction, secret_id, variant_id) values ($1, $2, $3, $4, $5)",
+            event_node_id,
             tag.pin,
             tag.restriction.value if tag.restriction is not None else None,
             tag.secret_id,
+            variant_id,
         )
 
 
@@ -128,7 +153,7 @@ class UserTagService(Service[Config]):
             user_id=current_user.id,
             node_id=node.id,
         )
-        return await create_user_tags(conn=conn, node_id=node.id, tags=new_user_tags)
+        return await create_user_tags(conn=conn, event_node_id=node.id, tags=new_user_tags)
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True, object_types=[ObjectType.user_tag])
@@ -185,3 +210,25 @@ class UserTagService(Service[Config]):
             f"%{search_term.lower()}%",
             node.ids_to_event_node,
         )
+
+    @with_db_transaction(read_only=True)
+    @requires_node(event_only=True, object_types=[ObjectType.user_tag])
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
+    async def get_user_tags_csv(self, *, conn: Connection, node: Node, exclude_activated: bool) -> str:
+        rows = await conn.fetch(
+            "select ut.pin, utv.variant_name as variant, ut.restriction "
+            "from user_tag ut "
+            "left join user_tag_variant utv on ut.variant_id = utv.id "
+            "where ut.node_id = any($1) "
+            " and (ut.uid is null or not $2) "
+            "order by ut.pin",
+            node.ids_to_event_node,
+            exclude_activated,
+        )
+
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["pin", "variant", "restriction"])
+        for row in rows:
+            writer.writerow([row["pin"], row["variant"] or "", row["restriction"] or ""])
+        return output.getvalue()

@@ -21,6 +21,7 @@ import { withPrivilegeGuard } from "@/app/layout";
 import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import {
   DetailBoolField,
+  DetailDateField,
   DetailField,
   DetailLayout,
   DetailNumberField,
@@ -216,6 +217,7 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
               value={formatUserTagUid(customer.user_tag_uid_hex)}
               linkTo={UserTagRoutes.detail(customer.user_tag_id)}
             />
+            <DetailDateField label={t("account.activatedAt")} value={customer.activated_at} />
             <DetailField label={t("account.name")} value={customer.name} />
             <EditableListItem
               label={t("account.comment")}

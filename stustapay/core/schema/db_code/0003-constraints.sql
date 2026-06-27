@@ -351,6 +351,7 @@ alter table till_button add constraint name_is_unique check(check_unique_in_tree
 alter table till_layout add constraint name_is_unique check(check_unique_in_tree(id, 'till_layout', 'name', name, node_id));
 alter table till_profile add constraint name_is_unique check(check_unique_in_tree(id, 'till_profile', 'name', name, node_id));
 alter table till add constraint name_is_unique check(check_unique_in_tree(id, 'till', 'name', name, node_id));
+alter table cash_register add constraint name_is_unique check(check_unique_in_tree(id, 'cash_register', 'name', name, node_id));
 alter table user_role add constraint name_is_unique check(check_unique_in_tree(id, 'user_role', 'name', name, node_id));
 alter table tse add constraint name_is_unique check(check_unique_in_tree(id, 'tse', 'name', name, node_id));
 alter table tax_rate add constraint name_is_unique check(check_unique_in_tree(id, 'tax_rate', 'name', name, node_id));

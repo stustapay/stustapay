@@ -1,4 +1,4 @@
-import { Search as SearchIcon } from "@mui/icons-material";
+import { Search as SearchIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -11,6 +11,9 @@ import { CustomerRoutes } from "@/app/routes";
 const getActiveTab = (location: string) => {
   if (location.startsWith(CustomerRoutes.action("blocked-payout"))) {
     return CustomerRoutes.action("blocked-payout");
+  }
+  if (location.startsWith(CustomerRoutes.action("swap-tag"))) {
+    return CustomerRoutes.action("swap-tag");
   }
   return CustomerRoutes.list();
 };
@@ -45,6 +48,14 @@ export const CustomerPageLayout: React.FC = () => {
           component={RouterLink}
           value={CustomerRoutes.list()}
           to={CustomerRoutes.list()}
+        />
+        <Tab
+          label={t("customer.swapTag")}
+          icon={<SwapHorizIcon />}
+          iconPosition="start"
+          component={RouterLink}
+          value={CustomerRoutes.action("swap-tag")}
+          to={CustomerRoutes.action("swap-tag")}
         />
         <Tab
           label={t("customer.customersWithBlockedPayout")}
