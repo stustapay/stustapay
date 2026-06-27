@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+# pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa,redefined-outer-name
 import uuid
 from dataclasses import dataclass
 
@@ -204,3 +204,49 @@ async def test_free_ticket_stats(
         query=TimeseriesStatsQuery(from_time=None, to_time=None),
     )
     assert stats.free_tickets_issued == 1
+
+
+async def test_product_stats_include_vouchers_redeemed(
+    order_service: OrderService,
+    sale_products: SaleProducts,
+    customer: Customer,
+    terminal_token: str,
+    event_admin_token: str,
+    event_node: Node,
+    db_connection: Connection,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+):
+    await db_connection.execute(
+        "update event set start_date = now() - interval '1 day', "
+        "end_date = now() + interval '1 day', daily_end_time = '04:00:00' "
+        "from node n where n.event_id = event.id and n.id = $1",
+        event_node.id,
+    )
+    await db_connection.execute("update account set vouchers = 2 where id = $1", customer.account_id)
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    await order_service.book_sale(
+        token=terminal_token,
+        new_sale=NewSale(
+            uuid=uuid.uuid4(),
+            buttons=[Button(till_button_id=sale_products.beer_button.id, quantity=2)],
+            customer_tag_uid=customer.tag.uid,
+            payment_method=PaymentMethod.tag,
+            used_vouchers=2,
+        ),
+    )
+
+    stats = await order_service.stats.get_product_stats(
+        token=event_admin_token,
+        node_id=event_node.id,
+        query=TimeseriesStatsQuery(from_time=None, to_time=None),
+    )
+
+    beer_stats = next(row for row in stats.product_overall_stats if row.product_id == sale_products.beer_product.id)
+    assert beer_stats.vouchers_redeemed == 2
+
+    vouchers_redeemed = await db_connection.fetchval(
+        "select sum(li.vouchers_redeemed) from line_item li join product p on li.product_id = p.id where p.id = $1",
+        sale_products.beer_product.id,
+    )
+    assert vouchers_redeemed == 2

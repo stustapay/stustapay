@@ -30,15 +30,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param quantity 
- * @param product 
- * @param productPrice 
- * @param taxRateId 
- * @param taxName 
- * @param taxRate 
- * @param totalPrice 
+ *
+ * @param quantity
+ * @param product
+ * @param productPrice
+ * @param taxRateId
+ * @param taxName
+ * @param taxRate
+ * @param vouchersRedeemed
+ * @param totalPrice
  */
 @Serializable
 
@@ -62,6 +63,9 @@ data class PendingLineItem (
     @Contextual @SerialName(value = "tax_rate")
     val taxRate: kotlin.Double,
 
+    @SerialName(value = "vouchers_redeemed")
+    val vouchersRedeemed: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
     @Contextual @SerialName(value = "total_price")
     val totalPrice: kotlin.Double
 
@@ -69,4 +73,3 @@ data class PendingLineItem (
 
 
 }
-

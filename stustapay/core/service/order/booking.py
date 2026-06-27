@@ -47,6 +47,7 @@ class NewLineItem(BaseModel):
     product_id: int
     product_price: float
     tax_rate_id: int
+    vouchers_redeemed: int
 
 
 @dataclass
@@ -73,6 +74,7 @@ async def book_money_transfer(
             product_id=transfer_product.id,
             product_price=amount,
             tax_rate_id=transfer_product.tax_rate_id,
+            vouchers_redeemed=0,
         )
     ]
 
@@ -136,8 +138,8 @@ async def book_order(
         for i, line_item in enumerate(line_items):
             await conn.fetchval(
                 "insert into line_item (order_id, item_id, product_id, product_price, quantity, tax_rate_id, "
-                "   tax_name, tax_rate) "
-                "select $1, $2, $3, $4, $5, $6, t.name, t.rate "
+                "   tax_name, tax_rate, vouchers_redeemed) "
+                "select $1, $2, $3, $4, $5, $6, t.name, t.rate, $7 "
                 "from tax_rate t where t.id = $6",
                 order_id,
                 i,
@@ -145,6 +147,7 @@ async def book_order(
                 line_item.product_price,
                 line_item.quantity,
                 line_item.tax_rate_id,
+                line_item.vouchers_redeemed,
             )
         await book_prepared_bookings(conn=conn, order_id=order_id, bookings=bookings)
     return OrderInfo(id=order_id, uuid=uuid, booked_at=booked_at)
@@ -168,6 +171,7 @@ async def book_imbalance_order(
             product_id=difference_product.id,
             product_price=imbalance,
             tax_rate_id=difference_product.tax_rate_id,
+            vouchers_redeemed=0,
         )
     ]
 

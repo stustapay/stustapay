@@ -121,6 +121,10 @@ class User(UserWithoutId):
     id: int
 
 
+class UserVoucherGrantStats(BaseModel):
+    vouchers_granted: int
+
+
 class UserWithPassword(User):
     password: str
 

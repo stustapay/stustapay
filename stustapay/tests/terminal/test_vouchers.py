@@ -203,3 +203,10 @@ async def test_free_ticket_grant_without_vouchers(
     account = await account_service.grant_vouchers(token=terminal_token, user_tag_uid=volunteer_tag.uid, vouchers=3)
     assert account is not None
     assert 3 == account.vouchers
+
+    grant_stats = await user_service.get_user_voucher_grant_stats(
+        token=event_admin_token,
+        node_id=event_node.id,
+        user_id=cashier.id,
+    )
+    assert grant_stats.vouchers_granted == 3

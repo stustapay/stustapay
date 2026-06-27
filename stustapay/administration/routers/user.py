@@ -17,6 +17,7 @@ from stustapay.core.schema.user import (
     UserRole,
     UserRoleAssignment,
     UserToRoles,
+    UserVoucherGrantStats,
 )
 
 router = APIRouter(
@@ -90,6 +91,13 @@ async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextU
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return user
+
+
+@user_router.get("/{user_id}/voucher-grant-stats", response_model=UserVoucherGrantStats)
+async def get_user_voucher_grant_stats(
+    user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: int
+):
+    return await user_service.get_user_voucher_grant_stats(token=token, user_id=user_id, node_id=node_id)
 
 
 @user_router.get("/{user_id}/role-assignments", response_model=list[UserRoleAssignment])

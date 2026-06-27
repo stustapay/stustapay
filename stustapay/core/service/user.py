@@ -24,6 +24,7 @@ from stustapay.core.schema.user import (
     UserRoleAssignment,
     UserRoleAssignmentPayload,
     UserToRoles,
+    UserVoucherGrantStats,
     UserWithoutId,
     format_user_tag_uid,
 )
@@ -644,6 +645,29 @@ class UserService(Service[Config]):
     @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_user(self, *, conn: Connection, node: Node, user_id: int) -> Optional[User]:
         return await fetch_user(conn=conn, node=node, user_id=user_id)
+
+    @with_db_transaction(read_only=True)
+    @requires_node()
+    @requires_user(node_privileges=[NodePrivilege.node_administration])
+    async def get_user_voucher_grant_stats(
+        self, *, conn: Connection, node: Node, user_id: int
+    ) -> UserVoucherGrantStats:
+        await fetch_user(conn=conn, node=node, user_id=user_id)
+        if node.event_node_id is None:
+            return UserVoucherGrantStats(vouchers_granted=0)
+
+        vouchers_granted = await conn.fetchval(
+            "select coalesce(sum(t.vouchers), 0) "
+            "from transaction t "
+            "join account sa on t.source_account = sa.id "
+            "where t.conducting_user_id = $1 "
+            "   and sa.type = 'voucher_create' "
+            "   and sa.node_id = $2 "
+            "   and t.vouchers > 0",
+            user_id,
+            node.event_node_id,
+        )
+        return UserVoucherGrantStats(vouchers_granted=vouchers_granted or 0)
 
     @with_db_transaction
     @requires_node(object_types=[ObjectType.user])

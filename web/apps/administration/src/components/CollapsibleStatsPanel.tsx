@@ -1,5 +1,5 @@
-import { Accordion, AccordionDetails, AccordionSummary, Typography } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Accordion, AccordionDetails, AccordionSummary, Typography } from "@mui/material";
 import * as React from "react";
 
 export type CollapsibleStatsPanelProps = {

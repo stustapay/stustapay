@@ -266,6 +266,7 @@ export const translations = {
     mostSoldProducts: "Most sold products",
     showDetails: "Show Details",
     quantitySold: "# Sold",
+    vouchersRedeemed: "Vouchers redeemed",
     selectedTill: "Till",
     statsByTill: "Products sold by till",
     depositBalance: "Deposit balance (# collected deposits)",
@@ -661,6 +662,7 @@ export const translations = {
     description: "Description",
     tagId: "User Tag ID",
     noTagAssigned: "No Tag assigned",
+    vouchersGranted: "Vouchers granted",
     roleAssignments: "Role Assignments",
     noRoleAssignments: "No role assignments",
     changePassword: {

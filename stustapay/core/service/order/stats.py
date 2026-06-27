@@ -91,6 +91,7 @@ class ProductOverallStats(BaseModel):
     node_name: str
     count: int
     revenue: float
+    vouchers_redeemed: int
 
 
 class ProductStats(BaseModel):
@@ -333,6 +334,28 @@ async def get_daily_stats(*, hourly_stats: Timeseries, event: PublicEventSetting
     return Timeseries(from_time=hourly_stats.from_time, to_time=hourly_stats.to_time, intervals=stats)
 
 
+async def get_product_vouchers_redeemed(
+    *, conn: Connection, node: Node, from_time: datetime, to_time: datetime
+) -> dict[int, int]:
+    rows = await conn.fetch(
+        "select li.product_id, coalesce(sum(li.vouchers_redeemed), 0) as vouchers_redeemed "
+        "from line_item li "
+        "join ordr o on li.order_id = o.id "
+        "join till til on o.till_id = til.id "
+        "join node n on til.node_id = n.id "
+        "join product p on li.product_id = p.id "
+        "where o.booked_at >= $1 and o.booked_at <= $2 "
+        "   and ($3 = any(n.parent_ids) or n.id = $3) "
+        "   and o.order_type in ('sale', 'cancel_sale') "
+        "   and p.type = 'user_defined' "
+        "group by li.product_id",
+        from_time,
+        to_time,
+        node.id,
+    )
+    return {row["product_id"]: row["vouchers_redeemed"] for row in rows}
+
+
 class OrderStatsService(Service[Config]):
     def __init__(self, db_pool: asyncpg.Pool, config: Config, auth_service: AuthService):
         super().__init__(db_pool, config)
@@ -447,11 +470,18 @@ class OrderStatsService(Service[Config]):
                 product_name=hourly_product.product_name,
                 node_id=hourly_product.node_id,
                 node_name=hourly_product.node_name,
+                vouchers_redeemed=0,
             )
             for interval in hourly_product.intervals:
                 s.count += interval.count  # pylint: disable=no-member
                 s.revenue += interval.revenue  # pylint: disable=no-member
             product_overall_stats.append(s)
+
+        vouchers_by_product = await get_product_vouchers_redeemed(
+            conn=conn, node=node, from_time=from_time, to_time=to_time
+        )
+        for product_stat in product_overall_stats:
+            product_stat.vouchers_redeemed = vouchers_by_product.get(product_stat.product_id, 0)
 
         deposit_overall_stats = []
         for hourly_deposit in hourly_deposit_stats:
@@ -462,6 +492,7 @@ class OrderStatsService(Service[Config]):
                 product_name=hourly_deposit.product_name,
                 node_id=hourly_deposit.node_id,
                 node_name=hourly_deposit.node_name,
+                vouchers_redeemed=0,
             )
             for interval in hourly_deposit.intervals:
                 s.count += interval.count  # pylint: disable=no-member

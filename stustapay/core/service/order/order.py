@@ -335,6 +335,7 @@ class OrderService(Service[Config]):
                     tax_rate=product.tax_rate,
                     tax_name=product.tax_name,
                     product=product,
+                    vouchers_redeemed=0,
                 )
 
         if len(restricted_product_names) > 0:
@@ -779,6 +780,7 @@ class OrderService(Service[Config]):
                 product_id=line_item.product.id,
                 product_price=line_item.product_price,
                 tax_rate_id=line_item.tax_rate_id,
+                vouchers_redeemed=line_item.vouchers_redeemed,
             )
             for line_item in pending_sale.line_items
         ]
@@ -1000,6 +1002,8 @@ class OrderService(Service[Config]):
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
+        if order.till_id is None:
+            raise InvalidArgument("Order does not have a till")
         till = await fetch_till(conn=conn, node=node, till_id=order.till_id)
         if till is None:
             raise InvalidArgument("Order does not exist")
@@ -1049,6 +1053,7 @@ class OrderService(Service[Config]):
                     product_id=line_item.product.id,
                     tax_rate_id=line_item.tax_rate_id,
                     product_price=line_item.product_price,
+                    vouchers_redeemed=-line_item.vouchers_redeemed,
                 )
             )
 
@@ -1171,6 +1176,7 @@ class OrderService(Service[Config]):
                 product_id=pay_out_product.id,
                 product_price=pending_pay_out.amount,
                 tax_rate_id=pay_out_product.tax_rate_id,
+                vouchers_redeemed=0,
             )
         ]
 
@@ -1392,6 +1398,7 @@ class OrderService(Service[Config]):
                     tax_name=ticket.tax_name,
                     tax_rate=ticket.tax_rate,
                     tax_rate_id=ticket.tax_rate_id,
+                    vouchers_redeemed=0,
                 )
             )
 
@@ -1405,6 +1412,7 @@ class OrderService(Service[Config]):
                         tax_name=top_up_product.tax_name,
                         tax_rate=top_up_product.tax_rate,
                         tax_rate_id=top_up_product.tax_rate_id,
+                        vouchers_redeemed=0,
                     )
                 )
 

@@ -49,6 +49,14 @@ const IndividualProductStats: React.FC<{
         headerAlign: "right",
       },
       {
+        field: "vouchers_redeemed",
+        headerName: t("overview.vouchersRedeemed"),
+        type: "number",
+        width: 100,
+        align: "right",
+        headerAlign: "right",
+      },
+      {
         field: "revenue",
         headerName: t("overview.revenue"),
         type: "currency",
@@ -77,7 +85,7 @@ const IndividualProductStats: React.FC<{
 
   return (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 9 }} sx={{ height: 300 }}>
+      <Grid size={{ xs: 8 }} sx={{ height: 300 }}>
         <ResponsiveLine
           animate={false}
           data={hourlyData}
@@ -143,7 +151,7 @@ const IndividualProductStats: React.FC<{
           ]}
         />
       </Grid>
-      <Grid size={{ xs: 3 }}>
+      <Grid size={{ xs: 4 }}>
         <DataGrid
           rows={overall_stats}
           columns={columns}
@@ -215,7 +223,7 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
           <NodeSelect label={t("common.node")} value={node} onChange={(val) => val && setNode(val)} />
           <CollapsibleStatsPanel title={t("overview.totalSalesRevenue")}>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
+              <Grid size={{ xs: 12, md: 8 }} sx={{ height: 300 }}>
                 <HourlyGraph
                   dailyEndTime={dailyEndTime}
                   groupByDay={groupByDay}
@@ -223,7 +231,7 @@ export const NodeSpecificStats: React.FC<NodeSpecificStatsProps> = ({
                   data={productStats}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
+              <Grid size={{ xs: 12, md: 4 }} sx={{ height: 300 }}>
                 <DailyStatsTable data={productStats} useRevenue={true} />
               </Grid>
             </Grid>

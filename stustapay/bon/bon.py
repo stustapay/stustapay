@@ -128,6 +128,7 @@ def gen_dummy_order(node_id: int, order_id: int = 1):
                 tax_rate_id=1,
                 tax_name="ust",
                 tax_rate=0.19,
+                vouchers_redeemed=0,
             ),
             LineItem(
                 quantity=1,
@@ -151,6 +152,7 @@ def gen_dummy_order(node_id: int, order_id: int = 1):
                 total_tax=0.14,
                 tax_name="eust",
                 tax_rate=0.07,
+                vouchers_redeemed=0,
             ),
             LineItem(
                 quantity=2,
@@ -174,6 +176,7 @@ def gen_dummy_order(node_id: int, order_id: int = 1):
                 tax_rate_id=1,
                 tax_name="none",
                 tax_rate=0.00,
+                vouchers_redeemed=0,
             ),
         ],
     )

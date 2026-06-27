@@ -31,10 +31,10 @@ const EntryStats: React.FC<{
   if (!data) {
     return (
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
+        <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
           <Skeleton variant="rounded" height={300} />
         </Grid>
-        <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
+        <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
           <Skeleton variant="rounded" height={300} />
         </Grid>
       </Grid>
@@ -43,10 +43,10 @@ const EntryStats: React.FC<{
 
   return (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 10 }} sx={{ height: 300 }}>
+      <Grid size={{ xs: 12, md: 9 }} sx={{ height: 300 }}>
         <HourlyGraph dailyEndTime={dailyEndTime} groupByDay={groupByDay} useRevenue={useRevenue} data={data} />
       </Grid>
-      <Grid size={{ xs: 12, md: 2 }} sx={{ height: 300 }}>
+      <Grid size={{ xs: 12, md: 3 }} sx={{ height: 300 }}>
         <DailyStatsTable data={data} useRevenue={useRevenue} />
       </Grid>
     </Grid>

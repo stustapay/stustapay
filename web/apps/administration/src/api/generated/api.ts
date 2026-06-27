@@ -136,6 +136,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      getUserVoucherGrantStats: build.query<GetUserVoucherGrantStatsApiResponse, GetUserVoucherGrantStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/voucher-grant-stats`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["users"],
+      }),
       listUserRoleAssignments: build.query<ListUserRoleAssignmentsApiResponse, ListUserRoleAssignmentsApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}/role-assignments`,
@@ -1579,6 +1588,11 @@ export type DeleteUserApiArg = {
   userId: number;
   nodeId: number;
 };
+export type GetUserVoucherGrantStatsApiResponse = /** status 200 Successful Response */ UserVoucherGrantStats;
+export type GetUserVoucherGrantStatsApiArg = {
+  userId: number;
+  nodeId: number;
+};
 export type ListUserRoleAssignmentsApiResponse = /** status 200 Successful Response */ UserRoleAssignment[];
 export type ListUserRoleAssignmentsApiArg = {
   userId: number;
@@ -2418,6 +2432,9 @@ export type UpdateUserPayload = {
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
 };
+export type UserVoucherGrantStats = {
+  vouchers_granted: number;
+};
 export type UserRole = {
   name: string;
   can_assign_all_roles?: boolean;
@@ -2719,6 +2736,7 @@ export type LineItem = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   item_id: number;
   total_tax: number;
 };
@@ -2729,6 +2747,7 @@ export type LineItemRead = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   item_id: number;
   total_tax: number;
   total_price: number;
@@ -3009,6 +3028,7 @@ export type PendingLineItem = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
 };
 export type PendingLineItemRead = {
   quantity: number;
@@ -3017,6 +3037,7 @@ export type PendingLineItemRead = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   total_price: number;
 };
 export type BookedProduct = {
@@ -3136,6 +3157,7 @@ export type ProductOverallStats = {
   node_name: string;
   count: number;
   revenue: number;
+  vouchers_redeemed: number;
 };
 export type ProductStats = {
   from_time: string;
@@ -3887,6 +3909,8 @@ export const {
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useGetUserVoucherGrantStatsQuery,
+  useLazyGetUserVoucherGrantStatsQuery,
   useListUserRoleAssignmentsQuery,
   useLazyListUserRoleAssignmentsQuery,
   useChangeUserPasswordMutation,
