@@ -544,7 +544,7 @@ export const translations = {
     deleteDescription: "Confirm till deletion",
     terminal: "Terminal",
     activeUser: "Logged in user",
-    tseId: "TSE ID",
+    tseId: "TSE",
     tseSerial: "TSE Serial",
     forceLogoutUser: "Force logout user",
     forceLogoutUserDescription:

@@ -10,11 +10,13 @@ import {
   selectOrderAll,
   selectTerminalById,
   selectTillProfileById,
+  selectTseById,
   useDeleteTillMutation,
   useGetTillQuery,
   useListOrdersByTillQuery,
   useListTerminalsQuery,
   useListTillProfilesQuery,
+  useListTsesQuery,
   useRemoveFromTerminalMutation,
 } from "@/api";
 import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
@@ -43,9 +45,10 @@ export const TillDetail: React.FC = () => {
   );
   const { data: profiles, error: profileError } = useListTillProfilesQuery({ nodeId: currentNode.id });
   const { data: terminals, error: terminalError } = useListTerminalsQuery({ nodeId: currentNode.id });
+  const { data: tses, error: tseError } = useListTsesQuery({ nodeId: currentNode.id });
   const [switchTerminalOpen, setSwitchTerminalOpen] = React.useState(false);
 
-  if (tillError || orderError || profileError || terminalError) {
+  if (tillError || orderError || profileError || terminalError || tseError) {
     toast.error("Error loading tills or orders");
     return <Navigate to={TillRoutes.list()} />;
   }
@@ -61,7 +64,7 @@ export const TillDetail: React.FC = () => {
     });
   };
 
-  if (till === undefined || terminals === undefined) {
+  if (till === undefined || terminals === undefined || tses === undefined) {
     return <Loading />;
   }
 
@@ -79,6 +82,7 @@ export const TillDetail: React.FC = () => {
   };
 
   const terminal = till.terminal_id != null ? selectTerminalById(terminals, till.terminal_id) : undefined;
+  const tse = till.tse_id != null ? selectTseById(tses, till.tse_id) : undefined;
 
   const openConfirmRemoveFromTerminalDialog = () => {
     if (!terminal) {
@@ -129,8 +133,8 @@ export const TillDetail: React.FC = () => {
         <DetailField label={t("till.id")} value={till.id} />
         <DetailField label={t("till.name")} value={till.name} />
         <DetailField label={t("till.description")} value={till.description} />
-        {till.tse_id != null ? (
-          <DetailField label={t("till.tseId")} linkTo={TseRoutes.detail(till.tse_id)} value={till.tse_id} />
+        {tse ? (
+          <DetailField label={t("till.tseId")} linkTo={TseRoutes.detail(tse.id)} value={tse.name} />
         ) : (
           <DetailField label={t("till.tseId")} value="No tse" />
         )}
