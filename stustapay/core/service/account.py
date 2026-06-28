@@ -339,6 +339,13 @@ class AccountService(Service[Config]):
                 conducting_user_id=current_user.id,
             )
 
+        await conn.execute(
+            "insert into free_ticket_grant (event_node_id, account_id, conducting_user_id) values ($1, $2, $3)",
+            node.event_node_id,
+            account_id,
+            current_user.id,
+        )
+
         account = await get_account_by_id(conn=conn, node=node, account_id=account_id)
         assert account is not None
         return account

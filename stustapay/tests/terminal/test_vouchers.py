@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
 import pytest
+from sftkit.database import Connection
 
 from stustapay.core.schema.order import NewFreeTicketGrant
 from stustapay.core.schema.till import NewTillProfile, Till, TillLayout
@@ -26,6 +27,7 @@ async def test_free_ticket_grant_with_vouchers(
     till_layout: TillLayout,
     login_supervised_user: LoginSupervisedUser,
     create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
 ):
     voucher_role = await user_service.create_user_role(
         token=event_admin_token,
@@ -67,14 +69,23 @@ async def test_free_ticket_grant_with_vouchers(
 
     volunteer_tag = await create_random_user_tag()
     grant = NewFreeTicketGrant(user_tag_uid=volunteer_tag.uid, user_tag_pin=volunteer_tag.pin, initial_voucher_amount=3)
-    success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
-    assert success
+    account = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
+    assert account is not None
     customer = await account_service.get_account_by_tag_id(
         token=event_admin_token, node_id=event_node.id, user_tag_id=volunteer_tag.id
     )
     assert customer is not None
     assert customer.vouchers == 3
     assert customer.activated_at is not None
+
+    grant_row = await db_connection.fetchrow(
+        "select event_node_id, account_id, conducting_user_id from free_ticket_grant where account_id = $1",
+        account.id,
+    )
+    assert grant_row is not None
+    assert grant_row["event_node_id"] == event_node.id
+    assert grant_row["account_id"] == account.id
+    assert grant_row["conducting_user_id"] == cashier.id
 
 
 async def test_free_ticket_grant_without_vouchers(
@@ -89,6 +100,7 @@ async def test_free_ticket_grant_without_vouchers(
     till_layout: TillLayout,
     login_supervised_user: LoginSupervisedUser,
     create_random_user_tag: CreateRandomUserTag,
+    db_connection: Connection,
 ):
     voucher_role = await user_service.create_user_role(
         token=event_admin_token,
@@ -134,6 +146,15 @@ async def test_free_ticket_grant_without_vouchers(
     with pytest.raises(AccessDenied):
         await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
 
+    grant_count = await db_connection.fetchval(
+        "select count(*) from free_ticket_grant ftg "
+        "join account a on a.id = ftg.account_id "
+        "join user_tag ut on ut.id = a.user_tag_id "
+        "where ut.id = $1",
+        volunteer_tag.id,
+    )
+    assert grant_count == 0
+
     await user_service.update_user_role_privileges(
         token=event_admin_token,
         node_id=event_node.id,
@@ -144,13 +165,22 @@ async def test_free_ticket_grant_without_vouchers(
         node_privileges=[],
     )
 
-    success = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
-    assert success
+    account = await account_service.grant_free_tickets(token=terminal_token, new_free_ticket_grant=grant)
+    assert account is not None
     customer = await account_service.get_account_by_tag_id(
         token=event_admin_token, node_id=event_node.id, user_tag_id=volunteer_tag.id
     )
     assert customer is not None
     assert customer.vouchers == 0
+
+    grant_row = await db_connection.fetchrow(
+        "select event_node_id, account_id, conducting_user_id from free_ticket_grant where account_id = $1",
+        account.id,
+    )
+    assert grant_row is not None
+    assert grant_row["event_node_id"] == event_node.id
+    assert grant_row["account_id"] == account.id
+    assert grant_row["conducting_user_id"] == cashier.id
 
     with pytest.raises(AccessDenied):
         await account_service.grant_vouchers(token=terminal_token, user_tag_uid=volunteer_tag.uid, vouchers=3)
@@ -173,3 +203,10 @@ async def test_free_ticket_grant_without_vouchers(
     account = await account_service.grant_vouchers(token=terminal_token, user_tag_uid=volunteer_tag.uid, vouchers=3)
     assert account is not None
     assert 3 == account.vouchers
+
+    grant_stats = await user_service.get_user_voucher_grant_stats(
+        token=event_admin_token,
+        node_id=event_node.id,
+        user_id=cashier.id,
+    )
+    assert grant_stats.vouchers_granted == 3

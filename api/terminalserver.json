@@ -2907,6 +2907,10 @@
             "type": "number",
             "title": "Tax Rate"
           },
+          "vouchers_redeemed": {
+            "type": "integer",
+            "title": "Vouchers Redeemed"
+          },
           "item_id": {
             "type": "integer",
             "title": "Item Id"
@@ -2929,6 +2933,7 @@
           "tax_rate_id",
           "tax_name",
           "tax_rate",
+          "vouchers_redeemed",
           "item_id",
           "total_tax",
           "total_price"
@@ -3343,6 +3348,10 @@
             "type": "number",
             "title": "Tax Rate"
           },
+          "vouchers_redeemed": {
+            "type": "integer",
+            "title": "Vouchers Redeemed"
+          },
           "total_price": {
             "type": "number",
             "title": "Total Price",
@@ -3357,6 +3366,7 @@
           "tax_rate_id",
           "tax_name",
           "tax_rate",
+          "vouchers_redeemed",
           "total_price"
         ],
         "title": "PendingLineItem"

@@ -614,6 +614,65 @@
         }
       }
     },
+    "/users/{user_id}/voucher-grant-stats": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get User Voucher Grant Stats",
+        "operationId": "get_user_voucher_grant_stats",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserVoucherGrantStats"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/{user_id}/role-assignments": {
       "get": {
         "tags": [
@@ -5108,6 +5167,174 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TimeseriesStats"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/payment-methods": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Payment Method Stats",
+        "operationId": "get_payment_method_stats",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodStatsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/free-tickets": {
+      "get": {
+        "tags": [
+          "stats"
+        ],
+        "summary": "Get Free Ticket Stats",
+        "operationId": "get_free_ticket_stats",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "to_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Timestamp"
+            }
+          },
+          {
+            "name": "from_timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Timestamp"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FreeTicketStats"
                 }
               }
             }
@@ -10946,6 +11173,19 @@
         ],
         "title": "FindUserTagPayload"
       },
+      "FreeTicketStats": {
+        "properties": {
+          "free_tickets_issued": {
+            "type": "integer",
+            "title": "Free Tickets Issued"
+          }
+        },
+        "type": "object",
+        "required": [
+          "free_tickets_issued"
+        ],
+        "title": "FreeTicketStats"
+      },
       "GenerateDailyReportPayload": {
         "properties": {
           "relevant_node_ids": {
@@ -11039,6 +11279,10 @@
             "type": "number",
             "title": "Tax Rate"
           },
+          "vouchers_redeemed": {
+            "type": "integer",
+            "title": "Vouchers Redeemed"
+          },
           "item_id": {
             "type": "integer",
             "title": "Item Id"
@@ -11061,6 +11305,7 @@
           "tax_rate_id",
           "tax_name",
           "tax_rate",
+          "vouchers_redeemed",
           "item_id",
           "total_tax",
           "total_price"
@@ -13764,6 +14009,56 @@
         ],
         "title": "PaymentMethod"
       },
+      "PaymentMethodStats": {
+        "properties": {
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "revenue": {
+            "type": "number",
+            "title": "Revenue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_method",
+          "count",
+          "revenue"
+        ],
+        "title": "PaymentMethodStats"
+      },
+      "PaymentMethodStatsResponse": {
+        "properties": {
+          "from_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "From Time"
+          },
+          "to_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "To Time"
+          },
+          "stats": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethodStats"
+            },
+            "type": "array",
+            "title": "Stats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_time",
+          "to_time",
+          "stats"
+        ],
+        "title": "PaymentMethodStatsResponse"
+      },
       "Payout": {
         "properties": {
           "id": {
@@ -13972,6 +14267,10 @@
             "type": "number",
             "title": "Tax Rate"
           },
+          "vouchers_redeemed": {
+            "type": "integer",
+            "title": "Vouchers Redeemed"
+          },
           "total_price": {
             "type": "number",
             "title": "Total Price",
@@ -13986,6 +14285,7 @@
           "tax_rate_id",
           "tax_name",
           "tax_rate",
+          "vouchers_redeemed",
           "total_price"
         ],
         "title": "PendingLineItem"
@@ -14230,6 +14530,14 @@
             "type": "string",
             "title": "Product Name"
           },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
           "count": {
             "type": "integer",
             "title": "Count"
@@ -14237,14 +14545,21 @@
           "revenue": {
             "type": "number",
             "title": "Revenue"
+          },
+          "vouchers_redeemed": {
+            "type": "integer",
+            "title": "Vouchers Redeemed"
           }
         },
         "type": "object",
         "required": [
           "product_id",
           "product_name",
+          "node_id",
+          "node_name",
           "count",
-          "revenue"
+          "revenue",
+          "vouchers_redeemed"
         ],
         "title": "ProductOverallStats"
       },
@@ -14334,6 +14649,14 @@
             "type": "string",
             "title": "Product Name"
           },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
+          "node_name": {
+            "type": "string",
+            "title": "Node Name"
+          },
           "intervals": {
             "items": {
               "$ref": "#/components/schemas/StatInterval"
@@ -14346,6 +14669,8 @@
         "required": [
           "product_id",
           "product_name",
+          "node_id",
+          "node_name",
           "intervals"
         ],
         "title": "ProductTimeseries"
@@ -17441,6 +17766,19 @@
           "node_id"
         ],
         "title": "UserToRoles"
+      },
+      "UserVoucherGrantStats": {
+        "properties": {
+          "vouchers_granted": {
+            "type": "integer",
+            "title": "Vouchers Granted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vouchers_granted"
+        ],
+        "title": "UserVoucherGrantStats"
       },
       "ValidationError": {
         "properties": {

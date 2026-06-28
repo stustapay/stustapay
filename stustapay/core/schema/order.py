@@ -177,6 +177,7 @@ class PendingLineItem(BaseModel):
     tax_rate_id: int
     tax_name: str
     tax_rate: float
+    vouchers_redeemed: int
 
     @computed_field  # type: ignore[misc]
     @property

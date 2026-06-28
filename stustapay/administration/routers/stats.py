@@ -6,6 +6,8 @@ from fastapi import APIRouter
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
 from stustapay.core.service.order.stats import (
+    FreeTicketStats,
+    PaymentMethodStatsResponse,
     ProductStats,
     TimeseriesStats,
     TimeseriesStatsQuery,
@@ -86,6 +88,36 @@ async def get_pay_out_stats(
     from_timestamp: Optional[datetime] = None,
 ):
     return await order_service.stats.get_pay_out_stats(
+        token=token,
+        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp),
+        node_id=node_id,
+    )
+
+
+@router.get("/payment-methods", response_model=PaymentMethodStatsResponse)
+async def get_payment_method_stats(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    node_id: int,
+    to_timestamp: Optional[datetime] = None,
+    from_timestamp: Optional[datetime] = None,
+):
+    return await order_service.stats.get_payment_method_stats(
+        token=token,
+        query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp),
+        node_id=node_id,
+    )
+
+
+@router.get("/free-tickets", response_model=FreeTicketStats)
+async def get_free_ticket_stats(
+    token: CurrentAuthToken,
+    order_service: ContextOrderService,
+    node_id: int,
+    to_timestamp: Optional[datetime] = None,
+    from_timestamp: Optional[datetime] = None,
+):
+    return await order_service.stats.get_free_ticket_stats(
         token=token,
         query=TimeseriesStatsQuery(to_time=to_timestamp, from_time=from_timestamp),
         node_id=node_id,

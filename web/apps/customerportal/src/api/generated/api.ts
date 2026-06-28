@@ -275,6 +275,7 @@ export type LineItem = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   item_id: number;
   total_tax: number;
 };
@@ -285,6 +286,7 @@ export type LineItemRead = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   item_id: number;
   total_tax: number;
   total_price: number;

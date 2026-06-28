@@ -87,11 +87,10 @@ from stustapay.core.service.product import (
     fetch_product,
     fetch_top_up_product,
 )
-from stustapay.core.service.till.common import fetch_virtual_till
+from stustapay.core.service.till.common import fetch_till, get_cash_register_account_id
 from stustapay.core.service.transaction import book_transaction
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
-from ..till.common import get_cash_register_account_id
 from .booking import BookingIdentifier, NewLineItem, book_order
 from .stats import OrderStatsService
 from .voucher import VoucherService
@@ -336,6 +335,7 @@ class OrderService(Service[Config]):
                     tax_rate=product.tax_rate,
                     tax_name=product.tax_name,
                     product=product,
+                    vouchers_redeemed=0,
                 )
 
         if len(restricted_product_names) > 0:
@@ -780,6 +780,7 @@ class OrderService(Service[Config]):
                 product_id=line_item.product.id,
                 product_price=line_item.product_price,
                 tax_rate_id=line_item.tax_rate_id,
+                vouchers_redeemed=line_item.vouchers_redeemed,
             )
             for line_item in pending_sale.line_items
         ]
@@ -933,14 +934,12 @@ class OrderService(Service[Config]):
             bon_url=bon_url,
         )
 
-    @with_db_transaction(read_only=False)
-    @requires_node()
-    @requires_user(node_privileges=[NodePrivilege.can_book_orders])
-    async def book_sale_products(
+    async def _book_sale_products(
         self,
         *,
         conn: Connection,
         node: Node,
+        till: Till,
         current_user: CurrentUser,
         new_sale: NewSaleProducts,
     ) -> CompletedSaleProducts:
@@ -964,12 +963,11 @@ class OrderService(Service[Config]):
             ],
             payment_method=new_sale.payment_method,
         )
-        virtual_till = await fetch_virtual_till(conn=conn, node=node)
         completed_sale = await self._book_sale(
             conn=conn,
             event_settings=event_settings,
             node=node,
-            till=virtual_till,
+            till=till,
             current_user=current_user,
             new_sale=internal_new_sale,
         )
@@ -991,7 +989,7 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_node()
-    @requires_user(node_privileges=[NodePrivilege.can_book_orders])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.can_book_orders])
     async def edit_sale_products(
         self,
         *,
@@ -1004,8 +1002,12 @@ class OrderService(Service[Config]):
         order = await fetch_order(conn=conn, order_id=order_id)
         if order is None:
             raise InvalidArgument("Order does not exist")
-        virtual_till = await fetch_virtual_till(conn=conn, node=node)
-        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=virtual_till.id)
+        if order.till_id is None:
+            raise InvalidArgument("Order does not have a till")
+        till = await fetch_till(conn=conn, node=node, till_id=order.till_id)
+        if till is None:
+            raise InvalidArgument("Order does not exist")
+        await self._cancel_sale(conn=conn, current_user=current_user, order_id=order_id, till_id=till.id)
 
         assert order.customer_tag_uid is not None
 
@@ -1017,11 +1019,8 @@ class OrderService(Service[Config]):
             payment_method=order.payment_method,
         )
 
-        return await self.book_sale_products(  # pylint: disable=unexpected-keyword-arg, missing-kwoa
-            conn=conn,
-            node_id=node.id,
-            current_user=current_user,
-            new_sale=new_sale,
+        return await self._book_sale_products(
+            conn=conn, node=node, current_user=current_user, new_sale=new_sale, till=till
         )
 
     @staticmethod
@@ -1043,6 +1042,8 @@ class OrderService(Service[Config]):
             raise InvalidArgument("Can only cancel sales")
         if order.payment_method != PaymentMethod.tag:
             raise InvalidArgument("Can only cancel orders payed with a tag")
+        if order.till_id != till_id:
+            raise InvalidArgument("Can only cancel orders for the same till the order was booked at")
 
         line_items = []
         for line_item in order.line_items:
@@ -1052,6 +1053,7 @@ class OrderService(Service[Config]):
                     product_id=line_item.product.id,
                     tax_rate_id=line_item.tax_rate_id,
                     product_price=line_item.product_price,
+                    vouchers_redeemed=-line_item.vouchers_redeemed,
                 )
             )
 
@@ -1092,10 +1094,16 @@ class OrderService(Service[Config]):
 
     @with_db_transaction(read_only=False)
     @requires_node()
-    @requires_user(node_privileges=[NodePrivilege.can_book_orders])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.can_book_orders])
     async def cancel_sale_admin(self, *, conn: Connection, node: Node, current_user: CurrentUser, order_id: int):
-        virtual_till = await fetch_virtual_till(conn=conn, node=node)
-        await self._cancel_sale(conn=conn, till_id=virtual_till.id, current_user=current_user, order_id=order_id)
+        till_id = await conn.fetchval(
+            "select t.id from ordr o join till t on o.till_id = t.id where o.id = $1 and t.node_id = any($2)",
+            order_id,
+            node.ids_to_event_node,
+        )
+        if till_id is None:
+            raise InvalidArgument("Order does not exist")
+        await self._cancel_sale(conn=conn, till_id=till_id, current_user=current_user, order_id=order_id)
 
     @with_db_transaction(read_only=False)
     @requires_terminal(node_privileges=[NodePrivilege.can_book_orders])
@@ -1168,6 +1176,7 @@ class OrderService(Service[Config]):
                 product_id=pay_out_product.id,
                 product_price=pending_pay_out.amount,
                 tax_rate_id=pay_out_product.tax_rate_id,
+                vouchers_redeemed=0,
             )
         ]
 
@@ -1389,6 +1398,7 @@ class OrderService(Service[Config]):
                     tax_name=ticket.tax_name,
                     tax_rate=ticket.tax_rate,
                     tax_rate_id=ticket.tax_rate_id,
+                    vouchers_redeemed=0,
                 )
             )
 
@@ -1402,6 +1412,7 @@ class OrderService(Service[Config]):
                         tax_name=top_up_product.tax_name,
                         tax_rate=top_up_product.tax_rate,
                         tax_rate_id=top_up_product.tax_rate_id,
+                        vouchers_redeemed=0,
                     )
                 )
 

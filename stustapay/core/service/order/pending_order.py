@@ -164,6 +164,7 @@ async def make_ticket_sale_bookings(
                 product_id=line_item.product.id,
                 product_price=line_item.product_price,
                 tax_rate_id=line_item.tax_rate_id,
+                vouchers_redeemed=line_item.vouchers_redeemed,
             )
         )
 
@@ -280,6 +281,7 @@ async def make_topup_bookings(
             product_id=top_up_product.id,
             product_price=top_up.amount,
             tax_rate_id=top_up_product.tax_rate_id,
+            vouchers_redeemed=0,
         )
     ]
 

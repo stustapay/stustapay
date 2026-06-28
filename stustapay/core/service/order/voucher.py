@@ -50,6 +50,7 @@ class VoucherService(Service[Config]):
             )
 
             price_deduction = current_line_item.product.price_per_voucher * vouchers_for_product
+            current_line_item.vouchers_redeemed = vouchers_for_product
 
             if current_line_item.tax_name not in additional_line_items_by_tax:
                 additional_line_items_by_tax[current_line_item.tax_name] = PendingLineItem(
@@ -59,6 +60,7 @@ class VoucherService(Service[Config]):
                     tax_name=current_line_item.tax_name,
                     product_price=-price_deduction,
                     quantity=1,
+                    vouchers_redeemed=0,
                 )
             else:
                 additional_line_items_by_tax[current_line_item.tax_name].product_price -= price_deduction

@@ -41,7 +41,8 @@ fun PreviewProductConfirmLineItem() {
             productPrice = 13.37,
             taxRate = 0.19,
             totalPrice = 13.37,
-            taxRateId = 0.toBigInteger()
+            taxRateId = 0.toBigInteger(),
+            vouchersRedeemed = 0.toBigInteger(),
         )
     )
 }

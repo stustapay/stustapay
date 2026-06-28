@@ -136,6 +136,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
+      getUserVoucherGrantStats: build.query<GetUserVoucherGrantStatsApiResponse, GetUserVoucherGrantStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/users/${queryArg.userId}/voucher-grant-stats`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["users"],
+      }),
       listUserRoleAssignments: build.query<ListUserRoleAssignmentsApiResponse, ListUserRoleAssignmentsApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}/role-assignments`,
@@ -872,6 +881,28 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
+      getPaymentMethodStats: build.query<GetPaymentMethodStatsApiResponse, GetPaymentMethodStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/payment-methods`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
+      getFreeTicketStats: build.query<GetFreeTicketStatsApiResponse, GetFreeTicketStatsApiArg>({
+        query: (queryArg) => ({
+          url: `/stats/free-tickets`,
+          params: {
+            node_id: queryArg.nodeId,
+            to_timestamp: queryArg.toTimestamp,
+            from_timestamp: queryArg.fromTimestamp,
+          },
+        }),
+        providesTags: ["stats"],
+      }),
       listTickets: build.query<ListTicketsApiResponse, ListTicketsApiArg>({
         query: (queryArg) => ({
           url: `/tickets`,
@@ -1557,6 +1588,11 @@ export type DeleteUserApiArg = {
   userId: number;
   nodeId: number;
 };
+export type GetUserVoucherGrantStatsApiResponse = /** status 200 Successful Response */ UserVoucherGrantStats;
+export type GetUserVoucherGrantStatsApiArg = {
+  userId: number;
+  nodeId: number;
+};
 export type ListUserRoleAssignmentsApiResponse = /** status 200 Successful Response */ UserRoleAssignment[];
 export type ListUserRoleAssignmentsApiArg = {
   userId: number;
@@ -1936,6 +1972,18 @@ export type GetTopUpStatsApiArg = {
 };
 export type GetPayOutStatsApiResponse = /** status 200 Successful Response */ TimeseriesStats;
 export type GetPayOutStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodStatsResponse;
+export type GetPaymentMethodStatsApiArg = {
+  nodeId: number;
+  toTimestamp?: string | null;
+  fromTimestamp?: string | null;
+};
+export type GetFreeTicketStatsApiResponse = /** status 200 Successful Response */ FreeTicketStats;
+export type GetFreeTicketStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
@@ -2384,6 +2432,9 @@ export type UpdateUserPayload = {
   user_tag_pin?: string | null;
   user_tag_uid_hex?: string | null;
 };
+export type UserVoucherGrantStats = {
+  vouchers_granted: number;
+};
 export type UserRole = {
   name: string;
   can_assign_all_roles?: boolean;
@@ -2685,6 +2736,7 @@ export type LineItem = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   item_id: number;
   total_tax: number;
 };
@@ -2695,6 +2747,7 @@ export type LineItemRead = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   item_id: number;
   total_tax: number;
   total_price: number;
@@ -2975,6 +3028,7 @@ export type PendingLineItem = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
 };
 export type PendingLineItemRead = {
   quantity: number;
@@ -2983,6 +3037,7 @@ export type PendingLineItemRead = {
   tax_rate_id: number;
   tax_name: string;
   tax_rate: number;
+  vouchers_redeemed: number;
   total_price: number;
 };
 export type BookedProduct = {
@@ -3091,13 +3146,18 @@ export type StatInterval = {
 export type ProductTimeseries = {
   product_id: number;
   product_name: string;
+  node_id: number;
+  node_name: string;
   intervals: StatInterval[];
 };
 export type ProductOverallStats = {
   product_id: number;
   product_name: string;
+  node_id: number;
+  node_name: string;
   count: number;
   revenue: number;
+  vouchers_redeemed: number;
 };
 export type ProductStats = {
   from_time: string;
@@ -3118,6 +3178,19 @@ export type TimeseriesStats = {
   to_time: string;
   daily_intervals: StatInterval[];
   hourly_intervals: StatInterval[];
+};
+export type PaymentMethodStats = {
+  payment_method: PaymentMethod;
+  count: number;
+  revenue: number;
+};
+export type PaymentMethodStatsResponse = {
+  from_time: string;
+  to_time: string;
+  stats: PaymentMethodStats[];
+};
+export type FreeTicketStats = {
+  free_tickets_issued: number;
 };
 export type Ticket = {
   name: string;
@@ -3836,6 +3909,8 @@ export const {
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useGetUserVoucherGrantStatsQuery,
+  useLazyGetUserVoucherGrantStatsQuery,
   useListUserRoleAssignmentsQuery,
   useLazyListUserRoleAssignmentsQuery,
   useChangeUserPasswordMutation,
@@ -3949,6 +4024,10 @@ export const {
   useLazyGetTopUpStatsQuery,
   useGetPayOutStatsQuery,
   useLazyGetPayOutStatsQuery,
+  useGetPaymentMethodStatsQuery,
+  useLazyGetPaymentMethodStatsQuery,
+  useGetFreeTicketStatsQuery,
+  useLazyGetFreeTicketStatsQuery,
   useListTicketsQuery,
   useLazyListTicketsQuery,
   useCreateTicketMutation,

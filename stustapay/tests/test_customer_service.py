@@ -87,12 +87,14 @@ async def order_with_bon(
             product_id=product1.id,
             product_price=product1.price,
             tax_rate_id=product1.tax_rate_id,
+            vouchers_redeemed=0,
         ),
         NewLineItem(
             quantity=1,
             product_id=product2.id,
             product_price=product2.price,
             tax_rate_id=product2.tax_rate_id,
+            vouchers_redeemed=0,
         ),
     ]
 

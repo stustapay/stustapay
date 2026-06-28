@@ -6,7 +6,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { useDeleteUserMutation, useGetUserQuery } from "@/api";
+import { useDeleteUserMutation, useGetUserQuery, useGetUserVoucherGrantStatsQuery } from "@/api";
 import { UserRoutes, UserTagRoutes } from "@/app/routes";
 import { UserRoleAssignmentsSection } from "@/app/routes/users";
 import { DetailField, DetailLayout, DetailView } from "@/components";
@@ -19,6 +19,10 @@ export const UserDetail: React.FC = () => {
   const navigate = useNavigate();
   const [deleteUser] = useDeleteUserMutation();
   const { data: user, error } = useGetUserQuery({ nodeId: currentNode.id, userId: Number(userId) });
+  const { data: voucherGrantStats } = useGetUserVoucherGrantStatsQuery({
+    nodeId: currentNode.id,
+    userId: Number(userId),
+  });
   const openModal = useOpenModal();
 
   if (error) {
@@ -73,6 +77,7 @@ export const UserDetail: React.FC = () => {
         ) : (
           <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
         )}
+        <DetailField label={t("user.vouchersGranted")} value={voucherGrantStats?.vouchers_granted ?? 0} />
       </DetailView>
       <Paper sx={{ p: 1 }}>
         <UserRoleAssignmentsSection userId={Number(userId)} />

@@ -30,17 +30,18 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param quantity 
- * @param product 
- * @param productPrice 
- * @param taxRateId 
- * @param taxName 
- * @param taxRate 
- * @param itemId 
- * @param totalTax 
- * @param totalPrice 
+ *
+ * @param quantity
+ * @param product
+ * @param productPrice
+ * @param taxRateId
+ * @param taxName
+ * @param taxRate
+ * @param vouchersRedeemed
+ * @param itemId
+ * @param totalTax
+ * @param totalPrice
  */
 @Serializable
 
@@ -64,6 +65,9 @@ data class LineItem (
     @Contextual @SerialName(value = "tax_rate")
     val taxRate: kotlin.Double,
 
+    @SerialName(value = "vouchers_redeemed")
+    val vouchersRedeemed: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
     @SerialName(value = "item_id")
     val itemId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
@@ -77,4 +81,3 @@ data class LineItem (
 
 
 }
-
