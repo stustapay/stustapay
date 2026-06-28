@@ -38,7 +38,7 @@ export const PayoutRunDetail: React.FC = () => {
 
   const [csvExport] = usePayoutRunCsvExportMutation();
   const [previousSepa] = usePreviousPayoutRunSepaXmlMutation();
-  const [setAsDone] = useSetPayoutRunAsDoneMutation();
+  const [setAsDone, { isLoading: isSetDoneLoading }] = useSetPayoutRunAsDoneMutation();
   const [revoke] = useRevokePayoutRunMutation();
   const { payoutRun, error } = useListPayoutRunsQuery(
     { nodeId: currentNode.id },
@@ -184,6 +184,7 @@ export const PayoutRunDetail: React.FC = () => {
       onClick: handleSetDone,
       color: "success",
       icon: <CheckIcon />,
+      loading: isSetDoneLoading,
       disabled: payoutRun.done || payoutRun.revoked,
     },
     {

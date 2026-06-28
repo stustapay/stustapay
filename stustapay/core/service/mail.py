@@ -4,6 +4,7 @@
 import asyncio
 import logging
 import math
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from email import encoders
 from email.mime.base import MIMEBase
@@ -17,7 +18,7 @@ from sftkit.database import Connection
 from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
-from stustapay.core.schema.mail import Mail, MailID
+from stustapay.core.schema.mail import Mail, MailID, MailMessage
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
 
@@ -77,6 +78,40 @@ class MailService(Service[Config]):
                 content,
             )
         self.logger.debug(f"Added mail to database buffer for {to_addr}")
+
+    @with_db_transaction
+    async def send_mails(
+        self,
+        *,
+        conn: Connection,
+        node_id: int,
+        subject: str,
+        messages: Sequence[MailMessage],
+        html_message: bool = False,
+        from_addr: str | None = None,
+        scheduled_send_date: datetime | None = None,
+    ):
+        if len(messages) == 0:
+            return
+
+        res_config = await fetch_restricted_event_settings_for_node(conn, node_id)
+        if not res_config.email_enabled:
+            self.logger.warning(
+                f"{len(messages)} mails were not scheduled for sending because event with node id {node_id} "
+                "has mail sending deactivated"
+            )
+            return
+
+        sender = from_addr if from_addr is not None else res_config.email_default_sender
+        send_date = scheduled_send_date if scheduled_send_date is not None else datetime.now()
+        await conn.executemany(
+            """
+            INSERT INTO mails (node_id, subject, message, html_message, to_addr, from_addr, scheduled_send_date)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """,
+            [(node_id, subject, mail.message, html_message, mail.to_addr, sender, send_date) for mail in messages],
+        )
+        self.logger.debug(f"Added {len(messages)} mails to database buffer")
 
     @with_db_transaction(read_only=True)
     async def _fetch_due_mail_ids(self, *, conn: Connection) -> list[MailID]:
