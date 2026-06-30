@@ -11,8 +11,10 @@ import {
   useListCashRegistersAdminQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, CashRegistersRoutes, UserRoutes } from "@/app/routes";
+import { CashRegistersRoutes, UserRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
+
+const shiftDetailPath = (cashierId: number, shiftId: number) => `${UserRoutes.detail(cashierId)}/shifts/${shiftId}`;
 
 export const CashierShiftTable: React.FC<{
   cashierShifts: CashierShift[];
@@ -42,9 +44,7 @@ export const CashierShiftTable: React.FC<{
       field: "id",
       headerName: t("shift.id"),
       renderCell: (params) => (
-        <RouterLink to={CashierRoutes.detail(params.row.cashier_id) + `/shifts/${params.row.id}`}>
-          {params.row.id}
-        </RouterLink>
+        <RouterLink to={shiftDetailPath(params.row.cashier_id, params.row.id)}>{params.row.id}</RouterLink>
       ),
     },
     {
@@ -60,7 +60,7 @@ export const CashierShiftTable: React.FC<{
             type: "string",
             valueGetter: (value: number) => getUsernameForUser(value),
             renderCell: (params: any) => (
-              <RouterLink to={CashierRoutes.detail(params.row.cashier_id)}>
+              <RouterLink to={UserRoutes.detail(params.row.cashier_id)}>
                 {getUsernameForUser(params.row.cashier_id)}
               </RouterLink>
             ),

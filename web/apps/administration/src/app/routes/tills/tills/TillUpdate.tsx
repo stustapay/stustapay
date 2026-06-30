@@ -20,7 +20,7 @@ export const TillUpdate: React.FC = withPrivilegeGuard("node_administration", ()
   const [updateTill] = useUpdateTillMutation();
 
   if (error) {
-    return <Navigate to={TillRoutes.list()} />;
+    return <Navigate to={TillRoutes.action("list")} />;
   }
 
   if (isLoading || !till) {

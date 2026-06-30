@@ -166,7 +166,7 @@ export const TillList: React.FC = () => {
   }
 
   return (
-    <ListLayout title={t("tills")} routes={TillRoutes}>
+    <ListLayout title={t("till.configuration")} routes={TillRoutes}>
       <DataGrid
         autoHeight
         loading={isTillsLoading || isProfilesLoading || isTerminalsLoading || isTsesLoading}

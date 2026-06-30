@@ -50,7 +50,7 @@ export const TillDetail: React.FC = () => {
 
   if (tillError || orderError || profileError || terminalError || tseError) {
     toast.error("Error loading tills or orders");
-    return <Navigate to={TillRoutes.list()} />;
+    return <Navigate to={TillRoutes.action("list")} />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -59,7 +59,7 @@ export const TillDetail: React.FC = () => {
       title: t("till.delete"),
       content: t("till.deleteDescription"),
       onConfirm: () => {
-        deleteTill({ nodeId: currentNode.id, tillId: Number(tillId) }).then(() => navigate(TillRoutes.list()));
+        deleteTill({ nodeId: currentNode.id, tillId: Number(tillId) }).then(() => navigate(TillRoutes.action("list")));
       },
     });
   };

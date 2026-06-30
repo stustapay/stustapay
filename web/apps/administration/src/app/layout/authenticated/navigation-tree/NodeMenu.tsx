@@ -14,7 +14,6 @@ import * as React from "react";
 
 import { EventPrivilege, Node, NodePrivilege, NodeSeenByUser, ObjectType } from "@/api";
 import {
-  CashierRoutes,
   CustomerRoutes,
   ProductRoutes,
   SumUpTransactionRoutes,
@@ -58,13 +57,6 @@ export const nodeMenuEntryDefinitions: NodeMenuItem[] = [
     route: (node) => UserToRoleRoutes.list(node.id),
     label: i18n.t("userToRoles"),
     icon: AdminPanelSettingsIcon,
-  },
-  {
-    route: (node) => CashierRoutes.list(node.id),
-    label: i18n.t("cashiers"),
-    icon: PersonIcon,
-    requiresOneOfObjectType: ["user", "user_role"],
-    requiresEvent: true,
   },
   {
     route: (node) => ProductRoutes.list(node.id),

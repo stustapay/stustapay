@@ -30,42 +30,48 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param login 
- * @param displayName 
- * @param userTagUid 
- * @param nodeId 
- * @param id 
- * @param assignedRoles 
- * @param userTagUidHex 
- * @param userTagPin 
- * @param description 
- * @param userTagId 
- * @param transportAccountId 
- * @param cashRegisterId 
- * @param cashRegisterName 
- * @param cashDrawerBalance 
- * @param transportAccountBalance 
+ *
+ * @param id
+ * @param login
+ * @param nodeId
+ * @param displayName
+ * @param userTagId
+ * @param userTagPin
+ * @param userTagUid
+ * @param assignedRoles
+ * @param userTagUidHex
+ * @param description
+ * @param cashRegisterId
+ * @param cashRegisterName
+ * @param cashDrawerBalance
+ * @param transportAccountBalance
+ * @param transportAccountId
  */
 @Serializable
 
 data class UserInfo (
 
+    @SerialName(value = "id")
+    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
     @SerialName(value = "login")
     val login: kotlin.String,
-
-    @SerialName(value = "display_name")
-    val displayName: kotlin.String,
-
-    @SerialName(value = "user_tag_uid")
-    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "node_id")
     val nodeId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "id")
-    val id: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+    @SerialName(value = "display_name")
+    val displayName: kotlin.String,
+
+    @SerialName(value = "user_tag_id")
+    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
+
+    @SerialName(value = "user_tag_pin")
+    val userTagPin: kotlin.String,
+
+    @SerialName(value = "user_tag_uid")
+    val userTagUid: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
     @SerialName(value = "assigned_roles")
     val assignedRoles: kotlin.collections.List<UserRoleInfo>,
@@ -73,17 +79,8 @@ data class UserInfo (
     @SerialName(value = "user_tag_uid_hex")
     val userTagUidHex: kotlin.String?,
 
-    @SerialName(value = "user_tag_pin")
-    val userTagPin: kotlin.String? = null,
-
     @SerialName(value = "description")
     val description: kotlin.String? = null,
-
-    @SerialName(value = "user_tag_id")
-    val userTagId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
-
-    @SerialName(value = "transport_account_id")
-    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
 
     @SerialName(value = "cash_register_id")
     val cashRegisterId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null,
@@ -95,10 +92,12 @@ data class UserInfo (
     val cashDrawerBalance: kotlin.Double? = null,
 
     @Contextual @SerialName(value = "transport_account_balance")
-    val transportAccountBalance: kotlin.Double? = null
+    val transportAccountBalance: kotlin.Double? = null,
+
+    @SerialName(value = "transport_account_id")
+    val transportAccountId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger? = null
 
 ) {
 
 
 }
-

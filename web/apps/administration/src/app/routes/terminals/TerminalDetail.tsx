@@ -26,7 +26,7 @@ import {
   useRemoveFromTerminalMutation,
 } from "@/api";
 import { config } from "@/api/common";
-import { CashierRoutes, TerminalRoutes, TillRoutes } from "@/app/routes";
+import { TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { TerminalSwitchTill } from "@/components/features";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
 import { encodeTerminalRegistrationQrCode } from "@/core";
@@ -190,7 +190,7 @@ export const TerminalDetail: React.FC = () => {
               <>
                 <DetailField
                   label={t("till.activeUser")}
-                  linkTo={CashierRoutes.detail(terminal.active_user_id)}
+                  linkTo={UserRoutes.detail(terminal.active_user_id)}
                   value={renderUser(terminal.active_user_id)}
                 />
                 <ListItem>

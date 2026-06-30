@@ -24,8 +24,8 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 
-import { selectTerminalById, useCloseOutCashierMutation, useGetCashierQuery, useListTerminalsQuery } from "@/api";
-import { CashierRoutes, TerminalRoutes } from "@/app/routes";
+import { selectTerminalById, useCloseOutCashierMutation, useGetUserQuery, useListTerminalsQuery } from "@/api";
+import { TerminalRoutes, UserRoutes } from "@/app/routes";
 import { UserSelect } from "@/components/features";
 import { useCurrencyFormatter, useCurrentNode, useCurrentUser } from "@/hooks";
 
@@ -82,7 +82,7 @@ const computeDifference = (
 export const CashierCloseOut: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { cashierId } = useParams();
+  const { userId } = useParams();
   const navigate = useNavigate();
 
   const formatCurrency = useCurrencyFormatter();
@@ -91,15 +91,15 @@ export const CashierCloseOut: React.FC = () => {
   const { schema, initialValues } = useCloseOutSchema(denominations);
 
   const [closeOut] = useCloseOutCashierMutation();
-  const { data: cashier, isLoading } = useGetCashierQuery({
+  const { data: user, isLoading } = useGetUserQuery({
     nodeId: currentNode.id,
-    cashierId: Number(cashierId),
+    userId: Number(userId),
   });
   const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({
     nodeId: currentNode.id,
   });
 
-  if (!cashier || isLoading || !terminals || isTerminalsLoading) {
+  if (!user || isLoading || !terminals || isTerminalsLoading) {
     return <Loading />;
   }
 
@@ -114,7 +114,7 @@ export const CashierCloseOut: React.FC = () => {
     setSubmitting(true);
     closeOut({
       nodeId: currentNode.id,
-      cashierId: Number(cashierId),
+      cashierId: Number(userId),
       closeOut: {
         comment: values.comment,
         actual_cash_drawer_balance: computeSum(values, denominations),
@@ -124,14 +124,14 @@ export const CashierCloseOut: React.FC = () => {
       .unwrap()
       .then(() => {
         setSubmitting(false);
-        navigate(CashierRoutes.detail(cashierId));
+        navigate(UserRoutes.detail(Number(userId)));
       })
       .catch((_err) => {
         setSubmitting(false);
       });
   };
 
-  const cashDrawerBalance = cashier.cash_drawer_balance;
+  const cashDrawerBalance = user.cash_drawer_balance;
 
   if (cashDrawerBalance == null) {
     return <Alert severity="error">{t("closeOut.noCashDrawerWarning")}</Alert>;
@@ -141,15 +141,15 @@ export const CashierCloseOut: React.FC = () => {
     <Stack spacing={2}>
       <Paper>
         <ListItem>
-          <ListItemText primary={getUserName(cashier)} />
+          <ListItemText primary={getUserName(user)} />
         </ListItem>
       </Paper>
 
-      {cashier.terminal_ids.length !== 0 && (
+      {user.terminal_ids.length !== 0 && (
         <Alert severity="error">
           <AlertTitle>{t("closeOut.warningStillLoggedInTitle")}</AlertTitle>
           {t("closeOut.warningStillLoggedIn")}
-          {cashier.terminal_ids.map((id) => (
+          {user.terminal_ids.map((id) => (
             <RouterLink key={id} to={TerminalRoutes.detail(id, getTerminal(id)?.node_id)}>
               {getTerminal(id)?.name}
             </RouterLink>
@@ -238,7 +238,7 @@ export const CashierCloseOut: React.FC = () => {
                 </Button>
               </Stack>
             </Paper>
-            <CashierShiftStatsOverview cashierId={cashier.id} />
+            <CashierShiftStatsOverview cashierId={user.id} />
           </Form>
         )}
       </Formik>

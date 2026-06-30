@@ -110,6 +110,9 @@ class UserWithoutId(NewUser):
     node_id: int
     user_tag_id: Optional[int] = None
     transport_account_id: Optional[int] = None
+    cash_register_id: Optional[int] = None
+    cash_drawer_balance: Optional[float] = None
+    terminal_ids: list[int]
 
     @computed_field  # type: ignore[misc]
     @property

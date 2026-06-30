@@ -8,12 +8,12 @@ import {
   selectCashierShiftById,
   selectCashRegisterById,
   selectUserById,
-  useGetCashierQuery,
   useGetCashierShiftsQuery,
+  useGetUserQuery,
   useListCashRegistersAdminQuery,
   useListUsersQuery,
 } from "@/api";
-import { CashierRoutes, CashRegistersRoutes, UserRoutes } from "@/app/routes";
+import { CashRegistersRoutes, UserRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
@@ -21,12 +21,12 @@ import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
 export const CashierShiftDetail: React.FC = () => {
   const { t } = useTranslation();
-  const { cashierId, shiftId } = useParams();
+  const { userId, shiftId } = useParams();
   const { currentNode } = useCurrentNode();
 
-  const { data: cashier } = useGetCashierQuery({ nodeId: currentNode.id, cashierId: Number(cashierId) });
+  const { data: user } = useGetUserQuery({ nodeId: currentNode.id, userId: Number(userId) });
   const { cashierShift } = useGetCashierShiftsQuery(
-    { nodeId: currentNode.id, cashierId: Number(cashierId) },
+    { nodeId: currentNode.id, cashierId: Number(userId) },
     {
       selectFromResult: ({ data, ...rest }) => ({
         ...rest,
@@ -37,7 +37,7 @@ export const CashierShiftDetail: React.FC = () => {
   const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
   const { data: registers } = useListCashRegistersAdminQuery({ nodeId: currentNode.id });
 
-  if (cashierShift === undefined || cashier === undefined || users === undefined || registers === undefined) {
+  if (cashierShift === undefined || user === undefined || users === undefined || registers === undefined) {
     return <Loading />;
   }
 
@@ -46,7 +46,7 @@ export const CashierShiftDetail: React.FC = () => {
     cashierShift.cash_register_id != null ? selectCashRegisterById(registers, cashierShift.cash_register_id) : null;
 
   return (
-    <DetailLayout title={getUserName(cashier)} routes={CashierRoutes}>
+    <DetailLayout title={getUserName(user)} routes={UserRoutes}>
       <DetailView>
         <DetailField label={t("shift.comment")} value={cashierShift.comment} />
         <DetailField label={t("shift.startedAt")} value={cashierShift.started_at} />
@@ -79,7 +79,7 @@ export const CashierShiftDetail: React.FC = () => {
           value={cashierShift.cash_drawer_imbalance}
         />
       </DetailView>
-      <CashierShiftStatsOverview cashierId={Number(cashierId)} shiftId={Number(shiftId)} />
+      <CashierShiftStatsOverview cashierId={Number(userId)} shiftId={Number(shiftId)} />
     </DetailLayout>
   );
 };

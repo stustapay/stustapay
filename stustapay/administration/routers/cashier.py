@@ -1,11 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextCashierService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
-from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
+from stustapay.core.schema.cashier import CashierShift, CashierShiftStats
 from stustapay.core.service.cashier import CloseOut, CloseOutResult
 
 router = APIRouter(
@@ -13,19 +13,6 @@ router = APIRouter(
     tags=["cashiers"],
     responses={404: {"description": "Not found"}},
 )
-
-
-@router.get("", response_model=NormalizedList[Cashier, int])
-async def list_cashiers(token: CurrentAuthToken, cashier_service: ContextCashierService, node_id: int):
-    return normalize_list(await cashier_service.list_cashiers(token=token, node_id=node_id))
-
-
-@router.get("/{cashier_id}", response_model=Cashier)
-async def get_cashier(token: CurrentAuthToken, cashier_id: int, cashier_service: ContextCashierService, node_id: int):
-    cashier = await cashier_service.get_cashier(token=token, cashier_id=cashier_id, node_id=node_id)
-    if not cashier:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return cashier
 
 
 @router.get("/{cashier_id}/shifts", response_model=NormalizedList[CashierShift, int])

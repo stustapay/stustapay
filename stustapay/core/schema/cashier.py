@@ -1,31 +1,9 @@
 from datetime import datetime
-from typing import Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.product import Product
-from stustapay.core.schema.user import format_user_tag_uid
-
-
-class Cashier(BaseModel):
-    node_id: int
-    id: int
-    login: str
-    display_name: str
-    description: Optional[str] = None
-    user_tag_id: Optional[int] = None
-    user_tag_uid: Optional[int] = None
-
-    @computed_field  # type: ignore[misc]
-    @property
-    def user_tag_uid_hex(self) -> Optional[str]:
-        return format_user_tag_uid(self.user_tag_uid)
-
-    transport_account_id: Optional[int] = None
-    cash_register_id: Optional[int] = None
-    cash_drawer_balance: float | None
-    terminal_ids: list[int]
 
 
 class CashierShiftStats(BaseModel):

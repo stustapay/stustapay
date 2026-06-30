@@ -1,4 +1,9 @@
-import { Folder as FolderIcon, Gamepad as GamepadIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
+import {
+  Folder as FolderIcon,
+  Gamepad as GamepadIcon,
+  Map as MapIcon,
+  PointOfSale as PointOfSaleIcon,
+} from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
@@ -16,6 +21,9 @@ import {
 } from "@/app/routes";
 
 const getActiveTab = (location: string) => {
+  if (location.startsWith(TillRoutes.action("list"))) {
+    return TillRoutes.action("list");
+  }
   if (location.startsWith(TillProfileRoutes.list())) {
     return TillProfileRoutes.list();
   }
@@ -53,12 +61,20 @@ export const TillPageLayout: React.FC = () => {
     <Box>
       <Tabs value={getActiveTab(location.pathname)} sx={{ borderBottom: 1, borderColor: "divider" }} aria-label="Tills">
         <Tab
-          label={t("till.tills")}
+          label={t("till.overview")}
           component={RouterLink}
-          icon={<PointOfSaleIcon />}
+          icon={<MapIcon />}
           iconPosition="start"
           value={TillRoutes.list()}
           to={TillRoutes.list()}
+        />
+        <Tab
+          label={t("till.configuration")}
+          component={RouterLink}
+          icon={<PointOfSaleIcon />}
+          iconPosition="start"
+          value={TillRoutes.action("list")}
+          to={TillRoutes.action("list")}
         />
         <Tab
           label={t("profile.profiles")}

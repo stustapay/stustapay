@@ -1,4 +1,4 @@
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -6,11 +6,19 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { useDeleteUserMutation, useGetUserQuery, useGetUserVoucherGrantStatsQuery } from "@/api";
-import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import {
+  selectTerminalById,
+  useDeleteUserMutation,
+  useGetUserQuery,
+  useGetUserVoucherGrantStatsQuery,
+  useListTerminalsQuery,
+} from "@/api";
+import { TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { UserRoleAssignmentsSection } from "@/app/routes/users";
 import { DetailField, DetailLayout, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
+
+import { UserCashierSection } from "./UserCashierSection";
 
 export const UserDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -23,11 +31,21 @@ export const UserDetail: React.FC = () => {
     nodeId: currentNode.id,
     userId: Number(userId),
   });
+  const {
+    data: terminals,
+    isLoading: isTerminalsLoading,
+    error: terminalError,
+  } = useListTerminalsQuery({
+    nodeId: currentNode.id,
+  });
   const openModal = useOpenModal();
 
-  if (error) {
-    return <Navigate to={UserRoutes.list()} />;
-  }
+  const getTerminal = (id: number) => {
+    if (!terminals) {
+      return undefined;
+    }
+    return selectTerminalById(terminals, id);
+  };
 
   const openConfirmDeleteDialog = () => {
     openModal({
@@ -40,9 +58,23 @@ export const UserDetail: React.FC = () => {
     });
   };
 
-  if (user === undefined) {
+  if (user === undefined || isTerminalsLoading) {
     return <Loading />;
   }
+  if (error || terminalError) {
+    return <Navigate to={UserRoutes.list()} />;
+  }
+
+  const cashierActions =
+    user.cash_register_id != null && user.cash_drawer_balance !== 0 && user.cash_drawer_balance != null
+      ? ([
+          {
+            label: t("cashier.closeOut"),
+            onClick: () => navigate(UserRoutes.detailAction(userId, "close-out", user.node_id)),
+            icon: <PointOfSaleIcon />,
+          } as const,
+        ] as const)
+      : [];
 
   return (
     <DetailLayout
@@ -50,6 +82,7 @@ export const UserDetail: React.FC = () => {
       routes={UserRoutes}
       elementNodeId={user.node_id}
       actions={[
+        ...cashierActions,
         {
           label: t("user.changePassword.title"),
           onClick: () => navigate(UserRoutes.detailAction(userId, "change-password")),
@@ -77,11 +110,24 @@ export const UserDetail: React.FC = () => {
         ) : (
           <DetailField label={t("user.tagId")} value={t("user.noTagAssigned")} />
         )}
+        {user.terminal_ids.length !== 0 ? (
+          user.terminal_ids.map((id) => (
+            <DetailField
+              key={id}
+              label={t("user.terminal")}
+              value={getTerminal(id)?.name}
+              linkTo={TerminalRoutes.detail(getTerminal(id)?.id)}
+            />
+          ))
+        ) : (
+          <DetailField label={t("user.terminal")} value={t("user.notLoggedInAtTill")} />
+        )}
         <DetailField label={t("user.vouchersGranted")} value={voucherGrantStats?.vouchers_granted ?? 0} />
       </DetailView>
       <Paper sx={{ p: 1 }}>
         <UserRoleAssignmentsSection userId={Number(userId)} />
       </Paper>
+      <UserCashierSection cashier={user} />
     </DetailLayout>
   );
 };

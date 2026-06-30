@@ -8,7 +8,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.core.config import Config
 from stustapay.core.schema.audit_logs import AuditType
-from stustapay.core.schema.cashier import Cashier, CashierShift, CashierShiftStats
+from stustapay.core.schema.cashier import CashierShift, CashierShiftStats
 from stustapay.core.schema.order import Order
 from stustapay.core.schema.product import Product
 from stustapay.core.schema.tree import Node, ObjectType
@@ -52,17 +52,9 @@ class CashierService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def list_cashiers(self, *, conn: Connection, node: Node) -> list[Cashier]:
-        return await conn.fetch_many(
-            Cashier, "select * from cashier where node_id = any($1) order by login", node.ids_to_event_node
-        )
-
-    @with_db_transaction(read_only=True)
-    @requires_node(event_only=True)
-    @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[Cashier]:
+    async def get_cashier(self, *, conn: Connection, node: Node, cashier_id: int) -> Optional[User]:
         return await conn.fetch_maybe_one(
-            Cashier, "select * from cashier where id = $1 and node_id = any($2)", cashier_id, node.ids_to_event_node
+            User, "select * from cashier where id = $1 and node_id = any($2)", cashier_id, node.ids_to_event_node
         )
 
     @staticmethod

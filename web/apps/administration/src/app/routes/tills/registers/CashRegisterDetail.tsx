@@ -10,18 +10,18 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import {
   CashRegister,
-  selectCashierById,
+  selectUserById,
   selectCashierShiftAll,
   selectTillById,
   selectTransactionAll,
   useDeleteRegisterMutation,
   useGetCashierShiftsForRegisterQuery,
   useGetCashRegisterAdminQuery,
-  useListCashiersQuery,
+  useListUsersQuery,
   useListTillsQuery,
   useListTransactionsQuery,
 } from "@/api";
-import { CashierRoutes, CashRegistersRoutes, TillRoutes } from "@/app/routes";
+import { CashRegistersRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { TransactionTable } from "@/components/features";
 import { useCurrentNode } from "@/hooks";
@@ -84,14 +84,14 @@ export const CashRegisterDetail: React.FC = () => {
     registerId: Number(registerId),
   });
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
+  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
 
   const [activeTab, setActiveTab] = React.useState("cashierShifts");
 
   if (error) {
     return <Navigate to={CashRegistersRoutes.list()} />;
   }
-  if (register === undefined || tills === undefined || cashiers === undefined) {
+  if (register === undefined || tills === undefined || users === undefined) {
     return <Loading />;
   }
 
@@ -108,7 +108,7 @@ export const CashRegisterDetail: React.FC = () => {
     });
   };
 
-  const cashier = register.current_cashier_id != null ? selectCashierById(cashiers, register.current_cashier_id) : null;
+  const cashier = register.current_cashier_id != null ? selectUserById(users, register.current_cashier_id) : null;
 
   return (
     <Stack spacing={2} direction="column">
@@ -147,7 +147,7 @@ export const CashRegisterDetail: React.FC = () => {
             secondaryAction={
               register.balance !== 0 &&
               cashier != null && (
-                <ButtonLink to={CashierRoutes.detailAction(cashier.id, "close-out", cashier.node_id)}>
+                <ButtonLink to={UserRoutes.detailAction(cashier.id, "close-out", cashier.node_id)}>
                   {t("cashier.closeOut")}
                 </ButtonLink>
               )
@@ -156,7 +156,7 @@ export const CashRegisterDetail: React.FC = () => {
           {cashier != null && (
             <DetailField
               label={t("register.currentCashier")}
-              linkTo={CashierRoutes.detail(cashier.id)}
+              linkTo={UserRoutes.detail(cashier.id)}
               value={getUserName(cashier)}
             />
           )}

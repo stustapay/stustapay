@@ -180,32 +180,41 @@ create view user_tag_with_history as
             group by atah.user_tag_id
         ) hist on ut.id = hist.user_tag_id;
 
-create view cashier as
+create view user_terminal_ids as
     select
-        u.node_id,
-        u.id,
-        u.login,
-        u.display_name,
-        u.description,
-        u.user_tag_id,
-        u.user_tag_uid,
-        u.transport_account_id,
-        u.cash_register_id,
+        t.active_user_id as user_id,
+        array_agg(t.id)  as terminal_ids
+    from
+        terminal t
+    where
+        t.active_user_id is not null
+    group by t.active_user_id;
+
+create view user_with_cashier_info as
+    select
+        u.*,
         cr.balance                                           as cash_drawer_balance,
         coalesce(terminals.terminal_ids, '{}'::bigint array) as terminal_ids
     from
         user_with_tag u
         left join cash_register_with_balance cr on cr.id = u.cash_register_id
-        left join (
-            select
-                t.active_user_id as user_id,
-                array_agg(t.id)  as terminal_ids
-            from
-                terminal t
-            where
-                t.active_user_id is not null
-            group by t.active_user_id
-        ) terminals on terminals.user_id = u.id;
+        left join user_terminal_ids terminals on terminals.user_id = u.id;
+
+create view cashier as
+    select
+        node_id,
+        id,
+        login,
+        display_name,
+        description,
+        user_tag_id,
+        user_tag_uid,
+        transport_account_id,
+        cash_register_id,
+        cash_drawer_balance,
+        terminal_ids
+    from
+        user_with_cashier_info;
 
 create view product_with_tax_and_restrictions as
     select

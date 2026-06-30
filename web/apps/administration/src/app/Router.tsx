@@ -6,7 +6,7 @@ import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout
 import { NodeProvider } from "./provider";
 import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
 import { Login, Profile } from "./routes/auth";
-import { CashierCloseOut, CashierDetail, CashierList, CashierShiftDetail } from "./routes/cashiers";
+import { CashierCloseOut, CashierShiftDetail } from "./routes/cashiers";
 import {
   CustomerDetail,
   CustomerTagSwap,
@@ -61,6 +61,7 @@ import {
   TillLayoutUpdate,
   TillList,
   TillPageLayout,
+  TillOverview,
   TillProfileCreate,
   TillProfileDetail,
   TillProfileList,
@@ -267,33 +268,15 @@ const router = createBrowserRouter([
             ],
           },
           {
-            path: "cashiers",
-            element: <PrivilegeGuard privilege="node_administration" />,
-            children: [
-              {
-                index: true,
-                element: <CashierList />,
-              },
-              {
-                path: ":cashierId",
-                element: <CashierDetail />,
-              },
-              {
-                path: ":cashierId/close-out",
-                element: <CashierCloseOut />,
-              },
-              {
-                path: ":cashierId/shifts/:shiftId",
-                element: <CashierShiftDetail />,
-              },
-            ],
-          },
-          {
             path: "tills",
             element: <TillPageLayout />,
             children: [
               {
                 index: true,
+                element: <TillOverview />,
+              },
+              {
+                path: "list",
                 element: <TillList />,
               },
               {
@@ -526,6 +509,14 @@ const router = createBrowserRouter([
               {
                 path: ":userId/change-password",
                 element: <UserPasswordChange />,
+              },
+              {
+                path: ":userId/close-out",
+                element: <CashierCloseOut />,
+              },
+              {
+                path: ":userId/shifts/:shiftId",
+                element: <CashierShiftDetail />,
               },
               {
                 path: ":userId",

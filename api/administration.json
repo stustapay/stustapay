@@ -4455,115 +4455,6 @@
         }
       }
     },
-    "/cashiers": {
-      "get": {
-        "tags": [
-          "cashiers"
-        ],
-        "summary": "List Cashiers",
-        "operationId": "list_cashiers",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Cashier__int_"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/cashiers/{cashier_id}": {
-      "get": {
-        "tags": [
-          "cashiers"
-        ],
-        "summary": "Get Cashier",
-        "operationId": "get_cashier",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "cashier_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Cashier Id"
-            }
-          },
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Cashier"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/cashiers/{cashier_id}/shifts": {
       "get": {
         "tags": [
@@ -10046,122 +9937,6 @@
         ],
         "title": "CashRegisterStocking"
       },
-      "Cashier": {
-        "properties": {
-          "node_id": {
-            "type": "integer",
-            "title": "Node Id"
-          },
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "login": {
-            "type": "string",
-            "title": "Login"
-          },
-          "display_name": {
-            "type": "string",
-            "title": "Display Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "user_tag_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Tag Id"
-          },
-          "user_tag_uid": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Tag Uid"
-          },
-          "transport_account_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Transport Account Id"
-          },
-          "cash_register_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cash Register Id"
-          },
-          "cash_drawer_balance": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cash Drawer Balance"
-          },
-          "terminal_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Terminal Ids"
-          },
-          "user_tag_uid_hex": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Tag Uid Hex",
-            "readOnly": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "node_id",
-          "id",
-          "login",
-          "display_name",
-          "cash_drawer_balance",
-          "terminal_ids",
-          "user_tag_uid_hex"
-        ],
-        "title": "Cashier"
-      },
       "CashierProductStats": {
         "properties": {
           "product": {
@@ -13126,30 +12901,6 @@
           "entities"
         ],
         "title": "NormalizedList[CashierShift, int]"
-      },
-      "NormalizedList_Cashier__int_": {
-        "properties": {
-          "ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Ids"
-          },
-          "entities": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Cashier"
-            },
-            "type": "object",
-            "title": "Entities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ids",
-          "entities"
-        ],
-        "title": "NormalizedList[Cashier, int]"
       },
       "NormalizedList_ConfigEntry__str_": {
         "properties": {
@@ -17333,6 +17084,35 @@
             ],
             "title": "Transport Account Id"
           },
+          "cash_register_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Register Id"
+          },
+          "cash_drawer_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Drawer Balance"
+          },
+          "terminal_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Terminal Ids"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -17355,6 +17135,7 @@
           "login",
           "display_name",
           "node_id",
+          "terminal_ids",
           "id",
           "user_tag_uid_hex"
         ],
