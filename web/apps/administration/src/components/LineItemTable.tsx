@@ -23,13 +23,14 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     return <Loading />;
   }
 
-  const renderProduct = (productId: number | null) => {
-    if (productId == null || !products) {
+  const renderProduct = (lineItem: LineItem) => {
+    if (lineItem.product == null) {
       return "";
     }
-    const product = selectProductById(products, productId);
-    if (!product || product.node_id !== currentNode.id) {
-      return "";
+
+    const product = products ? selectProductById(products, lineItem.product.id) : undefined;
+    if (!product) {
+      return lineItem.product.name;
     }
 
     return <RouterLink to={ProductRoutes.detail(product.id)}>{product.name}</RouterLink>;
@@ -58,7 +59,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       headerName: t("item.product"),
       type: "number",
       width: 200,
-      renderCell: (params) => renderProduct(params.row.product.id),
+      renderCell: (params) => renderProduct(params.row),
     },
     {
       field: "quantity",
