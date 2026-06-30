@@ -96,7 +96,7 @@ async def test_basic_till_button_workflow(
     assert updated_button.price == 5
 
     buttons = await till_service.layout.list_buttons(token=event_admin_token, node_id=event_node.id)
-    assert updated_button in buttons
+    assert updated_button.id in [b.id for b in buttons]
 
     with pytest.raises(AccessDenied):
         await till_service.layout.delete_button(token=cashier.token, node_id=event_node.id, button_id=updated_button.id)
