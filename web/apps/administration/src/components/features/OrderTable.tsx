@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 import { Order, selectTillById, selectUserById, useListTillsQuery, useListUsersQuery } from "@/api";
-import { CashierRoutes, OrderRoutes, TillRoutes } from "@/app/routes";
+import { OrderRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 
 export interface OrderListProps {
@@ -105,7 +105,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
                 return null;
               }
               return (
-                <RouterLink to={CashierRoutes.detail(row.cashier_id)}>{getUsernameForUser(row.cashier_id)}</RouterLink>
+                <RouterLink to={UserRoutes.detail(row.cashier_id)}>{getUsernameForUser(row.cashier_id)}</RouterLink>
               );
             },
             width: 200,

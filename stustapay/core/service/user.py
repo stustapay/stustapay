@@ -71,7 +71,7 @@ async def fetch_user_to_roles(*, conn: Connection, node: Node, user_id: int) -> 
 
 async def fetch_user(*, conn: Connection, node: Node, user_id: int) -> User:
     user = await conn.fetch_maybe_one(
-        User, "select * from user_with_tag where id = $1 and node_id = any($2)", user_id, node.ids_to_root
+        User, "select * from user_with_cashier_info where id = $1 and node_id = any($2)", user_id, node.ids_to_root
     )
     if user is None:
         raise NotFound(element_type="user", element_id=user_id)
@@ -490,7 +490,7 @@ class UserService(Service[Config]):
                 role_id=role.role_id,
             )
 
-        user = await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
+        user = await conn.fetch_one(User, "select * from user_with_cashier_info where id = $1", user_id)
         await create_audit_log(
             conn=conn,
             log_type=AuditType.user_created,
@@ -612,7 +612,7 @@ class UserService(Service[Config]):
             user_id=current_user.id,
             node_id=node.id,
         )
-        return await conn.fetch_one(User, "select * from user_with_tag where id = $1", user_id)
+        return await conn.fetch_one(User, "select * from user_with_cashier_info where id = $1", user_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
@@ -622,7 +622,9 @@ class UserService(Service[Config]):
     ) -> list[User]:
         if filter_privilege is None:
             return await conn.fetch_many(
-                User, "select * from user_with_tag where node_id = any($1) order by login", node.ids_to_root
+                User,
+                "select * from user_with_cashier_info where node_id = any($1) order by login",
+                node.ids_to_root,
             )
 
         return await conn.fetch_many(
@@ -631,11 +633,11 @@ class UserService(Service[Config]):
             "   select "
             "       u.*, "
             "       (select exists(select from user_privileges_at_node(u.id) up "
-            "       where $2 = any(up.privileges_at_node) and up.node_id = any($1))) as has_privilege "
-            "   from user_with_tag u "
+            "       where ($2 = any(up.node_privileges_at_node) or $2 = any(up.event_privileges_at_node)) and up.node_id = any($1))) as has_privilege "
+            "   from user_with_cashier_info u "
             "   where u.node_id = any($1)"
             ")"
-            "select * from users_by_privilege where has_privilege",
+            "select * from users_by_privilege where has_privilege order by login",
             node.ids_to_root,
             filter_privilege.name if filter_privilege is not None else None,
         )

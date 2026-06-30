@@ -3,6 +3,11 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class MailMessage(BaseModel):
+    to_addr: str
+    message: str
+
+
 class MailAttachment(BaseModel):
     id: int
     mail_id: int

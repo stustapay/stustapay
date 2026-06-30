@@ -13,6 +13,7 @@ from stustapay.core.config import Config
 from stustapay.core.schema.account import AccountType
 from stustapay.core.schema.audit_logs import AuditType
 from stustapay.core.schema.config import SEPAConfig
+from stustapay.core.schema.mail import MailMessage
 from stustapay.core.schema.payout import (
     NewPayoutRun,
     Payout,
@@ -330,19 +331,23 @@ class PayoutService(Service[Config]):
         )
 
         res_config = await fetch_restricted_event_settings_for_node(conn, node.id)
+        assert res_config.payout_done_message is not None
+        assert res_config.payout_done_subject is not None
+        mail_messages = []
         for payout in payouts:
             if payout.email is None:
                 continue
             payout.amount = round(payout.amount, 2)
             payout.donation = round(payout.donation, 2)
-            assert res_config.payout_done_message is not None
-            await mail_service.send_mail(
-                subject=res_config.payout_done_subject,
-                message=res_config.payout_done_message.format(**payout.model_dump()),
-                from_addr=res_config.payout_sender,
-                to_addr=payout.email,
-                node_id=node.id,
+            mail_messages.append(
+                MailMessage(to_addr=payout.email, message=res_config.payout_done_message.format(**payout.model_dump()))
             )
+        await mail_service.send_mails(
+            subject=res_config.payout_done_subject,
+            messages=mail_messages,
+            from_addr=res_config.payout_sender,
+            node_id=node.id,
+        )
         await create_audit_log(
             conn=conn,
             log_type=AuditType.payout_run_marked_done,

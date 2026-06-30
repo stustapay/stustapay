@@ -1,8 +1,9 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
-from stustapay.core.schema.user import EventPrivilege, NodePrivilege, User
+from stustapay.core.schema.user import EventPrivilege, NodePrivilege
+from stustapay.core.schema.user_tag import format_user_tag_uid
 
 
 class NewTillButton(BaseModel):
@@ -117,11 +118,26 @@ class UserRoleInfo(BaseModel):
     is_at_current_node: bool
 
 
-class UserInfo(User):
+class UserInfo(BaseModel):
+    id: int
+    login: str
+    node_id: int
+    display_name: str
+    description: Optional[str] = None
+
+    user_tag_id: int
+    user_tag_pin: str
     user_tag_uid: int
+
     cash_register_id: Optional[int] = None
     cash_register_name: Optional[str] = None
     cash_drawer_balance: Optional[float] = None
     transport_account_balance: Optional[float] = None
+    transport_account_id: Optional[int] = None
 
     assigned_roles: list[UserRoleInfo]
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def user_tag_uid_hex(self) -> Optional[str]:
+        return format_user_tag_uid(self.user_tag_uid)

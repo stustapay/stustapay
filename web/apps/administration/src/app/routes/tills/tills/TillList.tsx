@@ -11,10 +11,12 @@ import {
   selectTerminalById,
   selectTillAll,
   selectTillProfileById,
+  selectTseById,
   useDeleteTillMutation,
   useListTerminalsQuery,
   useListTillProfilesQuery,
   useListTillsQuery,
+  useListTsesQuery,
 } from "@/api";
 import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
@@ -39,6 +41,7 @@ export const TillList: React.FC = () => {
   );
   const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery({ nodeId: currentNode.id });
   const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
+  const { data: tses, isLoading: isTsesLoading } = useListTsesQuery({ nodeId: currentNode.id });
   const [deleteTill] = useDeleteTillMutation();
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -74,6 +77,22 @@ export const TillList: React.FC = () => {
     );
   };
 
+  const renderTse = (id?: number | null) => {
+    if (id == null || !tses) {
+      return "";
+    }
+    const tse = selectTseById(tses, id);
+    if (!tse) {
+      return "";
+    }
+
+    return (
+      <Link component={RouterLink} to={TseRoutes.detail(tse.id)}>
+        {tse.name}
+      </Link>
+    );
+  };
+
   const openConfirmDeleteDialog = (tillId: number) => {
     openModal({
       type: "confirm",
@@ -104,12 +123,7 @@ export const TillList: React.FC = () => {
       field: "tse_id",
       headerName: t("till.tseId"),
       minWidth: 150,
-      renderCell: (params) =>
-        params.row.tse_id != null && (
-          <Link component={RouterLink} to={TseRoutes.detail(params.row.tse_id)}>
-            {params.row.tse_id}
-          </Link>
-        ),
+      renderCell: (params) => renderTse(params.row.tse_id),
     },
     {
       field: "profile",
@@ -152,10 +166,10 @@ export const TillList: React.FC = () => {
   }
 
   return (
-    <ListLayout title={t("tills")} routes={TillRoutes}>
+    <ListLayout title={t("till.configuration")} routes={TillRoutes}>
       <DataGrid
         autoHeight
-        loading={isTillsLoading || isProfilesLoading || isTerminalsLoading}
+        loading={isTillsLoading || isProfilesLoading || isTerminalsLoading || isTsesLoading}
         rows={tills ?? []}
         columns={columns}
         disableRowSelectionOnClick

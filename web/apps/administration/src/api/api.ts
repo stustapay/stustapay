@@ -4,7 +4,6 @@ import {
   AccountRead,
   CashRegister,
   CashRegisterStocking,
-  CashierRead,
   CashierShift,
   Order,
   PayoutRunWithStats,
@@ -52,10 +51,6 @@ const userRoleAdapter = createEntityAdapter<UserRole>({
 
 const productAdapter = createEntityAdapter<Product>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const cashierAdapter = createEntityAdapter<CashierRead>({
-  sortComparer: (a, b) => a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase()),
 });
 
 const cashierShiftAdapter = createEntityAdapter<CashierShift>({
@@ -128,9 +123,6 @@ export const api = generatedApi.enhanceEndpoints({
     },
     getProduct: {
       providesTags: (result, error, arg) => [{ type: "products", id: arg.productId }],
-    },
-    listCashiers: {
-      providesTags: (result) => generateCacheKeys("cashiers", result),
     },
     listConfigEntries: {
       providesTags: (result) => generateCacheKeys("config", result),
@@ -255,9 +247,6 @@ export const { selectUserRoleAll, selectUserRoleById, selectUserRoleEntities, se
 
 export const { selectProductAll, selectProductById, selectProductEntities, selectProductIds, selectProductTotal } =
   convertEntityAdaptorSelectors("Product", productAdapter.getSelectors());
-
-export const { selectCashierAll, selectCashierById, selectCashierEntities, selectCashierIds, selectCashierTotal } =
-  convertEntityAdaptorSelectors("Cashier", cashierAdapter.getSelectors());
 
 export const {
   selectCashierShiftAll,

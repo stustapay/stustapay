@@ -344,6 +344,42 @@ async def test_set_payout_to_done(
         )
 
 
+async def test_set_payout_to_done_queues_completion_mails(
+    db_connection: Connection,
+    customers: list[CustomerTestInfo],
+    event_node: Node,
+    event_admin_token: str,
+    customer_service: CustomerService,
+    mail_service: MailService,
+):
+    del customers  # we just need the fixture to populate the payout candidates
+    await db_connection.execute(
+        "update event set email_enabled = true, email_default_sender = $2 "
+        "where id = (select event_id from node where id = $1)",
+        event_node.id,
+        "noreply@example.com",
+    )
+    payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
+        token=event_admin_token,
+        node_id=event_node.id,
+        new_payout_run=NewPayoutRun(max_num_payouts=15, max_payout_sum=15000),
+    )
+
+    await customer_service.payout.set_payout_run_as_done(
+        token=event_admin_token,
+        node_id=event_node.id,
+        payout_run_id=payout_run.id,
+        mail_service=mail_service,
+    )
+
+    num_mails = await db_connection.fetchval(
+        "select count(*) from mails where node_id = $1 and subject = $2",
+        event_node.id,
+        "[StuStaPay] Payout Completed",
+    )
+    assert num_mails == payout_run.n_payouts
+
+
 async def test_csv_export(
     db_connection: Connection,
     event_node: Node,

@@ -17,14 +17,7 @@ import {
   useListTillsQuery,
   useListUsersQuery,
 } from "@/api";
-import {
-  CashierRoutes,
-  CashRegistersRoutes,
-  CustomerRoutes,
-  OrderRoutes,
-  TillRoutes,
-  UserTagRoutes,
-} from "@/app/routes";
+import { CashRegistersRoutes, CustomerRoutes, OrderRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
 import { useCurrentNode } from "@/hooks";
@@ -116,7 +109,7 @@ export const OrderDetail: React.FC = () => {
           <DetailField
             label={t("common.cashier")}
             value={getUserName(cashier)}
-            linkTo={CashierRoutes.detail(cashier.id, cashier.node_id)}
+            linkTo={UserRoutes.detail(cashier.id, cashier.node_id)}
           />
         ) : (
           <DetailField label={t("common.cashier")} value={t("order.noCashier")} />

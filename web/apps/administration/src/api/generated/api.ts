@@ -778,24 +778,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["orders"],
       }),
-      listCashiers: build.query<ListCashiersApiResponse, ListCashiersApiArg>({
-        query: (queryArg) => ({
-          url: `/cashiers`,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        providesTags: ["cashiers"],
-      }),
-      getCashier: build.query<GetCashierApiResponse, GetCashierApiArg>({
-        query: (queryArg) => ({
-          url: `/cashiers/${queryArg.cashierId}`,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        providesTags: ["cashiers"],
-      }),
       getCashierShifts: build.query<GetCashierShiftsApiResponse, GetCashierShiftsApiArg>({
         query: (queryArg) => ({
           url: `/cashiers/${queryArg.cashierId}/shifts`,
@@ -1920,15 +1902,6 @@ export type EditOrderApiArg = {
   nodeId: number;
   editSaleProducts: EditSaleProducts;
 };
-export type ListCashiersApiResponse = /** status 200 Successful Response */ NormalizedListCashierInt;
-export type ListCashiersApiArg = {
-  nodeId: number;
-};
-export type GetCashierApiResponse = /** status 200 Successful Response */ CashierRead;
-export type GetCashierApiArg = {
-  cashierId: number;
-  nodeId: number;
-};
 export type GetCashierShiftsApiResponse = /** status 200 Successful Response */ NormalizedListCashierShiftInt;
 export type GetCashierShiftsApiArg = {
   cashierId: number;
@@ -2387,6 +2360,9 @@ export type User = {
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
+  cash_register_id?: number | null;
+  cash_drawer_balance?: number | null;
+  terminal_ids: number[];
   id: number;
 };
 export type UserRead = {
@@ -2398,6 +2374,9 @@ export type UserRead = {
   node_id: number;
   user_tag_id?: number | null;
   transport_account_id?: number | null;
+  cash_register_id?: number | null;
+  cash_drawer_balance?: number | null;
+  terminal_ids: number[];
   id: number;
   user_tag_uid_hex: string | null;
 };
@@ -3082,39 +3061,6 @@ export type EditSaleProducts = {
   uuid: string;
   used_vouchers?: number | null;
   products: BookedProduct[];
-};
-export type Cashier = {
-  node_id: number;
-  id: number;
-  login: string;
-  display_name: string;
-  description?: string | null;
-  user_tag_id?: number | null;
-  user_tag_uid?: number | null;
-  transport_account_id?: number | null;
-  cash_register_id?: number | null;
-  cash_drawer_balance: number | null;
-  terminal_ids: number[];
-};
-export type CashierRead = {
-  node_id: number;
-  id: number;
-  login: string;
-  display_name: string;
-  description?: string | null;
-  user_tag_id?: number | null;
-  user_tag_uid?: number | null;
-  transport_account_id?: number | null;
-  cash_register_id?: number | null;
-  cash_drawer_balance: number | null;
-  terminal_ids: number[];
-  user_tag_uid_hex: string | null;
-};
-export type NormalizedListCashierInt = {
-  ids: number[];
-  entities: {
-    [key: string]: CashierRead;
-  };
 };
 export type CashierProductStats = {
   product: Product;
@@ -4005,10 +3951,6 @@ export const {
   useGetOrderBonQuery,
   useLazyGetOrderBonQuery,
   useEditOrderMutation,
-  useListCashiersQuery,
-  useLazyListCashiersQuery,
-  useGetCashierQuery,
-  useLazyGetCashierQuery,
   useGetCashierShiftsQuery,
   useLazyGetCashierShiftsQuery,
   useGetCashierShiftStatsQuery,

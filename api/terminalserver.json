@@ -4665,6 +4665,35 @@
             ],
             "title": "Transport Account Id"
           },
+          "cash_register_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Register Id"
+          },
+          "cash_drawer_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Drawer Balance"
+          },
+          "terminal_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Terminal Ids"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -4687,6 +4716,7 @@
           "login",
           "display_name",
           "node_id",
+          "terminal_ids",
           "id",
           "user_tag_uid_hex"
         ],
@@ -4694,28 +4724,21 @@
       },
       "UserInfo": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "login": {
             "type": "string",
             "title": "Login"
           },
+          "node_id": {
+            "type": "integer",
+            "title": "Node Id"
+          },
           "display_name": {
             "type": "string",
             "title": "Display Name"
-          },
-          "user_tag_pin": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Tag Pin"
-          },
-          "user_tag_uid": {
-            "type": "integer",
-            "title": "User Tag Uid"
           },
           "description": {
             "anyOf": [
@@ -4728,35 +4751,17 @@
             ],
             "title": "Description"
           },
-          "node_id": {
-            "type": "integer",
-            "title": "Node Id"
-          },
           "user_tag_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "User Tag Id"
           },
-          "transport_account_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Transport Account Id"
+          "user_tag_pin": {
+            "type": "string",
+            "title": "User Tag Pin"
           },
-          "id": {
+          "user_tag_uid": {
             "type": "integer",
-            "title": "Id"
+            "title": "User Tag Uid"
           },
           "cash_register_id": {
             "anyOf": [
@@ -4802,6 +4807,17 @@
             ],
             "title": "Transport Account Balance"
           },
+          "transport_account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Account Id"
+          },
           "assigned_roles": {
             "items": {
               "$ref": "#/components/schemas/UserRoleInfo"
@@ -4824,11 +4840,13 @@
         },
         "type": "object",
         "required": [
-          "login",
-          "display_name",
-          "user_tag_uid",
-          "node_id",
           "id",
+          "login",
+          "node_id",
+          "display_name",
+          "user_tag_id",
+          "user_tag_pin",
+          "user_tag_uid",
           "assigned_roles",
           "user_tag_uid_hex"
         ],

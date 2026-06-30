@@ -8,16 +8,16 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import {
-  selectCashierById,
+  selectUserById,
   selectTillById,
   selectCashRegisterAll,
   useDeleteRegisterMutation,
   useListCashRegistersAdminQuery,
-  useListCashiersQuery,
+  useListUsersQuery,
   useListTillsQuery,
   CashRegister,
 } from "@/api";
-import { CashierRoutes, CashRegistersRoutes, TillRoutes } from "@/app/routes";
+import { CashRegistersRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
@@ -31,7 +31,7 @@ export const CashRegisterList: React.FC = () => {
   const { dataGridNodeColumn } = useRenderNode();
 
   const { data: tills } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: cashiers } = useListCashiersQuery({ nodeId: currentNode.id });
+  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
   const { registers, isLoading } = useListCashRegistersAdminQuery(
     { nodeId: currentNode.id },
     {
@@ -73,16 +73,16 @@ export const CashRegisterList: React.FC = () => {
   };
 
   const renderCashier = (id: number | null) => {
-    if (id == null || !cashiers) {
+    if (id == null || !users) {
       return "";
     }
-    const cashier = selectCashierById(cashiers, id);
+    const cashier = selectUserById(users, id);
     if (!cashier) {
       return "";
     }
 
     return (
-      <Link component={RouterLink} to={CashierRoutes.detail(cashier.id, cashier.node_id)}>
+      <Link component={RouterLink} to={UserRoutes.detail(cashier.id, cashier.node_id)}>
         {getUserName(cashier)}
       </Link>
     );

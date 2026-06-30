@@ -26,7 +26,7 @@ export const TillCreate: React.FC = withPrivilegeGuard("node_administration", ()
   return (
     <CreateLayout
       title={t("till.create")}
-      successRoute={TillRoutes.list()}
+      successRoute={TillRoutes.action("list")}
       initialValues={initialValues}
       validationSchema={NewTillSchema}
       onSubmit={(till) => createTill({ nodeId: currentNode.id, newTill: till })}
