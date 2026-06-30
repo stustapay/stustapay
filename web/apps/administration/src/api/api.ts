@@ -124,9 +124,6 @@ export const api = generatedApi.enhanceEndpoints({
     getProduct: {
       providesTags: (result, error, arg) => [{ type: "products", id: arg.productId }],
     },
-    listConfigEntries: {
-      providesTags: (result) => generateCacheKeys("config", result),
-    },
     listTaxRates: {
       providesTags: (result) => generateCacheKeys("tax-rates", result),
     },

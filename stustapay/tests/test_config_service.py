@@ -1,4 +1,5 @@
 # pylint: disable=attribute-defined-outside-init,unexpected-keyword-arg,missing-kwoa
+
 from stustapay.core.service.config import ConfigService
 
 

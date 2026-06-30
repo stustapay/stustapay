@@ -58,6 +58,7 @@ from stustapay.core.service.dsfinvk import DsfinvkService
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.order import OrderService
 from stustapay.core.service.product import ProductService
+from stustapay.core.service.sumup import SumUpService
 from stustapay.core.service.tax_rate import TaxRateService, fetch_tax_rate_none
 from stustapay.core.service.terminal import TerminalService
 from stustapay.core.service.ticket import TicketService
@@ -69,6 +70,7 @@ from stustapay.core.service.tree.common import (
 from stustapay.core.service.tree.service import TreeService, create_event
 from stustapay.core.service.user import UserService, associate_user_to_role
 from stustapay.core.service.user_tag import UserTagService
+from stustapay.core.service.webhook import WebhookService
 
 
 def get_test_db_config() -> DatabaseConfig:
@@ -365,6 +367,18 @@ async def customer_service(
 @pytest.fixture(scope="session")
 async def mail_service(setup_test_db_pool: asyncpg.Pool, config: Config) -> MailService:
     return MailService(db_pool=setup_test_db_pool, config=config)
+
+
+@pytest.fixture(scope="session")
+async def sumup_service(setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService) -> SumUpService:
+    return SumUpService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
+
+
+@pytest.fixture(scope="session")
+async def webhook_service(
+    setup_test_db_pool: asyncpg.Pool, config: Config, auth_service: AuthService
+) -> WebhookService:
+    return WebhookService(db_pool=setup_test_db_pool, config=config, auth_service=auth_service)
 
 
 @pytest.fixture
