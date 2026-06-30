@@ -3554,82 +3554,6 @@
         }
       }
     },
-    "/config": {
-      "get": {
-        "tags": [
-          "config"
-        ],
-        "summary": "List Config Entries",
-        "operationId": "list_config_entries",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_ConfigEntry__str_"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "config"
-        ],
-        "summary": "Set Config Entry",
-        "operationId": "set_config_entry",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfigEntry"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigEntry"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
     "/system-accounts": {
       "get": {
         "tags": [
@@ -10268,31 +10192,6 @@
         ],
         "title": "Config"
       },
-      "ConfigEntry": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "value": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "value"
-        ],
-        "title": "ConfigEntry"
-      },
       "CreateSepaXMLPayload": {
         "properties": {
           "execution_date": {
@@ -12901,30 +12800,6 @@
           "entities"
         ],
         "title": "NormalizedList[CashierShift, int]"
-      },
-      "NormalizedList_ConfigEntry__str_": {
-        "properties": {
-          "ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Ids"
-          },
-          "entities": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ConfigEntry"
-            },
-            "type": "object",
-            "title": "Entities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ids",
-          "entities"
-        ],
-        "title": "NormalizedList[ConfigEntry, str]"
       },
       "NormalizedList_Order__int_": {
         "properties": {
