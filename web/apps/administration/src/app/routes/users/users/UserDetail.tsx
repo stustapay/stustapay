@@ -120,7 +120,7 @@ export const UserDetail: React.FC = () => {
             />
           ))
         ) : (
-          <DetailField label={t("user.terminal")} value={t("user.notLoggedInAtTill")} />
+          <DetailField label={t("user.terminal")} value={t("user.notLoggedInAtTerminal")} />
         )}
         <DetailField label={t("user.vouchersGranted")} value={voucherGrantStats?.vouchers_granted ?? 0} />
       </DetailView>

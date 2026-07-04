@@ -674,7 +674,7 @@ export const translations = {
     cashierDetails: "Cashier Details",
     terminal: "Terminal",
     terminals: "Terminals",
-    notLoggedInAtTerminal: "User is not logged at a terminal",
+    notLoggedInAtTerminal: "Not logged at a terminal",
   },
   privilege: {
     noneAssigned: "No privileges assigned",
