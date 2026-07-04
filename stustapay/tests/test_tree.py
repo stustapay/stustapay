@@ -273,3 +273,61 @@ async def test_event_archive_deregisters_terminals(
     archived_till = await till_service.get_till(token=global_admin_token, node_id=till.node_id, till_id=till.id)
     assert archived_till is not None
     assert archived_till.terminal_id is None
+
+
+async def test_get_restricted_event_settings(tree_service: TreeService, event_admin_token: str, event_node: Node):
+    settings = await tree_service.get_restricted_event_settings(token=event_admin_token, node_id=event_node.id)
+
+    assert settings.currency_identifier == "EUR"
+    assert settings.max_account_balance == 150
+
+
+async def test_generate_test_bon(tree_service: TreeService, event_admin_token: str, event_node: Node):
+    bon = await tree_service.generate_test_bon(token=event_admin_token, node_id=event_node.id)
+
+    assert bon.currency_identifier == "EUR"
+    assert len(bon.tax_rate_aggregations) > 0
+
+
+async def test_generate_test_revenue_report(tree_service: TreeService, event_admin_token: str, event_node: Node):
+    report = await tree_service.generate_test_revenue_report(token=event_admin_token, node_id=event_node.id)
+
+    assert len(report) > 0
+
+
+async def test_generate_test_daily_report(tree_service: TreeService, event_admin_token: str, event_node: Node):
+    report = await tree_service.generate_test_daily_report(token=event_admin_token, node_id=event_node.id)
+
+    assert len(report) > 0
+
+
+async def test_update_node(tree_service: TreeService, global_admin_token: str):
+    node = await tree_service.create_node(
+        token=global_admin_token,
+        node_id=ROOT_NODE_ID,
+        new_node=NewNode(name="update-target", description="before"),
+    )
+    updated = await tree_service.update_node(
+        token=global_admin_token,
+        node_id=node.id,
+        updated_node=NewNode(name="update-target", description="after"),
+    )
+
+    assert updated.description == "after"
+
+
+async def test_list_audit_logs_after_node_update(tree_service: TreeService, global_admin_token: str):
+    node = await tree_service.create_node(
+        token=global_admin_token,
+        node_id=ROOT_NODE_ID,
+        new_node=NewNode(name="audit-log-node", description=""),
+    )
+    await tree_service.update_node(
+        token=global_admin_token,
+        node_id=node.id,
+        updated_node=NewNode(name="audit-log-node", description="updated"),
+    )
+
+    logs = await tree_service.list_audit_logs(token=global_admin_token, node_id=node.id)
+
+    assert len(logs) >= 1

@@ -636,14 +636,6 @@ const injectedRtkApi = api
         query: () => ({ url: `/public-config` }),
         providesTags: ["config"],
       }),
-      listConfigEntries: build.query<ListConfigEntriesApiResponse, ListConfigEntriesApiArg>({
-        query: () => ({ url: `/config` }),
-        providesTags: ["config"],
-      }),
-      setConfigEntry: build.mutation<SetConfigEntryApiResponse, SetConfigEntryApiArg>({
-        query: (queryArg) => ({ url: `/config`, method: "POST", body: queryArg.configEntry }),
-        invalidatesTags: ["config"],
-      }),
       listSystemAccounts: build.query<ListSystemAccountsApiResponse, ListSystemAccountsApiArg>({
         query: (queryArg) => ({
           url: `/system-accounts`,
@@ -1825,12 +1817,6 @@ export type TransferRegisterApiArg = {
 };
 export type GetPublicConfigApiResponse = /** status 200 Successful Response */ Config;
 export type GetPublicConfigApiArg = void;
-export type ListConfigEntriesApiResponse = /** status 200 Successful Response */ NormalizedListConfigEntryStr;
-export type ListConfigEntriesApiArg = void;
-export type SetConfigEntryApiResponse = /** status 200 Successful Response */ ConfigEntry;
-export type SetConfigEntryApiArg = {
-  configEntry: ConfigEntry;
-};
 export type ListSystemAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
 export type ListSystemAccountsApiArg = {
   nodeId: number;
@@ -2805,16 +2791,6 @@ export type Config = {
   test_mode_message: string;
   sumup_topup_enabled_globally: boolean;
   terminal_api_endpoint: string;
-};
-export type ConfigEntry = {
-  key: string;
-  value: string | null;
-};
-export type NormalizedListConfigEntryStr = {
-  ids: string[];
-  entities: {
-    [key: string]: ConfigEntry;
-  };
 };
 export type AccountType =
   | "private"
@@ -3927,9 +3903,6 @@ export const {
   useTransferRegisterMutation,
   useGetPublicConfigQuery,
   useLazyGetPublicConfigQuery,
-  useListConfigEntriesQuery,
-  useLazyListConfigEntriesQuery,
-  useSetConfigEntryMutation,
   useListSystemAccountsQuery,
   useLazyListSystemAccountsQuery,
   useGetMoneyOverviewQuery,

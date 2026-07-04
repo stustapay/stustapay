@@ -47,6 +47,15 @@
       "args": ["-c", "config.yaml", "-vvv", "ticket-processor"]
     },
     {
+      "name": "TSE Signature Processor",
+      "type": "debugpy",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "module": "stustapay",
+      "justMyCode": true,
+      "args": ["-c", "config.yaml", "-vvv", "tse", "signature-processor"]
+    },
+    {
       "name": "FestivalSimulator DB Setup",
       "type": "debugpy",
       "request": "launch",
@@ -66,7 +75,6 @@
         "config.yaml",
         "simulate",
         "api",
-        "--no-tse",
         "--no-bon"
       ]
     },
