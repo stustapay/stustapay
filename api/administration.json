@@ -3654,66 +3654,6 @@
         }
       }
     },
-    "/accounts/find-accounts": {
-      "post": {
-        "tags": [
-          "accounts"
-        ],
-        "summary": "Find Accounts",
-        "operationId": "find_accounts",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FindAccountPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Account__int_"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/accounts/{account_id}": {
       "get": {
         "tags": [
@@ -10807,19 +10747,6 @@
           "pretix"
         ],
         "title": "ExternalTicketType"
-      },
-      "FindAccountPayload": {
-        "properties": {
-          "search_term": {
-            "type": "string",
-            "title": "Search Term"
-          }
-        },
-        "type": "object",
-        "required": [
-          "search_term"
-        ],
-        "title": "FindAccountPayload"
       },
       "FindCustomerPayload": {
         "properties": {

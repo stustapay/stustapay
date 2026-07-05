@@ -167,37 +167,6 @@ async def test_switch_customer_tag_target_previously_used(
         )
 
 
-async def test_find_accounts(
-    account_service: AccountService,
-    event_admin_token: str,
-    db_connection: Connection,
-    event_node: Node,
-    create_random_user_tag: CreateRandomUserTag,
-):
-    user_tag = await create_random_user_tag()
-    await db_connection.fetchval(
-        "insert into account(node_id, user_tag_id, type, name, comment) "
-        "values ($1, $2, 'private', 'findable-account', 'special-search-comment') returning id",
-        event_node.id,
-        user_tag.id,
-    )
-
-    by_name = await account_service.find_accounts(
-        token=event_admin_token, node_id=event_node.id, search_term="findable-account"
-    )
-    by_comment = await account_service.find_accounts(
-        token=event_admin_token, node_id=event_node.id, search_term="special-search"
-    )
-
-    assert len(by_name) == 1
-    assert len(by_comment) == 1
-    assert by_name[0].name == "findable-account"
-
-
-async def test_find_accounts_empty_search(account_service: AccountService, event_admin_token: str, event_node: Node):
-    assert [] == await account_service.find_accounts(token=event_admin_token, node_id=event_node.id, search_term="  ")
-
-
 async def test_find_customers(
     account_service: AccountService,
     event_admin_token: str,

@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Account, AccountRead, AccountType, useGetMoneyOverviewQuery } from "@/api";
-import { AccountRoutes } from "@/app/routes";
+import { SystemAccountRoutes } from "@/app/routes";
 import { ButtonLink } from "@/components";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
@@ -62,7 +62,7 @@ const AccountBalanceCard: React.FC<AccountBalanceCardProps> = ({ account }) => {
       amount={account.balance}
       label={account.name}
       actions={
-        <ButtonLink size="small" to={AccountRoutes.detail(account.id)}>
+        <ButtonLink size="small" to={SystemAccountRoutes.detail(account.id)}>
           {t("overview.showDetails")}
         </ButtonLink>
       }

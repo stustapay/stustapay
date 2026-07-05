@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 import { AccountRead } from "@/api";
-import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { SystemAccountRoutes, UserTagRoutes } from "@/app/routes";
 import { useRenderNode } from "@/hooks";
 
 export interface AccountTableProps {
@@ -23,7 +23,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts, loading = 
       field: "name",
       headerName: t("account.name"),
       renderCell: (params) => (
-        <Link component={RouterLink} to={AccountRoutes.detail(params.row.id)}>
+        <Link component={RouterLink} to={SystemAccountRoutes.detail(params.row.id)}>
           {params.row.name}
         </Link>
       ),

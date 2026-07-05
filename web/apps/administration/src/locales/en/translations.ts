@@ -2,9 +2,7 @@ export const translations = {
   StuStaPay: "StuStaPay",
   cashiers: "Cashiers",
   advanced: "Advanced",
-  accounts: "Accounts",
   systemAccounts: "System Accounts",
-  findAccounts: "Find Accounts",
   orders: "Orders",
   transactions: "Transactions",
   submit: "Submit",
@@ -106,7 +104,6 @@ export const translations = {
     newTagUid: "UID of new tag",
     disable: "Disable",
     disableSuccess: "Successfully disabled account",
-    findAccounts: "Find Accounts",
     searchTerm: "Search Term",
     history: {
       title: "Account tag association history",

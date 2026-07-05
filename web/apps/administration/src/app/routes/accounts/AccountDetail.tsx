@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { useGetAccountQuery } from "@/api";
-import { AccountRoutes, CustomerRoutes } from "@/app/routes";
+import { SystemAccountRoutes, CustomerRoutes } from "@/app/routes";
 import { useCurrentNode } from "@/hooks";
 
 import { SystemAccountDetail } from "./SystemAccountDetail";
@@ -25,7 +25,7 @@ export const AccountDetail: React.FC = () => {
 
   if (error || !account) {
     toast.error("Error loading account");
-    navigate(AccountRoutes.list());
+    navigate(SystemAccountRoutes.list());
     return null;
   }
 

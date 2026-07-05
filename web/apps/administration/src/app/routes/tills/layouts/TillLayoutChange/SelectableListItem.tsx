@@ -128,24 +128,23 @@ export const SelectableListItem = React.forwardRef<HTMLLIElement, SelectableList
     const isDraggable = dragHandleRef != null;
     const isAvailable = variant === "available";
 
-    const actions =
-      isAvailable ? (
-        <ActionButton label={t("button.assign")} color="primary" onClick={onAssign}>
-          <ArrowForwardIcon fontSize="small" />
+    const actions = isAvailable ? (
+      <ActionButton label={t("button.assign")} color="primary" onClick={onAssign}>
+        <ArrowForwardIcon fontSize="small" />
+      </ActionButton>
+    ) : (
+      <Stack direction="row" spacing={0.5}>
+        <ActionButton label={t("button.moveUp")} onClick={onMoveUp} disabled={disableMoveUp} disableRipple>
+          <ArrowUpwardIcon fontSize="small" />
         </ActionButton>
-      ) : (
-        <Stack direction="row" spacing={0.5}>
-          <ActionButton label={t("button.moveUp")} onClick={onMoveUp} disabled={disableMoveUp} disableRipple>
-            <ArrowUpwardIcon fontSize="small" />
-          </ActionButton>
-          <ActionButton label={t("button.moveDown")} onClick={onMoveDown} disabled={disableMoveDown} disableRipple>
-            <ArrowDownwardIcon fontSize="small" />
-          </ActionButton>
-          <ActionButton label={t("delete")} color="error" onClick={onRemove} disableRipple>
-            <DeleteIcon fontSize="small" />
-          </ActionButton>
-        </Stack>
-      );
+        <ActionButton label={t("button.moveDown")} onClick={onMoveDown} disabled={disableMoveDown} disableRipple>
+          <ArrowDownwardIcon fontSize="small" />
+        </ActionButton>
+        <ActionButton label={t("delete")} color="error" onClick={onRemove} disableRipple>
+          <DeleteIcon fontSize="small" />
+        </ActionButton>
+      </Stack>
+    );
 
     const content = <ListItemText primary={selectable.name} secondary={formatCurrency(selectable.price)} />;
 

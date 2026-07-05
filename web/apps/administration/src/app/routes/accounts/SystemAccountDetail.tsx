@@ -2,14 +2,14 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Account } from "@/api";
-import { AccountRoutes } from "@/app/routes";
+import { SystemAccountRoutes } from "@/app/routes";
 import { DetailDateField, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 
 export const SystemAccountDetail: React.FC<{ account: Account }> = ({ account }) => {
   const { t } = useTranslation();
 
   return (
-    <DetailLayout title={account.name ?? ""} routes={AccountRoutes}>
+    <DetailLayout title={account.name ?? ""} routes={SystemAccountRoutes}>
       <DetailView>
         <DetailField label={t("account.id")} value={account.id} />
         <DetailField label={t("account.type")} value={account.type} />

@@ -1,8 +1,8 @@
 import { List } from "@mui/material";
 import * as React from "react";
 
-import { DraggableAssignedListItem } from "./DraggableAssignedListItem";
 import { LayoutEditorDragItem } from "./dnd";
+import { DraggableAssignedListItem } from "./DraggableAssignedListItem";
 import { Selectable } from "./types";
 
 export interface AssignedButtonsListProps {

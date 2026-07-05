@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 import { UserTagDetailRead } from "@/api";
-import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { CustomerRoutes, UserTagRoutes } from "@/app/routes";
 import { useRenderNode } from "@/hooks";
 
 export interface UserTagTableProps {
@@ -43,7 +43,7 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
       align: "right",
       renderCell: (params) =>
         params.row.account_id ? (
-          <Link component={RouterLink} to={AccountRoutes.detail(params.row.account_id)}>
+          <Link component={RouterLink} to={CustomerRoutes.detail(params.row.account_id)}>
             {t("userTag.account")}
           </Link>
         ) : (

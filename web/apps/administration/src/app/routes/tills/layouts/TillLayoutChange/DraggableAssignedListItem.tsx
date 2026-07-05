@@ -3,8 +3,8 @@ import { useEffect, useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 
-import { SelectableListItem } from "./SelectableListItem";
 import { LayoutEditorDragItem, LayoutEditorItemType } from "./dnd";
+import { SelectableListItem } from "./SelectableListItem";
 import { Selectable } from "./types";
 
 export interface DraggableAssignedListItemProps {
@@ -60,11 +60,7 @@ export const DraggableAssignedListItem: React.FC<DraggableAssignedListItemProps>
     },
   });
 
-  const [{ isDragging }, drag, preview] = useDrag<
-    LayoutEditorDragItem,
-    void,
-    { isDragging: boolean }
-  >({
+  const [{ isDragging }, drag, preview] = useDrag<LayoutEditorDragItem, void, { isDragging: boolean }>({
     type: LayoutEditorItemType,
     item: () => ({
       id: selectable.id,

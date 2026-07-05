@@ -12,17 +12,10 @@ export interface DraggableAvailableListItemProps {
   onAssign: () => void;
 }
 
-export const DraggableAvailableListItem: React.FC<DraggableAvailableListItemProps> = ({
-  selectable,
-  onAssign,
-}) => {
+export const DraggableAvailableListItem: React.FC<DraggableAvailableListItemProps> = ({ selectable, onAssign }) => {
   const rowRef = useRef<HTMLLIElement>(null);
 
-  const [{ isDragging }, drag, preview] = useDrag<
-    LayoutEditorDragItem,
-    void,
-    { isDragging: boolean }
-  >({
+  const [{ isDragging }, drag, preview] = useDrag<LayoutEditorDragItem, void, { isDragging: boolean }>({
     type: LayoutEditorItemType,
     item: () => ({
       id: selectable.id,
@@ -31,8 +24,7 @@ export const DraggableAvailableListItem: React.FC<DraggableAvailableListItemProp
       width: rowRef.current?.offsetWidth ?? 280,
       source: "available",
     }),
-    isDragging: (monitor) =>
-      monitor.getItem().id === selectable.id && monitor.getItem().source === "available",
+    isDragging: (monitor) => monitor.getItem().id === selectable.id && monitor.getItem().source === "available",
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),

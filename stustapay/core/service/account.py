@@ -182,27 +182,6 @@ class AccountService(Service[Config]):
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
     @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def find_accounts(self, *, conn: Connection, node: Node, search_term: str) -> list[Account]:
-        search_term = search_term.strip()
-        search_term_numeric = search_term.lstrip("0")
-        if not search_term:
-            return []
-        return await conn.fetch_many(
-            Account,
-            "select * from account_with_history a "
-            "where a.node_id = any ($3) and "
-            "   (a.name like $1 "
-            "   or a.comment like $1 "
-            "   or (a.user_tag_pin is not null and a.user_tag_pin like $2)) "
-            "   or (a.user_tag_uid is not null and to_hex(a.user_tag_uid::bigint) like $2)",
-            f"%{search_term.lower()}%",
-            f"%{search_term_numeric.lower()}%",
-            node.ids_to_root,
-        )
-
-    @with_db_transaction
-    @requires_node(event_only=True)
-    @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def disable_account(self, *, conn: Connection, node: Node, current_user: CurrentUser, account_id: int):
         row = await conn.fetchval(
             "update account set user_tag_id = null where id = $1 and node_id = any($2) returning id",

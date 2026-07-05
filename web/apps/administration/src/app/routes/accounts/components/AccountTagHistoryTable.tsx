@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 import { AccountRead } from "@/api";
-import { AccountRoutes, UserTagRoutes } from "@/app/routes";
+import { CustomerRoutes, UserTagRoutes } from "@/app/routes";
 
 type History = AccountRead["tag_history"];
 type HistoryEntry = ArrayElement<History>;
@@ -36,7 +36,7 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       field: "account_id",
       headerName: t("account.history.account"),
       renderCell: (params) => (
-        <Link component={RouterLink} to={AccountRoutes.detail(params.row.account_id)}>
+        <Link component={RouterLink} to={CustomerRoutes.detail(params.row.account_id)}>
           {params.row.account_id}
         </Link>
       ),
