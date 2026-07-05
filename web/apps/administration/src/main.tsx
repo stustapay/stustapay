@@ -6,6 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { ModalProvider } from "@stustapay/modal-provider";
 import * as React from "react";
+
 import "react-toastify/dist/ReactToastify.css";
 
 import "./i18n";
