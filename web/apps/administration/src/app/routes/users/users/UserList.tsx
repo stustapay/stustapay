@@ -6,8 +6,15 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import { selectUserAll, useDeleteUserMutation, useListUsersQuery, User } from "@/api";
-import { UserRoutes, UserTagRoutes } from "@/app/routes";
+import {
+  selectTerminalById,
+  selectUserAll,
+  useDeleteUserMutation,
+  useListTerminalsQuery,
+  useListUsersQuery,
+  User,
+} from "@/api";
+import { TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
@@ -28,8 +35,46 @@ export const UserList: React.FC = () => {
       }),
     }
   );
+  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const [deleteUser] = useDeleteUserMutation();
   const { dataGridNodeColumn } = useRenderNode();
+
+  const getTerminalName = (id: number) => {
+    const terminal = terminals ? selectTerminalById(terminals, id) : undefined;
+    return terminal?.name ?? String(id);
+  };
+
+  const renderTerminals = (ids: number[]) => {
+    if (ids.length === 0) {
+      return "";
+    }
+    if (!terminals) {
+      return "";
+    }
+
+    const terminalIds = ids.toSorted((lhs, rhs) =>
+      getTerminalName(lhs).toLowerCase().localeCompare(getTerminalName(rhs).toLowerCase())
+    );
+
+    return (
+      <div>
+        {terminalIds.map((id, index) => {
+          const terminal = selectTerminalById(terminals, id);
+          if (!terminal) {
+            return null;
+          }
+          return (
+            <React.Fragment key={id}>
+              {index > 0 ? ", " : null}
+              <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id, terminal.node_id)}>
+                {terminal.name}
+              </Link>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  };
 
   const openConfirmDeleteDialog = (userId: number) => {
     openModal({
@@ -61,9 +106,17 @@ export const UserList: React.FC = () => {
       flex: 1,
     },
     {
-      field: "description",
-      headerName: t("userDescription"),
+      field: "terminal_ids",
+      headerName: t("user.terminal"),
       flex: 2,
+      valueGetter: (_, row) =>
+        row.terminal_ids.length === 0
+          ? t("user.notLoggedInAtTerminal")
+          : row.terminal_ids
+              .map(getTerminalName)
+              .toSorted((lhs, rhs) => lhs.toLowerCase().localeCompare(rhs.toLowerCase()))
+              .join(", "),
+      renderCell: (params) => renderTerminals(params.row.terminal_ids),
     },
     {
       field: "user_tag_id",
@@ -108,7 +161,7 @@ export const UserList: React.FC = () => {
     <ListLayout title={t("users")} routes={UserRoutes}>
       <DataGrid
         autoHeight
-        loading={isLoading}
+        loading={isLoading || isTerminalsLoading}
         rows={users ?? []}
         columns={columns}
         disableRowSelectionOnClick

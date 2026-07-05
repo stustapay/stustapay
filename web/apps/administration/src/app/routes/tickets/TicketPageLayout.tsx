@@ -1,57 +1,40 @@
 import { ConfirmationNumber as ConfirmationNumberIcon } from "@mui/icons-material";
-import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
+import { Box } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-import { useNode } from "@/api/nodes";
+import { withTreeObjectGuard } from "@/app/layout";
 import { ExternalTicketRoutes, TicketRoutes } from "@/app/routes";
+import { ResponsivePageTabs } from "@/components";
 
-const getActiveTab = (location: string) => {
-  if (location.startsWith(ExternalTicketRoutes.list())) {
-    return ExternalTicketRoutes.list();
-  }
-  return TicketRoutes.list();
-};
-
-export const TicketPageLayout: React.FC = () => {
+export const TicketPageLayout: React.FC = withTreeObjectGuard("ticket", () => {
   const { t } = useTranslation();
-  const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: Number(nodeId) });
-  const location = useLocation();
 
-  if (!nodeId) {
-    // TODO: return error page / redirect
-    return null;
-  }
-
-  if (!node) {
-    return <Loading />;
-  }
+  const tabs = React.useMemo(
+    () => [
+      {
+        value: TicketRoutes.list(),
+        label: t("tickets"),
+        to: TicketRoutes.list(),
+        icon: <ConfirmationNumberIcon />,
+      },
+      {
+        value: ExternalTicketRoutes.list(),
+        label: t("externalTicket.presaleTickets"),
+        to: ExternalTicketRoutes.list(),
+        icon: <ConfirmationNumberIcon />,
+      },
+    ],
+    [t]
+  );
 
   return (
     <Box>
-      <Tabs value={getActiveTab(location.pathname)} sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tab
-          label={t("tickets")}
-          component={RouterLink}
-          icon={<ConfirmationNumberIcon />}
-          iconPosition="start"
-          value={TicketRoutes.list()}
-          to={TicketRoutes.list()}
-        />
-        <Tab
-          label={t("externalTicket.presaleTickets")}
-          component={RouterLink}
-          icon={<ConfirmationNumberIcon />}
-          value={ExternalTicketRoutes.list()}
-          to={ExternalTicketRoutes.list()}
-        />
-      </Tabs>
+      <ResponsivePageTabs tabs={tabs} />
       <Box sx={{ mt: 2 }}>
         <Outlet />
       </Box>
     </Box>
   );
-};
+});

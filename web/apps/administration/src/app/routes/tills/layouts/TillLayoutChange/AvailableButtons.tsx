@@ -1,9 +1,10 @@
-import { List, TextField, Typography } from "@mui/material";
+import { Box, List, TextField, Typography } from "@mui/material";
 import * as React from "react";
+import { useDrop } from "react-dnd";
 import { useTranslation } from "react-i18next";
 
-import { DragArea } from "./DragArea";
-import { DraggableButton } from "./DraggableButton";
+import { LayoutEditorDragItem, LayoutEditorItemType } from "./dnd";
+import { DraggableAvailableListItem } from "./DraggableAvailableListItem";
 import { Selectable } from "./types";
 
 export interface AvailableButtonsProps {
@@ -19,43 +20,65 @@ export const AvailableButtons: React.FC<AvailableButtonsProps> = ({
 }) => {
   const { t } = useTranslation();
   const [search, setSearch] = React.useState("");
-  const buttons = React.useMemo(
+  const availableDropRef = React.useRef<HTMLDivElement>(null);
+  const availableSelectables = React.useMemo(
     () =>
       selectables
         .filter(
-          (button) =>
-            !assignedButtonIds.includes(button.id) &&
-            (!search || button.name.toLowerCase().includes(search.toLowerCase()))
+          (selectable) =>
+            !assignedButtonIds.includes(selectable.id) &&
+            (!search || selectable.name.toLowerCase().includes(search.toLowerCase()))
         )
         .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
     [selectables, assignedButtonIds, search]
   );
 
-  const moveButton = (productId: number) => {
-    setAssignedButtonIds(assignedButtonIds.filter((id) => id !== productId));
-  };
-  const moveButtonEmpty = (productId: number) => {
-    setAssignedButtonIds(assignedButtonIds.filter((id) => id !== productId));
+  const assign = (id: number) => {
+    setAssignedButtonIds([...assignedButtonIds, id]);
   };
 
-  if (buttons.length === 0) {
-    return (
-      <Typography variant="h5">
-        {t("button.availableButtons")}
-        <DragArea moveButton={moveButtonEmpty} />
-      </Typography>
-    );
-  }
+  const [, drop] = useDrop<LayoutEditorDragItem>({
+    accept: LayoutEditorItemType,
+    canDrop: (item) => item.source === "assigned",
+    drop: (item) => {
+      if (item.source !== "assigned") {
+        return;
+      }
+
+      setAssignedButtonIds(assignedButtonIds.filter((assignedId) => assignedId !== item.id));
+    },
+  });
+
+  drop(availableDropRef);
 
   return (
-    <>
-      <Typography variant="h5">{t("button.availableButtons")}</Typography>
-      <List>
-        <TextField label="Search" fullWidth value={search} onChange={(e) => setSearch(e.target.value)} sx={{ mb: 2 }} />
-        {buttons.map((button) => (
-          <DraggableButton key={button.id} button={button} moveButton={moveButton} />
-        ))}
-      </List>
-    </>
+    <Box ref={availableDropRef}>
+      <Typography variant="subtitle1" sx={{ mb: 1 }}>
+        {t("button.availableButtons")}
+      </Typography>
+      <TextField
+        label={t("common.search")}
+        fullWidth
+        size="small"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        sx={{ mb: 1 }}
+      />
+      {availableSelectables.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          {t("button.noAvailableButtons")}
+        </Typography>
+      ) : (
+        <List dense disablePadding sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          {availableSelectables.map((selectable) => (
+            <DraggableAvailableListItem
+              key={selectable.id}
+              selectable={selectable}
+              onAssign={() => assign(selectable.id)}
+            />
+          ))}
+        </List>
+      )}
+    </Box>
   );
 };

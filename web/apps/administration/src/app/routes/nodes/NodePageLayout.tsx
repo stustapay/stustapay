@@ -5,100 +5,70 @@ import {
   List as ListIcon,
   Receipt as ReceiptIcon,
 } from "@mui/icons-material";
-import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
+import { Box } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-import { useNode } from "@/api";
+import { ResponsivePageTabs } from "@/components";
+import { useCurrentNode } from "@/hooks";
 
 import { EventPageLayout } from "./EventPageLayout";
 
-const getActiveTab = (nodeId: number, location: string) => {
-  if (location.startsWith(`/node/${nodeId}/stats`)) {
-    return `/node/${nodeId}/stats`;
-  }
-  if (location.startsWith(`/node/${nodeId}/settings`)) {
-    return `/node/${nodeId}/settings`;
-  }
-  if (location.startsWith(`/node/${nodeId}/audit-logs`)) {
-    return `/node/${nodeId}/audit-logs`;
-  }
-  if (location.startsWith(`/node/${nodeId}/reports`)) {
-    return `/node/${nodeId}/reports`;
-  }
-  return `/node/${nodeId}`;
-};
-
 export const NodePageLayout: React.FC = () => {
   const { t } = useTranslation();
-  const location = useLocation();
-  const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: Number(nodeId) });
+  const { currentNode } = useCurrentNode();
+  const nodeUrl = `/node/${currentNode.id}`;
 
-  if (!nodeId) {
-    // TODO: return error page / redirect
-    return null;
-  }
+  const tabs = React.useMemo(() => {
+    const items = [
+      {
+        value: nodeUrl,
+        label: t("nodes.overview"),
+        to: nodeUrl,
+        icon: <DashboardIcon />,
+      },
+    ];
+    if (currentNode.event_node_id != null) {
+      items.push(
+        {
+          value: `${nodeUrl}/stats`,
+          label: t("nodes.statistics"),
+          to: `${nodeUrl}/stats`,
+          icon: <LeaderboardIcon />,
+        },
+        {
+          value: `${nodeUrl}/reports`,
+          label: t("nodes.reports"),
+          to: `${nodeUrl}/reports`,
+          icon: <ReceiptIcon />,
+        }
+      );
+    }
+    items.push(
+      {
+        value: `${nodeUrl}/audit-logs`,
+        label: t("auditLog.auditLogs"),
+        to: `${nodeUrl}/audit-logs`,
+        icon: <ListIcon />,
+      },
+      {
+        value: `${nodeUrl}/settings`,
+        label: t("nodes.settings"),
+        to: `${nodeUrl}/settings`,
+        icon: <SettingsIcon />,
+      }
+    );
+    return items;
+  }, [currentNode.event_node_id, nodeUrl, t]);
 
-  if (!node) {
-    return <Loading />;
+  if (currentNode.event != null) {
+    return <EventPageLayout node={currentNode} />;
   }
-
-  if (node.event != null) {
-    return <EventPageLayout node={node} />;
-  }
-  const nodeUrl = `/node/${node.id}`;
 
   return (
     <Box>
-      <Tabs sx={{ borderBottom: 1, borderColor: "divider" }} value={getActiveTab(node.id, location.pathname)}>
-        <Tab
-          label={t("nodes.overview")}
-          component={RouterLink}
-          value={nodeUrl}
-          icon={<DashboardIcon />}
-          iconPosition="start"
-          to={nodeUrl}
-        />
-        {node.event_node_id != null && (
-          <Tab
-            label={t("nodes.statistics")}
-            component={RouterLink}
-            value={`${nodeUrl}/stats`}
-            icon={<LeaderboardIcon />}
-            iconPosition="start"
-            to={`${nodeUrl}/stats`}
-          />
-        )}
-        {node.event_node_id != null && (
-          <Tab
-            label={t("nodes.reports")}
-            component={RouterLink}
-            value={`${nodeUrl}/reports`}
-            icon={<ReceiptIcon />}
-            iconPosition="start"
-            to={`${nodeUrl}/reports`}
-          />
-        )}
-        <Tab
-          label={t("auditLog.auditLogs")}
-          component={RouterLink}
-          value={`${nodeUrl}/audit-logs`}
-          icon={<ListIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/audit-logs`}
-        />
-        <Tab
-          label={t("nodes.settings")}
-          component={RouterLink}
-          value={`${nodeUrl}/settings`}
-          icon={<SettingsIcon />}
-          iconPosition="start"
-          to={`${nodeUrl}/settings`}
-        />
-      </Tabs>
+      <ResponsivePageTabs tabs={tabs} />
       <Box sx={{ mt: 2 }}>
         <Outlet />
       </Box>

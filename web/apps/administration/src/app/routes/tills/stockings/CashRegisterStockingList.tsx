@@ -1,9 +1,10 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import {
   CashRegisterStocking,
@@ -53,6 +54,11 @@ export const CashRegisterStockingList: React.FC = () => {
       field: "name",
       headerName: t("register.name"),
       flex: 1,
+      renderCell: (params) => (
+        <Link component={RouterLink} to={TillStockingsRoutes.detail(params.row.id, params.row.node_id)}>
+          {params.row.name}
+        </Link>
+      ),
     },
     {
       field: "total",

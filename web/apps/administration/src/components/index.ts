@@ -10,3 +10,5 @@ export * from "./MarkdownEditor";
 export * from "./graphs";
 export * from "./NodeSelect";
 export * from "./NodeMultiSelcet";
+export * from "./ResponsivePageTabs";
+export * from "./ResponsiveTabSelect";

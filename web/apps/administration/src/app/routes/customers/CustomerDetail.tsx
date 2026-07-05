@@ -18,7 +18,7 @@ import {
   useUpdateAccountCommentMutation,
 } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
-import { AccountRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
+import { CustomerRoutes, PayoutRunRoutes, UserTagRoutes } from "@/app/routes";
 import {
   DetailBoolField,
   DetailDateField,
@@ -134,7 +134,7 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
 
   if (error || !customer) {
     toast.error("Error loading account");
-    navigate(AccountRoutes.list());
+    navigate(CustomerRoutes.list());
     return null;
   }
 
@@ -206,7 +206,7 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
   }
 
   return (
-    <DetailLayout title={`Customer Account ${customer.id}`} routes={AccountRoutes} actions={actions}>
+    <DetailLayout title={`Customer Account ${customer.id}`} routes={CustomerRoutes} actions={actions}>
       <Grid container spacing={1} sx={{ display: "grid", alignItems: "stretch", gridTemplateColumns: "1fr 1fr" }}>
         <Grid>
           <DetailView sx={{ height: "100%" }}>

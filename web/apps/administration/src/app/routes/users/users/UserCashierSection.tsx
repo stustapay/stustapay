@@ -15,12 +15,7 @@ import { CashierShiftTable } from "@/app/routes/cashiers";
 import { ButtonLink, DetailField, DetailNumberField, DetailView } from "@/components";
 
 export const isActiveCashier = (cashier: User, shiftCount: number): boolean => {
-  return (
-    cashier.cash_register_id != null ||
-    cashier.terminal_ids.length > 0 ||
-    (cashier.cash_drawer_balance ?? 0) !== 0 ||
-    shiftCount > 0
-  );
+  return cashier.cash_register_id != null || shiftCount > 0;
 };
 
 export const UserCashierSection: React.FC<{ cashier: User }> = ({ cashier }) => {
@@ -75,25 +70,27 @@ export const UserCashierSection: React.FC<{ cashier: User }> = ({ cashier }) => 
       <Typography variant="h6" sx={{ p: 1 }}>
         {t("cashier.cashierInfo")}
       </Typography>
-      <DetailNumberField
-        label={t("cashier.cashDrawerBalance")}
-        type="currency"
-        value={cashier.cash_drawer_balance ?? 0}
-        secondaryAction={
-          cashier.cash_drawer_balance !== 0 &&
-          cashier.cash_drawer_balance != null && (
-            <ButtonLink to={UserRoutes.detailAction(cashier.id, "close-out", cashier.node_id)}>
-              {t("cashier.closeOut")}
-            </ButtonLink>
-          )
-        }
-      />
       {cashier.cash_register_id != null && (
-        <DetailField
-          label={t("cashier.cashRegister")}
-          value={renderRegister(cashier.cash_register_id)}
-          linkTo={CashRegistersRoutes.detail(cashier.cash_register_id)}
-        />
+        <>
+          <DetailNumberField
+            label={t("cashier.cashDrawerBalance")}
+            type="currency"
+            value={cashier.cash_drawer_balance ?? 0}
+            secondaryAction={
+              cashier.cash_drawer_balance !== 0 &&
+              cashier.cash_drawer_balance != null && (
+                <ButtonLink to={UserRoutes.detailAction(cashier.id, "close-out", cashier.node_id)}>
+                  {t("cashier.closeOut")}
+                </ButtonLink>
+              )
+            }
+          />
+          <DetailField
+            label={t("cashier.cashRegister")}
+            value={renderRegister(cashier.cash_register_id)}
+            linkTo={CashRegistersRoutes.detail(cashier.cash_register_id)}
+          />
+        </>
       )}
       <Typography variant="h6" sx={{ p: 1 }}>
         {t("cashier.shifts")}

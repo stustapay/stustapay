@@ -24,22 +24,6 @@ async def get_money_overview(token: CurrentAuthToken, account_service: ContextAc
     return await account_service.get_money_overview(token=token, node_id=node_id)
 
 
-class FindAccountPayload(BaseModel):
-    search_term: str
-
-
-@router.post("/accounts/find-accounts", response_model=NormalizedList[Account, int])
-async def find_accounts(
-    token: CurrentAuthToken,
-    account_service: ContextAccountService,
-    payload: FindAccountPayload,
-    node_id: int,
-):
-    return normalize_list(
-        await account_service.find_accounts(token=token, search_term=payload.search_term, node_id=node_id)
-    )
-
-
 @router.get("/accounts/{account_id}", response_model=Account)
 async def get_account(token: CurrentAuthToken, account_service: ContextAccountService, account_id: int, node_id: int):
     return await account_service.get_account(token=token, account_id=account_id, node_id=node_id)

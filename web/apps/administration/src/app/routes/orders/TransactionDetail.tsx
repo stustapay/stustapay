@@ -11,7 +11,7 @@ import {
   useListSystemAccountsQuery,
   useListUsersQuery,
 } from "@/api";
-import { AccountRoutes, OrderRoutes, TransactionRoutes, UserRoutes } from "@/app/routes";
+import { CustomerRoutes, OrderRoutes, SystemAccountRoutes, TransactionRoutes, UserRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
@@ -52,6 +52,14 @@ export const TransactionDetail: React.FC = () => {
     return account.name;
   };
 
+  const getAccountLink = (accId: number) => {
+    const account = selectAccountById(accounts, accId);
+    if (account) {
+      return SystemAccountRoutes.detail(accId, currentNode.event_node_id);
+    }
+    return CustomerRoutes.detail(accId, currentNode.event_node_id);
+  };
+
   return (
     <DetailLayout title={t("transaction.name", { id: transactionId })} routes={TransactionRoutes}>
       <DetailView>
@@ -69,14 +77,14 @@ export const TransactionDetail: React.FC = () => {
           <DetailField
             label={t("transaction.sourceAccount")}
             value={renderAccount(transaction.source_account)}
-            linkTo={AccountRoutes.detail(transaction.source_account, currentNode.event_node_id)}
+            linkTo={getAccountLink(transaction.source_account)}
           />
         )}
         {transaction.target_account != null && (
           <DetailField
             label={t("transaction.targetAccount")}
             value={renderAccount(transaction.target_account)}
-            linkTo={AccountRoutes.detail(transaction.target_account, currentNode.event_node_id)}
+            linkTo={getAccountLink(transaction.target_account)}
           />
         )}
         {transaction.order != null && (

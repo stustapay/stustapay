@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./ErrorPage";
 import { AuthenticatedRoot, PrivilegeGuard, UnauthenticatedRoot } from "./layout";
 import { NodeProvider } from "./provider";
-import { AccountDetail, AccountPageLayout, FindAccounts, SystemAccountList } from "./routes/accounts";
+import { AccountDetail, SystemAccountList } from "./routes/accounts";
 import { Login, Profile } from "./routes/auth";
 import { CashierCloseOut, CashierShiftDetail } from "./routes/cashiers";
 import {
@@ -14,15 +14,7 @@ import {
   CustomerPageLayout,
   CustomerSearch,
 } from "./routes/customers";
-import {
-  EventCreate,
-  NodeOverview,
-  MoneyOverview,
-  NodePageLayout,
-  NodeSettings,
-  NodeCreate,
-  RevenueReports,
-} from "./routes/nodes";
+import { EventCreate, NodeOverview, NodePageLayout, NodeSettings, NodeCreate, RevenueReports } from "./routes/nodes";
 import { AuditLogList, AuditLogDetail } from "./routes/nodes/audit-logs";
 import { DsfinvkExport } from "./routes/nodes/DsfinvkExport";
 import { NodeStats } from "./routes/nodes/stats";
@@ -69,6 +61,7 @@ import {
   CashRegisterCreate,
   CashRegisterList,
   CashRegisterStockingCreate,
+  CashRegisterStockingDetail,
   CashRegisterStockingList,
   CashRegisterStockingUpdate,
   CashRegisterTransfer,
@@ -141,6 +134,10 @@ const router = createBrowserRouter([
               {
                 path: "system-accounts",
                 element: <SystemAccountList />,
+              },
+              {
+                path: "system-accounts/:accountId",
+                element: <AccountDetail />,
               },
               {
                 path: "payout-runs",
@@ -352,6 +349,10 @@ const router = createBrowserRouter([
                 element: <CashRegisterStockingCreate />,
               },
               {
+                path: "stockings/:stockingId",
+                element: <CashRegisterStockingDetail />,
+              },
+              {
                 path: "stockings/:stockingId/edit",
                 element: <CashRegisterStockingUpdate />,
               },
@@ -396,25 +397,6 @@ const router = createBrowserRouter([
               {
                 path: ":terminalId",
                 element: <TerminalDetail />,
-              },
-            ],
-          },
-          {
-            path: "accounts",
-            element: (
-              <PrivilegeGuard privilege="node_administration">
-                <AccountPageLayout />
-              </PrivilegeGuard>
-            ),
-            children: [
-              { index: true, element: <MoneyOverview /> },
-              {
-                path: ":accountId",
-                element: <AccountDetail />,
-              },
-              {
-                path: "find",
-                element: <FindAccounts />,
               },
             ],
           },

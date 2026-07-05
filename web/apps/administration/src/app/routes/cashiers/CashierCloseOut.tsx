@@ -1,21 +1,16 @@
 import {
   Alert,
   AlertTitle,
+  Box,
   Button,
   LinearProgress,
   ListItem,
   ListItemText,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  Typography,
 } from "@mui/material";
 import { CashingTextField, Loading } from "@stustapay/components";
-import { FormNumericInput } from "@stustapay/form-components";
 import { getUserName } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
 import { Form, Formik, FormikHelpers } from "formik";
@@ -26,57 +21,46 @@ import { z } from "zod";
 
 import { selectTerminalById, useCloseOutCashierMutation, useGetUserQuery, useListTerminalsQuery } from "@/api";
 import { TerminalRoutes, UserRoutes } from "@/app/routes";
+import {
+  cashRegisterStockingDenominationFields,
+  computeStockingTotal,
+  defaultCashRegisterStockingDenominationValues,
+  StockingDenominationValues,
+} from "@/app/routes/tills/stockings/stockingDenominations";
+import { StockingMakeupFormTable } from "@/app/routes/tills/stockings/StockingMakeupFormTable";
 import { UserSelect } from "@/components/features";
 import { useCurrencyFormatter, useCurrentNode, useCurrentUser } from "@/hooks";
 
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
-import { CurrencyDenomination, useDenomination } from "./denominations";
 
-type CloseOutValues = {
+type CloseOutValues = StockingDenominationValues & {
   comment: string;
   closingOutUserId: number;
-  [key: string]: number | string;
 };
 
-const useCloseOutSchema = (denominiations: CurrencyDenomination[]) => {
+const useCloseOutSchema = () => {
   const currentUser = useCurrentUser();
   return React.useMemo(() => {
     const initialValues: CloseOutValues = {
+      ...defaultCashRegisterStockingDenominationValues,
+      variable_in_euro: 0,
       comment: "",
       closingOutUserId: currentUser?.id as unknown as number,
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodObject<any> = z.object({
+
+    const denominationSchema = Object.fromEntries(
+      cashRegisterStockingDenominationFields.map((field) => [field, z.number()])
+    );
+
+    const schema = z.object({
       comment: z.string(),
       closingOutUserId: z.number(),
+      variable_in_euro: z.number(),
+      ...denominationSchema,
     });
 
-    for (const denominiation of denominiations) {
-      schema = schema.extend({ [denominiation.key]: z.number() });
-      initialValues[denominiation.key] = 0;
-    }
-
     return { schema, initialValues };
-  }, [denominiations, currentUser]);
-};
-
-const computeSum = (values: Record<string, number | string>, denominiations: CurrencyDenomination[]) => {
-  let sum = 0;
-  for (const denomination of denominiations) {
-    const val = values[denomination.key];
-    if (typeof val === "number") {
-      sum += val * denomination.denomination;
-    }
-  }
-  return sum;
-};
-
-const computeDifference = (
-  values: Record<string, number | string>,
-  denominiations: CurrencyDenomination[],
-  targetBalance: number
-): number => {
-  return computeSum(values, denominiations) - targetBalance;
+  }, [currentUser]);
 };
 
 export const CashierCloseOut: React.FC = () => {
@@ -87,8 +71,7 @@ export const CashierCloseOut: React.FC = () => {
 
   const formatCurrency = useCurrencyFormatter();
 
-  const denominations = useDenomination();
-  const { schema, initialValues } = useCloseOutSchema(denominations);
+  const { schema, initialValues } = useCloseOutSchema();
 
   const [closeOut] = useCloseOutCashierMutation();
   const { data: user, isLoading } = useGetUserQuery({
@@ -117,7 +100,7 @@ export const CashierCloseOut: React.FC = () => {
       cashierId: Number(userId),
       closeOut: {
         comment: values.comment,
-        actual_cash_drawer_balance: computeSum(values, denominations),
+        actual_cash_drawer_balance: computeStockingTotal(values),
         closing_out_user_id: values.closingOutUserId,
       },
     })
@@ -158,89 +141,70 @@ export const CashierCloseOut: React.FC = () => {
       )}
 
       <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={toFormikValidationSchema(schema)}>
-        {(formik) => (
-          <Form onSubmit={formik.handleSubmit}>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="right">{t("closeOut.denomination")}</TableCell>
-                    <TableCell align="right">{t("closeOut.countedInDrawer")}</TableCell>
-                    <TableCell align="right">{t("closeOut.sum")}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {denominations.map((denomination) => (
-                    <TableRow key={denomination.key}>
-                      <TableCell align="right">{denomination.label}</TableCell>
-                      <TableCell>
-                        <FormNumericInput fullWidth name={denomination.key} formik={formik} />
-                      </TableCell>
-                      <TableCell align="right">
-                        = {formatCurrency((formik.values[denomination.key] as number) * denomination.denomination)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell rowSpan={3} />
-                    <TableCell align="right" sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }}>
-                      {t("closeOut.targetInDrawer")}
-                    </TableCell>
-                    <TableCell align="right">{formatCurrency(cashDrawerBalance)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }} align="right">
-                      {t("closeOut.sumInCashDrawer")}
-                    </TableCell>
-                    <TableCell align="right">{formatCurrency(computeSum(formik.values, denominations))}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: (theme) => theme.typography.fontWeightBold }} align="right">
-                      {t("closeOut.difference")}
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(computeDifference(formik.values, denominations, cashDrawerBalance))} (
-                      {(
-                        Math.abs(
-                          computeDifference(formik.values, denominations, cashDrawerBalance) / cashDrawerBalance
-                        ) * 100
-                      ).toFixed(2)}
-                      %)
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Paper sx={{ mt: 2, p: 2 }}>
+        {(formik) => {
+          const countedTotal = computeStockingTotal(formik.values);
+          const difference = countedTotal - cashDrawerBalance;
+
+          return (
+            <Form onSubmit={formik.handleSubmit}>
               <Stack spacing={2}>
-                <UserSelect
-                  label={t("closeOut.closingOutUser")}
-                  value={formik.values.closingOutUserId}
-                  onBlur={formik.handleBlur}
-                  filterPrivilege="node_administration"
-                  onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
-                  error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
-                  helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
+                <StockingMakeupFormTable
+                  formik={formik}
+                  title={t("closeOut.countedInDrawer")}
+                  totalLabel={t("closeOut.sumInCashDrawer")}
                 />
-                <CashingTextField
-                  multiline
-                  fullWidth
-                  label={t("closeOut.comment")}
-                  name="comment"
-                  value={formik.values.comment}
-                  onChange={(val) => formik.setFieldValue("comment", val)}
-                  error={formik.touched.comment && !!formik.errors.comment}
-                  helperText={(formik.touched.comment && formik.errors.comment) as string}
-                />
-                {formik.isSubmitting && <LinearProgress />}
-                <Button type="submit" variant="outlined" disabled={formik.isSubmitting}>
-                  {t("submit")}
-                </Button>
+                <Paper sx={{ px: 2, py: 1.5 }}>
+                  <Stack spacing={0.5} sx={{ alignItems: "flex-end" }}>
+                    <Typography variant="body2">
+                      <Box component="span" sx={{ fontWeight: (theme) => theme.typography.fontWeightBold, mr: 2 }}>
+                        {t("closeOut.targetInDrawer")}
+                      </Box>
+                      {formatCurrency(cashDrawerBalance)}
+                    </Typography>
+                    <Typography variant="body2">
+                      <Box component="span" sx={{ fontWeight: (theme) => theme.typography.fontWeightBold, mr: 2 }}>
+                        {t("closeOut.difference")}
+                      </Box>
+                      {formatCurrency(difference)} (
+                      {cashDrawerBalance !== 0
+                        ? ((Math.abs(difference / cashDrawerBalance) * 100).toFixed(2) as string)
+                        : "—"}
+                      %)
+                    </Typography>
+                  </Stack>
+                </Paper>
+                <Paper sx={{ p: 2 }}>
+                  <Stack spacing={2}>
+                    <UserSelect
+                      label={t("closeOut.closingOutUser")}
+                      value={formik.values.closingOutUserId}
+                      onBlur={formik.handleBlur}
+                      filterPrivilege="node_administration"
+                      onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
+                      error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
+                      helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
+                    />
+                    <CashingTextField
+                      multiline
+                      fullWidth
+                      label={t("closeOut.comment")}
+                      name="comment"
+                      value={formik.values.comment}
+                      onChange={(val) => formik.setFieldValue("comment", val)}
+                      error={formik.touched.comment && !!formik.errors.comment}
+                      helperText={(formik.touched.comment && formik.errors.comment) as string}
+                    />
+                    {formik.isSubmitting && <LinearProgress />}
+                    <Button type="submit" variant="outlined" disabled={formik.isSubmitting}>
+                      {t("submit")}
+                    </Button>
+                  </Stack>
+                </Paper>
+                <CashierShiftStatsOverview cashierId={user.id} />
               </Stack>
-            </Paper>
-            <CashierShiftStatsOverview cashierId={user.id} />
-          </Form>
-        )}
+            </Form>
+          );
+        }}
       </Formik>
     </Stack>
   );

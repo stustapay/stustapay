@@ -50,7 +50,7 @@ class RouteBuilder implements IRouteBuilder {
   };
 }
 
-export const AccountRoutes = new RouteBuilder("accounts", "node_administration", "account");
+export const SystemAccountRoutes = new RouteBuilder("system-accounts", "node_administration", "account");
 export const TillRoutes = new RouteBuilder("tills", "node_administration", "till");
 export const TillLayoutRoutes = new RouteBuilder("tills/layouts", "node_administration", "till");
 export const TillProfileRoutes = new RouteBuilder("tills/profiles", "node_administration", "till");

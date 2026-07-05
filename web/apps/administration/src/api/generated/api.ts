@@ -654,17 +654,6 @@ const injectedRtkApi = api
         }),
         providesTags: ["accounts"],
       }),
-      findAccounts: build.mutation<FindAccountsApiResponse, FindAccountsApiArg>({
-        query: (queryArg) => ({
-          url: `/accounts/find-accounts`,
-          method: "POST",
-          body: queryArg.findAccountPayload,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        invalidatesTags: ["accounts"],
-      }),
       getAccount: build.query<GetAccountApiResponse, GetAccountApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}`,
@@ -1825,11 +1814,6 @@ export type GetMoneyOverviewApiResponse = /** status 200 Successful Response */ 
 export type GetMoneyOverviewApiArg = {
   nodeId: number;
 };
-export type FindAccountsApiResponse = /** status 200 Successful Response */ NormalizedListAccountInt;
-export type FindAccountsApiArg = {
-  nodeId: number;
-  findAccountPayload: FindAccountPayload;
-};
 export type GetAccountApiResponse = /** status 200 Successful Response */ AccountRead;
 export type GetAccountApiArg = {
   accountId: number;
@@ -2871,9 +2855,6 @@ export type MoneyOverviewRead = {
   total_customer_account_balance: number;
   total_cash_register_balance: number;
 };
-export type FindAccountPayload = {
-  search_term: string;
-};
 export type UpdateBalancePayload = {
   new_balance: number;
 };
@@ -3907,7 +3888,6 @@ export const {
   useLazyListSystemAccountsQuery,
   useGetMoneyOverviewQuery,
   useLazyGetMoneyOverviewQuery,
-  useFindAccountsMutation,
   useGetAccountQuery,
   useLazyGetAccountQuery,
   useDisableAccountMutation,

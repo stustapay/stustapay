@@ -3,30 +3,44 @@ import {
   PhonelinkSetup as PhonelinkSetupIcon,
   Map as MapIcon,
 } from "@mui/icons-material";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 
 import { useNode } from "@/api/nodes";
 import { TerminalMdmRoutes, TerminalRoutes } from "@/app/routes";
-
-const getActiveTab = (location: string) => {
-  if (location.startsWith(TerminalMdmRoutes.list())) {
-    return TerminalMdmRoutes.list();
-  }
-  if (location.startsWith(TerminalRoutes.action("list"))) {
-    return TerminalRoutes.action("list");
-  }
-  return TerminalRoutes.list();
-};
+import { ResponsivePageTabs } from "@/components";
 
 export const TerminalPageLayout: React.FC = () => {
   const { t } = useTranslation();
   const { nodeId } = useParams();
   const { node } = useNode({ nodeId: Number(nodeId) });
-  const location = useLocation();
+
+  const tabs = React.useMemo(
+    () => [
+      {
+        value: TerminalRoutes.list(),
+        label: t("terminal.overview"),
+        to: TerminalRoutes.list(),
+        icon: <MapIcon />,
+      },
+      {
+        value: TerminalRoutes.action("list"),
+        label: t("terminal.terminals"),
+        to: TerminalRoutes.action("list"),
+        icon: <SmartphoneIcon />,
+      },
+      {
+        value: TerminalMdmRoutes.list(),
+        label: t("terminal.mdmDevices"),
+        to: TerminalMdmRoutes.list(),
+        icon: <PhonelinkSetupIcon />,
+      },
+    ],
+    [t]
+  );
 
   if (!nodeId) {
     return null;
@@ -38,36 +52,7 @@ export const TerminalPageLayout: React.FC = () => {
 
   return (
     <Box>
-      <Tabs
-        value={getActiveTab(location.pathname)}
-        sx={{ borderBottom: 1, borderColor: "divider" }}
-        aria-label="Terminals"
-      >
-        <Tab
-          label={t("terminal.overview")}
-          component={RouterLink}
-          icon={<MapIcon />}
-          iconPosition="start"
-          value={TerminalRoutes.list()}
-          to={TerminalRoutes.list()}
-        />
-        <Tab
-          label={t("terminal.terminals")}
-          component={RouterLink}
-          icon={<SmartphoneIcon />}
-          iconPosition="start"
-          value={TerminalRoutes.action("list")}
-          to={TerminalRoutes.action("list")}
-        />
-        <Tab
-          label={t("terminal.mdmDevices")}
-          component={RouterLink}
-          icon={<PhonelinkSetupIcon />}
-          iconPosition="start"
-          value={TerminalMdmRoutes.list()}
-          to={TerminalMdmRoutes.list()}
-        />
-      </Tabs>
+      <ResponsivePageTabs tabs={tabs} ariaLabel="Terminals" />
       <Box sx={{ mt: 2 }}>
         <Outlet />
       </Box>
