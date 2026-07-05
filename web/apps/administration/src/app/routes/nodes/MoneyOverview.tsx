@@ -1,4 +1,4 @@
-import { Card, CardActions, CardContent, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Card, CardActions, CardContent, Grid, Typography, useTheme } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -86,7 +86,13 @@ export const MoneyOverview: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: theme.spacing(1) }}>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(6, 1fr)" },
+        gap: theme.spacing(1),
+      }}
+    >
       <AccountBalanceCard account={selectAccountByType("cash_vault")} />
       <AccountBalanceCard account={selectAccountByType("sumup_entry")} />
       <AccountBalanceCard account={selectAccountByType("sumup_online_entry")} />
@@ -98,6 +104,6 @@ export const MoneyOverview: React.FC = () => {
       <AccountBalanceCard account={selectAccountByType("donation_exit")} />
       <BalanceCard label="Customer balance" amount={moneyOverviewData.total_customer_account_balance} />
       <BalanceCard label="Cash registers" amount={moneyOverviewData.total_cash_register_balance} />
-    </div>
+    </Box>
   );
 };

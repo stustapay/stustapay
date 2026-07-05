@@ -1,47 +1,39 @@
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 import { withTreeObjectGuard } from "@/app/layout";
 import { AccountRoutes } from "@/app/routes";
-
-const getActiveTab = (location: string) => {
-  if (location.startsWith(AccountRoutes.list() + "/system")) {
-    return AccountRoutes.list() + "/system";
-  }
-  if (location.startsWith(AccountRoutes.list() + "/find")) {
-    return AccountRoutes.list() + "/find";
-  }
-  return AccountRoutes.list();
-};
+import { ResponsivePageTabs } from "@/components";
 
 export const AccountPageLayout: React.FC = withTreeObjectGuard("account", () => {
   const { t } = useTranslation();
-  const location = useLocation();
+
+  const tabs = React.useMemo(
+    () => [
+      {
+        value: AccountRoutes.list(),
+        label: t("account.overview"),
+        to: AccountRoutes.list(),
+      },
+      {
+        value: `${AccountRoutes.list()}/system`,
+        label: t("systemAccounts"),
+        to: `${AccountRoutes.list()}/system`,
+      },
+      {
+        value: `${AccountRoutes.list()}/find`,
+        label: t("findAccounts"),
+        to: `${AccountRoutes.list()}/find`,
+      },
+    ],
+    [t]
+  );
 
   return (
     <Box>
-      <Tabs value={getActiveTab(location.pathname)} aria-label="Users">
-        <Tab
-          label={t("account.overview")}
-          component={RouterLink}
-          value={AccountRoutes.list()}
-          to={AccountRoutes.list()}
-        />
-        <Tab
-          label={t("systemAccounts")}
-          component={RouterLink}
-          value={`${AccountRoutes.list()}/system`}
-          to={`${AccountRoutes.list()}/system`}
-        />
-        <Tab
-          label={t("findAccounts")}
-          component={RouterLink}
-          value={`${AccountRoutes.list()}/find`}
-          to={`${AccountRoutes.list()}/find`}
-        />
-      </Tabs>
+      <ResponsivePageTabs tabs={tabs} ariaLabel="Users" />
       <Box sx={{ mt: 2 }}>
         <Outlet />
       </Box>

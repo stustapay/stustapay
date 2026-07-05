@@ -1,27 +1,40 @@
 import { Search as SearchIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box } from "@mui/material";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet, Link as RouterLink, useLocation } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
 import { withTreeObjectGuard } from "@/app/layout";
 import { CustomerRoutes } from "@/app/routes";
+import { ResponsivePageTabs } from "@/components";
 import { useCurrentNode } from "@/hooks";
-
-const getActiveTab = (location: string) => {
-  if (location.startsWith(CustomerRoutes.action("blocked-payout"))) {
-    return CustomerRoutes.action("blocked-payout");
-  }
-  if (location.startsWith(CustomerRoutes.action("swap-tag"))) {
-    return CustomerRoutes.action("swap-tag");
-  }
-  return CustomerRoutes.list();
-};
 
 export const CustomerPageLayout: React.FC = withTreeObjectGuard("account", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const location = useLocation();
+
+  const tabs = React.useMemo(
+    () => [
+      {
+        value: CustomerRoutes.list(),
+        label: t("common.search"),
+        to: CustomerRoutes.list(),
+        icon: <SearchIcon />,
+      },
+      {
+        value: CustomerRoutes.action("swap-tag"),
+        label: t("customer.swapTag"),
+        to: CustomerRoutes.action("swap-tag"),
+        icon: <SwapHorizIcon />,
+      },
+      {
+        value: CustomerRoutes.action("blocked-payout"),
+        label: t("customer.customersWithBlockedPayout"),
+        to: CustomerRoutes.action("blocked-payout"),
+      },
+    ],
+    [t]
+  );
 
   if (currentNode.event == null) {
     // TODO: proper error redirect
@@ -30,30 +43,7 @@ export const CustomerPageLayout: React.FC = withTreeObjectGuard("account", () =>
 
   return (
     <Box>
-      <Tabs value={getActiveTab(location.pathname)} sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tab
-          label={t("common.search")}
-          icon={<SearchIcon />}
-          iconPosition="start"
-          component={RouterLink}
-          value={CustomerRoutes.list()}
-          to={CustomerRoutes.list()}
-        />
-        <Tab
-          label={t("customer.swapTag")}
-          icon={<SwapHorizIcon />}
-          iconPosition="start"
-          component={RouterLink}
-          value={CustomerRoutes.action("swap-tag")}
-          to={CustomerRoutes.action("swap-tag")}
-        />
-        <Tab
-          label={t("customer.customersWithBlockedPayout")}
-          component={RouterLink}
-          value={CustomerRoutes.action("blocked-payout")}
-          to={CustomerRoutes.action("blocked-payout")}
-        />
-      </Tabs>
+      <ResponsivePageTabs tabs={tabs} />
       <Box sx={{ mt: 2 }}>
         <Outlet />
       </Box>

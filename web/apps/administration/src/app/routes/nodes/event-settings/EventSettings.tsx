@@ -1,5 +1,7 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Alert, AlertTitle, Box, Button, Stack, Tab } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { useQueryVar } from "@stustapay/utils";
@@ -9,6 +11,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { useArchiveNodeMutation, useGetRestrictedEventSettingsQuery } from "@/api";
+import { ResponsiveTabSelect } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
 import { NodeConfiguration } from "../node-settings";
@@ -27,11 +30,32 @@ import { TabSumUp } from "./TabSumUp";
 
 export const EventSettings: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const [activeTab, setActiveTab] = useQueryVar("tab", "node");
   const { currentNode } = useCurrentNode();
   const { data: eventSettings, isLoading, error } = useGetRestrictedEventSettingsQuery({ nodeId: currentNode.id });
   const [archiveNode] = useArchiveNodeMutation();
   const openModal = useOpenModal();
+
+  const tabOptions = React.useMemo(
+    () => [
+      { value: "node", label: t("common.node") },
+      { value: "general", label: t("settings.general.tabLabel") },
+      { value: "customerPortal", label: t("settings.customerPortal.tabLabel") },
+      { value: "design", label: t("settings.design.tabLabel") },
+      { value: "pretix", label: t("settings.pretix.tabLabel") },
+      { value: "agb", label: t("settings.agb.tabLabel") },
+      { value: "privacypolicy", label: t("settings.privacypolicy.tabLabel") },
+      { value: "faq", label: t("settings.faq.tabLabel") },
+      { value: "sumup", label: t("settings.sumup.tabLabel") },
+      { value: "payout", label: t("settings.payout.tabLabel") },
+      { value: "bon", label: t("settings.bon.tabLabel") },
+      { value: "email", label: t("settings.email.tabLabel") },
+      { value: "mdm", label: t("settings.mdm.tabLabel") },
+    ],
+    [t]
+  );
 
   if (isLoading || (!eventSettings && !error)) {
     return <Loading />;
@@ -74,24 +98,19 @@ export const EventSettings: React.FC = () => {
         </Button>
       </Stack>
       <TabContext value={activeTab}>
-        <Box sx={{ display: "grid", gridTemplateColumns: "min-content auto" }}>
-          <Box sx={{ borderRight: 1, borderColor: "divider" }}>
-            <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
-              <Tab label={t("common.node")} value="node" />
-              <Tab label={t("settings.general.tabLabel")} value="general" />
-              <Tab label={t("settings.customerPortal.tabLabel")} value="customerPortal" />
-              <Tab label={t("settings.design.tabLabel")} value="design" />
-              <Tab label={t("settings.pretix.tabLabel")} value="pretix" />
-              <Tab label={t("settings.agb.tabLabel")} value="agb" />
-              <Tab label={t("settings.privacypolicy.tabLabel")} value="privacypolicy" />
-              <Tab label={t("settings.faq.tabLabel")} value="faq" />
-              <Tab label={t("settings.sumup.tabLabel")} value="sumup" />
-              <Tab label={t("settings.payout.tabLabel")} value="payout" />
-              <Tab label={t("settings.bon.tabLabel")} value="bon" />
-              <Tab label={t("settings.email.tabLabel")} value="email" />
-              <Tab label={t("settings.mdm.tabLabel")} value="mdm" />
-            </TabList>
-          </Box>
+        {!isDesktop && (
+          <ResponsiveTabSelect value={activeTab} options={tabOptions} onChange={setActiveTab} sx={{ mb: 0 }} />
+        )}
+        <Box sx={{ display: "grid", gridTemplateColumns: isDesktop ? "min-content auto" : "1fr" }}>
+          {isDesktop && (
+            <Box sx={{ borderRight: 1, borderColor: "divider" }}>
+              <TabList onChange={(_, tab) => setActiveTab(tab)} orientation="vertical">
+                {tabOptions.map((tab) => (
+                  <Tab key={tab.value} label={tab.label} value={tab.value} />
+                ))}
+              </TabList>
+            </Box>
+          )}
           <TabPanel value="node">
             <NodeConfiguration />
           </TabPanel>

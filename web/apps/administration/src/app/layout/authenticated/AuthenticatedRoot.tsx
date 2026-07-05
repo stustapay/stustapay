@@ -20,6 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { Loading, TestModeDisclaimer } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -86,7 +87,8 @@ const BreadcrumbHeader: React.FC = () => {
 export const AuthenticatedRoot: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [open, setOpen] = React.useState(true);
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const [open, setOpen] = React.useState(false);
   const location = useLocation();
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
@@ -94,6 +96,16 @@ export const AuthenticatedRoot: React.FC = () => {
   const user = useAppSelector(selectCurrentUser);
 
   const { isLoading: isTreeLoading, error: treeError } = useGetTreeForCurrentUserQuery();
+
+  React.useEffect(() => {
+    setOpen(isDesktop);
+  }, [isDesktop]);
+
+  React.useEffect(() => {
+    if (!isDesktop) {
+      setOpen(false);
+    }
+  }, [location.pathname, isDesktop]);
 
   if (!user) {
     const next = location.pathname !== "/logout" ? `?next=${location.pathname}` : "";
@@ -120,26 +132,18 @@ export const AuthenticatedRoot: React.FC = () => {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open}>
+      <AppBar position="fixed" open={open} isDesktop={isDesktop}>
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
-            sx={{ mr: 2, ...(open && { display: "none" }) }}
+            sx={{ mr: 2, ...(isDesktop && open && { display: "none" }) }}
           >
             <MenuIcon />
           </IconButton>
-          {isTreeLoading ? (
-            <Loading />
-          ) : treeError ? (
-            <Alert severity="error">
-              <AlertTitle>Error loading tree data</AlertTitle>
-            </Alert>
-          ) : (
-            <BreadcrumbHeader />
-          )}
+          {!isTreeLoading && !treeError && isDesktop && <BreadcrumbHeader />}
           <Button component={RouterLink} color="inherit" to="/profile">
             {t("auth.profile")}
           </Button>
@@ -157,9 +161,11 @@ export const AuthenticatedRoot: React.FC = () => {
             boxSizing: "border-box",
           },
         }}
-        variant="persistent"
+        variant={isDesktop ? "persistent" : "temporary"}
         anchor="left"
         open={open}
+        onClose={handleDrawerClose}
+        ModalProps={{ keepMounted: true }}
       >
         <DrawerHeader>
           <IconButton onClick={handleDrawerClose}>
@@ -178,7 +184,7 @@ export const AuthenticatedRoot: React.FC = () => {
           <NavigationTree />
         )}
       </Drawer>
-      <Main open={open}>
+      <Main open={open} isDesktop={isDesktop}>
         <DrawerHeader />
         <TestModeDisclaimer testMode={config.testMode} testModeMessage={config.testModeMessage} />
         <React.Suspense fallback={<CircularProgress />}>
