@@ -11,12 +11,14 @@ import {
   CashRegister,
   selectUserById,
   selectCashRegisterAll,
+  selectTerminalById,
   selectTillById,
   useListUsersQuery,
   useListCashRegistersAdminQuery,
+  useListTerminalsQuery,
   useListTillsQuery,
 } from "@/api";
-import { CashRegistersRoutes, TillRoutes, UserRoutes } from "@/app/routes";
+import { CashRegistersRoutes, TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode, useRenderNode } from "@/hooks";
 
@@ -36,6 +38,7 @@ export const TillOverview: React.FC = () => {
   );
 
   const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
   const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
   const { registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery(
     { nodeId: currentNode.id },
@@ -90,6 +93,26 @@ export const TillOverview: React.FC = () => {
     );
   };
 
+  const renderTerminal = (tillId: number | null) => {
+    if (tillId == null || !tills || !terminals) {
+      return "";
+    }
+    const till = selectTillById(tills, tillId);
+    if (!till?.terminal_id) {
+      return "";
+    }
+    const terminal = selectTerminalById(terminals, till.terminal_id);
+    if (!terminal) {
+      return "";
+    }
+
+    return (
+      <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id, terminal.node_id)}>
+        {terminal.name}
+      </Link>
+    );
+  };
+
   const columns: GridColDef<CashRegister>[] = [
     {
       field: "name",
@@ -112,6 +135,12 @@ export const TillOverview: React.FC = () => {
       headerName: t("register.currentTill"),
       width: 200,
       renderCell: (params) => renderTill(params.row.current_till_id),
+    },
+    {
+      field: "terminal_id",
+      headerName: t("till.terminal"),
+      width: 200,
+      renderCell: (params) => renderTerminal(params.row.current_till_id),
     },
     {
       field: "balance",
@@ -167,7 +196,7 @@ export const TillOverview: React.FC = () => {
       </Paper>
       <DataGrid
         autoHeight
-        loading={isRegistersLoading || isTillsLoading || isUsersLoading}
+        loading={isRegistersLoading || isTillsLoading || isTerminalsLoading || isUsersLoading}
         rows={registers ?? []}
         columns={columns}
         disableRowSelectionOnClick
