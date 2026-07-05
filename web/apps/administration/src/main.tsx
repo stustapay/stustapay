@@ -6,10 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { ModalProvider } from "@stustapay/modal-provider";
 import * as React from "react";
-import { DndProvider } from "react-dnd";
-
 import "react-toastify/dist/ReactToastify.css";
-import { HTML5Backend } from "react-dnd-html5-backend";
 
 import "./i18n";
 import * as ReactDOM from "react-dom/client";
@@ -27,9 +24,7 @@ root.render(
         <PersistGate persistor={persistor} loading={null}>
           <ModalProvider>
             <React.Suspense>
-              <DndProvider backend={HTML5Backend}>
-                <App />
-              </DndProvider>
+              <App />
             </React.Suspense>
           </ModalProvider>
         </PersistGate>
