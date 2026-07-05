@@ -1,12 +1,12 @@
 import { Search as SearchIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import { Navigate, Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 
-import { useNode } from "@/api/nodes";
+import { withTreeObjectGuard } from "@/app/layout";
 import { CustomerRoutes } from "@/app/routes";
+import { useCurrentNode } from "@/hooks";
 
 const getActiveTab = (location: string) => {
   if (location.startsWith(CustomerRoutes.action("blocked-payout"))) {
@@ -18,22 +18,12 @@ const getActiveTab = (location: string) => {
   return CustomerRoutes.list();
 };
 
-export const CustomerPageLayout: React.FC = () => {
+export const CustomerPageLayout: React.FC = withTreeObjectGuard("account", () => {
   const { t } = useTranslation();
-  const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: Number(nodeId) });
+  const { currentNode } = useCurrentNode();
   const location = useLocation();
 
-  if (!nodeId) {
-    // TODO: return error page / redirect
-    return null;
-  }
-
-  if (!node) {
-    return <Loading />;
-  }
-
-  if (node.event == null) {
+  if (currentNode.event == null) {
     // TODO: proper error redirect
     return <Navigate to="/" />;
   }
@@ -69,4 +59,4 @@ export const CustomerPageLayout: React.FC = () => {
       </Box>
     </Box>
   );
-};
+});

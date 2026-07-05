@@ -6,12 +6,11 @@ import {
   Receipt as ReceiptIcon,
 } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 
-import { useNode } from "@/api";
+import { useCurrentNode } from "@/hooks";
 
 import { EventPageLayout } from "./EventPageLayout";
 
@@ -34,26 +33,16 @@ const getActiveTab = (nodeId: number, location: string) => {
 export const NodePageLayout: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: Number(nodeId) });
+  const { currentNode } = useCurrentNode();
 
-  if (!nodeId) {
-    // TODO: return error page / redirect
-    return null;
+  if (currentNode.event != null) {
+    return <EventPageLayout node={currentNode} />;
   }
-
-  if (!node) {
-    return <Loading />;
-  }
-
-  if (node.event != null) {
-    return <EventPageLayout node={node} />;
-  }
-  const nodeUrl = `/node/${node.id}`;
+  const nodeUrl = `/node/${currentNode.id}`;
 
   return (
     <Box>
-      <Tabs sx={{ borderBottom: 1, borderColor: "divider" }} value={getActiveTab(node.id, location.pathname)}>
+      <Tabs sx={{ borderBottom: 1, borderColor: "divider" }} value={getActiveTab(currentNode.id, location.pathname)}>
         <Tab
           label={t("nodes.overview")}
           component={RouterLink}
@@ -62,7 +51,7 @@ export const NodePageLayout: React.FC = () => {
           iconPosition="start"
           to={nodeUrl}
         />
-        {node.event_node_id != null && (
+        {currentNode.event_node_id != null && (
           <Tab
             label={t("nodes.statistics")}
             component={RouterLink}
@@ -72,7 +61,7 @@ export const NodePageLayout: React.FC = () => {
             to={`${nodeUrl}/stats`}
           />
         )}
-        {node.event_node_id != null && (
+        {currentNode.event_node_id != null && (
           <Tab
             label={t("nodes.reports")}
             component={RouterLink}

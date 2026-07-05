@@ -1,11 +1,10 @@
 import { ConfirmationNumber as ConfirmationNumberIcon } from "@mui/icons-material";
 import { Box, Tab, Tabs } from "@mui/material";
-import { Loading } from "@stustapay/components";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, Link as RouterLink, useLocation, useParams } from "react-router-dom";
+import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 
-import { useNode } from "@/api/nodes";
+import { withTreeObjectGuard } from "@/app/layout";
 import { ExternalTicketRoutes, TicketRoutes } from "@/app/routes";
 
 const getActiveTab = (location: string) => {
@@ -15,20 +14,9 @@ const getActiveTab = (location: string) => {
   return TicketRoutes.list();
 };
 
-export const TicketPageLayout: React.FC = () => {
+export const TicketPageLayout: React.FC = withTreeObjectGuard("ticket", () => {
   const { t } = useTranslation();
-  const { nodeId } = useParams();
-  const { node } = useNode({ nodeId: Number(nodeId) });
   const location = useLocation();
-
-  if (!nodeId) {
-    // TODO: return error page / redirect
-    return null;
-  }
-
-  if (!node) {
-    return <Loading />;
-  }
 
   return (
     <Box>
@@ -54,4 +42,4 @@ export const TicketPageLayout: React.FC = () => {
       </Box>
     </Box>
   );
-};
+});
