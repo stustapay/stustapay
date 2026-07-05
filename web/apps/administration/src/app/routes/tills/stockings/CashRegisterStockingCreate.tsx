@@ -9,23 +9,11 @@ import { CreateLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
 import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
+import { defaultCashRegisterStockingDenominationValues } from "./stockingDenominations";
 
 const initialValues: NewCashRegisterStocking = {
   name: "",
-  euro200: 0,
-  euro100: 0,
-  euro50: 0,
-  euro20: 0,
-  euro10: 0,
-  euro5: 0,
-  euro2: 0,
-  euro1: 0,
-  cent50: 0,
-  cent20: 0,
-  cent10: 0,
-  cent5: 0,
-  cent2: 0,
-  cent1: 0,
+  ...defaultCashRegisterStockingDenominationValues,
   variable_in_euro: 0,
 };
 

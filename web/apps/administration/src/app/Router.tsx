@@ -61,6 +61,7 @@ import {
   CashRegisterCreate,
   CashRegisterList,
   CashRegisterStockingCreate,
+  CashRegisterStockingDetail,
   CashRegisterStockingList,
   CashRegisterStockingUpdate,
   CashRegisterTransfer,
@@ -346,6 +347,10 @@ const router = createBrowserRouter([
               {
                 path: "stockings/new",
                 element: <CashRegisterStockingCreate />,
+              },
+              {
+                path: "stockings/:stockingId",
+                element: <CashRegisterStockingDetail />,
               },
               {
                 path: "stockings/:stockingId/edit",

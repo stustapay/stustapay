@@ -42,7 +42,7 @@ export const CashRegisterStockingUpdate: React.FC = withPrivilegeGuard("node_adm
   return (
     <EditLayout
       title={t("profile.update")}
-      successRoute={TillStockingsRoutes.list()}
+      successRoute={TillStockingsRoutes.detail(stocking.id)}
       initialValues={stocking}
       validationSchema={UpdateCashRegisterStockingSchema}
       onSubmit={(s) => updateStocking({ nodeId: currentNode.id, stockingId: stocking.id, newCashRegisterStocking: s })}
