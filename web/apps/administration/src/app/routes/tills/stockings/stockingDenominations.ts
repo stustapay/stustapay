@@ -55,7 +55,7 @@ export const defaultCashRegisterStockingDenominationValues = Object.fromEntries(
   cashRegisterStockingDenominationFields.map((field) => [field, 0])
 ) as Record<CashRegisterStockingDenominationField, number>;
 
-type StockingDenominationValues = Pick<
+export type StockingDenominationValues = Pick<
   NewCashRegisterStocking,
   CashRegisterStockingDenominationField | "variable_in_euro"
 >;

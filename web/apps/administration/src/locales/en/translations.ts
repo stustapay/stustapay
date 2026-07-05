@@ -648,7 +648,7 @@ export const translations = {
       cent5: "5 ct roll",
       cent2: "2 ct roll",
       cent1: "1 ct roll",
-      variable: "Variable",
+      variable: "Loose coins",
     },
     activity: "Activity",
     orders: "Orders",

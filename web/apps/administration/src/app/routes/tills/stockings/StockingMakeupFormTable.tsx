@@ -1,35 +1,77 @@
-import { Box, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { FormCurrencyInput, FormNumericInput } from "@stustapay/form-components";
 import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { NewCashRegisterStocking } from "@/api";
 import { useCurrencyFormatter } from "@/hooks";
 
-import { buildStockingDenominationRows, computeStockingTotal, StockingDenominationRow } from "./stockingDenominations";
+import {
+  buildStockingDenominationRows,
+  computeStockingTotal,
+  StockingDenominationRow,
+  StockingDenominationValues,
+} from "./stockingDenominations";
 
-export type StockingMakeupFormTableProps<T extends NewCashRegisterStocking> = {
+type StockingMakeupFormTableRow =
+  | StockingDenominationRow
+  | {
+      id: "total";
+      field: "total";
+      label: string;
+      valuePerUnit: null;
+      quantity: null;
+      amount: number;
+    };
+
+const isTotalRow = (row: StockingMakeupFormTableRow): row is Extract<StockingMakeupFormTableRow, { field: "total" }> =>
+  row.field === "total";
+
+export type StockingMakeupFormTableProps<T extends StockingDenominationValues> = {
   formik: FormikProps<T>;
+  title: string;
+  totalLabel: string;
 };
 
-export function StockingMakeupFormTable<T extends NewCashRegisterStocking>({
+export function StockingMakeupFormTable<T extends StockingDenominationValues>({
   formik,
+  title,
+  totalLabel,
 }: StockingMakeupFormTableProps<T>) {
   const { t } = useTranslation();
   const formatCurrency = useCurrencyFormatter();
   const rows = React.useMemo(() => buildStockingDenominationRows(formik.values), [formik.values]);
   const total = React.useMemo(() => computeStockingTotal(formik.values), [formik.values]);
+  const tableRows = React.useMemo(
+    (): StockingMakeupFormTableRow[] => [
+      ...rows,
+      {
+        id: "total",
+        field: "total",
+        label: totalLabel,
+        valuePerUnit: null,
+        quantity: null,
+        amount: total,
+      },
+    ],
+    [rows, total, totalLabel]
+  );
 
-  const columns = React.useMemo<GridColDef<StockingDenominationRow>[]>(
+  const columns = React.useMemo<GridColDef<StockingMakeupFormTableRow>[]>(
     () => [
       {
         field: "labelKey",
         headerName: t("register.stockingMakeupDenomination"),
         flex: 1,
         sortable: false,
-        valueGetter: (_, row) => t(row.labelKey),
+        renderCell: (params) => {
+          if (isTotalRow(params.row)) {
+            return <Typography sx={{ fontWeight: "bold" }}>{params.row.label}</Typography>;
+          }
+
+          return t(params.row.labelKey);
+        },
       },
       {
         field: "valuePerUnit",
@@ -49,8 +91,8 @@ export function StockingMakeupFormTable<T extends NewCashRegisterStocking>({
         width: 120,
         sortable: false,
         renderCell: (params) => {
-          if (params.row.field === "variable_in_euro") {
-            return "—";
+          if (isTotalRow(params.row) || params.row.field === "variable_in_euro") {
+            return null;
           }
 
           return (
@@ -72,6 +114,10 @@ export function StockingMakeupFormTable<T extends NewCashRegisterStocking>({
         width: 150,
         sortable: false,
         renderCell: (params) => {
+          if (isTotalRow(params.row)) {
+            return <Typography sx={{ fontWeight: "bold" }}>{formatCurrency(params.row.amount)}</Typography>;
+          }
+
           if (params.row.field === "variable_in_euro") {
             return (
               <FormCurrencyInput
@@ -79,7 +125,7 @@ export function StockingMakeupFormTable<T extends NewCashRegisterStocking>({
                 formik={formik}
                 size="small"
                 fullWidth={false}
-                sx={{ width: 120 }}
+                sx={{ width: 120, "& input": { textAlign: "right" } }}
               />
             );
           }
@@ -95,19 +141,12 @@ export function StockingMakeupFormTable<T extends NewCashRegisterStocking>({
     <DataGrid
       autoHeight
       hideFooter
-      rows={rows}
+      rows={tableRows}
       columns={columns}
       disableRowSelectionOnClick
       disableColumnMenu
       slots={{
-        toolbar: () => (
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, pr: 1 }}>
-            <DataGridTitle title={t("register.stockingMakeup")} />
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-              {t("register.stockingTotal")}: {formatCurrency(total)}
-            </Typography>
-          </Box>
-        ),
+        toolbar: () => <DataGridTitle title={title} />,
       }}
       sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
     />

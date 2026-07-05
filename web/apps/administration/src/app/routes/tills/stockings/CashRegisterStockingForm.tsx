@@ -13,7 +13,11 @@ export function CashRegisterStockingForm<T extends NewCashRegisterStocking>(prop
   return (
     <>
       <FormTextField autoFocus name="name" label={t("register.name")} formik={props} />
-      <StockingMakeupFormTable formik={props} />
+      <StockingMakeupFormTable
+        formik={props}
+        title={t("register.stockingMakeup")}
+        totalLabel={t("register.stockingTotal")}
+      />
     </>
   );
 }
