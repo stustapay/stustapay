@@ -1,5 +1,5 @@
 import { FileDownload as FileDownloadIcon } from "@mui/icons-material";
-import { Button, Checkbox, FormControlLabel, LinearProgress, Paper } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, LinearProgress, Paper } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { toFormikValidationSchema } from "@stustapay/utils";
@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { selectUserTagAll, useFindUserTagsMutation, useUserTagsCsvExportMutation } from "@/api";
 import { DetailLayout } from "@/components";
+import { UserTagVariantSelect } from "@/components/features";
 import { LayoutAction } from "@/components/layouts/types";
 import { useCurrentNode } from "@/hooks";
 
@@ -24,6 +25,43 @@ type SearchForm = z.infer<typeof SearchFormSchema>;
 
 const initialValues: SearchForm = {
   searchTerm: "",
+};
+
+type UserTagsExportOptions = {
+  excludeActivated: boolean;
+  variantIds: number[];
+};
+
+const UserTagsExportDialogContent: React.FC<{
+  nodeId: number;
+  optionsRef: React.MutableRefObject<UserTagsExportOptions>;
+}> = ({ nodeId, optionsRef }) => {
+  const { t } = useTranslation();
+  const [excludeActivated, setExcludeActivated] = React.useState(false);
+  const [variantIds, setVariantIds] = React.useState<number[]>([]);
+
+  React.useEffect(() => {
+    optionsRef.current = { excludeActivated, variantIds };
+  }, [excludeActivated, optionsRef, variantIds]);
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <FormControlLabel
+        control={
+          <Checkbox checked={excludeActivated} onChange={(event) => setExcludeActivated(event.target.checked)} />
+        }
+        label={t("userTag.excludeActivated")}
+      />
+      <UserTagVariantSelect
+        nodeId={nodeId}
+        multiple
+        label={t("userTag.exportVariants")}
+        helperText={t("userTag.exportVariantsDescription")}
+        value={variantIds}
+        onChange={setVariantIds}
+      />
+    </Box>
+  );
 };
 
 export const FindUserTags: React.FC = () => {
@@ -46,11 +84,11 @@ export const FindUserTags: React.FC = () => {
       });
   };
 
-  const downloadCsv = async (excludeActivated: boolean) => {
+  const downloadCsv = async ({ excludeActivated, variantIds }: UserTagsExportOptions) => {
     try {
       const data = await csvExport({
         nodeId: currentNode.id,
-        userTagsCsvExportPayload: { exclude_activated: excludeActivated },
+        userTagsCsvExportPayload: { exclude_activated: excludeActivated, variant_ids: variantIds },
       }).unwrap();
       const url = window.URL.createObjectURL(new Blob([data], { type: "text/csv" }));
       const link = document.createElement("a");
@@ -65,25 +103,16 @@ export const FindUserTags: React.FC = () => {
   };
 
   const handleExport = () => {
-    let excludeActivated = false;
+    const optionsRef: React.MutableRefObject<UserTagsExportOptions> = {
+      current: { excludeActivated: false, variantIds: [] },
+    };
+
     openModal({
       type: "confirm",
       title: t("userTag.exportCsv"),
-      content: (
-        <FormControlLabel
-          control={
-            <Checkbox
-              defaultChecked={false}
-              onChange={(event) => {
-                excludeActivated = event.target.checked;
-              }}
-            />
-          }
-          label={t("userTag.excludeActivated")}
-        />
-      ),
+      content: <UserTagsExportDialogContent nodeId={currentNode.id} optionsRef={optionsRef} />,
       onConfirm: () => {
-        void downloadCsv(excludeActivated);
+        void downloadCsv(optionsRef.current);
         return true;
       },
     });

@@ -56,9 +56,11 @@ class TicketService(Service[Config]):
             ticket_metadata_id,
         )
 
-        for restriction in ticket.restrictions:
+        for user_tag_variant_id in ticket.user_tag_variant_ids:
             await conn.execute(
-                "insert into product_restriction (id, restriction) values ($1, $2)", ticket_id, restriction.name
+                "insert into product_user_tag_variant (id, user_tag_variant_id) values ($1, $2)",
+                ticket_id,
+                user_tag_variant_id,
             )
 
         created_ticket = await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)
@@ -113,10 +115,12 @@ class TicketService(Service[Config]):
             ticket.price,
             ticket.tax_rate_id,
         )
-        await conn.execute("delete from product_restriction where id = $1", ticket_id)
-        for restriction in ticket.restrictions:
+        await conn.execute("delete from product_user_tag_variant where id = $1", ticket_id)
+        for user_tag_variant_id in ticket.user_tag_variant_ids:
             await conn.execute(
-                "insert into product_restriction (id, restriction) values ($1, $2)", ticket_id, restriction.name
+                "insert into product_user_tag_variant (id, user_tag_variant_id) values ($1, $2)",
+                ticket_id,
+                user_tag_variant_id,
             )
 
         updated_ticket = await fetch_ticket(conn=conn, node=node, ticket_id=ticket_id)

@@ -11,7 +11,13 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { useDeleteProductMutation, useGetProductQuery, useUpdateProductMutation } from "@/api";
+import {
+  selectUserTagVariantEntities,
+  useDeleteProductMutation,
+  useGetProductQuery,
+  useListUserTagVariantsQuery,
+  useUpdateProductMutation,
+} from "@/api";
 import { ProductRoutes, tillButtonCreateFromProduct, TillButtonsRoutes } from "@/app/routes";
 import {
   DetailBoolField,
@@ -30,6 +36,7 @@ export const ProductDetail: React.FC = () => {
   const navigate = useNavigate();
   const [deleteProduct] = useDeleteProductMutation();
   const { data: product, error } = useGetProductQuery({ nodeId: currentNode.id, productId: Number(productId) });
+  const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
   const [updateProduct] = useUpdateProductMutation();
   const openModal = useOpenModal();
   const canCreateTillButtonAtNode = useCurrentUserHasPrivilegeAtNode(TillButtonsRoutes.privilege);
@@ -109,7 +116,15 @@ export const ProductDetail: React.FC = () => {
         <DetailBoolField label={t("product.isLocked")} value={product.is_locked} />
         <DetailBoolField label={t("product.isReturnable")} value={product.is_returnable} />
         <DetailBoolField label={t("product.isFixedPrice")} value={product.fixed_price} />
-        <DetailListField label={t("product.restrictions")} value={product?.restrictions} />
+        <DetailListField
+          label={t("product.userTagVariants")}
+          value={product.user_tag_variant_ids.map((variantId) => {
+            const userTagVariant = userTagVariants
+              ? selectUserTagVariantEntities(userTagVariants)[variantId]
+              : undefined;
+            return userTagVariant?.variant_name ?? String(variantId);
+          })}
+        />
         <DetailNumberField label={t("product.price")} type="currency" value={product.price} />
         <DetailField label={t("product.priceInVouchers")} value={product.price_in_vouchers} />
         <DetailField

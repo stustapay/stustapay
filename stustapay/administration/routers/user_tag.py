@@ -6,6 +6,7 @@ from stustapay.core.http.context import ContextUserTagService
 from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.account import UserTagDetail
 from stustapay.core.schema.user_tag import NewUserTag, NewUserTagSecret, UserTagSecret
+from stustapay.core.schema.user_tag_variant import NewUserTagVariant, UserTagVariant
 
 router = APIRouter(
     prefix="",
@@ -49,6 +50,7 @@ class FindUserTagPayload(BaseModel):
 
 class UserTagsCsvExportPayload(BaseModel):
     exclude_activated: bool = False
+    variant_ids: list[int] = []
 
 
 @router.post("/user-tags/csv-export", response_model=str)
@@ -59,7 +61,7 @@ async def user_tags_csv_export(
     node_id: int,
 ):
     return await user_tag_service.get_user_tags_csv(
-        token=token, node_id=node_id, exclude_activated=payload.exclude_activated
+        token=token, node_id=node_id, exclude_activated=payload.exclude_activated, variant_ids=payload.variant_ids
     )
 
 
@@ -104,3 +106,69 @@ async def update_user_tag_comment(
     return await user_tag_service.update_user_tag_comment(
         token=token, user_tag_id=user_tag_id, comment=payload.comment, node_id=node_id
     )
+
+
+@router.get("/user-tag-variants", response_model=NormalizedList[UserTagVariant, int])
+async def list_user_tag_variants(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    node_id: int,
+):
+    return normalize_list(await user_tag_service.list_user_tag_variants(token=token, node_id=node_id))
+
+
+@router.post("/user-tag-variants", response_model=UserTagVariant)
+async def create_user_tag_variant(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    new_user_tag_variant: NewUserTagVariant,
+    node_id: int,
+):
+    return await user_tag_service.create_user_tag_variant(
+        token=token, node_id=node_id, user_tag_variant=new_user_tag_variant
+    )
+
+
+@router.get("/user-tag-variants/{user_tag_variant_id}", response_model=UserTagVariant)
+async def get_user_tag_variant(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    user_tag_variant_id: int,
+    node_id: int,
+):
+    resp = await user_tag_service.get_user_tag_variant(
+        token=token, user_tag_variant_id=user_tag_variant_id, node_id=node_id
+    )
+    if resp is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return resp
+
+
+@router.post("/user-tag-variants/{user_tag_variant_id}", response_model=UserTagVariant)
+async def update_user_tag_variant(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    user_tag_variant_id: int,
+    new_user_tag_variant: NewUserTagVariant,
+    node_id: int,
+):
+    return await user_tag_service.update_user_tag_variant(
+        token=token,
+        user_tag_variant_id=user_tag_variant_id,
+        user_tag_variant=new_user_tag_variant,
+        node_id=node_id,
+    )
+
+
+@router.delete("/user-tag-variants/{user_tag_variant_id}")
+async def delete_user_tag_variant(
+    token: CurrentAuthToken,
+    user_tag_service: ContextUserTagService,
+    user_tag_variant_id: int,
+    node_id: int,
+):
+    deleted = await user_tag_service.delete_user_tag_variant(
+        token=token, user_tag_variant_id=user_tag_variant_id, node_id=node_id
+    )
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

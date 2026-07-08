@@ -33,7 +33,7 @@ fun PreviewProductConfirmLineItem() {
                 isLocked = true,
                 isReturnable = false,
                 nodeId = 0.toBigInteger(),
-                restrictions = listOf(),
+                userTagVariantIds = listOf(),
                 taxRateId = 0.toBigInteger(),
                 type = ProductType.user_defined
             ),

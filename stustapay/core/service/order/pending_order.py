@@ -100,8 +100,14 @@ async def make_ticket_sale_bookings(
     customers: list[CustomerRegistration] = []
 
     for scanned_ticket in ticket_sale.scanned_tickets:
-        restriction = await conn.fetchval(
-            "select restriction from user_tag where pin = $1 and node_id = any($2)",
+        user_tag_variants = await conn.fetchrow(
+            "select coalesce(array_agg(utv.id) filter (where utv.id is not null), '{}'::bigint array) "
+            "as variant_ids, "
+            "max(utv.priority) as max_priority "
+            "from user_tag ut "
+            "left join user_tag_to_variant uttv on ut.id = uttv.user_tag_id "
+            "left join user_tag_variant utv on uttv.variant_id = utv.id "
+            "where ut.pin = $1 and ut.node_id = any($2)",
             scanned_ticket.customer_tag_pin,
             node.ids_to_root,
         )
@@ -147,7 +153,10 @@ async def make_ticket_sale_bookings(
         customers.append(
             CustomerRegistration(
                 account_id=customer_account_id,
-                restriction=restriction,
+                user_tag_variant_ids=(list(user_tag_variants["variant_ids"]) if user_tag_variants is not None else []),
+                max_user_tag_variant_priority=(
+                    user_tag_variants["max_priority"] if user_tag_variants is not None else None
+                ),
                 ticket_included_top_up=scanned_ticket.ticket.initial_top_up_amount,
                 top_up_amount=scanned_ticket.top_up_amount,
             )

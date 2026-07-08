@@ -3,7 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from stustapay.core.schema.account import Account
-from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.user_tag import UserTagScan
 
 
@@ -11,7 +10,7 @@ class NewTicket(BaseModel):
     name: str
     price: float
     tax_rate_id: int
-    restrictions: list[ProductRestriction]
+    user_tag_variant_ids: list[int]
     is_locked: bool
     initial_top_up_amount: float
 

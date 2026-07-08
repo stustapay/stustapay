@@ -81,6 +81,7 @@ export const CashierRoutes = new RouteBuilder("cashiers", "node_administration",
 export const ProductRoutes = new RouteBuilder("products", "node_administration", "product");
 export const TaxRateRoutes = new RouteBuilder("tax-rates", "node_administration", "tax_rate");
 export const UserTagRoutes = new RouteBuilder("user-tags", "node_administration", "user_tag");
+export const UserTagVariantRoutes = new RouteBuilder("user-tags/variants", "node_administration", "user_tag");
 export const OrderRoutes = new RouteBuilder("orders", "node_administration", "account");
 export const TransactionRoutes = new RouteBuilder("transactions", "node_administration", "account");
 export const TseRoutes = new RouteBuilder("tses", "node_administration", "tse");

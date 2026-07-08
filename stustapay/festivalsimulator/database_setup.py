@@ -12,7 +12,7 @@ from sftkit.database import Connection
 
 from stustapay.core.config import Config
 from stustapay.core.database import get_database, reset_schema
-from stustapay.core.schema.product import NewProduct, ProductRestriction
+from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.terminal import NewTerminal
 from stustapay.core.schema.ticket import NewTicket
@@ -281,6 +281,22 @@ async def _create_admin_tills(
         )
 
 
+async def _ensure_standard_user_tag_variants(conn: Connection, event_node_id: int) -> tuple[int, int]:
+    under_16_id = await conn.fetchval(
+        "insert into user_tag_variant (node_id, variant_name, description, priority) "
+        "values ($1, 'under_16', 'User tag holder under 16 years', 1) "
+        "on conflict (node_id, variant_name) do update set variant_name = excluded.variant_name returning id",
+        event_node_id,
+    )
+    under_18_id = await conn.fetchval(
+        "insert into user_tag_variant (node_id, variant_name, description, priority) "
+        "values ($1, 'under_18', 'User tag holder under 18 years', 2) "
+        "on conflict (node_id, variant_name) do update set variant_name = excluded.variant_name returning id",
+        event_node_id,
+    )
+    return under_16_id, under_18_id
+
+
 async def _create_beverage_tills(
     conn: Connection,
     event_node_id: int,
@@ -295,6 +311,7 @@ async def _create_beverage_tills(
     karussel_node: Node,
     insel_node: Node,
 ):
+    under_16_id, under_18_id = await _ensure_standard_user_tag_variants(conn=conn, event_node_id=event_node_id)
     beer_products = [
         NewProduct(
             name="Helles 1.0l",
@@ -302,7 +319,7 @@ async def _create_beverage_tills(
             price_in_vouchers=2,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Helles 0.5l",
@@ -310,7 +327,7 @@ async def _create_beverage_tills(
             price_in_vouchers=1,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Weißbier 1.0l",
@@ -318,7 +335,7 @@ async def _create_beverage_tills(
             price_in_vouchers=2,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Weißbier 0.5l",
@@ -326,7 +343,7 @@ async def _create_beverage_tills(
             price_in_vouchers=1,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Radler 1.0l",
@@ -334,7 +351,7 @@ async def _create_beverage_tills(
             price_in_vouchers=2,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Radler 0.5l",
@@ -342,7 +359,7 @@ async def _create_beverage_tills(
             price_in_vouchers=1,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Russ 1.0l",
@@ -350,7 +367,7 @@ async def _create_beverage_tills(
             price_in_vouchers=2,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Russ 0.5l",
@@ -358,7 +375,7 @@ async def _create_beverage_tills(
             price_in_vouchers=1,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[under_16_id],
         ),
         NewProduct(
             name="Limonade 1.0l",
@@ -375,7 +392,7 @@ async def _create_beverage_tills(
             price_in_vouchers=10,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16, ProductRestriction.under_18],
+            user_tag_variant_ids=[under_16_id, under_18_id],
         ),
     ]
     node = await fetch_node(conn=conn, node_id=event_node_id)
@@ -527,7 +544,7 @@ async def _create_ticket_tills(
             tax_rate_id=tax_rate_ust.id,
             initial_top_up_amount=0,
             is_locked=True,
-            restrictions=[],
+            user_tag_variant_ids=[],
         ),
     )
     layout = await till_service.layout.create_layout(

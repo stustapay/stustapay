@@ -16,7 +16,7 @@ const initialValues: NewProduct = {
   tax_rate_id: null as unknown as number,
   fixed_price: true,
   price_in_vouchers: null,
-  restrictions: [],
+  user_tag_variant_ids: [],
   is_locked: false,
   is_returnable: false,
 };

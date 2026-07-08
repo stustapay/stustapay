@@ -1007,6 +1007,56 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
+      listUserTagVariants: build.query<ListUserTagVariantsApiResponse, ListUserTagVariantsApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tag-variants`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["user_tags"],
+      }),
+      createUserTagVariant: build.mutation<CreateUserTagVariantApiResponse, CreateUserTagVariantApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tag-variants`,
+          method: "POST",
+          body: queryArg.newUserTagVariant,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
+      getUserTagVariant: build.query<GetUserTagVariantApiResponse, GetUserTagVariantApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tag-variants/${queryArg.userTagVariantId}`,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        providesTags: ["user_tags"],
+      }),
+      updateUserTagVariant: build.mutation<UpdateUserTagVariantApiResponse, UpdateUserTagVariantApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tag-variants/${queryArg.userTagVariantId}`,
+          method: "POST",
+          body: queryArg.newUserTagVariant,
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
+      deleteUserTagVariant: build.mutation<DeleteUserTagVariantApiResponse, DeleteUserTagVariantApiArg>({
+        query: (queryArg) => ({
+          url: `/user-tag-variants/${queryArg.userTagVariantId}`,
+          method: "DELETE",
+          params: {
+            node_id: queryArg.nodeId,
+          },
+        }),
+        invalidatesTags: ["user_tags"],
+      }),
       listTses: build.query<ListTsesApiResponse, ListTsesApiArg>({
         query: (queryArg) => ({
           url: `/tses/`,
@@ -1999,6 +2049,31 @@ export type UpdateUserTagCommentApiArg = {
   nodeId: number;
   updateCommentPayload: UpdateCommentPayload;
 };
+export type ListUserTagVariantsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagVariantInt;
+export type ListUserTagVariantsApiArg = {
+  nodeId: number;
+};
+export type CreateUserTagVariantApiResponse = /** status 200 Successful Response */ UserTagVariant;
+export type CreateUserTagVariantApiArg = {
+  nodeId: number;
+  newUserTagVariant: NewUserTagVariant;
+};
+export type GetUserTagVariantApiResponse = /** status 200 Successful Response */ UserTagVariant;
+export type GetUserTagVariantApiArg = {
+  userTagVariantId: number;
+  nodeId: number;
+};
+export type UpdateUserTagVariantApiResponse = /** status 200 Successful Response */ UserTagVariant;
+export type UpdateUserTagVariantApiArg = {
+  userTagVariantId: number;
+  nodeId: number;
+  newUserTagVariant: NewUserTagVariant;
+};
+export type DeleteUserTagVariantApiResponse = /** status 200 Successful Response */ any;
+export type DeleteUserTagVariantApiArg = {
+  userTagVariantId: number;
+  nodeId: number;
+};
 export type ListTsesApiResponse = /** status 200 Successful Response */ NormalizedListTseInt;
 export type ListTsesApiArg = {
   nodeId: number;
@@ -2277,7 +2352,6 @@ export type GetBlobApiResponse = unknown;
 export type GetBlobApiArg = {
   blobId: string;
 };
-export type ProductRestriction = "under_16" | "under_18";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
@@ -2285,7 +2359,7 @@ export type Product = {
   fixed_price: boolean;
   price_in_vouchers?: number | null;
   tax_rate_id: number;
-  restrictions: ProductRestriction[];
+  user_tag_variant_ids: number[];
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;
@@ -2316,7 +2390,7 @@ export type NewProduct = {
   fixed_price?: boolean;
   price_in_vouchers?: number | null;
   tax_rate_id: number;
-  restrictions?: ProductRestriction[];
+  user_tag_variant_ids?: number[];
   is_locked?: boolean;
   is_returnable?: boolean;
   target_account_id?: number | null;
@@ -2820,7 +2894,8 @@ export type Account = {
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
-  restriction: ProductRestriction | null;
+  user_tag_variant_ids?: number[];
+  user_tag_variant_names?: string[];
   tag_history: UserTagHistoryEntry[];
 };
 export type AccountRead = {
@@ -2835,7 +2910,8 @@ export type AccountRead = {
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
-  restriction: ProductRestriction | null;
+  user_tag_variant_ids?: number[];
+  user_tag_variant_names?: string[];
   tag_history: UserTagHistoryEntryRead[];
   user_tag_uid_hex: string | null;
 };
@@ -3099,7 +3175,7 @@ export type Ticket = {
   name: string;
   price: number;
   tax_rate_id: number;
-  restrictions: ProductRestriction[];
+  user_tag_variant_ids: number[];
   is_locked: boolean;
   initial_top_up_amount: number;
   node_id: number;
@@ -3118,7 +3194,7 @@ export type NewTicket = {
   name: string;
   price: number;
   tax_rate_id: number;
-  restrictions: ProductRestriction[];
+  user_tag_variant_ids: number[];
   is_locked: boolean;
   initial_top_up_amount: number;
 };
@@ -3161,12 +3237,13 @@ export type NewUserTagSecret = {
 };
 export type NewUserTag = {
   pin: string;
-  restriction?: ProductRestriction | null;
   secret_id: number;
-  variant?: string | null;
+  variant_ids?: number[];
+  variant_names?: string[];
 };
 export type UserTagsCsvExportPayload = {
   exclude_activated?: boolean;
+  variant_ids?: number[];
 };
 export type UserTagAccountAssociation = {
   account_id: number;
@@ -3179,7 +3256,8 @@ export type UserTagDetail = {
   node_id: number;
   activated_at?: string | null;
   comment?: string | null;
-  variant?: string | null;
+  variant_ids?: number[];
+  variant_names?: string[];
   account_id?: number | null;
   user_id?: number | null;
   account_history: UserTagAccountAssociation[];
@@ -3191,7 +3269,8 @@ export type UserTagDetailRead = {
   node_id: number;
   activated_at?: string | null;
   comment?: string | null;
-  variant?: string | null;
+  variant_ids?: number[];
+  variant_names?: string[];
   account_id?: number | null;
   user_id?: number | null;
   account_history: UserTagAccountAssociation[];
@@ -3208,6 +3287,24 @@ export type FindUserTagPayload = {
 };
 export type UpdateCommentPayload = {
   comment: string;
+};
+export type UserTagVariant = {
+  variant_name: string;
+  description?: string;
+  priority?: number;
+  id: number;
+  node_id: number;
+};
+export type NormalizedListUserTagVariantInt = {
+  ids: number[];
+  entities: {
+    [key: string]: UserTagVariant;
+  };
+};
+export type NewUserTagVariant = {
+  variant_name: string;
+  description?: string;
+  priority?: number;
 };
 export type TseType = "diebold_nixdorf";
 export type TseStatus = "new" | "active" | "disabled" | "failed";
@@ -3683,7 +3780,8 @@ export type Customer = {
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
-  restriction: ProductRestriction | null;
+  user_tag_variant_ids?: number[];
+  user_tag_variant_names?: string[];
   tag_history: UserTagHistoryEntry[];
   iban: string | null;
   account_name: string | null;
@@ -3707,7 +3805,8 @@ export type CustomerRead = {
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
-  restriction: ProductRestriction | null;
+  user_tag_variant_ids?: number[];
+  user_tag_variant_names?: string[];
   tag_history: UserTagHistoryEntryRead[];
   iban: string | null;
   account_name: string | null;
@@ -3943,6 +4042,13 @@ export const {
   useGetUserTagDetailQuery,
   useLazyGetUserTagDetailQuery,
   useUpdateUserTagCommentMutation,
+  useListUserTagVariantsQuery,
+  useLazyListUserTagVariantsQuery,
+  useCreateUserTagVariantMutation,
+  useGetUserTagVariantQuery,
+  useLazyGetUserTagVariantQuery,
+  useUpdateUserTagVariantMutation,
+  useDeleteUserTagVariantMutation,
   useListTsesQuery,
   useLazyListTsesQuery,
   useCreateTseMutation,

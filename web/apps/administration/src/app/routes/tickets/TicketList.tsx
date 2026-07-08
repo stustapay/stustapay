@@ -10,9 +10,11 @@ import {
   Ticket,
   selectTaxRateById,
   selectTicketAll,
+  selectUserTagVariantEntities,
   useDeleteTicketMutation,
   useListTaxRatesQuery,
   useListTicketsQuery,
+  useListUserTagVariantsQuery,
   useUpdateTicketMutation,
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
@@ -37,6 +39,7 @@ export const TicketList: React.FC = () => {
     }
   );
   const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
+  const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
   const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
   const { dataGridNodeColumn } = useRenderNode();
@@ -80,6 +83,18 @@ export const TicketList: React.FC = () => {
     );
   };
 
+  const formatUserTagVariant = React.useCallback(
+    (variantIds: number[]) => {
+      const variantId = variantIds[0];
+      if (variantId == null) {
+        return "";
+      }
+      const userTagVariant = userTagVariants ? selectUserTagVariantEntities(userTagVariants)[variantId] : undefined;
+      return userTagVariant?.variant_name ?? String(variantId);
+    },
+    [userTagVariants]
+  );
+
   const columns: GridColDef<Ticket>[] = [
     {
       field: "name",
@@ -118,8 +133,9 @@ export const TicketList: React.FC = () => {
       type: "currency",
     },
     {
-      field: "restrictions",
+      field: "user_tag_variant_ids",
       headerName: t("ticket.restriction"),
+      valueFormatter: (value) => formatUserTagVariant(value as number[]),
       width: 150,
     },
     dataGridNodeColumn,

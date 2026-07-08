@@ -38,7 +38,7 @@ async def sale_setup(
             fixed_price=True,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[],
+            user_tag_variant_ids=[],
             is_returnable=False,
         ),
     )

@@ -17,10 +17,12 @@ import {
   Product,
   selectProductAll,
   selectTaxRateById,
+  selectUserTagVariantEntities,
   useCreateProductMutation,
   useDeleteProductMutation,
   useListProductsQuery,
   useListTaxRatesQuery,
+  useListUserTagVariantsQuery,
   useUpdateProductMutation,
 } from "@/api";
 import { ProductRoutes, tillButtonCreateFromProduct, TillButtonsRoutes } from "@/app/routes";
@@ -46,6 +48,7 @@ export const ProductList: React.FC = () => {
     }
   );
   const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
+  const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
   const [createProduct] = useCreateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -94,6 +97,17 @@ export const ProductList: React.FC = () => {
     createProduct({ nodeId: currentNode.id, newProduct: { ...product, name: `${product.name} - ${t("copy")}` } });
   };
 
+  const formatUserTagVariants = React.useCallback(
+    (variantIds: number[]) =>
+      variantIds
+        .map((variantId) => {
+          const userTagVariant = userTagVariants ? selectUserTagVariantEntities(userTagVariants)[variantId] : undefined;
+          return userTagVariant?.variant_name ?? String(variantId);
+        })
+        .join(", "),
+    [userTagVariants]
+  );
+
   const columns: GridColDef<Product>[] = [
     {
       field: "name",
@@ -137,10 +151,10 @@ export const ProductList: React.FC = () => {
       renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
     },
     {
-      field: "restrictions",
-      headerName: t("product.restrictions"),
-      valueFormatter: (value) => (value as string[]).join(", "),
-      width: 150,
+      field: "user_tag_variant_ids",
+      headerName: t("product.userTagVariants"),
+      valueFormatter: (value) => formatUserTagVariants(value as number[]),
+      width: 180,
     },
     dataGridNodeColumn,
   ];

@@ -13,7 +13,6 @@ from stustapay.core.schema.order import (
     PaymentMethod,
     UserTagScan,
 )
-from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import TaxRate
 from stustapay.core.schema.ticket import NewTicket, NewTicketScan, Ticket
 from stustapay.core.schema.till import NewTillLayout, NewTillProfile, Till, TillLayout
@@ -22,7 +21,7 @@ from stustapay.core.service.order.age_checks import find_oldest_customer
 from stustapay.core.service.order.order import OrderService, TillPermissionException
 from stustapay.core.service.ticket import TicketService
 from stustapay.core.service.till.till import TillService
-from stustapay.tests.conftest import Cashier, CreateRandomTicketVoucher, CreateRandomUserTag
+from stustapay.tests.conftest import Cashier, CreateRandomTicketVoucher, CreateRandomUserTag, StandardUserTagVariants
 from stustapay.tests.sumup_mock import MockSumUpApi
 from stustapay.tests.terminal.conftest import (
     AssertAccountBalance,
@@ -50,6 +49,7 @@ async def sale_tickets(
     event_node: Node,
     tax_rate_none: TaxRate,
     till_layout: TillLayout,
+    standard_user_tag_variants: StandardUserTagVariants,
 ) -> SaleTickets:
     ticket = await ticket_service.create_ticket(
         token=event_admin_token,
@@ -59,7 +59,7 @@ async def sale_tickets(
             price=12,
             tax_rate_id=tax_rate_none.id,
             initial_top_up_amount=8,
-            restrictions=[],
+            user_tag_variant_ids=[],
             is_locked=True,
         ),
     )
@@ -72,7 +72,7 @@ async def sale_tickets(
             tax_rate_id=tax_rate_none.id,
             initial_top_up_amount=8,
             is_locked=True,
-            restrictions=[ProductRestriction.under_18],
+            user_tag_variant_ids=[standard_user_tag_variants.under_18_id],
         ),
     )
     ticket_u16 = await ticket_service.create_ticket(
@@ -84,7 +84,7 @@ async def sale_tickets(
             tax_rate_id=tax_rate_none.id,
             initial_top_up_amount=0,
             is_locked=True,
-            restrictions=[ProductRestriction.under_16],
+            user_tag_variant_ids=[standard_user_tag_variants.under_16_id],
         ),
     )
     await till_service.layout.update_layout(
@@ -111,40 +111,100 @@ def test_find_oldest_customer():
 
     assert 1 == find_oldest_customer(
         [
-            CustomerRegistration(account_id=1, restriction=None, ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=2, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=1, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(account_id=2, ticket_included_top_up=0, top_up_amount=0),
         ]
     )
 
     assert 2 == find_oldest_customer(
         [
-            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=2, restriction=None, ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=3, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(
+                account_id=1,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(account_id=2, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(
+                account_id=3,
+                user_tag_variant_ids=[2],
+                max_user_tag_variant_priority=2,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
         ]
     )
 
     assert 3 == find_oldest_customer(
         [
-            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=2, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=3, restriction=None, ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(
+                account_id=1,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(
+                account_id=2,
+                user_tag_variant_ids=[2],
+                max_user_tag_variant_priority=2,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(account_id=3, ticket_included_top_up=0, top_up_amount=0),
         ]
     )
 
     assert 2 == find_oldest_customer(
         [
-            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=2, restriction="under_18", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=3, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(
+                account_id=1,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(
+                account_id=2,
+                user_tag_variant_ids=[2],
+                max_user_tag_variant_priority=2,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(
+                account_id=3,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
         ]
     )
 
     assert 1 == find_oldest_customer(
         [
-            CustomerRegistration(account_id=1, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=2, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
-            CustomerRegistration(account_id=3, restriction="under_16", ticket_included_top_up=0, top_up_amount=0),
+            CustomerRegistration(
+                account_id=1,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(
+                account_id=2,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
+            CustomerRegistration(
+                account_id=3,
+                user_tag_variant_ids=[1],
+                max_user_tag_variant_priority=1,
+                ticket_included_top_up=0,
+                top_up_amount=0,
+            ),
         ]
     )
 
@@ -503,6 +563,7 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
     create_random_user_tag: CreateRandomUserTag,
+    standard_user_tag_variants: StandardUserTagVariants,
 ):
     cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
@@ -514,10 +575,10 @@ async def test_ticket_flow_with_multiple_tags_invalid_booking(
     tag = await create_random_user_tag()
     tag2 = await create_random_user_tag()
     u18_tag = await create_random_user_tag(
-        restriction=ProductRestriction.under_18,
+        variant_ids=[standard_user_tag_variants.under_18_id],
     )
     u16_tag = await create_random_user_tag(
-        restriction=ProductRestriction.under_16,
+        variant_ids=[standard_user_tag_variants.under_16_id],
     )
 
     new_ticket = NewTicketSale(

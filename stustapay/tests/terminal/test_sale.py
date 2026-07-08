@@ -86,7 +86,7 @@ async def sale_products(
             target_account_id=None,
             price_in_vouchers=1,
             is_locked=True,
-            restrictions=[],
+            user_tag_variant_ids=[],
             is_returnable=False,
         ),
     )
@@ -102,7 +102,7 @@ async def sale_products(
             price_in_vouchers=2,
             is_locked=True,
             is_returnable=False,
-            restrictions=[],
+            user_tag_variant_ids=[],
         ),
     )
     deposit_product = await product_service.create_product(
@@ -116,7 +116,7 @@ async def sale_products(
             target_account_id=None,
             is_locked=True,
             is_returnable=True,
-            restrictions=[],
+            user_tag_variant_ids=[],
         ),
     )
     beer_button = await till_service.layout.create_button(

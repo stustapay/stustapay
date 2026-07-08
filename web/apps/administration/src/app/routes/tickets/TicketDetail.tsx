@@ -5,7 +5,13 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { useDeleteTicketMutation, useGetTicketQuery, useUpdateTicketMutation } from "@/api";
+import {
+  selectUserTagVariantEntities,
+  useDeleteTicketMutation,
+  useGetTicketQuery,
+  useListUserTagVariantsQuery,
+  useUpdateTicketMutation,
+} from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { DetailBoolField, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { useCurrentNode } from "@/hooks";
@@ -17,6 +23,7 @@ export const TicketDetail: React.FC = () => {
   const navigate = useNavigate();
   const [deleteTicket] = useDeleteTicketMutation();
   const { data: ticket, error } = useGetTicketQuery({ nodeId: currentNode.id, ticketId: Number(ticketId) });
+  const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
   const [updateTicket] = useUpdateTicketMutation();
   const openModal = useOpenModal();
 
@@ -73,7 +80,17 @@ export const TicketDetail: React.FC = () => {
         <DetailField label={t("ticket.name")} value={ticket.name} />
         <DetailField
           label={t("ticket.restriction")}
-          value={ticket.restrictions.length > 0 ? ticket.restrictions[0] : ""}
+          value={
+            ticket.user_tag_variant_ids.length > 0
+              ? (() => {
+                  const variantId = ticket.user_tag_variant_ids[0];
+                  const userTagVariant = userTagVariants
+                    ? selectUserTagVariantEntities(userTagVariants)[variantId]
+                    : undefined;
+                  return userTagVariant?.variant_name ?? String(variantId);
+                })()
+              : ""
+          }
         />
         <DetailNumberField
           label={t("ticket.initialTopUpAmount")}

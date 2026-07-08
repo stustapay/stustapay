@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { NewProduct } from "@/api";
-import { RestrictionSelect, TaxRateSelect } from "@/components/features";
+import { TaxRateSelect, UserTagVariantSelect } from "@/components/features";
 
 export type ProductFormProps<T extends NewProduct> = FormikProps<T>;
 
@@ -50,14 +50,14 @@ export function ProductForm<T extends NewProduct>(props: ProductFormProps<T>) {
         value={values.tax_rate_id}
       />
 
-      <RestrictionSelect
-        label={t("product.restrictions")}
+      <UserTagVariantSelect
+        label={t("product.userTagVariants")}
         multiple={true}
-        value={values.restrictions ?? []}
+        value={values.user_tag_variant_ids ?? []}
         disabled={values.is_locked}
-        onChange={(value) => setFieldValue("restrictions", value)}
-        error={touched.restrictions && !!errors.restrictions}
-        helperText={(touched.restrictions && errors.restrictions) as string}
+        onChange={(value) => setFieldValue("user_tag_variant_ids", value)}
+        error={touched.user_tag_variant_ids && !!errors.user_tag_variant_ids}
+        helperText={(touched.user_tag_variant_ids && errors.user_tag_variant_ids) as string}
       />
     </>
   );
