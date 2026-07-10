@@ -154,7 +154,7 @@ async def _create_system_accounts(conn: Connection, node_id: int):
 
 async def _create_system_tax_rates(conn: Connection, node_id: int):
     await conn.execute(
-        "insert into tax_rate (name, rate, description, node_id) values ('none', 0, 'No Tax', $1)",
+        "insert into tax_rate (name, rate, description, node_id, tax_type) values ('none', 0, 'No Tax', $1, 'no_tax')",
         node_id,
     )
 
@@ -225,22 +225,25 @@ async def create_event(conn: Connection, parent_id: int, event: NewEvent) -> Nod
     #  only exist at an event node
     event_id = await conn.fetchval(
         "insert into event (currency_identifier, sumup_topup_enabled, max_account_balance, ust_id, bon_issuer, "
-        "bon_address, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
+        "bon_street, bon_zip, bon_city, bon_country, bon_title, customer_portal_contact_email, sepa_enabled, sepa_sender_name, sepa_sender_iban, "
         "sepa_description, sepa_allowed_country_codes, customer_portal_url, customer_portal_about_page_url, "
         "customer_portal_data_privacy_url, sumup_payment_enabled, sumup_api_key, sumup_affiliate_key, "
         "sumup_merchant_code, start_date, end_date, daily_end_time, email_enabled, email_default_sender, "
         "email_smtp_host, email_smtp_port, email_smtp_username, email_smtp_password, payout_sender, "
         " sumup_oauth_client_id, sumup_oauth_client_secret, pretix_presale_enabled, pretix_shop_url, pretix_api_key, "
         " pretix_organizer, pretix_event, pretix_ticket_ids, customer_portal_feedback_url, headwind_enabled, headwind_url, headwind_username, headwind_password) "
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, "
-        " $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43)"
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, "
+        " $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46)"
         "returning id",
         event.currency_identifier,
         event.sumup_topup_enabled,
         event.max_account_balance,
         event.ust_id,
         event.bon_issuer,
-        event.bon_address,
+        event.bon_street,
+        event.bon_zip,
+        event.bon_city,
+        event.bon_country,
         event.bon_title,
         event.customer_portal_contact_email,
         event.sepa_enabled,
@@ -296,16 +299,17 @@ async def update_event(conn: Connection, node: Node, event: NewEvent) -> Node:
 
     await conn.fetchval(
         "update event set currency_identifier = $2, sumup_topup_enabled = $3, max_account_balance = $4, "
-        "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, bon_address = $8, bon_title = $9, "
-        "   sepa_enabled = $10, sepa_sender_name = $11, sepa_sender_iban = $12, sepa_description = $13, "
-        "   sepa_allowed_country_codes = $14, customer_portal_url = $15, customer_portal_about_page_url = $16,"
-        "   customer_portal_data_privacy_url = $17, sumup_payment_enabled = $18, sumup_api_key = $19, "
-        "   sumup_affiliate_key = $20, sumup_merchant_code = $21, start_date = $22, end_date = $23, "
-        "   daily_end_time = $24, email_enabled = $25, email_default_sender = $26, email_smtp_host = $27, "
-        "   email_smtp_port = $28, email_smtp_username = $29, email_smtp_password = $30, "
-        "   payout_sender = $31, sumup_oauth_client_id = $32, sumup_oauth_client_secret = $33, pretix_presale_enabled = $34,"
-        "   pretix_shop_url = $35, pretix_api_key = $36, pretix_organizer = $37, pretix_event = $38, pretix_ticket_ids = $39, customer_portal_feedback_url = $40, "
-        "   headwind_enabled = $41, headwind_url = $42, headwind_username = $43, headwind_password = $44 "
+        "   customer_portal_contact_email = $5, ust_id = $6, bon_issuer = $7, "
+        "   bon_street = $8, bon_zip = $9, bon_city = $10, bon_country = $11, bon_title = $12, "
+        "   sepa_enabled = $13, sepa_sender_name = $14, sepa_sender_iban = $15, sepa_description = $16, "
+        "   sepa_allowed_country_codes = $17, customer_portal_url = $18, customer_portal_about_page_url = $19,"
+        "   customer_portal_data_privacy_url = $20, sumup_payment_enabled = $21, sumup_api_key = $22, "
+        "   sumup_affiliate_key = $23, sumup_merchant_code = $24, start_date = $25, end_date = $26, "
+        "   daily_end_time = $27, email_enabled = $28, email_default_sender = $29, email_smtp_host = $30, "
+        "   email_smtp_port = $31, email_smtp_username = $32, email_smtp_password = $33, "
+        "   payout_sender = $34, sumup_oauth_client_id = $35, sumup_oauth_client_secret = $36, pretix_presale_enabled = $37,"
+        "   pretix_shop_url = $38, pretix_api_key = $39, pretix_organizer = $40, pretix_event = $41, pretix_ticket_ids = $42, customer_portal_feedback_url = $43, "
+        "   headwind_enabled = $44, headwind_url = $45, headwind_username = $46, headwind_password = $47 "
         "where id = $1",
         event_id,
         event.currency_identifier,
@@ -314,7 +318,10 @@ async def update_event(conn: Connection, node: Node, event: NewEvent) -> Node:
         event.customer_portal_contact_email,
         event.ust_id,
         event.bon_issuer,
-        event.bon_address,
+        event.bon_street,
+        event.bon_zip,
+        event.bon_city,
+        event.bon_country,
         event.bon_title,
         event.sepa_enabled,
         event.sepa_sender_name,

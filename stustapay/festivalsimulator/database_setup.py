@@ -14,6 +14,7 @@ from stustapay.core.config import Config
 from stustapay.core.database import get_database, reset_schema
 from stustapay.core.schema.product import NewProduct
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
+from stustapay.core.schema.tax_type import TaxType
 from stustapay.core.schema.terminal import NewTerminal
 from stustapay.core.schema.ticket import NewTicket
 from stustapay.core.schema.till import (
@@ -800,7 +801,7 @@ class DatabaseSetup:
 
         auth_service = AuthService(db_pool=self.db_pool, config=self.config)
         user_service = UserService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
-        tax_service = TaxRateService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
+        tax_rate_service = TaxRateService(db_pool=self.db_pool, config=self.config, auth_service=auth_service)
 
         async with self.db_pool.acquire() as conn:
             simulated_folder_node = await create_node(
@@ -834,7 +835,10 @@ class DatabaseSetup:
                     ],
                     ust_id="UST ID",
                     bon_issuer="Issuer",
-                    bon_address="Street 12\n81321 City",
+                    bon_street="Street 12",
+                    bon_zip="81321",
+                    bon_city="City",
+                    bon_country="DEU",
                     bon_title="Title",
                     sepa_enabled=True,
                     sepa_sender_name="Organizer",
@@ -913,11 +917,11 @@ class DatabaseSetup:
                 n_customer_tags=self.n_tags,
                 custom_tags=self.custom_tags,
             )
-            tax_rate_ust = await tax_service.create_tax_rate(
+            tax_rate_ust = await tax_rate_service.create_tax_rate(
                 conn=conn,
                 token=admin_token,
                 node_id=self.event_node_id,
-                tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19),
+                tax_rate=NewTaxRate(name="ust", description="Umsatzsteuer", rate=0.19, tax_type=TaxType.regular_vat),
             )
             await self._create_tills(
                 conn=conn,

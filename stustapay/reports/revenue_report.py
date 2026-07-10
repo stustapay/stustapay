@@ -61,7 +61,7 @@ async def generate_dummy_report(node: Node, event: RestrictedEventSettings, logo
         config=BonConfig(
             title=event.bon_title,
             issuer=event.bon_issuer,
-            address=event.bon_address,
+            address=event.formatted_bon_address(),
             ust_id=event.ust_id,
         ),
         node=Node(
@@ -153,7 +153,9 @@ async def generate_revenue_report(conn: Connection, node: Node, fees=0.01) -> by
         to_time,
     )
 
-    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
+    config = BonConfig(
+        ust_id=event.ust_id, address=event.formatted_bon_address(), issuer=event.bon_issuer, title=event.bon_title
+    )
 
     hourly_revenue_stats = await get_hourly_sales_stats(conn=conn, node=node, from_time=from_time, to_time=to_time)
     revenue_stats = await get_daily_stats(hourly_stats=hourly_revenue_stats, event=event)

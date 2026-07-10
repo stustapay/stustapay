@@ -245,6 +245,7 @@ create view product_with_tax_and_restrictions as
         -- price_in_vouchers is never 0 due to constraint product_price_in_vouchers_not_zero
         p.price / p.price_in_vouchers               as price_per_voucher,
         t.name                                      as tax_name,
+        t.tax_type                                  as tax_type,
         t.rate                                      as tax_rate,
         coalesce(pr.user_tag_variant_ids, '{}'::bigint array) as user_tag_variant_ids
     from
@@ -381,6 +382,7 @@ create view order_tax_rates as
     select
         ordr.*,
         tax_name,
+        tax_type,
         tax_rate,
         sum(total_price)             as total_price,
         sum(total_tax)               as total_tax,
@@ -388,8 +390,9 @@ create view order_tax_rates as
     from
         ordr
         join line_item on (ordr.id = order_id)
+        join tax_rate on line_item.tax_rate_id = tax_rate.id
     group by
-        ordr.id, tax_rate, tax_name;
+        ordr.id, tax_rate, tax_name, tax_type;
 
 create view event_with_translations as
     select

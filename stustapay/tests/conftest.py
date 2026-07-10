@@ -21,6 +21,7 @@ from stustapay.core.config import (
 )
 from stustapay.core.database import get_database
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
+from stustapay.core.schema.tax_type import TaxType
 from stustapay.core.schema.terminal import NewTerminal, Terminal
 from stustapay.core.schema.ticket import TicketVoucher
 from stustapay.core.schema.till import (
@@ -149,7 +150,10 @@ async def event_node(db_connection: Connection) -> Node:
             sepa_allowed_country_codes=["DE"],
             bon_title="",
             bon_issuer="",
-            bon_address="",
+            bon_street="",
+            bon_zip="",
+            bon_city="",
+            bon_country="DEU",
             max_account_balance=150,
             sumup_topup_enabled=False,
             sumup_payment_enabled=False,
@@ -509,7 +513,9 @@ async def tax_rate_none(db_connection: Connection, event_node: Node) -> TaxRate:
 @pytest.fixture
 async def tax_rate_ust(tax_rate_service: TaxRateService, event_admin_token: str, event_node: Node) -> TaxRate:
     return await tax_rate_service.create_tax_rate(
-        token=event_admin_token, node_id=event_node.id, tax_rate=NewTaxRate(name="ust", description="", rate=0.19)
+        token=event_admin_token,
+        node_id=event_node.id,
+        tax_rate=NewTaxRate(name="ust", description="Regular VAT", rate=0.19, tax_type=TaxType.regular_vat),
     )
 
 

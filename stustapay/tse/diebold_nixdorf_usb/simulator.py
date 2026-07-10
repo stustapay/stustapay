@@ -80,7 +80,6 @@ class VirtualTSE:
         self.signctr = 0
         # map from "client id" -> set of transactions
         self.current_transactions = dict[str, set[int]]()
-        self.current_transactions["POS001"] = set()
         self.current_transactions[MAGIC_PRODUCTION_CLIENT] = set()
         self.current_transactions["DummyDefaultClientId"] = set()
 

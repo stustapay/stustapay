@@ -11,13 +11,17 @@ from sftkit.database import Connection
 from stustapay import __version__ as stustapay_version
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
+from stustapay.core.schema.tax_type import TaxType
 from stustapay.core.schema.tree import Node, RestrictedEventSettings
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.tree.common import (
     fetch_node,
     fetch_restricted_event_settings_for_node,
 )
-from stustapay.tse.wrapper import PAYMENT_METHOD_TO_ZAHLUNGSART
+from stustapay.dsfinvk.gv_typ import gv_typ_for_line_item, kundetyp_for_order_type
+from stustapay.dsfinvk.tax_type import dsfinvk_schluessel_for_tax_type
+from stustapay.tse.till_tse_lookup import get_tse_masterdata_for_till_at_z_nr
+from stustapay.tse.zahlungsart import zahlungsart_for_payment_method
 
 from .dsfinvk.collection import Collection
 from .dsfinvk.models import (
@@ -43,22 +47,44 @@ DSFINVK_ASSETS = Path(__file__).parent / "assets"
 DEFAULT_INDEX_XML = DSFINVK_ASSETS / "index.xml"
 DEFAULT_DTD = DSFINVK_ASSETS / "gdpdu-01-09-2004.dtd"
 
-TAXNAME_TO_SCHLUESSELNUMMER = {"ust": 1, "eust": 2, "none": 5, "transparent": 1337}
-ORDERTYPE_TO_KUNDETYP = {
-    "top_up": "Kunde",
-    "sale": "Kunde",
-    "cancel_sale": "Kunde",
-    "pay_out": "Kunde",
-    "ticket": "Kunde",
-    "money_transfer": "intern",
-    "money_transfer_imbalance": "intern",
-}
+CERTIFICATE_CHUNK_SIZE = 1000
 
 
 class BNU:
     Brutto = Decimal(0)
     Netto = Decimal(0)
     USt = Decimal(0)
+
+
+def _parse_tse_timestamp(value: str) -> datetime:
+    if "." in value:
+        value = value.split(".", 1)[0]
+    return parser.isoparse(value).astimezone()
+
+
+def _assign_certificate_chunks(target: Stamm_TSE, certificate: str) -> None:
+    max_chunks = 5
+    max_length = CERTIFICATE_CHUNK_SIZE * max_chunks
+    if len(certificate) > max_length:
+        LOGGER.error(
+            "Certificate too long. Length: %s characters. Maximal supported: %s characters",
+            len(certificate),
+            max_length,
+        )
+        raise NotImplementedError
+    chunk_names = [
+        "TSE_ZERTIFIKAT_I",
+        "TSE_ZERTIFIKAT_II",
+        "TSE_ZERTIFIKAT_III",
+        "TSE_ZERTIFIKAT_IV",
+        "TSE_ZERTIFIKAT_V",
+    ]
+    for index, chunk_name in enumerate(chunk_names):
+        start = index * CERTIFICATE_CHUNK_SIZE
+        end = start + CERTIFICATE_CHUNK_SIZE
+        chunk = certificate[start:end]
+        if chunk:
+            setattr(target, chunk_name, chunk)
 
 
 class Generator:
@@ -72,9 +98,6 @@ class Generator:
         self.simulate = simulate
         self.starttime = time.monotonic()
         self.GV_SUMME: dict = dict()  # aufsummierte Geschäftsvorfalltypen
-        self.PLZ = ""
-        self.Street = ""
-        self.City = ""
 
     async def run(self):
         async with contextlib.AsyncExitStack() as es:
@@ -92,17 +115,6 @@ class Generator:
         node = await fetch_node(conn=conn, node_id=self.node_id)
         assert node is not None
         event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=self.node_id)
-
-        # extract address information
-        bon_addr = event_settings.bon_address
-        if "\n" in bon_addr:
-            self.Street = bon_addr.split("\n")[0]
-            self.PLZ = bon_addr.split("\n")[1].split(" ")[0]
-            self.City = bon_addr.split("\n")[1].split(" ")[1]
-        else:
-            self.Street = bon_addr.split(" ")[0] + " " + bon_addr.split(" ")[1]
-            self.PLZ = bon_addr.split(" ")[2]
-            self.City = bon_addr.split(" ")[3]
 
         # iteriere über alle Kassen Z_KASSE_ID (= KASSE_SERIENNR bei uns)
         # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
@@ -219,10 +231,10 @@ class Generator:
             else:
                 b.TSE_ID = int(row["tse_id"])
                 b.TSE_TANR = int(row["tse_transaction"])
-                a.BON_START = parser.isoparse(row["tse_start"].split(".")[0]).astimezone()  # TSE_start
-                a.BON_ENDE = parser.isoparse(row["tse_end"].split(".")[0]).astimezone()
-                b.TSE_TA_START = parser.isoparse(row["tse_start"].split(".")[0]).astimezone()
-                b.TSE_TA_ENDE = parser.isoparse(row["tse_end"].split(".")[0]).astimezone()
+                a.BON_START = _parse_tse_timestamp(row["tse_start"])
+                a.BON_ENDE = _parse_tse_timestamp(row["tse_end"])
+                b.TSE_TA_START = _parse_tse_timestamp(row["tse_start"])
+                b.TSE_TA_ENDE = _parse_tse_timestamp(row["tse_end"])
                 b.TSE_TA_VORGANGSART = row["transaction_process_type"]
                 b.TSE_TA_SIGZ = int(row["tse_signaturenr"])
                 b.TSE_TA_SIG = row["tse_signature"]
@@ -235,7 +247,7 @@ class Generator:
 
             a.UMS_BRUTTO = Decimal(row["total_price"])
             a.KUNDE_ID = row["customer_account_id"]
-            a.KUNDE_TYP = ORDERTYPE_TO_KUNDETYP[row["order_type"]]
+            a.KUNDE_TYP = kundetyp_for_order_type(row["order_type"])
 
             # Storno
             if row["cancels_order"] is not None:
@@ -248,7 +260,7 @@ class Generator:
             # leider müssen wir da wieder eine db abfrage machen....
             if row["item_count"] != 0:
                 for line in await conn.fetch(
-                    "select tax_name, total_price, total_tax, total_no_tax from order_tax_rates where id = $1",
+                    "select tax_type, total_price, total_tax, total_no_tax from order_tax_rates where id = $1",
                     row["id"],
                 ):
                     c = Bonkopf_USt()
@@ -257,7 +269,7 @@ class Generator:
                     c.Z_NR = Z_NR
 
                     c.BON_ID = row["id"]
-                    c.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[line["tax_name"]]
+                    c.UST_SCHLUESSEL = dsfinvk_schluessel_for_tax_type(TaxType(line["tax_type"]))
                     c.BON_BRUTTO = Decimal(line["total_price"])
                     c.BON_NETTO = Decimal(line["total_no_tax"])
                     c.BON_UST = Decimal(line["total_tax"])
@@ -272,7 +284,7 @@ class Generator:
             d.Z_NR = Z_NR
             # TODO Gutscheinfall? vielleicht auch in die Datei Bonpos_Preisfindung, Zahlart ist eh immer 'tag'?
             d.BON_ID = row["id"]
-            d.ZAHLART_TYP = PAYMENT_METHOD_TO_ZAHLUNGSART[row["payment_method"]]  # 'Bar'/'Unbar'
+            d.ZAHLART_TYP = zahlungsart_for_payment_method(row["payment_method"])
             d.ZAHLART_NAME = row["payment_method"]
             d.ZAHLWAEH_CODE = event_settings.currency_identifier
             d.ZAHLWAEH_BETRAG = Decimal(0)  # Fremdwährung, bei uns immer 0
@@ -305,44 +317,18 @@ class Generator:
                 e.P_STORNO = False  # nicht vorgesehen
                 e.AGENTUR_ID = 0  # Agenturen noch nicht implementiert
 
-                # finde den Geschäftsvorfalltyp dieses "Artikels" heraus..
-                gvtyp = "Umsatz"  # alles andere.
-                if row["order_type"] == "top_up" or row["order_type"] == "pay_out":
-                    gvtyp = "MehrzweckgutscheinKauf"
-                elif row["order_type"] == "money_transfer":
-                    gvtyp = "Geldtransit"
-
-                elif row["order_type"] == "money_transfer_imbalance":
-                    gvtyp = "DifferenzSollIst"
-
-                elif row["order_type"] == "sale":
-                    if item["product"]["is_returnable"] and item["total_price"] > 0:
-                        gvtyp = "Pfand"
-
-                    elif item["product"]["is_returnable"] and item["total_price"] < 0:
-                        gvtyp = "PfandRueckzahlung"
-
-                    else:
-                        gvtyp = "MehrzweckgutscheinEinloesung"
-                elif row["order_type"] == "ticket":
-                    if item["product"]["name"].startswith(
-                        "Eintritt"
-                    ):  # TODO Eintritt kann nicht anders benannt werden, muss evtl noch spezielles Flag bekommen
-                        gvtyp = "Umsatz"  # Eintritt
-                    elif (
-                        item["product"]["name"] == "Aufladen"
-                    ):  # TODO besser noch, alle Aufladeoperationen bekommen ein bestimmtes Flag
-                        gvtyp = "MehrzweckgutscheinKauf"
-
-                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].Brutto += Decimal(
-                    item["total_price"]
+                gvtyp = gv_typ_for_line_item(
+                    order_type=row["order_type"],
+                    product_type=item["product"]["type"],
+                    is_returnable=item["product"]["is_returnable"],
+                    total_price=Decimal(item["total_price"]),
                 )
-                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].USt += Decimal(
-                    item["total_tax"]
-                )
-                self.GV_SUMME[gvtyp][int(TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]])].Netto += Decimal(
-                    item["total_price"]
-                ) - Decimal(item["total_tax"])
+
+                tax_type = TaxType(item["product"]["tax_type"])
+                schluessel = dsfinvk_schluessel_for_tax_type(tax_type)
+                self.GV_SUMME[gvtyp][schluessel].Brutto += Decimal(item["total_price"])
+                self.GV_SUMME[gvtyp][schluessel].USt += Decimal(item["total_tax"])
+                self.GV_SUMME[gvtyp][schluessel].Netto += Decimal(item["total_price"]) - Decimal(item["total_tax"])
                 e.GV_TYP = gvtyp
 
                 e.GV_NAME = ""
@@ -353,7 +339,7 @@ class Generator:
                 f.Z_NR = Z_NR
                 f.BON_ID = row["id"]
                 f.POS_ZEILE = int(item["item_id"]) + 1
-                f.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[item["tax_name"]]
+                f.UST_SCHLUESSEL = dsfinvk_schluessel_for_tax_type(TaxType(item["product"]["tax_type"]))
                 f.POS_BRUTTO = Decimal(item["total_price"])
                 f.POS_UST = Decimal(item["total_tax"])
                 f.POS_NETTO = Decimal(item["total_price"]) - Decimal(item["total_tax"])
@@ -389,10 +375,10 @@ class Generator:
         a.Z_NR = Z_NR
         a.TAXONOMIE_VERSION = "2.3"  # aktuelle version der DSFinV-K
         a.NAME = event_settings.bon_issuer
-        a.STRASSE = self.Street
-        a.PLZ = self.PLZ
-        a.ORT = self.City
-        a.LAND = "DEU"  # sorry, not in db -> hardcoded
+        a.STRASSE = event_settings.bon_street
+        a.PLZ = event_settings.bon_zip
+        a.ORT = event_settings.bon_city
+        a.LAND = event_settings.bon_country
         a.STNR = ""
         a.USTID = event_settings.ust_id
 
@@ -412,7 +398,7 @@ class Generator:
             Z_NR,
         ):
             Z_SE_ZAHLUNGEN += Decimal(row["total_price"])
-            if PAYMENT_METHOD_TO_ZAHLUNGSART[row["payment_method"]] == "Bar":
+            if zahlungsart_for_payment_method(row["payment_method"]) == "Bar":
                 Z_SE_BARZAHLUNGEN += Decimal(row["total_price"])
 
         a.Z_SE_ZAHLUNGEN = Z_SE_ZAHLUNGEN  # Summe alle Zahlungen dieser Kasse für diesen Kassenabschluss
@@ -429,10 +415,10 @@ class Generator:
         a.Z_NR = Z_NR
 
         a.LOC_NAME = event_settings.bon_issuer
-        a.LOC_STRASSE = self.Street
-        a.LOC_PLZ = self.PLZ
-        a.LOC_ORT = self.City
-        a.LOC_LAND = "DEU"  # sorry, not in db -> hardcoded
+        a.LOC_STRASSE = event_settings.bon_street
+        a.LOC_PLZ = event_settings.bon_zip
+        a.LOC_ORT = event_settings.bon_city
+        a.LOC_LAND = event_settings.bon_country
         a.USTID = event_settings.ust_id
 
         self.c.add(a)
@@ -459,13 +445,15 @@ class Generator:
         ### \cashregister.csv ###
 
         ### vat.csv ###
-        for row in await conn.fetch("select name, rate, description from tax_rate where node_id = $1", node.id):
+        for row in await conn.fetch(
+            "select name, rate, description, tax_type from tax_rate where node_id = $1", node.id
+        ):
             a = Stamm_USt()
             a.Z_KASSE_ID = Z_KASSE_ID
             a.Z_ERSTELLUNG = Z_ERSTELLUNG
             a.Z_NR = Z_NR
 
-            a.UST_SCHLUESSEL = TAXNAME_TO_SCHLUESSELNUMMER[row["name"]]
+            a.UST_SCHLUESSEL = dsfinvk_schluessel_for_tax_type(TaxType(row["tax_type"]))
             a.UST_SATZ = Decimal(row["rate"] * 100)
             a.UST_BESCHR = row["description"]
             self.c.add(a)
@@ -478,123 +466,18 @@ class Generator:
         a.Z_ERSTELLUNG = Z_ERSTELLUNG
         a.Z_NR = Z_NR
 
-        # Prüfe, ob diese Kasse verschiedene TSEs hatte, wenn nicht, dann müssen wir nichts weiter tun. Das sollte der Normalfall sein:
-        till_history = await conn.fetch(
-            "select what, tse_id, z_nr, date from till_tse_history where till_id = $1 order by z_nr", str(Z_KASSE_ID)
-        )
-        tses = list()
-        for entry in till_history:
-            if entry["what"] == "register":
-                tses.append(entry["tse_id"])
-        if len(tses) == 1:
-            # Fall, dass wir nur eine TSE für diese Kasse haben: Einfach
-            row = await conn.fetchrow(
-                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, tse.public_key, tse.certificate "
-                "from till join tse on till.tse_id = tse.id where till.id = $1",
-                Z_KASSE_ID,
-            )
-
-            # oh gott, es gibt noch einen Fall: eine Kasse wird von der defekten TSE geschoben, aber hat noch keine Buchung gemacht und somit noch keine neue TSE erhalten -> das Feld tse_id in till ist Null
-            # damit schlägt natürlich der join fehl und es kommt None zurück.
-            if row is None:
-                # jetze müssen wir in der history nachschauen, auf welcher TSE diese Kasse registriert war, kann natürlich auch wieder mehrere geben, ahrg
-                # dazu kopieren wir jetzt einfach den code von unten
-                kassenschlussgrenzen = await conn.fetch(
-                    "select z_nr from till_tse_history where till_id = $1 and what = 'register' order by z_nr",
-                    str(Z_KASSE_ID),
-                )
-                aeltereschluesse = list()
-
-                for schluss in kassenschlussgrenzen:
-                    # ist der Kassenschluss bei dem die Kasse auf die TSE registriert wurde älter und damit kleiner gleich als der aktuel abgefragte Z_NR?
-                    if Z_NR >= schluss["z_nr"]:
-                        aeltereschluesse.append(schluss["z_nr"])
-                # nimm jetzt den größten weil ältesten Kassenschluss in der Liste und hole die TSE
-                aeltereschluesse.sort(reverse=True)
-                aktuelle_tse_id = await conn.fetchval(
-                    "select tse_id from till_tse_history where till_id = $1 and what = 'register' and z_nr = $2",
-                    str(Z_KASSE_ID),
-                    aeltereschluesse[0],
-                )
-                print(
-                    f"Kasse {Z_KASSE_ID} hat beim Abschluss {Z_NR} die TSE: {aktuelle_tse_id} und wurde bisher noch nicht auf eine neue TSE registriert"
-                )
-
-                # und jetzt die stammdaten dieser TSE
-                row = await conn.fetchrow(
-                    "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, "
-                    "   tse.public_key, tse.certificate "
-                    "from tse where id = $1",
-                    aktuelle_tse_id,
-                )
-
-        elif len(tses) == 0:
+        row = await get_tse_masterdata_for_till_at_z_nr(conn=conn, till_id=Z_KASSE_ID, z_nr=Z_NR)
+        if row is None:
             raise InvalidArgument(f"Kasse {Z_KASSE_ID} wurde bei keiner TSE registriert")
-        else:
-            print(f"KASSE {Z_KASSE_ID} wurde bei mehreren TSEs registriert, nämlich bei {tses}")
-            # Fall, dass bei dieser Kasse die TSE gewechselt wurde: Kompliziert :(
-            # Erstens: Herausfinden, welche TSE für diesen Kassenschluss zuständig war:
-            # ich habe mehrere Einträge, davon muss ich den mit dem kleinsten z_nr nehmen und vergleichen, ob der größer gleich dem aktuellen z_nr ist.
-            kassenschlussgrenzen = await conn.fetch(
-                "select z_nr from till_tse_history where till_id = $1 and what = 'register' order by z_nr",
-                str(Z_KASSE_ID),
-            )
-            aeltereschluesse = list()
 
-            for schluss in kassenschlussgrenzen:
-                # ist der Kassenschluss bei dem die Kasse auf die TSE registriert wurde älter und damit kleiner gleich als der aktuel abgefragte Z_NR?
-                if Z_NR >= schluss["z_nr"]:
-                    aeltereschluesse.append(schluss["z_nr"])
-            # nimm jetzt den größten weil ältesten Kassenschluss in der Liste und hole die TSE
-            aeltereschluesse.sort(reverse=True)
-            aktuelle_tse_id = await conn.fetchval(
-                "select tse_id from till_tse_history where till_id = $1 and what = 'register' and z_nr = $2",
-                str(Z_KASSE_ID),
-                aeltereschluesse[0],
-            )
-            print(f"Kasse {Z_KASSE_ID} hat beim Abschluss {Z_NR} die TSE: {aktuelle_tse_id}")
-
-            # und jetzt die stammdaten dieser TSE
-            row = await conn.fetchrow(
-                "select tse.id, tse.serial, tse.hashalgo, tse.time_format, tse.process_data_encoding, "
-                "   tse.public_key, tse.certificate "
-                "from tse where id = $1",
-                aktuelle_tse_id,
-            )
-
-        # LOGGER.info(row)
-        # LOGGER.info(f'Z_KASSE_ID: {Z_KASSE_ID}, Z_NR: {Z_NR}')
+        LOGGER.info("Kasse %s hat beim Abschluss %s die TSE: %s", Z_KASSE_ID, Z_NR, row["id"])
         a.TSE_ID = int(row["id"])
         a.TSE_SERIAL = row["serial"]
         a.TSE_SIG_ALGO = row["hashalgo"]
         a.TSE_ZEITFORMAT = row["time_format"]
         a.TSE_PD_ENCODING = row["process_data_encoding"]
         a.TSE_PUBLIC_KEY = row["public_key"]
-        if len(row["certificate"]) < 1001:
-            a.TSE_ZERTIFIKAT_I = row["certificate"]
-        elif 1000 < len(row["certificate"]) < 2001:
-            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["certificate"][1001:]
-        elif 2001 < len(row["certificate"]) < 3001:
-            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["certificate"][1000:2001]
-            a.TSE_ZERTIFIKAT_III = row["certificate"][2000:3001]
-        elif 3001 < len(row["certificate"]) < 4001:
-            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["certificate"][1000:2001]
-            a.TSE_ZERTIFIKAT_III = row["certificate"][2000:3001]
-            a.TSE_ZERTIFIKAT_IV = row["certificate"][3000:4001]
-        elif 4001 < len(row["certificate"]) < 5001:
-            a.TSE_ZERTIFIKAT_I = row["certificate"][0:1000]
-            a.TSE_ZERTIFIKAT_II = row["certificate"][1000:2001]
-            a.TSE_ZERTIFIKAT_III = row["certificate"][2000:3001]
-            a.TSE_ZERTIFIKAT_IV = row["certificate"][3000:4001]
-            a.TSE_ZERTIFIKAT_V = row["certificate"][4000:5001]
-        else:
-            LOGGER.error(
-                f"Zertifikat zu lang. Länge: {len(row['tse_certificate'])} Zeichen. Maximal unterstützt: 5000 Zeichen"
-            )
-            raise NotImplementedError
+        _assign_certificate_chunks(a, row["certificate"])
 
         self.c.add(a)
         ### \tse.csv ###
@@ -627,7 +510,7 @@ class Generator:
             Z_NR,
         ):
             summe_je_zahlart[row["payment_method"]] += Decimal(row["total_price"])
-            if PAYMENT_METHOD_TO_ZAHLUNGSART[row["payment_method"]] == "Bar":
+            if zahlungsart_for_payment_method(row["payment_method"]) == "Bar":
                 barzahlungen += Decimal(row["total_price"])
 
         ### businesscases.csv###
@@ -655,7 +538,7 @@ class Generator:
             a.Z_KASSE_ID = Z_KASSE_ID
             a.Z_ERSTELLUNG = Z_ERSTELLUNG
             a.Z_NR = Z_NR
-            a.ZAHLART_TYP = PAYMENT_METHOD_TO_ZAHLUNGSART[typ["payment_method"]]
+            a.ZAHLART_TYP = zahlungsart_for_payment_method(typ["payment_method"])
             a.ZAHLART_NAME = typ["payment_method"]
             a.Z_ZAHLART_BETRAG = summe_je_zahlart[typ["payment_method"]]
             self.c.add(a)

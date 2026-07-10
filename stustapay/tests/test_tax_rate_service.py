@@ -2,6 +2,7 @@
 import pytest
 
 from stustapay.core.schema.tax_rate import NewTaxRate
+from stustapay.core.schema.tax_type import TaxType
 from stustapay.core.schema.tree import Node
 from stustapay.core.service.common.error import AccessDenied
 from stustapay.core.service.tax_rate import TaxRateService
@@ -18,7 +19,7 @@ async def test_basic_tax_rate_workflow(
     tax_rate = await tax_rate_service.create_tax_rate(
         token=event_admin_token,
         node_id=event_node.id,
-        tax_rate=NewTaxRate(name="krass", rate=0.5, description="Krasse UST"),
+        tax_rate=NewTaxRate(name="krass", rate=0.5, description="Krasse UST", tax_type=TaxType.regular_vat),
     )
     assert tax_rate.name == "krass"
 
@@ -26,14 +27,14 @@ async def test_basic_tax_rate_workflow(
         await tax_rate_service.create_tax_rate(
             token=cashier.token,
             node_id=event_node.id,
-            tax_rate=NewTaxRate(name="Krasse UST", rate=0.5, description="Krasse UST"),
+            tax_rate=NewTaxRate(name="Krasse UST", rate=0.5, description="Krasse UST", tax_type=TaxType.regular_vat),
         )
 
     updated_tax_rate = await tax_rate_service.update_tax_rate(
         token=event_admin_token,
         tax_rate_id=tax_rate.id,
         node_id=event_node.id,
-        tax_rate=NewTaxRate(name="krass", rate=0.6, description="Noch Krassere UST"),
+        tax_rate=NewTaxRate(name="krass", rate=0.6, description="Noch Krassere UST", tax_type=TaxType.regular_vat),
     )
     assert updated_tax_rate.rate == 0.6
     assert updated_tax_rate.description == "Noch Krassere UST"

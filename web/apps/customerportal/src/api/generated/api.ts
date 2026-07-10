@@ -251,6 +251,7 @@ export type OrderType =
   | "money_transfer_imbalance"
   | "cashier_shift_start"
   | "cashier_shift_end";
+export type TaxType = "regular_vat" | "reduced_vat" | "no_tax" | "transparent";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
@@ -266,6 +267,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
+  tax_type: TaxType;
   type: ProductType;
   price_per_voucher?: number | null;
 };

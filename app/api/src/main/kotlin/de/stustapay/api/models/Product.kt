@@ -24,6 +24,7 @@
 package de.stustapay.api.models
 
 import de.stustapay.api.models.ProductType
+import de.stustapay.api.models.TaxType
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -43,6 +44,7 @@ import kotlinx.serialization.Contextual
  * @param id
  * @param taxName
  * @param taxRate
+ * @param taxType
  * @param type
  * @param priceInVouchers
  * @param targetAccountId
@@ -84,6 +86,9 @@ data class Product (
 
     @Contextual @SerialName(value = "tax_rate")
     val taxRate: kotlin.Double,
+
+    @Contextual @SerialName(value = "tax_type")
+    val taxType: TaxType,
 
     @Contextual @SerialName(value = "type")
     val type: ProductType,

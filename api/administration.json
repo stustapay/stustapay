@@ -11828,9 +11828,22 @@
             "type": "string",
             "title": "Bon Issuer"
           },
-          "bon_address": {
+          "bon_street": {
             "type": "string",
-            "title": "Bon Address"
+            "title": "Bon Street"
+          },
+          "bon_zip": {
+            "type": "string",
+            "title": "Bon Zip"
+          },
+          "bon_city": {
+            "type": "string",
+            "title": "Bon City"
+          },
+          "bon_country": {
+            "type": "string",
+            "title": "Bon Country",
+            "default": "DEU"
           },
           "bon_title": {
             "type": "string",
@@ -12036,7 +12049,9 @@
           "pretix_topup_ids",
           "ust_id",
           "bon_issuer",
-          "bon_address",
+          "bon_street",
+          "bon_zip",
+          "bon_city",
           "bon_title",
           "sepa_enabled",
           "sepa_sender_name",
@@ -12189,13 +12204,17 @@
           "description": {
             "type": "string",
             "title": "Description"
+          },
+          "tax_type": {
+            "$ref": "#/components/schemas/TaxType"
           }
         },
         "type": "object",
         "required": [
           "name",
           "rate",
-          "description"
+          "description",
+          "tax_type"
         ],
         "title": "NewTaxRate"
       },
@@ -14382,6 +14401,9 @@
             "type": "number",
             "title": "Tax Rate"
           },
+          "tax_type": {
+            "$ref": "#/components/schemas/TaxType"
+          },
           "type": {
             "$ref": "#/components/schemas/ProductType"
           },
@@ -14410,6 +14432,7 @@
           "id",
           "tax_name",
           "tax_rate",
+          "tax_type",
           "type"
         ],
         "title": "Product"
@@ -14729,9 +14752,22 @@
             "type": "string",
             "title": "Bon Issuer"
           },
-          "bon_address": {
+          "bon_street": {
             "type": "string",
-            "title": "Bon Address"
+            "title": "Bon Street"
+          },
+          "bon_zip": {
+            "type": "string",
+            "title": "Bon Zip"
+          },
+          "bon_city": {
+            "type": "string",
+            "title": "Bon City"
+          },
+          "bon_country": {
+            "type": "string",
+            "title": "Bon Country",
+            "default": "DEU"
           },
           "bon_title": {
             "type": "string",
@@ -14916,7 +14952,9 @@
           "pretix_topup_ids",
           "ust_id",
           "bon_issuer",
-          "bon_address",
+          "bon_street",
+          "bon_zip",
+          "bon_city",
           "bon_title",
           "sepa_enabled",
           "sepa_sender_name",
@@ -15165,9 +15203,22 @@
             "type": "string",
             "title": "Bon Issuer"
           },
-          "bon_address": {
+          "bon_street": {
             "type": "string",
-            "title": "Bon Address"
+            "title": "Bon Street"
+          },
+          "bon_zip": {
+            "type": "string",
+            "title": "Bon Zip"
+          },
+          "bon_city": {
+            "type": "string",
+            "title": "Bon City"
+          },
+          "bon_country": {
+            "type": "string",
+            "title": "Bon Country",
+            "default": "DEU"
           },
           "bon_title": {
             "type": "string",
@@ -15357,7 +15408,9 @@
           "pretix_topup_ids",
           "ust_id",
           "bon_issuer",
-          "bon_address",
+          "bon_street",
+          "bon_zip",
+          "bon_city",
           "bon_title",
           "sepa_enabled",
           "sepa_sender_name",
@@ -15671,6 +15724,9 @@
             "type": "string",
             "title": "Description"
           },
+          "tax_type": {
+            "$ref": "#/components/schemas/TaxType"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -15685,6 +15741,7 @@
           "name",
           "rate",
           "description",
+          "tax_type",
           "id",
           "node_id"
         ],
@@ -15722,6 +15779,16 @@
           "total_no_tax"
         ],
         "title": "TaxRateAggregation"
+      },
+      "TaxType": {
+        "type": "string",
+        "enum": [
+          "regular_vat",
+          "reduced_vat",
+          "no_tax",
+          "transparent"
+        ],
+        "title": "TaxType"
       },
       "Terminal": {
         "properties": {
@@ -16813,9 +16880,22 @@
             "type": "string",
             "title": "Bon Issuer"
           },
-          "bon_address": {
+          "bon_street": {
             "type": "string",
-            "title": "Bon Address"
+            "title": "Bon Street"
+          },
+          "bon_zip": {
+            "type": "string",
+            "title": "Bon Zip"
+          },
+          "bon_city": {
+            "type": "string",
+            "title": "Bon City"
+          },
+          "bon_country": {
+            "type": "string",
+            "title": "Bon Country",
+            "default": "DEU"
           },
           "bon_title": {
             "type": "string",
@@ -16997,7 +17077,9 @@
           "pretix_topup_ids",
           "ust_id",
           "bon_issuer",
-          "bon_address",
+          "bon_street",
+          "bon_zip",
+          "bon_city",
           "bon_title",
           "sepa_enabled",
           "sepa_sender_name",
