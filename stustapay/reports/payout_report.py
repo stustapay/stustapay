@@ -49,7 +49,9 @@ async def generate_payout_report(conn: Connection, node: Node) -> bytes:
         node.event_node_id,
     )
 
-    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
+    config = BonConfig(
+        ust_id=event.ust_id, address=event.formatted_bon_address(), issuer=event.bon_issuer, title=event.bon_title
+    )
 
     event_design = await fetch_event_design(conn=conn, node_id=node.event_node_id)
     logo = None

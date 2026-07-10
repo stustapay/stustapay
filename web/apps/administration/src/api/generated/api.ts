@@ -2352,6 +2352,7 @@ export type GetBlobApiResponse = unknown;
 export type GetBlobApiArg = {
   blobId: string;
 };
+export type TaxType = "regular_vat" | "reduced_vat" | "no_tax" | "transparent";
 export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
@@ -2367,6 +2368,7 @@ export type Product = {
   id: number;
   tax_name: string;
   tax_rate: number;
+  tax_type: TaxType;
   type: ProductType;
   price_per_voucher?: number | null;
 };
@@ -2509,6 +2511,7 @@ export type TaxRate = {
   name: string;
   rate: number;
   description: string;
+  tax_type: TaxType;
   id: number;
   node_id: number;
 };
@@ -2522,6 +2525,7 @@ export type NewTaxRate = {
   name: string;
   rate: number;
   description: string;
+  tax_type: TaxType;
 };
 export type CurrentUser = {
   node_id: number;
@@ -3429,7 +3433,10 @@ export type PublicEventSettings = {
   pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
-  bon_address: string;
+  bon_street: string;
+  bon_zip: string;
+  bon_city: string;
+  bon_country?: string;
   bon_title: string;
   sepa_enabled: boolean;
   sepa_sender_name: string;
@@ -3540,7 +3547,10 @@ export type NewEvent = {
   pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
-  bon_address: string;
+  bon_street: string;
+  bon_zip: string;
+  bon_city: string;
+  bon_country?: string;
   bon_title: string;
   sepa_enabled: boolean;
   sepa_sender_name: string;
@@ -3600,7 +3610,10 @@ export type UpdateEvent = {
   pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
-  bon_address: string;
+  bon_street: string;
+  bon_zip: string;
+  bon_city: string;
+  bon_country?: string;
   bon_title: string;
   sepa_enabled: boolean;
   sepa_sender_name: string;
@@ -3663,7 +3676,10 @@ export type RestrictedEventSettings = {
   pretix_topup_ids: number[] | null;
   ust_id: string;
   bon_issuer: string;
-  bon_address: string;
+  bon_street: string;
+  bon_zip: string;
+  bon_city: string;
+  bon_country?: string;
   bon_title: string;
   sepa_enabled: boolean;
   sepa_sender_name: string;

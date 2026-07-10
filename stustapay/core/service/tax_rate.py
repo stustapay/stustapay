@@ -39,11 +39,12 @@ class TaxRateService(Service[Config]):
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate: NewTaxRate
     ) -> TaxRate:
         tax_rate_id = await conn.fetchval(
-            "insert into tax_rate (node_id, name, rate, description) values ($1, $2, $3, $4) returning id",
+            "insert into tax_rate (node_id, name, rate, description, tax_type) values ($1, $2, $3, $4, $5) returning id",
             node.id,
             tax_rate.name,
             tax_rate.rate,
             tax_rate.description,
+            tax_rate.tax_type.value,
         )
         tax = await _fetch_tax_rate(conn=conn, node=node, tax_rate_id=tax_rate_id)
         assert tax is not None
@@ -77,11 +78,12 @@ class TaxRateService(Service[Config]):
         self, *, conn: Connection, node: Node, current_user: CurrentUser, tax_rate_id: int, tax_rate: NewTaxRate
     ) -> TaxRate:
         tax_id = await conn.fetchval(
-            "update tax_rate set name = $1, rate = $2, description = $3 "
-            "where id = $4 and node_id = any($5) returning id",
+            "update tax_rate set name = $1, rate = $2, description = $3, tax_type = $4 "
+            "where id = $5 and node_id = any($6) returning id",
             tax_rate.name,
             tax_rate.rate,
             tax_rate.description,
+            tax_rate.tax_type.value,
             tax_rate_id,
             node.ids_to_event_node,
         )

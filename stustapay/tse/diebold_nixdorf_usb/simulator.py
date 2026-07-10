@@ -80,9 +80,10 @@ class VirtualTSE:
         self.signctr = 0
         # map from "client id" -> set of transactions
         self.current_transactions = dict[str, set[int]]()
-        self.current_transactions["POS001"] = set()
         self.current_transactions[MAGIC_PRODUCTION_CLIENT] = set()
         self.current_transactions["DummyDefaultClientId"] = set()
+        # simulate a client which was already registered, but does not match a TSE in stustapay
+        self.current_transactions["POS001"] = set()
 
         if private_key_hex is not None:
             self.sk = ecdsa.SigningKey.from_string(

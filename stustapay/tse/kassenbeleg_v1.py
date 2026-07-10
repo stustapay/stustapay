@@ -1,15 +1,10 @@
 import re
 
+from stustapay.core.schema.tax_type import TaxType
+from stustapay.tse.tax_type import kassensichv_index_for_tax_type
+
 
 class Kassenbeleg_V1:
-    # mapping from tax_name (as given in the database) to KassSichV Kassenbeleg-V1 tax index
-    # (see Bundeskonvention Kasse Anhang I.1, <Brutto-Steuerumsätze>)
-    TAX_RATES = {
-        "ust": 0,
-        "eust": 1,
-        "none": 4,
-        "transparent": 4,
-    }
     ZAHLUNGSARTEN = {"Bar", "Unbar"}
 
     # TODO the separators are still wrong
@@ -20,11 +15,8 @@ class Kassenbeleg_V1:
         self.brutto_steuerumsaetze = [0, 0, 0, 0, 0]
         self.zahlungen: list[str] = []
 
-    def add_line_item(self, price, tax_name: str):
-        try:
-            tax_rate_index = self.TAX_RATES[tax_name]
-        except KeyError:
-            raise RuntimeError(f"invalid tax name {tax_name!r}") from None
+    def add_line_item(self, price, tax_type: TaxType):
+        tax_rate_index = kassensichv_index_for_tax_type(tax_type)
         self.brutto_steuerumsaetze[tax_rate_index] += price
 
     def add_zahlung(self, betrag: float, zahlungsart: str, waehrung="EUR"):

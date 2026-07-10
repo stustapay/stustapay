@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from stustapay.core.schema.tax_type import TaxType
+
 
 class ProductType(enum.Enum):
     discount = "discount"
@@ -32,6 +34,7 @@ class Product(NewProduct):
     id: int
     tax_name: str
     tax_rate: float
+    tax_type: TaxType
     fixed_price: bool
     type: ProductType
     price_per_voucher: Optional[float] = None

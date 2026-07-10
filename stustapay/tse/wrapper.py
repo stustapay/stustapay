@@ -11,12 +11,13 @@ import asyncpg
 from sftkit.database import Connection
 from sftkit.util import create_task_protected
 
+from stustapay.core.schema.tax_type import TaxType
+from stustapay.tse.zahlungsart import zahlungsart_for_payment_method
+
 from .handler import TSEHandler, TSESignature, TSESignatureRequest
 from .kassenbeleg_v1 import Kassenbeleg_V1
 
 LOGGER = logging.getLogger(__name__)
-
-PAYMENT_METHOD_TO_ZAHLUNGSART = {"cash": "Bar", "sumup": "Unbar", "tag": "Unbar", "sumup_online": "Unbar"}
 
 
 class TSEWrapper:
@@ -149,6 +150,11 @@ class TSEWrapper:
         masterdata = self._tse_handler.get_master_data()
 
         if tse_status == "new":
+            configured_serial = await conn.fetchval("select serial from tse where id = $1", self.tse_id)
+            if configured_serial and configured_serial != masterdata.tse_serial:
+                raise RuntimeError(
+                    f"TSE serial mismatch for {self.name}: configured {configured_serial!r}, device {masterdata.tse_serial!r}"
+                )
             await conn.execute(
                 """
             update
@@ -162,7 +168,8 @@ class TSEWrapper:
                 certificate=$5,
                 process_data_encoding=$6,
                 tse_description=$7,
-                certificate_date=$8
+                certificate_date=$8,
+                first_operation=coalesce(first_operation, now())
             where
                 id=$9
             """,
@@ -235,22 +242,21 @@ class TSEWrapper:
         else:
             raise RuntimeError("TSE has no state, forbidden db state")
 
-        # get the list of tills that are registered to the TSE
+        # get the list of client IDs that are registered to the TSE
         self._tills = set(await self._tse_handler.get_client_ids())
 
-        # List of tills which are registered to the TSE but not
-        # listed as assigned to the TSE in the database.
-        # These tills need to be unregistered from the TSE.
-        extra_tills = set(self._tills)
+        # Client IDs registered on the TSE but not assigned to this TSE in the DB
+        # (including non-stustapay / non-int leftovers) must be deregistered.
+        # Remaining client IDs are expected to match str(till.id).
+        extra_client_ids = set(self._tills)
         for row in await conn.fetch("select id from till where tse_id = $1", self.tse_id):
-            till = str(row["id"])
-            extra_tills.discard(till)  # no need to unregister this till
-            if till not in self._tills:
-                # let's register the till with the TSE!
-                await self._till_add(conn, till)
-        # Unregister all of the extra tills
-        for till in sorted(extra_tills):
-            await self._till_remove(conn, till)
+            till_id = row["id"]
+            client_id = str(till_id)
+            extra_client_ids.discard(client_id)
+            if client_id not in self._tills:
+                await self._till_add(conn, till_id)
+        for client_id in sorted(extra_client_ids):
+            await self._till_remove(conn, client_id)
 
         # The TSE is now ready to be used.
         # Ready to execute signatures from the database.
@@ -338,9 +344,7 @@ class TSEWrapper:
                 self._orders_available_event.set()
 
             order_id = next_sig["order_id"]
-            till_id = str(
-                next_sig["till_id"]
-            )  # use till_id converted to string as TSE ClientID to satisfy naming constraints
+            till_id = next_sig["till_id"]
 
             await conn.execute(
                 """
@@ -358,7 +362,7 @@ class TSEWrapper:
 
         return await self._make_signature_request(conn, order_id, till_id)
 
-    async def _make_signature_request(self, conn: Connection, order_id: int, till_id: str):
+    async def _make_signature_request(self, conn: Connection, order_id: int, till_id: int):
         """
         Collects all required information for signing the order,
         and passes the signing request to the TSE.
@@ -366,18 +370,35 @@ class TSEWrapper:
         payment_method = await conn.fetchval("select payment_method from ordr where ordr.id=$1", order_id)
         if payment_method is None:
             raise RuntimeError(f"invalid order {order_id!r}")
+        zahlungsart = zahlungsart_for_payment_method(payment_method)
+        currency = await conn.fetchval(
+            """
+            select e.currency_identifier
+            from ordr
+            join till on ordr.till_id = till.id
+            join node on till.node_id = node.id
+            join event e on node.event_id = e.id
+            where ordr.id = $1
+            """,
+            order_id,
+        )
+        if currency is None:
+            raise RuntimeError(f"could not resolve currency for order {order_id!r}")
         beleg = Kassenbeleg_V1()
         total = 0
-        try:
-            zahlungsart = PAYMENT_METHOD_TO_ZAHLUNGSART[payment_method]
-        except KeyError as exc:
-            raise RuntimeError(f"invalid payment_method {payment_method!r}") from exc
 
-        for row in await conn.fetch("select total_price, tax_name from line_item where order_id = $1", order_id):
-            beleg.add_line_item(row["total_price"], row["tax_name"])
+        for row in await conn.fetch(
+            """
+            select line_item.total_price, tax_rate.tax_type
+            from line_item
+            join tax_rate on line_item.tax_rate_id = tax_rate.id
+            where line_item.order_id = $1
+            """,
+            order_id,
+        ):
+            beleg.add_line_item(row["total_price"], TaxType(row["tax_type"]))
             total += row["total_price"]
-        # TODO: get currency from database config
-        beleg.add_zahlung(total, zahlungsart=zahlungsart, waehrung="EUR")
+        beleg.add_zahlung(total, zahlungsart=zahlungsart, waehrung=currency)
 
         return TSESignatureRequest(
             order_id=order_id,
@@ -448,8 +469,9 @@ class TSEWrapper:
     async def _sign(self, conn: Connection, signing_request: TSESignatureRequest) -> typing.Optional[TSESignature]:
         assert self._tse_handler is not None
         # must be called when the TSE is connected and operational.
-        if signing_request.till_id not in self._tills:
-            LOGGER.info(f"registering new ClientID {signing_request.till_id} with TSE {self.name}")
+        client_id = str(signing_request.till_id)
+        if client_id not in self._tills:
+            LOGGER.info(f"registering new ClientID {client_id} with TSE {self.name}")
             await self._till_add(conn, signing_request.till_id)
         start = time.monotonic()
         try:
@@ -466,32 +488,53 @@ class TSEWrapper:
         result.tse_duration = float(stop - start)  # duratoion
         return result
 
-    async def _till_add(self, conn: Connection, till):
+    async def _till_add(self, conn: Connection, till_id: int):
         assert self._tse_handler is not None
-        LOGGER.info(f"{self.name!r}: adding till {till!r}")
-        await self._tse_handler.register_client_id(str(till))
+        client_id = str(till_id)
+        LOGGER.info(f"{self.name!r}: adding till {client_id!r}")
+        await self._tse_handler.register_client_id(client_id)
         # get z_nr
-        z_nr = await conn.fetchval("select z_nr from till where id=$1", int(till))
+        z_nr = await conn.fetchval("select z_nr from till where id=$1", till_id)
         await conn.execute(
             "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'register', $3)",
-            till,
+            till_id,
             self.tse_id,
             z_nr,
         )
-        self._tills.add(till)
+        self._tills.add(client_id)
 
-    async def _till_remove(self, conn: Connection, till):
+    async def _till_remove(self, conn: Connection, client_id: str):
+        """Deregister a client ID from the TSE.
+
+        Known stustapay till IDs also get a till_tse_history entry.
+        Foreign / non-int client IDs are only removed from the device.
+        """
         assert self._tse_handler is not None
-        LOGGER.info(f"{self.name!r}: removing till {till!r}")
-        await self._tse_handler.deregister_client_id(str(till))
-        if str(till).isnumeric():
-            z_nr = await conn.fetchval("select z_nr from till where id=$1", int(till))
+        LOGGER.info(f"{self.name!r}: removing client id {client_id!r}")
+        await self._tse_handler.deregister_client_id(client_id)
+
+        till_id: int | None
+        try:
+            till_id = int(client_id)
+        except ValueError:
+            till_id = None
+
+        if till_id is not None:
+            z_nr = await conn.fetchval("select z_nr from till where id=$1", till_id)
+            if z_nr is not None:
+                await conn.execute(
+                    "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'deregister', $3)",
+                    till_id,
+                    self.tse_id,
+                    z_nr,
+                )
+            else:
+                LOGGER.warning(
+                    f"{self.name!r}: deregistered unknown numeric client id {client_id!r} without till_tse_history entry"
+                )
         else:
-            z_nr = 0
-        await conn.execute(
-            "insert into till_tse_history (till_id, tse_id, what, z_nr) values ($1, $2, 'deregister', $3)",
-            till,
-            self.tse_id,
-            z_nr,
-        )
-        self._tills.remove(till)
+            LOGGER.warning(
+                f"{self.name!r}: deregistered non-till client id {client_id!r} without till_tse_history entry"
+            )
+
+        self._tills.discard(client_id)

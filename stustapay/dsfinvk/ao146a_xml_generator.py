@@ -10,15 +10,21 @@ from sftkit.database import Connection
 from stustapay import __version__ as stustapay_version
 from stustapay.core.config import Config
 from stustapay.core.database import get_database
+from stustapay.core.schema.tse import TseFormFactor, TseType, form_factor_for_tse_type
 from stustapay.core.service.common.error import InvalidArgument
 from stustapay.core.service.tree.common import (
     fetch_node,
-    fetch_restricted_event_settings_for_node,
 )
+from stustapay.tse.bsi_certification import bsi_certification_for_tse
+from stustapay.tse.till_tse_lookup import get_tse_masterdata_for_till_at_z_nr
 
 LOGGER = logging.getLogger(__name__)
 
-BSI_TO_YEAR = {"0362": "2019", "0393": "2020", "0415": "2021"}
+TSE_FORM_FACTOR_TO_AO146A = {
+    TseFormFactor.sd_card: "1",
+    TseFormFactor.usb: "2",
+    TseFormFactor.cloud: "3",
+}
 
 
 class AO146Aexporter:
@@ -28,9 +34,6 @@ class AO146Aexporter:
         self.filename = filename
         self.shutdown_date = shutdown_date
         self.starttime = time.monotonic()
-        self.PLZ = ""
-        self.Street = ""
-        self.City = ""
 
     async def run(self):
         async with contextlib.AsyncExitStack() as es:
@@ -46,18 +49,6 @@ class AO146Aexporter:
     async def generate(self, conn: Connection) -> bytes:
         node = await fetch_node(conn=conn, node_id=self.node_id)
         assert node is not None
-        event_settings = await fetch_restricted_event_settings_for_node(conn=conn, node_id=self.node_id)
-
-        # extract address information
-        bon_addr = event_settings.bon_address
-        if "\n" in bon_addr:
-            self.Street = bon_addr.split("\n")[0]
-            self.PLZ = bon_addr.split("\n")[1].split(" ")[0]
-            self.City = bon_addr.split("\n")[1].split(" ")[1]
-        else:
-            self.Street = bon_addr.split(" ")[0] + " " + bon_addr.split(" ")[1]
-            self.PLZ = bon_addr.split(" ")[2]
-            self.City = bon_addr.split(" ")[3]
 
         root_element = ET.Element(
             "Aufzeichnung146a",
@@ -65,8 +56,6 @@ class AO146Aexporter:
         )
         Aufzeichnung146a_1 = ET.SubElement(root_element, "Aufzeichnung146a")
 
-        # iteriere über alle Kassen
-        # alle Kassen mit einer order (und damit auch mit einer TSE und die deshalb ans Finanzamt gemeldet wurden)
         for row in await conn.fetch(
             "select distinct o.till_id "
             "from ordr o "
@@ -76,47 +65,19 @@ class AO146Aexporter:
             "order by o.till_id",
             node.id,
         ):
-            # Prüfe, ob diese Kasse verschiedene TSEs hatte, wenn nicht, dann müssen wir nichts weiter tun. Das sollte der Normalfall sein:
-            till_history = await conn.fetch(
-                "select what, tse_id, z_nr, date from till_tse_history where till_id = $1 order by z_nr",
-                str(row["till_id"]),
+            tse_data = await get_tse_masterdata_for_till_at_z_nr(
+                conn=conn,
+                till_id=row["till_id"],
+                z_nr=await conn.fetchval("select max(z_nr) from ordr where till_id = $1", row["till_id"]) or 0,
             )
-            tses = list()
-            for entry in till_history:
-                if entry["what"] == "register":
-                    tses.append(entry["tse_id"])
-            if len(tses) == 1:
-                # Fall, dass wir nur eine TSE für diese Kasse haben: Einfach
-                tse_data = await conn.fetchrow(
-                    "select tse.id, tse.serial, tse.tse_description, tse.certificate_date "
-                    "from till join tse on till.tse_id = tse.id where till.id = $1",
-                    row["till_id"],
-                )
-
-                # oh gott, es gibt noch einen Fall: eine Kasse wird von der defekten TSE geschoben,
-                # aber hat noch keine Buchung gemacht und somit noch keine neue TSE erhalten -> das Feld tse_id in till ist Null
-                # damit schlägt natürlich der join fehl und es kommt None zurück.
-                if tse_data is None:
-                    print(f"Kasse {row['till_id']} wurde bisher noch nicht auf eine neue TSE registriert")
-                    tse_data = dict()
-                    tse_data["serial"] = "00000000000000000000000000000000"  # machs selber
-                    tse_data["tse_description"] = "0000"  # machs selber
-                    tse_data["certificate_date"] = "0000"  # machs selber
-
-            elif len(tses) == 0:
+            if tse_data is None:
                 raise InvalidArgument(f"Kasse {row['till_id']} wurde bei keiner TSE registriert")
-            else:
-                print(f"KASSE {row['till_id']} wurde bei mehreren TSEs registriert, nämlich bei {tses}")
-                # Fall, dass bei dieser Kasse die TSE gewechselt wurde: Kompliziert :(
-                # machs selbst
-                tse_data = dict()
-                tse_data["serial"] = "00000000000000000000000000000000"  # machs selber
-                tse_data["tse_description"] = "0000"  # machs selber
-                tse_data["certificate_date"] = "0000"  # machs selber
 
             first_booking_date = await conn.fetchval(
                 "select booked_at from ordr where till_id=$1 order by booked_at limit 1", row["till_id"]
             )
+            if tse_data["first_operation"] is not None:
+                first_booking_date = tse_data["first_operation"]
 
             kasse_brand, kasse_modell, kasse_sw_brand = await conn.fetchrow(
                 "select dsfinvk_brand, dsfinvk_model, dsfinvk_software_brand from till where id = $1",
@@ -124,46 +85,53 @@ class AO146Aexporter:
             )
 
             AngabenAufzeichnungssystem = ET.Element("AngabenAufzeichnungssystem")
-            # gather all data for this till
             Art = ET.SubElement(AngabenAufzeichnungssystem, "Art")
-            Art.text = "1"  # "Computergestützte/PC-Kassensysteme"
+            Art.text = "1"
 
             Software = ET.SubElement(AngabenAufzeichnungssystem, "Software")
-            Software.text = str(kasse_sw_brand)  # KASSE_SW_BRAND
+            Software.text = str(kasse_sw_brand)
 
             SoftwareVersion = ET.SubElement(AngabenAufzeichnungssystem, "SoftwareVersion")
-            SoftwareVersion.text = stustapay_version  # KASSE_SW_VERSION
+            SoftwareVersion.text = stustapay_version
 
             SeriennummerAS = ET.SubElement(AngabenAufzeichnungssystem, "SeriennummerAS")
-            SeriennummerAS.text = str(row["till_id"])  # KASSE_SERIENNR
+            SeriennummerAS.text = str(row["till_id"])
 
             Hersteller = ET.SubElement(AngabenAufzeichnungssystem, "Hersteller")
-            Hersteller.text = str(kasse_brand)  # KASSE_BRAND
+            Hersteller.text = str(kasse_brand)
 
             Modell = ET.SubElement(AngabenAufzeichnungssystem, "Modell")
-            Modell.text = str(kasse_modell)  # KASSE_MODELL
+            Modell.text = str(kasse_modell)
 
             SeriennummerTSE = ET.SubElement(AngabenAufzeichnungssystem, "SeriennummerTSE")
-            SeriennummerTSE.text = str(tse_data["serial"])  # TSE
+            SeriennummerTSE.text = str(tse_data["serial"])
 
             InbetriebnahmeTSE = ET.SubElement(AngabenAufzeichnungssystem, "InbetriebnahmeTSE")
-            InbetriebnahmeTSE.text = str(
-                first_booking_date.strftime("%d.%m.%Y")
-            )  # wann die TSE an dieser Kasse inbetriebgenommen wurde
+            InbetriebnahmeTSE.text = str(first_booking_date.strftime("%d.%m.%Y"))
 
             BSIID = ET.SubElement(AngabenAufzeichnungssystem, "BSIID")
-            BSIID.text = (
-                str(tse_data["tse_description"])[-4:] + "-" + str(BSI_TO_YEAR[str(tse_data["tse_description"])[-4:]])
-            )  # man muss das jahr beim BSI nachschauen..
+            if not tse_data["tse_description"]:
+                raise InvalidArgument(f"TSE {tse_data['id']} is missing TSE description for BSI certification lookup")
+            try:
+                bsi_certification_id, bsi_certification_year = bsi_certification_for_tse(
+                    TseType(tse_data["type"]),
+                    tse_data["tse_description"],
+                )
+            except RuntimeError as exc:
+                raise InvalidArgument(
+                    f"TSE {tse_data['id']} has unsupported BSI certification in description "
+                    f"{tse_data['tse_description']!r}"
+                ) from exc
+            BSIID.text = f"{bsi_certification_id}-{bsi_certification_year}"
 
             BauformTSE = ET.SubElement(AngabenAufzeichnungssystem, "ArtTSE")
-            BauformTSE.text = str("2")  # "2" = USB-Stick, "1" = SD Card, "3" = Cloud
+            BauformTSE.text = TSE_FORM_FACTOR_TO_AO146A[form_factor_for_tse_type(TseType(tse_data["type"]))]
 
             AnschaffungAS = ET.SubElement(AngabenAufzeichnungssystem, "AnschaffungAS")
-            AnschaffungAS.text = str(first_booking_date.strftime("%d.%m.%Y"))  # hmmm
+            AnschaffungAS.text = str(first_booking_date.strftime("%d.%m.%Y"))
 
             InbetriebnahmeAS = ET.SubElement(AngabenAufzeichnungssystem, "InbetriebnahmeAS")
-            InbetriebnahmeAS.text = str(first_booking_date.strftime("%d.%m.%Y"))  # we use the first order on this till
+            InbetriebnahmeAS.text = str(first_booking_date.strftime("%d.%m.%Y"))
 
             if self.shutdown_date is not None:
                 AusserbetriebnahmeAS = ET.SubElement(AngabenAufzeichnungssystem, "AusserbetriebnahmeAS")
@@ -178,7 +146,6 @@ class AO146Aexporter:
     def _serialize_xml(self, aufzeichnung146a: ET.Element) -> bytes:
         xml_body = ET.tostring(aufzeichnung146a, encoding="utf-8")
         LOGGER.info(xml_body)
-        # need to prepend xml header manually, because ElementTree only uses single quotes, but elster wants double quotes
         buffer = BytesIO()
         buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'.encode("utf-8"))
         buffer.write(
