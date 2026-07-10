@@ -35,7 +35,7 @@ begin
             select li.order_id, li.item_id, li.quantity, p.price_in_vouchers,
                    p.price / p.price_in_vouchers as price_per_voucher
             from line_item li
-            join product_with_tax_and_restrictions p on li.product_id = p.id
+            join product p on li.product_id = p.id
             where li.order_id = order_rec.order_id
               and p.price_in_vouchers is not null
               and p.price is not null
