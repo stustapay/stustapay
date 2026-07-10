@@ -10,5 +10,6 @@ export * from "./ticket";
 export * from "./till";
 export * from "./tse";
 export * from "./user";
+export * from "./user-tag-variant";
 export * from "./currency";
 export * from "./terminal";

@@ -781,15 +781,21 @@
             ],
             "title": "User Tag Comment"
           },
-          "restriction": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ProductRestriction"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "user_tag_variant_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "User Tag Variant Ids",
+            "default": []
+          },
+          "user_tag_variant_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "User Tag Variant Names",
+            "default": []
           },
           "tag_history": {
             "items": {
@@ -906,7 +912,6 @@
           "vouchers",
           "user_tag_id",
           "user_tag_uid",
-          "restriction",
           "tag_history",
           "iban",
           "account_name",
@@ -1849,12 +1854,12 @@
             "type": "integer",
             "title": "Tax Rate Id"
           },
-          "restrictions": {
+          "user_tag_variant_ids": {
             "items": {
-              "$ref": "#/components/schemas/ProductRestriction"
+              "type": "integer"
             },
             "type": "array",
-            "title": "Restrictions"
+            "title": "User Tag Variant Ids"
           },
           "is_locked": {
             "type": "boolean",
@@ -1912,7 +1917,7 @@
           "price",
           "fixed_price",
           "tax_rate_id",
-          "restrictions",
+          "user_tag_variant_ids",
           "is_locked",
           "is_returnable",
           "node_id",
@@ -1922,14 +1927,6 @@
           "type"
         ],
         "title": "Product"
-      },
-      "ProductRestriction": {
-        "type": "string",
-        "enum": [
-          "under_16",
-          "under_18"
-        ],
-        "title": "ProductRestriction"
       },
       "ProductType": {
         "type": "string",

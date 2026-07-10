@@ -4,7 +4,6 @@ from typing import Optional
 
 from pydantic import BaseModel, computed_field
 
-from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.user import format_user_tag_uid
 
 # keep in sync with stustapay/core/schema/db_code/0004-functions.sql book_transaction
@@ -47,7 +46,8 @@ class UserTagDetail(BaseModel):
     activated_at: Optional[datetime] = None
 
     comment: Optional[str] = None
-    variant: Optional[str] = None
+    variant_ids: list[int] = []
+    variant_names: list[str] = []
     account_id: Optional[int] = None
     user_id: Optional[int] = None
 
@@ -88,7 +88,8 @@ class Account(BaseModel):
     user_tag_id: Optional[int]
     user_tag_uid: Optional[int]
     user_tag_comment: Optional[str] = None
-    restriction: Optional[ProductRestriction]
+    user_tag_variant_ids: list[int] = []
+    user_tag_variant_names: list[str] = []
 
     tag_history: list[UserTagHistoryEntry]
 

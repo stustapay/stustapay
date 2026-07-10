@@ -121,23 +121,13 @@ fun AccountProperties(
             Spacer(modifier = Modifier.height(5.dp))
         }
 
-        val restriction = account.restriction
-        if (restriction != null) {
+        val userTagVariantNames = account.userTagVariantNames
+        if (!userTagVariantNames.isNullOrEmpty()) {
             item {
                 Divider()
                 SummaryEntry(
                     stringResource(R.string.customer_restriction),
-                    when (restriction.value) {
-                        "under_18" -> {
-                            stringResource(R.string.customer_under_18_years)
-                        }
-
-                        "under_16" -> {
-                            stringResource(R.string.customer_under_16_years)
-                        }
-
-                        else -> restriction.value
-                    },
+                    userTagVariantNames.joinToString(", "),
                 )
             }
         }

@@ -20,7 +20,6 @@ from stustapay.core.config import (
     TerminalApiConfig,
 )
 from stustapay.core.database import get_database
-from stustapay.core.schema.product import ProductRestriction
 from stustapay.core.schema.tax_rate import NewTaxRate, TaxRate
 from stustapay.core.schema.terminal import NewTerminal, Terminal
 from stustapay.core.schema.ticket import TicketVoucher
@@ -203,26 +202,53 @@ class UserTag:
     pin: str
 
 
+@dataclass
+class StandardUserTagVariants:
+    under_16_id: int
+    under_18_id: int
+
+
+@pytest.fixture
+async def standard_user_tag_variants(db_connection: Connection, event_node: Node) -> StandardUserTagVariants:
+    under_16_id = await db_connection.fetchval(
+        "insert into user_tag_variant (node_id, variant_name, description, priority) "
+        "values ($1, 'under_16', 'User tag holder under 16 years', 1) returning id",
+        event_node.id,
+    )
+    under_18_id = await db_connection.fetchval(
+        "insert into user_tag_variant (node_id, variant_name, description, priority) "
+        "values ($1, 'under_18', 'User tag holder under 18 years', 2) returning id",
+        event_node.id,
+    )
+    return StandardUserTagVariants(under_16_id=under_16_id, under_18_id=under_18_id)
+
+
 class CreateRandomUserTag(Protocol):
-    def __call__(self, restriction: ProductRestriction | None = None) -> Awaitable[UserTag]: ...
+    def __call__(self, variant_ids: list[int] | None = None) -> Awaitable[UserTag]: ...
 
 
 @pytest.fixture
 async def create_random_user_tag(
     db_connection: Connection, event_node: Node, user_tag_secret: int
 ) -> CreateRandomUserTag:
-    async def func(restriction: ProductRestriction | None = None) -> UserTag:
+    async def func(variant_ids: list[int] | None = None) -> UserTag:
         while True:
             uid = random.randint(1, 2**32 - 1)
             pin = secrets.token_hex(16)
             try:
                 user_tag_id = await db_connection.fetchval(
-                    "insert into user_tag (node_id, secret_id, restriction, pin) values ($1, $2, $3, $4) returning id",
+                    "insert into user_tag (node_id, secret_id, pin) values ($1, $2, $3) returning id",
                     event_node.id,
                     user_tag_secret,
-                    restriction.name if restriction is not None else None,
                     pin,
                 )
+                if variant_ids:
+                    for variant_id in variant_ids:
+                        await db_connection.execute(
+                            "insert into user_tag_to_variant (user_tag_id, variant_id) values ($1, $2)",
+                            user_tag_id,
+                            variant_id,
+                        )
                 return UserTag(id=user_tag_id, uid=uid, pin=pin)
             except asyncpg.DataError:
                 pass

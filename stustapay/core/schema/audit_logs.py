@@ -69,6 +69,9 @@ class AuditType(StrEnum):
     user_tags_created = auto()
     user_tag_secret_created = auto()
     user_tag_comment_updated = auto()
+    user_tag_variant_created = auto()
+    user_tag_variant_updated = auto()
+    user_tag_variant_deleted = auto()
 
     payout_run_created = auto()
     payout_run_marked_done = auto()

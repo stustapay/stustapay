@@ -159,7 +159,7 @@ fun PreviewTicketListItem() {
                 name = "Ticket-Name",
                 price = 13.37,
                 taxRateId = BigInteger.fromInt(2),
-                restrictions = listOf(),
+                userTagVariantIds = listOf(),
                 isLocked = true,
                 initialTopUpAmount = 0.0,
                 nodeId = BigInteger.fromInt(42),

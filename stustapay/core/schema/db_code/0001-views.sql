@@ -75,11 +75,23 @@ create view account_with_history as
         ut.uid                                 as user_tag_uid,
         ut.pin                                 as user_tag_pin,
         ut.comment                             as user_tag_comment,
-        ut.restriction,
+        coalesce(variants.variant_ids, '{}'::bigint array)   as user_tag_variant_ids,
+        coalesce(variants.variant_names, '{}'::text array)   as user_tag_variant_names,
         coalesce(hist.tag_history, '[]'::json) as tag_history
     from
         account a
         left join user_tag ut on a.user_tag_id = ut.id
+        left join (
+            select
+                uttv.user_tag_id,
+                array_agg(utv.id order by utv.priority, utv.variant_name)
+                    filter (where utv.id is not null)           as variant_ids,
+                array_agg(utv.variant_name order by utv.priority, utv.variant_name)
+                    filter (where utv.id is not null) as variant_names
+            from user_tag_to_variant uttv
+            join user_tag_variant utv on uttv.variant_id = utv.id
+            group by uttv.user_tag_id
+        ) variants on ut.id = variants.user_tag_id
         left join (
             select
                 atah.account_id,
@@ -159,14 +171,25 @@ create view user_tag_with_history as
         ut.uid,
         ut.pin,
         a.activated_at,
-        utv.variant_name                             as variant,
+        coalesce(variants.variant_ids, '{}'::bigint array)   as variant_ids,
+        coalesce(variants.variant_names, '{}'::text array)   as variant_names,
         ut.comment,
         a.id                                       as account_id,
         u.id                                       as user_id,
         coalesce(hist.account_history, '[]'::json) as account_history
     from
         user_tag ut
-        left join user_tag_variant utv on ut.variant_id = utv.id
+        left join (
+            select
+                uttv.user_tag_id,
+                array_agg(utv.id order by utv.priority, utv.variant_name)
+                    filter (where utv.id is not null)           as variant_ids,
+                array_agg(utv.variant_name order by utv.priority, utv.variant_name)
+                    filter (where utv.id is not null) as variant_names
+            from user_tag_to_variant uttv
+            join user_tag_variant utv on uttv.variant_id = utv.id
+            group by uttv.user_tag_id
+        ) variants on ut.id = variants.user_tag_id
         left join account a on a.user_tag_id = ut.id
         left join usr u on ut.id = u.user_tag_id
         left join (
@@ -223,12 +246,14 @@ create view product_with_tax_and_restrictions as
         p.price / p.price_in_vouchers               as price_per_voucher,
         t.name                                      as tax_name,
         t.rate                                      as tax_rate,
-        coalesce(pr.restrictions, '{}'::text array) as restrictions
+        coalesce(pr.user_tag_variant_ids, '{}'::bigint array) as user_tag_variant_ids
     from
         product p
         join tax_rate t on p.tax_rate_id = t.id
         left join (
-            select r.id, array_agg(r.restriction) as restrictions from product_restriction r group by r.id
+            select r.id, array_agg(r.user_tag_variant_id) as user_tag_variant_ids
+            from product_user_tag_variant r
+            group by r.id
         ) pr on pr.id = p.id;
 
 create view ticket as

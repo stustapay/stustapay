@@ -57,7 +57,6 @@ src/main/kotlin/de/stustapay/api/models/PendingSale.kt
 src/main/kotlin/de/stustapay/api/models/PendingTicketSale.kt
 src/main/kotlin/de/stustapay/api/models/PendingTopUp.kt
 src/main/kotlin/de/stustapay/api/models/Product.kt
-src/main/kotlin/de/stustapay/api/models/ProductRestriction.kt
 src/main/kotlin/de/stustapay/api/models/ProductType.kt
 src/main/kotlin/de/stustapay/api/models/RegisterStockUpPayload.kt
 src/main/kotlin/de/stustapay/api/models/RevenueStats.kt

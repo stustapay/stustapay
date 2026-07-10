@@ -91,9 +91,11 @@ class ProductService(Service[Config]):
             product.is_returnable,
         )
 
-        for restriction in product.restrictions:
+        for user_tag_variant_id in product.user_tag_variant_ids:
             await conn.execute(
-                "insert into product_restriction (id, restriction) values ($1, $2)", product_id, restriction.name
+                "insert into product_user_tag_variant (id, user_tag_variant_id) values ($1, $2)",
+                product_id,
+                user_tag_variant_id,
             )
 
         assert product_id is not None
@@ -165,10 +167,12 @@ class ProductService(Service[Config]):
         if row is None:
             raise RuntimeError("product disappeared unexpecteldy within a transaction")
 
-        await conn.execute("delete from product_restriction where id = $1", product_id)
-        for restriction in product.restrictions:
+        await conn.execute("delete from product_user_tag_variant where id = $1", product_id)
+        for user_tag_variant_id in product.user_tag_variant_ids:
             await conn.execute(
-                "insert into product_restriction (id, restriction) values ($1, $2)", product_id, restriction.name
+                "insert into product_user_tag_variant (id, user_tag_variant_id) values ($1, $2)",
+                product_id,
+                user_tag_variant_id,
             )
 
         updated_product = await fetch_product(conn=conn, node=node, product_id=product_id)

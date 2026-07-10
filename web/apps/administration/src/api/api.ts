@@ -18,6 +18,7 @@ import {
   User,
   UserRole,
   UserTagDetailRead,
+  UserTagVariant,
   api as generatedApi,
   GenerateTestRevenueReportApiArg,
   Terminal,
@@ -43,6 +44,10 @@ const accountAdapter = createEntityAdapter<AccountRead>({
 
 const userTagAdapter = createEntityAdapter<UserTagDetailRead>({
   sortComparer: (a, b) => a.pin.toLowerCase().localeCompare(b.pin.toLowerCase()),
+});
+
+const userTagVariantAdapter = createEntityAdapter<UserTagVariant>({
+  sortComparer: (a, b) => (a.priority ?? 0) - (b.priority ?? 0) || a.variant_name.localeCompare(b.variant_name),
 });
 
 const userRoleAdapter = createEntityAdapter<UserRole>({
@@ -129,6 +134,21 @@ export const api = generatedApi.enhanceEndpoints({
     },
     getTaxRate: {
       providesTags: (result, error, arg) => [{ type: "tax-rates", id: arg.taxRateId }],
+    },
+    listUserTagVariants: {
+      providesTags: (result) => generateCacheKeys("user_tags", result),
+    },
+    getUserTagVariant: {
+      providesTags: (result, error, arg) => [{ type: "user_tags", id: arg.userTagVariantId }],
+    },
+    createUserTagVariant: {
+      invalidatesTags: ["user_tags"],
+    },
+    updateUserTagVariant: {
+      invalidatesTags: ["user_tags"],
+    },
+    deleteUserTagVariant: {
+      invalidatesTags: ["user_tags"],
     },
     listTickets: {
       providesTags: (result) => generateCacheKeys("tickets", result),
@@ -266,6 +286,14 @@ export const {
 
 export const { selectTaxRateAll, selectTaxRateById, selectTaxRateEntities, selectTaxRateIds, selectTaxRateTotal } =
   convertEntityAdaptorSelectors("TaxRate", taxRateAdapter.getSelectors());
+
+export const {
+  selectUserTagVariantAll,
+  selectUserTagVariantById,
+  selectUserTagVariantEntities,
+  selectUserTagVariantIds,
+  selectUserTagVariantTotal,
+} = convertEntityAdaptorSelectors("UserTagVariant", userTagVariantAdapter.getSelectors());
 
 export const { selectTicketAll, selectTicketById, selectTicketEntities, selectTicketIds, selectTicketTotal } =
   convertEntityAdaptorSelectors("Ticket", ticketAdapter.getSelectors());

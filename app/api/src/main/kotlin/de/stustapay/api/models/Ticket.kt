@@ -23,26 +23,25 @@
 
 package de.stustapay.api.models
 
-import de.stustapay.api.models.ProductRestriction
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param name 
- * @param price 
- * @param taxRateId 
- * @param restrictions 
- * @param isLocked 
- * @param initialTopUpAmount 
- * @param nodeId 
- * @param id 
- * @param taxName 
- * @param taxRate 
- * @param totalPrice 
+ *
+ * @param name
+ * @param price
+ * @param taxRateId
+ * @param userTagVariantIds
+ * @param isLocked
+ * @param initialTopUpAmount
+ * @param nodeId
+ * @param id
+ * @param taxName
+ * @param taxRate
+ * @param totalPrice
  */
 @Serializable
 
@@ -57,8 +56,8 @@ data class Ticket (
     @SerialName(value = "tax_rate_id")
     val taxRateId: @Contextual com.ionspin.kotlin.bignum.integer.BigInteger,
 
-    @SerialName(value = "restrictions")
-    val restrictions: kotlin.collections.List<@Contextual ProductRestriction>,
+    @SerialName(value = "user_tag_variant_ids")
+    val userTagVariantIds: kotlin.collections.List<@Contextual com.ionspin.kotlin.bignum.integer.BigInteger>,
 
     @SerialName(value = "is_locked")
     val isLocked: kotlin.Boolean,
@@ -85,4 +84,3 @@ data class Ticket (
 
 
 }
-

@@ -76,6 +76,9 @@ import {
   UserTagPageLayout,
   UserTagsCreate,
   UserTagSecretCreate,
+  UserTagVariantCreate,
+  UserTagVariantList,
+  UserTagVariantUpdate,
 } from "./routes/user-tags";
 import {
   UserCreate,
@@ -419,6 +422,18 @@ const router = createBrowserRouter([
               {
                 path: "create-tags",
                 element: <UserTagsCreate />,
+              },
+              {
+                path: "variants",
+                element: <UserTagVariantList />,
+              },
+              {
+                path: "variants/new",
+                element: <UserTagVariantCreate />,
+              },
+              {
+                path: "variants/:userTagVariantId/edit",
+                element: <UserTagVariantUpdate />,
               },
               {
                 path: ":userTagId",

@@ -26,7 +26,7 @@ async def test_basic_ticket_workflow(
             price=12,
             tax_rate_id=tax_rate_none.id,
             is_locked=False,
-            restrictions=[],
+            user_tag_variant_ids=[],
             initial_top_up_amount=8,
         ),
     )
@@ -41,7 +41,7 @@ async def test_basic_ticket_workflow(
                 price=12,
                 tax_rate_id=tax_rate_ust.id,
                 is_locked=True,
-                restrictions=[],
+                user_tag_variant_ids=[],
                 initial_top_up_amount=8,
             ),
         )
@@ -55,7 +55,7 @@ async def test_basic_ticket_workflow(
             price=12,
             tax_rate_id=tax_rate_ust.id,
             is_locked=True,
-            restrictions=[],
+            user_tag_variant_ids=[],
             initial_top_up_amount=4,
         ),
     )

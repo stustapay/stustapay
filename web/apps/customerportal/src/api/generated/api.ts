@@ -125,7 +125,6 @@ export type AccountType =
   | "donation_exit"
   | "sepa_exit"
   | "cash_register";
-export type ProductRestriction = "under_16" | "under_18";
 export type UserTagHistoryEntry = {
   user_tag_id: number;
   user_tag_pin: string;
@@ -180,7 +179,8 @@ export type Customer = {
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
-  restriction: ProductRestriction | null;
+  user_tag_variant_ids?: number[];
+  user_tag_variant_names?: string[];
   tag_history: UserTagHistoryEntry[];
   iban: string | null;
   account_name: string | null;
@@ -204,7 +204,8 @@ export type CustomerRead = {
   user_tag_id: number | null;
   user_tag_uid: number | null;
   user_tag_comment?: string | null;
-  restriction: ProductRestriction | null;
+  user_tag_variant_ids?: number[];
+  user_tag_variant_names?: string[];
   tag_history: UserTagHistoryEntryRead[];
   iban: string | null;
   account_name: string | null;
@@ -257,7 +258,7 @@ export type Product = {
   fixed_price: boolean;
   price_in_vouchers?: number | null;
   tax_rate_id: number;
-  restrictions: ProductRestriction[];
+  user_tag_variant_ids: number[];
   is_locked: boolean;
   is_returnable: boolean;
   target_account_id?: number | null;

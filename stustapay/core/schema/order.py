@@ -292,7 +292,8 @@ class CompletedTicketSale(PendingTicketSale):
 
 class CustomerRegistration(BaseModel):
     account_id: int
-    restriction: str | None
+    user_tag_variant_ids: list[int] = []
+    max_user_tag_variant_priority: int | None = None
     ticket_included_top_up: float
     # additional top-up requested on-site
     top_up_amount: float

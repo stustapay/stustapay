@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 import { NewTicket } from "@/api";
-import { RestrictionSelect, TaxRateSelect } from "@/components/features";
+import { TaxRateSelect, UserTagVariantSelect } from "@/components/features";
 
 export type TicketFormProps<T extends NewTicket> = FormikProps<T>;
 
@@ -32,14 +32,14 @@ export function TicketForm<T extends NewTicket>(props: TicketFormProps<T>) {
         value={values.tax_rate_id}
       />
 
-      <RestrictionSelect
+      <UserTagVariantSelect
         label={t("ticket.restriction")}
         multiple={false}
-        value={values.restrictions.length > 0 ? values.restrictions[0] : null}
+        value={values.user_tag_variant_ids.length > 0 ? values.user_tag_variant_ids[0] : null}
         disabled={values.is_locked}
-        onChange={(value) => setFieldValue("restrictions", [value])}
-        error={touched.restrictions && !!errors.restrictions}
-        helperText={(touched.restrictions && errors.restrictions) as string}
+        onChange={(value) => setFieldValue("user_tag_variant_ids", value == null ? [] : [value])}
+        error={touched.user_tag_variant_ids && !!errors.user_tag_variant_ids}
+        helperText={(touched.user_tag_variant_ids && errors.user_tag_variant_ids) as string}
       />
     </>
   );

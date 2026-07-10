@@ -180,25 +180,25 @@ alter table till_button_product add constraint references_max_one_returnable_pro
 alter table till_button_product add constraint references_max_one_voucher_product
     check (check_button_references_max_one_voucher_product(button_id, product_id));
 
-create or replace function check_till_layout_contains_tickets_of_unique_restrictions(
+create or replace function check_till_layout_contains_tickets_of_unique_user_tag_variants(
     layout_id bigint,
     ticket_id bigint
 ) returns boolean as
 $$
 <<locals>> declare
-    restrictions            text[];
+    user_tag_variant_ids            bigint[];
     n_current_tickets_in_layout int;
 begin
     select
-        t.restrictions
-    into locals.restrictions
+        t.user_tag_variant_ids
+    into locals.user_tag_variant_ids
     from
         ticket t
     where
-        t.id = check_till_layout_contains_tickets_of_unique_restrictions.ticket_id;
+        t.id = check_till_layout_contains_tickets_of_unique_user_tag_variants.ticket_id;
 
-    if array_length(locals.restrictions, 1) > 1 then
-        raise 'ticket in till layout has more than one restriction set';
+    if array_length(locals.user_tag_variant_ids, 1) > 1 then
+        raise 'ticket in till layout has more than one user tag variant set';
     end if;
 
     select
@@ -208,12 +208,12 @@ begin
         ticket t
         join till_layout_to_ticket tltt on t.id = tltt.ticket_id
     where
-        t.id != check_till_layout_contains_tickets_of_unique_restrictions.ticket_id
-        and tltt.layout_id = check_till_layout_contains_tickets_of_unique_restrictions.layout_id
-        and (t.restrictions = locals.restrictions);
+        t.id != check_till_layout_contains_tickets_of_unique_user_tag_variants.ticket_id
+        and tltt.layout_id = check_till_layout_contains_tickets_of_unique_user_tag_variants.layout_id
+        and (t.user_tag_variant_ids = locals.user_tag_variant_ids);
 
     if locals.n_current_tickets_in_layout > 0 then
-        raise '% tickets in layout with same restrictions: %', locals.n_current_tickets_in_layout, locals.restrictions;
+        raise '% tickets in layout with same user tag variants: %', locals.n_current_tickets_in_layout, locals.user_tag_variant_ids;
     end if;
 
     return locals.n_current_tickets_in_layout < 1;
@@ -221,8 +221,8 @@ end
 $$ language plpgsql
     set search_path = "$user", public;
 
-alter table till_layout_to_ticket add constraint unique_restriction_ticket_per_layout
-    check (check_till_layout_contains_tickets_of_unique_restrictions(layout_id, ticket_id));
+alter table till_layout_to_ticket add constraint unique_user_tag_variant_ticket_per_layout
+    check (check_till_layout_contains_tickets_of_unique_user_tag_variants(layout_id, ticket_id));
 
 -- not null constraints do not work if the data is populated by a pre insert trigger, constraints are
 -- checked before any trigger runs

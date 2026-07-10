@@ -44,7 +44,7 @@ async def sale_products(
             tax_rate_id=tax_rate_ust.id,
             target_account_id=None,
             is_locked=True,
-            restrictions=[],
+            user_tag_variant_ids=[],
             is_returnable=False,
         ),
     )

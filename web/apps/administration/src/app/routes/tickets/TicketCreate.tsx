@@ -16,7 +16,7 @@ const initialValues: NewTicket = {
   tax_rate_id: null as unknown as number,
   initial_top_up_amount: 0,
   is_locked: false,
-  restrictions: [],
+  user_tag_variant_ids: [],
 };
 
 export const TicketCreate: React.FC = withPrivilegeGuard("node_administration", () => {

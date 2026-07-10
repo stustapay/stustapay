@@ -2,8 +2,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from stustapay.core.schema.product import ProductRestriction
-
 
 def format_user_tag_uid(uid: Optional[int]) -> Optional[str]:
     if uid is None:
@@ -41,6 +39,6 @@ class UserTagSecret(NewUserTagSecret):
 
 class NewUserTag(BaseModel):
     pin: str
-    restriction: ProductRestriction | None = None
     secret_id: int
-    variant: str | None = None
+    variant_ids: list[int] = []
+    variant_names: list[str] = []

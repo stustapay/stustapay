@@ -1,17 +1,11 @@
 import { z } from "zod";
 
-export const ProductRestrictionSchema = z.union([z.literal("under_16"), z.literal("under_18")]);
-
-export type ProductRestriction = z.infer<typeof ProductRestrictionSchema>;
-
-export const ProductRestrictions: ProductRestriction[] = ["under_16", "under_18"];
-
 export const NewProductSchema = z.object({
   name: z.string().min(1),
   price: z.number().nullable(),
   fixed_price: z.boolean(),
   price_in_vouchers: z.number().optional().nullable(),
-  restrictions: z.array(ProductRestrictionSchema),
+  user_tag_variant_ids: z.array(z.number().int()),
   is_locked: z.boolean(),
   is_returnable: z.boolean(),
   tax_rate_id: z.number().int(),

@@ -47,7 +47,7 @@ from stustapay.core.schema.order import (
     get_source_account,
     get_target_account,
 )
-from stustapay.core.schema.product import Product, ProductRestriction, ProductType
+from stustapay.core.schema.product import Product, ProductType
 from stustapay.core.schema.terminal import CurrentTerminal
 from stustapay.core.schema.ticket import (
     NewTicketScan,
@@ -290,7 +290,7 @@ class OrderService(Service[Config]):
     @staticmethod
     async def _preprocess_order_positions(
         *,
-        customer_restrictions: Optional[ProductRestriction],
+        customer_user_tag_variant_ids: list[int],
         booked_products: list[BookedProduct],
     ) -> list[PendingLineItem]:
         # we preprocess positions in a new order to group the resulting line items
@@ -325,7 +325,11 @@ class OrderService(Service[Config]):
                     raise RuntimeError("invalid internal price state, should not happen")
 
                 # check age restriction
-                if customer_restrictions is not None and customer_restrictions in product.restrictions:
+                if (
+                    len(customer_user_tag_variant_ids) > 0
+                    and len(product.user_tag_variant_ids) > 0
+                    and any(variant_id in product.user_tag_variant_ids for variant_id in customer_user_tag_variant_ids)
+                ):
                     restricted_product_names.add(product.name)
 
                 line_items_by_product[product.id] = PendingLineItem(
@@ -354,7 +358,7 @@ class OrderService(Service[Config]):
     async def _fetch_customer_by_user_tag(*, conn: Connection, node: Node, customer_tag_uid: int) -> Account:
         customer = await conn.fetch_maybe_one(
             Account,
-            "select a.*, t.restriction "
+            "select a.* "
             "from user_tag t join account_with_history a on t.id = a.user_tag_id "
             "where t.uid = $1 and a.type = 'private' and a.node_id = any($2)",
             customer_tag_uid,
@@ -387,7 +391,11 @@ class OrderService(Service[Config]):
         account = await conn.fetch_maybe_one(
             Account,
             "select a.*, "
-            "(select t.restriction from user_tag t where t.pin = $1 and t.node_id = any($2)) as restriction, "
+            "(select coalesce(array_agg(uttv.variant_id) filter (where uttv.variant_id is not null), "
+            "'{}'::bigint array) "
+            " from user_tag t "
+            " left join user_tag_to_variant uttv on t.id = uttv.user_tag_id "
+            " where t.pin = $1 and t.node_id = any($2)) as user_tag_variant_ids, "
             "null as user_tag_uid, "
             "'[]'::json as tag_history "
             "from account a "
@@ -612,8 +620,8 @@ class OrderService(Service[Config]):
             conn=conn, till_profile_id=till.active_profile_id, buttons=new_sale.buttons
         )
         line_items = await self._preprocess_order_positions(
-            customer_restrictions=(
-                customer_account.restriction if tag_payment and customer_account is not None else None
+            customer_user_tag_variant_ids=(
+                customer_account.user_tag_variant_ids if tag_payment and customer_account is not None else []
             ),
             booked_products=booked_products,
         )
@@ -1284,8 +1292,13 @@ class OrderService(Service[Config]):
                 "from ticket t "
                 "join till_layout_to_ticket tltt on tltt.ticket_id = t.id "
                 "join user_tag ut "
-                "   on (ut.restriction = any(t.restrictions) "
-                "       or t.restrictions = '{}'::text array and ut.restriction is null) "
+                "   on (exists ("
+                "           select from user_tag_to_variant uttv "
+                "           where uttv.user_tag_id = ut.id "
+                "             and uttv.variant_id = any(t.user_tag_variant_ids)"
+                "       ) "
+                "       or (t.user_tag_variant_ids = '{}'::bigint array "
+                "           and not exists (select from user_tag_to_variant uttv where uttv.user_tag_id = ut.id))) "
                 "where tltt.layout_id = $1 and ut.pin = $2",
                 layout_id,
                 customer_tag.tag_pin,

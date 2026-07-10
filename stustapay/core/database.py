@@ -16,7 +16,7 @@ from .schema import DB_CODE_PATH, MIGRATION_PATH
 
 logger = logging.getLogger(__name__)
 
-CURRENT_REVISION = "f3c8a1b2"
+CURRENT_REVISION = "a8f3e291"
 DB_FUNCTION_BLACKLIST = [
     "get_default_till_dsfinvk_brand",
     "get_default_till_dsfinvk_model",
