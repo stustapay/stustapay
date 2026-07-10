@@ -152,7 +152,10 @@ const bonFormStep: FormStep = {
   title: "Bon",
   initialValues: {
     bon_issuer: "",
-    bon_address: "",
+    bon_street: "",
+    bon_zip: "",
+    bon_city: "",
+    bon_country: "DEU",
     bon_title: "",
   },
   schema: BonSettingsSchema,

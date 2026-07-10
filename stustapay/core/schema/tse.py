@@ -16,6 +16,24 @@ class TseType(enum.Enum):
     diebold_nixdorf = "diebold_nixdorf"
 
 
+class TseFormFactor(enum.Enum):
+    sd_card = "sd_card"
+    usb = "usb"
+    cloud = "cloud"
+
+
+TSE_TYPE_TO_FORM_FACTOR: dict[TseType, TseFormFactor] = {
+    TseType.diebold_nixdorf: TseFormFactor.usb,
+}
+
+
+def form_factor_for_tse_type(tse_type: TseType) -> TseFormFactor:
+    try:
+        return TSE_TYPE_TO_FORM_FACTOR[tse_type]
+    except KeyError as exc:
+        raise RuntimeError(f"unmapped TSE type for form factor: {tse_type!r}") from exc
+
+
 class UpdateTse(BaseModel):
     name: str
     ws_url: str

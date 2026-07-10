@@ -13,6 +13,7 @@ const initialValues: TaxRate = {
   name: "",
   rate: 0,
   description: "",
+  tax_type: "no_tax",
 };
 
 export const TaxRateCreate: React.FC = () => {
