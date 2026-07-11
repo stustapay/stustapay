@@ -58,7 +58,7 @@ from stustapay.payment.sumup.api import (
 SUMUP_CHECKOUT_POLL_INTERVAL = timedelta(seconds=5)
 SUMUP_INITIAL_CHECK_TIMEOUT = timedelta(seconds=20)
 SUMUP_PENDING_ORDER_TIMEOUT = timedelta(minutes=5)  # Time after which pending orders are considered failed
-MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK = 5
+MAX_PENDING_SHARED_TOPUP_CHECKOUTS_PER_LINK = 50
 GROUP_TOPUP_DISABLED_MESSAGE = "Group top-up is currently disabled"
 
 
