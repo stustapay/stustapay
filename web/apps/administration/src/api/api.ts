@@ -7,8 +7,6 @@ import {
   CashierShift,
   Order,
   PayoutRunWithStats,
-  Product,
-  TaxRate,
   Ticket,
   Till,
   TillButton,
@@ -54,10 +52,6 @@ const userRoleAdapter = createEntityAdapter<UserRole>({
   sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 });
 
-const productAdapter = createEntityAdapter<Product>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
 const cashierShiftAdapter = createEntityAdapter<CashierShift>({
   sortComparer: (a, b) => a.ended_at.localeCompare(b.ended_at),
 });
@@ -66,10 +60,6 @@ const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id -
 
 const transactionAdapter = createEntityAdapter<Transaction>({
   sortComparer: (a, b) => b.id - a.id,
-});
-
-const taxRateAdapter = createEntityAdapter<TaxRate>({
-  sortComparer: (a, b) => a.name.localeCompare(b.name),
 });
 
 const ticketAdapter = createEntityAdapter<Ticket>({
@@ -122,18 +112,6 @@ export const api = generatedApi.enhanceEndpoints({
     },
     listUserRoles: {
       providesTags: (result) => generateCacheKeys("user-roles", result),
-    },
-    listProducts: {
-      providesTags: (result) => generateCacheKeys("products", result),
-    },
-    getProduct: {
-      providesTags: (result, error, arg) => [{ type: "products", id: arg.productId }],
-    },
-    listTaxRates: {
-      providesTags: (result) => generateCacheKeys("tax-rates", result),
-    },
-    getTaxRate: {
-      providesTags: (result, error, arg) => [{ type: "tax-rates", id: arg.taxRateId }],
     },
     listUserTagVariants: {
       providesTags: (result) => generateCacheKeys("user_tags", result),
@@ -262,9 +240,6 @@ export const { selectUserAll, selectUserById, selectUserEntities, selectUserIds,
 export const { selectUserRoleAll, selectUserRoleById, selectUserRoleEntities, selectUserRoleIds, selectUserRoleTotal } =
   convertEntityAdaptorSelectors("UserRole", userRoleAdapter.getSelectors());
 
-export const { selectProductAll, selectProductById, selectProductEntities, selectProductIds, selectProductTotal } =
-  convertEntityAdaptorSelectors("Product", productAdapter.getSelectors());
-
 export const {
   selectCashierShiftAll,
   selectCashierShiftById,
@@ -283,9 +258,6 @@ export const {
   selectTransactionIds,
   selectTransactionTotal,
 } = convertEntityAdaptorSelectors("Transaction", transactionAdapter.getSelectors());
-
-export const { selectTaxRateAll, selectTaxRateById, selectTaxRateEntities, selectTaxRateIds, selectTaxRateTotal } =
-  convertEntityAdaptorSelectors("TaxRate", taxRateAdapter.getSelectors());
 
 export const {
   selectUserTagVariantAll,

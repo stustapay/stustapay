@@ -46,7 +46,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_Product__int_"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  },
+                  "title": "Response List Products Products Get"
                 }
               }
             }
@@ -126,63 +130,6 @@
       }
     },
     "/products/{product_id}": {
-      "get": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Get Product",
-        "operationId": "get_product",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "product_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Product Id"
-            }
-          },
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Product"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "products"
@@ -1178,7 +1125,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NormalizedList_TaxRate__int_"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxRate"
+                  },
+                  "title": "Response List Tax Rates Tax Rates Get"
                 }
               }
             }
@@ -1258,63 +1209,6 @@
       }
     },
     "/tax-rates/{tax_rate_id}": {
-      "get": {
-        "tags": [
-          "tax-rates"
-        ],
-        "summary": "Get Tax Rate",
-        "operationId": "get_tax_rate",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "tax_rate_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Tax Rate Id"
-            }
-          },
-          {
-            "name": "node_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Node Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaxRate"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "tax-rates"
@@ -13111,54 +13005,6 @@
           "entities"
         ],
         "title": "NormalizedList[PayoutRunWithStats, int]"
-      },
-      "NormalizedList_Product__int_": {
-        "properties": {
-          "ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Ids"
-          },
-          "entities": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Product"
-            },
-            "type": "object",
-            "title": "Entities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ids",
-          "entities"
-        ],
-        "title": "NormalizedList[Product, int]"
-      },
-      "NormalizedList_TaxRate__int_": {
-        "properties": {
-          "ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Ids"
-          },
-          "entities": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/TaxRate"
-            },
-            "type": "object",
-            "title": "Entities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ids",
-          "entities"
-        ],
-        "title": "NormalizedList[TaxRate, int]"
       },
       "NormalizedList_Terminal__int_": {
         "properties": {

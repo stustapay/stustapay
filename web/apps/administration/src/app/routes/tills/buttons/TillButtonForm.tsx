@@ -1,12 +1,14 @@
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { IconButton, List, ListItem, ListItemText } from "@mui/material";
 import { FormTextField } from "@stustapay/form-components";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { NewTillButton, Product, selectProductById, useListProductsQuery } from "@/api";
+import { NewTillButton, Product } from "@/api";
 import { ProductSelect } from "@/components/features";
+import { getProductCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 interface ProductSelectProps {
@@ -14,15 +16,41 @@ interface ProductSelectProps {
   onChange: (productIds: number[]) => void;
 }
 
+const ProductListItem: React.FC<{ productId: number; removeProduct: (productId: number) => void }> = ({
+  productId,
+  removeProduct,
+}) => {
+  const { currentNode } = useCurrentNode();
+  const { data: product } = useLiveQuery(
+    (q) =>
+      q
+        .from({ products: getProductCollection(currentNode.id) })
+        .where(({ products }) => eq(products.id, productId))
+        .findOne(),
+    [currentNode.id]
+  );
+
+  if (!product) {
+    return null;
+  }
+  return (
+    <ListItem
+      key={product.id}
+      secondaryAction={
+        <IconButton color="error" onClick={() => removeProduct(product.id)}>
+          <DeleteIcon />
+        </IconButton>
+      }
+    >
+      <ListItemText primary={product.name} />
+    </ListItem>
+  );
+};
+
 const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }) => {
   const { t } = useTranslation();
-  const { currentNode } = useCurrentNode();
-  const { data: products } = useListProductsQuery({ nodeId: currentNode.id });
 
   const [currentSelectedProduct, setCurrentSelectedProduct] = React.useState<Product | null>(null);
-
-  const getProductById = (id: number) => (products != null ? selectProductById(products, id) : undefined);
-  const mapped = products ? (productIds.map((id) => getProductById(id)) as Product[]) : [];
 
   const removeProduct = (productId: number) => {
     onChange(productIds.filter((pId) => pId !== productId));
@@ -38,17 +66,8 @@ const ProductSelection: React.FC<ProductSelectProps> = ({ productIds, onChange }
 
   return (
     <List>
-      {mapped.map((product) => (
-        <ListItem
-          key={product.id}
-          secondaryAction={
-            <IconButton color="error" onClick={() => removeProduct(product.id)}>
-              <DeleteIcon />
-            </IconButton>
-          }
-        >
-          <ListItemText primary={product.name} />
-        </ListItem>
+      {productIds.map((productId) => (
+        <ProductListItem key={productId} productId={productId} removeProduct={removeProduct} />
       ))}
       <ProductSelect
         label={t("button.addProductToButton")}

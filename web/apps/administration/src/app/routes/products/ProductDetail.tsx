@@ -7,17 +7,12 @@ import {
 } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import {
-  selectUserTagVariantEntities,
-  useDeleteProductMutation,
-  useGetProductQuery,
-  useListUserTagVariantsQuery,
-  useUpdateProductMutation,
-} from "@/api";
+import { selectUserTagVariantEntities, useListUserTagVariantsQuery } from "@/api";
 import { ProductRoutes, tillButtonCreateFromProduct, TillButtonsRoutes } from "@/app/routes";
 import {
   DetailBoolField,
@@ -27,6 +22,7 @@ import {
   DetailNumberField,
   DetailView,
 } from "@/components";
+import { getProductCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
 
 export const ProductDetail: React.FC = () => {
@@ -34,40 +30,46 @@ export const ProductDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { productId } = useParams();
   const navigate = useNavigate();
-  const [deleteProduct] = useDeleteProductMutation();
-  const { data: product, error } = useGetProductQuery({ nodeId: currentNode.id, productId: Number(productId) });
+
+  const {
+    data: product,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ products: getProductCollection(currentNode.id) })
+        .where(({ products }) => eq(products.id, Number(productId)))
+        .findOne(),
+    [currentNode.id, productId]
+  );
+
   const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
-  const [updateProduct] = useUpdateProductMutation();
   const openModal = useOpenModal();
   const canCreateTillButtonAtNode = useCurrentUserHasPrivilegeAtNode(TillButtonsRoutes.privilege);
 
-  if (error) {
+  if (isError) {
     return <Navigate to={ProductRoutes.list()} />;
   }
 
+  if (isLoading || !product) {
+    return <Loading />;
+  }
   const openConfirmDeleteDialog = () => {
     openModal({
       type: "confirm",
       title: t("product.delete"),
       content: t("product.deleteDescription"),
       onConfirm: () => {
-        deleteProduct({ nodeId: currentNode.id, productId: Number(productId) }).then(() =>
-          navigate(ProductRoutes.list())
-        );
+        getProductCollection(currentNode.id).delete(product.id);
         return true;
       },
     });
   };
 
-  if (product === undefined) {
-    return <Loading />;
-  }
-
   const handleToggleLockProduct = () => {
-    updateProduct({
-      nodeId: currentNode.id,
-      productId: product.id,
-      newProduct: { ...product, is_locked: !product.is_locked },
+    getProductCollection(currentNode.id).update(product.id, (draft) => {
+      draft.is_locked = !draft.is_locked;
     });
   };
 

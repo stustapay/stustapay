@@ -55,15 +55,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["products"],
       }),
-      getProduct: build.query<GetProductApiResponse, GetProductApiArg>({
-        query: (queryArg) => ({
-          url: `/products/${queryArg.productId}`,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        providesTags: ["products"],
-      }),
       updateProduct: build.mutation<UpdateProductApiResponse, UpdateProductApiArg>({
         query: (queryArg) => ({
           url: `/products/${queryArg.productId}`,
@@ -245,15 +236,6 @@ const injectedRtkApi = api
           },
         }),
         invalidatesTags: ["tax-rates"],
-      }),
-      getTaxRate: build.query<GetTaxRateApiResponse, GetTaxRateApiArg>({
-        query: (queryArg) => ({
-          url: `/tax-rates/${queryArg.taxRateId}`,
-          params: {
-            node_id: queryArg.nodeId,
-          },
-        }),
-        providesTags: ["tax-rates"],
       }),
       updateTaxRate: build.mutation<UpdateTaxRateApiResponse, UpdateTaxRateApiArg>({
         query: (queryArg) => ({
@@ -1549,7 +1531,7 @@ const injectedRtkApi = api
     overrideExisting: false,
   });
 export { injectedRtkApi as api };
-export type ListProductsApiResponse = /** status 200 Successful Response */ NormalizedListProductInt;
+export type ListProductsApiResponse = /** status 200 Successful Response */ Product[];
 export type ListProductsApiArg = {
   nodeId: number;
   showAll?: any;
@@ -1558,11 +1540,6 @@ export type CreateProductApiResponse = /** status 200 Successful Response */ Pro
 export type CreateProductApiArg = {
   nodeId: number;
   newProduct: NewProduct;
-};
-export type GetProductApiResponse = /** status 200 Successful Response */ Product;
-export type GetProductApiArg = {
-  productId: number;
-  nodeId: number;
 };
 export type UpdateProductApiResponse = /** status 200 Successful Response */ Product;
 export type UpdateProductApiArg = {
@@ -1646,7 +1623,7 @@ export type UpdateUserToRolesApiArg = {
   nodeId: number;
   newUserToRoles: NewUserToRoles;
 };
-export type ListTaxRatesApiResponse = /** status 200 Successful Response */ NormalizedListTaxRateInt;
+export type ListTaxRatesApiResponse = /** status 200 Successful Response */ TaxRate[];
 export type ListTaxRatesApiArg = {
   nodeId: number;
 };
@@ -1654,11 +1631,6 @@ export type CreateTaxRateApiResponse = /** status 200 Successful Response */ Tax
 export type CreateTaxRateApiArg = {
   nodeId: number;
   newTaxRate: NewTaxRate;
-};
-export type GetTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
-export type GetTaxRateApiArg = {
-  taxRateId: number;
-  nodeId: number;
 };
 export type UpdateTaxRateApiResponse = /** status 200 Successful Response */ TaxRate;
 export type UpdateTaxRateApiArg = {
@@ -2372,12 +2344,6 @@ export type Product = {
   type: ProductType;
   price_per_voucher?: number | null;
 };
-export type NormalizedListProductInt = {
-  ids: number[];
-  entities: {
-    [key: string]: Product;
-  };
-};
 export type ValidationError = {
   loc: (string | number)[];
   msg: string;
@@ -2514,12 +2480,6 @@ export type TaxRate = {
   tax_type: TaxType;
   id: number;
   node_id: number;
-};
-export type NormalizedListTaxRateInt = {
-  ids: number[];
-  entities: {
-    [key: string]: TaxRate;
-  };
 };
 export type NewTaxRate = {
   name: string;
@@ -3916,8 +3876,6 @@ export const {
   useListProductsQuery,
   useLazyListProductsQuery,
   useCreateProductMutation,
-  useGetProductQuery,
-  useLazyGetProductQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
   useListUsersQuery,
@@ -3943,8 +3901,6 @@ export const {
   useListTaxRatesQuery,
   useLazyListTaxRatesQuery,
   useCreateTaxRateMutation,
-  useGetTaxRateQuery,
-  useLazyGetTaxRateQuery,
   useUpdateTaxRateMutation,
   useDeleteTaxRateMutation,
   useLoginMutation,

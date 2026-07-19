@@ -1,3 +1,4 @@
+import { heyApiPlugin } from "@hey-api/vite-plugin";
 import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import react from "@vitejs/plugin-react";
@@ -27,6 +28,17 @@ export default defineConfig(() => ({
     nxViteTsPaths(),
     nxCopyAssetsPlugin(["*.md"]),
     checker({ typescript: { tsconfigPath: "tsconfig.app.json" } }),
+    heyApiPlugin({
+      config: {
+        input: "../../../api/administration.json",
+        output: "src/db/api/generated",
+        plugins: [
+          { name: "@hey-api/client-fetch", runtimeConfigPath: "@/db/api/runtimeConfig" },
+          { name: "@hey-api/sdk" },
+          { name: "zod" },
+        ],
+      },
+    }),
   ],
   // Uncomment this if you are using workers.
   // worker: {

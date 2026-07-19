@@ -8,17 +8,16 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import {
   Ticket,
-  selectTaxRateById,
   selectTicketAll,
   selectUserTagVariantEntities,
   useDeleteTicketMutation,
-  useListTaxRatesQuery,
   useListTicketsQuery,
   useListUserTagVariantsQuery,
   useUpdateTicketMutation,
 } from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { TaxRateCell } from "@/components/table/TaxRateCell";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TicketList: React.FC = () => {
@@ -38,7 +37,6 @@ export const TicketList: React.FC = () => {
       }),
     }
   );
-  const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
   const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
   const [updateTicket] = useUpdateTicketMutation();
   const [deleteTicket] = useDeleteTicketMutation();
@@ -64,23 +62,6 @@ export const TicketList: React.FC = () => {
       ticketId: ticket.id,
       newTicket: { ...ticket, is_locked: !ticket.is_locked },
     });
-  };
-
-  const renderTaxRate = (id: number) => {
-    if (!taxRates) {
-      return "";
-    }
-
-    const tax = selectTaxRateById(taxRates, id);
-    if (!tax) {
-      return "";
-    }
-
-    return (
-      <Tooltip title={tax.description}>
-        <span>{(tax.rate * 100).toFixed(0)} %</span>
-      </Tooltip>
-    );
   };
 
   const formatUserTagVariant = React.useCallback(
@@ -125,7 +106,7 @@ export const TicketList: React.FC = () => {
       field: "tax_rate_id",
       headerName: t("ticket.taxRate"),
       align: "right",
-      renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
+      renderCell: (params) => <TaxRateCell taxRateId={params.row.tax_rate_id} />,
     },
     {
       field: "total_price",
