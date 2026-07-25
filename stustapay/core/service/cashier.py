@@ -67,25 +67,53 @@ class CashierService(Service[Config]):
     @requires_node(event_only=True)
     @requires_user(node_privileges=[NodePrivilege.node_administration])
     async def get_cashier_shifts(
-        self, *, conn: Connection, current_user: User, node: Node, cashier_id: int
+        self,
+        *,
+        conn: Connection,
+        current_user: User,
+        node: Node,
+        cashier_id: Optional[int] = None,
+        cash_register_id: Optional[int] = None,
+        shift_id: Optional[int] = None,
     ) -> list[CashierShift]:
-        # TODO: tree scope
-        cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
-            conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
-        )
-        if not cashier:
-            raise NotFound(element_type="cashier", element_id=cashier_id)
-        return await conn.fetch_many(CashierShift, "select * from cashier_shift where cashier_id = $1", cashier_id)
+        if cashier_id is not None:
+            cashier = await self.get_cashier(  # pylint: disable=unexpected-keyword-arg
+                conn=conn, current_user=current_user, node=node, cashier_id=cashier_id
+            )
+            if not cashier:
+                raise NotFound(element_type="cashier", element_id=cashier_id)
 
-    @with_db_transaction(read_only=True)
-    @requires_node(event_only=True)
-    @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def get_cashier_shifts_for_cash_register(
-        self, *, conn: Connection, cash_register_id: int
-    ) -> list[CashierShift]:
-        return await conn.fetch_many(
-            CashierShift, "select * from cashier_shift where cash_register_id = $1", cash_register_id
+        if cash_register_id is not None:
+            register_exists = await conn.fetchval(
+                "select exists(select from cash_register where id = $1 and node_id = any($2))",
+                cash_register_id,
+                node.ids_to_event_node,
+            )
+            if not register_exists:
+                raise NotFound(element_type="cash_register", element_id=cash_register_id)
+
+        conditions = ["c.node_id = any($1)"]
+        params: list = [node.ids_to_event_node]
+
+        if cashier_id is not None:
+            params.append(cashier_id)
+            conditions.append(f"cs.cashier_id = ${len(params)}")
+
+        if cash_register_id is not None:
+            params.append(cash_register_id)
+            conditions.append(f"cs.cash_register_id = ${len(params)}")
+
+        if shift_id is not None:
+            params.append(shift_id)
+            conditions.append(f"cs.id = ${len(params)}")
+
+        query = (
+            "select cs.* from cashier_shift cs "
+            "join cashier c on cs.cashier_id = c.id "
+            f"where {' and '.join(conditions)} "
+            "order by cs.started_at desc"
         )
+        return await conn.fetch_many(CashierShift, query, *params)
 
     @staticmethod
     async def _get_current_cashier_shift_start(*, conn: Connection, cashier_id: int) -> Optional[datetime]:

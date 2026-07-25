@@ -1,12 +1,13 @@
 import { Loading } from "@stustapay/components";
 import { NewUserTagVariantSchema } from "@stustapay/models";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 
-import { useGetUserTagVariantQuery, useUpdateUserTagVariantMutation } from "@/api";
 import { UserTagVariantRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
+import { EditLayoutV2 } from "@/components";
+import { getUserTagVariantCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { UserTagVariantForm } from "./UserTagTypeForm";
@@ -18,11 +19,17 @@ export const UserTagVariantUpdate: React.FC = () => {
   const {
     data: userTagVariant,
     isLoading,
-    error,
-  } = useGetUserTagVariantQuery({ nodeId: currentNode.id, userTagVariantId: Number(userTagVariantId) });
-  const [updateUserTagVariant] = useUpdateUserTagVariantMutation();
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ userTagVariants: getUserTagVariantCollection(currentNode.id) })
+        .where(({ userTagVariants }) => eq(userTagVariants.id, Number(userTagVariantId)))
+        .findOne(),
+    [currentNode.id, userTagVariantId]
+  );
 
-  if (error) {
+  if (isError) {
     return <Navigate to={UserTagVariantRoutes.list()} />;
   }
 
@@ -31,7 +38,7 @@ export const UserTagVariantUpdate: React.FC = () => {
   }
 
   return (
-    <EditLayout
+    <EditLayoutV2
       title={t("userTagVariant.update")}
       successRoute={UserTagVariantRoutes.list()}
       initialValues={{
@@ -41,10 +48,10 @@ export const UserTagVariantUpdate: React.FC = () => {
       }}
       validationSchema={NewUserTagVariantSchema}
       onSubmit={(values) =>
-        updateUserTagVariant({
-          nodeId: currentNode.id,
-          userTagVariantId: userTagVariant.id,
-          newUserTagVariant: values,
+        getUserTagVariantCollection(currentNode.id).update(userTagVariant.id, (draft) => {
+          draft.variant_name = values.variant_name;
+          draft.description = values.description;
+          draft.priority = values.priority;
         })
       }
       form={UserTagVariantForm}

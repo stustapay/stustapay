@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 
 import { usePayoutRunSepaXmlMutation } from "@/api";
+import { refetchNodeCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export interface DownloadSepaXMLModalProps {
@@ -50,6 +51,7 @@ export const DownloadSepaXMLModal: React.FC<DownloadSepaXMLModalProps> = ({ payo
       link.setAttribute("download", `sepa__run_${payoutRunId}__${values.execution_date}.xml`);
       link.click();
       link.remove();
+      refetchNodeCollection(currentNode.id, "payout-runs");
       onClose();
     } catch {
       toast.error("Error downloading sepa xml");

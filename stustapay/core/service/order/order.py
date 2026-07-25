@@ -12,6 +12,7 @@ from sftkit.service import Service, with_db_transaction
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.config import Config
+from stustapay.core.http.normalize_data import PaginatedList
 from stustapay.core.schema.account import (
     Account,
     AccountType,
@@ -70,6 +71,7 @@ from stustapay.core.service.common.decorators import (
     requires_user,
 )
 from stustapay.core.service.common.error import InvalidArgument, ServiceException
+from stustapay.core.service.customer.common import fetch_customer
 from stustapay.core.service.order.pending_order import (
     fetch_maybe_pending_order,
     fetch_pending_order,
@@ -1573,42 +1575,130 @@ class OrderService(Service[Config]):
             node.event_node_id,
         )
 
-    @with_db_transaction(read_only=True)
-    @requires_node()
-    @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def list_orders(self, *, conn: Connection, node: Node, customer_account_id: int) -> list[Order]:
-        return await conn.fetch_many(
-            Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where customer_account_id = $1), $2)",
-            customer_account_id,
-            node.event_node_id,
+    @staticmethod
+    async def _validate_cash_register_at_node(*, conn: Connection, node: Node, cash_register_id: int) -> None:
+        exists = await conn.fetchval(
+            "select exists("
+            "  select from cash_register cr join node n on cr.node_id = n.id "
+            "  where cr.id = $1 and (cr.node_id = any($2) or $3 = any(n.parent_ids))"
+            ")",
+            cash_register_id,
+            node.ids_to_event_node,
+            node.id,
         )
+        if not exists:
+            raise NotFound(element_type="cash_register", element_id=cash_register_id)
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def list_orders_by_till(self, *, conn: Connection, node: Node, till_id: int) -> list[Order]:
-        return await conn.fetch_many(
+    async def list_orders(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        customer_account_id: Optional[int] = None,
+        till_id: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 500,
+    ) -> PaginatedList[Order]:
+        if customer_account_id is None and till_id is None:
+            raise InvalidArgument("At least one of customer_account_id or till_id must be provided")
+
+        if customer_account_id is not None:
+            await fetch_customer(conn=conn, node=node, customer_id=customer_account_id)
+        if till_id is not None and await fetch_till(conn=conn, node=node, till_id=till_id) is None:
+            raise NotFound(element_type="till", element_id=till_id)
+
+        if customer_account_id is not None and till_id is not None:
+            total = await conn.fetchval(
+                "select count(*) from ordr o where o.customer_account_id = $1 and o.till_id = $2",
+                customer_account_id,
+                till_id,
+            )
+            order_ids = await conn.fetch(
+                "select o.id from ordr o where o.customer_account_id = $1 and o.till_id = $2 "
+                "order by o.booked_at desc limit $3 offset $4",
+                customer_account_id,
+                till_id,
+                limit,
+                offset,
+            )
+        elif customer_account_id is not None:
+            total = await conn.fetchval(
+                "select count(*) from ordr o where o.customer_account_id = $1",
+                customer_account_id,
+            )
+            order_ids = await conn.fetch(
+                "select o.id from ordr o where o.customer_account_id = $1 order by o.booked_at desc limit $2 offset $3",
+                customer_account_id,
+                limit,
+                offset,
+            )
+        else:
+            total = await conn.fetchval(
+                "select count(*) from ordr o where o.till_id = $1",
+                till_id,
+            )
+            order_ids = await conn.fetch(
+                "select o.id from ordr o where o.till_id = $1 order by o.booked_at desc limit $2 offset $3",
+                till_id,
+                limit,
+                offset,
+            )
+
+        if not order_ids:
+            return PaginatedList(items=[], total=total)
+
+        orders = await conn.fetch_many(
             Order,
-            "select * from order_value_prefiltered((select array_agg(o.id) from ordr o where till_id = $1), $2)",
-            till_id,
+            "select * from order_value_prefiltered($1, $2)",
+            [row["id"] for row in order_ids],
             node.event_node_id,
         )
+        return PaginatedList(items=orders, total=total)
 
     @with_db_transaction(read_only=True)
     @requires_node()
     @requires_user(node_privileges=[NodePrivilege.node_administration])
-    async def list_transactions_by_cash_register(
-        self, *, conn: Connection, node: Node, cash_register_id: int
-    ) -> list[Transaction]:
+    async def list_transactions(
+        self,
+        *,
+        conn: Connection,
+        node: Node,
+        cash_register_id: int | None = None,
+        transaction_id: int | None = None,
+        offset: int = 0,
+        limit: int = 500,
+    ) -> PaginatedList[Transaction]:
+        if transaction_id is not None:
+            transaction = await fetch_transaction(conn=conn, node=node, transaction_id=transaction_id)
+            return PaginatedList(items=[transaction], total=1)
+
+        if cash_register_id is None:
+            return PaginatedList(items=[], total=0)
+
+        await self._validate_cash_register_at_node(conn=conn, node=node, cash_register_id=cash_register_id)
         cash_register_account_id = await get_cash_register_account_id(
             conn=conn, node=node, cash_register_id=cash_register_id
         )
-        return await conn.fetch_many(
-            Transaction,
-            "select * from transaction_with_order t where source_account = $1 or target_account = $1",
+
+        total = await conn.fetchval(
+            "select count(*) from transaction_with_order where source_account = $1 or target_account = $1",
             cash_register_account_id,
         )
+
+        transactions = await conn.fetch_many(
+            Transaction,
+            "select * from transaction_with_order "
+            "where source_account = $1 or target_account = $1 "
+            "order by booked_at desc limit $2 offset $3",
+            cash_register_account_id,
+            limit,
+            offset,
+        )
+
+        return PaginatedList(items=transactions, total=total)
 
     @with_db_transaction(read_only=True)
     @requires_node()

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AllowCustomerPayoutData, AllowCustomerPayoutErrors, AllowCustomerPayoutResponses, ArchiveNodeData, ArchiveNodeErrors, ArchiveNodeResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ChangeMdmDeviceMappingData, ChangeMdmDeviceMappingErrors, ChangeMdmDeviceMappingResponses, ChangePasswordData, ChangePasswordErrors, ChangePasswordResponses, ChangeUserPasswordData, ChangeUserPasswordErrors, ChangeUserPasswordResponses, CheckPretixConnectionData, CheckPretixConnectionErrors, CheckPretixConnectionResponses, CloseOutCashierData, CloseOutCashierErrors, CloseOutCashierResponses, ConfigureSumupTokenData, ConfigureSumupTokenErrors, ConfigureSumupTokenResponses, CreateEventData, CreateEventErrors, CreateEventResponses, CreateNodeData, CreateNodeErrors, CreateNodeResponses, CreatePayoutRunData, CreatePayoutRunErrors, CreatePayoutRunResponses, CreateProductData, CreateProductErrors, CreateProductResponses, CreateRegisterData, CreateRegisterErrors, CreateRegisterResponses, CreateRegisterStockingData, CreateRegisterStockingErrors, CreateRegisterStockingResponses, CreateTaxRateData, CreateTaxRateErrors, CreateTaxRateResponses, CreateTerminalData, CreateTerminalErrors, CreateTerminalResponses, CreateTicketData, CreateTicketErrors, CreateTicketResponses, CreateTillButtonData, CreateTillButtonErrors, CreateTillButtonResponses, CreateTillData, CreateTillErrors, CreateTillLayoutData, CreateTillLayoutErrors, CreateTillLayoutResponses, CreateTillProfileData, CreateTillProfileErrors, CreateTillProfileResponses, CreateTillResponses, CreateTseData, CreateTseErrors, CreateTseResponses, CreateUserData, CreateUserErrors, CreateUserResponses, CreateUserRoleData, CreateUserRoleErrors, CreateUserRoleResponses, CreateUserTagsData, CreateUserTagSecretData, CreateUserTagSecretErrors, CreateUserTagSecretResponses, CreateUserTagsErrors, CreateUserTagsResponses, CreateUserTagVariantData, CreateUserTagVariantErrors, CreateUserTagVariantResponses, DeleteNodeData, DeleteNodeErrors, DeleteNodeResponses, DeleteProductData, DeleteProductErrors, DeleteProductResponses, DeleteRegisterData, DeleteRegisterErrors, DeleteRegisterResponses, DeleteRegisterStockingData, DeleteRegisterStockingErrors, DeleteRegisterStockingResponses, DeleteTaxRateData, DeleteTaxRateErrors, DeleteTaxRateResponses, DeleteTerminalData, DeleteTerminalErrors, DeleteTerminalResponses, DeleteTicketData, DeleteTicketErrors, DeleteTicketResponses, DeleteTillButtonData, DeleteTillButtonErrors, DeleteTillButtonResponses, DeleteTillData, DeleteTillErrors, DeleteTillLayoutData, DeleteTillLayoutErrors, DeleteTillLayoutResponses, DeleteTillProfileData, DeleteTillProfileErrors, DeleteTillProfileResponses, DeleteTillResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, DeleteUserRoleData, DeleteUserRoleErrors, DeleteUserRoleResponses, DeleteUserTagVariantData, DeleteUserTagVariantErrors, DeleteUserTagVariantResponses, DisableAccountData, DisableAccountErrors, DisableAccountResponses, EditOrderData, EditOrderErrors, EditOrderResponses, ExportAo146aData, ExportAo146aErrors, ExportAo146aResponses, ExportDsfinvkData, ExportDsfinvkErrors, ExportDsfinvkResponses, FetchPretixProductsData, FetchPretixProductsErrors, FetchPretixProductsResponses, FindCustomersData, FindCustomersErrors, FindCustomersResponses, FindUserTagsData, FindUserTagsErrors, FindUserTagsResponses, ForceLogoutUserData, ForceLogoutUserErrors, ForceLogoutUserResponses, GenerateDailyReportData, GenerateDailyReportErrors, GenerateDailyReportResponses, GeneratePayoutReportData, GeneratePayoutReportErrors, GeneratePayoutReportResponses, GenerateRevenueReportData, GenerateRevenueReportErrors, GenerateRevenueReportResponses, GenerateTestBonData, GenerateTestBonErrors, GenerateTestBonResponses, GenerateTestDailyReportData, GenerateTestDailyReportErrors, GenerateTestDailyReportResponses, GenerateTestRevenueReportData, GenerateTestRevenueReportErrors, GenerateTestRevenueReportResponses, GenerateWebhookUrlData, GenerateWebhookUrlErrors, GenerateWebhookUrlResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetAuditLogData, GetAuditLogErrors, GetAuditLogResponses, GetBlobData, GetBlobErrors, GetBlobResponses, GetCashierShiftsData, GetCashierShiftsErrors, GetCashierShiftsForRegisterData, GetCashierShiftsForRegisterErrors, GetCashierShiftsForRegisterResponses, GetCashierShiftsResponses, GetCashierShiftStatsData, GetCashierShiftStatsErrors, GetCashierShiftStatsResponses, GetCashRegisterAdminData, GetCashRegisterAdminErrors, GetCashRegisterAdminResponses, GetCustomerData, GetCustomerErrors, GetCustomerResponses, GetCustomersWithBlockedPayoutData, GetCustomersWithBlockedPayoutErrors, GetCustomersWithBlockedPayoutResponses, GetEntryStatsData, GetEntryStatsErrors, GetEntryStatsResponses, GetEventDesignData, GetEventDesignErrors, GetEventDesignResponses, GetFreeTicketStatsData, GetFreeTicketStatsErrors, GetFreeTicketStatsResponses, GetMdmDeviceLocationData, GetMdmDeviceLocationErrors, GetMdmDeviceLocationResponses, GetMoneyOverviewData, GetMoneyOverviewErrors, GetMoneyOverviewResponses, GetOrderBonData, GetOrderBonErrors, GetOrderBonResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetPaymentMethodStatsData, GetPaymentMethodStatsErrors, GetPaymentMethodStatsResponses, GetPayOutStatsData, GetPayOutStatsErrors, GetPayOutStatsResponses, GetPresaleStatsData, GetPresaleStatsErrors, GetPresaleStatsResponses, GetProductData, GetProductErrors, GetProductResponses, GetProductStatsData, GetProductStatsErrors, GetProductStatsResponses, GetPublicConfigData, GetPublicConfigErrors, GetPublicConfigResponses, GetRestrictedEventSettingsData, GetRestrictedEventSettingsErrors, GetRestrictedEventSettingsResponses, GetSumupCheckoutData, GetSumupCheckoutErrors, GetSumupCheckoutResponses, GetTaxRateData, GetTaxRateErrors, GetTaxRateResponses, GetTerminalData, GetTerminalErrors, GetTerminalResponses, GetTicketData, GetTicketErrors, GetTicketResponses, GetTillButtonData, GetTillButtonErrors, GetTillButtonResponses, GetTillData, GetTillErrors, GetTillLayoutData, GetTillLayoutErrors, GetTillLayoutResponses, GetTillProfileData, GetTillProfileErrors, GetTillProfileResponses, GetTillResponses, GetTopUpStatsData, GetTopUpStatsErrors, GetTopUpStatsResponses, GetTransactionData, GetTransactionErrors, GetTransactionResponses, GetTreeForCurrentUserData, GetTreeForCurrentUserErrors, GetTreeForCurrentUserResponses, GetUserData, GetUserErrors, GetUserResponses, GetUserTagDetailData, GetUserTagDetailErrors, GetUserTagDetailResponses, GetUserTagVariantData, GetUserTagVariantErrors, GetUserTagVariantResponses, GetUserVoucherGrantStatsData, GetUserVoucherGrantStatsErrors, GetUserVoucherGrantStatsResponses, GetVoucherStatsData, GetVoucherStatsErrors, GetVoucherStatsResponses, ListAuditLogsData, ListAuditLogsErrors, ListAuditLogsResponses, ListCashRegistersAdminData, ListCashRegistersAdminErrors, ListCashRegistersAdminResponses, ListExternalTicketsData, ListExternalTicketsErrors, ListExternalTicketsResponses, ListMdmDevicesData, ListMdmDevicesErrors, ListMdmDevicesResponses, ListOrdersByTillData, ListOrdersByTillErrors, ListOrdersByTillResponses, ListOrdersData, ListOrdersErrors, ListOrdersResponses, ListPayoutRunsData, ListPayoutRunsErrors, ListPayoutRunsResponses, ListProductsData, ListProductsErrors, ListProductsResponses, ListRegisterStockingsData, ListRegisterStockingsErrors, ListRegisterStockingsResponses, ListSumupCheckoutsData, ListSumupCheckoutsErrors, ListSumupCheckoutsResponses, ListSumupTransactionsData, ListSumupTransactionsErrors, ListSumupTransactionsResponses, ListSystemAccountsData, ListSystemAccountsErrors, ListSystemAccountsResponses, ListTaxRatesData, ListTaxRatesErrors, ListTaxRatesResponses, ListTerminalLocationsData, ListTerminalLocationsErrors, ListTerminalLocationsResponses, ListTerminalsData, ListTerminalsErrors, ListTerminalsResponses, ListTicketsData, ListTicketsErrors, ListTicketsResponses, ListTillButtonsData, ListTillButtonsErrors, ListTillButtonsResponses, ListTillLayoutsData, ListTillLayoutsErrors, ListTillLayoutsResponses, ListTillProfilesData, ListTillProfilesErrors, ListTillProfilesResponses, ListTillsData, ListTillsErrors, ListTillsResponses, ListTransactionsData, ListTransactionsErrors, ListTransactionsResponses, ListTsesData, ListTsesErrors, ListTsesResponses, ListUserRoleAssignmentsData, ListUserRoleAssignmentsErrors, ListUserRoleAssignmentsResponses, ListUserRolesData, ListUserRolesErrors, ListUserRolesResponses, ListUsersData, ListUsersErrors, ListUsersResponses, ListUserTagSecretsData, ListUserTagSecretsErrors, ListUserTagSecretsResponses, ListUserTagVariantsData, ListUserTagVariantsErrors, ListUserTagVariantsResponses, ListUserToRoleData, ListUserToRoleErrors, ListUserToRoleResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, LogoutTerminalData, LogoutTerminalErrors, LogoutTerminalResponses, PayoutRunCsvExportData, PayoutRunCsvExportErrors, PayoutRunCsvExportResponses, PayoutRunPayoutsData, PayoutRunPayoutsErrors, PayoutRunPayoutsResponses, PayoutRunSepaXmlData, PayoutRunSepaXmlErrors, PayoutRunSepaXmlResponses, PendingPayoutDetailData, PendingPayoutDetailErrors, PendingPayoutDetailResponses, PreventCustomerPayoutData, PreventCustomerPayoutErrors, PreventCustomerPayoutResponses, PreviousPayoutRunSepaXmlData, PreviousPayoutRunSepaXmlErrors, PreviousPayoutRunSepaXmlResponses, RemoveFromTerminalData, RemoveFromTerminalErrors, RemoveFromTerminalResponses, RevokePayoutRunData, RevokePayoutRunErrors, RevokePayoutRunResponses, SetPayoutRunAsDoneData, SetPayoutRunAsDoneErrors, SetPayoutRunAsDoneResponses, SwitchCustomerTagData, SwitchCustomerTagErrors, SwitchCustomerTagResponses, SwitchTerminalData, SwitchTerminalErrors, SwitchTerminalResponses, SwitchTillData, SwitchTillErrors, SwitchTillResponses, TransferRegisterData, TransferRegisterErrors, TransferRegisterResponses, TriggerWebhookData, TriggerWebhookErrors, TriggerWebhookResponses, UpdateAccountCommentData, UpdateAccountCommentErrors, UpdateAccountCommentResponses, UpdateBalanceData, UpdateBalanceErrors, UpdateBalanceResponses, UpdateBonLogoData, UpdateBonLogoErrors, UpdateBonLogoResponses, UpdateEventData, UpdateEventErrors, UpdateEventResponses, UpdateNodeData, UpdateNodeErrors, UpdateNodeResponses, UpdateProductData, UpdateProductErrors, UpdateProductResponses, UpdateRegisterData, UpdateRegisterErrors, UpdateRegisterResponses, UpdateRegisterStockingData, UpdateRegisterStockingErrors, UpdateRegisterStockingResponses, UpdateTaxRateData, UpdateTaxRateErrors, UpdateTaxRateResponses, UpdateTerminalData, UpdateTerminalErrors, UpdateTerminalResponses, UpdateTicketData, UpdateTicketErrors, UpdateTicketResponses, UpdateTillButtonData, UpdateTillButtonErrors, UpdateTillButtonResponses, UpdateTillData, UpdateTillErrors, UpdateTillLayoutData, UpdateTillLayoutErrors, UpdateTillLayoutResponses, UpdateTillProfileData, UpdateTillProfileErrors, UpdateTillProfileResponses, UpdateTillResponses, UpdateTseData, UpdateTseErrors, UpdateTseResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateUserRoleData, UpdateUserRoleErrors, UpdateUserRoleResponses, UpdateUserTagCommentData, UpdateUserTagCommentErrors, UpdateUserTagCommentResponses, UpdateUserTagVariantData, UpdateUserTagVariantErrors, UpdateUserTagVariantResponses, UpdateUserToRolesData, UpdateUserToRolesErrors, UpdateUserToRolesResponses, UpdateVoucherAmountData, UpdateVoucherAmountErrors, UpdateVoucherAmountResponses, UserTagsCsvExportData, UserTagsCsvExportErrors, UserTagsCsvExportResponses } from './types.gen';
+import type { AllowCustomerPayoutData, AllowCustomerPayoutErrors, AllowCustomerPayoutResponses, ArchiveNodeData, ArchiveNodeErrors, ArchiveNodeResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ChangeMdmDeviceMappingData, ChangeMdmDeviceMappingErrors, ChangeMdmDeviceMappingResponses, ChangePasswordData, ChangePasswordErrors, ChangePasswordResponses, ChangeUserPasswordData, ChangeUserPasswordErrors, ChangeUserPasswordResponses, CheckPretixConnectionData, CheckPretixConnectionErrors, CheckPretixConnectionResponses, CloseOutCashierData, CloseOutCashierErrors, CloseOutCashierResponses, ConfigureSumupTokenData, ConfigureSumupTokenErrors, ConfigureSumupTokenResponses, CreateEventData, CreateEventErrors, CreateEventResponses, CreateNodeData, CreateNodeErrors, CreateNodeResponses, CreatePayoutRunData, CreatePayoutRunErrors, CreatePayoutRunResponses, CreateProductData, CreateProductErrors, CreateProductResponses, CreateRegisterData, CreateRegisterErrors, CreateRegisterResponses, CreateRegisterStockingData, CreateRegisterStockingErrors, CreateRegisterStockingResponses, CreateTaxRateData, CreateTaxRateErrors, CreateTaxRateResponses, CreateTerminalData, CreateTerminalErrors, CreateTerminalResponses, CreateTicketData, CreateTicketErrors, CreateTicketResponses, CreateTillButtonData, CreateTillButtonErrors, CreateTillButtonResponses, CreateTillData, CreateTillErrors, CreateTillLayoutData, CreateTillLayoutErrors, CreateTillLayoutResponses, CreateTillProfileData, CreateTillProfileErrors, CreateTillProfileResponses, CreateTillResponses, CreateTseData, CreateTseErrors, CreateTseResponses, CreateUserData, CreateUserErrors, CreateUserResponses, CreateUserRoleData, CreateUserRoleErrors, CreateUserRoleResponses, CreateUserTagsData, CreateUserTagSecretData, CreateUserTagSecretErrors, CreateUserTagSecretResponses, CreateUserTagsErrors, CreateUserTagsResponses, CreateUserTagVariantData, CreateUserTagVariantErrors, CreateUserTagVariantResponses, DeleteNodeData, DeleteNodeErrors, DeleteNodeResponses, DeleteProductData, DeleteProductErrors, DeleteProductResponses, DeleteRegisterData, DeleteRegisterErrors, DeleteRegisterResponses, DeleteRegisterStockingData, DeleteRegisterStockingErrors, DeleteRegisterStockingResponses, DeleteTaxRateData, DeleteTaxRateErrors, DeleteTaxRateResponses, DeleteTerminalData, DeleteTerminalErrors, DeleteTerminalResponses, DeleteTicketData, DeleteTicketErrors, DeleteTicketResponses, DeleteTillButtonData, DeleteTillButtonErrors, DeleteTillButtonResponses, DeleteTillData, DeleteTillErrors, DeleteTillLayoutData, DeleteTillLayoutErrors, DeleteTillLayoutResponses, DeleteTillProfileData, DeleteTillProfileErrors, DeleteTillProfileResponses, DeleteTillResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, DeleteUserRoleData, DeleteUserRoleErrors, DeleteUserRoleResponses, DeleteUserTagVariantData, DeleteUserTagVariantErrors, DeleteUserTagVariantResponses, DisableAccountData, DisableAccountErrors, DisableAccountResponses, EditOrderData, EditOrderErrors, EditOrderResponses, ExportAo146aData, ExportAo146aErrors, ExportAo146aResponses, ExportDsfinvkData, ExportDsfinvkErrors, ExportDsfinvkResponses, FetchPretixProductsData, FetchPretixProductsErrors, FetchPretixProductsResponses, FindCustomersData, FindCustomersErrors, FindCustomersResponses, FindUserTagsData, FindUserTagsErrors, FindUserTagsResponses, ForceLogoutUserData, ForceLogoutUserErrors, ForceLogoutUserResponses, GenerateDailyReportData, GenerateDailyReportErrors, GenerateDailyReportResponses, GeneratePayoutReportData, GeneratePayoutReportErrors, GeneratePayoutReportResponses, GenerateRevenueReportData, GenerateRevenueReportErrors, GenerateRevenueReportResponses, GenerateTestBonData, GenerateTestBonErrors, GenerateTestBonResponses, GenerateTestDailyReportData, GenerateTestDailyReportErrors, GenerateTestDailyReportResponses, GenerateTestRevenueReportData, GenerateTestRevenueReportErrors, GenerateTestRevenueReportResponses, GenerateWebhookUrlData, GenerateWebhookUrlErrors, GenerateWebhookUrlResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetBlobData, GetBlobErrors, GetBlobResponses, GetCashierShiftStatsData, GetCashierShiftStatsErrors, GetCashierShiftStatsResponses, GetCustomerData, GetCustomerErrors, GetCustomerResponses, GetCustomersWithBlockedPayoutData, GetCustomersWithBlockedPayoutErrors, GetCustomersWithBlockedPayoutResponses, GetEntryStatsData, GetEntryStatsErrors, GetEntryStatsResponses, GetEventDesignData, GetEventDesignErrors, GetEventDesignResponses, GetFreeTicketStatsData, GetFreeTicketStatsErrors, GetFreeTicketStatsResponses, GetMdmDeviceLocationData, GetMdmDeviceLocationErrors, GetMdmDeviceLocationResponses, GetMoneyOverviewData, GetMoneyOverviewErrors, GetMoneyOverviewResponses, GetOrderBonData, GetOrderBonErrors, GetOrderBonResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetPaymentMethodStatsData, GetPaymentMethodStatsErrors, GetPaymentMethodStatsResponses, GetPayOutStatsData, GetPayOutStatsErrors, GetPayOutStatsResponses, GetPresaleStatsData, GetPresaleStatsErrors, GetPresaleStatsResponses, GetProductStatsData, GetProductStatsErrors, GetProductStatsResponses, GetPublicConfigData, GetPublicConfigErrors, GetPublicConfigResponses, GetRestrictedEventSettingsData, GetRestrictedEventSettingsErrors, GetRestrictedEventSettingsResponses, GetSumupCheckoutData, GetSumupCheckoutErrors, GetSumupCheckoutResponses, GetTopUpStatsData, GetTopUpStatsErrors, GetTopUpStatsResponses, GetTransactionData, GetTransactionErrors, GetTransactionResponses, GetTreeForCurrentUserData, GetTreeForCurrentUserErrors, GetTreeForCurrentUserResponses, GetUserTagDetailData, GetUserTagDetailErrors, GetUserTagDetailResponses, GetUserTagVariantData, GetUserTagVariantErrors, GetUserTagVariantResponses, GetUserVoucherGrantStatsData, GetUserVoucherGrantStatsErrors, GetUserVoucherGrantStatsResponses, GetVoucherStatsData, GetVoucherStatsErrors, GetVoucherStatsResponses, ListAuditLogsData, ListAuditLogsErrors, ListAuditLogsResponses, ListCashierShiftsData, ListCashierShiftsErrors, ListCashierShiftsResponses, ListCashRegistersAdminData, ListCashRegistersAdminErrors, ListCashRegistersAdminResponses, ListExternalTicketsData, ListExternalTicketsErrors, ListExternalTicketsResponses, ListMdmDevicesData, ListMdmDevicesErrors, ListMdmDevicesResponses, ListOrdersData, ListOrdersErrors, ListOrdersResponses, ListPayoutRunsData, ListPayoutRunsErrors, ListPayoutRunsResponses, ListProductsData, ListProductsErrors, ListProductsResponses, ListRegisterStockingsData, ListRegisterStockingsErrors, ListRegisterStockingsResponses, ListSumupCheckoutsData, ListSumupCheckoutsErrors, ListSumupCheckoutsResponses, ListSumupTransactionsData, ListSumupTransactionsErrors, ListSumupTransactionsResponses, ListSystemAccountsData, ListSystemAccountsErrors, ListSystemAccountsResponses, ListTaxRatesData, ListTaxRatesErrors, ListTaxRatesResponses, ListTerminalLocationsData, ListTerminalLocationsErrors, ListTerminalLocationsResponses, ListTerminalsData, ListTerminalsErrors, ListTerminalsResponses, ListTicketsData, ListTicketsErrors, ListTicketsResponses, ListTillButtonsData, ListTillButtonsErrors, ListTillButtonsResponses, ListTillLayoutsData, ListTillLayoutsErrors, ListTillLayoutsResponses, ListTillProfilesData, ListTillProfilesErrors, ListTillProfilesResponses, ListTillsData, ListTillsErrors, ListTillsResponses, ListTransactionsData, ListTransactionsErrors, ListTransactionsResponses, ListTsesData, ListTsesErrors, ListTsesResponses, ListUserRoleAssignmentsData, ListUserRoleAssignmentsErrors, ListUserRoleAssignmentsResponses, ListUserRolesData, ListUserRolesErrors, ListUserRolesResponses, ListUsersData, ListUsersErrors, ListUsersResponses, ListUserTagSecretsData, ListUserTagSecretsErrors, ListUserTagSecretsResponses, ListUserTagVariantsData, ListUserTagVariantsErrors, ListUserTagVariantsResponses, ListUserToRoleData, ListUserToRoleErrors, ListUserToRoleResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutResponses, LogoutTerminalData, LogoutTerminalErrors, LogoutTerminalResponses, PayoutRunCsvExportData, PayoutRunCsvExportErrors, PayoutRunCsvExportResponses, PayoutRunPayoutsData, PayoutRunPayoutsErrors, PayoutRunPayoutsResponses, PayoutRunSepaXmlData, PayoutRunSepaXmlErrors, PayoutRunSepaXmlResponses, PendingPayoutDetailData, PendingPayoutDetailErrors, PendingPayoutDetailResponses, PreventCustomerPayoutData, PreventCustomerPayoutErrors, PreventCustomerPayoutResponses, PreviousPayoutRunSepaXmlData, PreviousPayoutRunSepaXmlErrors, PreviousPayoutRunSepaXmlResponses, RemoveFromTerminalData, RemoveFromTerminalErrors, RemoveFromTerminalResponses, RevokePayoutRunData, RevokePayoutRunErrors, RevokePayoutRunResponses, SetPayoutRunAsDoneData, SetPayoutRunAsDoneErrors, SetPayoutRunAsDoneResponses, SwitchCustomerTagData, SwitchCustomerTagErrors, SwitchCustomerTagResponses, SwitchTerminalData, SwitchTerminalErrors, SwitchTerminalResponses, SwitchTillData, SwitchTillErrors, SwitchTillResponses, TransferRegisterData, TransferRegisterErrors, TransferRegisterResponses, TriggerWebhookData, TriggerWebhookErrors, TriggerWebhookResponses, UpdateAccountCommentData, UpdateAccountCommentErrors, UpdateAccountCommentResponses, UpdateBalanceData, UpdateBalanceErrors, UpdateBalanceResponses, UpdateBonLogoData, UpdateBonLogoErrors, UpdateBonLogoResponses, UpdateEventData, UpdateEventErrors, UpdateEventResponses, UpdateNodeData, UpdateNodeErrors, UpdateNodeResponses, UpdateProductData, UpdateProductErrors, UpdateProductResponses, UpdateRegisterData, UpdateRegisterErrors, UpdateRegisterResponses, UpdateRegisterStockingData, UpdateRegisterStockingErrors, UpdateRegisterStockingResponses, UpdateTaxRateData, UpdateTaxRateErrors, UpdateTaxRateResponses, UpdateTerminalData, UpdateTerminalErrors, UpdateTerminalResponses, UpdateTicketData, UpdateTicketErrors, UpdateTicketResponses, UpdateTillButtonData, UpdateTillButtonErrors, UpdateTillButtonResponses, UpdateTillData, UpdateTillErrors, UpdateTillLayoutData, UpdateTillLayoutErrors, UpdateTillLayoutResponses, UpdateTillProfileData, UpdateTillProfileErrors, UpdateTillProfileResponses, UpdateTillResponses, UpdateTseData, UpdateTseErrors, UpdateTseResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateUserRoleData, UpdateUserRoleErrors, UpdateUserRoleResponses, UpdateUserTagCommentData, UpdateUserTagCommentErrors, UpdateUserTagCommentResponses, UpdateUserTagVariantData, UpdateUserTagVariantErrors, UpdateUserTagVariantResponses, UpdateUserToRolesData, UpdateUserToRolesErrors, UpdateUserToRolesResponses, UpdateVoucherAmountData, UpdateVoucherAmountErrors, UpdateVoucherAmountResponses, UserTagsCsvExportData, UserTagsCsvExportErrors, UserTagsCsvExportResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -50,15 +50,6 @@ export const deleteProduct = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 /**
- * Get Product
- */
-export const getProduct = <ThrowOnError extends boolean = false>(options: Options<GetProductData, ThrowOnError>): RequestResult<GetProductResponses, GetProductErrors, ThrowOnError> => (options.client ?? client).get<GetProductResponses, GetProductErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/products/{product_id}',
-    ...options
-});
-
-/**
  * Update Product
  */
 export const updateProduct = <ThrowOnError extends boolean = false>(options: Options<UpdateProductData, ThrowOnError>): RequestResult<UpdateProductResponses, UpdateProductErrors, ThrowOnError> => (options.client ?? client).post<UpdateProductResponses, UpdateProductErrors, ThrowOnError>({
@@ -94,18 +85,27 @@ export const createUser = <ThrowOnError extends boolean = false>(options: Option
 });
 
 /**
- * Delete User
+ * Get User Voucher Grant Stats
  */
-export const deleteUser = <ThrowOnError extends boolean = false>(options: Options<DeleteUserData, ThrowOnError>): RequestResult<DeleteUserResponses, DeleteUserErrors, ThrowOnError> => (options.client ?? client).delete<DeleteUserResponses, DeleteUserErrors, ThrowOnError>({
+export const getUserVoucherGrantStats = <ThrowOnError extends boolean = false>(options: Options<GetUserVoucherGrantStatsData, ThrowOnError>): RequestResult<GetUserVoucherGrantStatsResponses, GetUserVoucherGrantStatsErrors, ThrowOnError> => (options.client ?? client).get<GetUserVoucherGrantStatsResponses, GetUserVoucherGrantStatsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{user_id}',
+    url: '/users/{user_id}/voucher-grant-stats',
     ...options
 });
 
 /**
- * Get User
+ * List User Role Assignments
  */
-export const getUser = <ThrowOnError extends boolean = false>(options: Options<GetUserData, ThrowOnError>): RequestResult<GetUserResponses, GetUserErrors, ThrowOnError> => (options.client ?? client).get<GetUserResponses, GetUserErrors, ThrowOnError>({
+export const listUserRoleAssignments = <ThrowOnError extends boolean = false>(options: Options<ListUserRoleAssignmentsData, ThrowOnError>): RequestResult<ListUserRoleAssignmentsResponses, ListUserRoleAssignmentsErrors, ThrowOnError> => (options.client ?? client).get<ListUserRoleAssignmentsResponses, ListUserRoleAssignmentsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/users/{user_id}/role-assignments',
+    ...options
+});
+
+/**
+ * Delete User
+ */
+export const deleteUser = <ThrowOnError extends boolean = false>(options: Options<DeleteUserData, ThrowOnError>): RequestResult<DeleteUserResponses, DeleteUserErrors, ThrowOnError> => (options.client ?? client).delete<DeleteUserResponses, DeleteUserErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/users/{user_id}',
     ...options
@@ -122,24 +122,6 @@ export const updateUser = <ThrowOnError extends boolean = false>(options: Option
         'Content-Type': 'application/json',
         ...options.headers
     }
-});
-
-/**
- * Get User Voucher Grant Stats
- */
-export const getUserVoucherGrantStats = <ThrowOnError extends boolean = false>(options: Options<GetUserVoucherGrantStatsData, ThrowOnError>): RequestResult<GetUserVoucherGrantStatsResponses, GetUserVoucherGrantStatsErrors, ThrowOnError> => (options.client ?? client).get<GetUserVoucherGrantStatsResponses, GetUserVoucherGrantStatsErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{user_id}/voucher-grant-stats',
-    ...options
-});
-
-/**
- * List User Role Assignments
- */
-export const listUserRoleAssignments = <ThrowOnError extends boolean = false>(options: Options<ListUserRoleAssignmentsData, ThrowOnError>): RequestResult<ListUserRoleAssignmentsResponses, ListUserRoleAssignmentsErrors, ThrowOnError> => (options.client ?? client).get<ListUserRoleAssignmentsResponses, ListUserRoleAssignmentsErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{user_id}/role-assignments',
-    ...options
 });
 
 /**
@@ -253,15 +235,6 @@ export const deleteTaxRate = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 /**
- * Get Tax Rate
- */
-export const getTaxRate = <ThrowOnError extends boolean = false>(options: Options<GetTaxRateData, ThrowOnError>): RequestResult<GetTaxRateResponses, GetTaxRateErrors, ThrowOnError> => (options.client ?? client).get<GetTaxRateResponses, GetTaxRateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tax-rates/{tax_rate_id}',
-    ...options
-});
-
-/**
  * Update Tax Rate
  */
 export const updateTaxRate = <ThrowOnError extends boolean = false>(options: Options<UpdateTaxRateData, ThrowOnError>): RequestResult<UpdateTaxRateResponses, UpdateTaxRateErrors, ThrowOnError> => (options.client ?? client).post<UpdateTaxRateResponses, UpdateTaxRateErrors, ThrowOnError>({
@@ -340,15 +313,6 @@ export const deleteTill = <ThrowOnError extends boolean = false>(options: Option
 });
 
 /**
- * Get Till
- */
-export const getTill = <ThrowOnError extends boolean = false>(options: Options<GetTillData, ThrowOnError>): RequestResult<GetTillResponses, GetTillErrors, ThrowOnError> => (options.client ?? client).get<GetTillResponses, GetTillErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tills/{till_id}',
-    ...options
-});
-
-/**
  * Update Till
  */
 export const updateTill = <ThrowOnError extends boolean = false>(options: Options<UpdateTillData, ThrowOnError>): RequestResult<UpdateTillResponses, UpdateTillErrors, ThrowOnError> => (options.client ?? client).post<UpdateTillResponses, UpdateTillErrors, ThrowOnError>({
@@ -415,15 +379,6 @@ export const deleteTillLayout = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
- * Get Till Layout
- */
-export const getTillLayout = <ThrowOnError extends boolean = false>(options: Options<GetTillLayoutData, ThrowOnError>): RequestResult<GetTillLayoutResponses, GetTillLayoutErrors, ThrowOnError> => (options.client ?? client).get<GetTillLayoutResponses, GetTillLayoutErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-layouts/{layout_id}',
-    ...options
-});
-
-/**
  * Update Till Layout
  */
 export const updateTillLayout = <ThrowOnError extends boolean = false>(options: Options<UpdateTillLayoutData, ThrowOnError>): RequestResult<UpdateTillLayoutResponses, UpdateTillLayoutErrors, ThrowOnError> => (options.client ?? client).post<UpdateTillLayoutResponses, UpdateTillLayoutErrors, ThrowOnError>({
@@ -468,15 +423,6 @@ export const deleteTillProfile = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
- * Get Till Profile
- */
-export const getTillProfile = <ThrowOnError extends boolean = false>(options: Options<GetTillProfileData, ThrowOnError>): RequestResult<GetTillProfileResponses, GetTillProfileErrors, ThrowOnError> => (options.client ?? client).get<GetTillProfileResponses, GetTillProfileErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-profiles/{profile_id}',
-    ...options
-});
-
-/**
  * Update Till Profile
  */
 export const updateTillProfile = <ThrowOnError extends boolean = false>(options: Options<UpdateTillProfileData, ThrowOnError>): RequestResult<UpdateTillProfileResponses, UpdateTillProfileErrors, ThrowOnError> => (options.client ?? client).post<UpdateTillProfileResponses, UpdateTillProfileErrors, ThrowOnError>({
@@ -515,15 +461,6 @@ export const createTillButton = <ThrowOnError extends boolean = false>(options: 
  * Delete Till Button
  */
 export const deleteTillButton = <ThrowOnError extends boolean = false>(options: Options<DeleteTillButtonData, ThrowOnError>): RequestResult<DeleteTillButtonResponses, DeleteTillButtonErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTillButtonResponses, DeleteTillButtonErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-buttons/{button_id}',
-    ...options
-});
-
-/**
- * Get Till Button
- */
-export const getTillButton = <ThrowOnError extends boolean = false>(options: Options<GetTillButtonData, ThrowOnError>): RequestResult<GetTillButtonResponses, GetTillButtonErrors, ThrowOnError> => (options.client ?? client).get<GetTillButtonResponses, GetTillButtonErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/till-buttons/{button_id}',
     ...options
@@ -609,18 +546,22 @@ export const createRegister = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Delete Register
+ * Transfer Register
  */
-export const deleteRegister = <ThrowOnError extends boolean = false>(options: Options<DeleteRegisterData, ThrowOnError>): RequestResult<DeleteRegisterResponses, DeleteRegisterErrors, ThrowOnError> => (options.client ?? client).delete<DeleteRegisterResponses, DeleteRegisterErrors, ThrowOnError>({
+export const transferRegister = <ThrowOnError extends boolean = false>(options: Options<TransferRegisterData, ThrowOnError>): RequestResult<TransferRegisterResponses, TransferRegisterErrors, ThrowOnError> => (options.client ?? client).post<TransferRegisterResponses, TransferRegisterErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-registers/{register_id}',
-    ...options
+    url: '/till-registers/transfer-register',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
- * Get Cash Register Admin
+ * Delete Register
  */
-export const getCashRegisterAdmin = <ThrowOnError extends boolean = false>(options: Options<GetCashRegisterAdminData, ThrowOnError>): RequestResult<GetCashRegisterAdminResponses, GetCashRegisterAdminErrors, ThrowOnError> => (options.client ?? client).get<GetCashRegisterAdminResponses, GetCashRegisterAdminErrors, ThrowOnError>({
+export const deleteRegister = <ThrowOnError extends boolean = false>(options: Options<DeleteRegisterData, ThrowOnError>): RequestResult<DeleteRegisterResponses, DeleteRegisterErrors, ThrowOnError> => (options.client ?? client).delete<DeleteRegisterResponses, DeleteRegisterErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/till-registers/{register_id}',
     ...options
@@ -632,37 +573,6 @@ export const getCashRegisterAdmin = <ThrowOnError extends boolean = false>(optio
 export const updateRegister = <ThrowOnError extends boolean = false>(options: Options<UpdateRegisterData, ThrowOnError>): RequestResult<UpdateRegisterResponses, UpdateRegisterErrors, ThrowOnError> => (options.client ?? client).post<UpdateRegisterResponses, UpdateRegisterErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/till-registers/{register_id}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Get Cashier Shifts For Register
- */
-export const getCashierShiftsForRegister = <ThrowOnError extends boolean = false>(options: Options<GetCashierShiftsForRegisterData, ThrowOnError>): RequestResult<GetCashierShiftsForRegisterResponses, GetCashierShiftsForRegisterErrors, ThrowOnError> => (options.client ?? client).get<GetCashierShiftsForRegisterResponses, GetCashierShiftsForRegisterErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-registers/{register_id}/cashier-shifts',
-    ...options
-});
-
-/**
- * List Transactions
- */
-export const listTransactions = <ThrowOnError extends boolean = false>(options: Options<ListTransactionsData, ThrowOnError>): RequestResult<ListTransactionsResponses, ListTransactionsErrors, ThrowOnError> => (options.client ?? client).get<ListTransactionsResponses, ListTransactionsErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-registers/{register_id}/transactions',
-    ...options
-});
-
-/**
- * Transfer Register
- */
-export const transferRegister = <ThrowOnError extends boolean = false>(options: Options<TransferRegisterData, ThrowOnError>): RequestResult<TransferRegisterResponses, TransferRegisterErrors, ThrowOnError> => (options.client ?? client).post<TransferRegisterResponses, TransferRegisterErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/till-registers/transfer-register',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -751,15 +661,6 @@ export const updateAccountComment = <ThrowOnError extends boolean = false>(optio
 });
 
 /**
- * List Orders By Till
- */
-export const listOrdersByTill = <ThrowOnError extends boolean = false>(options: Options<ListOrdersByTillData, ThrowOnError>): RequestResult<ListOrdersByTillResponses, ListOrdersByTillErrors, ThrowOnError> => (options.client ?? client).get<ListOrdersByTillResponses, ListOrdersByTillErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/orders/by-till/{till_id}',
-    ...options
-});
-
-/**
  * List Orders
  */
 export const listOrders = <ThrowOnError extends boolean = false>(options: Options<ListOrdersData, ThrowOnError>): RequestResult<ListOrdersResponses, ListOrdersErrors, ThrowOnError> => (options.client ?? client).get<ListOrdersResponses, ListOrdersErrors, ThrowOnError>({
@@ -805,11 +706,11 @@ export const editOrder = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * Get Cashier Shifts
+ * List Cashier Shifts
  */
-export const getCashierShifts = <ThrowOnError extends boolean = false>(options: Options<GetCashierShiftsData, ThrowOnError>): RequestResult<GetCashierShiftsResponses, GetCashierShiftsErrors, ThrowOnError> => (options.client ?? client).get<GetCashierShiftsResponses, GetCashierShiftsErrors, ThrowOnError>({
+export const listCashierShifts = <ThrowOnError extends boolean = false>(options: Options<ListCashierShiftsData, ThrowOnError>): RequestResult<ListCashierShiftsResponses, ListCashierShiftsErrors, ThrowOnError> => (options.client ?? client).get<ListCashierShiftsResponses, ListCashierShiftsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/cashiers/{cashier_id}/shifts',
+    url: '/cashiers/shifts',
     ...options
 });
 
@@ -942,15 +843,6 @@ export const getPresaleStats = <ThrowOnError extends boolean = false>(options: O
  * Delete Ticket
  */
 export const deleteTicket = <ThrowOnError extends boolean = false>(options: Options<DeleteTicketData, ThrowOnError>): RequestResult<DeleteTicketResponses, DeleteTicketErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTicketResponses, DeleteTicketErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tickets/{ticket_id}',
-    ...options
-});
-
-/**
- * Get Ticket
- */
-export const getTicket = <ThrowOnError extends boolean = false>(options: Options<GetTicketData, ThrowOnError>): RequestResult<GetTicketResponses, GetTicketErrors, ThrowOnError> => (options.client ?? client).get<GetTicketResponses, GetTicketErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tickets/{ticket_id}',
     ...options
@@ -1477,15 +1369,6 @@ export const listAuditLogs = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 /**
- * Get Audit Log
- */
-export const getAuditLog = <ThrowOnError extends boolean = false>(options: Options<GetAuditLogData, ThrowOnError>): RequestResult<GetAuditLogResponses, GetAuditLogErrors, ThrowOnError> => (options.client ?? client).get<GetAuditLogResponses, GetAuditLogErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tree/nodes/{node_id}/audit-logs/{audit_log_id}',
-    ...options
-});
-
-/**
  * List Sumup Checkouts
  */
 export const listSumupCheckouts = <ThrowOnError extends boolean = false>(options: Options<ListSumupCheckoutsData, ThrowOnError>): RequestResult<ListSumupCheckoutsResponses, ListSumupCheckoutsErrors, ThrowOnError> => (options.client ?? client).get<ListSumupCheckoutsResponses, ListSumupCheckoutsErrors, ThrowOnError>({
@@ -1646,15 +1529,6 @@ export const deleteTerminal = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Get Terminal
- */
-export const getTerminal = <ThrowOnError extends boolean = false>(options: Options<GetTerminalData, ThrowOnError>): RequestResult<GetTerminalResponses, GetTerminalErrors, ThrowOnError> => (options.client ?? client).get<GetTerminalResponses, GetTerminalErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/terminal/{terminal_id}',
-    ...options
-});
-
-/**
  * Update Terminal
  */
 export const updateTerminal = <ThrowOnError extends boolean = false>(options: Options<UpdateTerminalData, ThrowOnError>): RequestResult<UpdateTerminalResponses, UpdateTerminalErrors, ThrowOnError> => (options.client ?? client).post<UpdateTerminalResponses, UpdateTerminalErrors, ThrowOnError>({
@@ -1695,6 +1569,15 @@ export const switchTill = <ThrowOnError extends boolean = false>(options: Option
 export const forceLogoutUser = <ThrowOnError extends boolean = false>(options: Options<ForceLogoutUserData, ThrowOnError>): RequestResult<ForceLogoutUserResponses, ForceLogoutUserErrors, ThrowOnError> => (options.client ?? client).post<ForceLogoutUserResponses, ForceLogoutUserErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/terminal/{terminal_id}/force-logout-user',
+    ...options
+});
+
+/**
+ * List Transactions
+ */
+export const listTransactions = <ThrowOnError extends boolean = false>(options: Options<ListTransactionsData, ThrowOnError>): RequestResult<ListTransactionsResponses, ListTransactionsErrors, ThrowOnError> => (options.client ?? client).get<ListTransactionsResponses, ListTransactionsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/transactions',
     ...options
 });
 

@@ -1,29 +1,41 @@
-import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  FileDownload as FileDownloadIcon,
+  Check as CheckIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 import { Link, Alert } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { formatUserTagUid, getUserName } from "@stustapay/models";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams, Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import {
-  selectPayoutRunById,
-  useListPayoutRunsQuery,
   usePayoutRunCsvExportMutation,
-  usePayoutRunPayoutsQuery,
-  PayoutRead,
   usePreviousPayoutRunSepaXmlMutation,
   useSetPayoutRunAsDoneMutation,
   useRevokePayoutRunMutation,
-  useListUsersQuery,
-  selectUserById,
 } from "@/api";
-import { CustomerRoutes, PayoutRunRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { CustomerRoutes, PayoutRunRoutes } from "@/app/routes";
+import { UserTagCell, userTagValueGetter } from "@/components/table/UserTagCell";
+import {
+  DetailField,
+  DetailLayout,
+  DetailNumberField,
+  DetailView,
+  UserDetailField,
+} from "@/components";
 import { LayoutAction } from "@/components/layouts/types";
+import {
+  getPayoutRunCollection,
+  getPayoutRunPayoutCollection,
+  getUserCollection,
+  refetchNodeCollection,
+} from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { DownloadSepaXMLModal } from "./DownloadSepaXMLModal";
@@ -40,23 +52,46 @@ export const PayoutRunDetail: React.FC = () => {
   const [previousSepa] = usePreviousPayoutRunSepaXmlMutation();
   const [setAsDone, { isLoading: isSetDoneLoading }] = useSetPayoutRunAsDoneMutation();
   const [revoke] = useRevokePayoutRunMutation();
-  const { payoutRun, error } = useListPayoutRunsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        payoutRun: data ? selectPayoutRunById(data, Number(payoutRunId)) : undefined,
-      }),
-    }
+  const {
+    data: payoutRun,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ payoutRuns: getPayoutRunCollection(currentNode.id) })
+        .where(({ payoutRuns }) => eq(payoutRuns.id, Number(payoutRunId)))
+        .join(
+          { createdByUsers: getUserCollection(currentNode.id) },
+          ({ createdByUsers, payoutRuns }) => eq(payoutRuns.created_by, createdByUsers.id),
+          "left" as const,
+        )
+        .join(
+          { setDoneByUsers: getUserCollection(currentNode.id) },
+          ({ payoutRuns, setDoneByUsers }) => eq(payoutRuns.set_done_by, setDoneByUsers.id),
+          "left" as const,
+        )
+        .select(({ createdByUsers, payoutRuns, setDoneByUsers }) => ({
+          ...payoutRuns,
+          createdByUser: createdByUsers,
+          setDoneByUser: setDoneByUsers,
+        }))
+        .findOne(),
+    [currentNode.id, payoutRunId],
   );
-  const { data: payouts } = usePayoutRunPayoutsQuery({ nodeId: currentNode.id, payoutRunId: Number(payoutRunId) });
-  const { data: users } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: payouts, isLoading: isPayoutsLoading } = useLiveQuery(
+    (q) =>
+      q.from({
+        payouts: getPayoutRunPayoutCollection(currentNode.id, Number(payoutRunId)),
+      }),
+    [currentNode.id, payoutRunId],
+  );
 
-  if (error) {
+  if (isError) {
     return <Navigate to={PayoutRunRoutes.list()} />;
   }
 
-  if (payoutRun === undefined) {
+  if (isLoading || !payoutRun) {
     return <Loading />;
   }
 
@@ -94,7 +129,9 @@ export const PayoutRunDetail: React.FC = () => {
     }
   };
 
-  const columns: GridColDef<PayoutRead>[] = [
+  type PayoutRow = ArrayElement<NonNullable<typeof payouts>>;
+
+  const columns: GridColDef<PayoutRow>[] = [
     {
       field: "customer_account_id",
       headerName: t("common.id"),
@@ -118,12 +155,8 @@ export const PayoutRunDetail: React.FC = () => {
     {
       field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
-      valueGetter: (_, row) => formatUserTagUid(row.user_tag_uid_hex),
-      renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </Link>
-      ),
+      valueGetter: (_, row) => userTagValueGetter(row),
+      renderCell: ({ row }) => <UserTagCell userTag={row} />,
       minWidth: 300,
     },
     {
@@ -149,6 +182,7 @@ export const PayoutRunDetail: React.FC = () => {
         setAsDone({ nodeId: currentNode.id, payoutRunId: payoutRun.id })
           .unwrap()
           .then(() => {
+            refetchNodeCollection(currentNode.id, "payout-runs");
             toast.success("Payout run set as done");
           })
           .catch(() => {
@@ -168,6 +202,7 @@ export const PayoutRunDetail: React.FC = () => {
         revoke({ nodeId: currentNode.id, payoutRunId: payoutRun.id })
           .unwrap()
           .then(() => {
+            refetchNodeCollection(currentNode.id, "payout-runs");
             toast.success("Payout run revoked");
           })
           .catch(() => {
@@ -221,18 +256,18 @@ export const PayoutRunDetail: React.FC = () => {
       <DetailView>
         {payoutRun.done && <Alert severity="success">{t("payoutRun.done")}</Alert>}
         {payoutRun.revoked && <Alert severity="warning">{t("payoutRun.revoked")}</Alert>}
-        <DetailField
+        <UserDetailField
           label={t("payoutRun.createdBy")}
-          value={users && payoutRun.created_by != null && getUserName(selectUserById(users, payoutRun.created_by))}
-          linkTo={UserRoutes.detail(payoutRun.created_by)}
+          user={payoutRun.createdByUser}
+          fallbackNodeId={payoutRun.node_id}
         />
         <DetailField label={t("payoutRun.createdAt")} value={payoutRun.created_at} />
         {payoutRun.set_done_by != null && payoutRun.set_done_at && (
           <>
-            <DetailField
+            <UserDetailField
               label={t("payoutRun.setDoneBy")}
-              value={users && getUserName(selectUserById(users, payoutRun.set_done_by))}
-              linkTo={UserRoutes.detail(payoutRun.created_by)}
+              user={payoutRun.setDoneByUser}
+              fallbackNodeId={payoutRun.node_id}
             />
             <DetailField label={t("payoutRun.setDoneAt")} value={payoutRun.set_done_at} />
           </>
@@ -251,6 +286,7 @@ export const PayoutRunDetail: React.FC = () => {
       </DetailView>
       <DataGrid
         autoHeight
+        loading={isPayoutsLoading}
         rows={payouts ?? []}
         getRowId={(row) => row.customer_account_id}
         initialState={{
@@ -261,7 +297,7 @@ export const PayoutRunDetail: React.FC = () => {
         slots={{ toolbar: () => <DataGridTitle title={t("payoutRun.payoutsInPayoutRun")} /> }}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
       <DownloadSepaXMLModal
         show={showSepaModal}

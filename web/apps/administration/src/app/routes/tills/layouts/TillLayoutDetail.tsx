@@ -3,22 +3,18 @@ import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, List, ListItem, ListItemText, Paper, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { TillButton } from "@stustapay/models";
+import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import {
-  Ticket,
-  selectTicketById,
-  selectTillButtonById,
-  useDeleteTillLayoutMutation,
-  useGetTillLayoutQuery,
-  useListTicketsQuery,
-  useListTillButtonsQuery,
-} from "@/api";
 import { TillLayoutRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
+import {
+  getTicketCollection,
+  getTillButtonCollection,
+  getTillLayoutCollection,
+} from "@/db/collections";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
 export const TillLayoutDetail: React.FC = () => {
@@ -28,15 +24,42 @@ export const TillLayoutDetail: React.FC = () => {
   const formatCurrency = useCurrencyFormatter();
   const navigate = useNavigate();
   const openModal = useOpenModal();
-  const [deleteLayout] = useDeleteTillLayoutMutation();
-  const { data: layout, error } = useGetTillLayoutQuery({ nodeId: currentNode.id, layoutId: Number(layoutId) });
-  const { data: buttons, error: buttonsError } = useListTillButtonsQuery({ nodeId: currentNode.id });
-  const { data: tickets, error: ticketsError } = useListTicketsQuery({ nodeId: currentNode.id });
+
+  const {
+    data: layout,
+    isLoading: isLayoutLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ layouts: getTillLayoutCollection(currentNode.id) })
+        .where(({ layouts }) => eq(layouts.id, Number(layoutId)))
+        .findOne(),
+    [currentNode.id, layoutId],
+  );
+  const { data: buttons, isLoading: isButtonsLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ buttons: getTillButtonCollection(currentNode.id) })
+        .where(({ buttons }) => inArray(buttons.id, layout?.button_ids ?? [])),
+    [currentNode.id, layout?.button_ids],
+  );
+  const { data: tickets, isLoading: isTicketsLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ tickets: getTicketCollection(currentNode.id) })
+        .where(({ tickets }) => inArray(tickets.id, layout?.ticket_ids ?? [])),
+    [currentNode.id, layout?.ticket_ids],
+  );
 
   const [selectedTab, setSelectedTab] = React.useState("buttons");
 
-  if (error || buttonsError || ticketsError) {
+  if (isError) {
     return <Navigate to={TillLayoutRoutes.list()} />;
+  }
+
+  if (isLayoutLoading || isButtonsLoading || isTicketsLoading || !layout) {
+    return <Loading />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -45,21 +68,12 @@ export const TillLayoutDetail: React.FC = () => {
       title: t("layout.delete"),
       content: t("layout.deleteDescription"),
       onConfirm: () => {
-        deleteLayout({ nodeId: currentNode.id, layoutId: Number(layoutId) }).then(() =>
-          navigate(TillLayoutRoutes.list())
-        );
+        getTillLayoutCollection(currentNode.id)
+          .delete(Number(layoutId))
+          .isPersisted.promise.then(() => navigate(TillLayoutRoutes.list()));
       },
     });
   };
-
-  if (layout === undefined || buttons === undefined || tickets === undefined) {
-    return <Loading />;
-  }
-
-  const sortedButtons =
-    layout.button_ids == null ? [] : [...layout.button_ids].map((i) => selectTillButtonById(buttons, i) as TillButton);
-  const sortedTickets =
-    layout.ticket_ids == null ? [] : [...layout.ticket_ids].map((i) => selectTicketById(tickets, i) as Ticket);
 
   return (
     <DetailLayout
@@ -73,14 +87,19 @@ export const TillLayoutDetail: React.FC = () => {
           color: "primary",
           icon: <EditIcon />,
         },
-        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+        {
+          label: t("delete"),
+          onClick: openConfirmDeleteDialog,
+          color: "error",
+          icon: <DeleteIcon />,
+        },
       ]}
     >
       <DetailView>
         <DetailField label={t("layout.name")} value={layout.name} />
         <DetailField label={t("layout.description")} value={layout.description} />
       </DetailView>
-      {(sortedButtons.length > 0 || sortedTickets.length > 0) && (
+      {(buttons.length > 0 || tickets.length > 0) && (
         <Paper>
           <TabContext value={selectedTab}>
             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -91,7 +110,7 @@ export const TillLayoutDetail: React.FC = () => {
             </Box>
             <TabPanel value="buttons">
               <List>
-                {sortedButtons.map((button) => (
+                {buttons.map((button) => (
                   <ListItem key={button.id}>
                     <ListItemText primary={button.name} secondary={formatCurrency(button.price)} />
                   </ListItem>
@@ -100,9 +119,12 @@ export const TillLayoutDetail: React.FC = () => {
             </TabPanel>
             <TabPanel value="tickets">
               <List>
-                {sortedTickets.map((ticket) => (
+                {tickets.map((ticket) => (
                   <ListItem key={ticket.id}>
-                    <ListItemText primary={ticket.name} secondary={formatCurrency(ticket.total_price)} />
+                    <ListItemText
+                      primary={ticket.name}
+                      secondary={formatCurrency(ticket.total_price)}
+                    />
                   </ListItem>
                 ))}
               </List>

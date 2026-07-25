@@ -11,50 +11,55 @@ import { ProductRoutes, SumUpTransactionRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { useCurrentNode } from "@/hooks";
 
-export const SumUpTransactionList: React.FC = withPrivilegeGuard(NodePrivilege.node_administration, () => {
-  const { t } = useTranslation();
-  const { currentNode } = useCurrentNode();
+export const SumUpTransactionList: React.FC = withPrivilegeGuard(
+  NodePrivilege.node_administration,
+  () => {
+    const { t } = useTranslation();
+    const { currentNode } = useCurrentNode();
 
-  const { data: checkouts, isLoading } = useListSumupTransactionsQuery({ nodeId: currentNode.id });
+    const { data: checkouts, isLoading } = useListSumupTransactionsQuery({
+      nodeId: currentNode.id,
+    });
 
-  const columns: GridColDef<SumUpTransaction>[] = [
-    {
-      field: "id",
-      headerName: t("common.id"),
-      width: 300,
-      renderCell: (params) => (
-        <Link component={RouterLink} to={SumUpTransactionRoutes.detail(params.row.id)}>
-          {params.row.id}
-        </Link>
-      ),
-    },
-    {
-      field: "amount",
-      headerName: t("sumup.checkout.amount"),
-      type: "number",
-      valueFormatter: (amount: number, row) => `${amount.toFixed(2)} ${row.currency}`,
-    },
-    { field: "payment_type", headerName: t("sumup.checkout.payment_type") },
-    { field: "timestamp", headerName: t("sumup.checkout.date"), width: 200 },
-    { field: "status", headerName: t("sumup.checkout.status") },
-    { field: "product_summary", headerName: t("sumup.transaction.product_summary"), flex: 1 },
-  ];
+    const columns: GridColDef<SumUpTransaction>[] = [
+      {
+        field: "id",
+        headerName: t("common.id"),
+        width: 300,
+        renderCell: (params) => (
+          <Link component={RouterLink} to={SumUpTransactionRoutes.detail(params.row.id)}>
+            {params.row.id}
+          </Link>
+        ),
+      },
+      {
+        field: "amount",
+        headerName: t("sumup.checkout.amount"),
+        type: "number",
+        valueFormatter: (amount: number, row) => `${amount.toFixed(2)} ${row.currency}`,
+      },
+      { field: "payment_type", headerName: t("sumup.checkout.payment_type") },
+      { field: "timestamp", headerName: t("sumup.checkout.date"), width: 200 },
+      { field: "status", headerName: t("sumup.checkout.status") },
+      { field: "product_summary", headerName: t("sumup.transaction.product_summary"), flex: 1 },
+    ];
 
-  return (
-    <ListLayout title={t("sumup.transactions")} routes={ProductRoutes}>
-      <DataGrid
-        autoHeight
-        loading={isLoading}
-        rows={checkouts ?? []}
-        columns={columns}
-        disableRowSelectionOnClick
-        initialState={{
-          sorting: {
-            sortModel: [{ field: "timestamp", sort: "desc" }],
-          },
-        }}
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
-      />
-    </ListLayout>
-  );
-});
+    return (
+      <ListLayout title={t("sumup.transactions")} routes={ProductRoutes}>
+        <DataGrid
+          autoHeight
+          loading={isLoading}
+          rows={checkouts ?? []}
+          columns={columns}
+          disableRowSelectionOnClick
+          initialState={{
+            sorting: {
+              sortModel: [{ field: "timestamp", sort: "desc" }],
+            },
+          }}
+          sx={{ boxShadow: (theme) => theme.shadows[1] }}
+        />
+      </ListLayout>
+    );
+  },
+);

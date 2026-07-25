@@ -7,7 +7,7 @@ import {
 import { Box, Button, Grid, ListItem, Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { getUserName } from "@stustapay/models";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
@@ -15,20 +15,27 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import {
-  selectTillById,
-  selectUserById,
-  useDeleteTerminalMutation,
   useForceLogoutUserMutation,
-  useGetTerminalQuery,
-  useListTillsQuery,
-  useListUsersQuery,
   useLogoutTerminalMutation,
   useRemoveFromTerminalMutation,
 } from "@/api";
 import { config } from "@/api/common";
-import { TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
+import { TerminalRoutes, TillRoutes } from "@/app/routes";
 import { TerminalSwitchTill } from "@/components/features";
-import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components/layouts";
+import {
+  DetailBoolField,
+  DetailField,
+  DetailLayout,
+  DetailView,
+  UserDetailField,
+} from "@/components/layouts";
+import {
+  getTerminalCollection,
+  getTillCollection,
+  getUserCollection,
+  refetchNodeCollection,
+  refetchTillTerminalCollections,
+} from "@/db/collections";
 import { encodeTerminalRegistrationQrCode } from "@/core";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 
@@ -42,36 +49,47 @@ export const TerminalDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const [forceLogoutUser] = useForceLogoutUserMutation();
-  const [deleteTerminal] = useDeleteTerminalMutation();
   const [logoutTerminal] = useLogoutTerminalMutation();
   const [removeFromTerminal] = useRemoveFromTerminalMutation();
-  const { data: terminal, error: terminalError } = useGetTerminalQuery({
-    nodeId: currentNode.id,
-    terminalId: Number(terminalId),
-  });
-  const { data: users, error: userError } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills, error: tillError } = useListTillsQuery({ nodeId: currentNode.id });
+  const {
+    data: terminal,
+    isLoading: isTerminalLoading,
+    isError: isTerminalError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ terminals: getTerminalCollection(currentNode.id) })
+        .where(({ terminals }) => eq(terminals.id, Number(terminalId)))
+        .join(
+          { tills: getTillCollection(currentNode.id) },
+          ({ tills, terminals }) => eq(terminals.till_id, tills.id),
+          "left" as const,
+        )
+        .join(
+          { activeUsers: getUserCollection(currentNode.id) },
+          ({ activeUsers, terminals }) => eq(terminals.active_user_id, activeUsers.id),
+          "left" as const,
+        )
+        .select(({ activeUsers, terminals, tills }) => ({
+          ...terminals,
+          till: tills,
+          activeUser: activeUsers,
+        }))
+        .findOne(),
+    [currentNode.id, terminalId],
+  );
   const [switchTillOpen, setSwitchTillOpen] = React.useState(false);
 
   const openModal = useOpenModal();
 
-  if (terminalError || tillError || userError) {
+  if (isTerminalError) {
     toast.error("Error loading terminals or orders");
     return <Navigate to={TerminalRoutes.action("list")} />;
   }
 
-  const renderUser = (id?: number | null) => {
-    if (!id || !users) {
-      return "";
-    }
-
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return getUserName(user);
-  };
+  if (isTerminalLoading || !terminal) {
+    return <Loading />;
+  }
 
   const openConfirmDeleteDialog = () => {
     openModal({
@@ -79,9 +97,9 @@ export const TerminalDetail: React.FC = () => {
       title: t("terminal.delete"),
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
-        deleteTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
-          navigate(TerminalRoutes.action("list"))
-        );
+        getTerminalCollection(currentNode.id)
+          .delete(Number(terminalId))
+          .isPersisted.promise.then(() => navigate(TerminalRoutes.action("list")));
         return true;
       },
     });
@@ -93,19 +111,18 @@ export const TerminalDetail: React.FC = () => {
       title: t("terminal.unregisterTerminal"),
       content: t("terminal.unregisterTerminalDescription"),
       onConfirm: () => {
-        logoutTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) });
+        logoutTerminal({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
+          refetchNodeCollection(currentNode.id, "terminals"),
+        );
         return true;
       },
     });
   };
 
-  if (terminal === undefined || tills === undefined) {
-    return <Loading />;
-  }
-  const till = terminal.till_id != null ? selectTillById(tills, terminal.till_id) : undefined;
-
   const openConfirmRemoveTillDialog = () => {
-    if (!till) {
+    const till = terminal.till;
+    const tillId = terminal.till_id;
+    if (tillId == null || !till) {
       return;
     }
     openModal({
@@ -113,7 +130,9 @@ export const TerminalDetail: React.FC = () => {
       title: t("terminal.removeTill"),
       content: t("terminal.removeTillDescription", { tillName: till.name }),
       onConfirm: () => {
-        removeFromTerminal({ nodeId: till.node_id, tillId: till.id });
+        removeFromTerminal({ nodeId: till.node_id ?? currentNode.id, tillId }).then(() =>
+          refetchTillTerminalCollections(currentNode.id),
+        );
       },
     });
   };
@@ -124,7 +143,9 @@ export const TerminalDetail: React.FC = () => {
       title: t("till.forceLogoutUser"),
       content: t("till.forceLogoutUserDescription"),
       onConfirm: () => {
-        forceLogoutUser({ nodeId: currentNode.id, terminalId: Number(terminalId) });
+        forceLogoutUser({ nodeId: currentNode.id, terminalId: Number(terminalId) }).then(() =>
+          refetchNodeCollection(currentNode.id, "terminals"),
+        );
       },
     });
   };
@@ -147,7 +168,7 @@ export const TerminalDetail: React.FC = () => {
           color: "warning",
           icon: <PointOfSaleIcon />,
         },
-        ...(till != null
+        ...(terminal.till != null
           ? ([
               {
                 label: t("terminal.removeTill"),
@@ -179,19 +200,19 @@ export const TerminalDetail: React.FC = () => {
             <DetailField label={t("common.name")} value={terminal.name} />
             <DetailField label={t("common.description")} value={terminal.description} />
             <DetailField label={t("terminal.lastSeen")} value={terminal.last_seen} />
-            {till != null && (
+            {terminal.till != null && (
               <DetailField
-                linkTo={TillRoutes.detail(till.id, till.node_id)}
+                linkTo={TillRoutes.detail(terminal.till.id, terminal.till.node_id)}
                 label={t("terminal.till")}
-                value={till.name}
+                value={terminal.till.name}
               />
             )}
             {terminal.active_user_id != null && (
               <>
-                <DetailField
+                <UserDetailField
                   label={t("till.activeUser")}
-                  linkTo={UserRoutes.detail(terminal.active_user_id)}
-                  value={renderUser(terminal.active_user_id)}
+                  user={terminal.activeUser}
+                  fallbackNodeId={terminal.node_id}
                 />
                 <ListItem>
                   <Button
@@ -206,7 +227,10 @@ export const TerminalDetail: React.FC = () => {
               </>
             )}
             {terminal.registration_uuid != null && (
-              <DetailField label={t("terminal.registrationUUID")} value={terminal.registration_uuid} />
+              <DetailField
+                label={t("terminal.registrationUUID")}
+                value={terminal.registration_uuid}
+              />
             )}
             <DetailBoolField label={t("terminal.loggedIn")} value={terminal.session_uuid != null} />
             {terminal.mdm_device_id != null && (
@@ -236,7 +260,10 @@ export const TerminalDetail: React.FC = () => {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={encodeTerminalRegistrationQrCode(config.terminalApiBaseUrl, terminal.registration_uuid)}
+                  value={encodeTerminalRegistrationQrCode(
+                    config.terminalApiBaseUrl,
+                    terminal.registration_uuid,
+                  )}
                   viewBox={`0 0 256 256`}
                 />
               </Box>
@@ -249,7 +276,11 @@ export const TerminalDetail: React.FC = () => {
           <TerminalMap mdmDeviceId={terminal.mdm_device_id} label={terminal.name} />
         </Paper>
       )}
-      <TerminalSwitchTill open={switchTillOpen} terminalId={terminal.id} onClose={() => setSwitchTillOpen(false)} />
+      <TerminalSwitchTill
+        open={switchTillOpen}
+        terminalId={terminal.id}
+        onClose={() => setSwitchTillOpen(false)}
+      />
     </DetailLayout>
   );
 };

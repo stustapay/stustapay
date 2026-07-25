@@ -1,15 +1,17 @@
 import { Loading } from "@stustapay/components";
+import { useLiveQuery } from "@tanstack/react-db";
 import { FormikProps } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
 
-import { NewUserToRoles, useListUserToRoleQuery, useUpdateUserToRolesMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { UserToRoleRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { CreateLayoutV2 } from "@/components";
 import { RoleSelect, UserSelect } from "@/components/features";
+import type { NewUserToRoles } from "@/db/api/generated/types.gen";
+import { getUserToRoleCollection, getUserToRoleKey } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { UserRoleAssignmentsSection } from "./UserRoleAssignmentsSection";
@@ -27,7 +29,10 @@ const emptyInitialValues: NewUserToRoles = {
 const UserToRoleForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors, setFieldValue, touched }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: userToRoles } = useListUserToRoleQuery({ nodeId: currentNode.id });
+  const { data: userToRoles } = useLiveQuery(
+    (q) => q.from({ userToRoles: getUserToRoleCollection(currentNode.id) }),
+    [currentNode.id]
+  );
 
   const changeUserId = React.useCallback(
     (userId: number | undefined) => {
@@ -71,13 +76,12 @@ const UserToRoleForm: React.FC<FormikProps<NewUserToRoles>> = ({ values, errors,
 export const UserToRoleUpdate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const [updateUserToRoles] = useUpdateUserToRolesMutation();
   const { userId: userIdParam } = useParams();
   const userIdFromRoute = userIdParam != null ? Number(userIdParam) : undefined;
   const isEditMode = userIdFromRoute != null && Number.isFinite(userIdFromRoute);
-  const { data: userToRolesList, isLoading } = useListUserToRoleQuery(
-    { nodeId: currentNode.id },
-    { skip: !isEditMode }
+  const { data: userToRolesList, isLoading } = useLiveQuery(
+    (q) => q.from({ userToRoles: getUserToRoleCollection(currentNode.id) }),
+    [currentNode.id]
   );
 
   if (isEditMode && isLoading) {
@@ -95,12 +99,28 @@ export const UserToRoleUpdate: React.FC = withPrivilegeGuard("node_administratio
     : emptyInitialValues;
 
   return (
-    <CreateLayout
+    <CreateLayoutV2
       title={t("userToRole.create", { node: currentNode.name })}
       initialValues={initialValues}
       validationSchema={UserToRoleSchema}
       successRoute={UserToRoleRoutes.list()}
-      onSubmit={(u) => updateUserToRoles({ nodeId: currentNode.id, newUserToRoles: u })}
+      onSubmit={(u) => {
+        const collection = getUserToRoleCollection(currentNode.id);
+        const key = getUserToRoleKey(currentNode.id, u.user_id);
+        if (collection.has(key)) {
+          if (u.role_ids.length === 0) {
+            return collection.delete(key);
+          }
+          return collection.update(key, (draft) => {
+            draft.role_ids = u.role_ids;
+          });
+        }
+        return collection.insert({
+          user_id: u.user_id,
+          role_ids: u.role_ids,
+          node_id: currentNode.id,
+        });
+      }}
       form={UserToRoleForm}
     />
   );

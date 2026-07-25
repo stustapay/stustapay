@@ -3,7 +3,7 @@ import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { CashRegisterStocking } from "@/api";
+import { CashRegisterStocking } from "@/db/api/generated";
 
 import { buildStockingDenominationRows, StockingDenominationRow } from "./stockingDenominations";
 
@@ -13,7 +13,10 @@ export interface StockingMakeupTableProps {
 
 export const StockingMakeupTable: React.FC<StockingMakeupTableProps> = ({ stocking }) => {
   const { t } = useTranslation();
-  const rows = React.useMemo(() => buildStockingDenominationRows(stocking, { hideZero: true }), [stocking]);
+  const rows = React.useMemo(
+    () => buildStockingDenominationRows(stocking, { hideZero: true }),
+    [stocking],
+  );
 
   const columns = React.useMemo<GridColDef<StockingDenominationRow>[]>(
     () => [
@@ -50,7 +53,7 @@ export const StockingMakeupTable: React.FC<StockingMakeupTableProps> = ({ stocki
         width: 150,
       },
     ],
-    [t]
+    [t],
   );
 
   if (rows.length === 0) {
@@ -69,7 +72,7 @@ export const StockingMakeupTable: React.FC<StockingMakeupTableProps> = ({ stocki
       columns={columns}
       disableRowSelectionOnClick
       slots={{ toolbar: () => <DataGridTitle title={t("register.stockingMakeup")} /> }}
-      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };

@@ -1,9 +1,11 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from stustapay.bon.bon import BonJson
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextOrderService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
+from stustapay.core.http.normalize_data import PaginatedList
 from stustapay.core.schema.order import CompletedSaleProducts, EditSaleProducts, Order
 
 router = APIRouter(
@@ -13,20 +15,23 @@ router = APIRouter(
 )
 
 
-@router.get("/by-till/{till_id}", response_model=NormalizedList[Order, int])
-async def list_orders_by_till(token: CurrentAuthToken, till_id: int, order_service: ContextOrderService, node_id: int):
-    return normalize_list(await order_service.list_orders_by_till(token=token, till_id=till_id, node_id=node_id))
-
-
-@router.get("", response_model=NormalizedList[Order, int])
+@router.get("", response_model=PaginatedList[Order])
 async def list_orders(
     token: CurrentAuthToken,
     order_service: ContextOrderService,
     node_id: int,
-    customer_account_id: int,
+    customer_account_id: Optional[int] = None,
+    till_id: Optional[int] = None,
+    offset: int = 0,
+    limit: Optional[int] = None,
 ):
-    return normalize_list(
-        await order_service.list_orders(token=token, customer_account_id=customer_account_id, node_id=node_id)
+    return await order_service.list_orders(
+        token=token,
+        node_id=node_id,
+        customer_account_id=customer_account_id,
+        till_id=till_id,
+        offset=offset,
+        limit=limit,
     )
 
 

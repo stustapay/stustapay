@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextAccountService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.account import Account
 from stustapay.core.service.account import MoneyOverview
 
@@ -14,9 +13,9 @@ router = APIRouter(
 )
 
 
-@router.get("/system-accounts", response_model=NormalizedList[Account, int])
+@router.get("/system-accounts", response_model=list[Account])
 async def list_system_accounts(token: CurrentAuthToken, account_service: ContextAccountService, node_id: int):
-    return normalize_list(await account_service.list_system_accounts(token=token, node_id=node_id))
+    return await account_service.list_system_accounts(token=token, node_id=node_id)
 
 
 @router.get("/money-overview", response_model=MoneyOverview)

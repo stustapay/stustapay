@@ -1,81 +1,69 @@
 import { Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
-import { getUserName } from "@stustapay/models";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import {
-  PayoutRunWithStats,
-  selectPayoutRunAll,
-  selectUserById,
-  useListPayoutRunsQuery,
-  useListUsersQuery,
-} from "@/api";
-import { PayoutRunRoutes, UserRoutes } from "@/app/routes";
+import { PayoutRunRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { getPayoutRunCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { PendingPayoutDetail } from "./PendingPayoutDetail";
+import { UserCell, userValueGetter } from "@/components/table/UserCell";
 
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { payoutRuns, isLoading: isPayoutRunsLoading } = useListPayoutRunsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        payoutRuns: data ? selectPayoutRunAll(data) : undefined,
-      }),
-    }
+  const { data: payoutRuns, isLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ payoutRun: getPayoutRunCollection(currentNode.id) })
+        .join({ user: getUserCollection(currentNode.id) }, ({ payoutRun, user }) =>
+          eq(payoutRun.created_by, user.id),
+        ),
+    [currentNode.id],
   );
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
 
-  const columns: GridColDef<PayoutRunWithStats>[] = [
+  type PayoutRunRow = ArrayElement<NonNullable<typeof payoutRuns>>;
+
+  const columns: GridColDef<PayoutRunRow>[] = [
     {
-      field: "id",
+      field: "payoutRun.id",
       headerName: t("payoutRun.id"),
       minWidth: 50,
       renderCell: (params) => (
-        <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.id)}>
-          {params.row.id}
+        <Link component={RouterLink} to={PayoutRunRoutes.detail(params.row.payoutRun.id)}>
+          {params.row.payoutRun.id}
         </Link>
       ),
     },
     {
-      field: "created_by",
+      field: "payoutRun.created_by",
       headerName: t("payoutRun.createdBy"),
       flex: 1,
-      valueGetter: (value) => {
-        if (!value || !users) {
-          return "";
-        }
-
-        return getUserName(selectUserById(users, value));
+      valueGetter: (_, row) => {
+        return userValueGetter(row.user);
       },
-      renderCell: (params) =>
-        params.row.created_by && (
-          <Link component={RouterLink} to={UserRoutes.detail(params.row.created_by)}>
-            {users && getUserName(selectUserById(users, params.row.created_by))}
-          </Link>
-        ),
+      renderCell: ({ row }) => <UserCell user={row.user} nodeId={row.payoutRun.node_id} />,
     },
     {
-      field: "created_at",
+      field: "payoutRun.created_at",
       headerName: t("payoutRun.createdAt"),
       type: "dateTime",
       valueGetter: (value) => new Date(value),
       minWidth: 200,
     },
     {
-      field: "done",
+      field: "payoutRun.done",
       headerName: t("common.status"),
       minWidth: 100,
       renderCell: (params) => {
-        if (params.row.done) {
+        if (params.row.payoutRun.done) {
           return (
             <>
               <CheckIcon />
@@ -83,7 +71,7 @@ export const PayoutRunList: React.FC = () => {
             </>
           );
         }
-        if (params.row.revoked) {
+        if (params.row.payoutRun.revoked) {
           return (
             <>
               <DeleteIcon />
@@ -95,19 +83,19 @@ export const PayoutRunList: React.FC = () => {
       },
     },
     {
-      field: "total_payout_amount",
+      field: "payoutRun.total_payout_amount",
       headerName: t("payoutRun.totalPayoutAmount"),
       type: "currency",
       minWidth: 150,
     },
     {
-      field: "total_donation_amount",
+      field: "payoutRun.total_donation_amount",
       headerName: t("payoutRun.totalDonationAmount"),
       type: "currency",
       minWidth: 150,
     },
     {
-      field: "n_payouts",
+      field: "payoutRun.n_payouts",
       headerName: t("payoutRun.nPayouts"),
       type: "number",
       minWidth: 150,
@@ -119,16 +107,17 @@ export const PayoutRunList: React.FC = () => {
       <PendingPayoutDetail />
       <DataGrid
         autoHeight
-        loading={isPayoutRunsLoading || isUsersLoading}
+        loading={isLoading}
         rows={payoutRuns ?? []}
         columns={columns}
+        getRowId={(row) => row.payoutRun.id}
         initialState={{
           sorting: {
             sortModel: [{ field: "created_at", sort: "desc" }],
           },
         }}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

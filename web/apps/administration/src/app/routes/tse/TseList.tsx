@@ -1,14 +1,21 @@
 import { Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import { Tse, selectTseAll, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
+import { Tse } from "@/db/api/generated";
+import { getTseCollection } from "@/db/collections";
+import {
+  useCurrentNode,
+  useCurrentUserHasPrivilege,
+  useCurrentUserHasPrivilegeAtNode,
+  useRenderNode,
+} from "@/hooks";
 
 export const TseList: React.FC = () => {
   const { t } = useTranslation();
@@ -17,14 +24,9 @@ export const TseList: React.FC = () => {
   const canManageTsesAtNode = useCurrentUserHasPrivilegeAtNode(TseRoutes.privilege);
   const navigate = useNavigate();
 
-  const { tses, isLoading: isTsesLoading } = useListTsesQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        tses: data ? selectTseAll(data) : undefined,
-      }),
-    }
+  const { data: tses, isLoading: isTsesLoading } = useLiveQuery(
+    (q) => q.from({ tses: getTseCollection(currentNode.id) }),
+    [currentNode.id],
   );
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -92,7 +94,7 @@ export const TseList: React.FC = () => {
         rows={tses ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

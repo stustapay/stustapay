@@ -1,15 +1,19 @@
-import { NewCashRegisterStocking, NewCashRegisterStockingSchema } from "@stustapay/models";
+import { NewCashRegisterStockingSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCreateRegisterStockingMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { TillStockingsRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { CreateLayoutV2 } from "@/components";
+import { NewCashRegisterStocking } from "@/db/api/generated";
+import { generateId, getCashRegisterStockingCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
-import { defaultCashRegisterStockingDenominationValues } from "./stockingDenominations";
+import {
+  computeStockingTotal,
+  defaultCashRegisterStockingDenominationValues,
+} from "./stockingDenominations";
 
 const initialValues: NewCashRegisterStocking = {
   name: "",
@@ -17,19 +21,28 @@ const initialValues: NewCashRegisterStocking = {
   variable_in_euro: 0,
 };
 
-export const CashRegisterStockingCreate: React.FC = withPrivilegeGuard("node_administration", () => {
-  const { t } = useTranslation();
-  const { currentNode } = useCurrentNode();
-  const [createStocking] = useCreateRegisterStockingMutation();
+export const CashRegisterStockingCreate: React.FC = withPrivilegeGuard(
+  "node_administration",
+  () => {
+    const { t } = useTranslation();
+    const { currentNode } = useCurrentNode();
 
-  return (
-    <CreateLayout
-      title={t("register.createStocking")}
-      successRoute={TillStockingsRoutes.list()}
-      initialValues={initialValues}
-      validationSchema={NewCashRegisterStockingSchema}
-      onSubmit={(stocking) => createStocking({ nodeId: currentNode.id, newCashRegisterStocking: stocking })}
-      form={CashRegisterStockingForm}
-    />
-  );
-});
+    return (
+      <CreateLayoutV2
+        title={t("register.createStocking")}
+        successRoute={TillStockingsRoutes.list()}
+        initialValues={initialValues}
+        validationSchema={NewCashRegisterStockingSchema}
+        onSubmit={(stocking) =>
+          getCashRegisterStockingCollection(currentNode.id).insert({
+            ...stocking,
+            id: generateId(),
+            node_id: currentNode.id,
+            total: computeStockingTotal(stocking),
+          })
+        }
+        form={CashRegisterStockingForm}
+      />
+    );
+  },
+);

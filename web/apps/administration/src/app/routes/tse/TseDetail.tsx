@@ -1,12 +1,13 @@
 import { Edit as EditIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { selectTseById, useListTsesQuery } from "@/api";
 import { TseRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
+import { getTseCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const TseDetail: React.FC = () => {
@@ -14,21 +15,24 @@ export const TseDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { tseId } = useParams();
   const navigate = useNavigate();
-  const { tse, error } = useListTsesQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        tse: data ? selectTseById(data, Number(tseId)) : undefined,
-      }),
-    }
+  const {
+    data: tse,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ tses: getTseCollection(currentNode.id) })
+        .where(({ tses }) => eq(tses.id, Number(tseId)))
+        .findOne(),
+    [currentNode.id, tseId]
   );
 
-  if (error) {
+  if (isError) {
     return <Navigate to={TseRoutes.list()} />;
   }
 
-  if (tse === undefined) {
+  if (isLoading || !tse) {
     return <Loading />;
   }
 

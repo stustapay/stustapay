@@ -71,7 +71,7 @@ export const UserTagTable: React.FC<UserTagTableProps> = ({ userTags }) => {
       rows={userTags}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };

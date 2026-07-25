@@ -1,13 +1,13 @@
 import { Loading } from "@stustapay/components";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+import { Navigate, useParams } from "react-router-dom";
 
-import { selectUserRoleById, useListUserRolesQuery, useUpdateUserRoleMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { UserRoleRoutes } from "@/app/routes";
-import { EditLayout } from "@/components";
+import { EditLayoutV2 } from "@/components";
+import { getUserRoleCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { UserRoleUpdateForm, UserRoleUpdateSchema, UserRoleUpdate as UserRoleUpdateType } from "./UserRoleUpdateForm";
@@ -16,34 +16,40 @@ export const UserRoleUpdate: React.FC = withPrivilegeGuard("node_administration"
   const { t } = useTranslation();
   const { roleId } = useParams();
   const { currentNode } = useCurrentNode();
-  const [updateUserRole] = useUpdateUserRoleMutation();
-  const { userRole, isLoading } = useListUserRolesQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        userRole: data ? selectUserRoleById(data, Number(roleId)) : undefined,
-      }),
-    }
+  const {
+    data: userRole,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ userRoles: getUserRoleCollection(currentNode.id) })
+        .where(({ userRoles }) => eq(userRoles.id, Number(roleId)))
+        .findOne(),
+    [currentNode.id, roleId]
   );
 
-  if (isLoading) {
-    return <Loading />;
+  if (isError) {
+    return <Navigate to={UserRoleRoutes.list()} />;
   }
 
-  if (!userRole) {
-    toast.error("error loading user role");
+  if (isLoading || !userRole) {
     return <Loading />;
   }
 
   return (
-    <EditLayout
+    <EditLayoutV2
       title={t("userRole.update")}
       successRoute={UserRoleRoutes.list()}
       initialValues={userRole as UserRoleUpdateType}
       validationSchema={UserRoleUpdateSchema}
-      onSubmit={(u) =>
-        updateUserRole({ nodeId: currentNode.id, userRoleId: userRole.id, updateUserRolePrivilegesPayload: u })
+      onSubmit={(updatedRole) =>
+        getUserRoleCollection(currentNode.id).update(userRole.id, (draft) => {
+          draft.can_assign_all_roles = updatedRole.can_assign_all_roles;
+          draft.assignable_role_ids = updatedRole.assignable_role_ids;
+          draft.event_privileges = updatedRole.event_privileges;
+          draft.node_privileges = updatedRole.node_privileges;
+        })
       }
       form={UserRoleUpdateForm}
     />

@@ -2,10 +2,11 @@ import { NewTerminal, NewTerminalSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCreateTerminalMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { TerminalRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { CreateLayoutV2 } from "@/components";
+import { Terminal } from "@/db/api/generated";
+import { generateId, getTerminalCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { TerminalForm } from "./TerminalForm";
@@ -18,15 +19,24 @@ const initialValues: NewTerminal = {
 export const TerminalCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const [createTerminal] = useCreateTerminalMutation();
 
   return (
-    <CreateLayout
+    <CreateLayoutV2
       title={t("terminal.create")}
-      successRoute={(terminal) => TerminalRoutes.detail(terminal.id)}
+      successRoute={(terminal: Terminal) => TerminalRoutes.detail(terminal.id)}
       initialValues={initialValues}
       validationSchema={NewTerminalSchema}
-      onSubmit={(terminal) => createTerminal({ nodeId: currentNode.id, newTerminal: terminal })}
+      onSubmit={(terminal) =>
+        getTerminalCollection(currentNode.id).insert({
+          ...terminal,
+          id: generateId(),
+          node_id: currentNode.id,
+          till_id: null,
+          session_uuid: null,
+          registration_uuid: null,
+          last_seen: new Date().toISOString(),
+        })
+      }
       form={TerminalForm}
     />
   );

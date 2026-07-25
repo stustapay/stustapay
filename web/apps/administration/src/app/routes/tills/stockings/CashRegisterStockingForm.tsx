@@ -2,7 +2,7 @@ import { FormTextField } from "@stustapay/form-components";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
-import { NewCashRegisterStocking } from "@/api";
+import { NewCashRegisterStocking } from "@/db/api/generated";
 
 import { StockingMakeupFormTable } from "./StockingMakeupFormTable";
 

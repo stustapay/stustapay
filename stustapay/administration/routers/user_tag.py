@@ -108,13 +108,13 @@ async def update_user_tag_comment(
     )
 
 
-@router.get("/user-tag-variants", response_model=NormalizedList[UserTagVariant, int])
+@router.get("/user-tag-variants", response_model=list[UserTagVariant])
 async def list_user_tag_variants(
     token: CurrentAuthToken,
     user_tag_service: ContextUserTagService,
     node_id: int,
 ):
-    return normalize_list(await user_tag_service.list_user_tag_variants(token=token, node_id=node_id))
+    return await user_tag_service.list_user_tag_variants(token=token, node_id=node_id)
 
 
 @router.post("/user-tag-variants", response_model=UserTagVariant)

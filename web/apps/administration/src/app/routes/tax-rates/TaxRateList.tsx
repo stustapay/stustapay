@@ -21,7 +21,7 @@ export const TaxRateList: React.FC = () => {
 
   const { data: taxRates, isLoading } = useLiveQuery(
     (q) => q.from({ taxRates: getTaxRateCollection(currentNode.id) }),
-    [currentNode.id]
+    [currentNode.id],
   );
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -90,7 +90,7 @@ export const TaxRateList: React.FC = () => {
         rows={taxRates ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

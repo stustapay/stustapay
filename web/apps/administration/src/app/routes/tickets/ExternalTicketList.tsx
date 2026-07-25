@@ -1,21 +1,26 @@
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { ExternalTicket, useListExternalTicketsQuery } from "@/api";
 import { CustomerRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { getExternalTicketCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const ExternalTicketList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: tickets, isLoading: isTicketsLoading } = useListExternalTicketsQuery({ nodeId: currentNode.id });
+  const { data: tickets, isLoading: isTicketsLoading } = useLiveQuery(
+    (q) => q.from({ tickets: getExternalTicketCollection(currentNode.id) }),
+    [currentNode.id],
+  );
 
-  const columns: GridColDef<ExternalTicket>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof tickets>>>[] = [
     {
       field: "id",
       headerName: t("common.id"),
@@ -68,22 +73,22 @@ export const ExternalTicketList: React.FC = () => {
       ),
     },
     {
-      field: "pretix_product_name" as any,
+      field: "pretix_product_name",
       headerName: t("externalTicket.ticketProduct", "Ticket"),
       flex: 1,
-      valueGetter: (_value: any, row: any) => row.pretix_product_name ?? "",
+      valueGetter: (_value, row) => row.pretix_product_name ?? "",
     },
     {
-      field: "customer_name" as any,
+      field: "customer_name",
       headerName: t("externalTicket.customerName", "Customer"),
       flex: 1,
-      valueGetter: (_value: any, row: any) => row.customer_name ?? "",
+      valueGetter: (_value, row) => row.customer_name ?? "",
     },
     {
-      field: "customer_email" as any,
+      field: "customer_email",
       headerName: t("externalTicket.customerEmail", "Email"),
       flex: 1,
-      valueGetter: (_value: any, row: any) => row.customer_email ?? "",
+      valueGetter: (_value, row) => row.customer_email ?? "",
     },
     {
       field: "initial_top_up_amount",
@@ -110,7 +115,7 @@ export const ExternalTicketList: React.FC = () => {
         rows={tickets ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

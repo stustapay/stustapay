@@ -30,18 +30,6 @@ export const zAo146aExportPayload = z.object({
 });
 
 /**
- * AuditLog
- */
-export const zAuditLog = z.object({
-    id: z.int(),
-    created_at: z.iso.datetime(),
-    node_id: z.int(),
-    log_type: z.string(),
-    originating_user_id: z.int().nullable(),
-    originating_terminal_id: z.int().nullable()
-});
-
-/**
  * AuditLogDetail
  */
 export const zAuditLogDetail = z.object({
@@ -248,16 +236,16 @@ export const zExternalTicket = z.object({
     created_at: z.iso.datetime(),
     token: z.string(),
     ticket_type: zExternalTicketType,
-    external_link: z.string().nullish(),
-    customer_email: z.string().nullish(),
-    customer_name: z.string().nullish(),
-    initial_top_up_amount: z.number().optional().default(0),
-    pretix_item_id: z.int().nullish(),
-    pretix_product_name: z.string().nullish(),
+    external_link: z.string().nullable(),
+    customer_email: z.string().nullable(),
+    customer_name: z.string().nullable(),
+    initial_top_up_amount: z.number(),
+    pretix_item_id: z.int().nullable(),
+    pretix_product_name: z.string().nullable(),
     id: z.int(),
     customer_account_id: z.int(),
     has_checked_in: z.boolean(),
-    cancelled: z.boolean().optional().default(false)
+    cancelled: z.boolean()
 });
 
 /**
@@ -572,30 +560,6 @@ export const zNewUserRole = z.object({
 });
 
 /**
- * NormalizedList[CashRegisterStocking, int]
- */
-export const zNormalizedListCashRegisterStockingInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zCashRegisterStocking)
-});
-
-/**
- * NormalizedList[CashRegister, int]
- */
-export const zNormalizedListCashRegisterInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zCashRegister)
-});
-
-/**
- * NormalizedList[CashierShift, int]
- */
-export const zNormalizedListCashierShiftInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zCashierShift)
-});
-
-/**
  * ObjectType
  */
 export const zObjectType = z.enum([
@@ -760,14 +724,6 @@ export const zPayoutRunWithStats = z.object({
     total_donation_amount: z.number(),
     total_payout_amount: z.number(),
     n_payouts: z.int()
-});
-
-/**
- * NormalizedList[PayoutRunWithStats, int]
- */
-export const zNormalizedListPayoutRunWithStatsInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zPayoutRunWithStats)
 });
 
 /**
@@ -1224,14 +1180,6 @@ export const zCashierShiftStats = z.object({
 });
 
 /**
- * NormalizedList[Order, int]
- */
-export const zNormalizedListOrderInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zOrder)
-});
-
-/**
  * OrderWithTse
  */
 export const zOrderWithTse = z.object({
@@ -1275,6 +1223,14 @@ export const zBonJson = z.object({
     tax_rate_aggregations: z.array(zTaxRateAggregation),
     config: zBonConfig,
     currency_identifier: z.string()
+});
+
+/**
+ * PaginatedList[Order]
+ */
+export const zPaginatedListOrder = z.object({
+    items: z.array(zOrder),
+    total: z.int()
 });
 
 /**
@@ -1343,14 +1299,6 @@ export const zTerminal = z.object({
 });
 
 /**
- * NormalizedList[Terminal, int]
- */
-export const zNormalizedListTerminalInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTerminal)
-});
-
-/**
  * TerminalLocation
  */
 export const zTerminalLocation = z.object({
@@ -1380,14 +1328,6 @@ export const zTicket = z.object({
 });
 
 /**
- * NormalizedList[Ticket, int]
- */
-export const zNormalizedListTicketInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTicket)
-});
-
-/**
  * Till
  */
 export const zTill = z.object({
@@ -1407,14 +1347,6 @@ export const zTill = z.object({
 });
 
 /**
- * NormalizedList[Till, int]
- */
-export const zNormalizedListTillInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTill)
-});
-
-/**
  * TillButton
  */
 export const zTillButton = z.object({
@@ -1423,14 +1355,6 @@ export const zTillButton = z.object({
     node_id: z.int(),
     id: z.int(),
     price: z.number()
-});
-
-/**
- * NormalizedList[TillButton, int]
- */
-export const zNormalizedListTillButtonInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTillButton)
 });
 
 /**
@@ -1443,14 +1367,6 @@ export const zTillLayout = z.object({
     ticket_ids: z.array(z.int()).nullish(),
     node_id: z.int(),
     id: z.int()
-});
-
-/**
- * NormalizedList[TillLayout, int]
- */
-export const zNormalizedListTillLayoutInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTillLayout)
 });
 
 /**
@@ -1469,14 +1385,6 @@ export const zTillProfile = z.object({
     enable_card_payment: z.boolean(),
     node_id: z.int(),
     id: z.int()
-});
-
-/**
- * NormalizedList[TillProfile, int]
- */
-export const zNormalizedListTillProfileInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTillProfile)
 });
 
 /**
@@ -1505,11 +1413,11 @@ export const zTransaction = z.object({
 });
 
 /**
- * NormalizedList[Transaction, int]
+ * PaginatedList[Transaction]
  */
-export const zNormalizedListTransactionInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTransaction)
+export const zPaginatedListTransaction = z.object({
+    items: z.array(zTransaction),
+    total: z.int()
 });
 
 /**
@@ -1569,14 +1477,6 @@ export const zTse = z.object({
     process_data_encoding: z.string().nullable(),
     tse_description: z.string().nullable(),
     certificate_date: z.string().nullable()
-});
-
-/**
- * NormalizedList[Tse, int]
- */
-export const zNormalizedListTseInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTse)
 });
 
 /**
@@ -1718,14 +1618,6 @@ export const zUser = z.object({
 });
 
 /**
- * NormalizedList[User, int]
- */
-export const zNormalizedListUserInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zUser)
-});
-
-/**
  * UserLoginSuccess
  */
 export const zUserLoginSuccess = z.object({
@@ -1752,14 +1644,6 @@ export const zUserRole = z.object({
     node_privileges: z.array(zNodePrivilege),
     id: z.int(),
     node_id: z.int()
-});
-
-/**
- * NormalizedList[UserRole, int]
- */
-export const zNormalizedListUserRoleInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zUserRole)
 });
 
 /**
@@ -1881,14 +1765,6 @@ export const zMoneyOverview = z.object({
 });
 
 /**
- * NormalizedList[Account, int]
- */
-export const zNormalizedListAccountInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zAccount)
-});
-
-/**
  * UserTagSecret
  */
 export const zUserTagSecret = z.object({
@@ -1908,14 +1784,6 @@ export const zUserTagVariant = z.object({
     priority: z.int().optional().default(0),
     id: z.int(),
     node_id: z.int()
-});
-
-/**
- * NormalizedList[UserTagVariant, int]
- */
-export const zNormalizedListUserTagVariantInt = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zUserTagVariant)
 });
 
 /**
@@ -2026,14 +1894,6 @@ export const zCashierShiftStatsWritable = z.object({
 });
 
 /**
- * NormalizedList[Order, int]
- */
-export const zNormalizedListOrderIntWritable = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zOrderWritable)
-});
-
-/**
  * OrderWithTse
  */
 export const zOrderWithTseWritable = z.object({
@@ -2075,6 +1935,14 @@ export const zBonJsonWritable = z.object({
     tax_rate_aggregations: z.array(zTaxRateAggregation),
     config: zBonConfig,
     currency_identifier: z.string()
+});
+
+/**
+ * PaginatedList[Order]
+ */
+export const zPaginatedListOrderWritable = z.object({
+    items: z.array(zOrderWritable),
+    total: z.int()
 });
 
 /**
@@ -2141,11 +2009,11 @@ export const zTransactionWritable = z.object({
 });
 
 /**
- * NormalizedList[Transaction, int]
+ * PaginatedList[Transaction]
  */
-export const zNormalizedListTransactionIntWritable = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zTransactionWritable)
+export const zPaginatedListTransactionWritable = z.object({
+    items: z.array(zTransactionWritable),
+    total: z.int()
 });
 
 /**
@@ -2164,14 +2032,6 @@ export const zUserWritable = z.object({
     cash_drawer_balance: z.number().nullish(),
     terminal_ids: z.array(z.int()),
     id: z.int()
-});
-
-/**
- * NormalizedList[User, int]
- */
-export const zNormalizedListUserIntWritable = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zUserWritable)
 });
 
 /**
@@ -2269,14 +2129,6 @@ export const zMoneyOverviewWritable = z.object({
     total_cash_register_balance: z.number()
 });
 
-/**
- * NormalizedList[Account, int]
- */
-export const zNormalizedListAccountIntWritable = z.object({
-    ids: z.array(z.int()),
-    entities: z.record(z.string(), zAccountWritable)
-});
-
 export const zListProductsQuery = z.object({
     node_id: z.int(),
     show_all: z.unknown().optional().default(false)
@@ -2308,19 +2160,6 @@ export const zDeleteProductQuery = z.object({
     node_id: z.int()
 });
 
-export const zGetProductPath = z.object({
-    product_id: z.int()
-});
-
-export const zGetProductQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetProductResponse = zProduct;
-
 export const zUpdateProductBody = zNewProduct;
 
 export const zUpdateProductPath = z.object({
@@ -2345,9 +2184,11 @@ export const zListUsersQuery = z.object({
 });
 
 /**
+ * Response List Users Users Get
+ *
  * Successful Response
  */
-export const zListUsersResponse = zNormalizedListUserInt;
+export const zListUsersResponse = z.array(zUser);
 
 export const zCreateUserBody = zCreateUserPayload;
 
@@ -2359,42 +2200,6 @@ export const zCreateUserQuery = z.object({
  * Successful Response
  */
 export const zCreateUserResponse = zUser;
-
-export const zDeleteUserPath = z.object({
-    user_id: z.int()
-});
-
-export const zDeleteUserQuery = z.object({
-    node_id: z.int()
-});
-
-export const zGetUserPath = z.object({
-    user_id: z.int()
-});
-
-export const zGetUserQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetUserResponse = zUser;
-
-export const zUpdateUserBody = zUpdateUserPayload;
-
-export const zUpdateUserPath = z.object({
-    user_id: z.int()
-});
-
-export const zUpdateUserQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zUpdateUserResponse = zUser;
 
 export const zGetUserVoucherGrantStatsPath = z.object({
     user_id: z.int()
@@ -2424,6 +2229,29 @@ export const zListUserRoleAssignmentsQuery = z.object({
  */
 export const zListUserRoleAssignmentsResponse = z.array(zUserRoleAssignment);
 
+export const zDeleteUserPath = z.object({
+    user_id: z.int()
+});
+
+export const zDeleteUserQuery = z.object({
+    node_id: z.int()
+});
+
+export const zUpdateUserBody = zUpdateUserPayload;
+
+export const zUpdateUserPath = z.object({
+    user_id: z.int()
+});
+
+export const zUpdateUserQuery = z.object({
+    node_id: z.int()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateUserResponse = zUser;
+
 export const zChangeUserPasswordBody = zChangeUserPasswordPayload;
 
 export const zChangeUserPasswordPath = z.object({
@@ -2444,9 +2272,11 @@ export const zListUserRolesQuery = z.object({
 });
 
 /**
+ * Response List User Roles User Roles Get
+ *
  * Successful Response
  */
-export const zListUserRolesResponse = zNormalizedListUserRoleInt;
+export const zListUserRolesResponse = z.array(zUserRole);
 
 export const zCreateUserRoleBody = zNewUserRole;
 
@@ -2534,19 +2364,6 @@ export const zDeleteTaxRateQuery = z.object({
     node_id: z.int()
 });
 
-export const zGetTaxRatePath = z.object({
-    tax_rate_id: z.int()
-});
-
-export const zGetTaxRateQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTaxRateResponse = zTaxRate;
-
 export const zUpdateTaxRateBody = zNewTaxRate;
 
 export const zUpdateTaxRatePath = z.object({
@@ -2581,9 +2398,11 @@ export const zListTillsQuery = z.object({
 });
 
 /**
+ * Response List Tills Tills Get
+ *
  * Successful Response
  */
-export const zListTillsResponse = zNormalizedListTillInt;
+export const zListTillsResponse = z.array(zTill);
 
 export const zCreateTillBody = zNewTill;
 
@@ -2603,19 +2422,6 @@ export const zDeleteTillPath = z.object({
 export const zDeleteTillQuery = z.object({
     node_id: z.int()
 });
-
-export const zGetTillPath = z.object({
-    till_id: z.int()
-});
-
-export const zGetTillQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTillResponse = zTill;
 
 export const zUpdateTillBody = zNewTill;
 
@@ -2655,9 +2461,11 @@ export const zListTillLayoutsQuery = z.object({
 });
 
 /**
+ * Response List Till Layouts Till Layouts Get
+ *
  * Successful Response
  */
-export const zListTillLayoutsResponse = zNormalizedListTillLayoutInt;
+export const zListTillLayoutsResponse = z.array(zTillLayout);
 
 export const zCreateTillLayoutBody = zNewTillLayout;
 
@@ -2677,19 +2485,6 @@ export const zDeleteTillLayoutPath = z.object({
 export const zDeleteTillLayoutQuery = z.object({
     node_id: z.int()
 });
-
-export const zGetTillLayoutPath = z.object({
-    layout_id: z.int()
-});
-
-export const zGetTillLayoutQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTillLayoutResponse = zTillLayout;
 
 export const zUpdateTillLayoutBody = zNewTillLayout;
 
@@ -2711,9 +2506,11 @@ export const zListTillProfilesQuery = z.object({
 });
 
 /**
+ * Response List Till Profiles Till Profiles Get
+ *
  * Successful Response
  */
-export const zListTillProfilesResponse = zNormalizedListTillProfileInt;
+export const zListTillProfilesResponse = z.array(zTillProfile);
 
 export const zCreateTillProfileBody = zNewTillProfile;
 
@@ -2733,19 +2530,6 @@ export const zDeleteTillProfilePath = z.object({
 export const zDeleteTillProfileQuery = z.object({
     node_id: z.int()
 });
-
-export const zGetTillProfilePath = z.object({
-    profile_id: z.int()
-});
-
-export const zGetTillProfileQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTillProfileResponse = zTillProfile;
 
 export const zUpdateTillProfileBody = zNewTillProfile;
 
@@ -2767,9 +2551,11 @@ export const zListTillButtonsQuery = z.object({
 });
 
 /**
+ * Response List Till Buttons Till Buttons Get
+ *
  * Successful Response
  */
-export const zListTillButtonsResponse = zNormalizedListTillButtonInt;
+export const zListTillButtonsResponse = z.array(zTillButton);
 
 export const zCreateTillButtonBody = zNewTillButton;
 
@@ -2789,19 +2575,6 @@ export const zDeleteTillButtonPath = z.object({
 export const zDeleteTillButtonQuery = z.object({
     node_id: z.int()
 });
-
-export const zGetTillButtonPath = z.object({
-    button_id: z.int()
-});
-
-export const zGetTillButtonQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTillButtonResponse = zTillButton;
 
 export const zUpdateTillButtonBody = zNewTillButton;
 
@@ -2823,9 +2596,11 @@ export const zListRegisterStockingsQuery = z.object({
 });
 
 /**
+ * Response List Register Stockings Till Register Stockings Get
+ *
  * Successful Response
  */
-export const zListRegisterStockingsResponse = zNormalizedListCashRegisterStockingInt;
+export const zListRegisterStockingsResponse = z.array(zCashRegisterStocking);
 
 export const zCreateRegisterStockingBody = zNewCashRegisterStocking;
 
@@ -2866,9 +2641,11 @@ export const zListCashRegistersAdminQuery = z.object({
 });
 
 /**
+ * Response List Cash Registers Admin Till Registers Get
+ *
  * Successful Response
  */
-export const zListCashRegistersAdminResponse = zNormalizedListCashRegisterInt;
+export const zListCashRegistersAdminResponse = z.array(zCashRegister);
 
 export const zCreateRegisterBody = zNewCashRegister;
 
@@ -2881,6 +2658,12 @@ export const zCreateRegisterQuery = z.object({
  */
 export const zCreateRegisterResponse = zCashRegister;
 
+export const zTransferRegisterBody = zTransferRegisterPayload;
+
+export const zTransferRegisterQuery = z.object({
+    node_id: z.int()
+});
+
 export const zDeleteRegisterPath = z.object({
     register_id: z.int()
 });
@@ -2889,19 +2672,6 @@ export const zDeleteRegisterQuery = z.object({
     node_id: z.int()
 });
 
-export const zGetCashRegisterAdminPath = z.object({
-    register_id: z.int()
-});
-
-export const zGetCashRegisterAdminQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetCashRegisterAdminResponse = zCashRegister;
-
 export const zUpdateRegisterBody = zNewCashRegister;
 
 export const zUpdateRegisterPath = z.object({
@@ -2909,38 +2679,6 @@ export const zUpdateRegisterPath = z.object({
 });
 
 export const zUpdateRegisterQuery = z.object({
-    node_id: z.int()
-});
-
-export const zGetCashierShiftsForRegisterPath = z.object({
-    register_id: z.int()
-});
-
-export const zGetCashierShiftsForRegisterQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetCashierShiftsForRegisterResponse = zNormalizedListCashierShiftInt;
-
-export const zListTransactionsPath = z.object({
-    register_id: z.int()
-});
-
-export const zListTransactionsQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zListTransactionsResponse = zNormalizedListTransactionInt;
-
-export const zTransferRegisterBody = zTransferRegisterPayload;
-
-export const zTransferRegisterQuery = z.object({
     node_id: z.int()
 });
 
@@ -2954,9 +2692,11 @@ export const zListSystemAccountsQuery = z.object({
 });
 
 /**
+ * Response List System Accounts System Accounts Get
+ *
  * Successful Response
  */
-export const zListSystemAccountsResponse = zNormalizedListAccountInt;
+export const zListSystemAccountsResponse = z.array(zAccount);
 
 export const zGetMoneyOverviewQuery = z.object({
     node_id: z.int()
@@ -3023,28 +2763,18 @@ export const zUpdateAccountCommentQuery = z.object({
  */
 export const zUpdateAccountCommentResponse = zAccount;
 
-export const zListOrdersByTillPath = z.object({
-    till_id: z.int()
-});
-
-export const zListOrdersByTillQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zListOrdersByTillResponse = zNormalizedListOrderInt;
-
 export const zListOrdersQuery = z.object({
     node_id: z.int(),
-    customer_account_id: z.int()
+    customer_account_id: z.int().nullish(),
+    till_id: z.int().nullish(),
+    offset: z.int().optional().default(0),
+    limit: z.int().nullish()
 });
 
 /**
  * Successful Response
  */
-export const zListOrdersResponse = zNormalizedListOrderInt;
+export const zListOrdersResponse = zPaginatedListOrder;
 
 export const zCancelOrderPath = z.object({
     order_id: z.int()
@@ -3091,18 +2821,19 @@ export const zEditOrderQuery = z.object({
  */
 export const zEditOrderResponse = zCompletedSaleProducts;
 
-export const zGetCashierShiftsPath = z.object({
-    cashier_id: z.int()
-});
-
-export const zGetCashierShiftsQuery = z.object({
-    node_id: z.int()
+export const zListCashierShiftsQuery = z.object({
+    node_id: z.int(),
+    cashier_id: z.int().nullish(),
+    cash_register_id: z.int().nullish(),
+    shift_id: z.int().nullish()
 });
 
 /**
+ * Response List Cashier Shifts Cashiers Shifts Get
+ *
  * Successful Response
  */
-export const zGetCashierShiftsResponse = zNormalizedListCashierShiftInt;
+export const zListCashierShiftsResponse = z.array(zCashierShift);
 
 export const zGetCashierShiftStatsPath = z.object({
     cashier_id: z.int()
@@ -3215,9 +2946,11 @@ export const zListTicketsQuery = z.object({
 });
 
 /**
+ * Response List Tickets Tickets Get
+ *
  * Successful Response
  */
-export const zListTicketsResponse = zNormalizedListTicketInt;
+export const zListTicketsResponse = z.array(zTicket);
 
 export const zCreateTicketBody = zNewTicket;
 
@@ -3257,19 +2990,6 @@ export const zDeleteTicketPath = z.object({
 export const zDeleteTicketQuery = z.object({
     node_id: z.int()
 });
-
-export const zGetTicketPath = z.object({
-    ticket_id: z.int()
-});
-
-export const zGetTicketQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTicketResponse = zTicket;
 
 export const zUpdateTicketBody = zNewTicket;
 
@@ -3374,9 +3094,11 @@ export const zListUserTagVariantsQuery = z.object({
 });
 
 /**
+ * Response List User Tag Variants User Tag Variants Get
+ *
  * Successful Response
  */
-export const zListUserTagVariantsResponse = zNormalizedListUserTagVariantInt;
+export const zListUserTagVariantsResponse = z.array(zUserTagVariant);
 
 export const zCreateUserTagVariantBody = zNewUserTagVariant;
 
@@ -3430,9 +3152,11 @@ export const zListTsesQuery = z.object({
 });
 
 /**
+ * Response List Tses Tses  Get
+ *
  * Successful Response
  */
-export const zListTsesResponse = zNormalizedListTseInt;
+export const zListTsesResponse = z.array(zTse);
 
 export const zCreateTseBody = zNewTse;
 
@@ -3465,9 +3189,11 @@ export const zListPayoutRunsQuery = z.object({
 });
 
 /**
+ * Response List Payout Runs Payouts  Get
+ *
  * Successful Response
  */
-export const zListPayoutRunsResponse = zNormalizedListPayoutRunWithStatsInt;
+export const zListPayoutRunsResponse = z.array(zPayoutRunWithStats);
 
 export const zCreatePayoutRunBody = zNewPayoutRun;
 
@@ -3732,17 +3458,7 @@ export const zListAuditLogsPath = z.object({
  *
  * Successful Response
  */
-export const zListAuditLogsResponse = z.array(zAuditLog);
-
-export const zGetAuditLogPath = z.object({
-    node_id: z.int(),
-    audit_log_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetAuditLogResponse = zAuditLogDetail;
+export const zListAuditLogsResponse = z.array(zAuditLogDetail);
 
 export const zListSumupCheckoutsQuery = z.object({
     node_id: z.int()
@@ -3843,9 +3559,11 @@ export const zListTerminalsQuery = z.object({
 });
 
 /**
+ * Response List Terminals Terminal Get
+ *
  * Successful Response
  */
-export const zListTerminalsResponse = zNormalizedListTerminalInt;
+export const zListTerminalsResponse = z.array(zTerminal);
 
 export const zCreateTerminalBody = zNewTerminal;
 
@@ -3907,19 +3625,6 @@ export const zDeleteTerminalQuery = z.object({
     node_id: z.int()
 });
 
-export const zGetTerminalPath = z.object({
-    terminal_id: z.int()
-});
-
-export const zGetTerminalQuery = z.object({
-    node_id: z.int()
-});
-
-/**
- * Successful Response
- */
-export const zGetTerminalResponse = zTerminal;
-
 export const zUpdateTerminalBody = zNewTerminal;
 
 export const zUpdateTerminalPath = z.object({
@@ -3960,6 +3665,19 @@ export const zForceLogoutUserPath = z.object({
 export const zForceLogoutUserQuery = z.object({
     node_id: z.int()
 });
+
+export const zListTransactionsQuery = z.object({
+    node_id: z.int(),
+    cash_register_id: z.int().nullish(),
+    transaction_id: z.int().nullish(),
+    offset: z.int().optional().default(0),
+    limit: z.int().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zListTransactionsResponse = zPaginatedListTransaction;
 
 export const zGetTransactionPath = z.object({
     transaction_id: z.int()

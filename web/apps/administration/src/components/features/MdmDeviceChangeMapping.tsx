@@ -1,16 +1,25 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
 import { Loading, Select } from "@stustapay/components";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
+import { changeMdmDeviceMapping } from "@/db/api/generated";
+import { client } from "@/db/api/generated/client.gen";
+import { MdmDeviceWithMapping, Terminal } from "@/db/api/generated";
 import {
-  MdmDeviceWithMapping,
-  Terminal,
-  selectTerminalAll,
-  useChangeMdmDeviceMappingMutation,
-  useListTerminalsQuery,
-} from "@/api";
+  getTerminalCollection,
+  refetchNodeCollection,
+  refetchTillTerminalCollections,
+} from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export type MdmDeviceChangeMappingProps = {
@@ -20,16 +29,25 @@ export type MdmDeviceChangeMappingProps = {
   onClose: () => void;
 };
 
-const getSelectableTerminals = (terminals: Terminal[], device: MdmDeviceWithMapping, mappedTerminalIds: Set<number>) =>
-  terminals.filter((terminal) => !mappedTerminalIds.has(terminal.id) || terminal.id === device.mapping?.terminal_id);
+const getSelectableTerminals = (
+  terminals: Terminal[],
+  device: MdmDeviceWithMapping,
+  mappedTerminalIds: Set<number>,
+) =>
+  terminals.filter(
+    (terminal) =>
+      !mappedTerminalIds.has(terminal.id) || terminal.id === device.mapping?.terminal_id,
+  );
 
 const getDefaultTerminal = (
   terminals: Terminal[],
   device: MdmDeviceWithMapping,
-  mappedTerminalIds: Set<number>
+  mappedTerminalIds: Set<number>,
 ): Terminal | null => {
   if (device.mapping) {
-    const currentTerminal = terminals.find((terminal) => terminal.id === device.mapping?.terminal_id);
+    const currentTerminal = terminals.find(
+      (terminal) => terminal.id === device.mapping?.terminal_id,
+    );
     if (currentTerminal) {
       return currentTerminal;
     }
@@ -38,7 +56,8 @@ const getDefaultTerminal = (
   return (
     terminals.find(
       (terminal) =>
-        !mappedTerminalIds.has(terminal.id) && terminal.name.toLowerCase() === device.device.device_id.toLowerCase()
+        !mappedTerminalIds.has(terminal.id) &&
+        terminal.name.toLowerCase() === device.device.device_id.toLowerCase(),
     ) ?? null
   );
 };
@@ -51,21 +70,15 @@ export const MdmDeviceChangeMapping: React.FC<MdmDeviceChangeMappingProps> = ({
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { terminals, isLoading } = useListTerminalsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        terminals: data ? selectTerminalAll(data) : undefined,
-      }),
-    }
+  const { data: terminals, isLoading } = useLiveQuery(
+    (q) => q.from({ terminals: getTerminalCollection(currentNode.id) }),
+    [currentNode.id],
   );
-  const [changeMapping] = useChangeMdmDeviceMappingMutation();
   const [selectedTerminal, setSelectedTerminal] = React.useState<Terminal | null>(null);
 
   const selectableTerminals = React.useMemo(
     () => (terminals ? getSelectableTerminals(terminals, device, mappedTerminalIds) : []),
-    [terminals, device, mappedTerminalIds]
+    [terminals, device, mappedTerminalIds],
   );
 
   React.useEffect(() => {
@@ -80,14 +93,20 @@ export const MdmDeviceChangeMapping: React.FC<MdmDeviceChangeMappingProps> = ({
       return;
     }
 
-    changeMapping({
-      nodeId: currentNode.id,
-      changeMdmDeviceMappingPayload: {
+    changeMdmDeviceMapping({
+      client,
+      query: { node_id: currentNode.id },
+      body: {
         mdm_device_id: device.device.device_id,
         terminal_id: selectedTerminal.id,
       },
     })
-      .unwrap()
+      .then(() =>
+        Promise.all([
+          refetchNodeCollection(currentNode.id, "mdm-devices"),
+          refetchTillTerminalCollections(currentNode.id),
+        ]),
+      )
       .then(() => {
         toast.success(t("terminal.mdm.changeMappingSuccess"));
         onClose();

@@ -1,13 +1,13 @@
 import { Link } from "@mui/material";
 import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
-import { formatUserTagUid } from "@stustapay/models";
 import { ArrayElement } from "@stustapay/utils";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 import { AccountRead } from "@/api";
-import { CustomerRoutes, UserTagRoutes } from "@/app/routes";
+import { CustomerRoutes } from "@/app/routes";
+import { UserTagCell, userTagValueGetter } from "@/components/table/UserTagCell";
 
 type History = AccountRead["tag_history"];
 type HistoryEntry = ArrayElement<History>;
@@ -24,12 +24,8 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
-      valueGetter: (_, row) => formatUserTagUid(row.user_tag_uid_hex),
-      renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </Link>
-      ),
+      valueGetter: (_, row) => userTagValueGetter(row),
+      renderCell: ({ row }) => <UserTagCell userTag={row} />,
       width: 100,
     },
     {
@@ -64,7 +60,7 @@ export const AccountTagHistoryTable: React.FC<AccountTagHistoryTableProps> = ({ 
       rows={history}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };

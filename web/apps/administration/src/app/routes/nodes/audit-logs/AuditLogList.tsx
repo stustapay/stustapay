@@ -1,37 +1,46 @@
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
-import { getUserName } from "@stustapay/models";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, materialize, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { AuditLog, selectUserById, useListAuditLogsQuery, useListUsersQuery } from "@/api";
-import { AuditLogRoutes, UserRoutes } from "@/app/routes";
+import { AuditLogRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { UserCell, userValueGetter } from "@/components/table/UserCell";
+import { getAuditLogCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode, useRenderNode } from "@/hooks";
 
 export const AuditLogList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: auditLogs, isLoading } = useListAuditLogsQuery({ nodeId: currentNode.id });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
+  const { data: rows, isLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ auditLog: getAuditLogCollection(currentNode.id) })
+        .select(({ auditLog: auditLogRow }) => ({
+          ...auditLogRow,
+          originatingUser: materialize(
+            q
+              .from({ users: getUserCollection(currentNode.id) })
+              .where(({ users }) =>
+                auditLogRow.originating_user_id != null
+                  ? eq(users.id, auditLogRow.originating_user_id)
+                  : eq(users.id, -1),
+              )
+              .select(({ users }) => users)
+              .findOne(),
+          ),
+        })),
+    [currentNode.id],
+  );
   const { dataGridNodeColumn } = useRenderNode();
 
-  const renderUser = (id: number | null) => {
-    if (!id || !users) {
-      return "";
-    }
+  type AuditLogRow = ArrayElement<NonNullable<typeof rows>>;
 
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return getUserName(user);
-  };
-
-  const columns: GridColDef<AuditLog>[] = [
+  const columns: GridColDef<AuditLogRow>[] = [
     {
       field: "id",
       headerName: t("common.id"),
@@ -44,24 +53,20 @@ export const AuditLogList: React.FC = () => {
     {
       field: "log_type",
       headerName: t("auditLog.logType"),
-      flex: 1,
+      minWidth: 250,
     },
     {
       field: "originating_user_id",
       headerName: t("auditLog.originatingUser"),
       flex: 1,
-      valueGetter: (value) => renderUser(value),
-      renderCell: ({ row }) => (
-        <Link component={RouterLink} to={UserRoutes.detail(row.originating_user_id)}>
-          {renderUser(row.originating_user_id)}
-        </Link>
-      ),
+      valueGetter: (_, row) => userValueGetter(row.originatingUser),
+      renderCell: ({ row }) => <UserCell user={row.originatingUser} nodeId={row.node_id} />,
     },
     {
       field: "created_at",
       headerName: t("common.createdAt"),
       type: "dateTime",
-      valueGetter: (val) => new Date(val),
+      valueGetter: (value) => new Date(value),
       minWidth: 200,
     },
     dataGridNodeColumn,
@@ -70,11 +75,11 @@ export const AuditLogList: React.FC = () => {
   return (
     <ListLayout title={t("auditLog.auditLogs")}>
       <DataGrid
-        loading={isLoading || isUsersLoading}
-        rows={auditLogs ?? []}
+        loading={isLoading}
+        rows={rows ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

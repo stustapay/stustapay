@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTseService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.tse import NewTse, Tse, UpdateTse
 
 router = APIRouter(
@@ -12,9 +11,9 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=NormalizedList[Tse, int])
+@router.get("/", response_model=list[Tse])
 async def list_tses(token: CurrentAuthToken, tse_service: ContextTseService, node_id: int):
-    return normalize_list(await tse_service.list_tses(token=token, node_id=node_id))
+    return await tse_service.list_tses(token=token, node_id=node_id)
 
 
 @router.post("/", response_model=Tse)

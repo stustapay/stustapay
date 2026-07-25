@@ -83,36 +83,6 @@ export type Ao146aExportPayload = {
 };
 
 /**
- * AuditLog
- */
-export type AuditLog = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Node Id
-     */
-    node_id: number;
-    /**
-     * Log Type
-     */
-    log_type: string;
-    /**
-     * Originating User Id
-     */
-    originating_user_id: number | null;
-    /**
-     * Originating Terminal Id
-     */
-    originating_terminal_id: number | null;
-};
-
-/**
  * AuditLogDetail
  */
 export type AuditLogDetail = {
@@ -804,27 +774,27 @@ export type ExternalTicket = {
     /**
      * External Link
      */
-    external_link?: string | null;
+    external_link: string | null;
     /**
      * Customer Email
      */
-    customer_email?: string | null;
+    customer_email: string | null;
     /**
      * Customer Name
      */
-    customer_name?: string | null;
+    customer_name: string | null;
     /**
      * Initial Top Up Amount
      */
-    initial_top_up_amount?: number;
+    initial_top_up_amount: number;
     /**
      * Pretix Item Id
      */
-    pretix_item_id?: number | null;
+    pretix_item_id: number | null;
     /**
      * Pretix Product Name
      */
-    pretix_product_name?: string | null;
+    pretix_product_name: string | null;
     /**
      * Id
      */
@@ -840,7 +810,7 @@ export type ExternalTicket = {
     /**
      * Cancelled
      */
-    cancelled?: boolean;
+    cancelled: boolean;
 };
 
 /**
@@ -1972,246 +1942,6 @@ export type NodeSeenByUser = {
 };
 
 /**
- * NormalizedList[Account, int]
- */
-export type NormalizedListAccountInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Account;
-    };
-};
-
-/**
- * NormalizedList[CashRegisterStocking, int]
- */
-export type NormalizedListCashRegisterStockingInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: CashRegisterStocking;
-    };
-};
-
-/**
- * NormalizedList[CashRegister, int]
- */
-export type NormalizedListCashRegisterInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: CashRegister;
-    };
-};
-
-/**
- * NormalizedList[CashierShift, int]
- */
-export type NormalizedListCashierShiftInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: CashierShift;
-    };
-};
-
-/**
- * NormalizedList[Order, int]
- */
-export type NormalizedListOrderInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Order;
-    };
-};
-
-/**
- * NormalizedList[PayoutRunWithStats, int]
- */
-export type NormalizedListPayoutRunWithStatsInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: PayoutRunWithStats;
-    };
-};
-
-/**
- * NormalizedList[Terminal, int]
- */
-export type NormalizedListTerminalInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Terminal;
-    };
-};
-
-/**
- * NormalizedList[Ticket, int]
- */
-export type NormalizedListTicketInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Ticket;
-    };
-};
-
-/**
- * NormalizedList[TillButton, int]
- */
-export type NormalizedListTillButtonInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: TillButton;
-    };
-};
-
-/**
- * NormalizedList[TillLayout, int]
- */
-export type NormalizedListTillLayoutInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: TillLayout;
-    };
-};
-
-/**
- * NormalizedList[TillProfile, int]
- */
-export type NormalizedListTillProfileInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: TillProfile;
-    };
-};
-
-/**
- * NormalizedList[Till, int]
- */
-export type NormalizedListTillInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Till;
-    };
-};
-
-/**
- * NormalizedList[Transaction, int]
- */
-export type NormalizedListTransactionInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Transaction;
-    };
-};
-
-/**
- * NormalizedList[Tse, int]
- */
-export type NormalizedListTseInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: Tse;
-    };
-};
-
-/**
- * NormalizedList[UserRole, int]
- */
-export type NormalizedListUserRoleInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: UserRole;
-    };
-};
-
-/**
  * NormalizedList[UserTagDetail, int]
  */
 export type NormalizedListUserTagDetailInt = {
@@ -2224,38 +1954,6 @@ export type NormalizedListUserTagDetailInt = {
      */
     entities: {
         [key: string]: UserTagDetail;
-    };
-};
-
-/**
- * NormalizedList[UserTagVariant, int]
- */
-export type NormalizedListUserTagVariantInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: UserTagVariant;
-    };
-};
-
-/**
- * NormalizedList[User, int]
- */
-export type NormalizedListUserInt = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: User;
     };
 };
 
@@ -2457,6 +2155,34 @@ export type OrderWithTse = {
      * Tse Qr Code Text
      */
     readonly tse_qr_code_text: string;
+};
+
+/**
+ * PaginatedList[Order]
+ */
+export type PaginatedListOrder = {
+    /**
+     * Items
+     */
+    items: Array<Order>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * PaginatedList[Transaction]
+ */
+export type PaginatedListTransaction = {
+    /**
+     * Items
+     */
+    items: Array<Transaction>;
+    /**
+     * Total
+     */
+    total: number;
 };
 
 /**
@@ -5007,54 +4733,6 @@ export type MoneyOverviewWritable = {
 };
 
 /**
- * NormalizedList[Account, int]
- */
-export type NormalizedListAccountIntWritable = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: AccountWritable;
-    };
-};
-
-/**
- * NormalizedList[Order, int]
- */
-export type NormalizedListOrderIntWritable = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: OrderWritable;
-    };
-};
-
-/**
- * NormalizedList[Transaction, int]
- */
-export type NormalizedListTransactionIntWritable = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: TransactionWritable;
-    };
-};
-
-/**
  * NormalizedList[UserTagDetail, int]
  */
 export type NormalizedListUserTagDetailIntWritable = {
@@ -5067,22 +4745,6 @@ export type NormalizedListUserTagDetailIntWritable = {
      */
     entities: {
         [key: string]: UserTagDetailWritable;
-    };
-};
-
-/**
- * NormalizedList[User, int]
- */
-export type NormalizedListUserIntWritable = {
-    /**
-     * Ids
-     */
-    ids: Array<number>;
-    /**
-     * Entities
-     */
-    entities: {
-        [key: string]: UserWritable;
     };
 };
 
@@ -5262,6 +4924,34 @@ export type OrderWithTseWritable = {
      * Node Id
      */
     node_id: number;
+};
+
+/**
+ * PaginatedList[Order]
+ */
+export type PaginatedListOrderWritable = {
+    /**
+     * Items
+     */
+    items: Array<OrderWritable>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * PaginatedList[Transaction]
+ */
+export type PaginatedListTransactionWritable = {
+    /**
+     * Items
+     */
+    items: Array<TransactionWritable>;
+    /**
+     * Total
+     */
+    total: number;
 };
 
 /**
@@ -5625,45 +5315,6 @@ export type DeleteProductResponses = {
     200: unknown;
 };
 
-export type GetProductData = {
-    body?: never;
-    path: {
-        /**
-         * Product Id
-         */
-        product_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/products/{product_id}';
-};
-
-export type GetProductErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetProductError = GetProductErrors[keyof GetProductErrors];
-
-export type GetProductResponses = {
-    /**
-     * Successful Response
-     */
-    200: Product;
-};
-
-export type GetProductResponse = GetProductResponses[keyof GetProductResponses];
-
 export type UpdateProductData = {
     body: NewProduct;
     path: {
@@ -5734,9 +5385,11 @@ export type ListUsersError = ListUsersErrors[keyof ListUsersErrors];
 
 export type ListUsersResponses = {
     /**
+     * Response List Users Users Get
+     *
      * Successful Response
      */
-    200: NormalizedListUserInt;
+    200: Array<User>;
 };
 
 export type ListUsersResponse = ListUsersResponses[keyof ListUsersResponses];
@@ -5774,121 +5427,6 @@ export type CreateUserResponses = {
 };
 
 export type CreateUserResponse = CreateUserResponses[keyof CreateUserResponses];
-
-export type DeleteUserData = {
-    body?: never;
-    path: {
-        /**
-         * User Id
-         */
-        user_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/users/{user_id}';
-};
-
-export type DeleteUserErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
-
-export type DeleteUserResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetUserData = {
-    body?: never;
-    path: {
-        /**
-         * User Id
-         */
-        user_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/users/{user_id}';
-};
-
-export type GetUserErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetUserError = GetUserErrors[keyof GetUserErrors];
-
-export type GetUserResponses = {
-    /**
-     * Successful Response
-     */
-    200: User;
-};
-
-export type GetUserResponse = GetUserResponses[keyof GetUserResponses];
-
-export type UpdateUserData = {
-    body: UpdateUserPayload;
-    path: {
-        /**
-         * User Id
-         */
-        user_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/users/{user_id}';
-};
-
-export type UpdateUserErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
-
-export type UpdateUserResponses = {
-    /**
-     * Successful Response
-     */
-    200: User;
-};
-
-export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
 
 export type GetUserVoucherGrantStatsData = {
     body?: never;
@@ -5970,6 +5508,82 @@ export type ListUserRoleAssignmentsResponses = {
 
 export type ListUserRoleAssignmentsResponse = ListUserRoleAssignmentsResponses[keyof ListUserRoleAssignmentsResponses];
 
+export type DeleteUserData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: number;
+    };
+    query: {
+        /**
+         * Node Id
+         */
+        node_id: number;
+    };
+    url: '/users/{user_id}';
+};
+
+export type DeleteUserErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
+
+export type DeleteUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type UpdateUserData = {
+    body: UpdateUserPayload;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: number;
+    };
+    query: {
+        /**
+         * Node Id
+         */
+        node_id: number;
+    };
+    url: '/users/{user_id}';
+};
+
+export type UpdateUserErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
+
+export type UpdateUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: User;
+};
+
+export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
+
 export type ChangeUserPasswordData = {
     body: ChangeUserPasswordPayload;
     path: {
@@ -6036,9 +5650,11 @@ export type ListUserRolesError = ListUserRolesErrors[keyof ListUserRolesErrors];
 
 export type ListUserRolesResponses = {
     /**
+     * Response List User Roles User Roles Get
+     *
      * Successful Response
      */
-    200: NormalizedListUserRoleInt;
+    200: Array<UserRole>;
 };
 
 export type ListUserRolesResponse = ListUserRolesResponses[keyof ListUserRolesResponses];
@@ -6330,45 +5946,6 @@ export type DeleteTaxRateResponses = {
     200: unknown;
 };
 
-export type GetTaxRateData = {
-    body?: never;
-    path: {
-        /**
-         * Tax Rate Id
-         */
-        tax_rate_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/tax-rates/{tax_rate_id}';
-};
-
-export type GetTaxRateErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTaxRateError = GetTaxRateErrors[keyof GetTaxRateErrors];
-
-export type GetTaxRateResponses = {
-    /**
-     * Successful Response
-     */
-    200: TaxRate;
-};
-
-export type GetTaxRateResponse = GetTaxRateResponses[keyof GetTaxRateResponses];
-
 export type UpdateTaxRateData = {
     body: NewTaxRate;
     path: {
@@ -6514,9 +6091,11 @@ export type ListTillsError = ListTillsErrors[keyof ListTillsErrors];
 
 export type ListTillsResponses = {
     /**
+     * Response List Tills Tills Get
+     *
      * Successful Response
      */
-    200: NormalizedListTillInt;
+    200: Array<Till>;
 };
 
 export type ListTillsResponse = ListTillsResponses[keyof ListTillsResponses];
@@ -6591,45 +6170,6 @@ export type DeleteTillResponses = {
      */
     200: unknown;
 };
-
-export type GetTillData = {
-    body?: never;
-    path: {
-        /**
-         * Till Id
-         */
-        till_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/tills/{till_id}';
-};
-
-export type GetTillErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTillError = GetTillErrors[keyof GetTillErrors];
-
-export type GetTillResponses = {
-    /**
-     * Successful Response
-     */
-    200: Till;
-};
-
-export type GetTillResponse = GetTillResponses[keyof GetTillResponses];
 
 export type UpdateTillData = {
     body: NewTill;
@@ -6771,9 +6311,11 @@ export type ListTillLayoutsError = ListTillLayoutsErrors[keyof ListTillLayoutsEr
 
 export type ListTillLayoutsResponses = {
     /**
+     * Response List Till Layouts Till Layouts Get
+     *
      * Successful Response
      */
-    200: NormalizedListTillLayoutInt;
+    200: Array<TillLayout>;
 };
 
 export type ListTillLayoutsResponse = ListTillLayoutsResponses[keyof ListTillLayoutsResponses];
@@ -6849,45 +6391,6 @@ export type DeleteTillLayoutResponses = {
     200: unknown;
 };
 
-export type GetTillLayoutData = {
-    body?: never;
-    path: {
-        /**
-         * Layout Id
-         */
-        layout_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-layouts/{layout_id}';
-};
-
-export type GetTillLayoutErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTillLayoutError = GetTillLayoutErrors[keyof GetTillLayoutErrors];
-
-export type GetTillLayoutResponses = {
-    /**
-     * Successful Response
-     */
-    200: TillLayout;
-};
-
-export type GetTillLayoutResponse = GetTillLayoutResponses[keyof GetTillLayoutResponses];
-
 export type UpdateTillLayoutData = {
     body: NewTillLayout;
     path: {
@@ -6954,9 +6457,11 @@ export type ListTillProfilesError = ListTillProfilesErrors[keyof ListTillProfile
 
 export type ListTillProfilesResponses = {
     /**
+     * Response List Till Profiles Till Profiles Get
+     *
      * Successful Response
      */
-    200: NormalizedListTillProfileInt;
+    200: Array<TillProfile>;
 };
 
 export type ListTillProfilesResponse = ListTillProfilesResponses[keyof ListTillProfilesResponses];
@@ -7032,45 +6537,6 @@ export type DeleteTillProfileResponses = {
     200: unknown;
 };
 
-export type GetTillProfileData = {
-    body?: never;
-    path: {
-        /**
-         * Profile Id
-         */
-        profile_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-profiles/{profile_id}';
-};
-
-export type GetTillProfileErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTillProfileError = GetTillProfileErrors[keyof GetTillProfileErrors];
-
-export type GetTillProfileResponses = {
-    /**
-     * Successful Response
-     */
-    200: TillProfile;
-};
-
-export type GetTillProfileResponse = GetTillProfileResponses[keyof GetTillProfileResponses];
-
 export type UpdateTillProfileData = {
     body: NewTillProfile;
     path: {
@@ -7137,9 +6603,11 @@ export type ListTillButtonsError = ListTillButtonsErrors[keyof ListTillButtonsEr
 
 export type ListTillButtonsResponses = {
     /**
+     * Response List Till Buttons Till Buttons Get
+     *
      * Successful Response
      */
-    200: NormalizedListTillButtonInt;
+    200: Array<TillButton>;
 };
 
 export type ListTillButtonsResponse = ListTillButtonsResponses[keyof ListTillButtonsResponses];
@@ -7215,45 +6683,6 @@ export type DeleteTillButtonResponses = {
     200: unknown;
 };
 
-export type GetTillButtonData = {
-    body?: never;
-    path: {
-        /**
-         * Button Id
-         */
-        button_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-buttons/{button_id}';
-};
-
-export type GetTillButtonErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTillButtonError = GetTillButtonErrors[keyof GetTillButtonErrors];
-
-export type GetTillButtonResponses = {
-    /**
-     * Successful Response
-     */
-    200: TillButton;
-};
-
-export type GetTillButtonResponse = GetTillButtonResponses[keyof GetTillButtonResponses];
-
 export type UpdateTillButtonData = {
     body: NewTillButton;
     path: {
@@ -7320,9 +6749,11 @@ export type ListRegisterStockingsError = ListRegisterStockingsErrors[keyof ListR
 
 export type ListRegisterStockingsResponses = {
     /**
+     * Response List Register Stockings Till Register Stockings Get
+     *
      * Successful Response
      */
-    200: NormalizedListCashRegisterStockingInt;
+    200: Array<CashRegisterStocking>;
 };
 
 export type ListRegisterStockingsResponse = ListRegisterStockingsResponses[keyof ListRegisterStockingsResponses];
@@ -7464,9 +6895,11 @@ export type ListCashRegistersAdminError = ListCashRegistersAdminErrors[keyof Lis
 
 export type ListCashRegistersAdminResponses = {
     /**
+     * Response List Cash Registers Admin Till Registers Get
+     *
      * Successful Response
      */
-    200: NormalizedListCashRegisterInt;
+    200: Array<CashRegister>;
 };
 
 export type ListCashRegistersAdminResponse = ListCashRegistersAdminResponses[keyof ListCashRegistersAdminResponses];
@@ -7505,6 +6938,38 @@ export type CreateRegisterResponses = {
 
 export type CreateRegisterResponse = CreateRegisterResponses[keyof CreateRegisterResponses];
 
+export type TransferRegisterData = {
+    body: TransferRegisterPayload;
+    path?: never;
+    query: {
+        /**
+         * Node Id
+         */
+        node_id: number;
+    };
+    url: '/till-registers/transfer-register';
+};
+
+export type TransferRegisterErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TransferRegisterError = TransferRegisterErrors[keyof TransferRegisterErrors];
+
+export type TransferRegisterResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type DeleteRegisterData = {
     body?: never;
     path: {
@@ -7542,45 +7007,6 @@ export type DeleteRegisterResponses = {
     200: unknown;
 };
 
-export type GetCashRegisterAdminData = {
-    body?: never;
-    path: {
-        /**
-         * Register Id
-         */
-        register_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-registers/{register_id}';
-};
-
-export type GetCashRegisterAdminErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetCashRegisterAdminError = GetCashRegisterAdminErrors[keyof GetCashRegisterAdminErrors];
-
-export type GetCashRegisterAdminResponses = {
-    /**
-     * Successful Response
-     */
-    200: CashRegister;
-};
-
-export type GetCashRegisterAdminResponse = GetCashRegisterAdminResponses[keyof GetCashRegisterAdminResponses];
-
 export type UpdateRegisterData = {
     body: NewCashRegister;
     path: {
@@ -7612,116 +7038,6 @@ export type UpdateRegisterErrors = {
 export type UpdateRegisterError = UpdateRegisterErrors[keyof UpdateRegisterErrors];
 
 export type UpdateRegisterResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetCashierShiftsForRegisterData = {
-    body?: never;
-    path: {
-        /**
-         * Register Id
-         */
-        register_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-registers/{register_id}/cashier-shifts';
-};
-
-export type GetCashierShiftsForRegisterErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetCashierShiftsForRegisterError = GetCashierShiftsForRegisterErrors[keyof GetCashierShiftsForRegisterErrors];
-
-export type GetCashierShiftsForRegisterResponses = {
-    /**
-     * Successful Response
-     */
-    200: NormalizedListCashierShiftInt;
-};
-
-export type GetCashierShiftsForRegisterResponse = GetCashierShiftsForRegisterResponses[keyof GetCashierShiftsForRegisterResponses];
-
-export type ListTransactionsData = {
-    body?: never;
-    path: {
-        /**
-         * Register Id
-         */
-        register_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-registers/{register_id}/transactions';
-};
-
-export type ListTransactionsErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListTransactionsError = ListTransactionsErrors[keyof ListTransactionsErrors];
-
-export type ListTransactionsResponses = {
-    /**
-     * Successful Response
-     */
-    200: NormalizedListTransactionInt;
-};
-
-export type ListTransactionsResponse = ListTransactionsResponses[keyof ListTransactionsResponses];
-
-export type TransferRegisterData = {
-    body: TransferRegisterPayload;
-    path?: never;
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/till-registers/transfer-register';
-};
-
-export type TransferRegisterErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type TransferRegisterError = TransferRegisterErrors[keyof TransferRegisterErrors];
-
-export type TransferRegisterResponses = {
     /**
      * Successful Response
      */
@@ -7778,9 +7094,11 @@ export type ListSystemAccountsError = ListSystemAccountsErrors[keyof ListSystemA
 
 export type ListSystemAccountsResponses = {
     /**
+     * Response List System Accounts System Accounts Get
+     *
      * Successful Response
      */
-    200: NormalizedListAccountInt;
+    200: Array<Account>;
 };
 
 export type ListSystemAccountsResponse = ListSystemAccountsResponses[keyof ListSystemAccountsResponses];
@@ -8008,45 +7326,6 @@ export type UpdateAccountCommentResponses = {
 
 export type UpdateAccountCommentResponse = UpdateAccountCommentResponses[keyof UpdateAccountCommentResponses];
 
-export type ListOrdersByTillData = {
-    body?: never;
-    path: {
-        /**
-         * Till Id
-         */
-        till_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/orders/by-till/{till_id}';
-};
-
-export type ListOrdersByTillErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListOrdersByTillError = ListOrdersByTillErrors[keyof ListOrdersByTillErrors];
-
-export type ListOrdersByTillResponses = {
-    /**
-     * Successful Response
-     */
-    200: NormalizedListOrderInt;
-};
-
-export type ListOrdersByTillResponse = ListOrdersByTillResponses[keyof ListOrdersByTillResponses];
-
 export type ListOrdersData = {
     body?: never;
     path?: never;
@@ -8058,7 +7337,19 @@ export type ListOrdersData = {
         /**
          * Customer Account Id
          */
-        customer_account_id: number;
+        customer_account_id?: number | null;
+        /**
+         * Till Id
+         */
+        till_id?: number | null;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number | null;
     };
     url: '/orders';
 };
@@ -8080,7 +7371,7 @@ export type ListOrdersResponses = {
     /**
      * Successful Response
      */
-    200: NormalizedListOrderInt;
+    200: PaginatedListOrder;
 };
 
 export type ListOrdersResponse = ListOrdersResponses[keyof ListOrdersResponses];
@@ -8234,24 +7525,31 @@ export type EditOrderResponses = {
 
 export type EditOrderResponse = EditOrderResponses[keyof EditOrderResponses];
 
-export type GetCashierShiftsData = {
+export type ListCashierShiftsData = {
     body?: never;
-    path: {
-        /**
-         * Cashier Id
-         */
-        cashier_id: number;
-    };
+    path?: never;
     query: {
         /**
          * Node Id
          */
         node_id: number;
+        /**
+         * Cashier Id
+         */
+        cashier_id?: number | null;
+        /**
+         * Cash Register Id
+         */
+        cash_register_id?: number | null;
+        /**
+         * Shift Id
+         */
+        shift_id?: number | null;
     };
-    url: '/cashiers/{cashier_id}/shifts';
+    url: '/cashiers/shifts';
 };
 
-export type GetCashierShiftsErrors = {
+export type ListCashierShiftsErrors = {
     /**
      * Not found
      */
@@ -8262,16 +7560,18 @@ export type GetCashierShiftsErrors = {
     422: HttpValidationError;
 };
 
-export type GetCashierShiftsError = GetCashierShiftsErrors[keyof GetCashierShiftsErrors];
+export type ListCashierShiftsError = ListCashierShiftsErrors[keyof ListCashierShiftsErrors];
 
-export type GetCashierShiftsResponses = {
+export type ListCashierShiftsResponses = {
     /**
+     * Response List Cashier Shifts Cashiers Shifts Get
+     *
      * Successful Response
      */
-    200: NormalizedListCashierShiftInt;
+    200: Array<CashierShift>;
 };
 
-export type GetCashierShiftsResponse = GetCashierShiftsResponses[keyof GetCashierShiftsResponses];
+export type ListCashierShiftsResponse = ListCashierShiftsResponses[keyof ListCashierShiftsResponses];
 
 export type GetCashierShiftStatsData = {
     body?: never;
@@ -8676,9 +7976,11 @@ export type ListTicketsError = ListTicketsErrors[keyof ListTicketsErrors];
 
 export type ListTicketsResponses = {
     /**
+     * Response List Tickets Tickets Get
+     *
      * Successful Response
      */
-    200: NormalizedListTicketInt;
+    200: Array<Ticket>;
 };
 
 export type ListTicketsResponse = ListTicketsResponses[keyof ListTicketsResponses];
@@ -8823,45 +8125,6 @@ export type DeleteTicketResponses = {
      */
     200: unknown;
 };
-
-export type GetTicketData = {
-    body?: never;
-    path: {
-        /**
-         * Ticket Id
-         */
-        ticket_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/tickets/{ticket_id}';
-};
-
-export type GetTicketErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTicketError = GetTicketErrors[keyof GetTicketErrors];
-
-export type GetTicketResponses = {
-    /**
-     * Successful Response
-     */
-    200: Ticket;
-};
-
-export type GetTicketResponse = GetTicketResponses[keyof GetTicketResponses];
 
 export type UpdateTicketData = {
     body: NewTicket;
@@ -9182,9 +8445,11 @@ export type ListUserTagVariantsError = ListUserTagVariantsErrors[keyof ListUserT
 
 export type ListUserTagVariantsResponses = {
     /**
+     * Response List User Tag Variants User Tag Variants Get
+     *
      * Successful Response
      */
-    200: NormalizedListUserTagVariantInt;
+    200: Array<UserTagVariant>;
 };
 
 export type ListUserTagVariantsResponse = ListUserTagVariantsResponses[keyof ListUserTagVariantsResponses];
@@ -9365,9 +8630,11 @@ export type ListTsesError = ListTsesErrors[keyof ListTsesErrors];
 
 export type ListTsesResponses = {
     /**
+     * Response List Tses Tses  Get
+     *
      * Successful Response
      */
-    200: NormalizedListTseInt;
+    200: Array<Tse>;
 };
 
 export type ListTsesResponse = ListTsesResponses[keyof ListTsesResponses];
@@ -9472,9 +8739,11 @@ export type ListPayoutRunsError = ListPayoutRunsErrors[keyof ListPayoutRunsError
 
 export type ListPayoutRunsResponses = {
     /**
+     * Response List Payout Runs Payouts  Get
+     *
      * Successful Response
      */
-    200: NormalizedListPayoutRunWithStatsInt;
+    200: Array<PayoutRunWithStats>;
 };
 
 export type ListPayoutRunsResponse = ListPayoutRunsResponses[keyof ListPayoutRunsResponses];
@@ -10531,48 +9800,10 @@ export type ListAuditLogsResponses = {
      *
      * Successful Response
      */
-    200: Array<AuditLog>;
+    200: Array<AuditLogDetail>;
 };
 
 export type ListAuditLogsResponse = ListAuditLogsResponses[keyof ListAuditLogsResponses];
-
-export type GetAuditLogData = {
-    body?: never;
-    path: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-        /**
-         * Audit Log Id
-         */
-        audit_log_id: number;
-    };
-    query?: never;
-    url: '/tree/nodes/{node_id}/audit-logs/{audit_log_id}';
-};
-
-export type GetAuditLogErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetAuditLogError = GetAuditLogErrors[keyof GetAuditLogErrors];
-
-export type GetAuditLogResponses = {
-    /**
-     * Successful Response
-     */
-    200: AuditLogDetail;
-};
-
-export type GetAuditLogResponse = GetAuditLogResponses[keyof GetAuditLogResponses];
 
 export type ListSumupCheckoutsData = {
     body?: never;
@@ -10929,9 +10160,11 @@ export type ListTerminalsError = ListTerminalsErrors[keyof ListTerminalsErrors];
 
 export type ListTerminalsResponses = {
     /**
+     * Response List Terminals Terminal Get
+     *
      * Successful Response
      */
-    200: NormalizedListTerminalInt;
+    200: Array<Terminal>;
 };
 
 export type ListTerminalsResponse = ListTerminalsResponses[keyof ListTerminalsResponses];
@@ -11150,45 +10383,6 @@ export type DeleteTerminalResponses = {
     200: unknown;
 };
 
-export type GetTerminalData = {
-    body?: never;
-    path: {
-        /**
-         * Terminal Id
-         */
-        terminal_id: number;
-    };
-    query: {
-        /**
-         * Node Id
-         */
-        node_id: number;
-    };
-    url: '/terminal/{terminal_id}';
-};
-
-export type GetTerminalErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTerminalError = GetTerminalErrors[keyof GetTerminalErrors];
-
-export type GetTerminalResponses = {
-    /**
-     * Successful Response
-     */
-    200: Terminal;
-};
-
-export type GetTerminalResponse = GetTerminalResponses[keyof GetTerminalResponses];
-
 export type UpdateTerminalData = {
     body: NewTerminal;
     path: {
@@ -11338,6 +10532,56 @@ export type ForceLogoutUserResponses = {
      */
     200: unknown;
 };
+
+export type ListTransactionsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Node Id
+         */
+        node_id: number;
+        /**
+         * Cash Register Id
+         */
+        cash_register_id?: number | null;
+        /**
+         * Transaction Id
+         */
+        transaction_id?: number | null;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number | null;
+    };
+    url: '/transactions';
+};
+
+export type ListTransactionsErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListTransactionsError = ListTransactionsErrors[keyof ListTransactionsErrors];
+
+export type ListTransactionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaginatedListTransaction;
+};
+
+export type ListTransactionsResponse = ListTransactionsResponses[keyof ListTransactionsResponses];
 
 export type GetTransactionData = {
     body?: never;

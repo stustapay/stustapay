@@ -1,18 +1,22 @@
 import { Loading } from "@stustapay/components";
-import { getUserName } from "@stustapay/models";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { CustomerRoutes, OrderRoutes, SystemAccountRoutes, TransactionRoutes } from "@/app/routes";
 import {
-  selectAccountById,
-  selectUserById,
-  useGetTransactionQuery,
-  useListSystemAccountsQuery,
-  useListUsersQuery,
-} from "@/api";
-import { CustomerRoutes, OrderRoutes, SystemAccountRoutes, TransactionRoutes, UserRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+  DetailField,
+  DetailLayout,
+  DetailNumberField,
+  DetailView,
+  UserDetailField,
+} from "@/components";
+import {
+  getSystemAccountCollection,
+  getTransactionCollection,
+  getUserCollection,
+} from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const TransactionDetail: React.FC = () => {
@@ -23,25 +27,42 @@ export const TransactionDetail: React.FC = () => {
 
   const {
     data: transaction,
-    error,
     isLoading: isTransactionLoading,
-  } = useGetTransactionQuery({ nodeId: currentNode.id, transactionId: Number(transactionId) });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: accounts, isLoading: isAccountsLoading } = useListSystemAccountsQuery({ nodeId: currentNode.id });
+    isError: isTransactionError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ transactions: getTransactionCollection(currentNode.id) })
+        .where(({ transactions }) => eq(transactions.id, Number(transactionId)))
+        .findOne(),
+    [currentNode.id, transactionId],
+  );
+  const { data: accounts, isLoading: isAccountsLoading } = useLiveQuery(
+    (q) => q.from({ accounts: getSystemAccountCollection(currentNode.id) }),
+    [currentNode.id],
+  );
+  const { data: conductingUser } = useLiveQuery(
+    (q) =>
+      q
+        .from({ users: getUserCollection(currentNode.id) })
+        .where(({ users }) => eq(users.id, transaction?.conducting_user_id ?? -1))
+        .findOne(),
+    [currentNode.id, transaction?.conducting_user_id],
+  );
 
-  if (isTransactionLoading || isUsersLoading || isAccountsLoading) {
+  if (isTransactionLoading || isAccountsLoading) {
     return <Loading />;
   }
 
-  if (error || !transaction || !users || !accounts) {
+  if (isTransactionError || !transaction || !accounts) {
     navigate(-1);
     return null;
   }
-  const user =
-    transaction.conducting_user_id != null ? selectUserById(users, transaction.conducting_user_id) : undefined;
+
+  const getAccount = (accId: number) => accounts.find((account) => account.id === accId);
 
   const renderAccount = (accId: number) => {
-    const account = selectAccountById(accounts, accId);
+    const account = getAccount(accId);
     if (!account) {
       // not a system account -> assuming it's a customer account
       return t("transaction.customerAccount", { id: accId });
@@ -53,7 +74,7 @@ export const TransactionDetail: React.FC = () => {
   };
 
   const getAccountLink = (accId: number) => {
-    const account = selectAccountById(accounts, accId);
+    const account = getAccount(accId);
     if (account) {
       return SystemAccountRoutes.detail(accId, currentNode.event_node_id);
     }
@@ -66,11 +87,11 @@ export const TransactionDetail: React.FC = () => {
         <DetailField label={t("transaction.id")} value={transaction.id} />
         <DetailField label={t("common.description")} value={transaction.description} />
         <DetailField label={t("order.bookedAt")} value={transaction.booked_at} />
-        {user && (
-          <DetailField
+        {transaction.conducting_user_id != null && (
+          <UserDetailField
             label={t("transaction.conductingUser")}
-            value={getUserName(user)}
-            linkTo={UserRoutes.detail(user.id, user.node_id)}
+            user={conductingUser}
+            fallbackNodeId={currentNode.id}
           />
         )}
         {transaction.source_account != null && (
@@ -94,7 +115,11 @@ export const TransactionDetail: React.FC = () => {
             linkTo={OrderRoutes.detail(transaction.order.id, currentNode.event_node_id)}
           />
         )}
-        <DetailNumberField label={t("transaction.amount")} value={transaction.amount} type="currency" />
+        <DetailNumberField
+          label={t("transaction.amount")}
+          value={transaction.amount}
+          type="currency"
+        />
         <DetailNumberField label={t("transaction.voucherAmount")} value={transaction.vouchers} />
       </DetailView>
     </DetailLayout>

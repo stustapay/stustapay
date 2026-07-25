@@ -2,25 +2,26 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  Till,
-  selectTerminalById,
-  selectTillAll,
-  selectTillProfileById,
-  selectTseById,
-  useDeleteTillMutation,
-  useListTerminalsQuery,
-  useListTillProfilesQuery,
-  useListTillsQuery,
-  useListTsesQuery,
-} from "@/api";
 import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
+import {
+  getTerminalCollection,
+  getTillCollection,
+  getTillProfileCollection,
+  getTseCollection,
+} from "@/db/collections";
+import {
+  useCurrentNode,
+  useCurrentUserHasPrivilege,
+  useCurrentUserHasPrivilegeAtNode,
+  useRenderNode,
+} from "@/hooks";
 
 export const TillList: React.FC = () => {
   const { t } = useTranslation();
@@ -30,68 +31,34 @@ export const TillList: React.FC = () => {
   const navigate = useNavigate();
   const openModal = useOpenModal();
 
-  const { tills, isLoading: isTillsLoading } = useListTillsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        tills: data ? selectTillAll(data) : undefined,
-      }),
-    }
+  const { data: tills, isLoading: isTillsLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ tills: getTillCollection(currentNode.id) })
+        .join(
+          { profiles: getTillProfileCollection(currentNode.id) },
+          ({ profiles, tills }) => eq(tills.active_profile_id, profiles.id),
+          "left" as const,
+        )
+        .join(
+          { terminals: getTerminalCollection(currentNode.id) },
+          ({ terminals, tills }) => eq(tills.terminal_id, terminals.id),
+          "left" as const,
+        )
+        .join(
+          { tses: getTseCollection(currentNode.id) },
+          ({ tills, tses }) => eq(tills.tse_id, tses.id),
+          "left" as const,
+        )
+        .select(({ tills, profiles, terminals, tses }) => ({
+          ...tills,
+          profile: profiles,
+          terminal: terminals,
+          tse: tses,
+        })),
+    [currentNode.id],
   );
-  const { data: profiles, isLoading: isProfilesLoading } = useListTillProfilesQuery({ nodeId: currentNode.id });
-  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
-  const { data: tses, isLoading: isTsesLoading } = useListTsesQuery({ nodeId: currentNode.id });
-  const [deleteTill] = useDeleteTillMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  const renderProfile = (id: number | null) => {
-    if (id == null || !profiles) {
-      return "";
-    }
-    const profile = selectTillProfileById(profiles, id);
-    if (!profile) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={TillProfileRoutes.detail(profile.id, profile.node_id)}>
-        {profile.name}
-      </Link>
-    );
-  };
-
-  const renderTerminal = (id?: number | null) => {
-    if (id == null || !terminals) {
-      return "";
-    }
-    const terminal = selectTerminalById(terminals, id);
-    if (!terminal) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id, terminal.node_id)}>
-        {terminal.name}
-      </Link>
-    );
-  };
-
-  const renderTse = (id?: number | null) => {
-    if (id == null || !tses) {
-      return "";
-    }
-    const tse = selectTseById(tses, id);
-    if (!tse) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={TseRoutes.detail(tse.id)}>
-        {tse.name}
-      </Link>
-    );
-  };
 
   const openConfirmDeleteDialog = (tillId: number) => {
     openModal({
@@ -99,14 +66,12 @@ export const TillList: React.FC = () => {
       title: t("till.delete"),
       content: t("till.deleteDescription"),
       onConfirm: () => {
-        deleteTill({ nodeId: currentNode.id, tillId })
-          .unwrap()
-          .catch(() => undefined);
+        getTillCollection(currentNode.id).delete(tillId);
       },
     });
   };
 
-  const columns: GridColDef<Till>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof tills>>>[] = [
     {
       field: "name",
       headerName: t("till.name"),
@@ -123,19 +88,40 @@ export const TillList: React.FC = () => {
       field: "tse_id",
       headerName: t("till.tseId"),
       minWidth: 150,
-      renderCell: (params) => renderTse(params.row.tse_id),
+      renderCell: (params) =>
+        params.row.tse ? (
+          <Link component={RouterLink} to={TseRoutes.detail(params.row.tse.id)}>
+            {params.row.tse.name}
+          </Link>
+        ) : null,
     },
     {
       field: "profile",
       headerName: t("till.profile"),
       flex: 0.5,
-      renderCell: (params) => renderProfile(params.row.active_profile_id),
+      renderCell: (params) =>
+        params.row.profile ? (
+          <Link
+            component={RouterLink}
+            to={TillProfileRoutes.detail(params.row.profile.id, params.row.profile.node_id)}
+          >
+            {params.row.profile.name}
+          </Link>
+        ) : null,
     },
     {
       field: "terminal_id",
       headerName: t("till.terminal"),
       flex: 0.5,
-      renderCell: (params) => renderTerminal(params.row.terminal_id),
+      renderCell: (params) =>
+        params.row.terminal ? (
+          <Link
+            component={RouterLink}
+            to={TerminalRoutes.detail(params.row.terminal.id, params.row.terminal.node_id)}
+          >
+            {params.row.terminal.name}
+          </Link>
+        ) : null,
     },
     dataGridNodeColumn,
   ];
@@ -169,11 +155,11 @@ export const TillList: React.FC = () => {
     <ListLayout title={t("till.configuration")} routes={TillRoutes}>
       <DataGrid
         autoHeight
-        loading={isTillsLoading || isProfilesLoading || isTerminalsLoading || isTsesLoading}
+        loading={isTillsLoading}
         rows={tills ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

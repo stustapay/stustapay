@@ -1,175 +1,30 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
 
 import {
-  AccountRead,
-  CashRegister,
-  CashRegisterStocking,
-  CashierShift,
-  Order,
-  PayoutRunWithStats,
-  Ticket,
-  Till,
-  TillButton,
-  TillLayout,
-  TillProfile,
-  Tse,
-  User,
-  UserRole,
   UserTagDetailRead,
-  UserTagVariant,
   api as generatedApi,
   GenerateTestRevenueReportApiArg,
-  Terminal,
   GenerateRevenueReportApiArg,
-  Transaction,
   GenerateTestDailyReportApiArg,
   GeneratePayoutReportApiArg,
   GenerateDailyReportApiArg,
   ExportDsfinvkApiArg,
   ExportAo146AApiArg,
 } from "./generated/api";
-import { convertEntityAdaptorSelectors, generateCacheKeys, blobResponseHandler, blobUrlResponseHandler } from "./utils";
+import {
+  convertEntityAdaptorSelectors,
+  blobResponseHandler,
+  blobUrlResponseHandler,
+} from "./utils";
 
 export * from "./generated/api";
-
-const userAdapter = createEntityAdapter<User>({
-  sortComparer: (a, b) => a.login.toLowerCase().localeCompare(b.login.toLowerCase()),
-});
-
-const accountAdapter = createEntityAdapter<AccountRead>({
-  sortComparer: (a, b) => (a.name?.toLowerCase() ?? "").localeCompare(b.name?.toLowerCase() ?? ""),
-});
 
 const userTagAdapter = createEntityAdapter<UserTagDetailRead>({
   sortComparer: (a, b) => a.pin.toLowerCase().localeCompare(b.pin.toLowerCase()),
 });
 
-const userTagVariantAdapter = createEntityAdapter<UserTagVariant>({
-  sortComparer: (a, b) => (a.priority ?? 0) - (b.priority ?? 0) || a.variant_name.localeCompare(b.variant_name),
-});
-
-const userRoleAdapter = createEntityAdapter<UserRole>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const cashierShiftAdapter = createEntityAdapter<CashierShift>({
-  sortComparer: (a, b) => a.ended_at.localeCompare(b.ended_at),
-});
-
-const orderAdapter = createEntityAdapter<Order>({ sortComparer: (a, b) => b.id - a.id });
-
-const transactionAdapter = createEntityAdapter<Transaction>({
-  sortComparer: (a, b) => b.id - a.id,
-});
-
-const ticketAdapter = createEntityAdapter<Ticket>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const tillAdapter = createEntityAdapter<Till>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const tillLayoutAdapter = createEntityAdapter<TillLayout>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const tillButtonAdapter = createEntityAdapter<TillButton>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const tillProfileAdapter = createEntityAdapter<TillProfile>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const cashRegisterAdapter = createEntityAdapter<CashRegister>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const cashRegisterStockingAdapter = createEntityAdapter<CashRegisterStocking>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const tseAdapter = createEntityAdapter<Tse>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
-const payoutRunAdaptor = createEntityAdapter<PayoutRunWithStats>({
-  sortComparer: (a, b) => a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase()),
-});
-
-const terminalAdapter = createEntityAdapter<Terminal>({
-  sortComparer: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-});
-
 export const api = generatedApi.enhanceEndpoints({
   endpoints: {
-    listUsers: {
-      providesTags: (result) => generateCacheKeys("users", result),
-    },
-    getUser: {
-      providesTags: (result, error, arg) => [{ type: "users", id: arg.userId }],
-    },
-    listUserRoles: {
-      providesTags: (result) => generateCacheKeys("user-roles", result),
-    },
-    listUserTagVariants: {
-      providesTags: (result) => generateCacheKeys("user_tags", result),
-    },
-    getUserTagVariant: {
-      providesTags: (result, error, arg) => [{ type: "user_tags", id: arg.userTagVariantId }],
-    },
-    createUserTagVariant: {
-      invalidatesTags: ["user_tags"],
-    },
-    updateUserTagVariant: {
-      invalidatesTags: ["user_tags"],
-    },
-    deleteUserTagVariant: {
-      invalidatesTags: ["user_tags"],
-    },
-    listTickets: {
-      providesTags: (result) => generateCacheKeys("tickets", result),
-    },
-    getTicket: {
-      providesTags: (result, error, arg) => [{ type: "tickets", id: arg.ticketId }],
-    },
-    listTills: {
-      providesTags: (result) => generateCacheKeys("tills", result),
-    },
-    getTill: {
-      providesTags: (result, error, arg) => [{ type: "tills", id: arg.tillId }],
-    },
-    listTillButtons: {
-      providesTags: (result) => generateCacheKeys("till-buttons", result),
-    },
-    getTillButton: {
-      providesTags: (result, error, arg) => [{ type: "till-buttons", id: arg.buttonId }],
-    },
-    listTillLayouts: {
-      providesTags: (result) => generateCacheKeys("till-layouts", result),
-    },
-    getTillLayout: {
-      providesTags: (result, error, arg) => [{ type: "till-layouts", id: arg.layoutId }],
-    },
-    listTillProfiles: {
-      providesTags: (result) => generateCacheKeys("till-profiles", result),
-    },
-    getTillProfile: {
-      providesTags: (result, error, arg) => [{ type: "till-profiles", id: arg.profileId }],
-    },
-    listTerminals: {
-      providesTags: (result) => generateCacheKeys("terminals", result),
-    },
-    getTerminal: {
-      providesTags: (result, error, arg) => [{ type: "terminals", id: arg.terminalId }],
-    },
-    listTses: {
-      providesTags: (result) => generateCacheKeys("tses", result),
-    },
-    listPayoutRuns: {
-      providesTags: (result) => generateCacheKeys("payouts", result),
-    },
     generateTestRevenueReport: {
       query: (queryArg: GenerateTestRevenueReportApiArg) => ({
         url: `/tree/events/${queryArg.nodeId}/generate-test-revenuereport`,
@@ -234,101 +89,10 @@ export const api = generatedApi.enhanceEndpoints({
   },
 });
 
-export const { selectUserAll, selectUserById, selectUserEntities, selectUserIds, selectUserTotal } =
-  convertEntityAdaptorSelectors("User", userAdapter.getSelectors());
-
-export const { selectUserRoleAll, selectUserRoleById, selectUserRoleEntities, selectUserRoleIds, selectUserRoleTotal } =
-  convertEntityAdaptorSelectors("UserRole", userRoleAdapter.getSelectors());
-
 export const {
-  selectCashierShiftAll,
-  selectCashierShiftById,
-  selectCashierShiftEntities,
-  selectCashierShiftIds,
-  selectCashierShiftTotal,
-} = convertEntityAdaptorSelectors("CashierShift", cashierShiftAdapter.getSelectors());
-
-export const { selectOrderAll, selectOrderById, selectOrderEntities, selectOrderIds, selectOrderTotal } =
-  convertEntityAdaptorSelectors("Order", orderAdapter.getSelectors());
-
-export const {
-  selectTransactionAll,
-  selectTransactionById,
-  selectTransactionEntities,
-  selectTransactionIds,
-  selectTransactionTotal,
-} = convertEntityAdaptorSelectors("Transaction", transactionAdapter.getSelectors());
-
-export const {
-  selectUserTagVariantAll,
-  selectUserTagVariantById,
-  selectUserTagVariantEntities,
-  selectUserTagVariantIds,
-  selectUserTagVariantTotal,
-} = convertEntityAdaptorSelectors("UserTagVariant", userTagVariantAdapter.getSelectors());
-
-export const { selectTicketAll, selectTicketById, selectTicketEntities, selectTicketIds, selectTicketTotal } =
-  convertEntityAdaptorSelectors("Ticket", ticketAdapter.getSelectors());
-
-export const { selectTillAll, selectTillById, selectTillEntities, selectTillIds, selectTillTotal } =
-  convertEntityAdaptorSelectors("Till", tillAdapter.getSelectors());
-
-export const {
-  selectTillLayoutAll,
-  selectTillLayoutById,
-  selectTillLayoutEntities,
-  selectTillLayoutIds,
-  selectTillLayoutTotal,
-} = convertEntityAdaptorSelectors("TillLayout", tillLayoutAdapter.getSelectors());
-
-export const {
-  selectTillButtonAll,
-  selectTillButtonById,
-  selectTillButtonEntities,
-  selectTillButtonIds,
-  selectTillButtonTotal,
-} = convertEntityAdaptorSelectors("TillButton", tillButtonAdapter.getSelectors());
-
-export const {
-  selectTillProfileAll,
-  selectTillProfileById,
-  selectTillProfileEntities,
-  selectTillProfileIds,
-  selectTillProfileTotal,
-} = convertEntityAdaptorSelectors("TillProfile", tillProfileAdapter.getSelectors());
-
-export const {
-  selectCashRegisterAll,
-  selectCashRegisterById,
-  selectCashRegisterEntities,
-  selectCashRegisterIds,
-  selectCashRegisterTotal,
-} = convertEntityAdaptorSelectors("CashRegister", cashRegisterAdapter.getSelectors());
-
-export const {
-  selectCashRegisterStockingAll,
-  selectCashRegisterStockingById,
-  selectCashRegisterStockingEntities,
-  selectCashRegisterStockingIds,
-  selectCashRegisterStockingTotal,
-} = convertEntityAdaptorSelectors("CashRegisterStocking", cashRegisterStockingAdapter.getSelectors());
-
-export const { selectAccountById, selectAccountEntities, selectAccountTotal, selectAccountIds, selectAccountAll } =
-  convertEntityAdaptorSelectors("Account", accountAdapter.getSelectors());
-
-export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, selectUserTagIds, selectUserTagById } =
-  convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());
-
-export const { selectTseAll, selectTseById, selectTseEntities, selectTseIds, selectTseTotal } =
-  convertEntityAdaptorSelectors("Tse", tseAdapter.getSelectors());
-
-export const { selectTerminalAll, selectTerminalById, selectTerminalEntities, selectTerminalIds, selectTerminalTotal } =
-  convertEntityAdaptorSelectors("Terminal", terminalAdapter.getSelectors());
-
-export const {
-  selectPayoutRunAll,
-  selectPayoutRunById,
-  selectPayoutRunEntities,
-  selectPayoutRunIds,
-  selectPayoutRunTotal,
-} = convertEntityAdaptorSelectors("PayoutRun", payoutRunAdaptor.getSelectors());
+  selectUserTagAll,
+  selectUserTagEntities,
+  selectUserTagTotal,
+  selectUserTagIds,
+  selectUserTagById,
+} = convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());

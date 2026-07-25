@@ -1,12 +1,12 @@
 import { Link } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
-import { formatUserTagUid } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
 import { AccountRead } from "@/api";
-import { SystemAccountRoutes, UserTagRoutes } from "@/app/routes";
+import { SystemAccountRoutes } from "@/app/routes";
+import { UserTagCell, userTagValueGetter } from "@/components/table/UserTagCell";
 import { useRenderNode } from "@/hooks";
 
 export interface AccountTableProps {
@@ -38,12 +38,8 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts, loading = 
       field: "user_tag_id",
       headerName: t("account.user_tag_uid") as string,
       align: "right",
-      valueGetter: (_, row) => formatUserTagUid(row.user_tag_uid_hex),
-      renderCell: (params) => (
-        <Link component={RouterLink} to={UserTagRoutes.detail(params.row.user_tag_id)}>
-          {formatUserTagUid(params.row.user_tag_uid_hex)}
-        </Link>
-      ),
+      valueGetter: (_, row) => userTagValueGetter(row),
+      renderCell: ({ row }) => <UserTagCell userTag={row} />,
       width: 100,
     },
     {
@@ -73,7 +69,7 @@ export const AccountTable: React.FC<AccountTableProps> = ({ accounts, loading = 
       rows={accounts}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };
