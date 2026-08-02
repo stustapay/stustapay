@@ -21,7 +21,7 @@ export const TaxRateList: React.FC = () => {
 
   const { data: taxRates, isLoading } = useLiveQuery(
     (q) => q.from({ taxRates: getTaxRateCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 

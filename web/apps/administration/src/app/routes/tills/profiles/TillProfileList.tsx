@@ -11,12 +11,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { getTillLayoutCollection, getTillProfileCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TillProfileList: React.FC = () => {
   const { t } = useTranslation();
@@ -33,13 +28,13 @@ export const TillProfileList: React.FC = () => {
         .join(
           { layouts: getTillLayoutCollection(currentNode.id) },
           ({ layouts, profiles }) => eq(profiles.layout_id, layouts.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ profiles, layouts }) => ({
           ...profiles,
           layout: layouts,
         })),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -60,10 +55,7 @@ export const TillProfileList: React.FC = () => {
       headerName: t("profile.name"),
       flex: 1,
       renderCell: (params) => (
-        <Link
-          component={RouterLink}
-          to={TillProfileRoutes.detail(params.row.id, params.row.node_id)}
-        >
+        <Link component={RouterLink} to={TillProfileRoutes.detail(params.row.id, params.row.node_id)}>
           {params.row.name}
         </Link>
       ),

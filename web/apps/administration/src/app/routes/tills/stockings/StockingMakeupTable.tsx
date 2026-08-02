@@ -13,10 +13,7 @@ export interface StockingMakeupTableProps {
 
 export const StockingMakeupTable: React.FC<StockingMakeupTableProps> = ({ stocking }) => {
   const { t } = useTranslation();
-  const rows = React.useMemo(
-    () => buildStockingDenominationRows(stocking, { hideZero: true }),
-    [stocking],
-  );
+  const rows = React.useMemo(() => buildStockingDenominationRows(stocking, { hideZero: true }), [stocking]);
 
   const columns = React.useMemo<GridColDef<StockingDenominationRow>[]>(
     () => [
@@ -53,7 +50,7 @@ export const StockingMakeupTable: React.FC<StockingMakeupTableProps> = ({ stocki
         width: 150,
       },
     ],
-    [t],
+    [t]
   );
 
   if (rows.length === 0) {

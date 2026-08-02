@@ -1,6 +1,6 @@
+import type { LoadSubsetOptions } from "@tanstack/db";
 import { parseLoadSubsetOptions, queryCollectionOptions } from "@tanstack/query-db-collection";
 import { createCollection } from "@tanstack/react-db";
-import type { LoadSubsetOptions } from "@tanstack/db";
 
 import { listCashierShifts } from "../api/generated";
 import { client } from "../api/generated/client.gen";
@@ -45,9 +45,7 @@ const createCashierShiftCollection = (nodeId: number) => {
       getKey: (item) => item.id,
       schema: zCashierShift,
       queryFn: async (context) => {
-        const { cashierId, cashRegisterId, shiftId } = parseCashierShiftFilters(
-          context.meta?.loadSubsetOptions,
-        );
+        const { cashierId, cashRegisterId, shiftId } = parseCashierShiftFilters(context.meta?.loadSubsetOptions);
 
         const response = await listCashierShifts({
           query: {
@@ -60,7 +58,7 @@ const createCashierShiftCollection = (nodeId: number) => {
         });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 

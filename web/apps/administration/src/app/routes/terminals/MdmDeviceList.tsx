@@ -32,17 +32,14 @@ const MdmDeviceListContent: React.FC = () => {
   const canManageTerminals = useCurrentUserHasPrivilege(TerminalRoutes.privilege);
   const { data, isLoading, isError } = useLiveQuery(
     (q) => q.from({ devices: getMdmDeviceCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const [selectedDevice, setSelectedDevice] = React.useState<MdmDeviceWithMapping | null>(null);
   const [mapDevice, setMapDevice] = React.useState<MdmDeviceWithMapping | null>(null);
 
   const mappedTerminalIds = React.useMemo(
-    () =>
-      new Set(
-        (data ?? []).flatMap((device) => (device.mapping ? [device.mapping.terminal_id] : [])),
-      ),
-    [data],
+    () => new Set((data ?? []).flatMap((device) => (device.mapping ? [device.mapping.terminal_id] : []))),
+    [data]
   );
 
   if (isError) {
@@ -163,9 +160,7 @@ const MdmDeviceListContent: React.FC = () => {
         />
       )}
       <Dialog open={mapDevice != null} onClose={() => setMapDevice(null)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {mapDevice?.mapping?.terminal_name ?? mapDevice?.device.device_id}
-        </DialogTitle>
+        <DialogTitle>{mapDevice?.mapping?.terminal_name ?? mapDevice?.device.device_id}</DialogTitle>
         <DialogContent>
           {mapDevice && (
             <TerminalMap

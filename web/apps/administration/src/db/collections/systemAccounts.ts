@@ -18,14 +18,11 @@ const createSystemAccountCollection = (nodeId: number) => {
         const response = await listSystemAccounts({ query: { node_id: nodeId }, client: client });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 
-const systemAccountCollections: Record<
-  number,
-  ReturnType<typeof createSystemAccountCollection>
-> = {};
+const systemAccountCollections: Record<number, ReturnType<typeof createSystemAccountCollection>> = {};
 
 export const getSystemAccountCollection = (nodeId: number) => {
   if (!systemAccountCollections[nodeId]) {

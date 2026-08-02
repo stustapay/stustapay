@@ -27,7 +27,7 @@ export const UserUpdate: React.FC = withPrivilegeGuard("node_administration", ()
         .from({ users: getUserCollection(currentNode.id) })
         .where(({ users }) => eq(users.id, Number(userId)))
         .findOne(),
-    [currentNode.id, userId],
+    [currentNode.id, userId]
   );
 
   if (isError) {

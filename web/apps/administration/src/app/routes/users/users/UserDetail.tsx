@@ -1,8 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  PointOfSale as PointOfSaleIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, PointOfSale as PointOfSaleIcon } from "@mui/icons-material";
 import { Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -45,10 +41,7 @@ export const UserDetail: React.FC = () => {
     data: terminals,
     isLoading: isTerminalsLoading,
     isError: terminalError,
-  } = useLiveQuery(
-    (q) => q.from({ terminals: getTerminalCollection(currentNode.id) }),
-    [currentNode.id]
-  );
+  } = useLiveQuery((q) => q.from({ terminals: getTerminalCollection(currentNode.id) }), [currentNode.id]);
   const openModal = useOpenModal();
 
   const getTerminal = (id: number) => terminals?.find((terminal) => terminal.id === id);
@@ -74,9 +67,7 @@ export const UserDetail: React.FC = () => {
   }
 
   const cashierActions =
-    user.cash_register_id != null &&
-    user.cash_drawer_balance !== 0 &&
-    user.cash_drawer_balance != null
+    user.cash_register_id != null && user.cash_drawer_balance !== 0 && user.cash_drawer_balance != null
       ? ([
           {
             label: t("cashier.closeOut"),
@@ -137,10 +128,7 @@ export const UserDetail: React.FC = () => {
         ) : (
           <DetailField label={t("user.terminal")} value={t("user.notLoggedInAtTerminal")} />
         )}
-        <DetailField
-          label={t("user.vouchersGranted")}
-          value={voucherGrantStats?.vouchers_granted ?? 0}
-        />
+        <DetailField label={t("user.vouchersGranted")} value={voucherGrantStats?.vouchers_granted ?? 0} />
       </DetailView>
       <Paper sx={{ p: 1 }}>
         <UserRoleAssignmentsSection userId={Number(userId)} />

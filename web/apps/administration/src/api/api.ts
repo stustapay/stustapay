@@ -11,11 +11,7 @@ import {
   ExportDsfinvkApiArg,
   ExportAo146AApiArg,
 } from "./generated/api";
-import {
-  convertEntityAdaptorSelectors,
-  blobResponseHandler,
-  blobUrlResponseHandler,
-} from "./utils";
+import { convertEntityAdaptorSelectors, blobResponseHandler, blobUrlResponseHandler } from "./utils";
 
 export * from "./generated/api";
 
@@ -89,10 +85,5 @@ export const api = generatedApi.enhanceEndpoints({
   },
 });
 
-export const {
-  selectUserTagAll,
-  selectUserTagEntities,
-  selectUserTagTotal,
-  selectUserTagIds,
-  selectUserTagById,
-} = convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());
+export const { selectUserTagAll, selectUserTagEntities, selectUserTagTotal, selectUserTagIds, selectUserTagById } =
+  convertEntityAdaptorSelectors("UserTag", userTagAdapter.getSelectors());

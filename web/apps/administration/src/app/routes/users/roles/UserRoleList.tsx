@@ -11,12 +11,7 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { UserRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { getUserRoleCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 import { PrivilegeOverviewCell } from "./components/PrivilegeOverviewCell";
 
@@ -30,7 +25,7 @@ export const UserRoleList: React.FC = () => {
 
   const { data: userRoles, isLoading } = useLiveQuery(
     (q) => q.from({ userRoles: getUserRoleCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 

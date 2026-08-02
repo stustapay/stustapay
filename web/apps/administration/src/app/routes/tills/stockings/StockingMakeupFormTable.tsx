@@ -25,9 +25,8 @@ type StockingMakeupFormTableRow =
       amount: number;
     };
 
-const isTotalRow = (
-  row: StockingMakeupFormTableRow,
-): row is Extract<StockingMakeupFormTableRow, { field: "total" }> => row.field === "total";
+const isTotalRow = (row: StockingMakeupFormTableRow): row is Extract<StockingMakeupFormTableRow, { field: "total" }> =>
+  row.field === "total";
 
 export type StockingMakeupFormTableProps<T extends StockingDenominationValues> = {
   formik: FormikProps<T>;
@@ -56,7 +55,7 @@ export function StockingMakeupFormTable<T extends StockingDenominationValues>({
         amount: total,
       },
     ],
-    [rows, total, totalLabel],
+    [rows, total, totalLabel]
   );
 
   const columns = React.useMemo<GridColDef<StockingMakeupFormTableRow>[]>(
@@ -116,11 +115,7 @@ export function StockingMakeupFormTable<T extends StockingDenominationValues>({
         sortable: false,
         renderCell: (params) => {
           if (isTotalRow(params.row)) {
-            return (
-              <Typography sx={{ fontWeight: "bold" }}>
-                {formatCurrency(params.row.amount)}
-              </Typography>
-            );
+            return <Typography sx={{ fontWeight: "bold" }}>{formatCurrency(params.row.amount)}</Typography>;
           }
 
           if (params.row.field === "variable_in_euro") {
@@ -139,7 +134,7 @@ export function StockingMakeupFormTable<T extends StockingDenominationValues>({
         },
       },
     ],
-    [t, formik, formatCurrency],
+    [t, formik, formatCurrency]
   );
 
   return (

@@ -11,12 +11,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { getTerminalCollection, getUserCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const UserList: React.FC = () => {
   const { t } = useTranslation();
@@ -28,11 +23,11 @@ export const UserList: React.FC = () => {
 
   const { data: users, isLoading } = useLiveQuery(
     (q) => q.from({ users: getUserCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: terminals, isLoading: isTerminalsLoading } = useLiveQuery(
     (q) => q.from({ terminals: getTerminalCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -50,7 +45,7 @@ export const UserList: React.FC = () => {
     }
 
     const terminalIds = ids.toSorted((lhs, rhs) =>
-      getTerminalName(lhs).toLowerCase().localeCompare(getTerminalName(rhs).toLowerCase()),
+      getTerminalName(lhs).toLowerCase().localeCompare(getTerminalName(rhs).toLowerCase())
     );
 
     return (
@@ -63,10 +58,7 @@ export const UserList: React.FC = () => {
           return (
             <React.Fragment key={id}>
               {index > 0 ? ", " : null}
-              <Link
-                component={RouterLink}
-                to={TerminalRoutes.detail(terminal.id, terminal.node_id)}
-              >
+              <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id, terminal.node_id)}>
                 {terminal.name}
               </Link>
             </React.Fragment>

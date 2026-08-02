@@ -23,14 +23,11 @@ const createUserRoleAssignmentCollection = (nodeId: number, userId: number) => {
         });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 
-const userRoleAssignmentCollections: Record<
-  string,
-  ReturnType<typeof createUserRoleAssignmentCollection>
-> = {};
+const userRoleAssignmentCollections: Record<string, ReturnType<typeof createUserRoleAssignmentCollection>> = {};
 
 export const getUserRoleAssignmentCollection = (nodeId: number, userId: number) => {
   const key = `${nodeId}_${userId}`;

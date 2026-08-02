@@ -22,7 +22,7 @@ export const TillLayoutList: React.FC = () => {
 
   const { data: layouts, isLoading: isTillsLoading } = useLiveQuery(
     (q) => q.from({ layouts: getTillLayoutCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 

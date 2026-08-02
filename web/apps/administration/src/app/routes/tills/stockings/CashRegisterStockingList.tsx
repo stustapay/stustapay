@@ -11,12 +11,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { TillStockingsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { getCashRegisterStockingCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const CashRegisterStockingList: React.FC = () => {
   const { t } = useTranslation();
@@ -29,7 +24,7 @@ export const CashRegisterStockingList: React.FC = () => {
 
   const { data: stockings, isLoading } = useLiveQuery(
     (q) => q.from({ stockings: getCashRegisterStockingCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   const openConfirmDeleteDialog = (stockingId: number) => {
@@ -49,10 +44,7 @@ export const CashRegisterStockingList: React.FC = () => {
       headerName: t("register.name"),
       flex: 1,
       renderCell: (params) => (
-        <Link
-          component={RouterLink}
-          to={TillStockingsRoutes.detail(params.row.id, params.row.node_id)}
-        >
+        <Link component={RouterLink} to={TillStockingsRoutes.detail(params.row.id, params.row.node_id)}>
           {params.row.name}
         </Link>
       ),

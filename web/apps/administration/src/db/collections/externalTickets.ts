@@ -3,9 +3,9 @@ import { createCollection } from "@tanstack/react-db";
 
 import { listExternalTickets } from "../api/generated";
 import { client } from "../api/generated/client.gen";
+import { zExternalTicket } from "../api/generated/zod.gen";
 import { queryClient } from "./api";
 import { commonQueryCollectionOptions } from "./common";
-import { zExternalTicket } from "../api/generated/zod.gen";
 
 const createExternalTicketCollection = (nodeId: number) => {
   return createCollection(
@@ -20,14 +20,11 @@ const createExternalTicketCollection = (nodeId: number) => {
         const response = await listExternalTickets({ query: { node_id: nodeId }, client: client });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 
-const externalTicketCollections: Record<
-  number,
-  ReturnType<typeof createExternalTicketCollection>
-> = {};
+const externalTicketCollections: Record<number, ReturnType<typeof createExternalTicketCollection>> = {};
 
 export const getExternalTicketCollection = (nodeId: number) => {
   if (!externalTicketCollections[nodeId]) {

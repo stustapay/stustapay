@@ -16,14 +16,12 @@ export const UserTagVariantList: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
-  const canManageUserTagVariantsAtNode = useCurrentUserHasPrivilegeAtNode(
-    UserTagVariantRoutes.privilege,
-  );
+  const canManageUserTagVariantsAtNode = useCurrentUserHasPrivilegeAtNode(UserTagVariantRoutes.privilege);
   const openModal = useOpenModal();
 
   const { data: userTagVariants, isLoading } = useLiveQuery(
     (q) => q.from({ userTagVariants: getUserTagVariantCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   const openConfirmDeleteDialog = (userTagVariantId: number) => {

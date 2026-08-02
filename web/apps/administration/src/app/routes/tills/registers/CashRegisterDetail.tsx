@@ -1,8 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  SwapHoriz as SwapHorizIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Paper, Stack, Tab } from "@mui/material";
 import { Loading } from "@stustapay/components";
@@ -13,14 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { CashRegistersRoutes, TillRoutes, UserRoutes } from "@/app/routes";
-import {
-  ButtonLink,
-  DetailField,
-  DetailLayout,
-  DetailNumberField,
-  DetailView,
-  UserDetailField,
-} from "@/components";
+import { ButtonLink, DetailField, DetailLayout, DetailNumberField, DetailView, UserDetailField } from "@/components";
 import { TransactionTable } from "@/components/features";
 import { getCashRegisterCollection, getTillCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
@@ -45,12 +34,12 @@ export const CashRegisterDetail: React.FC = () => {
         .join(
           { tills: getTillCollection(currentNode.id) },
           ({ registers, tills }) => eq(registers.current_till_id, tills.id),
-          "left" as const,
+          "left" as const
         )
         .join(
           { users: getUserCollection(currentNode.id) },
           ({ registers, users }) => eq(registers.current_cashier_id, users.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ registers, tills, users }) => ({
           ...registers,
@@ -58,7 +47,7 @@ export const CashRegisterDetail: React.FC = () => {
           cashier: users,
         }))
         .findOne(),
-    [currentNode.id, registerId],
+    [currentNode.id, registerId]
   );
 
   const [activeTab, setActiveTab] = React.useState("cashierShifts");
@@ -123,24 +112,14 @@ export const CashRegisterDetail: React.FC = () => {
               register.balance !== 0 &&
               cashier != null &&
               cashier.id != null && (
-                <ButtonLink
-                  to={UserRoutes.detailAction(
-                    cashier.id,
-                    "close-out",
-                    cashier.node_id ?? register.node_id,
-                  )}
-                >
+                <ButtonLink to={UserRoutes.detailAction(cashier.id, "close-out", cashier.node_id ?? register.node_id)}>
                   {t("cashier.closeOut")}
                 </ButtonLink>
               )
             }
           />
           {register.current_cashier_id != null && (
-            <UserDetailField
-              label={t("register.currentCashier")}
-              user={cashier}
-              fallbackNodeId={register.node_id}
-            />
+            <UserDetailField label={t("register.currentCashier")} user={cashier} fallbackNodeId={register.node_id} />
           )}
           {register.till != null && (
             <DetailField
@@ -159,9 +138,7 @@ export const CashRegisterDetail: React.FC = () => {
             <Tab label={t("register.orders")} value="orders" />
           </TabList>
           <TabPanel value="cashierShifts">
-            {activeTab === "cashierShifts" && (
-              <CashierShiftTable cashRegisterId={register.id} showCashierColumn />
-            )}
+            {activeTab === "cashierShifts" && <CashierShiftTable cashRegisterId={register.id} showCashierColumn />}
           </TabPanel>
           <TabPanel value="orders">
             {activeTab === "orders" && (

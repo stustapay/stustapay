@@ -7,15 +7,10 @@ import { Link as RouterLink } from "react-router-dom";
 
 import { CashRegistersRoutes, UserRoutes } from "@/app/routes";
 import { UserCell, userValueGetter } from "@/components/table/UserCell";
-import {
-  getCashRegisterCollection,
-  getCashierShiftCollection,
-  getUserCollection,
-} from "@/db/collections";
+import { getCashRegisterCollection, getCashierShiftCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
-const shiftDetailPath = (cashierId: number, shiftId: number) =>
-  `${UserRoutes.detail(cashierId)}/shifts/${shiftId}`;
+const shiftDetailPath = (cashierId: number, shiftId: number) => `${UserRoutes.detail(cashierId)}/shifts/${shiftId}`;
 
 export const CashierShiftTable: React.FC<{
   cashierId?: number;
@@ -51,27 +46,25 @@ export const CashierShiftTable: React.FC<{
           q
             .from({ users: getUserCollection(currentNode.id) })
             .where(({ users }) => eq(users.id, shiftRow.closing_out_user_id))
-            .select(({ users }) => users),
+            .select(({ users }) => users)
         ),
         cashier: materialize(
           q
             .from({ users: getUserCollection(currentNode.id) })
             .where(({ users }) => eq(users.id, shiftRow.cashier_id))
-            .select(({ users }) => users),
+            .select(({ users }) => users)
         ),
         register: materialize(
           q
             .from({ registers: getCashRegisterCollection(currentNode.id) })
             .where(({ registers }) =>
-              shiftRow.cash_register_id != null
-                ? eq(registers.id, shiftRow.cash_register_id)
-                : eq(registers.id, -1),
+              shiftRow.cash_register_id != null ? eq(registers.id, shiftRow.cash_register_id) : eq(registers.id, -1)
             )
-            .select(({ registers }) => registers),
+            .select(({ registers }) => registers)
         ),
       }));
     },
-    [currentNode.id, cashierId, cashRegisterId],
+    [currentNode.id, cashierId, cashRegisterId]
   );
 
   if (isError || (hideWhenEmpty && !isLoading && (rows?.length ?? 0) === 0)) {
@@ -85,9 +78,7 @@ export const CashierShiftTable: React.FC<{
       field: "id",
       headerName: t("shift.id"),
       renderCell: (params) => (
-        <RouterLink to={shiftDetailPath(params.row.cashier_id, params.row.id)}>
-          {params.row.id}
-        </RouterLink>
+        <RouterLink to={shiftDetailPath(params.row.cashier_id, params.row.id)}>{params.row.id}</RouterLink>
       ),
     },
     {
@@ -129,10 +120,7 @@ export const CashierShiftTable: React.FC<{
               }
 
               return (
-                <Link
-                  component={RouterLink}
-                  to={CashRegistersRoutes.detail(register.id, register.node_id)}
-                >
+                <Link component={RouterLink} to={CashRegistersRoutes.detail(register.id, register.node_id)}>
                   {register.name}
                 </Link>
               );

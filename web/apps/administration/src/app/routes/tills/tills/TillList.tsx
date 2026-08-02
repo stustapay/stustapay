@@ -10,18 +10,8 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { TerminalRoutes, TillProfileRoutes, TillRoutes, TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  getTerminalCollection,
-  getTillCollection,
-  getTillProfileCollection,
-  getTseCollection,
-} from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { getTerminalCollection, getTillCollection, getTillProfileCollection, getTseCollection } from "@/db/collections";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TillList: React.FC = () => {
   const { t } = useTranslation();
@@ -38,17 +28,17 @@ export const TillList: React.FC = () => {
         .join(
           { profiles: getTillProfileCollection(currentNode.id) },
           ({ profiles, tills }) => eq(tills.active_profile_id, profiles.id),
-          "left" as const,
+          "left" as const
         )
         .join(
           { terminals: getTerminalCollection(currentNode.id) },
           ({ terminals, tills }) => eq(tills.terminal_id, terminals.id),
-          "left" as const,
+          "left" as const
         )
         .join(
           { tses: getTseCollection(currentNode.id) },
           ({ tills, tses }) => eq(tills.tse_id, tses.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ tills, profiles, terminals, tses }) => ({
           ...tills,
@@ -56,7 +46,7 @@ export const TillList: React.FC = () => {
           terminal: terminals,
           tse: tses,
         })),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -101,10 +91,7 @@ export const TillList: React.FC = () => {
       flex: 0.5,
       renderCell: (params) =>
         params.row.profile ? (
-          <Link
-            component={RouterLink}
-            to={TillProfileRoutes.detail(params.row.profile.id, params.row.profile.node_id)}
-          >
+          <Link component={RouterLink} to={TillProfileRoutes.detail(params.row.profile.id, params.row.profile.node_id)}>
             {params.row.profile.name}
           </Link>
         ) : null,
@@ -115,10 +102,7 @@ export const TillList: React.FC = () => {
       flex: 0.5,
       renderCell: (params) =>
         params.row.terminal ? (
-          <Link
-            component={RouterLink}
-            to={TerminalRoutes.detail(params.row.terminal.id, params.row.terminal.node_id)}
-          >
+          <Link component={RouterLink} to={TerminalRoutes.detail(params.row.terminal.id, params.row.terminal.node_id)}>
             {params.row.terminal.name}
           </Link>
         ) : null,

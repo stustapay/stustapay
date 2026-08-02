@@ -26,7 +26,13 @@ export const TaxRateCreate: React.FC = () => {
       successRoute={TaxRateRoutes.list()}
       initialValues={initialValues}
       validationSchema={TaxRateSchema}
-      onSubmit={(t) => getTaxRateCollection(currentNode.id).insert({ ...t, id: generateId(), node_id: currentNode.id })}
+      onSubmit={(t) =>
+        getTaxRateCollection(currentNode.id).insert({
+          ...t,
+          id: generateId(),
+          node_id: currentNode.id,
+        })
+      }
       form={TaxRateForm}
     />
   );

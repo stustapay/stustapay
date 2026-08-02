@@ -17,7 +17,7 @@ export const ExternalTicketList: React.FC = () => {
 
   const { data: tickets, isLoading: isTicketsLoading } = useLiveQuery(
     (q) => q.from({ tickets: getExternalTicketCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   const columns: GridColDef<ArrayElement<NonNullable<typeof tickets>>>[] = [

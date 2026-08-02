@@ -53,7 +53,11 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
 
   React.useEffect(() => {
     setSelectedProducts(
-      order.line_items.map((li) => ({ product: li.product, quantity: li.quantity, price: li.product_price }))
+      order.line_items.map((li) => ({
+        product: li.product,
+        quantity: li.quantity,
+        price: li.product_price,
+      }))
     );
   }, [order]);
 

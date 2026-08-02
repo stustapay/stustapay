@@ -1,8 +1,4 @@
-import {
-  FileDownload as FileDownloadIcon,
-  Check as CheckIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
+import { FileDownload as FileDownloadIcon, Check as CheckIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { Link, Alert } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
@@ -21,15 +17,9 @@ import {
   useRevokePayoutRunMutation,
 } from "@/api";
 import { CustomerRoutes, PayoutRunRoutes } from "@/app/routes";
-import { UserTagCell, userTagValueGetter } from "@/components/table/UserTagCell";
-import {
-  DetailField,
-  DetailLayout,
-  DetailNumberField,
-  DetailView,
-  UserDetailField,
-} from "@/components";
+import { DetailField, DetailLayout, DetailNumberField, DetailView, UserDetailField } from "@/components";
 import { LayoutAction } from "@/components/layouts/types";
+import { UserTagCell, userTagValueGetter } from "@/components/table/UserTagCell";
 import {
   getPayoutRunCollection,
   getPayoutRunPayoutCollection,
@@ -64,12 +54,12 @@ export const PayoutRunDetail: React.FC = () => {
         .join(
           { createdByUsers: getUserCollection(currentNode.id) },
           ({ createdByUsers, payoutRuns }) => eq(payoutRuns.created_by, createdByUsers.id),
-          "left" as const,
+          "left" as const
         )
         .join(
           { setDoneByUsers: getUserCollection(currentNode.id) },
           ({ payoutRuns, setDoneByUsers }) => eq(payoutRuns.set_done_by, setDoneByUsers.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ createdByUsers, payoutRuns, setDoneByUsers }) => ({
           ...payoutRuns,
@@ -77,14 +67,14 @@ export const PayoutRunDetail: React.FC = () => {
           setDoneByUser: setDoneByUsers,
         }))
         .findOne(),
-    [currentNode.id, payoutRunId],
+    [currentNode.id, payoutRunId]
   );
   const { data: payouts, isLoading: isPayoutsLoading } = useLiveQuery(
     (q) =>
       q.from({
         payouts: getPayoutRunPayoutCollection(currentNode.id, Number(payoutRunId)),
       }),
-    [currentNode.id, payoutRunId],
+    [currentNode.id, payoutRunId]
   );
 
   if (isError) {

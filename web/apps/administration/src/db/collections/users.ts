@@ -37,7 +37,9 @@ const createUserCollection = (nodeId: number, filterPrivilege?: EventPrivilege |
       onInsert: async ({ transaction }) => {
         await Promise.all(
           transaction.mutations.map(async ({ modified }) => {
-            const { password, ...userFields } = modified as typeof modified & { password?: string | null };
+            const { password, ...userFields } = modified as typeof modified & {
+              password?: string | null;
+            };
             return createUser({
               client: client,
               query: {

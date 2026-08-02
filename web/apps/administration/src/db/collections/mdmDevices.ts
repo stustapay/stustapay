@@ -23,7 +23,7 @@ const createMdmDeviceCollection = (nodeId: number) => {
         });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 

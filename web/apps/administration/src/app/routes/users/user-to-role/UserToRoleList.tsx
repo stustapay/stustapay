@@ -12,12 +12,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { UserRoleRoutes, UserToRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { UserCell, userValueGetter } from "@/components/table/UserCell";
-import {
-  getUserCollection,
-  getUserRoleCollection,
-  getUserToRoleCollection,
-  getUserToRoleKey,
-} from "@/db/collections";
+import { getUserCollection, getUserRoleCollection, getUserToRoleCollection, getUserToRoleKey } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 
 export const UserToRoleList: React.FC = () => {
@@ -34,14 +29,14 @@ export const UserToRoleList: React.FC = () => {
             .from({ users: getUserCollection(currentNode.id) })
             .where(({ users }) => eq(users.id, userToRole.user_id))
             .select(({ users }) => users)
-            .findOne(),
+            .findOne()
         ),
       })),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: userRoles, isLoading: isUserRolesLoading } = useLiveQuery(
     (q) => q.from({ userRoles: getUserRoleCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
   const openModal = useOpenModal();
@@ -49,10 +44,7 @@ export const UserToRoleList: React.FC = () => {
 
   type UserToRoleRow = ArrayElement<NonNullable<typeof userToRoles>>;
 
-  const roleById = React.useMemo(
-    () => new Map(userRoles?.map((role) => [role.id, role])),
-    [userRoles],
-  );
+  const roleById = React.useMemo(() => new Map(userRoles?.map((role) => [role.id, role])), [userRoles]);
 
   const getRoleNames = (roleIds: number[]) => {
     return roleIds

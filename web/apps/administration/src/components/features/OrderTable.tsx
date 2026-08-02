@@ -80,25 +80,18 @@ export const OrderTable: React.FC<OrderListProps> = ({
         .offset(paginationModel.page * paginationModel.pageSize)
         .limit(paginationModel.pageSize);
     },
-    [
-      usesCollection,
-      currentNode.id,
-      tillId,
-      customerAccountId,
-      paginationModel.page,
-      paginationModel.pageSize,
-    ],
+    [usesCollection, currentNode.id, tillId, customerAccountId, paginationModel.page, paginationModel.pageSize]
   );
 
   const total = usePaginatedQueryTotal(currentNode.id, "orders");
   const orders = usesCollection ? (queriedOrders ?? []) : (ordersProp ?? []);
   const { data: users, isLoading: isUsersLoading } = useLiveQuery(
     (q) => q.from({ users: getUserCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: tills, isLoading: isTillsLoading } = useLiveQuery(
     (q) => q.from({ tills: getTillCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   const getUsernameForUser = (id?: number | null) => {
@@ -163,9 +156,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
                 return null;
               }
               return (
-                <RouterLink to={UserRoutes.detail(row.cashier_id)}>
-                  {getUsernameForUser(row.cashier_id)}
-                </RouterLink>
+                <RouterLink to={UserRoutes.detail(row.cashier_id)}>{getUsernameForUser(row.cashier_id)}</RouterLink>
               );
             },
             width: 200,

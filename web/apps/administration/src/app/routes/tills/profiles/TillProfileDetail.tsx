@@ -30,14 +30,14 @@ export const TillProfileDetail: React.FC = () => {
         .join(
           { layouts: getTillLayoutCollection(currentNode.id) },
           ({ layouts, profiles }) => eq(profiles.layout_id, layouts.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ profiles, layouts }) => ({
           ...profiles,
           layout: layouts,
         }))
         .findOne(),
-    [currentNode.id, profileId],
+    [currentNode.id, profileId]
   );
 
   if (isError) {
@@ -87,19 +87,10 @@ export const TillProfileDetail: React.FC = () => {
         <DetailBoolField label={t("profile.allowTopUp")} value={profile.allow_top_up} />
         <DetailBoolField label={t("profile.allowCashOut")} value={profile.allow_cash_out} />
         <DetailBoolField label={t("profile.allowTicketSale")} value={profile.allow_ticket_sale} />
-        <DetailBoolField
-          label={t("profile.allowTicketVouchers")}
-          value={profile.allow_ticket_vouchers}
-        />
+        <DetailBoolField label={t("profile.allowTicketVouchers")} value={profile.allow_ticket_vouchers} />
         <DetailBoolField label={t("profile.enableSspPayment")} value={profile.enable_ssp_payment} />
-        <DetailBoolField
-          label={t("profile.enableCashPayment")}
-          value={profile.enable_cash_payment}
-        />
-        <DetailBoolField
-          label={t("profile.enableCardPayment")}
-          value={profile.enable_card_payment}
-        />
+        <DetailBoolField label={t("profile.enableCashPayment")} value={profile.enable_cash_payment} />
+        <DetailBoolField label={t("profile.enableCardPayment")} value={profile.enable_card_payment} />
         {profile.layout && (
           <DetailField
             label={t("profile.layout")}

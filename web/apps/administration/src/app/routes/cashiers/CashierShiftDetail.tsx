@@ -6,13 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { UserRoutes } from "@/app/routes";
-import {
-  DetailField,
-  DetailLayout,
-  DetailNumberField,
-  DetailView,
-  UserDetailField,
-} from "@/components";
+import { DetailField, DetailLayout, DetailNumberField, DetailView, UserDetailField } from "@/components";
 import { CashRegisterCell } from "@/components/table/CashRegisterCell";
 import { getCashierShiftCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
@@ -33,14 +27,14 @@ export const CashierShiftDetail: React.FC = () => {
         .join(
           { closingOutUsers: getUserCollection(currentNode.id) },
           ({ closingOutUsers, shifts }) => eq(shifts.closing_out_user_id, closingOutUsers.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ closingOutUsers, shifts }) => ({
           ...shifts,
           closingOutUser: closingOutUsers,
         }))
         .findOne(),
-    [currentNode.id, userId, shiftId],
+    [currentNode.id, userId, shiftId]
   );
   const { data: user, isLoading: isUserLoading } = useLiveQuery(
     (q) =>
@@ -48,7 +42,7 @@ export const CashierShiftDetail: React.FC = () => {
         .from({ users: getUserCollection(currentNode.id) })
         .where(({ users }) => eq(users.id, Number(userId)))
         .findOne(),
-    [currentNode.id, userId],
+    [currentNode.id, userId]
   );
 
   if (isShiftLoading || cashierShift == null || isUserLoading || user === undefined) {

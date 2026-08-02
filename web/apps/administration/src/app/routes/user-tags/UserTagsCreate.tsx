@@ -44,7 +44,7 @@ const CsvTagsSchema = z.array(
   z.object({
     pin: z.string(),
     variants: z.string().optional(),
-  }),
+  })
 );
 
 const NewUserTagsSchema = z.object({
@@ -93,7 +93,7 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
   const { data: userTagsSecrets, error } = useListUserTagSecretsQuery({ nodeId: currentNode.id });
   const { data: userTagVariants } = useLiveQuery(
     (q) => q.from({ userTagVariants: getUserTagVariantCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   if (error) {
@@ -167,19 +167,13 @@ const TagsForm: React.FC<FormikProps<NewUserTags>> = (props) => {
         sx={{ maxWidth: 400 }}
       >
         {t("userTag.uploadPinCsv")}
-        <VisuallyHiddenInput
-          type="file"
-          accept="text/csv"
-          onChange={(event) => handleCsvUpload(event)}
-        />
+        <VisuallyHiddenInput type="file" accept="text/csv" onChange={(event) => handleCsvUpload(event)} />
       </Button>
 
       {values.tags.length > 0 && (
         <Box>
           <Typography>{t("userTag.willCreate", { nTags: values.tags.length })}</Typography>
-          <Typography>
-            {t("userTag.firstNTags", { actualNum: Math.min(values.tags.length, 10) })}
-          </Typography>
+          <Typography>{t("userTag.firstNTags", { actualNum: Math.min(values.tags.length, 10) })}</Typography>
           <TableContainer>
             <Table size="small">
               <TableHead>

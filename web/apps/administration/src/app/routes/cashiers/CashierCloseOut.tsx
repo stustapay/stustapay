@@ -13,6 +13,7 @@ import {
 import { CashingTextField, Loading } from "@stustapay/components";
 import { getUserName } from "@stustapay/models";
 import { toFormikValidationSchema } from "@stustapay/utils";
+import { eq, materialize, useLiveQuery } from "@tanstack/react-db";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +32,6 @@ import { StockingMakeupFormTable } from "@/app/routes/tills/stockings/StockingMa
 import { UserSelect } from "@/components/features";
 import { getTerminalCollection, getUserCollection, refetchNodeCollection } from "@/db/collections";
 import { useCurrencyFormatter, useCurrentNode, useCurrentUser } from "@/hooks";
-import { eq, materialize, useLiveQuery } from "@tanstack/react-db";
 
 import { CashierShiftStatsOverview } from "./CashierShiftStatsOverview";
 
@@ -51,7 +51,7 @@ const useCloseOutSchema = () => {
     };
 
     const denominationSchema = Object.fromEntries(
-      cashRegisterStockingDenominationFields.map((field) => [field, z.number()]),
+      cashRegisterStockingDenominationFields.map((field) => [field, z.number()])
     );
 
     const schema = z.object({
@@ -87,21 +87,18 @@ export const CashierCloseOut: React.FC = () => {
             q
               .from({ terminals: getTerminalCollection(currentNode.id) })
               .where(({ terminals }) => eq(terminals.active_user_id, userRow.id))
-              .select(({ terminals }) => terminals),
+              .select(({ terminals }) => terminals)
           ),
         }))
         .findOne(),
-    [currentNode.id, userId],
+    [currentNode.id, userId]
   );
 
   if (!user || isLoading) {
     return <Loading />;
   }
 
-  const handleSubmit = (
-    values: CloseOutValues,
-    { setSubmitting }: FormikHelpers<CloseOutValues>,
-  ) => {
+  const handleSubmit = (values: CloseOutValues, { setSubmitting }: FormikHelpers<CloseOutValues>) => {
     setSubmitting(true);
     closeOut({
       nodeId: currentNode.id,
@@ -147,10 +144,7 @@ export const CashierCloseOut: React.FC = () => {
             }
 
             return (
-              <RouterLink
-                key={terminal.id}
-                to={TerminalRoutes.detail(terminal.id, terminal.node_id ?? currentNode.id)}
-              >
+              <RouterLink key={terminal.id} to={TerminalRoutes.detail(terminal.id, terminal.node_id ?? currentNode.id)}>
                 {terminal.name}
               </RouterLink>
             );
@@ -158,11 +152,7 @@ export const CashierCloseOut: React.FC = () => {
         </Alert>
       )}
 
-      <Formik
-        initialValues={initialValues}
-        onSubmit={handleSubmit}
-        validationSchema={toFormikValidationSchema(schema)}
-      >
+      <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={toFormikValidationSchema(schema)}>
         {(formik) => {
           const countedTotal = computeStockingTotal(formik.values);
           const difference = countedTotal - cashDrawerBalance;
@@ -178,19 +168,13 @@ export const CashierCloseOut: React.FC = () => {
                 <Paper sx={{ px: 2, py: 1.5 }}>
                   <Stack spacing={0.5} sx={{ alignItems: "flex-end" }}>
                     <Typography variant="body2">
-                      <Box
-                        component="span"
-                        sx={{ fontWeight: (theme) => theme.typography.fontWeightBold, mr: 2 }}
-                      >
+                      <Box component="span" sx={{ fontWeight: (theme) => theme.typography.fontWeightBold, mr: 2 }}>
                         {t("closeOut.targetInDrawer")}
                       </Box>
                       {formatCurrency(cashDrawerBalance)}
                     </Typography>
                     <Typography variant="body2">
-                      <Box
-                        component="span"
-                        sx={{ fontWeight: (theme) => theme.typography.fontWeightBold, mr: 2 }}
-                      >
+                      <Box component="span" sx={{ fontWeight: (theme) => theme.typography.fontWeightBold, mr: 2 }}>
                         {t("closeOut.difference")}
                       </Box>
                       {formatCurrency(difference)} (
@@ -210,10 +194,7 @@ export const CashierCloseOut: React.FC = () => {
                       filterPrivilege="node_administration"
                       onChange={(val) => formik.setFieldValue("closingOutUserId", val)}
                       error={formik.touched.closingOutUserId && !!formik.errors.closingOutUserId}
-                      helperText={
-                        (formik.touched.closingOutUserId &&
-                          formik.errors.closingOutUserId) as string
-                      }
+                      helperText={(formik.touched.closingOutUserId && formik.errors.closingOutUserId) as string}
                     />
                     <CashingTextField
                       multiline

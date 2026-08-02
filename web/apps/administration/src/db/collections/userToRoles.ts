@@ -10,7 +10,9 @@ import { commonQueryCollectionOptions } from "./common";
 export const getUserToRoleKey = (nodeId: number, userId: number) => `${nodeId}:${userId}`;
 
 const invalidateUserRoleAssignments = (nodeId: number, userId: number) =>
-  queryClient.invalidateQueries({ queryKey: ["nodes", nodeId, "users", userId, "role-assignments"] });
+  queryClient.invalidateQueries({
+    queryKey: ["nodes", nodeId, "users", userId, "role-assignments"],
+  });
 
 const createUserToRoleCollection = (nodeId: number) => {
   return createCollection(
@@ -39,7 +41,7 @@ const createUserToRoleCollection = (nodeId: number) => {
               },
             });
             await invalidateUserRoleAssignments(nodeId, modified.user_id);
-          }),
+          })
         );
       },
       onUpdate: async ({ transaction }) => {
@@ -56,7 +58,7 @@ const createUserToRoleCollection = (nodeId: number) => {
               },
             });
             await invalidateUserRoleAssignments(nodeId, original.user_id);
-          }),
+          })
         );
       },
       onDelete: async ({ transaction }) => {
@@ -73,10 +75,10 @@ const createUserToRoleCollection = (nodeId: number) => {
               },
             });
             await invalidateUserRoleAssignments(nodeId, original.user_id);
-          }),
+          })
         );
       },
-    }),
+    })
   );
 };
 

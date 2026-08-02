@@ -57,26 +57,16 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
       <Stack spacing={2}>
         <DetailView sx={{ height: "100%" }}>
           {customer.payout_export === false && (
-            <Alert
-              severity="info"
-              action={<Button onClick={onClickAllowPayout}>{t("customer.allowPayout")}</Button>}
-            >
+            <Alert severity="info" action={<Button onClick={onClickAllowPayout}>{t("customer.allowPayout")}</Button>}>
               {t("customer.payoutExportPrevented")}
             </Alert>
           )}
           <DetailBoolField label={t("customer.hasEnteredInfo")} value={customer.has_entered_info} />
-          <DetailField
-            label={t("customer.bankAccountHolder")}
-            value={printMaybeNull(customer.account_name)}
-          />
+          <DetailField label={t("customer.bankAccountHolder")} value={printMaybeNull(customer.account_name)} />
           <DetailField label={t("customer.iban")} value={printMaybeNull(customer.iban)} />
           <DetailField label={t("common.email")} value={printMaybeNull(customer.email)} />
           <DetailBoolField label={t("customer.donateAll")} value={customer.donate_all} />
-          <DetailNumberField
-            label={t("customer.donation")}
-            type="currency"
-            value={customer.donation}
-          />
+          <DetailNumberField label={t("customer.donation")} type="currency" value={customer.donation} />
         </DetailView>
         <DetailView>
           {customer.payout ? (
@@ -87,24 +77,10 @@ const PayoutDetails: React.FC<{ customer: Customer }> = ({ customer }) => {
                 value={customer.payout.payout_run_id}
                 linkTo={PayoutRunRoutes.detail(customer.payout.payout_run_id)}
               />
-              <DetailField
-                label={t("customer.iban")}
-                value={printMaybeNull(customer.payout.iban)}
-              />
-              <DetailField
-                label={t("common.email")}
-                value={printMaybeNull(customer.payout.email)}
-              />
-              <DetailNumberField
-                label={t("customer.donation")}
-                type="currency"
-                value={customer.payout.donation}
-              />
-              <DetailNumberField
-                label={t("customer.payoutAmount")}
-                type="currency"
-                value={customer.payout.amount}
-              />
+              <DetailField label={t("customer.iban")} value={printMaybeNull(customer.payout.iban)} />
+              <DetailField label={t("common.email")} value={printMaybeNull(customer.payout.email)} />
+              <DetailNumberField label={t("customer.donation")} type="currency" value={customer.payout.donation} />
+              <DetailNumberField label={t("customer.payoutAmount")} type="currency" value={customer.payout.amount} />
             </>
           ) : (
             <Alert severity="info">{t("customer.noPayoutRunAssigned")}</Alert>
@@ -204,16 +180,8 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
   }
 
   return (
-    <DetailLayout
-      title={`Customer Account ${customer.id}`}
-      routes={CustomerRoutes}
-      actions={actions}
-    >
-      <Grid
-        container
-        spacing={1}
-        sx={{ display: "grid", alignItems: "stretch", gridTemplateColumns: "1fr 1fr" }}
-      >
+    <DetailLayout title={`Customer Account ${customer.id}`} routes={CustomerRoutes} actions={actions}>
+      <Grid container spacing={1} sx={{ display: "grid", alignItems: "stretch", gridTemplateColumns: "1fr 1fr" }}>
         <Grid>
           <DetailView sx={{ height: "100%" }}>
             <DetailField label={t("account.id")} value={customer.id} />
@@ -230,11 +198,7 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
               value={customer.comment ?? ""}
               onChange={handleUpdateComment}
             />
-            <DetailNumberField
-              label={t("account.balance")}
-              type="currency"
-              value={customer.balance}
-            />
+            <DetailNumberField label={t("account.balance")} type="currency" value={customer.balance} />
             <DetailField
               label={t("account.vouchers")}
               value={customer.vouchers}

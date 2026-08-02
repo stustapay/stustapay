@@ -27,7 +27,7 @@ export const refetchTillTerminalCollections = (nodeId: number) =>
 export const usePaginatedQueryTotal = (nodeId: number, resource: "orders" | "transactions") => {
   const readTotal = React.useCallback(() => {
     const queries = queryClient.getQueryCache().findAll({ queryKey: ["nodes", nodeId, resource] });
-    for (const query of [...queries].reverse()) {
+    for (const query of [...queries].toReversed()) {
       const data = query.state.data as PaginatedListOrder | PaginatedListTransaction | undefined;
       if (data && "total" in data) {
         return data.total;

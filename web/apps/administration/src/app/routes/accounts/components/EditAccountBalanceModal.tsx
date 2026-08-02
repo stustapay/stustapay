@@ -37,7 +37,11 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
   }, [account]);
 
   const handleConfirm = () => {
-    updateBalance({ nodeId: currentNode.id, accountId: account.id, updateBalancePayload: { new_balance: balance } })
+    updateBalance({
+      nodeId: currentNode.id,
+      accountId: account.id,
+      updateBalancePayload: { new_balance: balance },
+    })
       .unwrap()
       .then(() => {
         handleClose();
@@ -66,7 +70,9 @@ export const EditAccountBalanceModal: React.FC<EditAccountBalanceModalProps> = (
           onChange={handleChange}
           label={t("account.newBalance")}
           slotProps={{
-            input: { endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment> },
+            input: {
+              endAdornment: <InputAdornment position="end">{currencySymbol}</InputAdornment>,
+            },
           }}
         />
       </DialogContent>

@@ -18,23 +18,19 @@ export const AuditLogList: React.FC = () => {
 
   const { data: rows, isLoading } = useLiveQuery(
     (q) =>
-      q
-        .from({ auditLog: getAuditLogCollection(currentNode.id) })
-        .select(({ auditLog: auditLogRow }) => ({
-          ...auditLogRow,
-          originatingUser: materialize(
-            q
-              .from({ users: getUserCollection(currentNode.id) })
-              .where(({ users }) =>
-                auditLogRow.originating_user_id != null
-                  ? eq(users.id, auditLogRow.originating_user_id)
-                  : eq(users.id, -1),
-              )
-              .select(({ users }) => users)
-              .findOne(),
-          ),
-        })),
-    [currentNode.id],
+      q.from({ auditLog: getAuditLogCollection(currentNode.id) }).select(({ auditLog: auditLogRow }) => ({
+        ...auditLogRow,
+        originatingUser: materialize(
+          q
+            .from({ users: getUserCollection(currentNode.id) })
+            .where(({ users }) =>
+              auditLogRow.originating_user_id != null ? eq(users.id, auditLogRow.originating_user_id) : eq(users.id, -1)
+            )
+            .select(({ users }) => users)
+            .findOne()
+        ),
+      })),
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 

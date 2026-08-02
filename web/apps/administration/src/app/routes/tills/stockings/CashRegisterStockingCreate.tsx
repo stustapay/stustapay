@@ -10,10 +10,7 @@ import { generateId, getCashRegisterStockingCollection } from "@/db/collections"
 import { useCurrentNode } from "@/hooks";
 
 import { CashRegisterStockingForm } from "./CashRegisterStockingForm";
-import {
-  computeStockingTotal,
-  defaultCashRegisterStockingDenominationValues,
-} from "./stockingDenominations";
+import { computeStockingTotal, defaultCashRegisterStockingDenominationValues } from "./stockingDenominations";
 
 const initialValues: NewCashRegisterStocking = {
   name: "",
@@ -21,28 +18,25 @@ const initialValues: NewCashRegisterStocking = {
   variable_in_euro: 0,
 };
 
-export const CashRegisterStockingCreate: React.FC = withPrivilegeGuard(
-  "node_administration",
-  () => {
-    const { t } = useTranslation();
-    const { currentNode } = useCurrentNode();
+export const CashRegisterStockingCreate: React.FC = withPrivilegeGuard("node_administration", () => {
+  const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
-    return (
-      <CreateLayoutV2
-        title={t("register.createStocking")}
-        successRoute={TillStockingsRoutes.list()}
-        initialValues={initialValues}
-        validationSchema={NewCashRegisterStockingSchema}
-        onSubmit={(stocking) =>
-          getCashRegisterStockingCollection(currentNode.id).insert({
-            ...stocking,
-            id: generateId(),
-            node_id: currentNode.id,
-            total: computeStockingTotal(stocking),
-          })
-        }
-        form={CashRegisterStockingForm}
-      />
-    );
-  },
-);
+  return (
+    <CreateLayoutV2
+      title={t("register.createStocking")}
+      successRoute={TillStockingsRoutes.list()}
+      initialValues={initialValues}
+      validationSchema={NewCashRegisterStockingSchema}
+      onSubmit={(stocking) =>
+        getCashRegisterStockingCollection(currentNode.id).insert({
+          ...stocking,
+          id: generateId(),
+          node_id: currentNode.id,
+          total: computeStockingTotal(stocking),
+        })
+      }
+      form={CashRegisterStockingForm}
+    />
+  );
+});

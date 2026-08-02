@@ -27,7 +27,7 @@ export const TillProfileUpdate: React.FC = withPrivilegeGuard("node_administrati
         .from({ profiles: getTillProfileCollection(currentNode.id) })
         .where(({ profiles }) => eq(profiles.id, Number(profileId)))
         .findOne(),
-    [currentNode.id, profileId],
+    [currentNode.id, profileId]
   );
 
   if (isError) {

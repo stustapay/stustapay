@@ -1,6 +1,6 @@
+import type { LoadSubsetOptions } from "@tanstack/db";
 import { parseLoadSubsetOptions, queryCollectionOptions } from "@tanstack/query-db-collection";
 import { createCollection } from "@tanstack/react-db";
-import type { LoadSubsetOptions } from "@tanstack/db";
 
 import { listOrders } from "../api/generated";
 import { client } from "../api/generated/client.gen";
@@ -63,7 +63,7 @@ const createOrderCollection = (nodeId: number) => {
         });
         return response.data ?? { items: [], total: 0 };
       },
-    }),
+    })
   );
 };
 

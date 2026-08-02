@@ -35,7 +35,7 @@ const createUserRoleCollection = (nodeId: number) => {
                 node_privileges: modified.node_privileges,
               },
             });
-          }),
+          })
         );
       },
       onUpdate: async ({ transaction }) => {
@@ -56,7 +56,7 @@ const createUserRoleCollection = (nodeId: number) => {
                 node_privileges: modified.node_privileges,
               },
             });
-          }),
+          })
         );
       },
       onDelete: async ({ transaction }) => {
@@ -71,10 +71,10 @@ const createUserRoleCollection = (nodeId: number) => {
                 node_id: nodeId,
               },
             });
-          }),
+          })
         );
       },
-    }),
+    })
   );
 };
 

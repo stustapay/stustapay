@@ -12,9 +12,7 @@ import { getUserRoleAssignmentCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 const renderRoles = (roles: UserRole[]) => {
-  const sortedRoles = roles.toSorted((lhs, rhs) =>
-    lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()),
-  );
+  const sortedRoles = roles.toSorted((lhs, rhs) => lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()));
 
   return (
     <div>
@@ -35,7 +33,7 @@ export const UserRoleAssignmentsSection: React.FC<{ userId: number }> = ({ userI
   const { currentNode } = useCurrentNode();
   const { data: assignments, isLoading } = useLiveQuery(
     (q) => q.from({ assignments: getUserRoleAssignmentCollection(currentNode.id, userId) }),
-    [currentNode.id, userId],
+    [currentNode.id, userId]
   );
 
   const columns: GridColDef<ArrayElement<NonNullable<typeof assignments>>>[] = [

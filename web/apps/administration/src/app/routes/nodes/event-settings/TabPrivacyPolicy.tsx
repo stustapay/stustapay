@@ -20,10 +20,10 @@ import { MarkdownEditor } from "@/components";
 import { TranslationTexts, TranslationTextsSchema, updateTranslationTexts } from "./common";
 import { LanguageDropdown } from "./LanguageDropdown";
 
-export const TabPrivacyPolicy: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
-  nodeId,
-  eventSettings,
-}) => {
+export const TabPrivacyPolicy: React.FC<{
+  nodeId: number;
+  eventSettings: RestrictedEventSettings;
+}> = ({ nodeId, eventSettings }) => {
   const { t } = useTranslation();
   const [language, setLanguage] = React.useState<Language>("en-US");
   const [updateEvent] = useUpdateEventMutation();

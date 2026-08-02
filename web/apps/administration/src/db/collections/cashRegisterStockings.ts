@@ -36,7 +36,7 @@ const createCashRegisterStockingCollection = (nodeId: number) => {
               },
               body: modified,
             });
-          }),
+          })
         );
       },
       onUpdate: async ({ transaction }) => {
@@ -52,7 +52,7 @@ const createCashRegisterStockingCollection = (nodeId: number) => {
               },
               body: modified,
             });
-          }),
+          })
         );
       },
       onDelete: async ({ transaction }) => {
@@ -67,17 +67,14 @@ const createCashRegisterStockingCollection = (nodeId: number) => {
                 node_id: nodeId,
               },
             });
-          }),
+          })
         );
       },
-    }),
+    })
   );
 };
 
-const cashRegisterStockingCollections: Record<
-  number,
-  ReturnType<typeof createCashRegisterStockingCollection>
-> = {};
+const cashRegisterStockingCollections: Record<number, ReturnType<typeof createCashRegisterStockingCollection>> = {};
 
 export const getCashRegisterStockingCollection = (nodeId: number) => {
   if (!cashRegisterStockingCollections[nodeId]) {

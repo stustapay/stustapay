@@ -9,11 +9,11 @@ import { Link as RouterLink } from "react-router-dom";
 
 import { PayoutRunRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { UserCell, userValueGetter } from "@/components/table/UserCell";
 import { getPayoutRunCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { PendingPayoutDetail } from "./PendingPayoutDetail";
-import { UserCell, userValueGetter } from "@/components/table/UserCell";
 
 export const PayoutRunList: React.FC = () => {
   const { t } = useTranslation();
@@ -23,10 +23,8 @@ export const PayoutRunList: React.FC = () => {
     (q) =>
       q
         .from({ payoutRun: getPayoutRunCollection(currentNode.id) })
-        .join({ user: getUserCollection(currentNode.id) }, ({ payoutRun, user }) =>
-          eq(payoutRun.created_by, user.id),
-        ),
-    [currentNode.id],
+        .join({ user: getUserCollection(currentNode.id) }, ({ payoutRun, user }) => eq(payoutRun.created_by, user.id)),
+    [currentNode.id]
   );
 
   type PayoutRunRow = ArrayElement<NonNullable<typeof payoutRuns>>;

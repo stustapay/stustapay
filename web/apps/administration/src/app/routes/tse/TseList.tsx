@@ -10,12 +10,7 @@ import { TseRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { Tse } from "@/db/api/generated";
 import { getTseCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TseList: React.FC = () => {
   const { t } = useTranslation();
@@ -26,7 +21,7 @@ export const TseList: React.FC = () => {
 
   const { data: tses, isLoading: isTsesLoading } = useLiveQuery(
     (q) => q.from({ tses: getTseCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 

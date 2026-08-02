@@ -1,6 +1,6 @@
+import type { LoadSubsetOptions } from "@tanstack/db";
 import { parseLoadSubsetOptions, queryCollectionOptions } from "@tanstack/query-db-collection";
 import { createCollection } from "@tanstack/react-db";
-import type { LoadSubsetOptions } from "@tanstack/db";
 import { z } from "zod";
 
 import { listTransactions } from "../api/generated";
@@ -68,7 +68,7 @@ const createTransactionCollection = (nodeId: number) => {
         });
         return response.data ?? { items: [], total: 0 };
       },
-    }),
+    })
   );
 };
 

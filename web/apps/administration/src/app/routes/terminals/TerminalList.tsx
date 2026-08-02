@@ -10,14 +10,9 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { TerminalRoutes, TillRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import { getTerminalCollection, getTillCollection, getUserCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
 import { UserCell, userValueGetter } from "@/components/table/UserCell";
+import { getTerminalCollection, getTillCollection, getUserCollection } from "@/db/collections";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TerminalList: React.FC = () => {
   const { t } = useTranslation();
@@ -34,7 +29,7 @@ export const TerminalList: React.FC = () => {
         .join(
           { tills: getTillCollection(currentNode.id) },
           ({ tills, terminals }) => eq(terminals.till_id, tills.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ terminals: terminalRow, tills }) => ({
           ...terminalRow,
@@ -43,15 +38,13 @@ export const TerminalList: React.FC = () => {
             q
               .from({ users: getUserCollection(currentNode.id) })
               .where(({ users }) =>
-                terminalRow.active_user_id != null
-                  ? eq(users.id, terminalRow.active_user_id)
-                  : eq(users.id, -1),
+                terminalRow.active_user_id != null ? eq(users.id, terminalRow.active_user_id) : eq(users.id, -1)
               )
               .select(({ users }) => users)
-              .findOne(),
+              .findOne()
           ),
         })),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 
@@ -93,10 +86,7 @@ export const TerminalList: React.FC = () => {
       flex: 0.5,
       renderCell: (params) =>
         params.row.till ? (
-          <Link
-            component={RouterLink}
-            to={TillRoutes.detail(params.row.till.id, params.row.till.node_id)}
-          >
+          <Link component={RouterLink} to={TillRoutes.detail(params.row.till.id, params.row.till.node_id)}>
             {params.row.till.name}
           </Link>
         ) : null,

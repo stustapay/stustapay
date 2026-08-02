@@ -26,7 +26,7 @@ export const TseUpdate: React.FC = () => {
         .from({ tses: getTseCollection(currentNode.id) })
         .where(({ tses }) => eq(tses.id, Number(tseId)))
         .findOne(),
-    [currentNode.id, tseId],
+    [currentNode.id, tseId]
   );
 
   if (isLoading || !tse) {

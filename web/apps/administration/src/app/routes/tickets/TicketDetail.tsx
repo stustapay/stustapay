@@ -1,9 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Lock as LockIcon,
-  LockOpen as UnlockIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon, LockOpen as UnlockIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
@@ -12,13 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { TicketRoutes } from "@/app/routes";
-import {
-  DetailBoolField,
-  DetailField,
-  DetailLayout,
-  DetailNumberField,
-  DetailView,
-} from "@/components";
+import { DetailBoolField, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
 import { getTicketCollection, getUserTagVariantCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
@@ -37,17 +26,15 @@ export const TicketDetail: React.FC = () => {
         .from({ tickets: getTicketCollection(currentNode.id) })
         .where(({ tickets }) => eq(tickets.id, Number(ticketId)))
         .findOne(),
-    [currentNode.id, ticketId],
+    [currentNode.id, ticketId]
   );
 
   const { data: userTagVariants, isLoading: isUserTagVariantsLoading } = useLiveQuery(
     (q) =>
       q
         .from({ userTagVariants: getUserTagVariantCollection(currentNode.id) })
-        .where(({ userTagVariants }) =>
-          inArray(userTagVariants.id, ticket?.user_tag_variant_ids ?? []),
-        ),
-    [currentNode.id, ticket?.user_tag_variant_ids],
+        .where(({ userTagVariants }) => inArray(userTagVariants.id, ticket?.user_tag_variant_ids ?? [])),
+    [currentNode.id, ticket?.user_tag_variant_ids]
   );
   const openModal = useOpenModal();
 
@@ -119,11 +106,7 @@ export const TicketDetail: React.FC = () => {
           label={t("ticket.taxRate")}
           value={`${ticket.tax_name} (${(ticket.tax_rate * 100).toFixed(0)}%)`}
         />
-        <DetailNumberField
-          label={t("ticket.totalPrice")}
-          type="currency"
-          value={ticket.total_price}
-        />
+        <DetailNumberField label={t("ticket.totalPrice")} type="currency" value={ticket.total_price} />
       </DetailView>
     </DetailLayout>
   );

@@ -10,21 +10,18 @@ import { useCurrentNode } from "@/hooks";
 
 import { AccountTable } from "./components/AccountTable";
 
-export const SystemAccountList: React.FC = withPrivilegeGuard(
-  NodePrivilege.node_administration,
-  () => {
-    const { t } = useTranslation();
-    const { currentNode } = useCurrentNode();
+export const SystemAccountList: React.FC = withPrivilegeGuard(NodePrivilege.node_administration, () => {
+  const { t } = useTranslation();
+  const { currentNode } = useCurrentNode();
 
-    const { data: accounts, isLoading: isAccountsLoading } = useLiveQuery(
-      (q) => q.from({ accounts: getSystemAccountCollection(currentNode.id) }),
-      [currentNode.id],
-    );
+  const { data: accounts, isLoading: isAccountsLoading } = useLiveQuery(
+    (q) => q.from({ accounts: getSystemAccountCollection(currentNode.id) }),
+    [currentNode.id]
+  );
 
-    return (
-      <ListLayout title={t("systemAccounts")}>
-        <AccountTable accounts={accounts ?? []} loading={isAccountsLoading} />
-      </ListLayout>
-    );
-  },
-);
+  return (
+    <ListLayout title={t("systemAccounts")}>
+      <AccountTable accounts={accounts ?? []} loading={isAccountsLoading} />
+    </ListLayout>
+  );
+});

@@ -30,7 +30,7 @@ export const CashRegisterStockingDetail: React.FC = () => {
         .from({ stockings: getCashRegisterStockingCollection(currentNode.id) })
         .where(({ stockings }) => eq(stockings.id, Number(stockingId)))
         .findOne(),
-    [currentNode.id, stockingId],
+    [currentNode.id, stockingId]
   );
 
   if (isError) {
@@ -77,11 +77,7 @@ export const CashRegisterStockingDetail: React.FC = () => {
       <Stack spacing={2}>
         <DetailView>
           <DetailField label={t("register.name")} value={stocking.name} />
-          <DetailNumberField
-            label={t("register.stockingTotal")}
-            value={stocking.total}
-            type="currency"
-          />
+          <DetailNumberField label={t("register.stockingTotal")} value={stocking.total} type="currency" />
         </DetailView>
         <StockingMakeupTable stocking={stocking} />
       </Stack>

@@ -17,7 +17,10 @@ const createCashRegisterCollection = (nodeId: number) => {
       getKey: (item) => item.id,
       schema: zCashRegister,
       queryFn: async () => {
-        const response = await listCashRegistersAdmin({ query: { node_id: nodeId }, client: client });
+        const response = await listCashRegistersAdmin({
+          query: { node_id: nodeId },
+          client: client,
+        });
         return response.data ?? [];
       },
       onInsert: async ({ transaction }) => {

@@ -1,8 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  SwapHoriz as SwapHorizIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, SwapHoriz as SwapHorizIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -16,12 +12,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { CashRegistersRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { getCashRegisterCollection, getTillCollection, getUserCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const CashRegisterList: React.FC = () => {
   const { t } = useTranslation();
@@ -39,19 +30,19 @@ export const CashRegisterList: React.FC = () => {
         .join(
           { tills: getTillCollection(currentNode.id) },
           ({ registers, tills }) => eq(registers.current_till_id, tills.id),
-          "left" as const,
+          "left" as const
         )
         .join(
           { users: getUserCollection(currentNode.id) },
           ({ registers, users }) => eq(registers.current_cashier_id, users.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ registers, tills, users }) => ({
           ...registers,
           till: tills,
           cashier: users,
         })),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   const openConfirmDeleteDialog = (registerId: number) => {
@@ -71,10 +62,7 @@ export const CashRegisterList: React.FC = () => {
     }
 
     return (
-      <Link
-        component={RouterLink}
-        to={UserRoutes.detail(cashier.id, cashier.node_id ?? currentNode.id)}
-      >
+      <Link component={RouterLink} to={UserRoutes.detail(cashier.id, cashier.node_id ?? currentNode.id)}>
         {getUserName({ login: cashier.login, display_name: cashier.display_name ?? "" })}
       </Link>
     );
@@ -86,10 +74,7 @@ export const CashRegisterList: React.FC = () => {
       headerName: t("register.name"),
       flex: 1,
       renderCell: (params) => (
-        <Link
-          component={RouterLink}
-          to={CashRegistersRoutes.detail(params.row.id, params.row.node_id)}
-        >
+        <Link component={RouterLink} to={CashRegistersRoutes.detail(params.row.id, params.row.node_id)}>
           {params.row.name}
         </Link>
       ),
@@ -106,10 +91,7 @@ export const CashRegisterList: React.FC = () => {
       width: 200,
       renderCell: (params) =>
         params.row.till ? (
-          <Link
-            component={RouterLink}
-            to={TillRoutes.detail(params.row.till.id, params.row.till.node_id)}
-          >
+          <Link component={RouterLink} to={TillRoutes.detail(params.row.till.id, params.row.till.node_id)}>
             {params.row.till.name}
           </Link>
         ) : null,

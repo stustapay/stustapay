@@ -10,7 +10,10 @@ export const UserTagVariantSchema = z.object({
 
 export type UserTagVariant = z.infer<typeof UserTagVariantSchema>;
 
-export const NewUserTagVariantSchema = UserTagVariantSchema.omit({ id: true, node_id: true }).extend({
+export const NewUserTagVariantSchema = UserTagVariantSchema.omit({
+  id: true,
+  node_id: true,
+}).extend({
   description: z.string().default(""),
   priority: z.number().int().default(0),
 });

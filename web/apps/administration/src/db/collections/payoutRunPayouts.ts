@@ -24,14 +24,11 @@ const createPayoutRunPayoutCollection = (nodeId: number, payoutRunId: number) =>
         });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 
-const payoutRunPayoutCollections: Record<
-  string,
-  ReturnType<typeof createPayoutRunPayoutCollection>
-> = {};
+const payoutRunPayoutCollections: Record<string, ReturnType<typeof createPayoutRunPayoutCollection>> = {};
 
 export const getPayoutRunPayoutCollection = (nodeId: number, payoutRunId: number) => {
   const key = `${nodeId}_${payoutRunId}`;

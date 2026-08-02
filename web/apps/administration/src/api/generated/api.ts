@@ -97,10 +97,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["users"],
       }),
-      getUserVoucherGrantStats: build.query<
-        GetUserVoucherGrantStatsApiResponse,
-        GetUserVoucherGrantStatsApiArg
-      >({
+      getUserVoucherGrantStats: build.query<GetUserVoucherGrantStatsApiResponse, GetUserVoucherGrantStatsApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}/voucher-grant-stats`,
           params: {
@@ -109,10 +106,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["users"],
       }),
-      listUserRoleAssignments: build.query<
-        ListUserRoleAssignmentsApiResponse,
-        ListUserRoleAssignmentsApiArg
-      >({
+      listUserRoleAssignments: build.query<ListUserRoleAssignmentsApiResponse, ListUserRoleAssignmentsApiArg>({
         query: (queryArg) => ({
           url: `/users/${queryArg.userId}/role-assignments`,
           params: {
@@ -456,10 +450,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-buttons"],
       }),
-      listRegisterStockings: build.query<
-        ListRegisterStockingsApiResponse,
-        ListRegisterStockingsApiArg
-      >({
+      listRegisterStockings: build.query<ListRegisterStockingsApiResponse, ListRegisterStockingsApiArg>({
         query: (queryArg) => ({
           url: `/till-register-stockings`,
           params: {
@@ -468,10 +459,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["till-register-stockings"],
       }),
-      createRegisterStocking: build.mutation<
-        CreateRegisterStockingApiResponse,
-        CreateRegisterStockingApiArg
-      >({
+      createRegisterStocking: build.mutation<CreateRegisterStockingApiResponse, CreateRegisterStockingApiArg>({
         query: (queryArg) => ({
           url: `/till-register-stockings`,
           method: "POST",
@@ -482,10 +470,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
-      updateRegisterStocking: build.mutation<
-        UpdateRegisterStockingApiResponse,
-        UpdateRegisterStockingApiArg
-      >({
+      updateRegisterStocking: build.mutation<UpdateRegisterStockingApiResponse, UpdateRegisterStockingApiArg>({
         query: (queryArg) => ({
           url: `/till-register-stockings/${queryArg.stockingId}`,
           method: "POST",
@@ -496,10 +481,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
-      deleteRegisterStocking: build.mutation<
-        DeleteRegisterStockingApiResponse,
-        DeleteRegisterStockingApiArg
-      >({
+      deleteRegisterStocking: build.mutation<DeleteRegisterStockingApiResponse, DeleteRegisterStockingApiArg>({
         query: (queryArg) => ({
           url: `/till-register-stockings/${queryArg.stockingId}`,
           method: "DELETE",
@@ -509,10 +491,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["till-register-stockings"],
       }),
-      listCashRegistersAdmin: build.query<
-        ListCashRegistersAdminApiResponse,
-        ListCashRegistersAdminApiArg
-      >({
+      listCashRegistersAdmin: build.query<ListCashRegistersAdminApiResponse, ListCashRegistersAdminApiArg>({
         query: (queryArg) => ({
           url: `/till-registers`,
           params: {
@@ -616,10 +595,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
-      updateVoucherAmount: build.mutation<
-        UpdateVoucherAmountApiResponse,
-        UpdateVoucherAmountApiArg
-      >({
+      updateVoucherAmount: build.mutation<UpdateVoucherAmountApiResponse, UpdateVoucherAmountApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/update-voucher-amount`,
           method: "POST",
@@ -630,10 +606,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
-      updateAccountComment: build.mutation<
-        UpdateAccountCommentApiResponse,
-        UpdateAccountCommentApiArg
-      >({
+      updateAccountComment: build.mutation<UpdateAccountCommentApiResponse, UpdateAccountCommentApiArg>({
         query: (queryArg) => ({
           url: `/accounts/${queryArg.accountId}/update-comment`,
           method: "POST",
@@ -703,10 +676,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["cashiers"],
       }),
-      getCashierShiftStats: build.query<
-        GetCashierShiftStatsApiResponse,
-        GetCashierShiftStatsApiArg
-      >({
+      getCashierShiftStats: build.query<GetCashierShiftStatsApiResponse, GetCashierShiftStatsApiArg>({
         query: (queryArg) => ({
           url: `/cashiers/${queryArg.cashierId}/shift-stats`,
           params: {
@@ -782,10 +752,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["stats"],
       }),
-      getPaymentMethodStats: build.query<
-        GetPaymentMethodStatsApiResponse,
-        GetPaymentMethodStatsApiArg
-      >({
+      getPaymentMethodStats: build.query<GetPaymentMethodStatsApiResponse, GetPaymentMethodStatsApiArg>({
         query: (queryArg) => ({
           url: `/stats/payment-methods`,
           params: {
@@ -866,10 +833,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tickets"],
       }),
-      createUserTagSecret: build.mutation<
-        CreateUserTagSecretApiResponse,
-        CreateUserTagSecretApiArg
-      >({
+      createUserTagSecret: build.mutation<CreateUserTagSecretApiResponse, CreateUserTagSecretApiArg>({
         query: (queryArg) => ({
           url: `/user-tag-secrets`,
           method: "POST",
@@ -931,10 +895,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["user_tags"],
       }),
-      updateUserTagComment: build.mutation<
-        UpdateUserTagCommentApiResponse,
-        UpdateUserTagCommentApiArg
-      >({
+      updateUserTagComment: build.mutation<UpdateUserTagCommentApiResponse, UpdateUserTagCommentApiArg>({
         query: (queryArg) => ({
           url: `/user-tags/${queryArg.userTagId}/update-comment`,
           method: "POST",
@@ -954,10 +915,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["user_tags"],
       }),
-      createUserTagVariant: build.mutation<
-        CreateUserTagVariantApiResponse,
-        CreateUserTagVariantApiArg
-      >({
+      createUserTagVariant: build.mutation<CreateUserTagVariantApiResponse, CreateUserTagVariantApiArg>({
         query: (queryArg) => ({
           url: `/user-tag-variants`,
           method: "POST",
@@ -977,10 +935,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["user_tags"],
       }),
-      updateUserTagVariant: build.mutation<
-        UpdateUserTagVariantApiResponse,
-        UpdateUserTagVariantApiArg
-      >({
+      updateUserTagVariant: build.mutation<UpdateUserTagVariantApiResponse, UpdateUserTagVariantApiArg>({
         query: (queryArg) => ({
           url: `/user-tag-variants/${queryArg.userTagVariantId}`,
           method: "POST",
@@ -991,10 +946,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["user_tags"],
       }),
-      deleteUserTagVariant: build.mutation<
-        DeleteUserTagVariantApiResponse,
-        DeleteUserTagVariantApiArg
-      >({
+      deleteUserTagVariant: build.mutation<DeleteUserTagVariantApiResponse, DeleteUserTagVariantApiArg>({
         query: (queryArg) => ({
           url: `/user-tag-variants/${queryArg.userTagVariantId}`,
           method: "DELETE",
@@ -1094,10 +1046,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["payouts"],
       }),
-      previousPayoutRunSepaXml: build.mutation<
-        PreviousPayoutRunSepaXmlApiResponse,
-        PreviousPayoutRunSepaXmlApiArg
-      >({
+      previousPayoutRunSepaXml: build.mutation<PreviousPayoutRunSepaXmlApiResponse, PreviousPayoutRunSepaXmlApiArg>({
         query: (queryArg) => ({
           url: `/payouts/${queryArg.payoutRunId}/previous_sepa_xml`,
           method: "POST",
@@ -1127,10 +1076,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["payouts"],
       }),
-      getTreeForCurrentUser: build.query<
-        GetTreeForCurrentUserApiResponse,
-        GetTreeForCurrentUserApiArg
-      >({
+      getTreeForCurrentUser: build.query<GetTreeForCurrentUserApiResponse, GetTreeForCurrentUserApiArg>({
         query: () => ({ url: `/tree/` }),
         providesTags: ["tree"],
       }),
@@ -1185,10 +1131,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/event-design` }),
         providesTags: ["tree"],
       }),
-      getRestrictedEventSettings: build.query<
-        GetRestrictedEventSettingsApiResponse,
-        GetRestrictedEventSettingsApiArg
-      >({
+      getRestrictedEventSettings: build.query<GetRestrictedEventSettingsApiResponse, GetRestrictedEventSettingsApiArg>({
         query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/settings` }),
         providesTags: ["tree"],
       }),
@@ -1203,20 +1146,14 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
-      checkPretixConnection: build.mutation<
-        CheckPretixConnectionApiResponse,
-        CheckPretixConnectionApiArg
-      >({
+      checkPretixConnection: build.mutation<CheckPretixConnectionApiResponse, CheckPretixConnectionApiArg>({
         query: (queryArg) => ({
           url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`,
           method: "POST",
         }),
         invalidatesTags: ["tree"],
       }),
-      fetchPretixProducts: build.mutation<
-        FetchPretixProductsApiResponse,
-        FetchPretixProductsApiArg
-      >({
+      fetchPretixProducts: build.mutation<FetchPretixProductsApiResponse, FetchPretixProductsApiArg>({
         query: (queryArg) => ({
           url: `/tree/events/${queryArg.nodeId}/fetch-pretix-products`,
           method: "POST",
@@ -1232,30 +1169,21 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
-      generateTestRevenueReport: build.mutation<
-        GenerateTestRevenueReportApiResponse,
-        GenerateTestRevenueReportApiArg
-      >({
+      generateTestRevenueReport: build.mutation<GenerateTestRevenueReportApiResponse, GenerateTestRevenueReportApiArg>({
         query: (queryArg) => ({
           url: `/tree/events/${queryArg.nodeId}/generate-test-report`,
           method: "POST",
         }),
         invalidatesTags: ["tree"],
       }),
-      generateRevenueReport: build.mutation<
-        GenerateRevenueReportApiResponse,
-        GenerateRevenueReportApiArg
-      >({
+      generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
           method: "POST",
         }),
         invalidatesTags: ["tree"],
       }),
-      generateDailyReport: build.mutation<
-        GenerateDailyReportApiResponse,
-        GenerateDailyReportApiArg
-      >({
+      generateDailyReport: build.mutation<GenerateDailyReportApiResponse, GenerateDailyReportApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/generate-daily-report`,
           method: "POST",
@@ -1263,20 +1191,14 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
-      generateTestDailyReport: build.mutation<
-        GenerateTestDailyReportApiResponse,
-        GenerateTestDailyReportApiArg
-      >({
+      generateTestDailyReport: build.mutation<GenerateTestDailyReportApiResponse, GenerateTestDailyReportApiArg>({
         query: (queryArg) => ({
           url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`,
           method: "POST",
         }),
         invalidatesTags: ["tree"],
       }),
-      generatePayoutReport: build.mutation<
-        GeneratePayoutReportApiResponse,
-        GeneratePayoutReportApiArg
-      >({
+      generatePayoutReport: build.mutation<GeneratePayoutReportApiResponse, GeneratePayoutReportApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`,
           method: "POST",
@@ -1298,10 +1220,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["tree"],
       }),
-      configureSumupToken: build.mutation<
-        ConfigureSumupTokenApiResponse,
-        ConfigureSumupTokenApiArg
-      >({
+      configureSumupToken: build.mutation<ConfigureSumupTokenApiResponse, ConfigureSumupTokenApiArg>({
         query: (queryArg) => ({
           url: `/tree/nodes/${queryArg.nodeId}/configure-sumup-token`,
           method: "POST",
@@ -1322,10 +1241,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["sumup"],
       }),
-      listSumupTransactions: build.query<
-        ListSumupTransactionsApiResponse,
-        ListSumupTransactionsApiArg
-      >({
+      listSumupTransactions: build.query<ListSumupTransactionsApiResponse, ListSumupTransactionsApiArg>({
         query: (queryArg) => ({
           url: `/sumup/transactions`,
           params: {
@@ -1375,10 +1291,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["accounts"],
       }),
-      preventCustomerPayout: build.mutation<
-        PreventCustomerPayoutApiResponse,
-        PreventCustomerPayoutApiArg
-      >({
+      preventCustomerPayout: build.mutation<PreventCustomerPayoutApiResponse, PreventCustomerPayoutApiArg>({
         query: (queryArg) => ({
           url: `/customers/${queryArg.customerId}/prevent-payout`,
           method: "POST",
@@ -1388,10 +1301,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["accounts"],
       }),
-      allowCustomerPayout: build.mutation<
-        AllowCustomerPayoutApiResponse,
-        AllowCustomerPayoutApiArg
-      >({
+      allowCustomerPayout: build.mutation<AllowCustomerPayoutApiResponse, AllowCustomerPayoutApiArg>({
         query: (queryArg) => ({
           url: `/customers/${queryArg.customerId}/allow-payout`,
           method: "POST",
@@ -1441,10 +1351,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["terminals"],
       }),
-      changeMdmDeviceMapping: build.mutation<
-        ChangeMdmDeviceMappingApiResponse,
-        ChangeMdmDeviceMappingApiArg
-      >({
+      changeMdmDeviceMapping: build.mutation<ChangeMdmDeviceMappingApiResponse, ChangeMdmDeviceMappingApiArg>({
         query: (queryArg) => ({
           url: `/terminal/mdm-devices/change-device-to-terminal-mapping`,
           method: "POST",
@@ -1455,10 +1362,7 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["terminals"],
       }),
-      getMdmDeviceLocation: build.query<
-        GetMdmDeviceLocationApiResponse,
-        GetMdmDeviceLocationApiArg
-      >({
+      getMdmDeviceLocation: build.query<GetMdmDeviceLocationApiResponse, GetMdmDeviceLocationApiArg>({
         query: (queryArg) => ({
           url: `/terminal/mdm-devices/${queryArg.mdmDeviceId}/location`,
           params: {
@@ -1467,10 +1371,7 @@ const injectedRtkApi = api
         }),
         providesTags: ["terminals"],
       }),
-      listTerminalLocations: build.query<
-        ListTerminalLocationsApiResponse,
-        ListTerminalLocationsApiArg
-      >({
+      listTerminalLocations: build.query<ListTerminalLocationsApiResponse, ListTerminalLocationsApiArg>({
         query: (queryArg) => ({
           url: `/terminal/locations`,
           params: {
@@ -1602,14 +1503,12 @@ export type CreateUserApiArg = {
   nodeId: number;
   createUserPayload: CreateUserPayload;
 };
-export type GetUserVoucherGrantStatsApiResponse =
-  /** status 200 Successful Response */ UserVoucherGrantStats;
+export type GetUserVoucherGrantStatsApiResponse = /** status 200 Successful Response */ UserVoucherGrantStats;
 export type GetUserVoucherGrantStatsApiArg = {
   userId: number;
   nodeId: number;
 };
-export type ListUserRoleAssignmentsApiResponse =
-  /** status 200 Successful Response */ UserRoleAssignment[];
+export type ListUserRoleAssignmentsApiResponse = /** status 200 Successful Response */ UserRoleAssignment[];
 export type ListUserRoleAssignmentsApiArg = {
   userId: number;
   nodeId: number;
@@ -1781,19 +1680,16 @@ export type DeleteTillButtonApiArg = {
   buttonId: number;
   nodeId: number;
 };
-export type ListRegisterStockingsApiResponse =
-  /** status 200 Successful Response */ CashRegisterStocking[];
+export type ListRegisterStockingsApiResponse = /** status 200 Successful Response */ CashRegisterStocking[];
 export type ListRegisterStockingsApiArg = {
   nodeId: number;
 };
-export type CreateRegisterStockingApiResponse =
-  /** status 200 Successful Response */ CashRegisterStocking;
+export type CreateRegisterStockingApiResponse = /** status 200 Successful Response */ CashRegisterStocking;
 export type CreateRegisterStockingApiArg = {
   nodeId: number;
   newCashRegisterStocking: NewCashRegisterStocking;
 };
-export type UpdateRegisterStockingApiResponse =
-  /** status 200 Successful Response */ CashRegisterStocking;
+export type UpdateRegisterStockingApiResponse = /** status 200 Successful Response */ CashRegisterStocking;
 export type UpdateRegisterStockingApiArg = {
   stockingId: number;
   nodeId: number;
@@ -1804,8 +1700,7 @@ export type DeleteRegisterStockingApiArg = {
   stockingId: number;
   nodeId: number;
 };
-export type ListCashRegistersAdminApiResponse =
-  /** status 200 Successful Response */ CashRegister[];
+export type ListCashRegistersAdminApiResponse = /** status 200 Successful Response */ CashRegister[];
 export type ListCashRegistersAdminApiArg = {
   nodeId: number;
 };
@@ -1903,8 +1798,7 @@ export type ListCashierShiftsApiArg = {
   cashRegisterId?: number | null;
   shiftId?: number | null;
 };
-export type GetCashierShiftStatsApiResponse =
-  /** status 200 Successful Response */ CashierShiftStatsRead;
+export type GetCashierShiftStatsApiResponse = /** status 200 Successful Response */ CashierShiftStatsRead;
 export type GetCashierShiftStatsApiArg = {
   cashierId: number;
   nodeId: number;
@@ -1946,8 +1840,7 @@ export type GetPayOutStatsApiArg = {
   toTimestamp?: string | null;
   fromTimestamp?: string | null;
 };
-export type GetPaymentMethodStatsApiResponse =
-  /** status 200 Successful Response */ PaymentMethodStatsResponse;
+export type GetPaymentMethodStatsApiResponse = /** status 200 Successful Response */ PaymentMethodStatsResponse;
 export type GetPaymentMethodStatsApiArg = {
   nodeId: number;
   toTimestamp?: string | null;
@@ -2006,8 +1899,7 @@ export type UserTagsCsvExportApiArg = {
   nodeId: number;
   userTagsCsvExportPayload: UserTagsCsvExportPayload;
 };
-export type FindUserTagsApiResponse =
-  /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
+export type FindUserTagsApiResponse = /** status 200 Successful Response */ NormalizedListUserTagDetailInt;
 export type FindUserTagsApiArg = {
   nodeId: number;
   findUserTagPayload: FindUserTagPayload;
@@ -2017,8 +1909,7 @@ export type GetUserTagDetailApiArg = {
   userTagId: number;
   nodeId: number;
 };
-export type UpdateUserTagCommentApiResponse =
-  /** status 200 Successful Response */ UserTagDetailRead;
+export type UpdateUserTagCommentApiResponse = /** status 200 Successful Response */ UserTagDetailRead;
 export type UpdateUserTagCommentApiArg = {
   userTagId: number;
   nodeId: number;
@@ -2073,8 +1964,7 @@ export type CreatePayoutRunApiArg = {
   nodeId: number;
   newPayoutRun: NewPayoutRun;
 };
-export type PendingPayoutDetailApiResponse =
-  /** status 200 Successful Response */ PendingPayoutDetail;
+export type PendingPayoutDetailApiResponse = /** status 200 Successful Response */ PendingPayoutDetail;
 export type PendingPayoutDetailApiArg = {
   nodeId: number;
 };
@@ -2144,8 +2034,7 @@ export type GetEventDesignApiResponse = /** status 200 Successful Response */ Ev
 export type GetEventDesignApiArg = {
   nodeId: number;
 };
-export type GetRestrictedEventSettingsApiResponse =
-  /** status 200 Successful Response */ RestrictedEventSettings;
+export type GetRestrictedEventSettingsApiResponse = /** status 200 Successful Response */ RestrictedEventSettings;
 export type GetRestrictedEventSettingsApiArg = {
   nodeId: number;
 };
@@ -2166,8 +2055,7 @@ export type FetchPretixProductsApiArg = {
   nodeId: number;
   pretixFetchProductsPayload: PretixFetchProductsPayload;
 };
-export type GenerateWebhookUrlApiResponse =
-  /** status 200 Successful Response */ GenerateWebhookResponse;
+export type GenerateWebhookUrlApiResponse = /** status 200 Successful Response */ GenerateWebhookResponse;
 export type GenerateWebhookUrlApiArg = {
   nodeId: number;
   generateWebhookPayload: GenerateWebhookPayload;
@@ -2215,8 +2103,7 @@ export type ListSumupCheckoutsApiResponse = /** status 200 Successful Response *
 export type ListSumupCheckoutsApiArg = {
   nodeId: number;
 };
-export type ListSumupTransactionsApiResponse =
-  /** status 200 Successful Response */ SumUpTransaction[];
+export type ListSumupTransactionsApiResponse = /** status 200 Successful Response */ SumUpTransaction[];
 export type ListSumupTransactionsApiArg = {
   nodeId: number;
 };
@@ -2235,8 +2122,7 @@ export type GetCustomerApiArg = {
   customerId: number;
   nodeId: number;
 };
-export type GetCustomersWithBlockedPayoutApiResponse =
-  /** status 200 Successful Response */ CustomerRead[];
+export type GetCustomersWithBlockedPayoutApiResponse = /** status 200 Successful Response */ CustomerRead[];
 export type GetCustomersWithBlockedPayoutApiArg = {
   nodeId: number;
 };
@@ -2264,8 +2150,7 @@ export type CreateTerminalApiArg = {
   nodeId: number;
   newTerminal: NewTerminal;
 };
-export type ListMdmDevicesApiResponse =
-  /** status 200 Successful Response */ MdmDeviceWithMapping[];
+export type ListMdmDevicesApiResponse = /** status 200 Successful Response */ MdmDeviceWithMapping[];
 export type ListMdmDevicesApiArg = {
   nodeId: number;
 };
@@ -2274,14 +2159,12 @@ export type ChangeMdmDeviceMappingApiArg = {
   nodeId: number;
   changeMdmDeviceMappingPayload: ChangeMdmDeviceMappingPayload;
 };
-export type GetMdmDeviceLocationApiResponse =
-  /** status 200 Successful Response */ MdmDeviceLocation;
+export type GetMdmDeviceLocationApiResponse = /** status 200 Successful Response */ MdmDeviceLocation;
 export type GetMdmDeviceLocationApiArg = {
   mdmDeviceId: string;
   nodeId: number;
 };
-export type ListTerminalLocationsApiResponse =
-  /** status 200 Successful Response */ TerminalLocation[];
+export type ListTerminalLocationsApiResponse = /** status 200 Successful Response */ TerminalLocation[];
 export type ListTerminalLocationsApiArg = {
   nodeId: number;
 };
@@ -2312,8 +2195,7 @@ export type ForceLogoutUserApiArg = {
   terminalId: number;
   nodeId: number;
 };
-export type ListTransactionsApiResponse =
-  /** status 200 Successful Response */ PaginatedListTransactionRead;
+export type ListTransactionsApiResponse = /** status 200 Successful Response */ PaginatedListTransactionRead;
 export type ListTransactionsApiArg = {
   nodeId: number;
   cashRegisterId?: number | null;
@@ -2335,14 +2217,7 @@ export type GetBlobApiArg = {
   blobId: string;
 };
 export type TaxType = "regular_vat" | "reduced_vat" | "no_tax" | "transparent";
-export type ProductType =
-  | "discount"
-  | "topup"
-  | "payout"
-  | "money_transfer"
-  | "imbalance"
-  | "user_defined"
-  | "ticket";
+export type ProductType = "discount" | "topup" | "payout" | "money_transfer" | "imbalance" | "user_defined" | "ticket";
 export type Product = {
   name: string;
   price: number | null;

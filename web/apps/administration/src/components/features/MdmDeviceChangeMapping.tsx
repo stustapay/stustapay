@@ -1,11 +1,4 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { Loading, Select } from "@stustapay/components";
 import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
@@ -13,13 +6,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 import { changeMdmDeviceMapping } from "@/db/api/generated";
-import { client } from "@/db/api/generated/client.gen";
 import { MdmDeviceWithMapping, Terminal } from "@/db/api/generated";
-import {
-  getTerminalCollection,
-  refetchNodeCollection,
-  refetchTillTerminalCollections,
-} from "@/db/collections";
+import { client } from "@/db/api/generated/client.gen";
+import { getTerminalCollection, refetchNodeCollection, refetchTillTerminalCollections } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export type MdmDeviceChangeMappingProps = {
@@ -29,25 +18,16 @@ export type MdmDeviceChangeMappingProps = {
   onClose: () => void;
 };
 
-const getSelectableTerminals = (
-  terminals: Terminal[],
-  device: MdmDeviceWithMapping,
-  mappedTerminalIds: Set<number>,
-) =>
-  terminals.filter(
-    (terminal) =>
-      !mappedTerminalIds.has(terminal.id) || terminal.id === device.mapping?.terminal_id,
-  );
+const getSelectableTerminals = (terminals: Terminal[], device: MdmDeviceWithMapping, mappedTerminalIds: Set<number>) =>
+  terminals.filter((terminal) => !mappedTerminalIds.has(terminal.id) || terminal.id === device.mapping?.terminal_id);
 
 const getDefaultTerminal = (
   terminals: Terminal[],
   device: MdmDeviceWithMapping,
-  mappedTerminalIds: Set<number>,
+  mappedTerminalIds: Set<number>
 ): Terminal | null => {
   if (device.mapping) {
-    const currentTerminal = terminals.find(
-      (terminal) => terminal.id === device.mapping?.terminal_id,
-    );
+    const currentTerminal = terminals.find((terminal) => terminal.id === device.mapping?.terminal_id);
     if (currentTerminal) {
       return currentTerminal;
     }
@@ -56,8 +36,7 @@ const getDefaultTerminal = (
   return (
     terminals.find(
       (terminal) =>
-        !mappedTerminalIds.has(terminal.id) &&
-        terminal.name.toLowerCase() === device.device.device_id.toLowerCase(),
+        !mappedTerminalIds.has(terminal.id) && terminal.name.toLowerCase() === device.device.device_id.toLowerCase()
     ) ?? null
   );
 };
@@ -72,13 +51,13 @@ export const MdmDeviceChangeMapping: React.FC<MdmDeviceChangeMappingProps> = ({
   const { currentNode } = useCurrentNode();
   const { data: terminals, isLoading } = useLiveQuery(
     (q) => q.from({ terminals: getTerminalCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const [selectedTerminal, setSelectedTerminal] = React.useState<Terminal | null>(null);
 
   const selectableTerminals = React.useMemo(
     () => (terminals ? getSelectableTerminals(terminals, device, mappedTerminalIds) : []),
-    [terminals, device, mappedTerminalIds],
+    [terminals, device, mappedTerminalIds]
   );
 
   React.useEffect(() => {
@@ -105,7 +84,7 @@ export const MdmDeviceChangeMapping: React.FC<MdmDeviceChangeMappingProps> = ({
         Promise.all([
           refetchNodeCollection(currentNode.id, "mdm-devices"),
           refetchTillTerminalCollections(currentNode.id),
-        ]),
+        ])
       )
       .then(() => {
         toast.success(t("terminal.mdm.changeMappingSuccess"));

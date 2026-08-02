@@ -27,7 +27,7 @@ export const UserCashierSection: React.FC<{ cashier: User }> = ({ cashier }) => 
         .from({ registers: getCashRegisterCollection(cashier.node_id) })
         .where(({ registers }) => eq(registers.id, cashier.cash_register_id ?? -1))
         .findOne(),
-    [cashier.node_id, cashier.cash_register_id],
+    [cashier.node_id, cashier.cash_register_id]
   );
 
   if (registerError) {

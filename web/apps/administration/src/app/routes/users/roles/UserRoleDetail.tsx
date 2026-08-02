@@ -28,7 +28,7 @@ export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration"
         .from({ userRoles: getUserRoleCollection(currentNode.id) })
         .where(({ userRoles }) => eq(userRoles.id, Number(roleId)))
         .findOne(),
-    [currentNode.id, roleId],
+    [currentNode.id, roleId]
   );
 
   if (isError) {
@@ -70,14 +70,8 @@ export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration"
           />
         )}
       </DetailView>
-      <PrivilegeDetailSection
-        title={t("userRole.eventPrivileges")}
-        privileges={role.event_privileges}
-      />
-      <PrivilegeDetailSection
-        title={t("userRole.nodePrivileges")}
-        privileges={role.node_privileges}
-      />
+      <PrivilegeDetailSection title={t("userRole.eventPrivileges")} privileges={role.event_privileges} />
+      <PrivilegeDetailSection title={t("userRole.nodePrivileges")} privileges={role.node_privileges} />
     </DetailLayout>
   );
 });

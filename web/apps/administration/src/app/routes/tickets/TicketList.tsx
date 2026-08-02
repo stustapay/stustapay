@@ -1,9 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Lock as LockIcon,
-  LockOpen as UnlockIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon, LockOpen as UnlockIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
@@ -17,12 +12,7 @@ import { TicketRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { TaxRateCell } from "@/components/table/TaxRateCell";
 import { getTicketCollection, getUserTagVariantCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TicketList: React.FC = () => {
   const { t } = useTranslation();
@@ -34,15 +24,15 @@ export const TicketList: React.FC = () => {
 
   const { data: tickets, isLoading: isTicketsLoading } = useLiveQuery(
     (q) => q.from({ tickets: getTicketCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: userTagVariants, isLoading: isUserTagVariantsLoading } = useLiveQuery(
     (q) => q.from({ userTagVariants: getUserTagVariantCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const userTagVariantById = React.useMemo(
     () => new Map((userTagVariants ?? []).map((variant) => [variant.id, variant])),
-    [userTagVariants],
+    [userTagVariants]
   );
   const isLoading = isTicketsLoading || isUserTagVariantsLoading;
   const { dataGridNodeColumn } = useRenderNode();

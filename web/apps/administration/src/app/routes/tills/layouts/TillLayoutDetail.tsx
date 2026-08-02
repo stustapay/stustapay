@@ -10,11 +10,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { TillLayoutRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
-import {
-  getTicketCollection,
-  getTillButtonCollection,
-  getTillLayoutCollection,
-} from "@/db/collections";
+import { getTicketCollection, getTillButtonCollection, getTillLayoutCollection } from "@/db/collections";
 import { useCurrencyFormatter, useCurrentNode } from "@/hooks";
 
 export const TillLayoutDetail: React.FC = () => {
@@ -35,21 +31,21 @@ export const TillLayoutDetail: React.FC = () => {
         .from({ layouts: getTillLayoutCollection(currentNode.id) })
         .where(({ layouts }) => eq(layouts.id, Number(layoutId)))
         .findOne(),
-    [currentNode.id, layoutId],
+    [currentNode.id, layoutId]
   );
   const { data: buttons, isLoading: isButtonsLoading } = useLiveQuery(
     (q) =>
       q
         .from({ buttons: getTillButtonCollection(currentNode.id) })
         .where(({ buttons }) => inArray(buttons.id, layout?.button_ids ?? [])),
-    [currentNode.id, layout?.button_ids],
+    [currentNode.id, layout?.button_ids]
   );
   const { data: tickets, isLoading: isTicketsLoading } = useLiveQuery(
     (q) =>
       q
         .from({ tickets: getTicketCollection(currentNode.id) })
         .where(({ tickets }) => inArray(tickets.id, layout?.ticket_ids ?? [])),
-    [currentNode.id, layout?.ticket_ids],
+    [currentNode.id, layout?.ticket_ids]
   );
 
   const [selectedTab, setSelectedTab] = React.useState("buttons");
@@ -121,10 +117,7 @@ export const TillLayoutDetail: React.FC = () => {
               <List>
                 {tickets.map((ticket) => (
                   <ListItem key={ticket.id}>
-                    <ListItemText
-                      primary={ticket.name}
-                      secondary={formatCurrency(ticket.total_price)}
-                    />
+                    <ListItemText primary={ticket.name} secondary={formatCurrency(ticket.total_price)} />
                   </ListItem>
                 ))}
               </List>

@@ -25,14 +25,14 @@ export const AuditLogDetail: React.FC = () => {
         .from({ auditLogs: getAuditLogCollection(currentNode.id) })
         .where(({ auditLogs }) => eq(auditLogs.id, Number(auditLogId)))
         .join({ users: getUserCollection(currentNode.id) }, ({ auditLogs, users }) =>
-          eq(auditLogs.originating_user_id, users.id),
+          eq(auditLogs.originating_user_id, users.id)
         )
         .select(({ auditLogs, users }) => ({
           ...auditLogs,
           originatingUser: users,
         }))
         .findOne(),
-    [currentNode.id, auditLogId],
+    [currentNode.id, auditLogId]
   );
 
   if (isError) {

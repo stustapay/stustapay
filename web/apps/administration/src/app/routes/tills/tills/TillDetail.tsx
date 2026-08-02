@@ -1,8 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Smartphone as SmartphoneIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, Smartphone as SmartphoneIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { eq, useLiveQuery } from "@tanstack/react-db";
@@ -44,17 +40,17 @@ export const TillDetail: React.FC = () => {
         .join(
           { profiles: getTillProfileCollection(currentNode.id) },
           ({ profiles, tills }) => eq(tills.active_profile_id, profiles.id),
-          "inner" as const,
+          "inner" as const
         )
         .join(
           { terminals: getTerminalCollection(currentNode.id) },
           ({ terminals, tills }) => eq(tills.terminal_id, terminals.id),
-          "left" as const,
+          "left" as const
         )
         .join(
           { tses: getTseCollection(currentNode.id) },
           ({ tills, tses }) => eq(tills.tse_id, tses.id),
-          "left" as const,
+          "left" as const
         )
         .select(({ tills, profiles, terminals, tses }) => ({
           ...tills,
@@ -63,7 +59,7 @@ export const TillDetail: React.FC = () => {
           tse: tses,
         }))
         .findOne(),
-    [currentNode.id, tillId],
+    [currentNode.id, tillId]
   );
   const [switchTerminalOpen, setSwitchTerminalOpen] = React.useState(false);
 
@@ -99,7 +95,7 @@ export const TillDetail: React.FC = () => {
       content: t("till.removeFromTerminalDescription", { terminalName: till.terminal.name }),
       onConfirm: () => {
         removeFromTerminal({ nodeId: currentNode.id, tillId: Number(tillId) }).then(() =>
-          refetchTillTerminalCollections(currentNode.id),
+          refetchTillTerminalCollections(currentNode.id)
         );
       },
     });
@@ -146,11 +142,7 @@ export const TillDetail: React.FC = () => {
         <DetailField label={t("till.name")} value={till.name} />
         <DetailField label={t("till.description")} value={till.description} />
         {till.tse ? (
-          <DetailField
-            label={t("till.tseId")}
-            linkTo={TseRoutes.detail(till.tse.id)}
-            value={till.tse.name}
-          />
+          <DetailField label={t("till.tseId")} linkTo={TseRoutes.detail(till.tse.id)} value={till.tse.name} />
         ) : (
           <DetailField label={t("till.tseId")} value="No tse" />
         )}
@@ -178,11 +170,7 @@ export const TillDetail: React.FC = () => {
         )}
       </DetailView>
       <OrderTable tillId={Number(tillId)} showCashierColumn />
-      <TillSwitchTerminal
-        open={switchTerminalOpen}
-        tillId={till.id}
-        onClose={() => setSwitchTerminalOpen(false)}
-      />
+      <TillSwitchTerminal open={switchTerminalOpen} tillId={till.id} onClose={() => setSwitchTerminalOpen(false)} />
     </DetailLayout>
   );
 };

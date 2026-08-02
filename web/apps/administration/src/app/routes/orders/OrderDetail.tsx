@@ -2,6 +2,7 @@ import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { formatUserTagUid } from "@stustapay/models";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -9,18 +10,11 @@ import { toast } from "react-toastify";
 
 import { useCancelOrderMutation, useGetOrderQuery } from "@/api";
 import { CustomerRoutes, OrderRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
-import {
-  DetailField,
-  DetailLayout,
-  DetailNumberField,
-  DetailView,
-  UserDetailField,
-} from "@/components";
-import { CashRegisterCell } from "@/components/table/CashRegisterCell";
+import { DetailField, DetailLayout, DetailNumberField, DetailView, UserDetailField } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
+import { CashRegisterCell } from "@/components/table/CashRegisterCell";
 import { getTillCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
-import { eq, useLiveQuery } from "@tanstack/react-db";
 
 export const OrderDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -38,7 +32,7 @@ export const OrderDetail: React.FC = () => {
   } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
   const { data: tills, isLoading: isTillsLoading } = useLiveQuery(
     (q) => q.from({ tills: getTillCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: cashier } = useLiveQuery(
     (q) =>
@@ -46,7 +40,7 @@ export const OrderDetail: React.FC = () => {
         .from({ users: getUserCollection(currentNode.id) })
         .where(({ users }) => eq(users.id, order?.cashier_id ?? -1))
         .findOne(),
-    [currentNode.id, order?.cashier_id],
+    [currentNode.id, order?.cashier_id]
   );
 
   if (isOrderLoading || isTillsLoading) {
@@ -110,20 +104,12 @@ export const OrderDetail: React.FC = () => {
         <DetailField label={t("order.uuid")} value={order.uuid} />
         <DetailField label={t("order.bookedAt")} value={order.booked_at} />
         {order.cashier_id != null ? (
-          <UserDetailField
-            label={t("common.cashier")}
-            user={cashier}
-            fallbackNodeId={currentNode.id}
-          />
+          <UserDetailField label={t("common.cashier")} user={cashier} fallbackNodeId={currentNode.id} />
         ) : (
           <DetailField label={t("common.cashier")} value={t("order.noCashier")} />
         )}
         {till ? (
-          <DetailField
-            label={t("common.till")}
-            value={till.name}
-            linkTo={TillRoutes.detail(till.id, till.node_id)}
-          />
+          <DetailField label={t("common.till")} value={till.name} linkTo={TillRoutes.detail(till.id, till.node_id)} />
         ) : (
           <DetailField label={t("common.till")} value={t("order.noTill")} />
         )}
@@ -147,17 +133,9 @@ export const OrderDetail: React.FC = () => {
             value={<CashRegisterCell registerId={order.cash_register_id} />}
           />
         )}
-        <DetailNumberField
-          label={t("order.totalNoTax")}
-          value={order.total_no_tax}
-          type="currency"
-        />
+        <DetailNumberField label={t("order.totalNoTax")} value={order.total_no_tax} type="currency" />
         <DetailNumberField label={t("order.totalTax")} value={order.total_tax} type="currency" />
-        <DetailNumberField
-          label={t("order.totalPrice")}
-          value={order.total_price}
-          type="currency"
-        />
+        <DetailNumberField label={t("order.totalPrice")} value={order.total_price} type="currency" />
       </DetailView>
       <LineItemTable lineItems={order.line_items} />
     </DetailLayout>

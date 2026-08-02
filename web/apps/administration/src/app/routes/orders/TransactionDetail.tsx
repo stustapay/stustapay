@@ -5,18 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { CustomerRoutes, OrderRoutes, SystemAccountRoutes, TransactionRoutes } from "@/app/routes";
-import {
-  DetailField,
-  DetailLayout,
-  DetailNumberField,
-  DetailView,
-  UserDetailField,
-} from "@/components";
-import {
-  getSystemAccountCollection,
-  getTransactionCollection,
-  getUserCollection,
-} from "@/db/collections";
+import { DetailField, DetailLayout, DetailNumberField, DetailView, UserDetailField } from "@/components";
+import { getSystemAccountCollection, getTransactionCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const TransactionDetail: React.FC = () => {
@@ -35,11 +25,11 @@ export const TransactionDetail: React.FC = () => {
         .from({ transactions: getTransactionCollection(currentNode.id) })
         .where(({ transactions }) => eq(transactions.id, Number(transactionId)))
         .findOne(),
-    [currentNode.id, transactionId],
+    [currentNode.id, transactionId]
   );
   const { data: accounts, isLoading: isAccountsLoading } = useLiveQuery(
     (q) => q.from({ accounts: getSystemAccountCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: conductingUser } = useLiveQuery(
     (q) =>
@@ -47,7 +37,7 @@ export const TransactionDetail: React.FC = () => {
         .from({ users: getUserCollection(currentNode.id) })
         .where(({ users }) => eq(users.id, transaction?.conducting_user_id ?? -1))
         .findOne(),
-    [currentNode.id, transaction?.conducting_user_id],
+    [currentNode.id, transaction?.conducting_user_id]
   );
 
   if (isTransactionLoading || isAccountsLoading) {
@@ -115,11 +105,7 @@ export const TransactionDetail: React.FC = () => {
             linkTo={OrderRoutes.detail(transaction.order.id, currentNode.event_node_id)}
           />
         )}
-        <DetailNumberField
-          label={t("transaction.amount")}
-          value={transaction.amount}
-          type="currency"
-        />
+        <DetailNumberField label={t("transaction.amount")} value={transaction.amount} type="currency" />
         <DetailNumberField label={t("transaction.voucherAmount")} value={transaction.vouchers} />
       </DetailView>
     </DetailLayout>

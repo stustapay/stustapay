@@ -52,10 +52,10 @@ const createPayoutRunCollection = (nodeId: number) => {
                 max_num_payouts: payload.max_num_payouts,
               },
             });
-          }),
+          })
         );
       },
-    }),
+    })
   );
 };
 

@@ -73,24 +73,22 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               .where(({ users }) =>
                 transactionRow.order?.cashier_id != null
                   ? eq(users.id, transactionRow.order.cashier_id)
-                  : eq(users.id, -1),
+                  : eq(users.id, -1)
               )
               .select(({ users }) => users)
-              .findOne(),
+              .findOne()
           ),
           till: materialize(
             q
               .from({ tills: getTillCollection(currentNode.id) })
               .where(({ tills }) =>
-                transactionRow.order?.till_id != null
-                  ? eq(tills.id, transactionRow.order.till_id)
-                  : eq(tills.id, -1),
+                transactionRow.order?.till_id != null ? eq(tills.id, transactionRow.order.till_id) : eq(tills.id, -1)
               )
               .select(({ tills }) => tills)
-              .findOne(),
+              .findOne()
           ),
         })),
-    [currentNode.id, cashRegisterId, paginationModel.page, paginationModel.pageSize],
+    [currentNode.id, cashRegisterId, paginationModel.page, paginationModel.pageSize]
   );
 
   const total = usePaginatedQueryTotal(currentNode.id, "transactions");
@@ -172,9 +170,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               if (till == null) {
                 return null;
               }
-              return (
-                <RouterLink to={TillRoutes.detail(till.id, till.node_id)}>{till.name}</RouterLink>
-              );
+              return <RouterLink to={TillRoutes.detail(till.id, till.node_id)}>{till.name}</RouterLink>;
             },
             width: 200,
           },

@@ -14,7 +14,7 @@ const TerminalOverviewContent: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { data, isLoading, isError } = useLiveQuery(
     (q) => q.from({ locations: getTerminalLocationCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
 
   if (isError) {

@@ -17,17 +17,8 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { ProductRoutes, tillButtonCreateFromProduct, TillButtonsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
-import {
-  getProductCollection,
-  getTaxRateCollection,
-  getUserTagVariantCollection,
-} from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { getProductCollection, getTaxRateCollection, getUserTagVariantCollection } from "@/db/collections";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const ProductList: React.FC = () => {
   const { t } = useTranslation();
@@ -45,21 +36,21 @@ export const ProductList: React.FC = () => {
         .join(
           { taxRates: getTaxRateCollection(currentNode.id) },
           ({ taxRates, products }) => eq(products.tax_rate_id, taxRates.id),
-          "inner" as const,
+          "inner" as const
         )
         .select(({ products, taxRates }) => ({
           ...products,
           taxRate: taxRates,
         })),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { data: userTagVariants, isLoading: isUserTagVariantsLoading } = useLiveQuery(
     (q) => q.from({ userTagVariants: getUserTagVariantCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const userTagVariantById = React.useMemo(
     () => new Map((userTagVariants ?? []).map((variant) => [variant.id, variant])),
-    [userTagVariants],
+    [userTagVariants]
   );
   const isLoading = isProductsLoading || isUserTagVariantsLoading;
   const { dataGridNodeColumn } = useRenderNode();

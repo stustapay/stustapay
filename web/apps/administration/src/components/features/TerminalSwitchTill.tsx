@@ -35,9 +35,11 @@ export const TerminalSwitchTill: React.FC<TerminalSwitchTillProps> = ({ terminal
     if (!selectedTill) {
       return;
     }
-    switchTill({ nodeId: currentNode.id, terminalId, switchTillPayload: { new_till_id: selectedTill.id } }).then(() =>
-      refetchTillTerminalCollections(currentNode.id).then(onClose)
-    );
+    switchTill({
+      nodeId: currentNode.id,
+      terminalId,
+      switchTillPayload: { new_till_id: selectedTill.id },
+    }).then(() => refetchTillTerminalCollections(currentNode.id).then(onClose));
   };
 
   return (

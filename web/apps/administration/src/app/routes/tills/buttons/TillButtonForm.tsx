@@ -16,10 +16,10 @@ interface ProductSelectProps {
   onChange: (productIds: number[]) => void;
 }
 
-const ProductListItem: React.FC<{ productId: number; removeProduct: (productId: number) => void }> = ({
-  productId,
-  removeProduct,
-}) => {
+const ProductListItem: React.FC<{
+  productId: number;
+  removeProduct: (productId: number) => void;
+}> = ({ productId, removeProduct }) => {
   const { currentNode } = useCurrentNode();
   const { data: product } = useLiveQuery(
     (q) =>

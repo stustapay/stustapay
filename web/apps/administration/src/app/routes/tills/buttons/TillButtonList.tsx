@@ -10,12 +10,7 @@ import { TillButtonsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { TillButton } from "@/db/api/generated";
 import { getTillButtonCollection } from "@/db/collections";
-import {
-  useCurrentNode,
-  useCurrentUserHasPrivilege,
-  useCurrentUserHasPrivilegeAtNode,
-  useRenderNode,
-} from "@/hooks";
+import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TillButtonList: React.FC = () => {
   const { t } = useTranslation();
@@ -27,7 +22,7 @@ export const TillButtonList: React.FC = () => {
 
   const { data: buttons, isLoading } = useLiveQuery(
     (q) => q.from({ buttons: getTillButtonCollection(currentNode.id) }),
-    [currentNode.id],
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 

@@ -40,16 +40,14 @@ export const ProductDetail: React.FC = () => {
         .from({ products: getProductCollection(currentNode.id) })
         .where(({ products }) => eq(products.id, Number(productId)))
         .findOne(),
-    [currentNode.id, productId],
+    [currentNode.id, productId]
   );
   const { data: userTagVariants, isLoading: isUserTagVariantsLoading } = useLiveQuery(
     (q) =>
       q
         .from({ userTagVariants: getUserTagVariantCollection(currentNode.id) })
-        .where(({ userTagVariants }) =>
-          inArray(userTagVariants.id, product?.user_tag_variant_ids ?? []),
-        ),
-    [currentNode.id, product?.user_tag_variant_ids],
+        .where(({ userTagVariants }) => inArray(userTagVariants.id, product?.user_tag_variant_ids ?? [])),
+    [currentNode.id, product?.user_tag_variant_ids]
   );
   const openModal = useOpenModal();
   const canCreateTillButtonAtNode = useCurrentUserHasPrivilegeAtNode(TillButtonsRoutes.privilege);

@@ -23,7 +23,7 @@ const createAuditLogCollection = (nodeId: number) => {
         });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 

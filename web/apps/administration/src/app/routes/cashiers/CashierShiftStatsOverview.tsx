@@ -15,7 +15,11 @@ export interface CashierShiftStatsOverview {
 
 export const CashierShiftStatsOverview: React.FC<CashierShiftStatsOverview> = ({ cashierId, shiftId }) => {
   const { currentNode } = useCurrentNode();
-  const { data, isLoading } = useGetCashierShiftStatsQuery({ nodeId: currentNode.id, cashierId, shiftId });
+  const { data, isLoading } = useGetCashierShiftStatsQuery({
+    nodeId: currentNode.id,
+    cashierId,
+    shiftId,
+  });
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState("products");
 

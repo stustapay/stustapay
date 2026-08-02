@@ -33,7 +33,7 @@ const createUserTagVariantCollection = (nodeId: number) => {
               },
               body: modified,
             });
-          }),
+          })
         );
       },
       onUpdate: async ({ transaction }) => {
@@ -49,7 +49,7 @@ const createUserTagVariantCollection = (nodeId: number) => {
               },
               body: modified,
             });
-          }),
+          })
         );
       },
       onDelete: async ({ transaction }) => {
@@ -64,17 +64,14 @@ const createUserTagVariantCollection = (nodeId: number) => {
                 node_id: nodeId,
               },
             });
-          }),
+          })
         );
       },
-    }),
+    })
   );
 };
 
-const userTagVariantCollections: Record<
-  number,
-  ReturnType<typeof createUserTagVariantCollection>
-> = {};
+const userTagVariantCollections: Record<number, ReturnType<typeof createUserTagVariantCollection>> = {};
 
 export const getUserTagVariantCollection = (nodeId: number) => {
   if (!userTagVariantCollections[nodeId]) {

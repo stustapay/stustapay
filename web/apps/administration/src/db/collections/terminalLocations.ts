@@ -23,14 +23,11 @@ const createTerminalLocationCollection = (nodeId: number) => {
         });
         return response.data ?? [];
       },
-    }),
+    })
   );
 };
 
-const terminalLocationCollections: Record<
-  number,
-  ReturnType<typeof createTerminalLocationCollection>
-> = {};
+const terminalLocationCollections: Record<number, ReturnType<typeof createTerminalLocationCollection>> = {};
 
 export const getTerminalLocationCollection = (nodeId: number) => {
   if (!terminalLocationCollections[nodeId]) {
