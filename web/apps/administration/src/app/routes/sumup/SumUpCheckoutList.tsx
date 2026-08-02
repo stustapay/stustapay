@@ -45,7 +45,7 @@ export const SumUpCheckoutList: React.FC = withPrivilegeGuard(NodePrivilege.node
         rows={checkouts ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

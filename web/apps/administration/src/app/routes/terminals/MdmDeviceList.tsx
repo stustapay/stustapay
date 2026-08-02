@@ -11,26 +11,28 @@ import {
   Link,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { MdmDeviceWithMapping, useListMdmDevicesQuery } from "@/api";
 import { TerminalRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
 import { MdmDeviceChangeMapping } from "@/components/features";
+import { MdmDeviceWithMapping } from "@/db/api/generated";
+import { getMdmDeviceCollection } from "@/db/collections";
 import { useCurrentEventSettings, useCurrentNode, useCurrentUserHasPrivilege } from "@/hooks";
 
 import { TerminalMap } from "./TerminalMap";
 
-export const MdmDeviceList: React.FC = () => {
+const MdmDeviceListContent: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { eventSettings } = useCurrentEventSettings();
   const canManageTerminals = useCurrentUserHasPrivilege(TerminalRoutes.privilege);
-  const { data, isLoading, error } = useListMdmDevicesQuery(
-    { nodeId: currentNode.id },
-    { skip: !eventSettings.headwind_enabled }
+  const { data, isLoading, isError } = useLiveQuery(
+    (q) => q.from({ devices: getMdmDeviceCollection(currentNode.id) }),
+    [currentNode.id]
   );
   const [selectedDevice, setSelectedDevice] = React.useState<MdmDeviceWithMapping | null>(null);
   const [mapDevice, setMapDevice] = React.useState<MdmDeviceWithMapping | null>(null);
@@ -40,15 +42,7 @@ export const MdmDeviceList: React.FC = () => {
     [data]
   );
 
-  if (!eventSettings.headwind_enabled) {
-    return (
-      <Alert severity="info">
-        <AlertTitle>{t("terminal.mdm.headwindDisabled")}</AlertTitle>
-      </Alert>
-    );
-  }
-
-  if (error) {
+  if (isError) {
     return (
       <Alert severity="error">
         <AlertTitle>{t("terminal.mdm.loadFailed")}</AlertTitle>
@@ -56,7 +50,7 @@ export const MdmDeviceList: React.FC = () => {
     );
   }
 
-  const columns: GridColDef<MdmDeviceWithMapping>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof data>>>[] = [
     {
       field: "device_id",
       headerName: t("terminal.mdm.deviceId"),
@@ -154,7 +148,7 @@ export const MdmDeviceList: React.FC = () => {
           rows={data ?? []}
           columns={columns}
           disableRowSelectionOnClick
-          sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+          sx={{ boxShadow: (theme) => theme.shadows[1] }}
         />
       </ListLayout>
       {selectedDevice && (
@@ -181,4 +175,19 @@ export const MdmDeviceList: React.FC = () => {
       </Dialog>
     </>
   );
+};
+
+export const MdmDeviceList: React.FC = () => {
+  const { t } = useTranslation();
+  const { eventSettings } = useCurrentEventSettings();
+
+  if (!eventSettings.headwind_enabled) {
+    return (
+      <Alert severity="info">
+        <AlertTitle>{t("terminal.mdm.headwindDisabled")}</AlertTitle>
+      </Alert>
+    );
+  }
+
+  return <MdmDeviceListContent />;
 };

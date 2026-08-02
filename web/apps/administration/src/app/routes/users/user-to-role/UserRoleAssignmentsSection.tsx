@@ -1,11 +1,14 @@
 import { Link, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@stustapay/framework";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { UserRole, UserRoleAssignment, useListUserRoleAssignmentsQuery } from "@/api";
 import { UserRoleRoutes } from "@/app/routes";
+import type { UserRole } from "@/db/api/generated/types.gen";
+import { getUserRoleAssignmentCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 const renderRoles = (roles: UserRole[]) => {
@@ -28,12 +31,12 @@ const renderRoles = (roles: UserRole[]) => {
 export const UserRoleAssignmentsSection: React.FC<{ userId: number }> = ({ userId }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: assignments, isLoading } = useListUserRoleAssignmentsQuery({
-    nodeId: currentNode.id,
-    userId,
-  });
+  const { data: assignments, isLoading } = useLiveQuery(
+    (q) => q.from({ assignments: getUserRoleAssignmentCollection(currentNode.id, userId) }),
+    [currentNode.id, userId]
+  );
 
-  const columns: GridColDef<UserRoleAssignment>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof assignments>>>[] = [
     {
       field: "node_name",
       headerName: t("common.definedAtNode"),

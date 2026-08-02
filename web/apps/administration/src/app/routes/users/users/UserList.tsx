@@ -2,20 +2,15 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  selectTerminalById,
-  selectUserAll,
-  useDeleteUserMutation,
-  useListTerminalsQuery,
-  useListUsersQuery,
-  User,
-} from "@/api";
 import { TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { getTerminalCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const UserList: React.FC = () => {
@@ -26,21 +21,18 @@ export const UserList: React.FC = () => {
   const navigate = useNavigate();
   const openModal = useOpenModal();
 
-  const { users, isLoading } = useListUsersQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        users: data ? selectUserAll(data) : undefined,
-      }),
-    }
+  const { data: users, isLoading } = useLiveQuery(
+    (q) => q.from({ users: getUserCollection(currentNode.id) }),
+    [currentNode.id]
   );
-  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
-  const [deleteUser] = useDeleteUserMutation();
+  const { data: terminals, isLoading: isTerminalsLoading } = useLiveQuery(
+    (q) => q.from({ terminals: getTerminalCollection(currentNode.id) }),
+    [currentNode.id]
+  );
   const { dataGridNodeColumn } = useRenderNode();
 
   const getTerminalName = (id: number) => {
-    const terminal = terminals ? selectTerminalById(terminals, id) : undefined;
+    const terminal = terminals?.find((t) => t.id === id);
     return terminal?.name ?? String(id);
   };
 
@@ -59,7 +51,7 @@ export const UserList: React.FC = () => {
     return (
       <div>
         {terminalIds.map((id, index) => {
-          const terminal = selectTerminalById(terminals, id);
+          const terminal = terminals?.find((t) => t.id === id);
           if (!terminal) {
             return null;
           }
@@ -82,14 +74,12 @@ export const UserList: React.FC = () => {
       title: t("deleteUser"),
       content: t("deleteUserDescription"),
       onConfirm: () => {
-        deleteUser({ nodeId: currentNode.id, userId })
-          .unwrap()
-          .catch(() => undefined);
+        getUserCollection(currentNode.id).delete(userId);
       },
     });
   };
 
-  const columns: GridColDef<User>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof users>>>[] = [
     {
       field: "login",
       headerName: t("userLogin"),
@@ -165,7 +155,7 @@ export const UserList: React.FC = () => {
         rows={users ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

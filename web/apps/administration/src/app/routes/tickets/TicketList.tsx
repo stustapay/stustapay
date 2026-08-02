@@ -2,23 +2,16 @@ import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon, LockOpen as U
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  Ticket,
-  selectTaxRateById,
-  selectTicketAll,
-  selectUserTagVariantEntities,
-  useDeleteTicketMutation,
-  useListTaxRatesQuery,
-  useListTicketsQuery,
-  useListUserTagVariantsQuery,
-  useUpdateTicketMutation,
-} from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { TaxRateCell } from "@/components/table/TaxRateCell";
+import { getTicketCollection, getUserTagVariantCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TicketList: React.FC = () => {
@@ -29,19 +22,19 @@ export const TicketList: React.FC = () => {
   const navigate = useNavigate();
   const openModal = useOpenModal();
 
-  const { tickets, isLoading: isTicketsLoading } = useListTicketsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        tickets: data ? selectTicketAll(data) : undefined,
-      }),
-    }
+  const { data: tickets, isLoading: isTicketsLoading } = useLiveQuery(
+    (q) => q.from({ tickets: getTicketCollection(currentNode.id) }),
+    [currentNode.id]
   );
-  const { data: taxRates } = useListTaxRatesQuery({ nodeId: currentNode.id });
-  const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
-  const [updateTicket] = useUpdateTicketMutation();
-  const [deleteTicket] = useDeleteTicketMutation();
+  const { data: userTagVariants, isLoading: isUserTagVariantsLoading } = useLiveQuery(
+    (q) => q.from({ userTagVariants: getUserTagVariantCollection(currentNode.id) }),
+    [currentNode.id]
+  );
+  const userTagVariantById = React.useMemo(
+    () => new Map((userTagVariants ?? []).map((variant) => [variant.id, variant])),
+    [userTagVariants]
+  );
+  const isLoading = isTicketsLoading || isUserTagVariantsLoading;
   const { dataGridNodeColumn } = useRenderNode();
 
   const openConfirmDeleteDialog = (ticketId: number) => {
@@ -50,52 +43,19 @@ export const TicketList: React.FC = () => {
       title: t("ticket.delete"),
       content: t("ticket.deleteDescription"),
       onConfirm: () => {
-        deleteTicket({ nodeId: currentNode.id, ticketId })
-          .unwrap()
-          .catch(() => undefined);
+        getTicketCollection(currentNode.id).delete(ticketId);
         return true;
       },
     });
   };
 
-  const handleToggleLockTicket = (ticket: Ticket) => {
-    updateTicket({
-      nodeId: currentNode.id,
-      ticketId: ticket.id,
-      newTicket: { ...ticket, is_locked: !ticket.is_locked },
+  const handleToggleLockTicket = (ticket: ArrayElement<NonNullable<typeof tickets>>) => {
+    getTicketCollection(currentNode.id).update(ticket.id, (draft) => {
+      draft.is_locked = !draft.is_locked;
     });
   };
 
-  const renderTaxRate = (id: number) => {
-    if (!taxRates) {
-      return "";
-    }
-
-    const tax = selectTaxRateById(taxRates, id);
-    if (!tax) {
-      return "";
-    }
-
-    return (
-      <Tooltip title={tax.description}>
-        <span>{(tax.rate * 100).toFixed(0)} %</span>
-      </Tooltip>
-    );
-  };
-
-  const formatUserTagVariant = React.useCallback(
-    (variantIds: number[]) => {
-      const variantId = variantIds[0];
-      if (variantId == null) {
-        return "";
-      }
-      const userTagVariant = userTagVariants ? selectUserTagVariantEntities(userTagVariants)[variantId] : undefined;
-      return userTagVariant?.variant_name ?? String(variantId);
-    },
-    [userTagVariants]
-  );
-
-  const columns: GridColDef<Ticket>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof tickets>>>[] = [
     {
       field: "name",
       headerName: t("ticket.name"),
@@ -125,7 +85,7 @@ export const TicketList: React.FC = () => {
       field: "tax_rate_id",
       headerName: t("ticket.taxRate"),
       align: "right",
-      renderCell: (params) => renderTaxRate(params.row.tax_rate_id),
+      renderCell: (params) => <TaxRateCell taxRateId={params.row.tax_rate_id} />,
     },
     {
       field: "total_price",
@@ -133,9 +93,15 @@ export const TicketList: React.FC = () => {
       type: "currency",
     },
     {
-      field: "user_tag_variant_ids",
+      field: "userTagVariant",
       headerName: t("ticket.restriction"),
-      valueFormatter: (value) => formatUserTagVariant(value as number[]),
+      valueGetter: (_, row) => {
+        const variantId = row.user_tag_variant_ids[0];
+        if (variantId == null) {
+          return "";
+        }
+        return userTagVariantById.get(variantId)?.variant_name ?? String(variantId);
+      },
       width: 150,
     },
     dataGridNodeColumn,
@@ -187,11 +153,11 @@ export const TicketList: React.FC = () => {
     <ListLayout title={t("tickets")} routes={TicketRoutes}>
       <DataGrid
         autoHeight
-        loading={isTicketsLoading}
+        loading={isLoading}
         rows={tickets ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

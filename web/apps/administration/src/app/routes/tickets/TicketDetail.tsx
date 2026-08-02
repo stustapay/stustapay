@@ -1,19 +1,14 @@
 import { Delete as DeleteIcon, Edit as EditIcon, Lock as LockIcon, LockOpen as UnlockIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { eq, inArray, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import {
-  selectUserTagVariantEntities,
-  useDeleteTicketMutation,
-  useGetTicketQuery,
-  useListUserTagVariantsQuery,
-  useUpdateTicketMutation,
-} from "@/api";
 import { TicketRoutes } from "@/app/routes";
 import { DetailBoolField, DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { getTicketCollection, getUserTagVariantCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const TicketDetail: React.FC = () => {
@@ -21,14 +16,34 @@ export const TicketDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { ticketId } = useParams();
   const navigate = useNavigate();
-  const [deleteTicket] = useDeleteTicketMutation();
-  const { data: ticket, error } = useGetTicketQuery({ nodeId: currentNode.id, ticketId: Number(ticketId) });
-  const { data: userTagVariants } = useListUserTagVariantsQuery({ nodeId: currentNode.id });
-  const [updateTicket] = useUpdateTicketMutation();
+  const {
+    data: ticket,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ tickets: getTicketCollection(currentNode.id) })
+        .where(({ tickets }) => eq(tickets.id, Number(ticketId)))
+        .findOne(),
+    [currentNode.id, ticketId]
+  );
+
+  const { data: userTagVariants, isLoading: isUserTagVariantsLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ userTagVariants: getUserTagVariantCollection(currentNode.id) })
+        .where(({ userTagVariants }) => inArray(userTagVariants.id, ticket?.user_tag_variant_ids ?? [])),
+    [currentNode.id, ticket?.user_tag_variant_ids]
+  );
   const openModal = useOpenModal();
 
-  if (error) {
+  if (isError) {
     return <Navigate to={TicketRoutes.list()} />;
+  }
+
+  if (isLoading || !ticket || isUserTagVariantsLoading) {
+    return <Loading />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -37,21 +52,17 @@ export const TicketDetail: React.FC = () => {
       title: t("ticket.delete"),
       content: t("ticket.deleteDescription"),
       onConfirm: () => {
-        deleteTicket({ nodeId: currentNode.id, ticketId: Number(ticketId) }).then(() => navigate(TicketRoutes.list()));
+        getTicketCollection(currentNode.id)
+          .delete(Number(ticketId))
+          .isPersisted.promise.then(() => navigate(TicketRoutes.list()));
         return true;
       },
     });
   };
 
-  if (ticket === undefined) {
-    return <Loading />;
-  }
-
   const handleToggleLockTicket = () => {
-    updateTicket({
-      nodeId: currentNode.id,
-      ticketId: ticket.id,
-      newTicket: { ...ticket, is_locked: !ticket.is_locked },
+    getTicketCollection(currentNode.id).update(ticket.id, (draft) => {
+      draft.is_locked = !draft.is_locked;
     });
   };
 
@@ -73,25 +84,17 @@ export const TicketDetail: React.FC = () => {
           color: "error",
           icon: ticket.is_locked ? <UnlockIcon /> : <LockIcon />,
         },
-        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+        {
+          label: t("delete"),
+          onClick: openConfirmDeleteDialog,
+          color: "error",
+          icon: <DeleteIcon />,
+        },
       ]}
     >
       <DetailView>
         <DetailField label={t("ticket.name")} value={ticket.name} />
-        <DetailField
-          label={t("ticket.restriction")}
-          value={
-            ticket.user_tag_variant_ids.length > 0
-              ? (() => {
-                  const variantId = ticket.user_tag_variant_ids[0];
-                  const userTagVariant = userTagVariants
-                    ? selectUserTagVariantEntities(userTagVariants)[variantId]
-                    : undefined;
-                  return userTagVariant?.variant_name ?? String(variantId);
-                })()
-              : ""
-          }
-        />
+        <DetailField label={t("ticket.restriction")} value={userTagVariants?.[0]?.variant_name} />
         <DetailNumberField
           label={t("ticket.initialTopUpAmount")}
           type="currency"

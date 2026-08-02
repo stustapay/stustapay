@@ -1,16 +1,18 @@
 import { Alert, AlertTitle, Button, LinearProgress, Paper, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { toFormikValidationSchema } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import { Form, Formik, FormikHelpers } from "formik";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 
-import { selectCashRegisterById, useListCashRegistersAdminQuery, useTransferRegisterMutation } from "@/api";
+import { useTransferRegisterMutation } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { CashRegistersRoutes } from "@/app/routes";
 import { UserSelect } from "@/components/features";
+import { getCashRegisterCollection, refetchNodeCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 const TillTransferSchema = z.object({
@@ -24,14 +26,17 @@ export const CashRegisterTransfer: React.FC = withPrivilegeGuard("node_administr
   const navigate = useNavigate();
   const { currentNode } = useCurrentNode();
   const { registerId } = useParams();
-  const { register, isLoading, error } = useListCashRegistersAdminQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        register: data ? selectCashRegisterById(data, Number(registerId)) : undefined,
-      }),
-    }
+  const {
+    data: register,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ registers: getCashRegisterCollection(currentNode.id) })
+        .where(({ registers }) => eq(registers.id, Number(registerId)))
+        .findOne(),
+    [currentNode.id, registerId]
   );
   const [transferRegister] = useTransferRegisterMutation();
 
@@ -41,7 +46,7 @@ export const CashRegisterTransfer: React.FC = withPrivilegeGuard("node_administr
     };
   }, [register]);
 
-  if (error) {
+  if (isError) {
     return <Navigate to={CashRegistersRoutes.list()} />;
   }
 
@@ -60,6 +65,7 @@ export const CashRegisterTransfer: React.FC = withPrivilegeGuard("node_administr
       transferRegisterPayload: { source_cashier_id: register.current_cashier_id, ...values },
     })
       .unwrap()
+      .then(() => refetchNodeCollection(currentNode.id, "cash-registers"))
       .then(() => {
         setSubmitting(false);
         navigate(CashRegistersRoutes.list());

@@ -2,9 +2,10 @@ import { NewTseSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { NewTse, useCreateTseMutation } from "@/api";
 import { TseRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { CreateLayoutV2 } from "@/components";
+import { NewTse } from "@/db/api/generated";
+import { generateId, getTseCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { TseForm } from "./TseForm";
@@ -22,15 +23,28 @@ const initialValues: NewTse = {
 export const TseCreate: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const [createTse] = useCreateTseMutation();
 
   return (
-    <CreateLayout
+    <CreateLayoutV2
       title={t("tse.create")}
       successRoute={TseRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTseSchema}
-      onSubmit={(tse) => createTse({ nodeId: currentNode.id, newTse: tse })}
+      onSubmit={(tse) =>
+        getTseCollection(currentNode.id).insert({
+          ...tse,
+          id: generateId(),
+          node_id: currentNode.id,
+          status: "new",
+          hashalgo: null,
+          time_format: null,
+          public_key: null,
+          certificate: null,
+          process_data_encoding: null,
+          tse_description: null,
+          certificate_date: null,
+        })
+      }
       form={TseForm}
     />
   );

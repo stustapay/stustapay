@@ -1,10 +1,11 @@
 import { NodePrivilege } from "@stustapay/models";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { selectAccountAll, useListSystemAccountsQuery } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { ListLayout } from "@/components";
+import { getSystemAccountCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { AccountTable } from "./components/AccountTable";
@@ -13,14 +14,9 @@ export const SystemAccountList: React.FC = withPrivilegeGuard(NodePrivilege.node
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { products: accounts, isLoading: isAccountsLoading } = useListSystemAccountsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        products: data ? selectAccountAll(data) : undefined,
-      }),
-    }
+  const { data: accounts, isLoading: isAccountsLoading } = useLiveQuery(
+    (q) => q.from({ accounts: getSystemAccountCollection(currentNode.id) }),
+    [currentNode.id]
   );
 
   return (

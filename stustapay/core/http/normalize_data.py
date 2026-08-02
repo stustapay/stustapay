@@ -11,6 +11,11 @@ class NormalizedList(BaseModel, Generic[T, K]):
     entities: dict[K, T]
 
 
+class PaginatedList(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+
+
 def normalize_list(elements: list[T], primary_key="id") -> NormalizedList[T, K]:
     return NormalizedList(
         ids=[getattr(x, primary_key) for x in elements], entities={getattr(x, primary_key): x for x in elements}

@@ -1,31 +1,23 @@
 import { Alert, AlertTitle, Skeleton } from "@mui/material";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useListTerminalLocationsQuery } from "@/api";
 import { ListLayout } from "@/components";
+import { getTerminalLocationCollection } from "@/db/collections";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 
 import { TerminalMapMarker, TerminalMapView } from "./TerminalMap";
 
-export const TerminalOverview: React.FC = () => {
+const TerminalOverviewContent: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { eventSettings } = useCurrentEventSettings();
-  const { data, isLoading, error } = useListTerminalLocationsQuery(
-    { nodeId: currentNode.id },
-    { skip: !eventSettings.headwind_enabled }
+  const { data, isLoading, isError } = useLiveQuery(
+    (q) => q.from({ locations: getTerminalLocationCollection(currentNode.id) }),
+    [currentNode.id]
   );
 
-  if (!eventSettings.headwind_enabled) {
-    return (
-      <Alert severity="info">
-        <AlertTitle>{t("terminal.mdm.headwindDisabled")}</AlertTitle>
-      </Alert>
-    );
-  }
-
-  if (error) {
+  if (isError) {
     return (
       <Alert severity="error">
         <AlertTitle>{t("terminal.mdm.locationsLoadFailed")}</AlertTitle>
@@ -52,4 +44,19 @@ export const TerminalOverview: React.FC = () => {
       )}
     </ListLayout>
   );
+};
+
+export const TerminalOverview: React.FC = () => {
+  const { t } = useTranslation();
+  const { eventSettings } = useCurrentEventSettings();
+
+  if (!eventSettings.headwind_enabled) {
+    return (
+      <Alert severity="info">
+        <AlertTitle>{t("terminal.mdm.headwindDisabled")}</AlertTitle>
+      </Alert>
+    );
+  }
+
+  return <TerminalOverviewContent />;
 };

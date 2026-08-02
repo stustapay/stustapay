@@ -1,13 +1,14 @@
 import { Edit as EditIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { selectUserRoleById, useListUserRolesQuery } from "@/api";
 import { withPrivilegeGuard } from "@/app/layout";
 import { UserRoleRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailView } from "@/components";
+import { getUserRoleCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { PrivilegeDetailSection } from "./components/PrivilegeDetailSection";
@@ -17,21 +18,24 @@ export const UserRoleDetail: React.FC = withPrivilegeGuard("node_administration"
   const { currentNode } = useCurrentNode();
   const { roleId } = useParams();
   const navigate = useNavigate();
-  const { role, error } = useListUserRolesQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        role: data ? selectUserRoleById(data, Number(roleId)) : undefined,
-      }),
-    }
+  const {
+    data: role,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ userRoles: getUserRoleCollection(currentNode.id) })
+        .where(({ userRoles }) => eq(userRoles.id, Number(roleId)))
+        .findOne(),
+    [currentNode.id, roleId]
   );
 
-  if (error) {
+  if (isError) {
     return <Navigate to={UserRoleRoutes.list()} />;
   }
 
-  if (role === undefined) {
+  if (isLoading || !role) {
     return <Loading />;
   }
 

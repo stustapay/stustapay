@@ -2,17 +2,14 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Stack } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import {
-  selectCashRegisterStockingById,
-  useDeleteRegisterStockingMutation,
-  useListRegisterStockingsQuery,
-} from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { getCashRegisterStockingCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { StockingMakeupTable } from "./StockingMakeupTable";
@@ -23,18 +20,20 @@ export const CashRegisterStockingDetail: React.FC = () => {
   const { stockingId } = useParams();
   const navigate = useNavigate();
   const openModal = useOpenModal();
-  const [deleteStocking] = useDeleteRegisterStockingMutation();
-  const { stocking, isLoading, error } = useListRegisterStockingsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        stocking: data ? selectCashRegisterStockingById(data, Number(stockingId)) : undefined,
-      }),
-    }
+  const {
+    data: stocking,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ stockings: getCashRegisterStockingCollection(currentNode.id) })
+        .where(({ stockings }) => eq(stockings.id, Number(stockingId)))
+        .findOne(),
+    [currentNode.id, stockingId]
   );
 
-  if (error) {
+  if (isError) {
     return <Navigate to={TillStockingsRoutes.list()} />;
   }
 
@@ -48,10 +47,9 @@ export const CashRegisterStockingDetail: React.FC = () => {
       title: t("register.deleteStocking"),
       content: t("register.deleteStockingDescription"),
       onConfirm: () => {
-        deleteStocking({ nodeId: currentNode.id, stockingId: stocking.id })
-          .unwrap()
-          .then(() => navigate(TillStockingsRoutes.list()))
-          .catch(() => undefined);
+        getCashRegisterStockingCollection(currentNode.id)
+          .delete(Number(stockingId))
+          .isPersisted.promise.then(() => navigate(TillStockingsRoutes.list()));
       },
     });
   };

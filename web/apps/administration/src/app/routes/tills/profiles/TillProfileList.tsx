@@ -2,20 +2,15 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  TillProfile,
-  selectTillLayoutById,
-  selectTillProfileAll,
-  useDeleteTillProfileMutation,
-  useListTillLayoutsQuery,
-  useListTillProfilesQuery,
-} from "@/api";
-import { TillProfileRoutes } from "@/app/routes";
+import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { getTillLayoutCollection, getTillProfileCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TillProfileList: React.FC = () => {
@@ -24,38 +19,24 @@ export const TillProfileList: React.FC = () => {
   const canManageProfiles = useCurrentUserHasPrivilege(TillProfileRoutes.privilege);
   const canManageProfilesAtNode = useCurrentUserHasPrivilegeAtNode(TillProfileRoutes.privilege);
   const navigate = useNavigate();
-  const { nodeId } = useParams();
   const openModal = useOpenModal();
 
-  const { profiles, isLoading: isTillsLoading } = useListTillProfilesQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        profiles: data ? selectTillProfileAll(data) : undefined,
-      }),
-    }
+  const { data: profiles, isLoading: isProfilesLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ profiles: getTillProfileCollection(currentNode.id) })
+        .join(
+          { layouts: getTillLayoutCollection(currentNode.id) },
+          ({ layouts, profiles }) => eq(profiles.layout_id, layouts.id),
+          "left" as const
+        )
+        .select(({ profiles, layouts }) => ({
+          ...profiles,
+          layout: layouts,
+        })),
+    [currentNode.id]
   );
-  const { data: layouts, isLoading: isLayoutsLoading } = useListTillLayoutsQuery({ nodeId: currentNode.id });
-  const [deleteTillProfile] = useDeleteTillProfileMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  const renderLayout = (id: number) => {
-    if (!layouts) {
-      return "";
-    }
-
-    const layout = selectTillLayoutById(layouts, id);
-    if (!layout) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={`/node/${nodeId}/tills/layouts/${layout.id}`}>
-        {layout.name}
-      </Link>
-    );
-  };
 
   const openConfirmDeleteDialog = (profileId: number) => {
     openModal({
@@ -63,20 +44,18 @@ export const TillProfileList: React.FC = () => {
       title: t("profile.delete"),
       content: t("profile.deleteDescription"),
       onConfirm: () => {
-        deleteTillProfile({ nodeId: currentNode.id, profileId })
-          .unwrap()
-          .catch(() => undefined);
+        getTillProfileCollection(currentNode.id).delete(profileId);
       },
     });
   };
 
-  const columns: GridColDef<TillProfile>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof profiles>>>[] = [
     {
       field: "name",
       headerName: t("profile.name"),
       flex: 1,
       renderCell: (params) => (
-        <Link component={RouterLink} to={`/node/${nodeId}/tills/profiles/${params.row.id}`}>
+        <Link component={RouterLink} to={TillProfileRoutes.detail(params.row.id, params.row.node_id)}>
           {params.row.name}
         </Link>
       ),
@@ -102,7 +81,12 @@ export const TillProfileList: React.FC = () => {
       field: "layout",
       headerName: t("profile.layout"),
       flex: 0.5,
-      renderCell: (params) => renderLayout(params.row.layout_id),
+      renderCell: (params) =>
+        params.row.layout ? (
+          <Link component={RouterLink} to={TillLayoutRoutes.detail(params.row.layout.id)}>
+            {params.row.layout.name}
+          </Link>
+        ) : null,
     },
     dataGridNodeColumn,
   ];
@@ -120,7 +104,7 @@ export const TillProfileList: React.FC = () => {
                 icon={<EditIcon />}
                 color="primary"
                 label={t("edit")}
-                onClick={() => navigate(`/node/${nodeId}/tills/profiles/${params.row.id}/edit`)}
+                onClick={() => navigate(TillProfileRoutes.edit(params.row.id, params.row.node_id))}
               />,
               <GridActionsCellItem
                 icon={<DeleteIcon color="error" />}
@@ -136,11 +120,11 @@ export const TillProfileList: React.FC = () => {
     <ListLayout title={t("profile.profiles")} routes={TillProfileRoutes}>
       <DataGrid
         autoHeight
-        loading={isTillsLoading || isLayoutsLoading}
+        loading={isProfilesLoading}
         rows={profiles ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

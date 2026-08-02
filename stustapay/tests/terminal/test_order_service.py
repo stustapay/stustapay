@@ -163,8 +163,44 @@ async def test_list_orders(
         token=event_admin_token, node_id=event_node.id, customer_account_id=customer.account_id
     )
 
-    assert len(orders) == 1
-    assert orders[0].order_type == OrderType.sale
+    assert orders.total == 1
+    assert len(orders.items) == 1
+    assert orders.items[0].order_type == OrderType.sale
+
+
+async def test_list_orders_pagination(
+    order_service: OrderService,
+    sale_setup: tuple[Product, TillButton],
+    customer: Customer,
+    terminal_token: str,
+    event_admin_token: str,
+    event_node: Node,
+    login_supervised_user: LoginSupervisedUser,
+    cashier: Cashier,
+):
+    _, button = sale_setup
+    await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
+    for _ in range(3):
+        await order_service.book_sale(
+            token=terminal_token,
+            new_sale=NewSale(
+                uuid=uuid.uuid4(),
+                customer_tag_uid=customer.tag.uid,
+                buttons=[Button(till_button_id=button.id, quantity=1)],
+                payment_method=PaymentMethod.tag,
+            ),
+        )
+
+    page = await order_service.list_orders(
+        token=event_admin_token,
+        node_id=event_node.id,
+        customer_account_id=customer.account_id,
+        offset=1,
+        limit=1,
+    )
+
+    assert page.total == 3
+    assert len(page.items) == 1
 
 
 async def test_cancel_sale_admin(
@@ -194,7 +230,7 @@ async def test_cancel_sale_admin(
     orders = await order_service.list_orders(
         token=event_admin_token, node_id=event_node.id, customer_account_id=customer.account_id
     )
-    cancel_orders = [order for order in orders if order.order_type == OrderType.cancel_sale]
+    cancel_orders = [order for order in orders.items if order.order_type == OrderType.cancel_sale]
     assert len(cancel_orders) == 1
     assert cancel_orders[0].cancels_order == completed_sale.id
 

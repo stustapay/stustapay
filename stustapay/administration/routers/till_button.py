@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTillService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.till import NewTillButton, TillButton
 
 router = APIRouter(
@@ -12,9 +11,9 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[TillButton, int])
+@router.get("", response_model=list[TillButton])
 async def list_till_buttons(token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    return normalize_list(await till_service.layout.list_buttons(token=token, node_id=node_id))
+    return await till_service.layout.list_buttons(token=token, node_id=node_id)
 
 
 @router.post("", response_model=NewTillButton)
@@ -22,15 +21,6 @@ async def create_till_button(
     button: NewTillButton, token: CurrentAuthToken, till_service: ContextTillService, node_id: int
 ):
     return await till_service.layout.create_button(token=token, button=button, node_id=node_id)
-
-
-@router.get("/{button_id}", response_model=TillButton)
-async def get_till_button(button_id: int, token: CurrentAuthToken, till_service: ContextTillService, node_id: int):
-    till = await till_service.layout.get_button(token=token, button_id=button_id, node_id=node_id)
-    if till is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    return till
 
 
 @router.post("/{button_id}", response_model=TillButton)

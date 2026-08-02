@@ -1,18 +1,15 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import {
-  UserTagVariant,
-  selectUserTagVariantAll,
-  useDeleteUserTagVariantMutation,
-  useListUserTagVariantsQuery,
-} from "@/api";
 import { UserTagVariantRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { getUserTagVariantCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilegeAtNode } from "@/hooks";
 
 export const UserTagVariantList: React.FC = () => {
@@ -22,16 +19,10 @@ export const UserTagVariantList: React.FC = () => {
   const canManageUserTagVariantsAtNode = useCurrentUserHasPrivilegeAtNode(UserTagVariantRoutes.privilege);
   const openModal = useOpenModal();
 
-  const { userTagVariants, isLoading } = useListUserTagVariantsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        userTagVariants: data ? selectUserTagVariantAll(data) : [],
-      }),
-    }
+  const { data: userTagVariants, isLoading } = useLiveQuery(
+    (q) => q.from({ userTagVariants: getUserTagVariantCollection(currentNode.id) }),
+    [currentNode.id]
   );
-  const [deleteUserTagVariant] = useDeleteUserTagVariantMutation();
 
   const openConfirmDeleteDialog = (userTagVariantId: number) => {
     openModal({
@@ -39,15 +30,13 @@ export const UserTagVariantList: React.FC = () => {
       title: t("userTagVariant.delete"),
       content: t("userTagVariant.deleteDescription"),
       onConfirm: () => {
-        deleteUserTagVariant({ nodeId: currentNode.id, userTagVariantId })
-          .unwrap()
-          .catch(() => undefined);
+        getUserTagVariantCollection(currentNode.id).delete(userTagVariantId);
         return true;
       },
     });
   };
 
-  const columns: GridColDef<UserTagVariant>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof userTagVariants>>>[] = [
     {
       field: "variant_name",
       headerName: t("userTagVariant.name"),
@@ -97,7 +86,7 @@ export const UserTagVariantList: React.FC = () => {
         rows={userTagVariants ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

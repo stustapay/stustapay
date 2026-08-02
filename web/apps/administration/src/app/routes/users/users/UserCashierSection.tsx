@@ -1,76 +1,53 @@
 import { Box, Typography } from "@mui/material";
 import { Loading } from "@stustapay/components";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  selectCashierShiftAll,
-  selectCashRegisterById,
-  useGetCashierShiftsQuery,
-  useListCashRegistersAdminQuery,
-  User,
-} from "@/api";
+import { User } from "@/api";
 import { CashRegistersRoutes, UserRoutes } from "@/app/routes";
 import { CashierShiftTable } from "@/app/routes/cashiers";
 import { ButtonLink, DetailField, DetailNumberField, DetailView } from "@/components";
+import { getCashRegisterCollection } from "@/db/collections";
 
-export const isActiveCashier = (cashier: User, shiftCount: number): boolean => {
-  return cashier.cash_register_id != null || shiftCount > 0;
+export const isActiveCashier = (cashier: User): boolean => {
+  return cashier.cash_register_id != null;
 };
 
 export const UserCashierSection: React.FC<{ cashier: User }> = ({ cashier }) => {
   const { t } = useTranslation();
 
   const {
-    cashierShifts,
-    isLoading: isShiftsLoading,
-    error: shiftsError,
-  } = useGetCashierShiftsQuery(
-    { nodeId: cashier.node_id, cashierId: cashier.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        cashierShifts: data ? selectCashierShiftAll(data) : undefined,
-      }),
-    }
+    data: register,
+    isLoading: isRegisterLoading,
+    isError: registerError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ registers: getCashRegisterCollection(cashier.node_id) })
+        .where(({ registers }) => eq(registers.id, cashier.cash_register_id ?? -1))
+        .findOne(),
+    [cashier.node_id, cashier.cash_register_id]
   );
-  const {
-    data: registers,
-    isLoading: isRegistersLoading,
-    error: registerError,
-  } = useListCashRegistersAdminQuery({ nodeId: cashier.node_id });
 
-  if (shiftsError || registerError) {
+  if (registerError) {
     return null;
   }
 
-  if (!cashierShifts || !registers || isShiftsLoading || isRegistersLoading) {
+  if (cashier.cash_register_id != null && (isRegisterLoading || !register)) {
     return <Loading />;
   }
 
-  if (!isActiveCashier(cashier, cashierShifts.length)) {
-    return null;
+  if (!isActiveCashier(cashier)) {
+    return <CashierShiftTable cashierId={cashier.id} showCashRegisterColumn hideWhenEmpty />;
   }
-
-  const renderRegister = (id?: number | null) => {
-    if (id == null) {
-      return "";
-    }
-
-    const register = selectCashRegisterById(registers, id);
-    if (!register) {
-      return "";
-    }
-
-    return register.name;
-  };
 
   return (
     <DetailView>
       <Typography variant="h6" sx={{ p: 1 }}>
         {t("cashier.cashierInfo")}
       </Typography>
-      {cashier.cash_register_id != null && (
+      {register != null && (
         <>
           <DetailNumberField
             label={t("cashier.cashDrawerBalance")}
@@ -87,8 +64,8 @@ export const UserCashierSection: React.FC<{ cashier: User }> = ({ cashier }) => 
           />
           <DetailField
             label={t("cashier.cashRegister")}
-            value={renderRegister(cashier.cash_register_id)}
-            linkTo={CashRegistersRoutes.detail(cashier.cash_register_id)}
+            value={register.name}
+            linkTo={CashRegistersRoutes.detail(register.id, register.node_id)}
           />
         </>
       )}
@@ -96,7 +73,7 @@ export const UserCashierSection: React.FC<{ cashier: User }> = ({ cashier }) => 
         {t("cashier.shifts")}
       </Typography>
       <Box sx={{ p: 2 }}>
-        <CashierShiftTable cashierShifts={cashierShifts} showCashRegisterColumn />
+        <CashierShiftTable cashierId={cashier.id} showCashRegisterColumn />
       </Box>
     </DetailView>
   );

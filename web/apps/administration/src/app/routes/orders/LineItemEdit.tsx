@@ -17,13 +17,15 @@ import {
   TableRow,
 } from "@mui/material";
 import { Loading, NumericInput } from "@stustapay/components";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 
-import { Order, Product, selectProductAll, useEditOrderMutation, useListProductsQuery } from "@/api";
+import { Order, Product, useEditOrderMutation } from "@/api";
 import { OrderRoutes } from "@/app/routes";
+import { getProductCollection } from "@/db/collections";
 import { useCurrencyFormatter, useCurrencySymbol, useCurrentNode } from "@/hooks";
 
 interface SelectedProduct {
@@ -43,20 +45,19 @@ export const LineItemEdit: React.FC<LineItemEditProps> = ({ order }) => {
   const [selectedProducts, setSelectedProducts] = React.useState<SelectedProduct[]>([]);
   const navigate = useNavigate();
 
-  const { products } = useListProductsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        products: data ? selectProductAll(data) : undefined,
-      }),
-    }
+  const { data: products } = useLiveQuery(
+    (q) => q.from({ products: getProductCollection(currentNode.id) }),
+    [currentNode.id]
   );
   const [editSale] = useEditOrderMutation();
 
   React.useEffect(() => {
     setSelectedProducts(
-      order.line_items.map((li) => ({ product: li.product, quantity: li.quantity, price: li.product_price }))
+      order.line_items.map((li) => ({
+        product: li.product,
+        quantity: li.quantity,
+        price: li.product_price,
+      }))
     );
   }, [order]);
 

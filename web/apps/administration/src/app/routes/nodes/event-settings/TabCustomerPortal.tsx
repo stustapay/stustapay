@@ -49,10 +49,10 @@ export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSett
   );
 };
 
-export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: RestrictedEventSettings }> = ({
-  nodeId,
-  eventSettings,
-}) => {
+export const TabCustomerPortal: React.FC<{
+  nodeId: number;
+  eventSettings: RestrictedEventSettings;
+}> = ({ nodeId, eventSettings }) => {
   const { t } = useTranslation();
   const [updateEvent] = useUpdateEventMutation();
 

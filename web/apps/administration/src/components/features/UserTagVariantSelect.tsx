@@ -1,7 +1,9 @@
 import { Select, SelectProps } from "@stustapay/components";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 
-import { UserTagVariant, selectUserTagVariantAll, useListUserTagVariantsQuery } from "@/api";
+import { UserTagVariant } from "@/db/api/generated";
+import { getUserTagVariantCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 type UserTagVariantSelectBaseProps = {
@@ -34,25 +36,21 @@ export function UserTagVariantSelect(props: UserTagVariantSelectSingleProps): Re
 export function UserTagVariantSelect(props: UserTagVariantSelectProps) {
   const { currentNode } = useCurrentNode();
   const nodeId = props.nodeId ?? currentNode.id;
-  const { userTagVariants, isLoading } = useListUserTagVariantsQuery(
-    { nodeId },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        userTagVariants: data ? selectUserTagVariantAll(data) : [],
-      }),
-    }
+  const { data: userTagVariants, isLoading } = useLiveQuery(
+    (q) => q.from({ userTagVariants: getUserTagVariantCollection(nodeId) }),
+    [nodeId]
   );
 
   if (props.multiple) {
     const { value, onChange, nodeId: _nodeId, ...rest } = props;
-    const selected = userTagVariants.filter((variant) => value.includes(variant.id));
+    const variants = userTagVariants ?? [];
+    const selected = variants.filter((variant) => value.includes(variant.id));
 
     return (
       <Select
         checkboxes
         loading={isLoading}
-        options={userTagVariants}
+        options={variants}
         formatOption={formatUserTagVariant}
         value={selected}
         onChange={(selectedValue) =>
@@ -65,13 +63,14 @@ export function UserTagVariantSelect(props: UserTagVariantSelectProps) {
   }
 
   const { value, onChange, nodeId: _nodeId, ...rest } = props;
-  const selected = userTagVariants.find((variant) => variant.id === value) ?? null;
+  const variants = userTagVariants ?? [];
+  const selected = variants.find((variant) => variant.id === value) ?? null;
 
   return (
     <Select
       loading={isLoading}
       multiple={false}
-      options={userTagVariants}
+      options={variants}
       formatOption={formatUserTagVariant}
       value={selected}
       onChange={(selectedValue) => onChange((selectedValue as UserTagVariant | null)?.id ?? null)}

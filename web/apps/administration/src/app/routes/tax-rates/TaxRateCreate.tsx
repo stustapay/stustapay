@@ -2,9 +2,9 @@ import { TaxRate, TaxRateSchema } from "@stustapay/models";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCreateTaxRateMutation } from "@/api";
 import { TaxRateRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { CreateLayoutV2 } from "@/components";
+import { generateId, getTaxRateCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { TaxRateForm } from "./TaxRateForm";
@@ -19,15 +19,20 @@ const initialValues: TaxRate = {
 export const TaxRateCreate: React.FC = () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const [createTaxRate] = useCreateTaxRateMutation();
 
   return (
-    <CreateLayout
+    <CreateLayoutV2
       title={t("createTaxRate")}
       successRoute={TaxRateRoutes.list()}
       initialValues={initialValues}
       validationSchema={TaxRateSchema}
-      onSubmit={(taxRate) => createTaxRate({ nodeId: currentNode.id, newTaxRate: taxRate })}
+      onSubmit={(t) =>
+        getTaxRateCollection(currentNode.id).insert({
+          ...t,
+          id: generateId(),
+          node_id: currentNode.id,
+        })
+      }
       form={TaxRateForm}
     />
   );

@@ -2,23 +2,16 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { getUserName } from "@stustapay/models";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, materialize, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  Terminal,
-  selectTerminalAll,
-  selectTillById,
-  selectUserById,
-  useDeleteTerminalMutation,
-  useListTerminalsQuery,
-  useListTillsQuery,
-  useListUsersQuery,
-} from "@/api";
-import { TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
+import { TerminalRoutes, TillRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { UserCell, userValueGetter } from "@/components/table/UserCell";
+import { getTerminalCollection, getTillCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const TerminalList: React.FC = () => {
@@ -29,48 +22,31 @@ export const TerminalList: React.FC = () => {
   const navigate = useNavigate();
   const openModal = useOpenModal();
 
-  const { terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        terminals: data ? selectTerminalAll(data) : undefined,
-      }),
-    }
+  const { data: terminals, isLoading: isTerminalsLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ terminals: getTerminalCollection(currentNode.id) })
+        .join(
+          { tills: getTillCollection(currentNode.id) },
+          ({ tills, terminals }) => eq(terminals.till_id, tills.id),
+          "left" as const
+        )
+        .select(({ terminals: terminalRow, tills }) => ({
+          ...terminalRow,
+          till: tills,
+          user: materialize(
+            q
+              .from({ users: getUserCollection(currentNode.id) })
+              .where(({ users }) =>
+                terminalRow.active_user_id != null ? eq(users.id, terminalRow.active_user_id) : eq(users.id, -1)
+              )
+              .select(({ users }) => users)
+              .findOne()
+          ),
+        })),
+    [currentNode.id]
   );
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const [deleteTerminal] = useDeleteTerminalMutation();
   const { dataGridNodeColumn } = useRenderNode();
-
-  const renderTill = (id: number | null) => {
-    if (id == null || !tills) {
-      return "";
-    }
-    const till = selectTillById(tills, id);
-    if (!till) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={TillRoutes.detail(till.id, till.node_id)}>
-        {till.name}
-      </Link>
-    );
-  };
-
-  const renderUser = (id?: number | null) => {
-    if (!id || !users) {
-      return "";
-    }
-
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return getUserName(user);
-  };
 
   const openConfirmDeleteDialog = (terminalId: number) => {
     openModal({
@@ -78,15 +54,13 @@ export const TerminalList: React.FC = () => {
       title: t("terminal.delete"),
       content: t("terminal.deleteDescription"),
       onConfirm: () => {
-        deleteTerminal({ nodeId: currentNode.id, terminalId })
-          .unwrap()
-          .catch(() => undefined);
+        getTerminalCollection(currentNode.id).delete(terminalId);
         return true;
       },
     });
   };
 
-  const columns: GridColDef<Terminal>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof terminals>>>[] = [
     {
       field: "name",
       headerName: t("common.name"),
@@ -103,18 +77,19 @@ export const TerminalList: React.FC = () => {
       field: "active_user_id",
       headerName: t("till.activeUser"),
       flex: 1,
-      valueGetter: (value) => renderUser(value),
-      renderCell: ({ row }) => (
-        <Link component={RouterLink} to={UserRoutes.detail(row.active_user_id)}>
-          {renderUser(row.active_user_id)}
-        </Link>
-      ),
+      valueGetter: (_, row) => userValueGetter(row.user),
+      renderCell: ({ row }) => <UserCell user={row.user} nodeId={row.node_id} />,
     },
     {
       field: "till_id",
       headerName: t("terminal.till"),
       flex: 0.5,
-      renderCell: (params) => renderTill(params.row.till_id),
+      renderCell: (params) =>
+        params.row.till ? (
+          <Link component={RouterLink} to={TillRoutes.detail(params.row.till.id, params.row.till.node_id)}>
+            {params.row.till.name}
+          </Link>
+        ) : null,
     },
     {
       field: "last_seen",
@@ -160,11 +135,11 @@ export const TerminalList: React.FC = () => {
   return (
     <ListLayout title={t("terminal.terminals")} routes={TerminalRoutes}>
       <DataGrid
-        loading={isTerminalsLoading || isTillsLoading || isUsersLoading}
+        loading={isTerminalsLoading}
         rows={terminals ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

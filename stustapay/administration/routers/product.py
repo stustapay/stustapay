@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, status
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextProductService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.product import NewProduct, Product
 
 router = APIRouter(
@@ -12,10 +11,10 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[Product, int])
+@router.get("", response_model=list[Product])
 async def list_products(token: CurrentAuthToken, product_service: ContextProductService, node_id: int, show_all=False):
-    return normalize_list(
-        await product_service.list_products(token=token, node_id=node_id, include_tickets_and_special_products=show_all)
+    return await product_service.list_products(
+        token=token, node_id=node_id, include_tickets_and_special_products=show_all
     )
 
 
@@ -24,15 +23,6 @@ async def create_product(
     product: NewProduct, token: CurrentAuthToken, product_service: ContextProductService, node_id: int
 ):
     return await product_service.create_product(token=token, product=product, node_id=node_id)
-
-
-@router.get("/{product_id}", response_model=Product)
-async def get_product(product_id: int, token: CurrentAuthToken, product_service: ContextProductService, node_id: int):
-    product = await product_service.get_product(token=token, product_id=product_id, node_id=node_id)
-    if product is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    return product
 
 
 @router.post("/{product_id}", response_model=Product)

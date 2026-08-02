@@ -148,7 +148,7 @@ export function StockingMakeupFormTable<T extends StockingDenominationValues>({
       slots={{
         toolbar: () => <DataGridTitle title={title} />,
       }}
-      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 }

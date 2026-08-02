@@ -4,19 +4,29 @@ import {
   ConfirmationNumber as TicketIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { GridRenderCellParams } from "@mui/x-data-grid";
+import { GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { Order, selectTillById, selectUserById, useListTillsQuery, useListUsersQuery } from "@/api";
+import { Order } from "@/api";
 import { OrderRoutes, TillRoutes, UserRoutes } from "@/app/routes";
+import {
+  DEFAULT_PAGE_SIZE,
+  getOrderCollection,
+  getTillCollection,
+  getUserCollection,
+  usePaginatedQueryTotal,
+} from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export interface OrderListProps {
-  orders: Order[];
+  orders?: Order[];
+  tillId?: number;
+  customerAccountId?: number;
   showShadow?: boolean;
   showTillColumn?: boolean;
   showCashierColumn?: boolean;
@@ -33,22 +43,63 @@ const orderTypeToIcon: Record<string, React.ReactElement> = {
 };
 
 export const OrderTable: React.FC<OrderListProps> = ({
-  orders,
+  orders: ordersProp,
+  tillId,
+  customerAccountId,
   showShadow = false,
   showTillColumn = false,
   showCashierColumn = false,
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const usesCollection = ordersProp == null && (tillId != null || customerAccountId != null);
+  const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>({
+    page: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
+
+  const {
+    data: queriedOrders,
+    isLoading: isOrdersLoading,
+    isError: isOrdersError,
+  } = useLiveQuery(
+    (q) => {
+      if (!usesCollection) {
+        return undefined;
+      }
+
+      let query = q.from({ orders: getOrderCollection(currentNode.id) });
+      if (tillId != null) {
+        query = query.where(({ orders }) => eq(orders.till_id, tillId));
+      }
+      if (customerAccountId != null) {
+        query = query.where(({ orders }) => eq(orders.customer_account_id, customerAccountId));
+      }
+      return query
+        .orderBy(({ orders }) => orders.booked_at, "desc")
+        .offset(paginationModel.page * paginationModel.pageSize)
+        .limit(paginationModel.pageSize);
+    },
+    [usesCollection, currentNode.id, tillId, customerAccountId, paginationModel.page, paginationModel.pageSize]
+  );
+
+  const total = usePaginatedQueryTotal(currentNode.id, "orders");
+  const orders = usesCollection ? (queriedOrders ?? []) : (ordersProp ?? []);
+  const { data: users, isLoading: isUsersLoading } = useLiveQuery(
+    (q) => q.from({ users: getUserCollection(currentNode.id) }),
+    [currentNode.id]
+  );
+  const { data: tills, isLoading: isTillsLoading } = useLiveQuery(
+    (q) => q.from({ tills: getTillCollection(currentNode.id) }),
+    [currentNode.id]
+  );
 
   const getUsernameForUser = (id?: number | null) => {
     if (id == null || users == null) {
       return "";
     }
 
-    const user = selectUserById(users, id);
+    const user = users.find((u) => u.id === id);
     if (!user) {
       return "";
     }
@@ -63,7 +114,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
       renderCell: ({ row }) => {
         let nodeId = null;
         if (row.till_id != null) {
-          nodeId = tills ? selectTillById(tills, row.till_id)?.node_id : null;
+          nodeId = tills?.find((till) => till.id === row.till_id)?.node_id ?? null;
         }
         return (
           <Link component={RouterLink} to={OrderRoutes.detail(row.id, nodeId)}>
@@ -124,7 +175,7 @@ export const OrderTable: React.FC<OrderListProps> = ({
               }
               return (
                 <RouterLink to={TillRoutes.detail(row.till_id)}>
-                  {tills ? selectTillById(tills, row.till_id)?.name : null}
+                  {tills?.find((till) => till.id === row.till_id)?.name ?? null}
                 </RouterLink>
               );
             },
@@ -159,15 +210,24 @@ export const OrderTable: React.FC<OrderListProps> = ({
     },
   ];
 
+  if (usesCollection && isOrdersError) {
+    return null;
+  }
+
   return (
     <DataGrid
       autoHeight
-      loading={isUsersLoading || isTillsLoading}
-      rows={orders ?? []}
+      loading={isUsersLoading || isTillsLoading || (usesCollection && isOrdersLoading)}
+      rows={orders}
+      rowCount={usesCollection ? total : orders.length}
+      paginationMode={usesCollection ? "server" : "client"}
+      paginationModel={usesCollection ? paginationModel : undefined}
+      onPaginationModelChange={usesCollection ? setPaginationModel : undefined}
+      pageSizeOptions={[10, 25, 50, 100]}
       slots={{ toolbar: () => <DataGridTitle title={t("orders")} /> }}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ p: 1, boxShadow: showShadow ? (theme) => theme.shadows[1] : undefined }}
+      sx={{ boxShadow: showShadow ? (theme) => theme.shadows[1] : undefined }}
     />
   );
 };

@@ -15,7 +15,9 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(NodePrivilege.n
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
 
-  const { data: checkouts, isLoading } = useListSumupTransactionsQuery({ nodeId: currentNode.id });
+  const { data: checkouts, isLoading } = useListSumupTransactionsQuery({
+    nodeId: currentNode.id,
+  });
 
   const columns: GridColDef<SumUpTransaction>[] = [
     {
@@ -53,7 +55,7 @@ export const SumUpTransactionList: React.FC = withPrivilegeGuard(NodePrivilege.n
             sortModel: [{ field: "timestamp", sort: "desc" }],
           },
         }}
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 
 import { withPrivilegeGuard } from "@/app/layout";
 import { TicketRoutes } from "@/app/routes";
-import { CreateLayout } from "@/components";
+import { CreateLayoutV2 } from "@/components";
+import { generateId, getTicketCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
-import { useCreateTicketMutation } from "../../../api";
 import { TicketForm } from "./TicketForm";
 
 const initialValues: NewTicket = {
@@ -22,15 +22,25 @@ const initialValues: NewTicket = {
 export const TicketCreate: React.FC = withPrivilegeGuard("node_administration", () => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const [createTicket] = useCreateTicketMutation();
 
   return (
-    <CreateLayout
+    <CreateLayoutV2
       title={t("ticket.create")}
       successRoute={TicketRoutes.list()}
       initialValues={initialValues}
       validationSchema={NewTicketSchema}
-      onSubmit={(ticket) => createTicket({ nodeId: currentNode.id, newTicket: ticket })}
+      onSubmit={(ticket) =>
+        getTicketCollection(currentNode.id).insert({
+          ...ticket,
+          id: generateId(),
+          node_id: currentNode.id,
+          user_tag_variant_ids: ticket.user_tag_variant_ids ?? [],
+          is_locked: ticket.is_locked ?? false,
+          tax_name: "",
+          tax_rate: 0,
+          total_price: 0,
+        })
+      }
       form={TicketForm}
     />
   );

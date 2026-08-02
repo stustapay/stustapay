@@ -1,4 +1,4 @@
-import { CashRegisterStocking, NewCashRegisterStocking } from "@/api";
+import { CashRegisterStocking, NewCashRegisterStocking } from "@/db/api/generated";
 
 export type CashRegisterStockingDenominationField = (typeof cashRegisterStockingDenominationFields)[number];
 

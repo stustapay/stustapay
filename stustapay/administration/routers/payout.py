@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextCustomerService, ContextMailService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.payout import (
     NewPayoutRun,
     Payout,
@@ -20,9 +19,9 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=NormalizedList[PayoutRunWithStats, int])
+@router.get("/", response_model=list[PayoutRunWithStats])
 async def list_payout_runs(token: CurrentAuthToken, customer_service: ContextCustomerService, node_id: int):
-    return normalize_list(await customer_service.payout.list_payout_runs(token=token, node_id=node_id))
+    return await customer_service.payout.list_payout_runs(token=token, node_id=node_id)
 
 
 @router.post("/", response_model=PayoutRunWithStats)

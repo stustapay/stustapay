@@ -3,21 +3,16 @@ import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
 import { getUserName } from "@stustapay/models";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, materialize, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  selectUserById,
-  selectUserRoleById,
-  useListUsersQuery,
-  useListUserRolesQuery,
-  useListUserToRoleQuery,
-  UserToRoles,
-  useUpdateUserToRolesMutation,
-} from "@/api";
-import { UserRoleRoutes, UserRoutes, UserToRoleRoutes } from "@/app/routes";
+import { UserRoleRoutes, UserToRoleRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { UserCell, userValueGetter } from "@/components/table/UserCell";
+import { getUserCollection, getUserRoleCollection, getUserToRoleCollection, getUserToRoleKey } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useRenderNode } from "@/hooks";
 
 export const UserToRoleList: React.FC = () => {
@@ -25,77 +20,61 @@ export const UserToRoleList: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const canManageNode = useCurrentUserHasPrivilege(UserToRoleRoutes.privilege);
 
-  const { data: userToRoles, isLoading } = useListUserToRoleQuery({ nodeId: currentNode.id });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: userRoles, isLoading: isUserRolesLoading } = useListUserRolesQuery({
-    nodeId: currentNode.id,
-  });
-  const [updateUserToRoles] = useUpdateUserToRolesMutation();
+  const { data: userToRoles, isLoading } = useLiveQuery(
+    (q) =>
+      q.from({ userToRole: getUserToRoleCollection(currentNode.id) }).select(({ userToRole }) => ({
+        ...userToRole,
+        user: materialize(
+          q
+            .from({ users: getUserCollection(currentNode.id) })
+            .where(({ users }) => eq(users.id, userToRole.user_id))
+            .select(({ users }) => users)
+            .findOne()
+        ),
+      })),
+    [currentNode.id]
+  );
+  const { data: userRoles, isLoading: isUserRolesLoading } = useLiveQuery(
+    (q) => q.from({ userRoles: getUserRoleCollection(currentNode.id) }),
+    [currentNode.id]
+  );
   const { dataGridNodeColumn } = useRenderNode();
   const openModal = useOpenModal();
   const navigate = useNavigate();
 
-  const getUserDisplayName = (userId: number) => {
-    const user = users ? selectUserById(users, userId) : undefined;
-    return user ? getUserName(user) : String(userId);
-  };
+  type UserToRoleRow = ArrayElement<NonNullable<typeof userToRoles>>;
+
+  const roleById = React.useMemo(() => new Map(userRoles?.map((role) => [role.id, role])), [userRoles]);
 
   const getRoleNames = (roleIds: number[]) => {
-    if (!userRoles) {
-      return "";
-    }
     return roleIds
-      .map((id) => selectUserRoleById(userRoles, id)?.name)
+      .map((id) => roleById.get(id)?.name)
       .filter((name): name is string => name != null)
       .toSorted((lhs, rhs) => lhs.toLowerCase().localeCompare(rhs.toLowerCase()))
       .join(", ");
   };
 
-  const openConfirmDeleteDialog = (userToRole: UserToRoles) => {
-    if (userToRole.node_id !== currentNode.id) {
+  const openConfirmDeleteDialog = (row: UserToRoleRow) => {
+    if (row.node_id !== currentNode.id) {
       return;
     }
     openModal({
       type: "confirm",
       title: t("userToRole.deleteAssociation"),
       content: t("userToRole.deleteAssociationDescription", {
-        userName: getUserDisplayName(userToRole.user_id),
+        userName: getUserName(row.user),
         nodeName: currentNode.name,
-        roles: getRoleNames(userToRole.role_ids),
+        roles: getRoleNames(row.role_ids),
       }),
       onConfirm: () => {
-        updateUserToRoles({
-          nodeId: currentNode.id,
-          newUserToRoles: { user_id: userToRole.user_id, role_ids: [] },
-        })
-          .unwrap()
-          .catch(() => undefined);
+        getUserToRoleCollection(currentNode.id).delete(getUserToRoleKey(row.node_id, row.user_id));
       },
     });
   };
 
-  const renderUser = (id: number) => {
-    if (!users) {
-      return "";
-    }
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={UserRoutes.detail(id, user.node_id)}>
-        {getUserName(user)}
-      </Link>
-    );
-  };
-
   const renderRoles = (ids: number[]) => {
-    if (!userRoles) {
-      return "";
-    }
     const roles = ids
-      .map((id) => selectUserRoleById(userRoles, id))
+      .map((id) => roleById.get(id))
       .filter((role) => role != null)
       .toSorted((lhs, rhs) => lhs.name.toLowerCase().localeCompare(rhs.name.toLowerCase()));
 
@@ -113,12 +92,13 @@ export const UserToRoleList: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<UserToRoles>[] = [
+  const columns: GridColDef<UserToRoleRow>[] = [
     {
       field: "user_id",
       headerName: t("userToRole.user"),
       flex: 1,
-      renderCell: (params) => renderUser(params.row.user_id),
+      valueGetter: (_, row) => userValueGetter(row.user),
+      renderCell: ({ row }) => <UserCell user={row.user} nodeId={row.node_id} />,
     },
     {
       field: "role_ids",
@@ -158,12 +138,12 @@ export const UserToRoleList: React.FC = () => {
     <ListLayout title={t("userToRoles")} routes={UserToRoleRoutes}>
       <DataGrid
         autoHeight
-        loading={isLoading || isUsersLoading || isUserRolesLoading}
-        getRowId={(row) => `${row.node_id}-${row.user_id}`}
+        loading={isLoading || isUserRolesLoading}
+        getRowId={(row) => getUserToRoleKey(row.node_id, row.user_id)}
         rows={userToRoles ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
         initialState={{
           sorting: {
             sortModel: [{ field: "user_id", sort: "asc" }],

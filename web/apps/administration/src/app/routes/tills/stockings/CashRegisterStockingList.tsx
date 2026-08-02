@@ -2,18 +2,15 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { ArrayElement } from "@stustapay/utils";
+import { useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import {
-  CashRegisterStocking,
-  selectCashRegisterStockingAll,
-  useDeleteRegisterStockingMutation,
-  useListRegisterStockingsQuery,
-} from "@/api";
 import { TillStockingsRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import { getCashRegisterStockingCollection } from "@/db/collections";
 import { useCurrentNode, useCurrentUserHasPrivilege, useCurrentUserHasPrivilegeAtNode, useRenderNode } from "@/hooks";
 
 export const CashRegisterStockingList: React.FC = () => {
@@ -25,16 +22,10 @@ export const CashRegisterStockingList: React.FC = () => {
   const openModal = useOpenModal();
   const { dataGridNodeColumn } = useRenderNode();
 
-  const { stockings, isLoading } = useListRegisterStockingsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        stockings: data ? selectCashRegisterStockingAll(data) : undefined,
-      }),
-    }
+  const { data: stockings, isLoading } = useLiveQuery(
+    (q) => q.from({ stockings: getCashRegisterStockingCollection(currentNode.id) }),
+    [currentNode.id]
   );
-  const [deleteStocking] = useDeleteRegisterStockingMutation();
 
   const openConfirmDeleteDialog = (stockingId: number) => {
     openModal({
@@ -42,14 +33,12 @@ export const CashRegisterStockingList: React.FC = () => {
       title: t("register.deleteStocking"),
       content: t("register.deleteStockingDescription"),
       onConfirm: () => {
-        deleteStocking({ nodeId: currentNode.id, stockingId })
-          .unwrap()
-          .catch(() => undefined);
+        getCashRegisterStockingCollection(currentNode.id).delete(stockingId);
       },
     });
   };
 
-  const columns: GridColDef<CashRegisterStocking>[] = [
+  const columns: GridColDef<ArrayElement<NonNullable<typeof stockings>>>[] = [
     {
       field: "name",
       headerName: t("register.name"),
@@ -101,7 +90,7 @@ export const CashRegisterStockingList: React.FC = () => {
         rows={stockings ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

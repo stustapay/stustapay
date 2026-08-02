@@ -40,3 +40,23 @@ sync-contract: generate-openapi
 	cd web && npx nx run administration:generate-openapi
 	cd web && npx nx run customerportal:generate-openapi
 	cd app && ./gradlew api
+	$(MAKE) sync-contract-precommit
+
+CONTRACT_PATHS = \
+	api \
+	app/api \
+	web/apps/administration/src/api/generated \
+	web/apps/administration/src/db/api/generated \
+	web/apps/customerportal/src/api/generated
+
+.PHONY: sync-contract-precommit
+sync-contract-precommit:
+	files="$$( { \
+		git diff --name-only --diff-filter=ACMR -- $(CONTRACT_PATHS); \
+		git diff --cached --name-only --diff-filter=ACMR -- $(CONTRACT_PATHS); \
+		git ls-files --others --exclude-standard -- $(CONTRACT_PATHS); \
+	} | sort -u )"; \
+	if [ -n "$$files" ]; then \
+		echo "$$files" | xargs uv run pre-commit run --files; \
+		echo "$$files" | xargs uv run pre-commit run --files; \
+	fi

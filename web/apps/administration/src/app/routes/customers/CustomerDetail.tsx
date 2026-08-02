@@ -9,11 +9,9 @@ import { toast } from "react-toastify";
 
 import {
   Customer,
-  selectOrderAll,
   useAllowCustomerPayoutMutation,
   useDisableAccountMutation,
   useGetCustomerQuery,
-  useListOrdersQuery,
   usePreventCustomerPayoutMutation,
   useUpdateAccountCommentMutation,
 } from "@/api";
@@ -114,20 +112,6 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
   const [balanceModalOpen, setBalanceModalOpen] = React.useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = React.useState(false);
 
-  const {
-    orders,
-    error: orderError,
-    isLoading: isOrdersLoading,
-  } = useListOrdersQuery(
-    { nodeId: currentNode.id, customerAccountId: Number(customerId) },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        orders: data ? selectOrderAll(data) : undefined,
-      }),
-    }
-  );
-
   if (isAccountLoading || (!customer && !error)) {
     return <Loading />;
   }
@@ -135,16 +119,6 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
   if (error || !customer) {
     toast.error("Error loading account");
     navigate(CustomerRoutes.list());
-    return null;
-  }
-
-  if (isOrdersLoading || (!orders && !orderError)) {
-    return <Loading />;
-  }
-
-  if (orderError || !orders) {
-    toast.error("Error loading account");
-    navigate(-1);
     return null;
   }
 
@@ -249,7 +223,7 @@ export const CustomerDetail = withPrivilegeGuard(NodePrivilege.node_administrati
         open={voucherModalOpen}
         handleClose={() => setVoucherModalOpen(false)}
       />
-      <OrderTable orders={orders} showCashierColumn showTillColumn />
+      <OrderTable customerAccountId={Number(customerId)} showCashierColumn showTillColumn />
     </DetailLayout>
   );
 });

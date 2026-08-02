@@ -2,14 +2,23 @@ import { Loading } from "@stustapay/components";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
 import { UserTagDetail as UserTagDetailType, formatUserTagUid } from "@stustapay/models";
 import { ArrayElement } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { useGetUserTagDetailQuery, useUpdateUserTagCommentMutation } from "@/api";
-import { CustomerRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailDateField, DetailField, DetailLayout, DetailView, EditableListItem } from "@/components";
+import { CustomerRoutes, UserTagRoutes } from "@/app/routes";
+import {
+  DetailDateField,
+  DetailField,
+  DetailLayout,
+  DetailView,
+  EditableListItem,
+  UserDetailField,
+} from "@/components";
+import { getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 type History = UserTagDetailType["account_history"];
@@ -26,6 +35,14 @@ export const UserTagDetail: React.FC = () => {
     nodeId: currentNode.id,
     userTagId: Number(userTagId),
   });
+  const { data: user } = useLiveQuery(
+    (q) =>
+      q
+        .from({ users: getUserCollection(currentNode.id) })
+        .where(({ users }) => eq(users.id, data?.user_id ?? -1))
+        .findOne(),
+    [currentNode.id, data?.user_id]
+  );
 
   if (isLoading || (!data && !error)) {
     return <Loading />;
@@ -81,7 +98,7 @@ export const UserTagDetail: React.FC = () => {
           <DetailField label={t("userTag.noAccount")} />
         )}
         {data.user_id != null ? (
-          <DetailField label={t("userTag.user")} value={data.user_id} linkTo={UserRoutes.detail(data.user_id)} />
+          <UserDetailField label={t("userTag.user")} user={user} fallbackNodeId={currentNode.id} />
         ) : (
           <DetailField label={t("userTag.noUser")} />
         )}
@@ -93,7 +110,7 @@ export const UserTagDetail: React.FC = () => {
         rows={data.account_history}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </DetailLayout>
   );

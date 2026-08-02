@@ -2,20 +2,16 @@ import { Delete as DeleteIcon, Edit as EditIcon, PointOfSale as PointOfSaleIcon 
 import { Paper } from "@mui/material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import {
-  selectTerminalById,
-  useDeleteUserMutation,
-  useGetUserQuery,
-  useGetUserVoucherGrantStatsQuery,
-  useListTerminalsQuery,
-} from "@/api";
+import { useGetUserVoucherGrantStatsQuery } from "@/api";
 import { TerminalRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
 import { UserRoleAssignmentsSection } from "@/app/routes/users";
 import { DetailField, DetailLayout, DetailView } from "@/components";
+import { getTerminalCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 import { UserCashierSection } from "./UserCashierSection";
@@ -25,8 +21,18 @@ export const UserDetail: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const { userId } = useParams();
   const navigate = useNavigate();
-  const [deleteUser] = useDeleteUserMutation();
-  const { data: user, error } = useGetUserQuery({ nodeId: currentNode.id, userId: Number(userId) });
+  const {
+    data: user,
+    isLoading: isUserLoading,
+    isError: isUserError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ users: getUserCollection(currentNode.id) })
+        .where(({ users }) => eq(users.id, Number(userId)))
+        .findOne(),
+    [currentNode.id, userId]
+  );
   const { data: voucherGrantStats } = useGetUserVoucherGrantStatsQuery({
     nodeId: currentNode.id,
     userId: Number(userId),
@@ -34,18 +40,11 @@ export const UserDetail: React.FC = () => {
   const {
     data: terminals,
     isLoading: isTerminalsLoading,
-    error: terminalError,
-  } = useListTerminalsQuery({
-    nodeId: currentNode.id,
-  });
+    isError: terminalError,
+  } = useLiveQuery((q) => q.from({ terminals: getTerminalCollection(currentNode.id) }), [currentNode.id]);
   const openModal = useOpenModal();
 
-  const getTerminal = (id: number) => {
-    if (!terminals) {
-      return undefined;
-    }
-    return selectTerminalById(terminals, id);
-  };
+  const getTerminal = (id: number) => terminals?.find((terminal) => terminal.id === id);
 
   const openConfirmDeleteDialog = () => {
     openModal({
@@ -53,15 +52,17 @@ export const UserDetail: React.FC = () => {
       title: t("deleteUser"),
       content: t("deleteUserDescription"),
       onConfirm: () => {
-        deleteUser({ nodeId: currentNode.id, userId: Number(userId) }).then(() => navigate(UserRoutes.list()));
+        getUserCollection(currentNode.id)
+          .delete(Number(userId))
+          .isPersisted.promise.then(() => navigate(UserRoutes.list()));
       },
     });
   };
 
-  if (user === undefined || isTerminalsLoading) {
+  if (isUserLoading || isTerminalsLoading) {
     return <Loading />;
   }
-  if (error || terminalError) {
+  if (isUserError || terminalError || !user) {
     return <Navigate to={UserRoutes.list()} />;
   }
 
@@ -95,7 +96,12 @@ export const UserDetail: React.FC = () => {
           color: "primary",
           icon: <EditIcon />,
         },
-        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+        {
+          label: t("delete"),
+          onClick: openConfirmDeleteDialog,
+          color: "error",
+          icon: <DeleteIcon />,
+        },
       ]}
     >
       <DetailView>

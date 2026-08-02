@@ -1,25 +1,19 @@
 import { Cancel as CancelIcon, Edit as EditIcon, Print as PrintIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
-import { formatUserTagUid, getUserName } from "@stustapay/models";
+import { formatUserTagUid } from "@stustapay/models";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import {
-  selectCashRegisterById,
-  selectTillById,
-  selectUserById,
-  useCancelOrderMutation,
-  useGetOrderQuery,
-  useListCashRegistersAdminQuery,
-  useListTillsQuery,
-  useListUsersQuery,
-} from "@/api";
-import { CashRegistersRoutes, CustomerRoutes, OrderRoutes, TillRoutes, UserRoutes, UserTagRoutes } from "@/app/routes";
-import { DetailField, DetailLayout, DetailNumberField, DetailView } from "@/components";
+import { useCancelOrderMutation, useGetOrderQuery } from "@/api";
+import { CustomerRoutes, OrderRoutes, TillRoutes, UserTagRoutes } from "@/app/routes";
+import { DetailField, DetailLayout, DetailNumberField, DetailView, UserDetailField } from "@/components";
 import { LineItemTable } from "@/components/LineItemTable";
+import { CashRegisterCell } from "@/components/table/CashRegisterCell";
+import { getTillCollection, getUserCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const OrderDetail: React.FC = () => {
@@ -36,17 +30,24 @@ export const OrderDetail: React.FC = () => {
     error,
     isLoading: isOrderLoading,
   } = useGetOrderQuery({ nodeId: currentNode.id, orderId: Number(orderId) });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery({
-    nodeId: currentNode.id,
-  });
+  const { data: tills, isLoading: isTillsLoading } = useLiveQuery(
+    (q) => q.from({ tills: getTillCollection(currentNode.id) }),
+    [currentNode.id]
+  );
+  const { data: cashier } = useLiveQuery(
+    (q) =>
+      q
+        .from({ users: getUserCollection(currentNode.id) })
+        .where(({ users }) => eq(users.id, order?.cashier_id ?? -1))
+        .findOne(),
+    [currentNode.id, order?.cashier_id]
+  );
 
-  if (isOrderLoading || isTillsLoading || isUsersLoading || isRegistersLoading) {
+  if (isOrderLoading || isTillsLoading) {
     return <Loading />;
   }
 
-  if (error || !order || !users || !tills || !registers) {
+  if (error || !order || !tills) {
     navigate(-1);
     return null;
   }
@@ -66,10 +67,7 @@ export const OrderDetail: React.FC = () => {
     });
   };
 
-  const till = order.till_id != null ? selectTillById(tills, order.till_id) : undefined;
-  const cashier = order.cashier_id != null ? selectUserById(users, order.cashier_id) : undefined;
-  const register =
-    order.cash_register_id != null ? selectCashRegisterById(registers, order.cash_register_id) : undefined;
+  const till = order.till_id != null ? tills?.find((t) => t.id === order.till_id) : undefined;
 
   return (
     <DetailLayout
@@ -105,12 +103,8 @@ export const OrderDetail: React.FC = () => {
         <DetailField label={t("order.type")} value={order.order_type} />
         <DetailField label={t("order.uuid")} value={order.uuid} />
         <DetailField label={t("order.bookedAt")} value={order.booked_at} />
-        {cashier ? (
-          <DetailField
-            label={t("common.cashier")}
-            value={getUserName(cashier)}
-            linkTo={UserRoutes.detail(cashier.id, cashier.node_id)}
-          />
+        {order.cashier_id != null ? (
+          <UserDetailField label={t("common.cashier")} user={cashier} fallbackNodeId={currentNode.id} />
         ) : (
           <DetailField label={t("common.cashier")} value={t("order.noCashier")} />
         )}
@@ -133,11 +127,10 @@ export const OrderDetail: React.FC = () => {
             linkTo={UserTagRoutes.detail(order.customer_tag_id, currentNode.event_node_id)}
           />
         )}
-        {register != null && (
+        {order.cash_register_id != null && (
           <DetailField
             label={t("order.cashRegister")}
-            value={register.name}
-            linkTo={CashRegistersRoutes.detail(order.cash_register_id, register.node_id)}
+            value={<CashRegisterCell registerId={order.cash_register_id} />}
           />
         )}
         <DetailNumberField label={t("order.totalNoTax")} value={order.total_no_tax} type="currency" />

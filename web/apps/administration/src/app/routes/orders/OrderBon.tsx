@@ -12,7 +12,9 @@ export const OrderBon: React.FC = () => {
   const { orderId } = useParams();
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: eventDesign } = useGetEventDesignQuery({ nodeId: currentNode.event_node_id ?? currentNode.id });
+  const { data: eventDesign } = useGetEventDesignQuery({
+    nodeId: currentNode.event_node_id ?? currentNode.id,
+  });
 
   const { data: bon, isError } = useGetOrderBonQuery({ orderId: Number(orderId) });
 

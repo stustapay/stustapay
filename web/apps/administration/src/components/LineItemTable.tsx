@@ -1,55 +1,38 @@
-import { Tooltip } from "@mui/material";
 import { DataGrid, GridColDef, DataGridTitle } from "@stustapay/framework";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { LineItem, selectProductById, selectTaxRateById, useListProductsQuery, useListTaxRatesQuery } from "@/api";
+import { LineItem } from "@/api";
 import { ProductRoutes } from "@/app/routes";
+import { getProductCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
+
+import { TaxRateCell } from "./table/TaxRateCell";
 
 export interface LineItemTableProps {
   lineItems: LineItem[];
 }
 
+const ProductCell: React.FC<{ productId: number }> = ({ productId }) => {
+  const { currentNode } = useCurrentNode();
+  const { data: product } = useLiveQuery(
+    (q) =>
+      q
+        .from({ products: getProductCollection(currentNode.id) })
+        .where(({ products }) => eq(products.id, productId))
+        .findOne(),
+    [currentNode.id]
+  );
+  if (!product) {
+    return "";
+  }
+  return <RouterLink to={ProductRoutes.detail(productId, currentNode.id)}>{product.name}</RouterLink>;
+};
+
 export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   const { t } = useTranslation();
-  const { currentNode } = useCurrentNode();
-
-  const { data: products, isLoading: isProductsLoading } = useListProductsQuery({
-    nodeId: currentNode.id,
-    showAll: true,
-  });
-  const { data: taxRates, isLoading: isTaxRatesLoading } = useListTaxRatesQuery({ nodeId: currentNode.id });
-
-  const renderProduct = (productId: number | null) => {
-    if (productId == null || !products) {
-      return "";
-    }
-    const product = selectProductById(products, productId);
-    if (!product) {
-      return "";
-    }
-
-    return <RouterLink to={ProductRoutes.detail(product.id, product.node_id)}>{product.name}</RouterLink>;
-  };
-
-  const renderTaxRate = (id: number, rate: number) => {
-    if (!taxRates) {
-      return "";
-    }
-
-    const tax = selectTaxRateById(taxRates, id);
-    if (!tax) {
-      return "";
-    }
-
-    return (
-      <Tooltip title={tax.description}>
-        <span>{(rate * 100).toFixed(0)} %</span>
-      </Tooltip>
-    );
-  };
 
   const itemColumns: GridColDef<LineItem>[] = [
     {
@@ -57,7 +40,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
       headerName: t("item.product"),
       type: "number",
       width: 200,
-      renderCell: (params) => renderProduct(params.row.product.id),
+      renderCell: (params) => <ProductCell productId={params.row.product.id} />,
     },
     {
       field: "quantity",
@@ -85,7 +68,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
     {
       field: "tax_rate",
       headerName: t("item.taxRate"),
-      renderCell: (params) => renderTaxRate(params.row.tax_rate_id, params.row.tax_rate),
+      renderCell: (params) => <TaxRateCell taxRateId={params.row.tax_rate_id} />,
       align: "right",
       width: 100,
     },
@@ -100,7 +83,6 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({ lineItems }) => {
   return (
     <DataGrid
       autoHeight
-      loading={isProductsLoading || isTaxRatesLoading}
       slots={{ toolbar: () => <DataGridTitle title={t("order.lineItems")} /> }}
       rows={lineItems}
       columns={itemColumns}

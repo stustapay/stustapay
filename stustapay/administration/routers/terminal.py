@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextTerminalService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.terminal import (
     MdmDeviceLocation,
     MdmDeviceWithMapping,
@@ -19,9 +18,9 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=NormalizedList[Terminal, int])
+@router.get("", response_model=list[Terminal])
 async def list_terminals(token: CurrentAuthToken, terminal_service: ContextTerminalService, node_id: int):
-    return normalize_list(await terminal_service.list_terminals(token=token, node_id=node_id))
+    return await terminal_service.list_terminals(token=token, node_id=node_id)
 
 
 @router.post("", response_model=Terminal)
@@ -84,17 +83,6 @@ async def list_terminal_locations(
     node_id: int,
 ):
     return await terminal_service.list_terminal_locations(token=token, node_id=node_id)
-
-
-@router.get("/{terminal_id}", response_model=Terminal)
-async def get_terminal(
-    terminal_id: int, token: CurrentAuthToken, terminal_service: ContextTerminalService, node_id: int
-):
-    terminal = await terminal_service.get_terminal(token=token, terminal_id=terminal_id, node_id=node_id)
-    if terminal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    return terminal
 
 
 @router.post("/{terminal_id}", response_model=Terminal)

@@ -6,7 +6,6 @@ from sftkit.error import InvalidArgument
 
 from stustapay.core.http.auth_user import CurrentAuthToken
 from stustapay.core.http.context import ContextUserService
-from stustapay.core.http.normalize_data import NormalizedList, normalize_list
 from stustapay.core.schema.user import (
     EventPrivilege,
     NewUser,
@@ -30,16 +29,14 @@ user_role_router = APIRouter(prefix="/user-roles", tags=["user-roles"])
 user_to_role_router = APIRouter(prefix="/user-to-roles", tags=["user-to-roles"])
 
 
-@user_router.get("", response_model=NormalizedList[User, int])
+@user_router.get("", response_model=list[User])
 async def list_users(
     token: CurrentAuthToken,
     user_service: ContextUserService,
     node_id: int,
     filter_privilege: EventPrivilege | NodePrivilege | None = None,
 ):
-    return normalize_list(
-        await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
-    )
+    return await user_service.list_users(token=token, node_id=node_id, filter_privilege=filter_privilege)
 
 
 class UpdateUserPayload(BaseModel):
@@ -82,15 +79,6 @@ async def create_user(
         password=new_user.password,
         node_id=node_id,
     )
-
-
-@user_router.get("/{user_id}", response_model=User)
-async def get_user(user_id: int, token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
-    user = await user_service.get_user(token=token, user_id=user_id, node_id=node_id)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    return user
 
 
 @user_router.get("/{user_id}/voucher-grant-stats", response_model=UserVoucherGrantStats)
@@ -169,9 +157,9 @@ async def delete_user(user_id: int, token: CurrentAuthToken, user_service: Conte
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@user_role_router.get("", response_model=NormalizedList[UserRole, int])
+@user_role_router.get("", response_model=list[UserRole])
 async def list_user_roles(token: CurrentAuthToken, user_service: ContextUserService, node_id: int):
-    return normalize_list(await user_service.list_user_roles(token=token, node_id=node_id))
+    return await user_service.list_user_roles(token=token, node_id=node_id)
 
 
 @user_role_router.post("", response_model=UserRole)

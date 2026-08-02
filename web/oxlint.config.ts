@@ -7,6 +7,7 @@ export default defineConfig({
     suspicious: "error",
     perf: "error",
   },
+  ignorePatterns: ["apps/administration/src/db/api/generated/**/*"],
   rules: {
     "import/no-unassigned-import": "off",
     "import/no-named-as-default": "off",

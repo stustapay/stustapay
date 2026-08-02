@@ -1,18 +1,14 @@
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { Loading } from "@stustapay/components";
 import { useOpenModal } from "@stustapay/modal-provider";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
-import {
-  selectTillLayoutById,
-  useDeleteTillProfileMutation,
-  useGetTillProfileQuery,
-  useListTillLayoutsQuery,
-} from "@/api";
 import { TillLayoutRoutes, TillProfileRoutes } from "@/app/routes";
 import { DetailBoolField, DetailField, DetailLayout, DetailView } from "@/components";
+import { getTillLayoutCollection, getTillProfileCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export const TillProfileDetail: React.FC = () => {
@@ -21,13 +17,35 @@ export const TillProfileDetail: React.FC = () => {
   const { profileId } = useParams();
   const navigate = useNavigate();
   const openModal = useOpenModal();
-  const [deleteProfile] = useDeleteTillProfileMutation();
-  const { data: profile, error } = useGetTillProfileQuery({ nodeId: currentNode.id, profileId: Number(profileId) });
 
-  const { data: layouts, error: layoutError } = useListTillLayoutsQuery({ nodeId: currentNode.id });
+  const {
+    data: profile,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ profiles: getTillProfileCollection(currentNode.id) })
+        .where(({ profiles }) => eq(profiles.id, Number(profileId)))
+        .join(
+          { layouts: getTillLayoutCollection(currentNode.id) },
+          ({ layouts, profiles }) => eq(profiles.layout_id, layouts.id),
+          "left" as const
+        )
+        .select(({ profiles, layouts }) => ({
+          ...profiles,
+          layout: layouts,
+        }))
+        .findOne(),
+    [currentNode.id, profileId]
+  );
 
-  if (error || layoutError) {
+  if (isError) {
     return <Navigate to={TillProfileRoutes.list()} />;
+  }
+
+  if (isLoading || !profile) {
+    return <Loading />;
   }
 
   const openConfirmDeleteDialog = () => {
@@ -36,18 +54,12 @@ export const TillProfileDetail: React.FC = () => {
       title: t("profile.delete"),
       content: t("profile.deleteDescription"),
       onConfirm: () => {
-        deleteProfile({ nodeId: currentNode.id, profileId: Number(profileId) }).then(() =>
-          navigate(TillProfileRoutes.list())
-        );
+        getTillProfileCollection(currentNode.id)
+          .delete(Number(profileId))
+          .isPersisted.promise.then(() => navigate(TillProfileRoutes.list()));
       },
     });
   };
-
-  if (profile === undefined || layouts === undefined) {
-    return <Loading />;
-  }
-
-  const layout = selectTillLayoutById(layouts, profile.layout_id);
 
   return (
     <DetailLayout
@@ -61,7 +73,12 @@ export const TillProfileDetail: React.FC = () => {
           color: "primary",
           icon: <EditIcon />,
         },
-        { label: t("delete"), onClick: openConfirmDeleteDialog, color: "error", icon: <DeleteIcon /> },
+        {
+          label: t("delete"),
+          onClick: openConfirmDeleteDialog,
+          color: "error",
+          icon: <DeleteIcon />,
+        },
       ]}
     >
       <DetailView>
@@ -74,8 +91,12 @@ export const TillProfileDetail: React.FC = () => {
         <DetailBoolField label={t("profile.enableSspPayment")} value={profile.enable_ssp_payment} />
         <DetailBoolField label={t("profile.enableCashPayment")} value={profile.enable_cash_payment} />
         <DetailBoolField label={t("profile.enableCardPayment")} value={profile.enable_card_payment} />
-        {layout && (
-          <DetailField label={t("profile.layout")} linkTo={TillLayoutRoutes.detail(layout.id)} value={layout.name} />
+        {profile.layout && (
+          <DetailField
+            label={t("profile.layout")}
+            linkTo={TillLayoutRoutes.detail(profile.layout.id)}
+            value={profile.layout.name}
+          />
         )}
       </DetailView>
     </DetailLayout>

@@ -4,19 +4,27 @@ import {
   ConfirmationNumber as TicketIcon,
 } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
-import { GridRenderCellParams } from "@mui/x-data-grid";
+import { GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
-import { getUserName } from "@stustapay/models";
+import { ArrayElement } from "@stustapay/utils";
+import { eq, materialize, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 
-import { selectTillById, selectUserById, Transaction, useListTillsQuery, useListUsersQuery } from "@/api";
-import { OrderRoutes, TillRoutes, TransactionRoutes, UserRoutes } from "@/app/routes";
+import { OrderRoutes, TillRoutes, TransactionRoutes } from "@/app/routes";
+import { UserCell, userValueGetter } from "@/components/table/UserCell";
+import {
+  DEFAULT_PAGE_SIZE,
+  getTillCollection,
+  getTransactionCollection,
+  getUserCollection,
+  usePaginatedQueryTotal,
+} from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export interface TransactionTableProps {
-  transactions: Transaction[];
+  cashRegisterId: number;
   showShadow?: boolean;
   showTillColumn?: boolean;
   showCashierColumn?: boolean;
@@ -33,30 +41,65 @@ const orderTypeToIcon: Record<string, React.ReactElement> = {
 };
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
-  transactions,
+  cashRegisterId,
   showShadow = false,
   showTillColumn = false,
   showCashierColumn = false,
 }) => {
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
+  const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>({
+    page: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
 
-  const getUsernameForUser = (id?: number | null) => {
-    if (id == null || users == null) {
-      return "";
-    }
+  const {
+    data: rows,
+    isLoading,
+    isError,
+  } = useLiveQuery(
+    (q) =>
+      q
+        .from({ transactions: getTransactionCollection(currentNode.id) })
+        .where(({ transactions }) => eq(transactions.cash_register_id, cashRegisterId))
+        .orderBy(({ transactions }) => transactions.booked_at, "desc")
+        .offset(paginationModel.page * paginationModel.pageSize)
+        .limit(paginationModel.pageSize)
+        .select(({ transactions: transactionRow }) => ({
+          ...transactionRow,
+          cashier: materialize(
+            q
+              .from({ users: getUserCollection(currentNode.id) })
+              .where(({ users }) =>
+                transactionRow.order?.cashier_id != null
+                  ? eq(users.id, transactionRow.order.cashier_id)
+                  : eq(users.id, -1)
+              )
+              .select(({ users }) => users)
+              .findOne()
+          ),
+          till: materialize(
+            q
+              .from({ tills: getTillCollection(currentNode.id) })
+              .where(({ tills }) =>
+                transactionRow.order?.till_id != null ? eq(tills.id, transactionRow.order.till_id) : eq(tills.id, -1)
+              )
+              .select(({ tills }) => tills)
+              .findOne()
+          ),
+        })),
+    [currentNode.id, cashRegisterId, paginationModel.page, paginationModel.pageSize]
+  );
 
-    const user = selectUserById(users, id);
-    if (!user) {
-      return "";
-    }
+  const total = usePaginatedQueryTotal(currentNode.id, "transactions");
 
-    return getUserName(user);
-  };
+  if (isError) {
+    return null;
+  }
 
-  const columns: GridColDef<Transaction>[] = [
+  type TransactionRow = ArrayElement<NonNullable<typeof rows>>;
+
+  const columns: GridColDef<TransactionRow>[] = [
     {
       field: "id",
       headerName: t("order.id"),
@@ -107,40 +150,32 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             field: "cashier_id",
             headerName: t("common.cashier"),
             type: "string",
-            renderCell: ({ row }: GridRenderCellParams<Transaction>) => {
-              if (row.order?.cashier_id == null) {
-                return null;
-              }
-              return (
-                <RouterLink to={UserRoutes.detail(row.order.cashier_id)}>
-                  {getUsernameForUser(row.order.cashier_id)}
-                </RouterLink>
-              );
-            },
+            valueGetter: (_, row) => userValueGetter(row.cashier),
+            renderCell: ({ row }: GridRenderCellParams<TransactionRow>) => (
+              <UserCell user={row.cashier} nodeId={currentNode.id} />
+            ),
             width: 200,
           },
-        ] as const)
-      : ([] as const)),
+        ] satisfies GridColDef<TransactionRow>[])
+      : []),
     ...(showTillColumn
       ? ([
           {
             field: "order.till_id",
             headerName: t("common.till"),
             type: "string",
-            renderCell: ({ row }: GridRenderCellParams<Transaction>) => {
-              if (row.order?.till_id == null) {
+            valueGetter: (_, row) => row.till?.name ?? "",
+            renderCell: ({ row }: GridRenderCellParams<TransactionRow>) => {
+              const till = row.till;
+              if (till == null) {
                 return null;
               }
-              return (
-                <RouterLink to={TillRoutes.detail(row.order.till_id)}>
-                  {tills ? selectTillById(tills, row.order.till_id)?.name : null}
-                </RouterLink>
-              );
+              return <RouterLink to={TillRoutes.detail(till.id, till.node_id)}>{till.name}</RouterLink>;
             },
             width: 200,
           },
-        ] as const)
-      : ([] as const)),
+        ] satisfies GridColDef<TransactionRow>[])
+      : []),
     {
       field: "total_no_tax",
       headerName: t("order.totalNoTax"),
@@ -174,12 +209,17 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
   return (
     <DataGrid
-      loading={isUsersLoading || isTillsLoading}
-      rows={transactions ?? []}
+      loading={isLoading}
+      rows={rows ?? []}
+      rowCount={total}
+      paginationMode="server"
+      paginationModel={paginationModel}
+      onPaginationModelChange={setPaginationModel}
+      pageSizeOptions={[10, 25, 50, 100]}
       slots={{ toolbar: () => <DataGridTitle title={t("transactions")} /> }}
       columns={columns}
       disableRowSelectionOnClick
-      sx={{ p: 1, boxShadow: showShadow ? (theme) => theme.shadows[1] : undefined }}
+      sx={{ boxShadow: showShadow ? (theme) => theme.shadows[1] : undefined }}
     />
   );
 };

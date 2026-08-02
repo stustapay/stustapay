@@ -1,25 +1,21 @@
 import { Checkbox, FormControlLabel, Link, Paper } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@stustapay/framework";
 import { getUserName } from "@stustapay/models";
-import { StringyBoolean, useQueryState } from "@stustapay/utils";
+import { ArrayElement, StringyBoolean, useQueryState } from "@stustapay/utils";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import {
-  CashRegister,
-  selectUserById,
-  selectCashRegisterAll,
-  selectTerminalById,
-  selectTillById,
-  useListUsersQuery,
-  useListCashRegistersAdminQuery,
-  useListTerminalsQuery,
-  useListTillsQuery,
-} from "@/api";
 import { CashRegistersRoutes, TerminalRoutes, TillRoutes, UserRoutes } from "@/app/routes";
 import { ListLayout } from "@/components";
+import {
+  getCashRegisterCollection,
+  getTerminalCollection,
+  getTillCollection,
+  getUserCollection,
+} from "@/db/collections";
 import { useCurrentNode, useRenderNode } from "@/hooks";
 
 const FilterOptionsSchema = z.object({
@@ -32,88 +28,59 @@ export const TillOverview: React.FC = () => {
   const { currentNode } = useCurrentNode();
   const navigate = useNavigate();
 
-  const [filterOptions, setFilterOptions] = useQueryState<{ showZeroBalance: boolean; showUnassigned: boolean }>(
-    { showZeroBalance: true, showUnassigned: true },
-    FilterOptionsSchema
-  );
+  const [filterOptions, setFilterOptions] = useQueryState<{
+    showZeroBalance: boolean;
+    showUnassigned: boolean;
+  }>({ showZeroBalance: true, showUnassigned: true }, FilterOptionsSchema);
 
-  const { data: tills, isLoading: isTillsLoading } = useListTillsQuery({ nodeId: currentNode.id });
-  const { data: terminals, isLoading: isTerminalsLoading } = useListTerminalsQuery({ nodeId: currentNode.id });
-  const { data: users, isLoading: isUsersLoading } = useListUsersQuery({ nodeId: currentNode.id });
-  const { registers, isLoading: isRegistersLoading } = useListCashRegistersAdminQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        registers: data
-          ? selectCashRegisterAll(data).filter((register) => {
-              if (!filterOptions.showUnassigned && register.current_cashier_id == null) {
-                return false;
-              }
-              if (!filterOptions.showZeroBalance && register.balance === 0) {
-                return false;
-              }
-              return true;
-            })
-          : undefined,
-      }),
-    }
+  const { data: registers, isLoading: isRegistersLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ registers: getCashRegisterCollection(currentNode.id) })
+        .join(
+          { tills: getTillCollection(currentNode.id) },
+          ({ registers, tills }) => eq(registers.current_till_id, tills.id),
+          "left" as const
+        )
+        .join(
+          { terminals: getTerminalCollection(currentNode.id) },
+          ({ tills, terminals }) => eq(tills.terminal_id, terminals.id),
+          "left" as const
+        )
+        .join(
+          { users: getUserCollection(currentNode.id) },
+          ({ registers, users }) => eq(registers.current_cashier_id, users.id),
+          "left" as const
+        )
+        .select(({ registers, tills, terminals, users }) => ({
+          ...registers,
+          till: tills,
+          terminal: terminals,
+          cashier: users,
+        })),
+    [currentNode.id]
   );
   const { dataGridNodeColumn } = useRenderNode();
 
-  const renderTill = (id: number | null) => {
-    if (id == null || !tills) {
-      return "";
-    }
-    const till = selectTillById(tills, id);
-    if (!till) {
-      return "";
+  type RegisterRow = ArrayElement<NonNullable<typeof registers>>;
+
+  const rows = React.useMemo((): RegisterRow[] | undefined => {
+    if (!registers) {
+      return undefined;
     }
 
-    return (
-      <Link component={RouterLink} to={TillRoutes.detail(till.id, till.node_id)}>
-        {till.name}
-      </Link>
-    );
-  };
+    return registers.filter((register) => {
+      if (!filterOptions.showUnassigned && register.current_cashier_id == null) {
+        return false;
+      }
+      if (!filterOptions.showZeroBalance && register.balance === 0) {
+        return false;
+      }
+      return true;
+    });
+  }, [registers, filterOptions]);
 
-  const renderCashier = (id: number | null) => {
-    if (id == null || !users) {
-      return "";
-    }
-    const cashier = selectUserById(users, id);
-    if (!cashier) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={UserRoutes.detail(cashier.id, cashier.node_id)}>
-        {getUserName(cashier)}
-      </Link>
-    );
-  };
-
-  const renderTerminal = (tillId: number | null) => {
-    if (tillId == null || !tills || !terminals) {
-      return "";
-    }
-    const till = selectTillById(tills, tillId);
-    if (!till?.terminal_id) {
-      return "";
-    }
-    const terminal = selectTerminalById(terminals, till.terminal_id);
-    if (!terminal) {
-      return "";
-    }
-
-    return (
-      <Link component={RouterLink} to={TerminalRoutes.detail(terminal.id, terminal.node_id)}>
-        {terminal.name}
-      </Link>
-    );
-  };
-
-  const columns: GridColDef<CashRegister>[] = [
+  const columns: GridColDef<RegisterRow>[] = [
     {
       field: "name",
       headerName: t("register.name"),
@@ -128,19 +95,40 @@ export const TillOverview: React.FC = () => {
       field: "current_cashier_id",
       headerName: t("register.currentCashier"),
       width: 200,
-      renderCell: (params) => renderCashier(params.row.current_cashier_id),
+      renderCell: (params) => {
+        const cashier = params.row.cashier;
+        if (cashier?.id == null || cashier.login == null) {
+          return null;
+        }
+
+        return (
+          <Link component={RouterLink} to={UserRoutes.detail(cashier.id, cashier.node_id ?? params.row.node_id)}>
+            {getUserName({ login: cashier.login, display_name: cashier.display_name ?? "" })}
+          </Link>
+        );
+      },
     },
     {
       field: "current_till_id",
       headerName: t("register.currentTill"),
       width: 200,
-      renderCell: (params) => renderTill(params.row.current_till_id),
+      renderCell: (params) =>
+        params.row.till ? (
+          <Link component={RouterLink} to={TillRoutes.detail(params.row.till.id, params.row.till.node_id)}>
+            {params.row.till.name}
+          </Link>
+        ) : null,
     },
     {
       field: "terminal_id",
       headerName: t("till.terminal"),
       width: 200,
-      renderCell: (params) => renderTerminal(params.row.current_till_id),
+      renderCell: (params) =>
+        params.row.terminal ? (
+          <Link component={RouterLink} to={TerminalRoutes.detail(params.row.terminal.id, params.row.terminal.node_id)}>
+            {params.row.terminal.name}
+          </Link>
+        ) : null,
     },
     {
       field: "balance",
@@ -196,11 +184,11 @@ export const TillOverview: React.FC = () => {
       </Paper>
       <DataGrid
         autoHeight
-        loading={isRegistersLoading || isTillsLoading || isTerminalsLoading || isUsersLoading}
-        rows={registers ?? []}
+        loading={isRegistersLoading}
+        rows={rows ?? []}
         columns={columns}
         disableRowSelectionOnClick
-        sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+        sx={{ boxShadow: (theme) => theme.shadows[1] }}
       />
     </ListLayout>
   );

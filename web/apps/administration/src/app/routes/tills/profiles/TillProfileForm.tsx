@@ -1,10 +1,11 @@
 import { Select } from "@stustapay/components";
 import { FormCheckbox, FormTextField } from "@stustapay/form-components";
+import { useLiveQuery } from "@tanstack/react-db";
 import { FormikProps } from "formik";
 import { useTranslation } from "react-i18next";
 
-import { NewTillProfile } from "@/api";
-import { TillLayout, selectTillLayoutAll, useListTillLayoutsQuery } from "@/api";
+import { NewTillProfile, TillLayout } from "@/db/api/generated";
+import { getTillLayoutCollection } from "@/db/collections";
 import { useCurrentNode } from "@/hooks";
 
 export type TillProfileFormProps<T extends NewTillProfile> = FormikProps<T>;
@@ -13,15 +14,11 @@ export function TillProfileForm<T extends NewTillProfile>(props: TillProfileForm
   const { values, touched, errors, setFieldValue } = props;
   const { t } = useTranslation();
   const { currentNode } = useCurrentNode();
-  const { layouts } = useListTillLayoutsQuery(
-    { nodeId: currentNode.id },
-    {
-      selectFromResult: ({ data, ...rest }) => ({
-        ...rest,
-        layouts: data ? selectTillLayoutAll(data) : [],
-      }),
-    }
+  const { data: layouts } = useLiveQuery(
+    (q) => q.from({ layouts: getTillLayoutCollection(currentNode.id) }),
+    [currentNode.id]
   );
+
   return (
     <>
       <FormTextField autoFocus name="name" label={t("profile.name")} formik={props} />
@@ -37,9 +34,9 @@ export function TillProfileForm<T extends NewTillProfile>(props: TillProfileForm
       <Select
         label={t("layout.layout")}
         multiple={false}
-        value={layouts.find((l) => l.id === values.layout_id) ?? null}
+        value={layouts?.find((layout) => layout.id === values.layout_id) ?? null}
         formatOption={(layout: TillLayout) => layout.name}
-        options={layouts}
+        options={layouts ?? []}
         error={touched.layout_id && !!errors.layout_id}
         helperText={(touched.layout_id && errors.layout_id) as string}
         onChange={(value: TillLayout | null) => (value != null ? setFieldValue("layout_id", value.id) : undefined)}

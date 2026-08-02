@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
-import { useCreatePayoutRunMutation } from "@/api";
 import { PayoutRunRoutes } from "@/app/routes";
+import { generateId, getPayoutRunCollection, type PayoutRunCollectionInsert } from "@/db/collections";
 import { useCurrentEventSettings, useCurrentNode } from "@/hooks";
 
 import { PendingPayoutDetail } from "./PendingPayoutDetail";
@@ -28,14 +28,27 @@ export const PayoutRunCreate: React.FC = () => {
 
   const { eventSettings } = useCurrentEventSettings();
 
-  const [createPayoutRun] = useCreatePayoutRunMutation();
-
   const handleSubmit = (values: NewPayoutRun, { setSubmitting }: FormikHelpers<NewPayoutRun>) => {
     setSubmitting(true);
 
-    createPayoutRun({ nodeId: currentNode.id, newPayoutRun: values })
-      .unwrap()
-      .then(() => {
+    getPayoutRunCollection(currentNode.id)
+      .insert({
+        id: generateId(),
+        node_id: currentNode.id,
+        max_payout_sum: values.max_payout_sum,
+        max_num_payouts: values.max_num_payouts,
+        created_by: null,
+        created_at: new Date().toISOString(),
+        set_done_by: null,
+        set_done_at: null,
+        done: false,
+        revoked: false,
+        sepa_was_generated: false,
+        total_donation_amount: 0,
+        total_payout_amount: 0,
+        n_payouts: 0,
+      } as PayoutRunCollectionInsert)
+      .isPersisted.promise.then(() => {
         setSubmitting(false);
         navigate(PayoutRunRoutes.list());
       })

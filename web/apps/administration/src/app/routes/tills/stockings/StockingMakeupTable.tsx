@@ -3,7 +3,7 @@ import { DataGrid, DataGridTitle, GridColDef } from "@stustapay/framework";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { CashRegisterStocking } from "@/api";
+import { CashRegisterStocking } from "@/db/api/generated";
 
 import { buildStockingDenominationRows, StockingDenominationRow } from "./stockingDenominations";
 
@@ -69,7 +69,7 @@ export const StockingMakeupTable: React.FC<StockingMakeupTableProps> = ({ stocki
       columns={columns}
       disableRowSelectionOnClick
       slots={{ toolbar: () => <DataGridTitle title={t("register.stockingMakeup")} /> }}
-      sx={{ p: 1, boxShadow: (theme) => theme.shadows[1] }}
+      sx={{ boxShadow: (theme) => theme.shadows[1] }}
     />
   );
 };
