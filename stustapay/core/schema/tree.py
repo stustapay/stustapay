@@ -43,8 +43,17 @@ class _BaseEvent(BaseModel):
 
     ust_id: str
     bon_issuer: str
-    bon_address: str
+    bon_street: str
+    bon_zip: str
+    bon_city: str
+    bon_country: str = "DEU"
     bon_title: str
+
+    def formatted_bon_address(self) -> str:
+        city_line = f"{self.bon_zip} {self.bon_city}".strip()
+        if city_line:
+            return f"{self.bon_street}\n{city_line}"
+        return self.bon_street
 
     sepa_enabled: bool
     sepa_sender_name: str

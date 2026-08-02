@@ -9,6 +9,7 @@ from sftkit.database import Connection
 
 from stustapay.core.schema.order import LineItem, Order, OrderType, PaymentMethod
 from stustapay.core.schema.product import Product, ProductType
+from stustapay.core.schema.tax_type import TaxType
 from stustapay.core.schema.tree import RestrictedEventSettings
 from stustapay.core.service.tree.common import fetch_restricted_event_settings_for_node
 
@@ -116,6 +117,7 @@ def gen_dummy_order(node_id: int, order_id: int = 1):
                     tax_rate_id=1,
                     tax_name="ust",
                     tax_rate=0.19,
+                    tax_type=TaxType.regular_vat,
                     id=0,
                     type=ProductType.user_defined,
                     fixed_price=True,
@@ -140,6 +142,7 @@ def gen_dummy_order(node_id: int, order_id: int = 1):
                     tax_rate_id=1,
                     tax_name="eust",
                     tax_rate=0.07,
+                    tax_type=TaxType.reduced_vat,
                     id=9,
                     type=ProductType.user_defined,
                     fixed_price=True,
@@ -164,6 +167,7 @@ def gen_dummy_order(node_id: int, order_id: int = 1):
                     tax_rate_id=1,
                     tax_name="none",
                     tax_rate=0.0,
+                    tax_type=TaxType.no_tax,
                     id=10,
                     type=ProductType.user_defined,
                     fixed_price=True,
@@ -212,7 +216,7 @@ async def generate_dummy_bon_json(node_id: int, event: RestrictedEventSettings) 
         config=BonConfig(
             title=event.bon_title,
             issuer=event.bon_issuer,
-            address=event.bon_address,
+            address=event.formatted_bon_address(),
             ust_id=event.ust_id,
         ),
         currency_identifier=event.currency_identifier,
@@ -227,7 +231,7 @@ async def generate_bon_json(db_pool: asyncpg.Pool, order_id: int) -> BonJson | N
 
         event = await fetch_restricted_event_settings_for_node(conn=conn, node_id=order.node_id)
         config = BonConfig(
-            ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title
+            ust_id=event.ust_id, address=event.formatted_bon_address(), issuer=event.bon_issuer, title=event.bon_title
         )
 
         aggregations = await conn.fetch_many(

@@ -283,7 +283,7 @@ async def generate_dummy_daily_report(event: RestrictedEventSettings, logo: Blob
         config=BonConfig(
             title=event.bon_title,
             issuer=event.bon_issuer,
-            address=event.bon_address,
+            address=event.formatted_bon_address(),
             ust_id=event.ust_id,
         ),
         from_time=datetime.now() - timedelta(days=3),
@@ -447,7 +447,9 @@ async def generate_daily_report(conn: Connection, node: Node, report_date: date,
     )
     to_time = from_time + timedelta(days=1)
 
-    config = BonConfig(ust_id=event.ust_id, address=event.bon_address, issuer=event.bon_issuer, title=event.bon_title)
+    config = BonConfig(
+        ust_id=event.ust_id, address=event.formatted_bon_address(), issuer=event.bon_issuer, title=event.bon_title
+    )
 
     event_design = await fetch_event_design(conn=conn, node_id=node.event_node_id)
     logo = None

@@ -1896,6 +1896,9 @@
             "type": "number",
             "title": "Tax Rate"
           },
+          "tax_type": {
+            "$ref": "#/components/schemas/TaxType"
+          },
           "type": {
             "$ref": "#/components/schemas/ProductType"
           },
@@ -1924,6 +1927,7 @@
           "id",
           "tax_name",
           "tax_rate",
+          "tax_type",
           "type"
         ],
         "title": "Product"
@@ -1982,6 +1986,16 @@
           "total_no_tax"
         ],
         "title": "TaxRateAggregation"
+      },
+      "TaxType": {
+        "type": "string",
+        "enum": [
+          "regular_vat",
+          "reduced_vat",
+          "no_tax",
+          "transparent"
+        ],
+        "title": "TaxType"
       },
       "UserTagHistoryEntry": {
         "properties": {

@@ -135,7 +135,8 @@ class SignatureProcessor:
                 LOGGER.error("ERROR: no more active TSEs available")
                 LOGGER.warning("will set all signature requests to 'failure'")
                 await conn.execute(
-                    "update tse_signature set signature_status = 'failure', result_message = 'TSE failure, no active TSE available', tse_id = 1 where signature_status='new'"
+                    "update tse_signature set signature_status = 'failure', result_message = 'TSE failure, no active TSE available' "
+                    "where signature_status='new'"
                 )
 
     async def handle_hook(self, payload):

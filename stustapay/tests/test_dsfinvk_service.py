@@ -13,14 +13,18 @@ from stustapay.core.service.dsfinvk import DsfinvkService
 
 from .conftest import Cashier
 
-BON_ADDRESS = "Test Street 1\n80333 Munich"
-
 
 @pytest.fixture
 async def event_with_bon_address(db_connection: Connection, event_node: Node):
     await db_connection.execute(
-        "update event set bon_address = $1 where id = (select event_id from node where id = $2)",
-        BON_ADDRESS,
+        """
+        update event
+        set bon_street = 'Test Street 1',
+            bon_zip = '80333',
+            bon_city = 'Munich',
+            bon_country = 'DEU'
+        where id = (select event_id from node where id = $1)
+        """,
         event_node.id,
     )
     return event_node
