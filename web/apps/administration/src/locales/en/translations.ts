@@ -357,6 +357,7 @@ export const translations = {
     warningEventDatesNeedConfiguration:
       "Please configure the start / end times for this event as well as the daily end time in the event settings",
     generateRevenueReport: "Generate revenue report",
+    generateRevenueReportError: "Could not generate revenue report",
     filterDate: "Date",
     filterSubnode: "Filter by Subnode",
     allSubnodes: "All Subnodes",

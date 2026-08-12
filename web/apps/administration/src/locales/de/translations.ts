@@ -349,6 +349,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
     warningEventDatesNeedConfiguration:
       "Bitte konfigurieren Sie die Start- / Endzeiten für dieses Ereignis sowie die tägliche Endzeit in den Ereigniseinstellungen",
     generateRevenueReport: "Umsatzbericht generieren",
+    generateRevenueReportError: "Umsatzbericht konnte nicht generiert werden",
     filterDate: "Datum",
     filterSubnode: "Nach Unterknoten filtern",
     allSubnodes: "Alle Unterknoten",

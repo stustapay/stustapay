@@ -248,10 +248,7 @@ export const api = generatedApi.enhanceEndpoints({
       query: (queryArg: GenerateRevenueReportApiArg) => ({
         url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
         method: "POST",
-        responseHandler: async (resp: Response) => {
-          const blob = await resp.blob();
-          return window.URL.createObjectURL(blob);
-        },
+        responseHandler: async (resp: Response) => window.URL.createObjectURL(await resp.blob()),
       }),
       invalidatesTags: [],
     },

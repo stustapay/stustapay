@@ -110,6 +110,39 @@ export const NodeOverview: React.FC = () => {
     !canViewStats &&
     nearestActionableNodes.length === 1;
 
+  const downloadRevenueReport = async () => {
+    try {
+      const pdfUrl = await generateReport({
+        nodeId: currentNode.id,
+      }).unwrap();
+      const link = document.createElement("a");
+
+      try {
+        link.setAttribute("href", pdfUrl);
+        link.setAttribute("download", `revenue_report_${currentNode.id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        window.setTimeout(() => window.URL.revokeObjectURL(pdfUrl), 100);
+      }
+    } catch {
+      toast.error(t("overview.generateRevenueReportError"));
+    }
+  };
+
+  const revenueReportButton = isInEventContext && canAdminNode && (
+    <LoadingButton
+      variant="contained"
+      onClick={downloadRevenueReport}
+      loading={reportGenerating}
+      startIcon={<ReceiptIcon />}
+      loadingPosition="start"
+    >
+      {t("overview.generateRevenueReport")}
+    </LoadingButton>
+  );
+
   if (shouldRedirectScopedEventRoot) {
     return <Navigate replace to={nearestActionableNodes[0].route} />;
   }
@@ -127,38 +160,13 @@ export const NodeOverview: React.FC = () => {
       return <EventOverviewFallback actionableNodes={nearestActionableNodes} />;
     }
 
-    return <EventOverview />;
+    return (
+      <Stack spacing={2}>
+        {revenueReportButton}
+        <EventOverview />
+      </Stack>
+    );
   }
 
-  const openReportPreview = async () => {
-    try {
-      const resp = await generateReport({
-        nodeId: currentNode.id,
-      });
-      const pdfUrl = (resp as any).data;
-      if (pdfUrl === undefined) {
-        toast.error("Error generating report");
-      } else {
-        window.open(pdfUrl);
-      }
-    } catch (e) {
-      toast.error("Error generating report");
-    }
-  };
-
-  return (
-    <Stack spacing={2}>
-      {canAdminNode && (
-        <LoadingButton
-          variant="contained"
-          onClick={openReportPreview}
-          loading={reportGenerating}
-          startIcon={<ReceiptIcon />}
-          loadingPosition="start"
-        >
-          {t("overview.generateRevenueReport")}
-        </LoadingButton>
-      )}
-    </Stack>
-  );
+  return <Stack spacing={2}>{revenueReportButton}</Stack>;
 };
