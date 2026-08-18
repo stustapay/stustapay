@@ -46,7 +46,11 @@ set -euo pipefail
 while [[ "${1:-}" == "-n" || "${1:-}" == "-u" ]]; do
   if [[ "$1" == "-u" ]]; then shift 2; else shift; fi
 done
-if [[ "${1:-}" == "true" || "${1:-}" == "chown" || "${1:-}" == "test" ]]; then exit 0; fi
+if [[ "${1:-}" == "chown" ]]; then
+  printf '%s\n' "$*" >>"$OWNERSHIP_LOG"
+  exit 0
+fi
+if [[ "${1:-}" == "true" || "${1:-}" == "test" ]]; then exit 0; fi
 exec "$@"
 EOF
 
@@ -128,10 +132,12 @@ run_remote() {
   local scenario="$1" mode="$2"
   printf 'oldsha\n' >"${TEST_ROOT}/state"
   : >"${TEST_ROOT}/services.log"
+  : >"${TEST_ROOT}/ownership.log"
   PATH="${FAKE_BIN}:$PATH" \
     SCENARIO="$scenario" \
     STATE_FILE="${TEST_ROOT}/state" \
     SERVICE_LOG="${TEST_ROOT}/services.log" \
+    OWNERSHIP_LOG="${TEST_ROOT}/ownership.log" \
     EXPECTED_SHA="newsha" \
     EXPECTED_BRANCH="merge-current-state-2" \
     bash "${SCRIPT_DIR}/remote-deploy.sh" "$mode" sudo "${REMOTE_ROOT}/repo" merge-current-state-2 newsha \
@@ -156,6 +162,11 @@ assert_service_failure_keeps_new_commit() {
   [[ "$(<"${TEST_ROOT}/state")" == "newsha" ]]
 }
 
+assert_venv_ownership_normalized() {
+  run_remote success deploy >/dev/null 2>&1
+  grep -Fq -- "-R cashless: ${REMOTE_ROOT}/venv" "${TEST_ROOT}/ownership.log"
+}
+
 expect_success 'remote preflight' run_remote success preflight
 expect_failure 'dirty remote checkout' run_remote dirty preflight
 expect_failure 'wrong remote branch' run_remote wrong_branch preflight
@@ -165,6 +176,7 @@ expect_success 'dependency failure recovery' assert_recovered dependency_failure
 expect_success 'migration failure is not rewound' assert_migration_not_rewound
 expect_success 'service failure keeps migrated commit' assert_service_failure_keeps_new_commit
 expect_success 'successful remote deployment' run_remote success deploy
+expect_success 'virtual environment ownership normalization' assert_venv_ownership_normalized
 
 CONFIG_ROOT="${TEST_ROOT}/config"
 mkdir -p "${CONFIG_ROOT}/environments"

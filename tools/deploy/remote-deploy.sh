@@ -37,6 +37,7 @@ service_status() {
 
 install_backend() {
   local metadata_dir
+  "${SUDO[@]}" -n chown -R "${BACKEND_RUN_USER}:" "$BACKEND_VENV_DIR"
   for metadata_dir in "$BACKEND_REPO_DIR"/*.egg-info; do
     [[ -d "$metadata_dir" ]] || continue
     "${SUDO[@]}" -n chown -R "${BACKEND_RUN_USER}:" "$metadata_dir"

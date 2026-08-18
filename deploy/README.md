@@ -33,7 +33,7 @@ tools/deploy/test.sh
 
 - The local checkout must be clean, on the configured branch, and exactly match `origin/<branch>`.
 - The remote checkout must also be clean and on the configured branch.
-- All backend services stop before the fast-forward-only pull, editable dependency installation, and migration.
+- All backend services stop before the fast-forward-only pull, editable dependency installation, and migration. The dedicated virtual environment is normalized to the configured runtime user before pip runs so existing root-owned package files can be replaced safely.
 - The remote commit must exactly match the validated local commit before migration starts.
 - After the backend is healthy, the web builds overwrite `dist/apps/administration` and `dist/apps/customerportal` in the configured container. Existing unrelated or stale blobs are not deleted.
 - Both uploaded `index.html` files are downloaded and compared with the local builds. Every referenced JavaScript bundle must exist before public smoke checks run.
