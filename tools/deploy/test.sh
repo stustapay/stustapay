@@ -234,7 +234,7 @@ done
 printf '<html>mismatch</html>\n' >"$output_file"
 EOF
 chmod +x "${AZURE_FAIL_BIN}/az"
-printf '<script src="main-good.js"></script>\n' >"${TEST_ROOT}/web/index.html"
+printf '<script src="https://example.invalid/external.js"></script><script src="main-good.js?version=1"></script>\n' >"${TEST_ROOT}/web/index.html"
 expect_failure 'Azure index verification mismatch' \
   bash -c "source '${SCRIPT_DIR}/lib.sh'; AZURE_STORAGE_ARGS=(--auth-mode login --account-name test); AZURE_STORAGE_CONTAINER=shared; PATH='${AZURE_FAIL_BIN}':\$PATH; verify_uploaded_app '${TEST_ROOT}/web' dist/apps/administration administration"
 

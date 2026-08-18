@@ -234,7 +234,7 @@ blob_exists() {
 
 verify_uploaded_app() {
   local local_dir="$1" destination="$2" label="$3"
-  local downloaded_index js_ref blob_name
+  local downloaded_index js_ref blob_name local_bundle_count=0
   downloaded_index="$(mktemp "${TMPDIR:-/tmp}/stustapay-${label}-index-XXXXXX")"
 
   az storage blob download "${AZURE_STORAGE_ARGS[@]}" \
@@ -252,6 +252,14 @@ verify_uploaded_app() {
   }
 
   while IFS= read -r js_ref; do
+    case "$js_ref" in
+      http://*|https://*|//*|data:*)
+        continue
+        ;;
+    esac
+    local_bundle_count=$((local_bundle_count + 1))
+    js_ref="${js_ref%%\?*}"
+    js_ref="${js_ref%%#*}"
     js_ref="${js_ref#./}"
     js_ref="${js_ref#/}"
     blob_name="${destination}/${js_ref}"
@@ -260,11 +268,11 @@ verify_uploaded_app() {
       warn "Uploaded ${label} bundle is missing: ${blob_name}"
       return 1
     }
-  done < <(grep -oE 'src="[^"]+\.js"' "$downloaded_index" | sed -E 's/^src="//; s/"$//' | sort -u)
+  done < <(grep -oE 'src="[^"]+\.js([?#][^"]*)?"' "$downloaded_index" | sed -E 's/^src="//; s/"$//' | sort -u)
 
-  if ! grep -qE 'src="[^"]+\.js"' "$downloaded_index"; then
+  if [[ "$local_bundle_count" -eq 0 ]]; then
     rm -f "$downloaded_index"
-    warn "Uploaded ${label} index.html does not reference a JavaScript bundle"
+    warn "Uploaded ${label} index.html does not reference a local JavaScript bundle"
     return 1
   fi
   rm -f "$downloaded_index"
