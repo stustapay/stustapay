@@ -16929,6 +16929,17 @@
             ],
             "title": "Customer Portal Background Color"
           },
+          "customer_portal_font_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Font Color"
+          },
           "translation_texts": {
             "additionalProperties": {
               "additionalProperties": {
@@ -19922,6 +19933,17 @@
             ],
             "title": "Customer Portal Background Color"
           },
+          "customer_portal_font_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Font Color"
+          },
           "translation_texts": {
             "additionalProperties": {
               "additionalProperties": {
@@ -20433,6 +20455,17 @@
               }
             ],
             "title": "Customer Portal Background Color"
+          },
+          "customer_portal_font_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Font Color"
           },
           "translation_texts": {
             "additionalProperties": {
@@ -22355,6 +22388,17 @@
               }
             ],
             "title": "Customer Portal Background Color"
+          },
+          "customer_portal_font_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Portal Font Color"
           },
           "translation_texts": {
             "additionalProperties": {

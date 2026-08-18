@@ -83,6 +83,7 @@ def _build_source_event(name: str = "Original Event", description: str = "Event 
         customer_portal_primary_color="#112233",
         customer_portal_secondary_color="#445566",
         customer_portal_background_color="#ddeeff",
+        customer_portal_font_color="#101010",
         translation_texts={
             Language.en_US: {"welcome": "Welcome", "faq": "Questions"},
             Language.de_DE: {"welcome": "Willkommen", "faq": "Fragen"},
@@ -282,6 +283,7 @@ async def test_update_event_theme_colors(
     updated_event.customer_portal_primary_color = "#112233"
     updated_event.customer_portal_secondary_color = "#445566"
     updated_event.customer_portal_background_color = "#778899"
+    updated_event.customer_portal_font_color = "#101010"
 
     updated_node = await tree_service.update_event(
         token=global_admin_token,
@@ -293,6 +295,7 @@ async def test_update_event_theme_colors(
     assert updated_node.event.customer_portal_primary_color == "#112233"
     assert updated_node.event.customer_portal_secondary_color == "#445566"
     assert updated_node.event.customer_portal_background_color == "#778899"
+    assert updated_node.event.customer_portal_font_color == "#101010"
 
 
 async def test_object_rules(tree_service: TreeService, global_admin_token: str):
@@ -658,6 +661,7 @@ async def test_copy_event(
     assert copied_event.event.customer_portal_primary_color == "#112233"
     assert copied_event.event.customer_portal_secondary_color == "#445566"
     assert copied_event.event.customer_portal_background_color == "#ddeeff"
+    assert copied_event.event.customer_portal_font_color == "#101010"
 
     copied_settings = await tree_service.get_restricted_event_settings(
         token=global_admin_token,
@@ -906,6 +910,7 @@ async def test_copy_event(
     assert minimal_settings.email_smtp_password is None
     assert minimal_settings.sumup_oauth_refresh_token == ""
     assert minimal_settings.customer_portal_primary_color is None
+    assert minimal_settings.customer_portal_font_color is None
     assert minimal_settings.expected_visitors_per_day is None
     assert minimal_settings.wifi_ssid is None
     assert await db_connection.fetchval(

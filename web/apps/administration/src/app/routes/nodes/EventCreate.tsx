@@ -170,6 +170,7 @@ const customerPortalFormStep: FormStep = {
     donation_enabled: true,
     customer_portal_primary_color: null,
     customer_portal_secondary_color: null,
+    customer_portal_font_color: "#ffffff",
   },
   schema: CustomerPortalSettingsSchema,
   form: CustomerPortalSettingsForm,

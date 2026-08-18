@@ -97,7 +97,7 @@ export const Index: React.FC = () => {
               textAlign: "center",
               width: "100%",
               background: "var(--primary-gradient, linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%))",
-              color: "white",
+              color: "var(--portal-font-color)",
               borderRadius: 4,
               position: "relative",
               overflow: "hidden",
@@ -128,7 +128,7 @@ export const Index: React.FC = () => {
                   <Typography component="div" variant="body1" sx={{ opacity: 0.85 }}>
                     {t("payout.payoutAmount")}
                   </Typography>
-                  <Typography component="div" variant="h5" fontWeight="bold" sx={{ color: "#90caf9" }}>
+                  <Typography component="div" variant="h5" fontWeight="bold" sx={{ color: "inherit" }}>
                     {formatCurrency(customer.balance - (customer.donation || 0))}
                   </Typography>
                 </div>

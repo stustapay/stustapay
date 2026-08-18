@@ -566,6 +566,7 @@ export const translations: NestedPartialAsStrings<Translations> = {
       uploadBanner: "Banner hochladen",
       primaryColor: "Hauptfarbe",
       secondaryColor: "Sekundärfarbe",
+      fontColor: "Schriftfarbe",
       appearance: "Aussehen des Portals",
     },
     agb: {

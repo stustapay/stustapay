@@ -28,6 +28,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({ title, children, m
                     <Box
                         sx={{
                             background: "var(--primary-gradient)",
+                            color: "var(--portal-font-color)",
                             py: 4,
                             px: 2,
                             position: "relative",
@@ -50,7 +51,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({ title, children, m
                             align="center"
                             sx={{
                                 fontWeight: "bold",
-                                color: "white",
+                                color: "inherit",
                                 textShadow: "0 2px 4px rgba(0,0,0,0.2)",
                                     width: "100%",
                                     // Prevent cutting/overflow of long single "words" on small screens

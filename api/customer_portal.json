@@ -1519,6 +1519,17 @@
               }
             ],
             "title": "Background Color"
+          },
+          "font_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Font Color"
           }
         },
         "type": "object",

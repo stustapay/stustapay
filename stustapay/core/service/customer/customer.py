@@ -70,6 +70,7 @@ class CustomerPortalApiConfig(BaseModel):
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     background_color: Optional[str] = None
+    font_color: Optional[str] = None
 
 
 
@@ -623,6 +624,7 @@ class CustomerService(Service[Config]):
             primary_color=node.event.customer_portal_primary_color,
             secondary_color=node.event.customer_portal_secondary_color,
             background_color=node.event.customer_portal_background_color,
+            font_color=node.event.customer_portal_font_color,
         )
 
     @with_db_transaction(read_only=True)

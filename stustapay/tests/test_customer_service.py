@@ -399,11 +399,13 @@ async def test_get_api_config_includes_theme_colors(
     base_url = f"http://localhost:4300/{secrets.token_hex(8)}"
     await db_connection.execute(
         "update event set customer_portal_url = $1, customer_portal_primary_color = $2, "
-        "customer_portal_secondary_color = $3, customer_portal_background_color = $4 where id = $5",
+        "customer_portal_secondary_color = $3, customer_portal_background_color = $4, "
+        "customer_portal_font_color = $5 where id = $6",
         base_url,
         "#112233",
         "#445566",
         "#778899",
+        "#101010",
         event_node.event.id,
     )
 
@@ -411,6 +413,7 @@ async def test_get_api_config_includes_theme_colors(
     assert config.primary_color == "#112233"
     assert config.secondary_color == "#445566"
     assert config.background_color == "#778899"
+    assert config.font_color == "#101010"
 
 
 async def test_get_api_config_includes_sumup_payment_methods(

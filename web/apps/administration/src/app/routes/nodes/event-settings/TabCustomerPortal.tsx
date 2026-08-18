@@ -21,6 +21,7 @@ export const CustomerPortalSettingsSchema = z.object({
   customer_portal_primary_color: z.string().optional().nullable(),
   customer_portal_secondary_color: z.string().optional().nullable(),
   customer_portal_background_color: z.string().optional().nullable(),
+  customer_portal_font_color: z.string().optional().nullable(),
 });
 
 export type CustomerPortalSettings = z.infer<typeof CustomerPortalSettingsSchema>;
@@ -274,6 +275,14 @@ export const CustomerPortalSettingsForm: React.FC<FormikProps<CustomerPortalSett
               sx={{ width: 150 }}
               InputLabelProps={{ shrink: true }}
             />
+            <FormTextField
+              label={t("settings.customerPortal.fontColor")}
+              name="customer_portal_font_color"
+              formik={formik}
+              type="color"
+              sx={{ width: 150 }}
+              InputLabelProps={{ shrink: true }}
+            />
           </Stack>
         </Stack>
       </Paper>
@@ -328,6 +337,7 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     customer_portal_primary_color: eventSettings.customer_portal_primary_color || "#3A0CA3",
     customer_portal_secondary_color: eventSettings.customer_portal_secondary_color || "#4CC9F0",
     customer_portal_background_color: eventSettings.customer_portal_background_color || "#f5f7fa",
+    customer_portal_font_color: eventSettings.customer_portal_font_color || "#ffffff",
   };
 
   return (
@@ -358,4 +368,3 @@ export const TabCustomerPortal: React.FC<{ nodeId: number; eventSettings: Restri
     </Stack>
   );
 };
-

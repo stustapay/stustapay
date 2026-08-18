@@ -71,6 +71,7 @@ OPTIONAL_EVENT_DB_COLUMNS = {
     "customer_portal_primary_color",
     "customer_portal_secondary_color",
     "customer_portal_background_color",
+    "customer_portal_font_color",
     "wifi_ssid",
     "wifi_passphrase",
 }
@@ -149,6 +150,7 @@ def _build_event_db_values(event: NewEvent, available_columns: set[str]) -> list
         "customer_portal_primary_color": event.customer_portal_primary_color,
         "customer_portal_secondary_color": event.customer_portal_secondary_color,
         "customer_portal_background_color": event.customer_portal_background_color,
+        "customer_portal_font_color": event.customer_portal_font_color,
         "wifi_ssid": event.wifi_ssid,
         "wifi_passphrase": event.wifi_passphrase,
     }

@@ -88,7 +88,7 @@ export const Login: React.FC = () => {
           <Avatar sx={{
             margin: 1,
             backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "var(--primary-main, #1976d2)",
-            color: isDarkMode ? "white" : "white",
+            color: isDarkMode ? "white" : "var(--portal-font-color)",
             opacity: 0.9
           }}>
             <LockOutlinedIcon color="inherit" />

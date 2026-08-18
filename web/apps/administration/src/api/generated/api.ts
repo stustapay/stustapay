@@ -4345,6 +4345,7 @@ export type PublicEventSettings = {
   customer_portal_primary_color?: string | null;
   customer_portal_secondary_color?: string | null;
   customer_portal_background_color?: string | null;
+  customer_portal_font_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -4462,6 +4463,7 @@ export type NewEvent = {
   customer_portal_primary_color?: string | null;
   customer_portal_secondary_color?: string | null;
   customer_portal_background_color?: string | null;
+  customer_portal_font_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -4543,6 +4545,7 @@ export type UpdateEvent = {
   customer_portal_primary_color?: string | null;
   customer_portal_secondary_color?: string | null;
   customer_portal_background_color?: string | null;
+  customer_portal_font_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;
@@ -4613,6 +4616,7 @@ export type RestrictedEventSettings = {
   customer_portal_primary_color?: string | null;
   customer_portal_secondary_color?: string | null;
   customer_portal_background_color?: string | null;
+  customer_portal_font_color?: string | null;
   translation_texts?: {
     [key: string]: {
       [key: string]: string;

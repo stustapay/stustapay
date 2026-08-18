@@ -74,6 +74,7 @@ class _BaseEvent(BaseModel):
     customer_portal_primary_color: str | None = None
     customer_portal_secondary_color: str | None = None
     customer_portal_background_color: str | None = None
+    customer_portal_font_color: str | None = None
 
     # map of lang_code -> [text type -> text content]
     translation_texts: dict[Language, dict[str, str]] = {}

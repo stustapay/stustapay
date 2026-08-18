@@ -448,6 +448,7 @@ export type CustomerPortalApiConfig = {
   primary_color?: string | null;
   secondary_color?: string | null;
   background_color?: string | null;
+  font_color?: string | null;
 };
 export type OrderWithTse = {
   id: number;

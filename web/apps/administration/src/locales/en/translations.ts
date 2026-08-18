@@ -574,6 +574,7 @@ export const translations = {
       uploadBanner: "Upload Banner",
       primaryColor: "Primary Color",
       secondaryColor: "Secondary Color",
+      fontColor: "Font Color",
       appearance: "Portal Appearance",
     },
     pretix: {

@@ -6,6 +6,7 @@
     --primary-gradient: linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%);
     --accent-gradient: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
     --primary-main: #1976d2;
+    --portal-font-color: white;
     --portal-card-bg: rgba(255, 255, 255, 0.94);
     --portal-card-border: rgba(25, 118, 210, 0.18);
     --portal-card-text: #132238;
@@ -97,7 +98,7 @@ body {
 /* Balance card special styling */
 .balance-card {
     background: var(--primary-gradient);
-    color: white;
+    color: var(--portal-font-color);
     border-radius: 20px;
     box-shadow: var(--shadow-strong);
     position: relative;
@@ -140,7 +141,7 @@ body {
 /* Primary Contained Buttons */
 button.MuiButton-containedPrimary {
     background: var(--primary-gradient) !important;
-    color: white !important;
+    color: var(--portal-font-color) !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
@@ -152,7 +153,7 @@ button.MuiButton-containedPrimary:hover {
 /* Secondary Contained Buttons */
 button.MuiButton-containedSecondary {
     background: var(--accent-gradient) !important;
-    color: white !important;
+    color: var(--portal-font-color) !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
@@ -164,10 +165,12 @@ button.MuiButton-containedSecondary:hover {
 /* Floating Action Buttons */
 .MuiFab-primary {
     background: var(--primary-gradient) !important;
+    color: var(--portal-font-color) !important;
 }
 
 .MuiFab-secondary {
     background: var(--accent-gradient) !important;
+    color: var(--portal-font-color) !important;
 }
 
 /* Links */

@@ -20,5 +20,11 @@ export const useThemeColors = () => {
             // Let's try to make a very subtle gradient from it to keep the "premium" feel.
             document.body.style.background = `linear-gradient(135deg, ${color} 0%, ${color} 100%)`;
         }
-    }, [publicConfig.primary_color, publicConfig.secondary_color, publicConfig.background_color]);
+        document.documentElement.style.setProperty("--portal-font-color", publicConfig.font_color || "white");
+    }, [
+        publicConfig.primary_color,
+        publicConfig.secondary_color,
+        publicConfig.background_color,
+        publicConfig.font_color,
+    ]);
 };

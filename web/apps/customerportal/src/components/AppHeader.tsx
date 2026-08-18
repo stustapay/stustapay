@@ -33,6 +33,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ authenticated, onLogout, n
                 sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     background: "var(--primary-gradient)",
+                    color: "var(--portal-font-color)",
                     boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
                 }}
             >
