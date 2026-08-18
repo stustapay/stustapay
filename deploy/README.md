@@ -1,35 +1,45 @@
-# StuStaPay Azure deployment
+# StuStaPay local production deployment
 
-This directory contains the configuration layout for the local Azure deployment tooling in [`tools/deploy/cli.sh`](/Users/thomastelaak/code/stustapay/tools/deploy/cli.sh).
+The local deployment command builds both web applications, updates the existing backend Git checkout in place, runs database migrations, restarts the backend services, and overwrites the live Azure Blob paths.
 
 ## Setup
 
-1. Copy [`common.env.example`](/Users/thomastelaak/code/stustapay/deploy/common.env.example) to `deploy/common.env`.
-2. Copy the environment template you need:
-   - [`primary.env.example`](/Users/thomastelaak/code/stustapay/deploy/environments/primary.env.example) to `deploy/environments/primary.env`
-   - [`weu.env.example`](/Users/thomastelaak/code/stustapay/deploy/environments/weu.env.example) to `deploy/environments/weu.env`
-3. Fill in Azure, VM, TLS, database and secret values.
-4. Log into Azure locally with an account that can upload to the configured storage account.
-5. Ensure the remote VM user has passwordless `sudo`, `python3`, `python3-venv`, `nginx` and `systemd`.
+1. Copy `deploy/common.env.example` to `deploy/common.env`.
+2. Copy `deploy/environments/primary.env.example` to `deploy/environments/primary.env`.
+3. Fill in the Azure subscription, SSH host/key, and public smoke-test URLs.
+4. Log into Azure locally with an account that can upload and download blobs in the configured container.
+5. Ensure the SSH user has passwordless sudo for Git, switching to the backend runtime user, and controlling the configured systemd services.
+
+The `.env` files are ignored by Git. Never store Azure keys, SAS tokens, SSH private keys, or backend credentials in tracked files.
 
 ## Commands
 
-Run all commands from the repository root:
+Run commands from the repository root:
 
 ```bash
 tools/deploy/cli.sh dry-run --env primary
-tools/deploy/cli.sh bootstrap-server --env primary
 tools/deploy/cli.sh deploy --env primary
-tools/deploy/cli.sh list-releases --env primary
-tools/deploy/cli.sh rollback --env primary --release 20260315123000-deadbee
+tools/deploy/cli.sh deploy --env primary --yes
+tools/deploy/test.sh
 ```
 
-Deploying to the warm-standby environment works the same way with `--env weu`.
+`dry-run` validates the clean local branch and pushed commit, Azure access, SSH/sudo access, the remote checkout, virtual environment, config file, and all configured services. It does not build, upload, pull, migrate, or restart anything.
 
-## Notes
+`deploy` repeats the preflight, builds both web applications without the Nx cache, displays the resolved production target, and requires confirmation. `--yes` skips only that confirmation and is intended for an already reviewed non-interactive run.
 
-- `deploy` uploads both web apps to Azure Blob Storage and installs one backend release on the target VM.
-- The VM stores every release under `/opt/stustapay/releases/<release>` by default and switches `/opt/stustapay/current` on success.
-- Rollback restores the stored config and nginx files from the selected release directory. It does not run database down-migrations.
-- The nginx setup assumes one certificate/key pair is valid for the admin, customer portal and terminal domains of an environment.
-- Azure Blob proxying can use a public container or a SAS token via `AZURE_STORAGE_SAS_TOKEN`.
+`tools/deploy/test.sh` runs isolated command and recovery tests with mocked Git, systemd, SSH, and Azure commands. It never connects to production.
+
+## Deployment behavior
+
+- The local checkout must be clean, on the configured branch, and exactly match `origin/<branch>`.
+- The remote checkout must also be clean and on the configured branch.
+- All backend services stop before the fast-forward-only pull, editable dependency installation, and migration.
+- The remote commit must exactly match the validated local commit before migration starts.
+- After the backend is healthy, the web builds overwrite `dist/apps/administration` and `dist/apps/customerportal` in the configured container. Existing unrelated or stale blobs are not deleted.
+- Both uploaded `index.html` files are downloaded and compared with the local builds. Every referenced JavaScript bundle must exist before public smoke checks run.
+
+## Failure boundary
+
+Before migration begins, a failure restores the previous clean Git commit, reinstalls its dependencies, and restarts the services. Once migration starts, the command never rewinds Git or the database automatically.
+
+If migration fails, services remain stopped and the command prints their state. If service startup, Azure upload, or a public smoke check fails after migration, the new backend remains installed and the command reports the deployed commit, service state, and which frontend uploads were verified. Resolve that state explicitly; there are no automatic database down-migrations.

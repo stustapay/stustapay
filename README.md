@@ -112,7 +112,7 @@ Configuration of products, cash desks, accounts, ...
 
 ## Deployment
 
-Local multi-environment Azure deployment tooling lives under [`tools/deploy/`](/Users/thomastelaak/code/stustapay/tools/deploy) and is configured via [`deploy/README.md`](/Users/thomastelaak/code/stustapay/deploy/README.md). It supports `dry-run`, `bootstrap-server`, `deploy`, `list-releases` and `rollback` for explicit targets like `primary` and `weu`.
+The guarded local production deployment tooling lives under [`tools/deploy/`](/Users/thomastelaak/code/stustapay/tools/deploy) and is configured via [`deploy/README.md`](/Users/thomastelaak/code/stustapay/deploy/README.md). Use `dry-run` to validate the pushed commit and production prerequisites, then `deploy` to update the backend checkout, migrate the database, restart services, and publish both frontends.
 
 ## License
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "StuStaPay Local Deployment"
+  short_description: "Guarded production deployment from a local checkout"
+  default_prompt: "Use $stustapay-local-deployment to validate and deploy the configured StuStaPay production environment."

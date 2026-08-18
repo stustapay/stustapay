@@ -11,20 +11,21 @@ if [[ -z "$COMMAND" || "$COMMAND" == "--help" || "$COMMAND" == "-h" ]]; then
   usage
   exit 0
 fi
-shift || true
+shift
 
 DEPLOY_ENV_NAME=""
-RELEASE_ID=""
+ASSUME_YES="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --env)
-      DEPLOY_ENV_NAME="${2:-}"
+      [[ $# -ge 2 ]] || die "--env requires a value"
+      DEPLOY_ENV_NAME="$2"
       shift 2
       ;;
-    --release)
-      RELEASE_ID="${2:-}"
-      shift 2
+    --yes)
+      ASSUME_YES="true"
+      shift
       ;;
     --help|-h)
       usage
@@ -36,79 +37,45 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+[[ "$COMMAND" == "dry-run" || "$COMMAND" == "deploy" ]] || die "Unknown command: ${COMMAND}"
 [[ -n "$DEPLOY_ENV_NAME" ]] || die "--env is required"
+if [[ "$COMMAND" == "dry-run" && "$ASSUME_YES" == "true" ]]; then
+  die "--yes is only valid with deploy"
+fi
 
 load_env "$DEPLOY_ENV_NAME"
 validate_env
+run_preflight
 
-case "$COMMAND" in
-  dry-run)
-    require_command ssh
-    require_command scp
-    require_command curl
-    require_command git
-    require_command npm
-    require_command python3
-    azure_login_check
-    log "Checking Azure Blob container access"
-    [[ "$(az storage container exists \
-      --auth-mode "$AZURE_STORAGE_AUTH_MODE" \
-      --account-name "$AZURE_STORAGE_ACCOUNT" \
-      --name "$AZURE_STORAGE_CONTAINER" \
-      --query exists \
-      --output tsv)" == "true" ]] || die "Azure Blob container not accessible"
-    log "Checking SSH connectivity"
-    run_remote_cmd "true"
-    log "Checking remote prerequisites"
-    run_remote_cmd \
-      "command -v ${PYTHON_BIN@Q} >/dev/null && ${PYTHON_BIN@Q} -m venv --help >/dev/null && command -v nginx >/dev/null && command -v systemctl >/dev/null"
-    log "Dry-run checks passed for ${DEPLOY_ENV_NAME}"
-    ;;
-  bootstrap-server)
-    RELEASE_ID="${RELEASE_ID:-bootstrap-pending}"
-    BUNDLE_DIR="$(create_bundle "$RELEASE_ID" bootstrap)"
-    REMOTE_DIR="$(remote_tmp_dir "$RELEASE_ID")"
-    trap 'rm -rf "${BUNDLE_DIR:-}"' EXIT
-    copy_bundle_to_remote "$BUNDLE_DIR" "$REMOTE_DIR"
-    log "Bootstrapping remote VM"
-    run_remote_script remote-bootstrap.sh "$REMOTE_DIR"
-    log "Bootstrap completed for ${DEPLOY_ENV_NAME}"
-    ;;
-  deploy)
-    azure_login_check
-    RELEASE_ID="${RELEASE_ID:-$(generate_release_id)}"
-    build_artifacts
-    upload_web_release "$RELEASE_ID"
-    BUNDLE_DIR="$(create_bundle "$RELEASE_ID" deploy)"
-    REMOTE_DIR="$(remote_tmp_dir "$RELEASE_ID")"
-    trap 'rm -rf "${BUNDLE_DIR:-}"' EXIT
-    copy_bundle_to_remote "$BUNDLE_DIR" "$REMOTE_DIR"
-    log "Installing release ${RELEASE_ID} on remote host"
-    run_remote_script remote-install.sh "$REMOTE_DIR"
-    run_smoke_checks
-    log "Deployment finished: ${RELEASE_ID} (${DEPLOY_ENV_NAME})"
-    ;;
-  rollback)
-    [[ -n "$RELEASE_ID" ]] || die "--release is required for rollback"
-    BUNDLE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/stustapay-rollback-${DEPLOY_ENV_NAME}-${RELEASE_ID}-XXXX")"
-    trap 'rm -rf "${BUNDLE_DIR:-}"' EXIT
-    write_metadata_env "${BUNDLE_DIR}/metadata.env" "$RELEASE_ID"
-    REMOTE_DIR="$(remote_tmp_dir "rollback-${RELEASE_ID}")"
-    copy_bundle_to_remote "$BUNDLE_DIR" "$REMOTE_DIR"
-    log "Rolling back ${DEPLOY_ENV_NAME} to ${RELEASE_ID}"
-    run_remote_script remote-rollback.sh "$REMOTE_DIR"
-    run_smoke_checks
-    log "Rollback finished: ${RELEASE_ID} (${DEPLOY_ENV_NAME})"
-    ;;
-  list-releases)
-    BUNDLE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/stustapay-list-${DEPLOY_ENV_NAME}-XXXX")"
-    trap 'rm -rf "${BUNDLE_DIR:-}"' EXIT
-    write_metadata_env "${BUNDLE_DIR}/metadata.env" "list-releases"
-    REMOTE_DIR="$(remote_tmp_dir "list-releases")"
-    copy_bundle_to_remote "$BUNDLE_DIR" "$REMOTE_DIR"
-    run_remote_script remote-list-releases.sh "$REMOTE_DIR"
-    ;;
-  *)
-    die "Unknown command: ${COMMAND}"
-    ;;
-esac
+if [[ "$COMMAND" == "dry-run" ]]; then
+  log "Dry-run checks passed for ${DEPLOY_ENV_NAME} at ${LOCAL_COMMIT}"
+  exit 0
+fi
+
+build_web_apps
+print_deploy_summary
+confirm_deploy "$ASSUME_YES"
+
+log "Updating backend on $(ssh_target)"
+if ! run_remote_deploy; then
+  warn "Backend deployment failed. The remote recovery policy was applied by the backend helper."
+  report_remote_status
+  exit 1
+fi
+
+ADMIN_UPLOAD_STATUS="pending"
+CUSTOMER_UPLOAD_STATUS="pending"
+if ! upload_and_verify_web_apps; then
+  warn "Frontend deployment failed after the backend reached ${LOCAL_COMMIT}."
+  report_deployment_state
+  exit 1
+fi
+
+if ! run_public_smoke_checks; then
+  warn "Public smoke checks failed after backend and frontend deployment."
+  report_deployment_state
+  exit 1
+fi
+
+report_deployment_state
+log "Deployment finished successfully: ${DEPLOY_ENV_NAME} at ${LOCAL_COMMIT}"
