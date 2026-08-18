@@ -21,6 +21,23 @@ async def fetch_customer(*, conn: Connection, node: Node, customer_id: int) -> C
     )
 
 
+async def reset_customer_payout_info(*, conn: Connection, customer_account_ids: list[int]) -> None:
+    if not customer_account_ids:
+        return
+
+    await conn.execute(
+        "update customer_info set "
+        "   iban = null, "
+        "   account_name = null, "
+        "   email = null, "
+        "   donation = 0, "
+        "   donate_all = false, "
+        "   has_entered_info = false "
+        "where customer_account_id = any($1)",
+        customer_account_ids,
+    )
+
+
 async def fetch_customer_portal_event_node_id(*, conn: Connection, base_url: str) -> int | None:
     return await conn.fetchval(
         "select n.id from node n join event e on n.event_id = e.id where e.customer_portal_url = $1",

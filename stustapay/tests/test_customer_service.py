@@ -1535,6 +1535,15 @@ async def test_update_customer_info_blocked_only_for_active_payout_runs(
     assert not completed_payout_info.in_payout_run
     assert completed_payout_info.payout_date is not None
 
+    cleared_customer = await customer_service.get_customer(token=auth.token)
+    assert cleared_customer is not None
+    assert cleared_customer.iban is None
+    assert cleared_customer.account_name is None
+    assert cleared_customer.email is None
+    assert cleared_customer.donation == 0
+    assert not cleared_customer.donate_all
+    assert not cleared_customer.has_entered_info
+
     await db_connection.execute("update account set balance = 30 where id = $1", test_customer.id)
 
     await customer_service.update_customer_info(

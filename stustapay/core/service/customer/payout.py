@@ -27,7 +27,7 @@ from stustapay.core.service.account import get_system_account_for_node
 from stustapay.core.service.auth import AuthService
 from stustapay.core.service.common.decorators import requires_node, requires_user
 from stustapay.core.service.config import ConfigService
-from stustapay.core.service.customer.common import fetch_customer
+from stustapay.core.service.customer.common import fetch_customer, reset_customer_payout_info
 from stustapay.core.service.email_templates import render_plain_text_payout_html
 from stustapay.core.service.mail import MailService
 from stustapay.core.service.tree.common import (
@@ -346,6 +346,11 @@ class PayoutService(Service[Config]):
                 to_addr=payout.email,
                 node_id=node.id,
             )
+
+        await reset_customer_payout_info(
+            conn=conn,
+            customer_account_ids=[payout.customer_account_id for payout in payouts],
+        )
 
     @with_db_transaction
     @requires_node(event_only=True)

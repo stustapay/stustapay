@@ -504,9 +504,31 @@ async def test_set_payout_to_done(
     assert payout_run.done
 
     updated_customers = await db_connection.fetch_many(
-        Customer, "select * from customer where id = any($1)", [c.id for c in customers]
+        Customer,
+        "select * from customer where id = any($1)",
+        [c.id for c in customers if round(c.balance, 2) > 0],
     )
     assert all(customer.payout is None for customer in updated_customers)
+    assert all(customer.iban is None for customer in updated_customers)
+    assert all(customer.account_name is None for customer in updated_customers)
+    assert all(customer.email is None for customer in updated_customers)
+    assert all(customer.donation == 0 for customer in updated_customers)
+    assert all(not customer.donate_all for customer in updated_customers)
+    assert all(not customer.has_entered_info for customer in updated_customers)
+    assert all(customer.payout_export for customer in updated_customers)
+
+    historical_payouts = await customer_service.payout.get_payout_run_payouts(
+        token=event_admin_token,
+        node_id=event_node.id,
+        payout_run_id=created_payout_run.id,
+    )
+    original_customers = {customer.id: customer for customer in customers}
+    assert all(payout.iban == original_customers[payout.customer_account_id].iban for payout in historical_payouts)
+    assert all(
+        payout.account_name == original_customers[payout.customer_account_id].account_name
+        for payout in historical_payouts
+    )
+    assert all(payout.email == original_customers[payout.customer_account_id].email for payout in historical_payouts)
 
     mails = await db_connection.fetch(
         "select subject, text_message, html_message, to_addr, from_addr from mails order by id asc"
@@ -531,7 +553,7 @@ async def test_set_payout_to_done(
         )
 
 
-async def test_customer_with_completed_payout_can_be_scheduled_again(
+async def test_customer_with_completed_payout_must_enter_payout_info_again(
     db_connection: Connection,
     customers: list[CustomerTestInfo],
     event_node: Node,
@@ -551,9 +573,33 @@ async def test_customer_with_completed_payout_can_be_scheduled_again(
         mail_service=mail_service,
     )
 
-    rescheduled_customers = customers[:3]
+    first_run_payouts = await customer_service.payout.get_payout_run_payouts(
+        token=event_admin_token,
+        node_id=event_node.id,
+        payout_run_id=first_payout_run.id,
+    )
+    customers_by_id = {customer.id: customer for customer in customers}
+    rescheduled_customers = [customers_by_id[payout.customer_account_id] for payout in first_run_payouts[:3]]
     for index, customer in enumerate(rescheduled_customers, start=1):
         await db_connection.execute("update account set balance = $2 where id = $1", customer.id, 20 + index)
+
+    with pytest.raises(InvalidArgument):
+        await customer_service.payout.create_payout_run(
+            token=event_admin_token,
+            node_id=event_node.id,
+            new_payout_run=NewPayoutRun(max_num_payouts=15, max_payout_sum=15000),
+        )
+
+    for customer in rescheduled_customers:
+        await db_connection.execute(
+            "update customer_info set iban = $2, account_name = $3, email = $4, donation = 0, "
+            "   donate_all = false, has_entered_info = true "
+            "where customer_account_id = $1",
+            customer.id,
+            customer.iban,
+            customer.account_name,
+            customer.email,
+        )
 
     second_payout_run: PayoutRunWithStats = await customer_service.payout.create_payout_run(
         token=event_admin_token,

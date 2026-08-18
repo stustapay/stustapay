@@ -2,6 +2,7 @@
 import uuid
 
 import pytest
+from sftkit.database import Connection
 from sftkit.error import InvalidArgument
 
 from stustapay.core.schema.account import AccountType
@@ -40,17 +41,39 @@ async def test_cash_pay_out_flow_with_amount(
     terminal_token: str,
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
+    db_connection: Connection,
 ):
     cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_exit_start_balance = await get_system_account_balance(account_type=AccountType.cash_exit)
+    await db_connection.execute(
+        "update customer_info set iban = $2, account_name = $3, email = $4, donation = 10, "
+        "   donate_all = true, has_entered_info = true, payout_export = false "
+        "where customer_account_id = $1",
+        customer.account_id,
+        "DE89370400440532013000",
+        "Cash Customer",
+        "cash@example.com",
+    )
 
     # Test that payout validation works for amounts exceeding balance
     new_pay_out = NewPayOut(uuid=uuid.uuid4(), customer_tag_uid=customer.tag.uid, amount=2 * START_BALANCE)
     with pytest.raises(InvalidArgument):
         await order_service.check_pay_out(token=terminal_token, new_pay_out=new_pay_out)
+    unchanged_payout_info = await db_connection.fetchrow(
+        "select iban, account_name, email, donation, donate_all, has_entered_info, payout_export "
+        "from customer_info where customer_account_id = $1",
+        customer.account_id,
+    )
+    assert unchanged_payout_info["iban"] == "DE89370400440532013000"
+    assert unchanged_payout_info["account_name"] == "Cash Customer"
+    assert unchanged_payout_info["email"] == "cash@example.com"
+    assert unchanged_payout_info["donation"] == 10
+    assert unchanged_payout_info["donate_all"]
+    assert unchanged_payout_info["has_entered_info"]
+    assert not unchanged_payout_info["payout_export"]
 
     new_pay_out = NewPayOut(uuid=uuid.uuid4(), customer_tag_uid=customer.tag.uid, amount=-20)
     pending_pay_out = await order_service.check_pay_out(token=terminal_token, new_pay_out=new_pay_out)
@@ -61,6 +84,19 @@ async def test_cash_pay_out_flow_with_amount(
 
     completed_pay_out = await order_service.book_pay_out(token=terminal_token, new_pay_out=new_pay_out)
     assert completed_pay_out is not None
+
+    cleared_payout_info = await db_connection.fetchrow(
+        "select iban, account_name, email, donation, donate_all, has_entered_info, payout_export "
+        "from customer_info where customer_account_id = $1",
+        customer.account_id,
+    )
+    assert cleared_payout_info["iban"] is None
+    assert cleared_payout_info["account_name"] is None
+    assert cleared_payout_info["email"] is None
+    assert cleared_payout_info["donation"] == 0
+    assert not cleared_payout_info["donate_all"]
+    assert not cleared_payout_info["has_entered_info"]
+    assert not cleared_payout_info["payout_export"]
 
     customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
     assert START_BALANCE - 20 == customer_info.balance
@@ -85,12 +121,22 @@ async def test_cash_pay_out_flow_no_amount(
     customer: Customer,
     login_supervised_user: LoginSupervisedUser,
     assign_cash_register: AssignCashRegister,
+    db_connection: Connection,
 ):
     cash_register_account_id = await assign_cash_register(cashier=cashier)
     await login_supervised_user(user_tag_uid=cashier.user_tag_uid, user_role_id=cashier.cashier_role.id)
     cash_drawer_start_balance = await get_account_balance(account_id=cash_register_account_id)
     cash_sale_source_start_balance = await get_system_account_balance(account_type=AccountType.cash_topup_source)
     cash_exit_start_balance = await get_system_account_balance(account_type=AccountType.cash_exit)
+    await db_connection.execute(
+        "update customer_info set iban = $2, account_name = $3, email = $4, donation = 5, "
+        "   has_entered_info = true "
+        "where customer_account_id = $1",
+        customer.account_id,
+        "DE89370400440532013000",
+        "Cash Customer",
+        "cash@example.com",
+    )
 
     new_pay_out = NewPayOut(uuid=uuid.uuid4(), customer_tag_uid=customer.tag.uid)
     pending_pay_out = await order_service.check_pay_out(token=terminal_token, new_pay_out=new_pay_out)
@@ -100,6 +146,18 @@ async def test_cash_pay_out_flow_no_amount(
     assert pending_pay_out.amount == START_BALANCE
     completed_pay_out = await order_service.book_pay_out(token=terminal_token, new_pay_out=new_pay_out)
     assert completed_pay_out is not None
+
+    cleared_payout_info = await db_connection.fetchrow(
+        "select iban, account_name, email, donation, donate_all, has_entered_info "
+        "from customer_info where customer_account_id = $1",
+        customer.account_id,
+    )
+    assert cleared_payout_info["iban"] is None
+    assert cleared_payout_info["account_name"] is None
+    assert cleared_payout_info["email"] is None
+    assert cleared_payout_info["donation"] == 0
+    assert not cleared_payout_info["donate_all"]
+    assert not cleared_payout_info["has_entered_info"]
 
     customer_info = await till_service.get_customer(token=terminal_token, customer_tag_uid=customer.tag.uid)
     # Customer balance should be 0 after full payout
@@ -278,5 +336,3 @@ async def test_payout_money_conservation(
 
     # Final verification of customer balance
     assert customer_after.balance == START_BALANCE - payout_amount
-
-
