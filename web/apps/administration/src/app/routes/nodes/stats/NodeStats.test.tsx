@@ -198,7 +198,7 @@ describe("NodeStats", () => {
     );
     expect(mockUseGetAvailableDatesQuery).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ skip: true }));
     expect(screen.getByTestId("orders-table").textContent).toContain("disabled");
-    expect(screen.getByRole("combobox", { name: "overview.filterDate" }).textContent).toContain("overview.today");
+    expect(screen.getByLabelText("overview.filterDate").textContent).toContain("overview.today");
   });
 
   test("fetches only the expanded sections and shares one top-level product/counter query", () => {
