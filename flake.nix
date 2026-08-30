@@ -1,52 +1,57 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }: flake-utils.lib.eachDefaultSystem (system:
+  outputs = { self, nixpkgs, flake-utils, pyproject-nix, uv2nix, pyproject-build-systems, ... }: flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [];
-        config = {
-          # This exception is needed for a stustapay dependency.
-          # It's irrelevant for security in production because it's used exclusively in the TSE simulator.
-          permittedInsecurePackages = [
-            "python3.13-ecdsa-0.19.1"
-          ];
-        };
       };
-      python = pkgs.python3.override {
-        self = python;
-        packageOverrides = final: prev: {
-          sftkit = final.buildPythonPackage rec {
-            pname = "sftkit";
-            version = "0.4.2";
-            src = prev.fetchPypi {
-              inherit pname version;
-              hash = "sha256-dj+rV69lU7LzJaNGTsi0wTfg1tyNxI7J8BKf3iUQfYw=";
-            };
-            pyproject = true;
-            doCheck = false;
-            build-system = with final; [
-              uv-build
-            ];
-            dependencies = with final; [
-              fastapi
-              typer
-              uvicorn
-              asyncpg
-              pydantic
-            ];
-            pythonRelaxDeps = [ "pydantic" ];
-            postPatch = ''
-              substituteInPlace pyproject.toml \
-                --replace "uv_build>=0.9.9,<0.10.0" "uv_build>=0.9.7,<0.10.0"
-            '';
-          };
-        };
+
+      lib = pkgs.lib;
+
+      workspace = uv2nix.lib.workspace.loadWorkspace {
+        workspaceRoot = ./.;
       };
+
+      python = lib.head (pyproject-nix.lib.util.filterPythonInterpreters {
+        inherit (workspace) requires-python;
+        inherit (pkgs) pythonInterpreters;
+      });
+
+      pythonBase = pkgs.callPackage pyproject-nix.build.packages {
+        inherit python;
+      };
+
+      overlay = workspace.mkPyprojectOverlay {
+        sourcePreference = "wheel";
+      };
+
+      pythonSet = pythonBase.overrideScope (
+        lib.composeManyExtensions [
+          pyproject-build-systems.overlays.wheel
+          overlay
+        ]
+      );
+
+      virtualEnv = pythonSet.mkVirtualEnv "application-env" workspace.deps.default;
     in with pkgs; {
       packages.default = self.packages.${system}.stustapay;
 
@@ -54,7 +59,7 @@
         pname = "stustapay-admin-ui";
         version = "0.1.0";
         src = ./web;
-        npmDepsHash = "sha256-e+SfMEuub7YSCY0fKpgL51pT6SQwn57Y6J+SPx/uLK4=";
+        npmDepsHash = "sha256-W2bo8f6V2Jhm6FT3H4ndfhGzqMmu9Ugk3N01a/tLVl0=";
         npmInstallFlags = "--verbose";
         dontNpmBuild = true;
         buildPhase = ''
@@ -73,7 +78,7 @@
         pname = "stustapay-customer-ui";
         version = "0.1.0";
         src = ./web;
-        npmDepsHash = "sha256-e+SfMEuub7YSCY0fKpgL51pT6SQwn57Y6J+SPx/uLK4=";
+        npmDepsHash = "sha256-W2bo8f6V2Jhm6FT3H4ndfhGzqMmu9Ugk3N01a/tLVl0=";
         npmInstallFlags = "--verbose";
         dontNpmBuild = true;
         buildPhase = ''
@@ -88,66 +93,24 @@
         CYPRESS_RUN_BINARY = "${pkgs.cypress}/bin/Cypress";
       };
 
-      packages.stustapay = with python.pkgs; buildPythonPackage {
-        pname = "stustapay";
-        version = "0.1.0";
-        src = ./.;
-        pyproject = true;
-        build-system = [
-          setuptools
+      packages.stustapay = pkgs.stdenv.mkDerivation rec {
+        name = "stustapay";
+        buildInputs = with pkgs; [
+          virtualEnv
+          glib
+          pango
+          fontconfig
         ];
-        dependencies = [
-          sftkit
-          fastapi
-          typer
-          uvicorn
-          asyncpg
-          pydantic
-          python-jose
-          jinja2
-          aiohttp
-          pylatexenc
-          schwifty
-          sepaxml
-          asn1crypto
-          ecdsa
-          dateutils
-          aiosmtplib
-          bcrypt
-          passlib
-          pyyaml
-          email-validator
-          python-multipart
-          weasyprint
-          mako
-          pandas
-          websockets
-        ];
-        pythonRelaxDeps = [
-          "jinja2"
-          "aiohttp"
-          "schwifty"
-          "ecdsa"
-          "aiosmtplib"
-          "bcrypt"
-          "pyyaml"
-          "fastapi"
-          "typer"
-          "uvicorn"
-          "pydantic"
-          "python-multipart"
-          "python-jose"
-          "sepaxml"
-          "passlib"
-          "weasyprint"
-          "mako"
-          "pandas"
-        ];
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+        dontUnpack = true;
+        installPhase = ''
+          export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath buildInputs}:$LD_LIBRARY_PATH"
+          mkdir -p $out/bin
+          makeWrapper ${virtualEnv}/bin/stustapay $out/bin/stustapay --set LD_LIBRARY_PATH "$LD_LIBRARY_PATH"
+        '';
       };
 
-      packages.sftkit = python.pkgs.sftkit;
-
-      devShell = mkShell rec {
+      devShell = mkShell {
         buildInputs = [
           (python3.withPackages(ps: with ps; [
             pip
