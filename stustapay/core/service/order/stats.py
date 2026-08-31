@@ -289,7 +289,7 @@ async def fetch_payment_method_stats(
         "from orders_at_node_and_children($3) o "
         "join line_item li on o.id = li.order_id "
         "where o.booked_at >= $1 and o.booked_at <= $2 "
-        "   and o.order_type in ('sale', 'cancel_sale', 'top_up', 'pay_out', 'ticket') "
+        "   and o.order_type in ('sale', 'cancel_sale', 'top_up', 'ticket') "
         "group by o.payment_method "
         "order by revenue desc",
         from_time,
