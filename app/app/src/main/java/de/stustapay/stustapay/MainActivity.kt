@@ -13,12 +13,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
-import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.libssp.nfc.NfcHandler
-import de.stustapay.stustapay.repository.InfallibleRepository
-import de.stustapay.stustapay.ui.Main
 import de.stustapay.libssp.util.ActivityCallback
 import de.stustapay.libssp.util.SysUiController
+import de.stustapay.stustapay.ec.SumUp
+import de.stustapay.stustapay.ec.SumUpTapToPay
+import de.stustapay.stustapay.repository.InfallibleRepository
+import de.stustapay.stustapay.ui.Main
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -31,6 +32,9 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     @Inject
     lateinit var sumUp: SumUp
+
+    @Inject
+    lateinit var sumUpTapToPay: SumUpTapToPay
 
     @Inject
     lateinit var infallible: InfallibleRepository
@@ -48,6 +52,7 @@ class MainActivity : ComponentActivity(), SysUiController {
         // things that need the activity
         nfcHandler.onCreate(this, mapOf())
         sumUp.init(activityCallback)
+        sumUpTapToPay.init(applicationContext)
 
         infallible.launch()
 
@@ -74,8 +79,7 @@ class MainActivity : ComponentActivity(), SysUiController {
 
     @Deprecated("Deprecated in Android")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        @Suppress("DEPRECATION")
-        super.onActivityResult(requestCode, resultCode, data)
+        @Suppress("DEPRECATION") super.onActivityResult(requestCode, resultCode, data)
 
         activityCallback.activityResult(requestCode, resultCode, data)
     }
