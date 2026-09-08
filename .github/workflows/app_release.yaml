@@ -35,6 +35,9 @@ jobs:
           echo "ANDROID_KEY_PASSWORD=${ANDROID_KEY_PASSWORD}" >> ~/.gradle/gradle.properties
           ./gradlew app:signingReport
       - name: build app
+        env:
+          SUMUP_TTP_USER: ${{ secrets.SUMUP_TTP_USER }}
+          SUMUP_TTP_PASS: ${{ secrets.SUMUP_TTP_PASS }}
         working-directory: ./app
         run: ./gradlew app:assembleRelease
       - name: upload apk
