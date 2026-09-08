@@ -5,6 +5,8 @@ import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.stustapay.ec.SumUpState
+import de.stustapay.stustapay.ec.SumUpTapToPay
+import de.stustapay.stustapay.ec.SumUpTapToPayResult
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,13 +19,18 @@ sealed interface ECPaymentResult {
 
 @Singleton
 class ECPaymentRepository @Inject constructor(
-    private val sumUp: SumUp,
+    private val sumUp: SumUp, private val sumUpTapToPay: SumUpTapToPay
 ) {
     suspend fun wakeup() {
         sumUp.wakeup()
     }
 
-    suspend fun pay(context: Activity, ecPayment: ECPayment): ECPaymentResult {
+    suspend fun login() {
+        sumUpTapToPay.login()
+    }
+
+    // payment with an external card reader
+    suspend fun payReader(context: Activity, ecPayment: ECPayment): ECPaymentResult {
 
         // perform sumup flow
         sumUp.pay(context, ecPayment)
@@ -60,6 +67,14 @@ class ECPaymentRepository @Inject constructor(
                     ECPaymentResult.SilentCancelled
                 }
             }
+        }
+    }
+
+    // payment using the built-in nfc reader
+    suspend fun payTapToPay(ecPayment: ECPayment): ECPaymentResult {
+        return when (val res = sumUpTapToPay.pay(ecPayment)) {
+            is SumUpTapToPayResult.Error -> ECPaymentResult.Failure(res.msg)
+            SumUpTapToPayResult.Success -> ECPaymentResult.Success(SumUpState.Success("", "", null))
         }
     }
 }

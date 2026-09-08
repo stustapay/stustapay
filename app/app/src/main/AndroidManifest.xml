@@ -27,6 +27,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.StuStaPay"
+        tools:replace="android:theme"
         tools:targetApi="s"
         android:icon="@mipmap/ic_launcher">
         <activity

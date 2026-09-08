@@ -3,14 +3,19 @@ package de.stustapay.stustapay.ui.root
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.stustapay.libssp.util.Result
+import de.stustapay.libssp.util.asResult
 import de.stustapay.stustapay.model.UserState
+import de.stustapay.stustapay.repository.ECPaymentRepository
 import de.stustapay.stustapay.repository.TerminalConfigRepository
 import de.stustapay.stustapay.repository.UserRepository
 import de.stustapay.stustapay.ui.common.TerminalLoginState
-import de.stustapay.libssp.util.Result
-import de.stustapay.libssp.util.asResult
-import de.stustapay.stustapay.repository.InfallibleRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 
@@ -31,7 +36,8 @@ sealed interface LoginProfileUIState {
 @HiltViewModel
 class TerminalConfigViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val terminalConfigRepository: TerminalConfigRepository
+    private val terminalConfigRepository: TerminalConfigRepository,
+    private val ecPaymentRepository: ECPaymentRepository
 ) : ViewModel() {
     private val _user = userRepository.userState
     private val _terminal = terminalConfigRepository.terminalConfigState
@@ -56,6 +62,7 @@ class TerminalConfigViewModel @Inject constructor(
 
     suspend fun fetchAccessData() {
         terminalConfigRepository.fetchConfig(keepTrying = true)
+        ecPaymentRepository.login()
         userRepository.fetchLogin()
     }
 }
@@ -66,46 +73,43 @@ private fun loginProfileUiState(
 ): Flow<LoginProfileUIState> {
 
     // convert the registration state to a ui registration state
-    return userState.asResult()
-        .map { userStateResult ->
-            when (userStateResult) {
-                is Result.Loading -> {
-                    LoginProfileUIState.Error("loading...")
-                }
+    return userState.asResult().map { userStateResult ->
+        when (userStateResult) {
+            is Result.Loading -> {
+                LoginProfileUIState.Error("loading...")
+            }
 
-                is Result.Success -> {
-                    when (val state = userStateResult.data) {
-                        is UserState.LoggedIn -> {
-                            if (state.user.activeRoleName != null) {
-                                LoginProfileUIState.LoggedIn(
-                                    username = state.user.login,
-                                    role = state.user.activeRoleName!!
-                                )
-                            } else {
-                                LoginProfileUIState.Error(
-                                    message = "no active role provided",
-                                )
-                            }
-                        }
-
-                        is UserState.NoLogin -> {
-                            LoginProfileUIState.NotLoggedIn
-                        }
-
-                        is UserState.Error -> {
+            is Result.Success -> {
+                when (val state = userStateResult.data) {
+                    is UserState.LoggedIn -> {
+                        if (state.user.activeRoleName != null) {
+                            LoginProfileUIState.LoggedIn(
+                                username = state.user.login, role = state.user.activeRoleName!!
+                            )
+                        } else {
                             LoginProfileUIState.Error(
-                                message = state.msg,
+                                message = "no active role provided",
                             )
                         }
                     }
-                }
 
-                is Result.Error -> {
-                    LoginProfileUIState.Error(
-                        userStateResult.exception?.localizedMessage
-                            ?: "unknown login state error"
-                    )
+                    is UserState.NoLogin -> {
+                        LoginProfileUIState.NotLoggedIn
+                    }
+
+                    is UserState.Error -> {
+                        LoginProfileUIState.Error(
+                            message = state.msg,
+                        )
+                    }
                 }
             }
+
+            is Result.Error -> {
+                LoginProfileUIState.Error(
+                    userStateResult.exception?.localizedMessage ?: "unknown login state error"
+                )
+            }
         }
+    }
 }
