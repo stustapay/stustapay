@@ -37,10 +37,9 @@ import javax.inject.Singleton
  *  - Debug features (USB debugging, dev mode, debuggable app build) must be turned off to use
  *    production credentials
  *  - The OAuth application doesn't actually require 'payments' permissions
- *  - Sandbox credentials don't work at all in the SSP app for whatever reason, production does (both
- *    API keys and OAuth)
  *  - Debuggable build is not required to use sandbox credentials
- *  - Production credentials fail in the test app???
+ *  - API must be torn down when switching credentials, even after restarting / reinstalling the app
+ *    (SumUp has some sort of persistent internal state)
  */
 
 @Singleton
@@ -58,12 +57,6 @@ class SumUpTapToPay @Inject constructor(
     }
 
     suspend fun login(): SumUpTapToPayResult {
-        val api = when (val state = state.value) {
-            is SumUpTapToPayState.Initializing -> state.api
-            is SumUpTapToPayState.Ready -> return SumUpTapToPayResult.Success
-            SumUpTapToPayState.Uninitialized -> return SumUpTapToPayResult.Error("api not initialized")
-        }
-
         val terminalConfig =
             (terminalConfigRepository.terminalConfigState.value as? TerminalConfigState.Success)?.config
                 ?: return SumUpTapToPayResult.Error("terminal not registered")
@@ -71,23 +64,39 @@ class SumUpTapToPay @Inject constructor(
         val sumupSecrets = terminalConfig.till?.sumupSecrets
             ?: return SumUpTapToPayResult.Error("no sumup secret available")
 
+        val api = when (val state = state.value) {
+            is SumUpTapToPayState.Initializing -> state.api
+            is SumUpTapToPayState.Ready -> {
+                if (state.initializedWithKey == sumupSecrets.sumupApiKey.takeLast(4)) {
+                    return SumUpTapToPayResult.Success
+                } else {
+                    state.api
+                }
+            }
+
+            SumUpTapToPayState.Uninitialized -> return SumUpTapToPayResult.Error("api not initialized")
+        }
+
+        api.tearDown().onFailure {
+            val e = it.toApiError()
+            Log.e("ttp", "api teardown failed: ${e.code} ${e.message}")
+            Log.e("ttp", "${e.details}")
+        }.onSuccess {
+            Log.i("ttp", "api teardown done")
+        }
+
         api.init(object : AuthTokenProvider {
             override fun getAccessToken(): String {
                 return sumupSecrets.sumupApiKey
             }
         }).onFailure {
             val e = it.toApiError()
-            if (e.details == "SDKIsAlreadyInitialized") {
-                Log.i("ttp", "api reinit")
-                state.update { SumUpTapToPayState.Ready(api) }
-            } else {
-                Log.e("ttp", "api init failed: ${e.code} ${e.message}")
-                Log.e("ttp", "${e.details}")
-                return SumUpTapToPayResult.Error("api init failed")
-            }
+            Log.e("ttp", "api init failed: ${e.code} ${e.message}")
+            Log.e("ttp", "${e.details}")
+            return SumUpTapToPayResult.Error("api init failed")
         }.onSuccess {
             Log.i("ttp", "api init done")
-            state.update { SumUpTapToPayState.Ready(api) }
+            state.update { SumUpTapToPayState.Ready(api, sumupSecrets.sumupApiKey.takeLast(4)) }
         }
 
         return SumUpTapToPayResult.Success
@@ -120,7 +129,11 @@ class SumUpTapToPay @Inject constructor(
                 affiliateData = AffiliateModel(
                     key = sumupSecrets.sumupAffiliateKey,
                     foreignTransactionId = payment.id,
-                    tags = null
+                    tags = mapOf(
+                        Pair("Terminal", terminalConfig.name),
+                        Pair("TerminalID", terminalConfig.id.toString()),
+                        Pair("Tag", payment.tag.toString())
+                    )
                 )
             ), skipSuccessScreen = true, timeoutCardWaitSeconds = null
         ).catch {
@@ -147,7 +160,7 @@ sealed interface SumUpTapToPayState {
     ) : SumUpTapToPayState
 
     data class Ready(
-        val api: TapToPay
+        val api: TapToPay, val initializedWithKey: String
     ) : SumUpTapToPayState
 }
 
