@@ -1,12 +1,15 @@
 package de.stustapay.stustapay.repository
 
 import android.app.Activity
+import android.util.Log
 import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.stustapay.ec.SumUpState
 import de.stustapay.stustapay.ec.SumUpTapToPay
+import de.stustapay.stustapay.ec.SumUpTapToPayLoginResult
 import de.stustapay.stustapay.ec.SumUpTapToPayResult
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,8 +28,13 @@ class ECPaymentRepository @Inject constructor(
         sumUp.wakeup()
     }
 
-    suspend fun login() {
-        sumUpTapToPay.login()
+    suspend fun login(keepTrying: Boolean = false) {
+        var res = sumUpTapToPay.login()
+        while (keepTrying && res is SumUpTapToPayLoginResult.Error) {
+            Log.e("ec", "ttp login failed: ${res.msg}")
+            delay(1000)
+            res = sumUpTapToPay.login()
+        }
     }
 
     // payment with an external card reader
@@ -73,8 +81,14 @@ class ECPaymentRepository @Inject constructor(
     // payment using the built-in nfc reader
     suspend fun payTapToPay(ecPayment: ECPayment): ECPaymentResult {
         return when (val res = sumUpTapToPay.pay(ecPayment)) {
+            is SumUpTapToPayResult.Success -> ECPaymentResult.Success(
+                SumUpState.Success(
+                    "success", res.txCode, null
+                )
+            )
+
             is SumUpTapToPayResult.Error -> ECPaymentResult.Failure(res.msg)
-            SumUpTapToPayResult.Success -> ECPaymentResult.Success(SumUpState.Success("", "", null))
+            SumUpTapToPayResult.Cancelled -> ECPaymentResult.Failure("cancelled")
         }
     }
 }

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,27 +57,29 @@ class SumUpTapToPay @Inject constructor(
         }
     }
 
-    suspend fun login(): SumUpTapToPayResult {
+    suspend fun login(): SumUpTapToPayLoginResult {
         val terminalConfig =
             (terminalConfigRepository.terminalConfigState.value as? TerminalConfigState.Success)?.config
-                ?: return SumUpTapToPayResult.Error("terminal not registered")
+                ?: return SumUpTapToPayLoginResult.Error("terminal not registered")
 
         val sumupSecrets = terminalConfig.till?.sumupSecrets
-            ?: return SumUpTapToPayResult.Error("no sumup secret available")
+            ?: return SumUpTapToPayLoginResult.Error("no sumup secret available")
 
+        // ensure the api either hasn't been initialized or has been initialized with a different key
         val api = when (val state = state.value) {
             is SumUpTapToPayState.Initializing -> state.api
             is SumUpTapToPayState.Ready -> {
                 if (state.initializedWithKey == sumupSecrets.sumupApiKey.takeLast(4)) {
-                    return SumUpTapToPayResult.Success
+                    return SumUpTapToPayLoginResult.Success
                 } else {
                     state.api
                 }
             }
 
-            SumUpTapToPayState.Uninitialized -> return SumUpTapToPayResult.Error("api not initialized")
+            SumUpTapToPayState.Uninitialized -> return SumUpTapToPayLoginResult.Error("api not initialized")
         }
 
+        // completely reinit the api to ensure any stale state is completely removed
         api.tearDown().onFailure {
             val e = it.toApiError()
             Log.e("ttp", "api teardown failed: ${e.code} ${e.message}")
@@ -93,13 +96,13 @@ class SumUpTapToPay @Inject constructor(
             val e = it.toApiError()
             Log.e("ttp", "api init failed: ${e.code} ${e.message}")
             Log.e("ttp", "${e.details}")
-            return SumUpTapToPayResult.Error("api init failed")
+            return SumUpTapToPayLoginResult.Error("api init failed")
         }.onSuccess {
             Log.i("ttp", "api init done")
             state.update { SumUpTapToPayState.Ready(api, sumupSecrets.sumupApiKey.takeLast(4)) }
         }
 
-        return SumUpTapToPayResult.Success
+        return SumUpTapToPayLoginResult.Success
     }
 
 
@@ -145,28 +148,49 @@ class SumUpTapToPay @Inject constructor(
             it
         }.lastOrNull()
 
-        return if (paymentResult is PaymentEvent.PaymentFlowClosedSuccessfully) {
-            SumUpTapToPayResult.Success
-        } else {
-            SumUpTapToPayResult.Error("$paymentResult")
+        return when (paymentResult) {
+            is PaymentEvent.PaymentFlowClosedSuccessfully -> SumUpTapToPayResult.Success(
+                paymentResult.paymentOutput.txCode, paymentResult.paymentOutput.serverTransactionId
+            )
+
+            is PaymentEvent.TransactionCanceled -> SumUpTapToPayResult.Cancelled
+            else -> SumUpTapToPayResult.Error("$paymentResult")
         }
     }
 }
 
 sealed interface SumUpTapToPayState {
+    // set on start up
     object Uninitialized : SumUpTapToPayState
+
+    // after application has been registered, but login hasn't happened yet
     data class Initializing(
         val api: TapToPay
     ) : SumUpTapToPayState
 
+    // normal state while the app is running
+    // part of the key is stored so we can reinitialize when it changes
     data class Ready(
         val api: TapToPay, val initializedWithKey: String
     ) : SumUpTapToPayState
 }
 
 sealed interface SumUpTapToPayResult {
-    object Success : SumUpTapToPayResult
+    data class Success(
+        val txCode: String, val serverTransactionId: String
+    ) : SumUpTapToPayResult
+
     data class Error(
         val msg: String
     ) : SumUpTapToPayResult
+
+    object Cancelled : SumUpTapToPayResult
+}
+
+sealed interface SumUpTapToPayLoginResult {
+    object Success : SumUpTapToPayLoginResult
+
+    data class Error(
+        val msg: String
+    ) : SumUpTapToPayLoginResult
 }
