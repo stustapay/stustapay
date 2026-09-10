@@ -31,15 +31,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param id
- * @param name
- * @param eventPrivileges
- * @param nodePrivileges
- * @param nodeId
- * @param nodeName
- * @param isAtCurrentNode
+ * @param id 
+ * @param name 
+ * @param eventPrivileges 
+ * @param nodePrivileges 
+ * @param nodeId 
+ * @param nodeName 
+ * @param isAtCurrentNode 
  */
 @Serializable
 
@@ -70,3 +70,4 @@ data class UserRoleInfo (
 
 
 }
+

@@ -29,19 +29,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param name
- * @param id
- * @param nodeId
- * @param tillId
- * @param sessionUuid
- * @param registrationUuid
- * @param lastSeen
- * @param description
- * @param activeUserId
- * @param activeUserRoleId
- * @param mdmDeviceId
+ * @param name 
+ * @param id 
+ * @param nodeId 
+ * @param tillId 
+ * @param sessionUuid 
+ * @param registrationUuid 
+ * @param lastSeen 
+ * @param description 
+ * @param activeUserId 
+ * @param activeUserRoleId 
+ * @param mdmDeviceId 
  */
 @Serializable
 
@@ -84,3 +84,4 @@ data class Terminal (
 
 
 }
+

@@ -34,20 +34,20 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param id
- * @param name
- * @param description
- * @param eventName
- * @param activeUserId
- * @param availableRolesByNode
- * @param userEventPrivileges
- * @param userNodePrivileges
- * @param secrets
- * @param till
- * @param testMode
- * @param testModeMessage
+ * @param id 
+ * @param name 
+ * @param description 
+ * @param eventName 
+ * @param activeUserId 
+ * @param availableRolesByNode 
+ * @param userEventPrivileges 
+ * @param userNodePrivileges 
+ * @param secrets 
+ * @param till 
+ * @param testMode 
+ * @param testModeMessage 
  */
 @Serializable
 
@@ -93,3 +93,4 @@ data class TerminalConfig (
 
 
 }
+
