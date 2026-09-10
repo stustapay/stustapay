@@ -200,7 +200,7 @@ class TopUpViewModel @Inject constructor(
             delay(800)
 
             // perform ec transaction
-            when (val paymentResult = ecPaymentRepository.payReader(context, payment)) {
+            when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
                 is ECPaymentResult.Failure -> {
                     _status.update { "EC: ${paymentResult.msg}" }
                     topUpApi.cancelPendingTopUp(newTopUp.uuid)

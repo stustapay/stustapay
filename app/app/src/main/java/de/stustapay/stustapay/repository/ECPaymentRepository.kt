@@ -22,7 +22,9 @@ sealed interface ECPaymentResult {
 
 @Singleton
 class ECPaymentRepository @Inject constructor(
-    private val sumUp: SumUp, private val sumUpTapToPay: SumUpTapToPay
+    private val sumUp: SumUp,
+    private val sumUpTapToPay: SumUpTapToPay,
+    private val terminalConfigRepository: TerminalConfigRepository
 ) {
     suspend fun wakeup() {
         sumUp.wakeup()
@@ -40,6 +42,17 @@ class ECPaymentRepository @Inject constructor(
             Log.e("ec", "ttp login failed: ${res.msg}")
             delay(1000)
             res = sumUpTapToPay.login()
+        }
+    }
+
+    // payment with the method set in the terminal config
+    suspend fun pay(context: Activity, ecPayment: ECPayment): ECPaymentResult {
+        val terminalConfig =
+            terminalConfigRepository.terminalConfigState.value as? TerminalConfigState.Success
+        return if (terminalConfig?.config?.till?.useTtpForCardPayment == true) {
+            payTapToPay(ecPayment)
+        } else {
+            payReader(context, ecPayment)
         }
     }
 
