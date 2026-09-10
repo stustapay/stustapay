@@ -29,10 +29,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param nodeId
- * @param roleIds
+ * @param nodeId 
+ * @param roleIds 
  */
 @Serializable
 
@@ -48,3 +48,4 @@ data class UserRoleAssignmentPayload (
 
 
 }
+

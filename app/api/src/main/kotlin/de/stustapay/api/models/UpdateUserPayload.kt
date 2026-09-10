@@ -30,10 +30,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param userTagUid
- * @param roleAssignments
+ * @param userTagUid 
+ * @param roleAssignments 
  */
 @Serializable
 
@@ -49,3 +49,4 @@ data class UpdateUserPayload (
 
 
 }
+

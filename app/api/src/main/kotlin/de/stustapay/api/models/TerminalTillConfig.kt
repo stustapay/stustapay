@@ -31,23 +31,24 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param id
- * @param name
- * @param description
- * @param profileName
- * @param cashRegisterId
- * @param cashRegisterName
- * @param allowTopUp
- * @param allowCashOut
- * @param allowTicketSale
- * @param allowTicketVouchers
- * @param enableSspPayment
- * @param enableCashPayment
- * @param enableCardPayment
- * @param buttons
- * @param sumupSecrets
+ * @param id 
+ * @param name 
+ * @param description 
+ * @param profileName 
+ * @param cashRegisterId 
+ * @param cashRegisterName 
+ * @param allowTopUp 
+ * @param allowCashOut 
+ * @param allowTicketSale 
+ * @param allowTicketVouchers 
+ * @param enableSspPayment 
+ * @param enableCashPayment 
+ * @param enableCardPayment 
+ * @param useTtpForCardPayment 
+ * @param buttons 
+ * @param sumupSecrets 
  */
 @Serializable
 
@@ -105,3 +106,4 @@ data class TerminalTillConfig (
 
 
 }
+

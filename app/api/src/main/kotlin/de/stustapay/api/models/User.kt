@@ -29,21 +29,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param login
- * @param displayName
- * @param nodeId
- * @param terminalIds
- * @param id
- * @param userTagUidHex
- * @param userTagPin
- * @param userTagUid
- * @param description
- * @param userTagId
- * @param transportAccountId
- * @param cashRegisterId
- * @param cashDrawerBalance
+ * @param login 
+ * @param displayName 
+ * @param nodeId 
+ * @param terminalIds 
+ * @param id 
+ * @param userTagUidHex 
+ * @param userTagPin 
+ * @param userTagUid 
+ * @param description 
+ * @param userTagId 
+ * @param transportAccountId 
+ * @param cashRegisterId 
+ * @param cashDrawerBalance 
  */
 @Serializable
 
@@ -92,3 +92,4 @@ data class User (
 
 
 }
+

@@ -31,24 +31,24 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param name
- * @param price
- * @param fixedPrice
- * @param taxRateId
- * @param userTagVariantIds
- * @param isLocked
- * @param isReturnable
- * @param nodeId
- * @param id
- * @param taxName
- * @param taxRate
- * @param taxType
- * @param type
- * @param priceInVouchers
- * @param targetAccountId
- * @param pricePerVoucher
+ * @param name 
+ * @param price 
+ * @param fixedPrice 
+ * @param taxRateId 
+ * @param userTagVariantIds 
+ * @param isLocked 
+ * @param isReturnable 
+ * @param nodeId 
+ * @param id 
+ * @param taxName 
+ * @param taxRate 
+ * @param taxType 
+ * @param type 
+ * @param priceInVouchers 
+ * @param targetAccountId 
+ * @param pricePerVoucher 
  */
 @Serializable
 
@@ -106,3 +106,4 @@ data class Product (
 
 
 }
+

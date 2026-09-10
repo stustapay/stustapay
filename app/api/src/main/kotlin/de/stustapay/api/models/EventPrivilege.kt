@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializable
 
 
 /**
- *
+ * 
  *
  * Values: customer_management,payout_management,create_user,cash_transport,terminal_login,supervised_terminal_login,grant_free_tickets,grant_vouchers
  */
@@ -86,3 +86,5 @@ enum class EventPrivilege(val value: kotlin.String) {
         }
     }
 }
+
+
