@@ -101,8 +101,8 @@ class TillProfileService(Service[Config]):
             profile.enable_card_payment,
             profile.use_ttp_for_card_payment,
             profile.layout_id,
-            node.ids_to_event_node,
             profile.allow_ticket_vouchers,
+            node.ids_to_event_node,
         )
         if p_id is None:
             return None
