@@ -10,7 +10,9 @@
   "paths": {
     "/health": {
       "get": {
-        "tags": ["base"],
+        "tags": [
+          "base"
+        ],
         "summary": "health check endpoint",
         "operationId": "health",
         "responses": {
@@ -36,7 +38,9 @@
     },
     "/config": {
       "get": {
-        "tags": ["base"],
+        "tags": [
+          "base"
+        ],
         "summary": "obtain the current terminal config",
         "operationId": "config",
         "responses": {
@@ -69,7 +73,9 @@
     },
     "/cash-register-stockings": {
       "get": {
-        "tags": ["base"],
+        "tags": [
+          "base"
+        ],
         "summary": "obtain the list of available cash register stockings",
         "operationId": "list_cash_register_stockings",
         "responses": {
@@ -106,7 +112,9 @@
     },
     "/cash-registers": {
       "get": {
-        "tags": ["base"],
+        "tags": [
+          "base"
+        ],
         "summary": "list all cash registers",
         "operationId": "list_cash_registers",
         "security": [
@@ -165,7 +173,9 @@
     },
     "/stock-up-cash-register": {
       "post": {
-        "tags": ["base"],
+        "tags": [
+          "base"
+        ],
         "summary": "stock up a cash register",
         "operationId": "stock_up_cash_register",
         "requestBody": {
@@ -216,7 +226,9 @@
     },
     "/user-info": {
       "post": {
-        "tags": ["base"],
+        "tags": [
+          "base"
+        ],
         "summary": "Obtain information about a user tag",
         "operationId": "user_info",
         "requestBody": {
@@ -269,7 +281,9 @@
     },
     "/order": {
       "get": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "list all orders",
         "description": "List all the order of the currently logged in Cashier",
         "operationId": "list_orders",
@@ -298,7 +312,9 @@
     },
     "/order/check-sale": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "check if a sale is valid",
         "operationId": "check_sale",
         "requestBody": {
@@ -342,7 +358,9 @@
     },
     "/order/book-sale": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "finish the sale and book the transactions",
         "operationId": "book_sale",
         "requestBody": {
@@ -386,7 +404,9 @@
     },
     "/order/check-topup": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "check if a top up is valid",
         "operationId": "check_topup",
         "requestBody": {
@@ -430,7 +450,9 @@
     },
     "/order/book-topup": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "finish the top up and book the transactions",
         "operationId": "book_topup",
         "requestBody": {
@@ -474,7 +496,9 @@
     },
     "/order/register-pending-topup": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "Register a pending topup with the server where the sumup payment is still pending",
         "operationId": "register_pending_topup",
         "requestBody": {
@@ -518,7 +542,9 @@
     },
     "/order/cancel-pending-topup": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "Mark a pending topup as cancelled, e.g. because the sumup booking failed",
         "operationId": "cancel_pending_topup",
         "requestBody": {
@@ -560,7 +586,9 @@
     },
     "/order/check-ticket-scan": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "check if a ticket sale is valid",
         "operationId": "check_ticket_scan",
         "requestBody": {
@@ -604,7 +632,9 @@
     },
     "/order/check-ticket-sale": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "check if a ticket sale is valid",
         "operationId": "check_ticket_sale",
         "requestBody": {
@@ -648,7 +678,9 @@
     },
     "/order/book-ticket-sale": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "finish a ticket sale and book the transactions",
         "operationId": "book_ticket_sale",
         "requestBody": {
@@ -692,7 +724,9 @@
     },
     "/order/register-pending-ticket-sale": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "Register a pending topup with the server where the sumup payment is still pending",
         "operationId": "register_pending_ticket_sale",
         "requestBody": {
@@ -736,7 +770,9 @@
     },
     "/order/cancel-pending-ticket-sale": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "Mark a pending ticket sale as cancelled, e.g. because the sumup booking failed",
         "operationId": "cancel_pending_ticket_sale",
         "requestBody": {
@@ -778,7 +814,9 @@
     },
     "/order/check-payout": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "check if a pay out is valid",
         "operationId": "check_payout",
         "requestBody": {
@@ -822,7 +860,9 @@
     },
     "/order/book-payout": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "finish the pay out and book the transactions",
         "operationId": "book_payout",
         "requestBody": {
@@ -866,7 +906,9 @@
     },
     "/order/{order_id}/cancel": {
       "post": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "cancel information about an order",
         "operationId": "cancel_order",
         "security": [
@@ -909,7 +951,9 @@
     },
     "/order/{order_id}": {
       "get": {
-        "tags": ["order"],
+        "tags": [
+          "order"
+        ],
         "summary": "get information about an order",
         "operationId": "show",
         "security": [
@@ -962,7 +1006,9 @@
     },
     "/auth/register_terminal": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Register a new Terminal",
         "operationId": "register_terminal",
         "requestBody": {
@@ -1004,7 +1050,9 @@
     },
     "/auth/logout_terminal": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Log out this Terminal",
         "operationId": "logout_terminal",
         "responses": {
@@ -1024,7 +1072,9 @@
     },
     "/user": {
       "get": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Get the currently logged in User",
         "operationId": "get_current_user",
         "responses": {
@@ -1056,7 +1106,9 @@
     },
     "/user/check-login": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Check if a user can login to the terminal and return his roles",
         "operationId": "check_login_user",
         "requestBody": {
@@ -1100,7 +1152,9 @@
     },
     "/user/login": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Login User",
         "operationId": "login_user",
         "requestBody": {
@@ -1144,7 +1198,9 @@
     },
     "/user/logout": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Logout the current user",
         "operationId": "logout_user",
         "responses": {
@@ -1161,7 +1217,9 @@
     },
     "/user/create-user": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Create a new user with the given roles",
         "operationId": "create_user",
         "requestBody": {
@@ -1205,7 +1263,9 @@
     },
     "/user/update-user-roles": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Update the roles of a given user",
         "operationId": "update_user_roles",
         "requestBody": {
@@ -1249,7 +1309,9 @@
     },
     "/user/grant-free-ticket": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "grant a free ticket, e.g. to a volunteer",
         "operationId": "grant_free_ticket",
         "requestBody": {
@@ -1293,7 +1355,9 @@
     },
     "/user/grant-vouchers": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "grant vouchers to a customer",
         "operationId": "grant_vouchers",
         "requestBody": {
@@ -1337,7 +1401,9 @@
     },
     "/customer/switch_tag": {
       "post": {
-        "tags": ["customer"],
+        "tags": [
+          "customer"
+        ],
         "summary": "Switch Tag",
         "operationId": "switch_tag",
         "requestBody": {
@@ -1382,7 +1448,9 @@
     },
     "/customer/{customer_tag_uid}": {
       "get": {
-        "tags": ["customer"],
+        "tags": [
+          "customer"
+        ],
         "summary": "Obtain a customer by tag uid",
         "operationId": "get_customer",
         "security": [
@@ -1430,7 +1498,9 @@
     },
     "/customer/{customer_tag_uid}/orders": {
       "get": {
-        "tags": ["customer"],
+        "tags": [
+          "customer"
+        ],
         "summary": "Obtain all orders of a customer by tag uid",
         "operationId": "get_customer_orders",
         "security": [
@@ -1482,7 +1552,9 @@
     },
     "/change-cash-register-balance": {
       "post": {
-        "tags": ["cashier"],
+        "tags": [
+          "cashier"
+        ],
         "summary": "update the balance of a cash register by transferring money from / to a orga transport account",
         "operationId": "change_cash_register_balance",
         "requestBody": {
@@ -1533,7 +1605,9 @@
     },
     "/change-transport-register-balance": {
       "post": {
-        "tags": ["cashier"],
+        "tags": [
+          "cashier"
+        ],
         "summary": "update the balance of a transport account by transferring money from / to the cash vault",
         "operationId": "change_transport_account_balance",
         "requestBody": {
@@ -1584,7 +1658,9 @@
     },
     "/transfer-cash-register": {
       "post": {
-        "tags": ["cashier"],
+        "tags": [
+          "cashier"
+        ],
         "summary": "transfer a cash register between two cashiers",
         "operationId": "transfer_cash_register",
         "requestBody": {
@@ -1637,7 +1713,9 @@
     },
     "/mgmtrevenue-stats": {
       "post": {
-        "tags": ["mgmt"],
+        "tags": [
+          "mgmt"
+        ],
         "summary": "Get revenue statistics for the current node",
         "operationId": "get_revenue_stats",
         "requestBody": {
@@ -1861,7 +1939,11 @@
           }
         },
         "type": "object",
-        "required": ["node_id", "node_name", "roles"],
+        "required": [
+          "node_id",
+          "node_name",
+          "roles"
+        ],
         "title": "AssignableUserRolesAtNode"
       },
       "Button": {
@@ -1894,7 +1976,9 @@
           }
         },
         "type": "object",
-        "required": ["till_button_id"],
+        "required": [
+          "till_button_id"
+        ],
         "title": "Button"
       },
       "CancelOrderPayload": {
@@ -1906,7 +1990,9 @@
           }
         },
         "type": "object",
-        "required": ["order_uuid"],
+        "required": [
+          "order_uuid"
+        ],
         "title": "CancelOrderPayload"
       },
       "CashRegister": {
@@ -2061,7 +2147,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "node_id", "id", "total"],
+        "required": [
+          "name",
+          "node_id",
+          "id",
+          "total"
+        ],
         "title": "CashRegisterStocking"
       },
       "CashierAccountChangePayload": {
@@ -2076,7 +2167,10 @@
           }
         },
         "type": "object",
-        "required": ["cashier_tag_uid", "amount"],
+        "required": [
+          "cashier_tag_uid",
+          "amount"
+        ],
         "title": "CashierAccountChangePayload"
       },
       "CheckLoginResult": {
@@ -2093,7 +2187,10 @@
           }
         },
         "type": "object",
-        "required": ["user_tag", "roles"],
+        "required": [
+          "user_tag",
+          "roles"
+        ],
         "title": "CheckLoginResult"
       },
       "CompletedPayOut": {
@@ -2460,7 +2557,11 @@
           }
         },
         "type": "object",
-        "required": ["login", "display_name", "role_assignments"],
+        "required": [
+          "login",
+          "display_name",
+          "role_assignments"
+        ],
         "title": "CreateUserPayload"
       },
       "CurrentUser": {
@@ -2574,7 +2675,12 @@
           }
         },
         "type": "object",
-        "required": ["node_id", "id", "login", "display_name"],
+        "required": [
+          "node_id",
+          "id",
+          "login",
+          "display_name"
+        ],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
       },
@@ -2762,7 +2868,10 @@
           }
         },
         "type": "object",
-        "required": ["vouchers", "user_tag_uid"],
+        "required": [
+          "vouchers",
+          "user_tag_uid"
+        ],
         "title": "GrantVoucherPayload"
       },
       "HTTPValidationError": {
@@ -2847,7 +2956,10 @@
           }
         },
         "type": "object",
-        "required": ["user_tag", "user_role_id"],
+        "required": [
+          "user_tag",
+          "user_role_id"
+        ],
         "title": "LoginPayload"
       },
       "NewFreeTicketGrant": {
@@ -2867,7 +2979,10 @@
           }
         },
         "type": "object",
-        "required": ["user_tag_pin", "user_tag_uid"],
+        "required": [
+          "user_tag_pin",
+          "user_tag_uid"
+        ],
         "title": "NewFreeTicketGrant"
       },
       "NewPayOut": {
@@ -2894,7 +3009,10 @@
           }
         },
         "type": "object",
-        "required": ["uuid", "customer_tag_uid"],
+        "required": [
+          "uuid",
+          "customer_tag_uid"
+        ],
         "title": "NewPayOut"
       },
       "NewSale": {
@@ -2938,7 +3056,11 @@
           }
         },
         "type": "object",
-        "required": ["uuid", "payment_method", "buttons"],
+        "required": [
+          "uuid",
+          "payment_method",
+          "buttons"
+        ],
         "title": "NewSale"
       },
       "NewTicketSale": {
@@ -2967,7 +3089,11 @@
           }
         },
         "type": "object",
-        "required": ["uuid", "customer_tags", "payment_method"],
+        "required": [
+          "uuid",
+          "customer_tags",
+          "payment_method"
+        ],
         "title": "NewTicketSale"
       },
       "NewTicketScan": {
@@ -2981,7 +3107,9 @@
           }
         },
         "type": "object",
-        "required": ["customer_tags"],
+        "required": [
+          "customer_tags"
+        ],
         "title": "NewTicketScan"
       },
       "NewTopUp": {
@@ -3004,12 +3132,21 @@
           }
         },
         "type": "object",
-        "required": ["uuid", "payment_method", "amount", "customer_tag_uid"],
+        "required": [
+          "uuid",
+          "payment_method",
+          "amount",
+          "customer_tag_uid"
+        ],
         "title": "NewTopUp"
       },
       "NodePrivilege": {
         "type": "string",
-        "enum": ["node_administration", "view_node_stats", "can_book_orders"],
+        "enum": [
+          "node_administration",
+          "view_node_stats",
+          "can_book_orders"
+        ],
         "title": "NodePrivilege"
       },
       "Order": {
@@ -3183,7 +3320,12 @@
       },
       "PaymentMethod": {
         "type": "string",
-        "enum": ["cash", "sumup", "tag", "sumup_online"],
+        "enum": [
+          "cash",
+          "sumup",
+          "tag",
+          "sumup_online"
+        ],
         "title": "PaymentMethod"
       },
       "PendingLineItem": {
@@ -3661,7 +3803,12 @@
           }
         },
         "type": "object",
-        "required": ["from_time", "to_time", "count", "revenue"],
+        "required": [
+          "from_time",
+          "to_time",
+          "count",
+          "revenue"
+        ],
         "title": "StatInterval"
       },
       "SwitchTagPayload": {
@@ -3694,7 +3841,12 @@
       },
       "TaxType": {
         "type": "string",
-        "enum": ["regular_vat", "reduced_vat", "no_tax", "transparent"],
+        "enum": [
+          "regular_vat",
+          "reduced_vat",
+          "no_tax",
+          "transparent"
+        ],
         "title": "TaxType"
       },
       "Terminal": {
@@ -3872,7 +4024,13 @@
           }
         },
         "type": "object",
-        "required": ["id", "name", "price", "is_returnable", "fixed_price"],
+        "required": [
+          "id",
+          "name",
+          "price",
+          "is_returnable",
+          "fixed_price"
+        ],
         "title": "TerminalButton"
       },
       "TerminalConfig": {
@@ -4000,7 +4158,9 @@
           }
         },
         "type": "object",
-        "required": ["registration_uuid"],
+        "required": [
+          "registration_uuid"
+        ],
         "title": "TerminalRegistrationPayload"
       },
       "TerminalRegistrationSuccess": {
@@ -4014,7 +4174,10 @@
           }
         },
         "type": "object",
-        "required": ["terminal", "token"],
+        "required": [
+          "terminal",
+          "token"
+        ],
         "title": "TerminalRegistrationSuccess"
       },
       "TerminalSumupSecrets": {
@@ -4125,7 +4288,7 @@
           },
           "use_ttp_for_card_payment": {
             "type": "boolean",
-            "title": "Use TTP for Card Payment"
+            "title": "Use Ttp For Card Payment"
           },
           "buttons": {
             "anyOf": [
@@ -4180,7 +4343,9 @@
           }
         },
         "type": "object",
-        "required": ["user_tag_secret"],
+        "required": [
+          "user_tag_secret"
+        ],
         "title": "TerminalUserTagSecrets"
       },
       "Ticket": {
@@ -4260,7 +4425,9 @@
           }
         },
         "type": "object",
-        "required": ["scanned_tickets"],
+        "required": [
+          "scanned_tickets"
+        ],
         "title": "TicketScanResult"
       },
       "TicketScanResultEntry": {
@@ -4382,7 +4549,10 @@
           }
         },
         "type": "object",
-        "required": ["from_time", "to_time"],
+        "required": [
+          "from_time",
+          "to_time"
+        ],
         "title": "TimeseriesStatsQuery"
       },
       "TransferCashRegisterPayload": {
@@ -4397,7 +4567,10 @@
           }
         },
         "type": "object",
-        "required": ["source_cashier_tag_uid", "target_cashier_tag_uid"],
+        "required": [
+          "source_cashier_tag_uid",
+          "target_cashier_tag_uid"
+        ],
         "title": "TransferCashRegisterPayload"
       },
       "TransportAccountChangePayload": {
@@ -4412,7 +4585,10 @@
           }
         },
         "type": "object",
-        "required": ["orga_tag_uid", "amount"],
+        "required": [
+          "orga_tag_uid",
+          "amount"
+        ],
         "title": "TransportAccountChangePayload"
       },
       "UpdateUserPayload": {
@@ -4430,7 +4606,10 @@
           }
         },
         "type": "object",
-        "required": ["user_tag_uid", "role_assignments"],
+        "required": [
+          "user_tag_uid",
+          "role_assignments"
+        ],
         "title": "UpdateUserPayload"
       },
       "User": {
@@ -4697,7 +4876,9 @@
           }
         },
         "type": "object",
-        "required": ["user_tag_uid"],
+        "required": [
+          "user_tag_uid"
+        ],
         "title": "UserInfoPayload"
       },
       "UserRole": {
@@ -4766,7 +4947,10 @@
           }
         },
         "type": "object",
-        "required": ["node_id", "role_ids"],
+        "required": [
+          "node_id",
+          "role_ids"
+        ],
         "title": "UserRoleAssignmentPayload"
       },
       "UserRoleInfo": {
@@ -4826,7 +5010,9 @@
           }
         },
         "type": "object",
-        "required": ["uid"],
+        "required": [
+          "uid"
+        ],
         "title": "UserTag"
       },
       "UserTagHistoryEntry": {
@@ -4922,7 +5108,10 @@
           }
         },
         "type": "object",
-        "required": ["tag_uid", "tag_pin"],
+        "required": [
+          "tag_uid",
+          "tag_pin"
+        ],
         "title": "UserTagScan",
         "description": "a scanned tag before ticket sale"
       },
@@ -4938,7 +5127,10 @@
           }
         },
         "type": "object",
-        "required": ["key0", "key1"],
+        "required": [
+          "key0",
+          "key1"
+        ],
         "title": "UserTagSecret"
       },
       "ValidationError": {
@@ -4967,7 +5159,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       }
     },
