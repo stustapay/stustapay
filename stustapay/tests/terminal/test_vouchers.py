@@ -53,6 +53,7 @@ async def test_free_ticket_grant_with_vouchers(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
         ),
     )
 
@@ -134,6 +135,7 @@ async def test_free_ticket_grant_without_vouchers(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
         ),
     )
 

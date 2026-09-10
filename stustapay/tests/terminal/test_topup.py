@@ -155,6 +155,7 @@ async def test_only_topup_till_profiles_can_topup(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
         ),
     )
     till.active_profile_id = profile.id
