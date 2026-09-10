@@ -1675,6 +1675,10 @@ export type NewTillProfile = {
    * Enable Card Payment
    */
   enable_card_payment: boolean;
+  /**
+   * Use Ttp For Card Payment
+   */
+  use_ttp_for_card_payment: boolean;
 };
 
 /**
@@ -3608,6 +3612,10 @@ export type TillProfile = {
    * Enable Card Payment
    */
   enable_card_payment: boolean;
+  /**
+   * Use Ttp For Card Payment
+   */
+  use_ttp_for_card_payment: boolean;
   /**
    * Node Id
    */

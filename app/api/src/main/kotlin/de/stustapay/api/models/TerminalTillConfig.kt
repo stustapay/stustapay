@@ -31,23 +31,23 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
- * 
  *
- * @param id 
- * @param name 
- * @param description 
- * @param profileName 
- * @param cashRegisterId 
- * @param cashRegisterName 
- * @param allowTopUp 
- * @param allowCashOut 
- * @param allowTicketSale 
- * @param allowTicketVouchers 
- * @param enableSspPayment 
- * @param enableCashPayment 
- * @param enableCardPayment 
- * @param buttons 
- * @param sumupSecrets 
+ *
+ * @param id
+ * @param name
+ * @param description
+ * @param profileName
+ * @param cashRegisterId
+ * @param cashRegisterName
+ * @param allowTopUp
+ * @param allowCashOut
+ * @param allowTicketSale
+ * @param allowTicketVouchers
+ * @param enableSspPayment
+ * @param enableCashPayment
+ * @param enableCardPayment
+ * @param buttons
+ * @param sumupSecrets
  */
 @Serializable
 
@@ -92,6 +92,9 @@ data class TerminalTillConfig (
     @SerialName(value = "enable_card_payment")
     val enableCardPayment: kotlin.Boolean,
 
+    @SerialName(value = "use_ttp_for_card_payment")
+    val useTtpForCardPayment: kotlin.Boolean,
+
     @SerialName(value = "buttons")
     val buttons: kotlin.collections.List<TerminalButton>?,
 
@@ -102,4 +105,3 @@ data class TerminalTillConfig (
 
 
 }
-

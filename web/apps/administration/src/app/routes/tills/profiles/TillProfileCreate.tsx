@@ -22,6 +22,7 @@ const initialValues: NewTillProfile = {
   enable_ssp_payment: true,
   enable_cash_payment: false,
   enable_card_payment: false,
+  use_ttp_for_card_payment: false,
 };
 
 export const TillProfileCreate: React.FC = withPrivilegeGuard("node_administration", () => {

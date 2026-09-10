@@ -10,9 +10,7 @@
   "paths": {
     "/products": {
       "get": {
-        "tags": [
-          "products"
-        ],
+        "tags": ["products"],
         "summary": "List Products",
         "operationId": "list_products",
         "security": [
@@ -71,9 +69,7 @@
         }
       },
       "post": {
-        "tags": [
-          "products"
-        ],
+        "tags": ["products"],
         "summary": "Create Product",
         "operationId": "create_product",
         "security": [
@@ -131,9 +127,7 @@
     },
     "/products/{product_id}": {
       "post": {
-        "tags": [
-          "products"
-        ],
+        "tags": ["products"],
         "summary": "Update Product",
         "operationId": "update_product",
         "security": [
@@ -198,9 +192,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "products"
-        ],
+        "tags": ["products"],
         "summary": "Delete Product",
         "operationId": "delete_product",
         "security": [
@@ -255,9 +247,7 @@
     },
     "/users": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "List Users",
         "operationId": "list_users",
         "security": [
@@ -326,9 +316,7 @@
         }
       },
       "post": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Create User",
         "operationId": "create_user",
         "security": [
@@ -386,9 +374,7 @@
     },
     "/users/{user_id}/voucher-grant-stats": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Get User Voucher Grant Stats",
         "operationId": "get_user_voucher_grant_stats",
         "security": [
@@ -445,9 +431,7 @@
     },
     "/users/{user_id}/role-assignments": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "List User Role Assignments",
         "operationId": "list_user_role_assignments",
         "security": [
@@ -508,9 +492,7 @@
     },
     "/users/{user_id}": {
       "post": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Update User",
         "operationId": "update_user",
         "security": [
@@ -575,9 +557,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Delete User",
         "operationId": "delete_user",
         "security": [
@@ -632,9 +612,7 @@
     },
     "/users/{user_id}/change-password": {
       "post": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Change User Password",
         "operationId": "change_user_password",
         "security": [
@@ -701,9 +679,7 @@
     },
     "/user-roles": {
       "get": {
-        "tags": [
-          "user-roles"
-        ],
+        "tags": ["user-roles"],
         "summary": "List User Roles",
         "operationId": "list_user_roles",
         "security": [
@@ -753,9 +729,7 @@
         }
       },
       "post": {
-        "tags": [
-          "user-roles"
-        ],
+        "tags": ["user-roles"],
         "summary": "Create User Role",
         "operationId": "create_user_role",
         "security": [
@@ -813,9 +787,7 @@
     },
     "/user-roles/{user_role_id}": {
       "post": {
-        "tags": [
-          "user-roles"
-        ],
+        "tags": ["user-roles"],
         "summary": "Update User Role",
         "operationId": "update_user_role",
         "security": [
@@ -880,9 +852,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "user-roles"
-        ],
+        "tags": ["user-roles"],
         "summary": "Delete User Role",
         "operationId": "delete_user_role",
         "security": [
@@ -937,9 +907,7 @@
     },
     "/user-to-roles": {
       "get": {
-        "tags": [
-          "user-to-roles"
-        ],
+        "tags": ["user-to-roles"],
         "summary": "List User To Role",
         "operationId": "list_user_to_role",
         "security": [
@@ -989,9 +957,7 @@
         }
       },
       "post": {
-        "tags": [
-          "user-to-roles"
-        ],
+        "tags": ["user-to-roles"],
         "summary": "Update User To Roles",
         "operationId": "update_user_to_roles",
         "security": [
@@ -1049,9 +1015,7 @@
     },
     "/tax-rates": {
       "get": {
-        "tags": [
-          "tax-rates"
-        ],
+        "tags": ["tax-rates"],
         "summary": "List Tax Rates",
         "operationId": "list_tax_rates",
         "security": [
@@ -1101,9 +1065,7 @@
         }
       },
       "post": {
-        "tags": [
-          "tax-rates"
-        ],
+        "tags": ["tax-rates"],
         "summary": "Create Tax Rate",
         "operationId": "create_tax_rate",
         "security": [
@@ -1161,9 +1123,7 @@
     },
     "/tax-rates/{tax_rate_id}": {
       "post": {
-        "tags": [
-          "tax-rates"
-        ],
+        "tags": ["tax-rates"],
         "summary": "Update Tax Rate",
         "operationId": "update_tax_rate",
         "security": [
@@ -1228,9 +1188,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "tax-rates"
-        ],
+        "tags": ["tax-rates"],
         "summary": "Delete Tax Rate",
         "operationId": "delete_tax_rate",
         "security": [
@@ -1285,9 +1243,7 @@
     },
     "/auth/login": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "login with username and password",
         "operationId": "login",
         "requestBody": {
@@ -1329,9 +1285,7 @@
     },
     "/auth/change-password": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "change password",
         "operationId": "change_password",
         "requestBody": {
@@ -1376,9 +1330,7 @@
     },
     "/auth/logout": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "sign out of the current session",
         "operationId": "logout",
         "responses": {
@@ -1398,9 +1350,7 @@
     },
     "/tills": {
       "get": {
-        "tags": [
-          "tills"
-        ],
+        "tags": ["tills"],
         "summary": "List Tills",
         "operationId": "list_tills",
         "security": [
@@ -1450,9 +1400,7 @@
         }
       },
       "post": {
-        "tags": [
-          "tills"
-        ],
+        "tags": ["tills"],
         "summary": "Create Till",
         "operationId": "create_till",
         "security": [
@@ -1510,9 +1458,7 @@
     },
     "/tills/{till_id}": {
       "post": {
-        "tags": [
-          "tills"
-        ],
+        "tags": ["tills"],
         "summary": "Update Till",
         "operationId": "update_till",
         "security": [
@@ -1577,9 +1523,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "tills"
-        ],
+        "tags": ["tills"],
         "summary": "Delete Till",
         "operationId": "delete_till",
         "security": [
@@ -1634,11 +1578,7 @@
     },
     "/tills/{till_id}/remove-from-terminal": {
       "post": {
-        "tags": [
-          "tills",
-          "tills",
-          "terminals"
-        ],
+        "tags": ["tills", "tills", "terminals"],
         "summary": "Remove From Terminal",
         "operationId": "remove_from_terminal",
         "security": [
@@ -1693,11 +1633,7 @@
     },
     "/tills/{till_id}/switch-terminal": {
       "post": {
-        "tags": [
-          "tills",
-          "tills",
-          "terminals"
-        ],
+        "tags": ["tills", "tills", "terminals"],
         "summary": "Switch Terminal",
         "operationId": "switch_terminal",
         "security": [
@@ -1762,9 +1698,7 @@
     },
     "/till-layouts": {
       "get": {
-        "tags": [
-          "till-layouts"
-        ],
+        "tags": ["till-layouts"],
         "summary": "List Till Layouts",
         "operationId": "list_till_layouts",
         "security": [
@@ -1814,9 +1748,7 @@
         }
       },
       "post": {
-        "tags": [
-          "till-layouts"
-        ],
+        "tags": ["till-layouts"],
         "summary": "Create Till Layout",
         "operationId": "create_till_layout",
         "security": [
@@ -1874,9 +1806,7 @@
     },
     "/till-layouts/{layout_id}": {
       "post": {
-        "tags": [
-          "till-layouts"
-        ],
+        "tags": ["till-layouts"],
         "summary": "Update Till Layout",
         "operationId": "update_till_layout",
         "security": [
@@ -1941,9 +1871,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "till-layouts"
-        ],
+        "tags": ["till-layouts"],
         "summary": "Delete Till Layout",
         "operationId": "delete_till_layout",
         "security": [
@@ -1998,9 +1926,7 @@
     },
     "/till-profiles": {
       "get": {
-        "tags": [
-          "till-profiles"
-        ],
+        "tags": ["till-profiles"],
         "summary": "List Till Profiles",
         "operationId": "list_till_profiles",
         "security": [
@@ -2050,9 +1976,7 @@
         }
       },
       "post": {
-        "tags": [
-          "till-profiles"
-        ],
+        "tags": ["till-profiles"],
         "summary": "Create Till Profile",
         "operationId": "create_till_profile",
         "security": [
@@ -2110,9 +2034,7 @@
     },
     "/till-profiles/{profile_id}": {
       "post": {
-        "tags": [
-          "till-profiles"
-        ],
+        "tags": ["till-profiles"],
         "summary": "Update Till Profile",
         "operationId": "update_till_profile",
         "security": [
@@ -2177,9 +2099,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "till-profiles"
-        ],
+        "tags": ["till-profiles"],
         "summary": "Delete Till Profile",
         "operationId": "delete_till_profile",
         "security": [
@@ -2234,9 +2154,7 @@
     },
     "/till-buttons": {
       "get": {
-        "tags": [
-          "till-buttons"
-        ],
+        "tags": ["till-buttons"],
         "summary": "List Till Buttons",
         "operationId": "list_till_buttons",
         "security": [
@@ -2286,9 +2204,7 @@
         }
       },
       "post": {
-        "tags": [
-          "till-buttons"
-        ],
+        "tags": ["till-buttons"],
         "summary": "Create Till Button",
         "operationId": "create_till_button",
         "security": [
@@ -2346,9 +2262,7 @@
     },
     "/till-buttons/{button_id}": {
       "post": {
-        "tags": [
-          "till-buttons"
-        ],
+        "tags": ["till-buttons"],
         "summary": "Update Till Button",
         "operationId": "update_till_button",
         "security": [
@@ -2413,9 +2327,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "till-buttons"
-        ],
+        "tags": ["till-buttons"],
         "summary": "Delete Till Button",
         "operationId": "delete_till_button",
         "security": [
@@ -2470,9 +2382,7 @@
     },
     "/till-register-stockings": {
       "get": {
-        "tags": [
-          "till-register-stockings"
-        ],
+        "tags": ["till-register-stockings"],
         "summary": "List Register Stockings",
         "operationId": "list_register_stockings",
         "security": [
@@ -2522,9 +2432,7 @@
         }
       },
       "post": {
-        "tags": [
-          "till-register-stockings"
-        ],
+        "tags": ["till-register-stockings"],
         "summary": "Create Register Stocking",
         "operationId": "create_register_stocking",
         "security": [
@@ -2582,9 +2490,7 @@
     },
     "/till-register-stockings/{stocking_id}": {
       "post": {
-        "tags": [
-          "till-register-stockings"
-        ],
+        "tags": ["till-register-stockings"],
         "summary": "Update Register Stocking",
         "operationId": "update_register_stocking",
         "security": [
@@ -2649,9 +2555,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "till-register-stockings"
-        ],
+        "tags": ["till-register-stockings"],
         "summary": "Delete Register Stocking",
         "operationId": "delete_register_stocking",
         "security": [
@@ -2706,9 +2610,7 @@
     },
     "/till-registers": {
       "get": {
-        "tags": [
-          "till-registers"
-        ],
+        "tags": ["till-registers"],
         "summary": "List Cash Registers Admin",
         "operationId": "list_cash_registers_admin",
         "security": [
@@ -2758,9 +2660,7 @@
         }
       },
       "post": {
-        "tags": [
-          "till-registers"
-        ],
+        "tags": ["till-registers"],
         "summary": "Create Register",
         "operationId": "create_register",
         "security": [
@@ -2818,9 +2718,7 @@
     },
     "/till-registers/transfer-register": {
       "post": {
-        "tags": [
-          "till-registers"
-        ],
+        "tags": ["till-registers"],
         "summary": "Transfer Register",
         "operationId": "transfer_register",
         "security": [
@@ -2876,9 +2774,7 @@
     },
     "/till-registers/{register_id}": {
       "post": {
-        "tags": [
-          "till-registers"
-        ],
+        "tags": ["till-registers"],
         "summary": "Update Register",
         "operationId": "update_register",
         "security": [
@@ -2941,9 +2837,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "till-registers"
-        ],
+        "tags": ["till-registers"],
         "summary": "Delete Register",
         "operationId": "delete_register",
         "security": [
@@ -2998,9 +2892,7 @@
     },
     "/public-config": {
       "get": {
-        "tags": [
-          "config"
-        ],
+        "tags": ["config"],
         "summary": "Get Public Config",
         "operationId": "get_public_config",
         "responses": {
@@ -3022,9 +2914,7 @@
     },
     "/system-accounts": {
       "get": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "List System Accounts",
         "operationId": "list_system_accounts",
         "security": [
@@ -3076,9 +2966,7 @@
     },
     "/money-overview": {
       "get": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Get Money Overview",
         "operationId": "get_money_overview",
         "security": [
@@ -3126,9 +3014,7 @@
     },
     "/accounts/{account_id}": {
       "get": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Get Account",
         "operationId": "get_account",
         "security": [
@@ -3185,9 +3071,7 @@
     },
     "/accounts/{account_id}/disable": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Disable Account",
         "operationId": "disable_account",
         "security": [
@@ -3242,9 +3126,7 @@
     },
     "/accounts/{account_id}/update-balance": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Update Balance",
         "operationId": "update_balance",
         "security": [
@@ -3309,9 +3191,7 @@
     },
     "/accounts/{account_id}/update-voucher-amount": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Update Voucher Amount",
         "operationId": "update_voucher_amount",
         "security": [
@@ -3376,9 +3256,7 @@
     },
     "/accounts/{account_id}/update-comment": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Update Account Comment",
         "operationId": "update_account_comment",
         "security": [
@@ -3445,9 +3323,7 @@
     },
     "/orders": {
       "get": {
-        "tags": [
-          "orders"
-        ],
+        "tags": ["orders"],
         "summary": "List Orders",
         "operationId": "list_orders",
         "security": [
@@ -3553,9 +3429,7 @@
     },
     "/orders/{order_id}": {
       "get": {
-        "tags": [
-          "orders"
-        ],
+        "tags": ["orders"],
         "summary": "Get Order",
         "operationId": "get_order",
         "security": [
@@ -3610,9 +3484,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "orders"
-        ],
+        "tags": ["orders"],
         "summary": "Cancel Order",
         "operationId": "cancel_order",
         "security": [
@@ -3667,9 +3539,7 @@
     },
     "/orders/{order_id}/bon": {
       "get": {
-        "tags": [
-          "orders"
-        ],
+        "tags": ["orders"],
         "summary": "Get Order Bon",
         "operationId": "get_order_bon",
         "parameters": [
@@ -3712,9 +3582,7 @@
     },
     "/orders/{order_id}/edit": {
       "post": {
-        "tags": [
-          "orders"
-        ],
+        "tags": ["orders"],
         "summary": "Edit Order",
         "operationId": "edit_order",
         "security": [
@@ -3781,9 +3649,7 @@
     },
     "/cashiers/shifts": {
       "get": {
-        "tags": [
-          "cashiers"
-        ],
+        "tags": ["cashiers"],
         "summary": "List Cashier Shifts",
         "operationId": "list_cashier_shifts",
         "security": [
@@ -3883,9 +3749,7 @@
     },
     "/cashiers/{cashier_id}/shift-stats": {
       "get": {
-        "tags": [
-          "cashiers"
-        ],
+        "tags": ["cashiers"],
         "summary": "Get Cashier Shift Stats",
         "operationId": "get_cashier_shift_stats",
         "security": [
@@ -3958,9 +3822,7 @@
     },
     "/cashiers/{cashier_id}/close-out": {
       "post": {
-        "tags": [
-          "cashiers"
-        ],
+        "tags": ["cashiers"],
         "summary": "Close Out Cashier",
         "operationId": "close_out_cashier",
         "security": [
@@ -4027,9 +3889,7 @@
     },
     "/stats/products": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Product Stats",
         "operationId": "get_product_stats",
         "security": [
@@ -4111,9 +3971,7 @@
     },
     "/stats/vouchers": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Voucher Stats",
         "operationId": "get_voucher_stats",
         "security": [
@@ -4195,9 +4053,7 @@
     },
     "/stats/entries": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Entry Stats",
         "operationId": "get_entry_stats",
         "security": [
@@ -4279,9 +4135,7 @@
     },
     "/stats/top-ups": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Top Up Stats",
         "operationId": "get_top_up_stats",
         "security": [
@@ -4363,9 +4217,7 @@
     },
     "/stats/pay-outs": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Pay Out Stats",
         "operationId": "get_pay_out_stats",
         "security": [
@@ -4447,9 +4299,7 @@
     },
     "/stats/payment-methods": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Payment Method Stats",
         "operationId": "get_payment_method_stats",
         "security": [
@@ -4531,9 +4381,7 @@
     },
     "/stats/free-tickets": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Get Free Ticket Stats",
         "operationId": "get_free_ticket_stats",
         "security": [
@@ -4615,9 +4463,7 @@
     },
     "/tickets": {
       "get": {
-        "tags": [
-          "tickets"
-        ],
+        "tags": ["tickets"],
         "summary": "List Tickets",
         "operationId": "list_tickets",
         "security": [
@@ -4667,9 +4513,7 @@
         }
       },
       "post": {
-        "tags": [
-          "tickets"
-        ],
+        "tags": ["tickets"],
         "summary": "Create Ticket",
         "operationId": "create_ticket",
         "security": [
@@ -4727,9 +4571,7 @@
     },
     "/tickets/external-tickets": {
       "get": {
-        "tags": [
-          "tickets"
-        ],
+        "tags": ["tickets"],
         "summary": "List External Tickets",
         "operationId": "list_external_tickets",
         "security": [
@@ -4781,9 +4623,7 @@
     },
     "/tickets/stats/presale": {
       "get": {
-        "tags": [
-          "tickets"
-        ],
+        "tags": ["tickets"],
         "summary": "Get Presale Stats",
         "operationId": "get_presale_stats",
         "security": [
@@ -4831,9 +4671,7 @@
     },
     "/tickets/{ticket_id}": {
       "post": {
-        "tags": [
-          "tickets"
-        ],
+        "tags": ["tickets"],
         "summary": "Update Ticket",
         "operationId": "update_ticket",
         "security": [
@@ -4898,9 +4736,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "tickets"
-        ],
+        "tags": ["tickets"],
         "summary": "Delete Ticket",
         "operationId": "delete_ticket",
         "security": [
@@ -4955,9 +4791,7 @@
     },
     "/user-tag-secrets": {
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Create User Tag Secret",
         "operationId": "create_user_tag_secret",
         "security": [
@@ -5013,9 +4847,7 @@
         }
       },
       "get": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "List User Tag Secrets",
         "operationId": "list_user_tag_secrets",
         "security": [
@@ -5067,9 +4899,7 @@
     },
     "/user-tags": {
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Create User Tags",
         "operationId": "create_user_tags",
         "security": [
@@ -5129,9 +4959,7 @@
     },
     "/user-tags/csv-export": {
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "User Tags Csv Export",
         "operationId": "user_tags_csv_export",
         "security": [
@@ -5190,9 +5018,7 @@
     },
     "/user-tags/find-user-tags": {
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Find User Tags",
         "operationId": "find_user_tags",
         "security": [
@@ -5250,9 +5076,7 @@
     },
     "/user-tags/{user_tag_id}": {
       "get": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Get User Tag Detail",
         "operationId": "get_user_tag_detail",
         "security": [
@@ -5309,9 +5133,7 @@
     },
     "/user-tags/{user_tag_id}/update-comment": {
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Update User Tag Comment",
         "operationId": "update_user_tag_comment",
         "security": [
@@ -5378,9 +5200,7 @@
     },
     "/user-tag-variants": {
       "get": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "List User Tag Variants",
         "operationId": "list_user_tag_variants",
         "security": [
@@ -5430,9 +5250,7 @@
         }
       },
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Create User Tag Variant",
         "operationId": "create_user_tag_variant",
         "security": [
@@ -5490,9 +5308,7 @@
     },
     "/user-tag-variants/{user_tag_variant_id}": {
       "get": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Get User Tag Variant",
         "operationId": "get_user_tag_variant",
         "security": [
@@ -5547,9 +5363,7 @@
         }
       },
       "post": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Update User Tag Variant",
         "operationId": "update_user_tag_variant",
         "security": [
@@ -5614,9 +5428,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "user_tags"
-        ],
+        "tags": ["user_tags"],
         "summary": "Delete User Tag Variant",
         "operationId": "delete_user_tag_variant",
         "security": [
@@ -5671,9 +5483,7 @@
     },
     "/tses/": {
       "get": {
-        "tags": [
-          "tses"
-        ],
+        "tags": ["tses"],
         "summary": "List Tses",
         "operationId": "list_tses",
         "security": [
@@ -5723,9 +5533,7 @@
         }
       },
       "post": {
-        "tags": [
-          "tses"
-        ],
+        "tags": ["tses"],
         "summary": "Create Tse",
         "operationId": "create_tse",
         "security": [
@@ -5783,9 +5591,7 @@
     },
     "/tses/{tse_id}": {
       "post": {
-        "tags": [
-          "tses"
-        ],
+        "tags": ["tses"],
         "summary": "Update Tse",
         "operationId": "update_tse",
         "security": [
@@ -5852,9 +5658,7 @@
     },
     "/payouts/": {
       "get": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "List Payout Runs",
         "operationId": "list_payout_runs",
         "security": [
@@ -5904,9 +5708,7 @@
         }
       },
       "post": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Create Payout Run",
         "operationId": "create_payout_run",
         "security": [
@@ -5964,9 +5766,7 @@
     },
     "/payouts/pending-payout-detail": {
       "get": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Pending Payout Detail",
         "operationId": "pending_payout_detail",
         "security": [
@@ -6014,9 +5814,7 @@
     },
     "/payouts/{payout_run_id}/payouts": {
       "get": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Payout Run Payouts",
         "operationId": "payout_run_payouts",
         "security": [
@@ -6077,9 +5875,7 @@
     },
     "/payouts/{payout_run_id}/csv": {
       "post": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Payout Run Csv Export",
         "operationId": "payout_run_csv_export",
         "security": [
@@ -6137,9 +5933,7 @@
     },
     "/payouts/{payout_run_id}/sepa_xml": {
       "post": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Payout Run Sepa Xml",
         "operationId": "payout_run_sepa_xml",
         "security": [
@@ -6207,9 +6001,7 @@
     },
     "/payouts/{payout_run_id}/previous_sepa_xml": {
       "post": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Previous Payout Run Sepa Xml",
         "operationId": "previous_payout_run_sepa_xml",
         "security": [
@@ -6267,9 +6059,7 @@
     },
     "/payouts/{payout_run_id}/set-as-done": {
       "post": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Set Payout Run As Done",
         "operationId": "set_payout_run_as_done",
         "security": [
@@ -6324,9 +6114,7 @@
     },
     "/payouts/{payout_run_id}/revoke": {
       "post": {
-        "tags": [
-          "payouts"
-        ],
+        "tags": ["payouts"],
         "summary": "Revoke Payout Run",
         "operationId": "revoke_payout_run",
         "security": [
@@ -6381,9 +6169,7 @@
     },
     "/tree/": {
       "get": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Get Tree For Current User",
         "operationId": "get_tree_for_current_user",
         "responses": {
@@ -6410,9 +6196,7 @@
     },
     "/tree/nodes/{node_id}/create-node": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Create Node",
         "operationId": "create_node",
         "security": [
@@ -6470,9 +6254,7 @@
     },
     "/tree/nodes/{node_id}/settings": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Update Node",
         "operationId": "update_node",
         "security": [
@@ -6530,9 +6312,7 @@
     },
     "/tree/nodes/{node_id}/archive-node": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Archive Node",
         "operationId": "archive_node",
         "security": [
@@ -6578,9 +6358,7 @@
     },
     "/tree/nodes/{node_id}/create-event": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Create Event",
         "operationId": "create_event",
         "security": [
@@ -6638,9 +6416,7 @@
     },
     "/tree/events/{node_id}/event-settings": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Update Event",
         "operationId": "update_event",
         "security": [
@@ -6698,9 +6474,7 @@
     },
     "/tree/events/{node_id}/event-design/bon-logo": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Update Bon Logo",
         "operationId": "update_bon_logo",
         "security": [
@@ -6756,9 +6530,7 @@
     },
     "/tree/events/{node_id}/event-design": {
       "get": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Get Event Design",
         "operationId": "get_event_design",
         "security": [
@@ -6806,9 +6578,7 @@
     },
     "/tree/events/{node_id}/settings": {
       "get": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Get Restricted Event Settings",
         "operationId": "get_restricted_event_settings",
         "security": [
@@ -6856,9 +6626,7 @@
     },
     "/tree/nodes/{node_id}": {
       "delete": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Delete Node",
         "operationId": "delete_node",
         "security": [
@@ -6904,9 +6672,7 @@
     },
     "/tree/events/{node_id}/generate-test-bon": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Test Bon",
         "operationId": "generate_test_bon",
         "security": [
@@ -6954,9 +6720,7 @@
     },
     "/tree/events/{node_id}/check-pretix-connection": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Check Pretix Connection",
         "operationId": "check_pretix_connection",
         "security": [
@@ -7002,9 +6766,7 @@
     },
     "/tree/events/{node_id}/fetch-pretix-products": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Fetch Pretix Products",
         "operationId": "fetch_pretix_products",
         "security": [
@@ -7066,9 +6828,7 @@
     },
     "/tree/events/{node_id}/generate-webhook-url": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Webhook Url",
         "operationId": "generate_webhook_url",
         "security": [
@@ -7126,9 +6886,7 @@
     },
     "/tree/events/{node_id}/generate-test-report": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Test Revenue Report",
         "operationId": "generate_test_revenue_report",
         "security": [
@@ -7175,9 +6933,7 @@
     },
     "/tree/nodes/{node_id}/generate-revenue-report": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Revenue Report",
         "operationId": "generate_revenue_report",
         "security": [
@@ -7224,9 +6980,7 @@
     },
     "/tree/nodes/{node_id}/generate-daily-report": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Daily Report",
         "operationId": "generate_daily_report",
         "security": [
@@ -7283,9 +7037,7 @@
     },
     "/tree/events/{node_id}/generate-test-daily-report": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Test Daily Report",
         "operationId": "generate_test_daily_report",
         "security": [
@@ -7332,9 +7084,7 @@
     },
     "/tree/nodes/{node_id}/generate-payout-report": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Generate Payout Report",
         "operationId": "generate_payout_report",
         "security": [
@@ -7381,9 +7131,7 @@
     },
     "/tree/events/{node_id}/export-dsfinvk": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Export Dsfinvk",
         "operationId": "export_dsfinvk",
         "security": [
@@ -7430,9 +7178,7 @@
     },
     "/tree/events/{node_id}/export-ao146a": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Export Ao146A",
         "operationId": "export_ao146a",
         "security": [
@@ -7489,9 +7235,7 @@
     },
     "/tree/nodes/{node_id}/configure-sumup-token": {
       "post": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "Configure Sumup Token",
         "operationId": "configure_sumup_token",
         "security": [
@@ -7547,9 +7291,7 @@
     },
     "/tree/nodes/{node_id}/audit-logs": {
       "get": {
-        "tags": [
-          "tree"
-        ],
+        "tags": ["tree"],
         "summary": "List Audit Logs",
         "operationId": "list_audit_logs",
         "security": [
@@ -7601,9 +7343,7 @@
     },
     "/sumup/checkouts": {
       "get": {
-        "tags": [
-          "sumup"
-        ],
+        "tags": ["sumup"],
         "summary": "List Sumup Checkouts",
         "operationId": "list_sumup_checkouts",
         "security": [
@@ -7655,9 +7395,7 @@
     },
     "/sumup/transactions": {
       "get": {
-        "tags": [
-          "sumup"
-        ],
+        "tags": ["sumup"],
         "summary": "List Sumup Transactions",
         "operationId": "list_sumup_transactions",
         "security": [
@@ -7709,9 +7447,7 @@
     },
     "/sumup/checkouts/{checkout_id}": {
       "get": {
-        "tags": [
-          "sumup"
-        ],
+        "tags": ["sumup"],
         "summary": "Get Sumup Checkout",
         "operationId": "get_sumup_checkout",
         "security": [
@@ -7768,9 +7504,7 @@
     },
     "/customers/find-customers": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Find Customers",
         "operationId": "find_customers",
         "security": [
@@ -7832,9 +7566,7 @@
     },
     "/customers/{customer_id}": {
       "get": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Get Customer",
         "operationId": "get_customer",
         "security": [
@@ -7891,9 +7623,7 @@
     },
     "/customers-with-blocked-payout": {
       "get": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Get Customers With Blocked Payout",
         "operationId": "get_customers_with_blocked_payout",
         "security": [
@@ -7945,9 +7675,7 @@
     },
     "/customers/{customer_id}/prevent-payout": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Prevent Customer Payout",
         "operationId": "prevent_customer_payout",
         "security": [
@@ -8002,9 +7730,7 @@
     },
     "/customers/{customer_id}/allow-payout": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Allow Customer Payout",
         "operationId": "allow_customer_payout",
         "security": [
@@ -8059,9 +7785,7 @@
     },
     "/customers/switch-tag": {
       "post": {
-        "tags": [
-          "accounts"
-        ],
+        "tags": ["accounts"],
         "summary": "Switch Customer Tag",
         "operationId": "switch_customer_tag",
         "security": [
@@ -8117,9 +7841,7 @@
     },
     "/terminal": {
       "get": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "List Terminals",
         "operationId": "list_terminals",
         "security": [
@@ -8169,9 +7891,7 @@
         }
       },
       "post": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Create Terminal",
         "operationId": "create_terminal",
         "security": [
@@ -8229,9 +7949,7 @@
     },
     "/terminal/mdm-devices": {
       "get": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "List Mdm Devices",
         "operationId": "list_mdm_devices",
         "security": [
@@ -8283,9 +8001,7 @@
     },
     "/terminal/mdm-devices/change-device-to-terminal-mapping": {
       "post": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Change Mdm Device Mapping",
         "operationId": "change_mdm_device_mapping",
         "security": [
@@ -8341,9 +8057,7 @@
     },
     "/terminal/mdm-devices/{mdm_device_id}/location": {
       "get": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Get Mdm Device Location",
         "operationId": "get_mdm_device_location",
         "security": [
@@ -8400,9 +8114,7 @@
     },
     "/terminal/locations": {
       "get": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "List Terminal Locations",
         "operationId": "list_terminal_locations",
         "security": [
@@ -8454,9 +8166,7 @@
     },
     "/terminal/{terminal_id}": {
       "post": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Update Terminal",
         "operationId": "update_terminal",
         "security": [
@@ -8521,9 +8231,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Delete Terminal",
         "operationId": "delete_terminal",
         "security": [
@@ -8578,9 +8286,7 @@
     },
     "/terminal/{terminal_id}/logout": {
       "post": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Logout Terminal",
         "operationId": "logout_terminal",
         "security": [
@@ -8635,11 +8341,7 @@
     },
     "/terminal/{terminal_id}/switch-till": {
       "post": {
-        "tags": [
-          "terminals",
-          "tills",
-          "terminals"
-        ],
+        "tags": ["terminals", "tills", "terminals"],
         "summary": "Switch Till",
         "operationId": "switch_till",
         "security": [
@@ -8704,9 +8406,7 @@
     },
     "/terminal/{terminal_id}/force-logout-user": {
       "post": {
-        "tags": [
-          "terminals"
-        ],
+        "tags": ["terminals"],
         "summary": "Force Logout User",
         "operationId": "force_logout_user",
         "security": [
@@ -8761,9 +8461,7 @@
     },
     "/transactions": {
       "get": {
-        "tags": [
-          "transactions"
-        ],
+        "tags": ["transactions"],
         "summary": "List Transactions",
         "operationId": "list_transactions",
         "security": [
@@ -8869,9 +8567,7 @@
     },
     "/transactions/{transaction_id}": {
       "get": {
-        "tags": [
-          "transactions"
-        ],
+        "tags": ["transactions"],
         "summary": "Get Transaction",
         "operationId": "get_transaction",
         "security": [
@@ -8928,9 +8624,7 @@
     },
     "/webhooks/hook": {
       "post": {
-        "tags": [
-          "webhooks"
-        ],
+        "tags": ["webhooks"],
         "summary": "Trigger Webhook",
         "operationId": "trigger_webhook",
         "parameters": [
@@ -8971,9 +8665,7 @@
     },
     "/media/blob/{blob_id}": {
       "get": {
-        "tags": [
-          "media"
-        ],
+        "tags": ["media"],
         "summary": "Get Blob",
         "operationId": "get_blob",
         "parameters": [
@@ -9268,12 +8960,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title",
-          "issuer",
-          "address",
-          "ust_id"
-        ],
+        "required": ["title", "issuer", "address", "ust_id"],
         "title": "BonConfig"
       },
       "BonJson": {
@@ -9335,9 +9022,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "product_id"
-        ],
+        "required": ["product_id"],
         "title": "BookedProduct"
       },
       "CashRegister": {
@@ -9492,12 +9177,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "node_id",
-          "id",
-          "total"
-        ],
+        "required": ["name", "node_id", "id", "total"],
         "title": "CashRegisterStocking"
       },
       "CashierProductStats": {
@@ -9511,10 +9191,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "product",
-          "quantity"
-        ],
+        "required": ["product", "quantity"],
         "title": "CashierProductStats"
       },
       "CashierShift": {
@@ -9602,10 +9279,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "booked_products",
-          "orders"
-        ],
+        "required": ["booked_products", "orders"],
         "title": "CashierShiftStats"
       },
       "ChangeMdmDeviceMappingPayload": {
@@ -9620,10 +9294,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "mdm_device_id",
-          "terminal_id"
-        ],
+        "required": ["mdm_device_id", "terminal_id"],
         "title": "ChangeMdmDeviceMappingPayload"
       },
       "ChangePasswordPayload": {
@@ -9638,10 +9309,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "old_password",
-          "new_password"
-        ],
+        "required": ["old_password", "new_password"],
         "title": "ChangePasswordPayload"
       },
       "ChangeUserPasswordPayload": {
@@ -9652,9 +9320,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "new_password"
-        ],
+        "required": ["new_password"],
         "title": "ChangeUserPasswordPayload"
       },
       "CloseOut": {
@@ -9692,10 +9358,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "cashier_id",
-          "imbalance"
-        ],
+        "required": ["cashier_id", "imbalance"],
         "title": "CloseOutResult"
       },
       "CompletedSaleProducts": {
@@ -9840,9 +9503,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "execution_date"
-        ],
+        "required": ["execution_date"],
         "title": "CreateSepaXMLPayload"
       },
       "CreateUserPayload": {
@@ -9901,10 +9562,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "login",
-          "display_name"
-        ],
+        "required": ["login", "display_name"],
         "title": "CreateUserPayload"
       },
       "CurrentUser": {
@@ -10018,12 +9676,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_id",
-          "id",
-          "login",
-          "display_name"
-        ],
+        "required": ["node_id", "id", "login", "display_name"],
         "title": "CurrentUser",
         "description": "Describes a logged-in user in the system"
       },
@@ -10262,11 +9915,7 @@
       },
       "DeviceStatus": {
         "type": "string",
-        "enum": [
-          "online",
-          "offline",
-          "unknown"
-        ],
+        "enum": ["online", "offline", "unknown"],
         "title": "DeviceStatus"
       },
       "EditSaleProducts": {
@@ -10296,10 +9945,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uuid",
-          "products"
-        ],
+        "required": ["uuid", "products"],
         "title": "EditSaleProducts"
       },
       "EventDesign": {
@@ -10318,9 +9964,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "bon_logo_blob_id"
-        ],
+        "required": ["bon_logo_blob_id"],
         "title": "EventDesign"
       },
       "EventPrivilege": {
@@ -10452,9 +10096,7 @@
       },
       "ExternalTicketType": {
         "type": "string",
-        "enum": [
-          "pretix"
-        ],
+        "enum": ["pretix"],
         "title": "ExternalTicketType"
       },
       "FindCustomerPayload": {
@@ -10465,9 +10107,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "search_term"
-        ],
+        "required": ["search_term"],
         "title": "FindCustomerPayload"
       },
       "FindUserTagPayload": {
@@ -10478,9 +10118,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "search_term"
-        ],
+        "required": ["search_term"],
         "title": "FindUserTagPayload"
       },
       "FreeTicketStats": {
@@ -10491,9 +10129,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "free_tickets_issued"
-        ],
+        "required": ["free_tickets_issued"],
         "title": "FreeTicketStats"
       },
       "GenerateDailyReportPayload": {
@@ -10512,10 +10148,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "relevant_node_ids",
-          "report_date"
-        ],
+        "required": ["relevant_node_ids", "report_date"],
         "title": "GenerateDailyReportPayload"
       },
       "GenerateWebhookPayload": {
@@ -10525,9 +10158,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "webhook_type"
-        ],
+        "required": ["webhook_type"],
         "title": "GenerateWebhookPayload"
       },
       "GenerateWebhookResponse": {
@@ -10538,9 +10169,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "webhook_url"
-        ],
+        "required": ["webhook_url"],
         "title": "GenerateWebhookResponse"
       },
       "HTTPValidationError": {
@@ -10558,10 +10187,7 @@
       },
       "Language": {
         "type": "string",
-        "enum": [
-          "en-US",
-          "de-DE"
-        ],
+        "enum": ["en-US", "de-DE"],
         "title": "Language"
       },
       "LineItem": {
@@ -10645,10 +10271,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
+        "required": ["username", "password"],
         "title": "LoginPayload"
       },
       "MdmDevice": {
@@ -10741,10 +10364,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "device_id",
-          "status"
-        ],
+        "required": ["device_id", "status"],
         "title": "MdmDevice"
       },
       "MdmDeviceLocation": {
@@ -10771,11 +10391,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "latitude",
-          "longitude",
-          "last_update"
-        ],
+        "required": ["latitude", "longitude", "last_update"],
         "title": "MdmDeviceLocation"
       },
       "MdmDeviceMappingWithTerminal": {
@@ -10845,17 +10461,12 @@
           }
         },
         "type": "object",
-        "required": [
-          "device",
-          "mapping"
-        ],
+        "required": ["device", "mapping"],
         "title": "MdmDeviceWithMapping"
       },
       "MdmType": {
         "type": "string",
-        "enum": [
-          "headwind"
-        ],
+        "enum": ["headwind"],
         "title": "MdmType"
       },
       "MoneyOverview": {
@@ -10896,10 +10507,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data",
-          "mime_type"
-        ],
+        "required": ["data", "mime_type"],
         "title": "NewBlob"
       },
       "NewCashRegister": {
@@ -10910,9 +10518,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "NewCashRegister"
       },
       "NewCashRegisterStocking": {
@@ -10998,9 +10604,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "NewCashRegisterStocking"
       },
       "NewEvent": {
@@ -11502,10 +11106,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "description"
-        ],
+        "required": ["name", "description"],
         "title": "NewNode"
       },
       "NewPayoutRun": {
@@ -11520,10 +11121,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "max_payout_sum",
-          "max_num_payouts"
-        ],
+        "required": ["max_payout_sum", "max_num_payouts"],
         "title": "NewPayoutRun"
       },
       "NewProduct": {
@@ -11594,11 +11192,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "price",
-          "tax_rate_id"
-        ],
+        "required": ["name", "price", "tax_rate_id"],
         "title": "NewProduct"
       },
       "NewTaxRate": {
@@ -11620,12 +11214,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "rate",
-          "description",
-          "tax_type"
-        ],
+        "required": ["name", "rate", "description", "tax_type"],
         "title": "NewTaxRate"
       },
       "NewTerminal": {
@@ -11647,9 +11236,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "NewTerminal"
       },
       "NewTicket": {
@@ -11738,10 +11325,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "active_profile_id"
-        ],
+        "required": ["name", "active_profile_id"],
         "title": "NewTill"
       },
       "NewTillButton": {
@@ -11759,10 +11343,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "product_ids"
-        ],
+        "required": ["name", "product_ids"],
         "title": "NewTillButton"
       },
       "NewTillLayout": {
@@ -11812,9 +11393,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "NewTillLayout"
       },
       "NewTillProfile": {
@@ -11865,6 +11444,10 @@
           "enable_card_payment": {
             "type": "boolean",
             "title": "Enable Card Payment"
+          },
+          "use_ttp_for_card_payment": {
+            "type": "boolean",
+            "title": "Use TTP for Card Payment"
           }
         },
         "type": "object",
@@ -11877,7 +11460,8 @@
           "allow_ticket_vouchers",
           "enable_ssp_payment",
           "enable_cash_payment",
-          "enable_card_payment"
+          "enable_card_payment",
+          "use_ttp_for_card_payment"
         ],
         "title": "NewTillProfile"
       },
@@ -11972,11 +11556,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "event_privileges",
-          "node_privileges"
-        ],
+        "required": ["name", "event_privileges", "node_privileges"],
         "title": "NewUserRole"
       },
       "NewUserTag": {
@@ -12007,10 +11587,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "pin",
-          "secret_id"
-        ],
+        "required": ["pin", "secret_id"],
         "title": "NewUserTag"
       },
       "NewUserTagSecret": {
@@ -12029,11 +11606,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key0",
-          "key1",
-          "description"
-        ],
+        "required": ["key0", "key1", "description"],
         "title": "NewUserTagSecret"
       },
       "NewUserTagVariant": {
@@ -12054,9 +11627,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "variant_name"
-        ],
+        "required": ["variant_name"],
         "title": "NewUserTagVariant"
       },
       "NewUserToRoles": {
@@ -12074,10 +11645,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_id",
-          "role_ids"
-        ],
+        "required": ["user_id", "role_ids"],
         "title": "NewUserToRoles"
       },
       "Node": {
@@ -12220,20 +11788,12 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_id",
-          "name",
-          "description"
-        ],
+        "required": ["node_id", "name", "description"],
         "title": "NodeChoice"
       },
       "NodePrivilege": {
         "type": "string",
-        "enum": [
-          "node_administration",
-          "view_node_stats",
-          "can_book_orders"
-        ],
+        "enum": ["node_administration", "view_node_stats", "can_book_orders"],
         "title": "NodePrivilege"
       },
       "NodeSeenByUser": {
@@ -12396,10 +11956,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "ids",
-          "entities"
-        ],
+        "required": ["ids", "entities"],
         "title": "NormalizedList[UserTagDetail, int]"
       },
       "ObjectType": {
@@ -12881,10 +12438,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total"
-        ],
+        "required": ["items", "total"],
         "title": "PaginatedList[Order]"
       },
       "PaginatedList_Transaction_": {
@@ -12902,20 +12456,12 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total"
-        ],
+        "required": ["items", "total"],
         "title": "PaginatedList[Transaction]"
       },
       "PaymentMethod": {
         "type": "string",
-        "enum": [
-          "cash",
-          "sumup",
-          "tag",
-          "sumup_online"
-        ],
+        "enum": ["cash", "sumup", "tag", "sumup_online"],
         "title": "PaymentMethod"
       },
       "PaymentMethodStats": {
@@ -12933,11 +12479,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "payment_method",
-          "count",
-          "revenue"
-        ],
+        "required": ["payment_method", "count", "revenue"],
         "title": "PaymentMethodStats"
       },
       "PaymentMethodStatsResponse": {
@@ -12961,11 +12503,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "from_time",
-          "to_time",
-          "stats"
-        ],
+        "required": ["from_time", "to_time", "stats"],
         "title": "PaymentMethodStatsResponse"
       },
       "Payout": {
@@ -13285,12 +12823,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "organizer",
-          "event",
-          "apiKey",
-          "url"
-        ],
+        "required": ["organizer", "event", "apiKey", "url"],
         "title": "PretixFetchProductsPayload"
       },
       "PretixProduct": {
@@ -13312,11 +12845,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "default_price"
-        ],
+        "required": ["id", "name", "default_price"],
         "title": "PretixProduct"
       },
       "Product": {
@@ -14443,12 +13972,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "from_time",
-          "to_time",
-          "count",
-          "revenue"
-        ],
+        "required": ["from_time", "to_time", "count", "revenue"],
         "title": "StatInterval"
       },
       "SumUpCheckout": {
@@ -14544,11 +14068,7 @@
       },
       "SumUpCheckoutStatus": {
         "type": "string",
-        "enum": [
-          "PENDING",
-          "FAILED",
-          "PAID"
-        ],
+        "enum": ["PENDING", "FAILED", "PAID"],
         "title": "SumUpCheckoutStatus"
       },
       "SumUpTokenPayload": {
@@ -14559,9 +14079,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "authorization_code"
-        ],
+        "required": ["authorization_code"],
         "title": "SumUpTokenPayload"
       },
       "SumUpTransaction": {
@@ -14648,13 +14166,7 @@
       },
       "SumUpTransactionStatus": {
         "type": "string",
-        "enum": [
-          "SUCCESSFUL",
-          "CANCELLED",
-          "FAILED",
-          "PENDING",
-          "REFUNDED"
-        ],
+        "enum": ["SUCCESSFUL", "CANCELLED", "FAILED", "PENDING", "REFUNDED"],
         "title": "SumUpTransactionStatus"
       },
       "SwitchCustomerTagPayload": {
@@ -14673,11 +14185,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "old_user_tag_pin",
-          "new_user_tag_pin",
-          "comment"
-        ],
+        "required": ["old_user_tag_pin", "new_user_tag_pin", "comment"],
         "title": "SwitchCustomerTagPayload"
       },
       "SwitchTerminalPayload": {
@@ -14688,9 +14196,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "new_terminal_id"
-        ],
+        "required": ["new_terminal_id"],
         "title": "SwitchTerminalPayload"
       },
       "SwitchTillPayload": {
@@ -14701,9 +14207,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "new_till_id"
-        ],
+        "required": ["new_till_id"],
         "title": "SwitchTillPayload"
       },
       "TaxRate": {
@@ -14778,12 +14282,7 @@
       },
       "TaxType": {
         "type": "string",
-        "enum": [
-          "regular_vat",
-          "reduced_vat",
-          "no_tax",
-          "transparent"
-        ],
+        "enum": ["regular_vat", "reduced_vat", "no_tax", "transparent"],
         "title": "TaxType"
       },
       "Terminal": {
@@ -15121,13 +14620,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "active_profile_id",
-          "node_id",
-          "id",
-          "z_nr"
-        ],
+        "required": ["name", "active_profile_id", "node_id", "id", "z_nr"],
         "title": "Till"
       },
       "TillButton": {
@@ -15157,13 +14650,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "product_ids",
-          "node_id",
-          "id",
-          "price"
-        ],
+        "required": ["name", "product_ids", "node_id", "id", "price"],
         "title": "TillButton"
       },
       "TillLayout": {
@@ -15221,11 +14708,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "node_id",
-          "id"
-        ],
+        "required": ["name", "node_id", "id"],
         "title": "TillLayout"
       },
       "TillProfile": {
@@ -15277,6 +14760,10 @@
             "type": "boolean",
             "title": "Enable Card Payment"
           },
+          "use_ttp_for_card_payment": {
+            "type": "boolean",
+            "title": "Use TTP for Card Payment"
+          },
           "node_id": {
             "type": "integer",
             "title": "Node Id"
@@ -15297,6 +14784,7 @@
           "enable_ssp_payment",
           "enable_cash_payment",
           "enable_card_payment",
+          "use_ttp_for_card_payment",
           "node_id",
           "id"
         ],
@@ -15424,10 +14912,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_cashier_id",
-          "target_cashier_id"
-        ],
+        "required": ["source_cashier_id", "target_cashier_id"],
         "title": "TransferRegisterPayload"
       },
       "Tse": {
@@ -15587,19 +15072,12 @@
       },
       "TseStatus": {
         "type": "string",
-        "enum": [
-          "new",
-          "active",
-          "disabled",
-          "failed"
-        ],
+        "enum": ["new", "active", "disabled", "failed"],
         "title": "TseStatus"
       },
       "TseType": {
         "type": "string",
-        "enum": [
-          "diebold_nixdorf"
-        ],
+        "enum": ["diebold_nixdorf"],
         "title": "TseType"
       },
       "UpdateAccountCommentPayload": {
@@ -15610,9 +15088,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "comment"
-        ],
+        "required": ["comment"],
         "title": "UpdateAccountCommentPayload"
       },
       "UpdateBalancePayload": {
@@ -15623,9 +15099,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "new_balance"
-        ],
+        "required": ["new_balance"],
         "title": "UpdateBalancePayload"
       },
       "UpdateCommentPayload": {
@@ -15636,9 +15110,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "comment"
-        ],
+        "required": ["comment"],
         "title": "UpdateCommentPayload"
       },
       "UpdateEvent": {
@@ -16172,10 +15644,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "login",
-          "display_name"
-        ],
+        "required": ["login", "display_name"],
         "title": "UpdateUserPayload"
       },
       "UpdateUserRolePrivilegesPayload": {
@@ -16223,9 +15692,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "new_voucher_amount"
-        ],
+        "required": ["new_voucher_amount"],
         "title": "UpdateVoucherAmountPayload"
       },
       "User": {
@@ -16382,10 +15849,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "available_nodes"
-        ],
+        "required": ["success", "available_nodes"],
         "title": "UserLoginResult"
       },
       "UserLoginSuccess": {
@@ -16399,10 +15863,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user",
-          "token"
-        ],
+        "required": ["user", "token"],
         "title": "UserLoginSuccess"
       },
       "UserRole": {
@@ -16486,13 +15947,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_id",
-          "node_id",
-          "node_name",
-          "role_ids",
-          "roles"
-        ],
+        "required": ["user_id", "node_id", "node_name", "role_ids", "roles"],
         "title": "UserRoleAssignment"
       },
       "UserTagAccountAssociation": {
@@ -16508,10 +15963,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "account_id",
-          "mapping_was_valid_until"
-        ],
+        "required": ["account_id", "mapping_was_valid_until"],
         "title": "UserTagAccountAssociation"
       },
       "UserTagDetail": {
@@ -16720,13 +16172,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key0",
-          "key1",
-          "description",
-          "id",
-          "node_id"
-        ],
+        "required": ["key0", "key1", "description", "id", "node_id"],
         "title": "UserTagSecret"
       },
       "UserTagVariant": {
@@ -16755,11 +16201,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "variant_name",
-          "id",
-          "node_id"
-        ],
+        "required": ["variant_name", "id", "node_id"],
         "title": "UserTagVariant"
       },
       "UserTagsCsvExportPayload": {
@@ -16800,11 +16242,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_id",
-          "role_ids",
-          "node_id"
-        ],
+        "required": ["user_id", "role_ids", "node_id"],
         "title": "UserToRoles"
       },
       "UserVoucherGrantStats": {
@@ -16815,9 +16253,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "vouchers_granted"
-        ],
+        "required": ["vouchers_granted"],
         "title": "UserVoucherGrantStats"
       },
       "ValidationError": {
@@ -16846,11 +16282,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
       "VoucherStats": {
@@ -16865,17 +16297,12 @@
           }
         },
         "type": "object",
-        "required": [
-          "vouchers_issued",
-          "vouchers_spent"
-        ],
+        "required": ["vouchers_issued", "vouchers_spent"],
         "title": "VoucherStats"
       },
       "WebhookType": {
         "type": "string",
-        "enum": [
-          "pretix"
-        ],
+        "enum": ["pretix"],
         "title": "WebhookType"
       }
     },

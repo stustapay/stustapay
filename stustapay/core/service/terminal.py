@@ -419,6 +419,7 @@ class TerminalService(Service[Config]):
             enable_ssp_payment=profile.enable_ssp_payment,
             enable_cash_payment=profile.enable_cash_payment,
             enable_card_payment=profile.enable_card_payment,
+            use_ttp_for_card_payment=profile.use_ttp_for_card_payment,
             buttons=buttons,
             sumup_secrets=secrets,
         )
