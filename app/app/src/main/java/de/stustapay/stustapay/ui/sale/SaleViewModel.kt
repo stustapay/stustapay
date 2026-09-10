@@ -285,7 +285,7 @@ class SaleViewModel @Inject constructor(
             // https://stackoverflow.com/questions/60868912
             delay(800)
 
-            when (val paymentResult = ecPaymentRepository.payReader(context, payment)) {
+            when (val paymentResult = ecPaymentRepository.pay(context, payment)) {
                 is ECPaymentResult.Failure -> {
                     _status.update { "EC: ${paymentResult.msg}" }
                     return
