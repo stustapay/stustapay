@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -185,6 +184,8 @@ sealed interface SumUpTapToPayResult {
     ) : SumUpTapToPayResult
 
     object Cancelled : SumUpTapToPayResult
+
+    object NotSupported : SumUpTapToPayResult
 }
 
 sealed interface SumUpTapToPayLoginResult {
@@ -193,4 +194,6 @@ sealed interface SumUpTapToPayLoginResult {
     data class Error(
         val msg: String
     ) : SumUpTapToPayLoginResult
+
+    object NotSupported : SumUpTapToPayLoginResult
 }
