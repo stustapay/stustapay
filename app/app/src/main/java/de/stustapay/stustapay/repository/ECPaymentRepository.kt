@@ -30,6 +30,12 @@ class ECPaymentRepository @Inject constructor(
 
     suspend fun login(keepTrying: Boolean = false) {
         var res = sumUpTapToPay.login()
+
+        if (res == SumUpTapToPayLoginResult.NotSupported) {
+            Log.e("ec", "tap-to-pay is disabled in this build")
+            return
+        }
+
         while (keepTrying && res is SumUpTapToPayLoginResult.Error) {
             Log.e("ec", "ttp login failed: ${res.msg}")
             delay(1000)
@@ -89,6 +95,7 @@ class ECPaymentRepository @Inject constructor(
 
             is SumUpTapToPayResult.Error -> ECPaymentResult.Failure(res.msg)
             SumUpTapToPayResult.Cancelled -> ECPaymentResult.Failure("cancelled")
+            SumUpTapToPayResult.NotSupported -> ECPaymentResult.Failure("tap-to-pay is disabled in this build")
         }
     }
 }

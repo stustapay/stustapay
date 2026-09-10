@@ -3,7 +3,7 @@ on:
   workflow_call:
   pull_request:
     paths:
-    - "app/**"
+      - "app/**"
 
 jobs:
   build:
@@ -18,8 +18,8 @@ jobs:
       - name: get java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
           cache: gradle
       - name: build with gradle
         uses: gradle/gradle-build-action@v3
@@ -27,6 +27,7 @@ jobs:
           arguments: assembleDebug
           build-root-directory: app/
         env:
+          SUMUP_TTP_ENABLE: "true"
           SUMUP_TTP_USER: ${{ secrets.SUMUP_TTP_USER }}
           SUMUP_TTP_PASS: ${{ secrets.SUMUP_TTP_PASS }}
       - name: Upload APK
@@ -49,8 +50,8 @@ jobs:
       - name: get java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
           cache: gradle
       - name: test with gradle
         uses: gradle/gradle-build-action@v3
@@ -58,6 +59,7 @@ jobs:
           arguments: test
           build-root-directory: app/
         env:
+          SUMUP_TTP_ENABLE: "true"
           SUMUP_TTP_USER: ${{ secrets.SUMUP_TTP_USER }}
           SUMUP_TTP_PASS: ${{ secrets.SUMUP_TTP_PASS }}
       - name: lint with gradle
@@ -66,6 +68,7 @@ jobs:
           arguments: lint
           build-root-directory: app/
         env:
+          SUMUP_TTP_ENABLE: "true"
           SUMUP_TTP_USER: ${{ secrets.SUMUP_TTP_USER }}
           SUMUP_TTP_PASS: ${{ secrets.SUMUP_TTP_PASS }}
       - name: Upload lint report
