@@ -31,23 +31,23 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param nodeId
- * @param id
- * @param type
- * @param name
- * @param comment
- * @param balance
- * @param vouchers
- * @param userTagId
- * @param userTagUid
- * @param tagHistory
- * @param userTagUidHex
- * @param activatedAt
- * @param userTagComment
- * @param userTagVariantIds
- * @param userTagVariantNames
+ * @param nodeId 
+ * @param id 
+ * @param type 
+ * @param name 
+ * @param comment 
+ * @param balance 
+ * @param vouchers 
+ * @param userTagId 
+ * @param userTagUid 
+ * @param tagHistory 
+ * @param userTagUidHex 
+ * @param activatedAt 
+ * @param userTagComment 
+ * @param userTagVariantIds 
+ * @param userTagVariantNames 
  */
 @Serializable
 
@@ -102,3 +102,4 @@ data class Account (
 
 
 }
+

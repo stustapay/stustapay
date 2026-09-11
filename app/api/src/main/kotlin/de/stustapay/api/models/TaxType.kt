@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializable
 
 
 /**
- *
+ * 
  *
  * Values: regular_vat,reduced_vat,no_tax,transparent
  */
@@ -74,3 +74,5 @@ enum class TaxType(val value: kotlin.String) {
         }
     }
 }
+
+

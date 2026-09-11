@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         applicationId "de.stustapay.stustapay"
-        minSdk 28
+        minSdk 30
         targetSdk 33
         versionCode getSSPVersionCode()
         versionName getSSPVersionName()
@@ -46,12 +46,17 @@ android {
             if (project.hasProperty('ANDROID_KEY_STORE_FILE')) {
                 signingConfig signingConfigs.release
             }
+            debuggable = false
+        }
+        debug {
+            debuggable = System.env.SUMUP_TTP_ENABLE != "true"
         }
     }
 
     compileOptions {
         sourceCompatibility = targetJavaVersion
         targetCompatibility = targetJavaVersion
+        coreLibraryDesugaringEnabled true
     }
 
     buildFeatures {
@@ -62,6 +67,12 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    sourceSets {
+        main {
+            kotlin.srcDirs += System.env.SUMUP_TTP_ENABLE == "true" ? "src/impl/java" : "src/dummy/java"
         }
     }
 }
@@ -122,6 +133,10 @@ dependencies {
     implementation "com.ionspin.kotlin:bignum-serialization-kotlinx:$bignum_version"
     implementation "androidx.media3:media3-ui-compose:1.10.1"
     implementation "androidx.media3:media3-exoplayer:1.10.1"
+    if (System.env.SUMUP_TTP_ENABLE == "true") {
+        implementation "com.sumup.tap-to-pay:utopia-sdk:1.1.6"
+    }
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
 }
 
 composeCompiler {

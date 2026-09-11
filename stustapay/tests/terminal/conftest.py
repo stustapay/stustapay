@@ -318,6 +318,7 @@ async def create_terminal_token(
                     enable_ssp_payment=True,
                     enable_cash_payment=False,
                     enable_card_payment=False,
+                    use_ttp_for_card_payment=False,
                 ),
             )
             await till_service.create_till(

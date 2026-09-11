@@ -23,11 +23,7 @@ const injectedRtkApi = api
         providesTags: ["base"],
       }),
       updateCustomerInfo: build.mutation<UpdateCustomerInfoApiResponse, UpdateCustomerInfoApiArg>({
-        query: (queryArg) => ({
-          url: `/customer_info`,
-          method: "POST",
-          body: queryArg.customerBank,
-        }),
+        query: (queryArg) => ({ url: `/customer_info`, method: "POST", body: queryArg.customerBank }),
         invalidatesTags: ["base"],
       }),
       updateCustomerInfoDonateAll: build.mutation<
@@ -63,19 +59,11 @@ const injectedRtkApi = api
         providesTags: ["base"],
       }),
       createCheckout: build.mutation<CreateCheckoutApiResponse, CreateCheckoutApiArg>({
-        query: (queryArg) => ({
-          url: `/sumup/create-checkout`,
-          method: "POST",
-          body: queryArg.createCheckoutPayload,
-        }),
+        query: (queryArg) => ({ url: `/sumup/create-checkout`, method: "POST", body: queryArg.createCheckoutPayload }),
         invalidatesTags: ["sumup"],
       }),
       checkCheckout: build.mutation<CheckCheckoutApiResponse, CheckCheckoutApiArg>({
-        query: (queryArg) => ({
-          url: `/sumup/check-checkout`,
-          method: "POST",
-          body: queryArg.checkCheckoutPayload,
-        }),
+        query: (queryArg) => ({ url: `/sumup/check-checkout`, method: "POST", body: queryArg.checkCheckoutPayload }),
         invalidatesTags: ["sumup"],
       }),
     }),

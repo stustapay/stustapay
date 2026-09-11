@@ -1,10 +1,15 @@
 package de.stustapay.stustapay.repository
 
 import android.app.Activity
+import android.util.Log
 import de.stustapay.libssp.util.waitFor
 import de.stustapay.stustapay.ec.ECPayment
 import de.stustapay.stustapay.ec.SumUp
 import de.stustapay.stustapay.ec.SumUpState
+import de.stustapay.stustapay.ec.SumUpTapToPay
+import de.stustapay.stustapay.ec.SumUpTapToPayLoginResult
+import de.stustapay.stustapay.ec.SumUpTapToPayResult
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,12 +23,41 @@ sealed interface ECPaymentResult {
 @Singleton
 class ECPaymentRepository @Inject constructor(
     private val sumUp: SumUp,
+    private val sumUpTapToPay: SumUpTapToPay,
+    private val terminalConfigRepository: TerminalConfigRepository
 ) {
     suspend fun wakeup() {
         sumUp.wakeup()
     }
 
+    suspend fun login(keepTrying: Boolean = false) {
+        var res = sumUpTapToPay.login()
+
+        if (res == SumUpTapToPayLoginResult.NotSupported) {
+            Log.e("ec", "tap-to-pay is disabled in this build")
+            return
+        }
+
+        while (keepTrying && res is SumUpTapToPayLoginResult.Error) {
+            Log.e("ec", "ttp login failed: ${res.msg}")
+            delay(1000)
+            res = sumUpTapToPay.login()
+        }
+    }
+
+    // payment with the method set in the terminal config
     suspend fun pay(context: Activity, ecPayment: ECPayment): ECPaymentResult {
+        val terminalConfig =
+            terminalConfigRepository.terminalConfigState.value as? TerminalConfigState.Success
+        return if (terminalConfig?.config?.till?.useTtpForCardPayment == true) {
+            payTapToPay(ecPayment)
+        } else {
+            payReader(context, ecPayment)
+        }
+    }
+
+    // payment with an external card reader
+    suspend fun payReader(context: Activity, ecPayment: ECPayment): ECPaymentResult {
 
         // perform sumup flow
         sumUp.pay(context, ecPayment)
@@ -60,6 +94,21 @@ class ECPaymentRepository @Inject constructor(
                     ECPaymentResult.SilentCancelled
                 }
             }
+        }
+    }
+
+    // payment using the built-in nfc reader
+    suspend fun payTapToPay(ecPayment: ECPayment): ECPaymentResult {
+        return when (val res = sumUpTapToPay.pay(ecPayment)) {
+            is SumUpTapToPayResult.Success -> ECPaymentResult.Success(
+                SumUpState.Success(
+                    "success", res.txCode, null
+                )
+            )
+
+            is SumUpTapToPayResult.Error -> ECPaymentResult.Failure(res.msg)
+            SumUpTapToPayResult.Cancelled -> ECPaymentResult.Failure("cancelled")
+            SumUpTapToPayResult.NotSupported -> ECPaymentResult.Failure("tap-to-pay is disabled in this build")
         }
     }
 }

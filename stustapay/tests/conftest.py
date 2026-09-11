@@ -608,6 +608,7 @@ async def till_profile(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
         ),
     )
 

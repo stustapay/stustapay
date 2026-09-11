@@ -254,11 +254,7 @@ const injectedRtkApi = api
         invalidatesTags: ["auth"],
       }),
       changePassword: build.mutation<ChangePasswordApiResponse, ChangePasswordApiArg>({
-        query: (queryArg) => ({
-          url: `/auth/change-password`,
-          method: "POST",
-          body: queryArg.changePasswordPayload,
-        }),
+        query: (queryArg) => ({ url: `/auth/change-password`, method: "POST", body: queryArg.changePasswordPayload }),
         invalidatesTags: ["auth"],
       }),
       logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
@@ -1097,10 +1093,7 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       archiveNode: build.mutation<ArchiveNodeApiResponse, ArchiveNodeApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/nodes/${queryArg.nodeId}/archive-node`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/archive-node`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       createEvent: build.mutation<CreateEventApiResponse, CreateEventApiArg>({
@@ -1140,17 +1133,11 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateTestBon: build.mutation<GenerateTestBonApiResponse, GenerateTestBonApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/generate-test-bon`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-bon`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       checkPretixConnection: build.mutation<CheckPretixConnectionApiResponse, CheckPretixConnectionApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/check-pretix-connection`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       fetchPretixProducts: build.mutation<FetchPretixProductsApiResponse, FetchPretixProductsApiArg>({
@@ -1170,17 +1157,11 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateTestRevenueReport: build.mutation<GenerateTestRevenueReportApiResponse, GenerateTestRevenueReportApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/generate-test-report`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generateRevenueReport: build.mutation<GenerateRevenueReportApiResponse, GenerateRevenueReportApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-revenue-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generateDailyReport: build.mutation<GenerateDailyReportApiResponse, GenerateDailyReportApiArg>({
@@ -1192,24 +1173,15 @@ const injectedRtkApi = api
         invalidatesTags: ["tree"],
       }),
       generateTestDailyReport: build.mutation<GenerateTestDailyReportApiResponse, GenerateTestDailyReportApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/generate-test-daily-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       generatePayoutReport: build.mutation<GeneratePayoutReportApiResponse, GeneratePayoutReportApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/nodes/${queryArg.nodeId}/generate-payout-report`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       exportDsfinvk: build.mutation<ExportDsfinvkApiResponse, ExportDsfinvkApiArg>({
-        query: (queryArg) => ({
-          url: `/tree/events/${queryArg.nodeId}/export-dsfinvk`,
-          method: "POST",
-        }),
+        query: (queryArg) => ({ url: `/tree/events/${queryArg.nodeId}/export-dsfinvk`, method: "POST" }),
         invalidatesTags: ["tree"],
       }),
       exportAo146A: build.mutation<ExportAo146AApiResponse, ExportAo146AApiArg>({
@@ -2454,6 +2426,7 @@ export type TillProfile = {
   enable_ssp_payment: boolean;
   enable_cash_payment: boolean;
   enable_card_payment: boolean;
+  use_ttp_for_card_payment: boolean;
   node_id: number;
   id: number;
 };
@@ -2468,6 +2441,7 @@ export type NewTillProfile = {
   enable_ssp_payment: boolean;
   enable_cash_payment: boolean;
   enable_card_payment: boolean;
+  use_ttp_for_card_payment: boolean;
 };
 export type TillButton = {
   name: string;

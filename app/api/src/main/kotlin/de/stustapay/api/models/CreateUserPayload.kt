@@ -30,14 +30,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param login
- * @param displayName
- * @param roleAssignments
- * @param userTagPin
- * @param userTagUid
- * @param description
+ * @param login 
+ * @param displayName 
+ * @param roleAssignments 
+ * @param userTagPin 
+ * @param userTagUid 
+ * @param description 
  */
 @Serializable
 
@@ -65,3 +65,4 @@ data class CreateUserPayload (
 
 
 }
+

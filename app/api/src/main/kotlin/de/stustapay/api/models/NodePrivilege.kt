@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializable
 
 
 /**
- *
+ * 
  *
  * Values: node_administration,view_node_stats,can_book_orders
  */
@@ -71,3 +71,5 @@ enum class NodePrivilege(val value: kotlin.String) {
         }
     }
 }
+
+

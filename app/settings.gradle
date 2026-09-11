@@ -14,6 +14,15 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = 'https://maven.sumup.com/releases' }
+        if (System.env.SUMUP_TTP_ENABLE == "true") {
+            maven {
+                url = uri("https://tap-to-pay-sdk.fleet.live.sumup.net/")
+                credentials {
+                    username = "$System.env.SUMUP_TTP_USER"
+                    password = "$System.env.SUMUP_TTP_PASS"
+                }
+            }
+        }
     }
 }
 rootProject.name = "StuStaPay"
