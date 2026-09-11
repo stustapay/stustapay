@@ -169,7 +169,7 @@ class TicketService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(node_privileges=[NodePrivilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_presale_stats(self, *, conn: Connection, node: Node) -> PresaleStats:
         stats = await conn.fetch_one(
             PresaleStats,

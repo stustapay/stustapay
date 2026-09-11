@@ -143,7 +143,7 @@ class AccountService(Service[Config]):
 
     @with_db_transaction(read_only=True)
     @requires_node(event_only=True)
-    @requires_user(node_privileges=[NodePrivilege.node_administration])
+    @requires_user(node_privileges=[NodePrivilege.node_administration, NodePrivilege.view_node_stats])
     async def get_money_overview(self, *, conn: Connection, node: Node) -> MoneyOverview:
         system_accounts = await conn.fetch_many(
             Account,
