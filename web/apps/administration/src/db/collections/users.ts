@@ -1,5 +1,6 @@
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { createCollection } from "@tanstack/react-db";
+import * as z from "zod";
 
 import { createUser, deleteUser, listUsers, updateUser } from "../api/generated";
 import { client } from "../api/generated/client.gen";
@@ -23,7 +24,7 @@ const createUserCollection = (nodeId: number, filterPrivilege?: EventPrivilege |
       queryKey: ["nodes", nodeId, "users", filterPrivilege ?? "all"],
       queryClient,
       getKey: (item) => item.id,
-      schema: zUser,
+      schema: zUser.extend({ password: z.string().nullish() }),
       queryFn: async () => {
         const response = await listUsers({
           query: {
@@ -37,9 +38,7 @@ const createUserCollection = (nodeId: number, filterPrivilege?: EventPrivilege |
       onInsert: async ({ transaction }) => {
         await Promise.all(
           transaction.mutations.map(async ({ modified }) => {
-            const { password, ...userFields } = modified as typeof modified & {
-              password?: string | null;
-            };
+            const { password, ...userFields } = modified;
             return createUser({
               client: client,
               query: {
