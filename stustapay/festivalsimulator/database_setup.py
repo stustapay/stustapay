@@ -265,6 +265,7 @@ async def _create_admin_tills(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
             layout_id=admin_layout.id,
         ),
     )
@@ -451,6 +452,7 @@ async def _create_beverage_tills(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
             layout_id=beer_layout.id,
         ),
     )
@@ -494,6 +496,7 @@ async def _create_beverage_tills(
             enable_ssp_payment=True,
             enable_cash_payment=False,
             enable_card_payment=False,
+            use_ttp_for_card_payment=False,
             layout_id=cocktail_layout.id,
         ),
     )
@@ -572,6 +575,7 @@ async def _create_ticket_tills(
             enable_ssp_payment=False,
             enable_cash_payment=True,
             enable_card_payment=True,
+            use_ttp_for_card_payment=False,
             layout_id=layout.id,
         ),
     )
@@ -620,6 +624,7 @@ async def _create_topup_tills(
             enable_ssp_payment=True,
             enable_cash_payment=True,
             enable_card_payment=True,
+            use_ttp_for_card_payment=False,
             layout_id=layout.id,
         ),
     )

@@ -33,19 +33,19 @@ import kotlinx.serialization.Contextual
 /**
  * Describes a logged-in user in the system
  *
- * @param nodeId
- * @param id
- * @param login
- * @param displayName
- * @param activeRoleId
- * @param activeRoleName
- * @param eventPrivileges
- * @param nodePrivileges
- * @param description
- * @param userTagId
- * @param userTagUid
- * @param transportAccountId
- * @param cashRegisterId
+ * @param nodeId 
+ * @param id 
+ * @param login 
+ * @param displayName 
+ * @param activeRoleId 
+ * @param activeRoleName 
+ * @param eventPrivileges 
+ * @param nodePrivileges 
+ * @param description 
+ * @param userTagId 
+ * @param userTagUid 
+ * @param transportAccountId 
+ * @param cashRegisterId 
  */
 @Serializable
 
@@ -94,3 +94,4 @@ data class CurrentUser (
 
 
 }
+

@@ -11865,6 +11865,10 @@
           "enable_card_payment": {
             "type": "boolean",
             "title": "Enable Card Payment"
+          },
+          "use_ttp_for_card_payment": {
+            "type": "boolean",
+            "title": "Use Ttp For Card Payment"
           }
         },
         "type": "object",
@@ -11877,7 +11881,8 @@
           "allow_ticket_vouchers",
           "enable_ssp_payment",
           "enable_cash_payment",
-          "enable_card_payment"
+          "enable_card_payment",
+          "use_ttp_for_card_payment"
         ],
         "title": "NewTillProfile"
       },
@@ -15277,6 +15282,10 @@
             "type": "boolean",
             "title": "Enable Card Payment"
           },
+          "use_ttp_for_card_payment": {
+            "type": "boolean",
+            "title": "Use Ttp For Card Payment"
+          },
           "node_id": {
             "type": "integer",
             "title": "Node Id"
@@ -15297,6 +15306,7 @@
           "enable_ssp_payment",
           "enable_cash_payment",
           "enable_card_payment",
+          "use_ttp_for_card_payment",
           "node_id",
           "id"
         ],

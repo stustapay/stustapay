@@ -40,6 +40,7 @@ class NewTillProfile(BaseModel):
     enable_ssp_payment: bool
     enable_cash_payment: bool
     enable_card_payment: bool
+    use_ttp_for_card_payment: bool
 
 
 class TillProfile(NewTillProfile):

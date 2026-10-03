@@ -110,14 +110,21 @@
         '';
       };
 
-      devShell = mkShell {
+      devShell = mkShell rec {
         buildInputs = [
-          (python3.withPackages(ps: with ps; [
-            pip
-          ]))
+          virtualEnv
+          glib
+          pango
+          fontconfig
           nodejs
           typst
+          ruff
+          pylint
+          mypy
         ];
+        shellHook = ''
+          export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath buildInputs}:$LD_LIBRARY_PATH"
+        '';
       };
     }
   );

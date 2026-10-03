@@ -30,6 +30,7 @@ export function TillProfileForm<T extends NewTillProfile>(props: TillProfileForm
       <FormCheckbox name="enable_ssp_payment" label={t("profile.enableSspPayment")} formik={props} />
       <FormCheckbox name="enable_cash_payment" label={t("profile.enableCashPayment")} formik={props} />
       <FormCheckbox name="enable_card_payment" label={t("profile.enableCardPayment")} formik={props} />
+      <FormCheckbox name="use_ttp_for_card_payment" label={t("profile.useTtpForCardPayment")} formik={props} />
 
       <Select
         label={t("layout.layout")}

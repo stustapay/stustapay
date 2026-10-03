@@ -30,16 +30,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param quantity
- * @param product
- * @param productPrice
- * @param taxRateId
- * @param taxName
- * @param taxRate
- * @param vouchersRedeemed
- * @param totalPrice
+ * @param quantity 
+ * @param product 
+ * @param productPrice 
+ * @param taxRateId 
+ * @param taxName 
+ * @param taxRate 
+ * @param vouchersRedeemed 
+ * @param totalPrice 
  */
 @Serializable
 
@@ -73,3 +73,4 @@ data class PendingLineItem (
 
 
 }
+

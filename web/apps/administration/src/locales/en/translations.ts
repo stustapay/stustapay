@@ -613,6 +613,7 @@ export const translations = {
     enableSspPayment: "Enable payment of products with SSP",
     enableCashPayment: "Enable payment of products with cash",
     enableCardPayment: "Enable payment of products with card",
+    useTtpForCardPayment: "Use tap-to-pay instead of an external reader for card payments",
     allowedUserRoles: "Allowed user roles",
     layout: "Layout",
     update: "Update profile",

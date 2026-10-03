@@ -29,19 +29,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param name
- * @param price
- * @param taxRateId
- * @param userTagVariantIds
- * @param isLocked
- * @param initialTopUpAmount
- * @param nodeId
- * @param id
- * @param taxName
- * @param taxRate
- * @param totalPrice
+ * @param name 
+ * @param price 
+ * @param taxRateId 
+ * @param userTagVariantIds 
+ * @param isLocked 
+ * @param initialTopUpAmount 
+ * @param nodeId 
+ * @param id 
+ * @param taxName 
+ * @param taxRate 
+ * @param totalPrice 
  */
 @Serializable
 
@@ -84,3 +84,4 @@ data class Ticket (
 
 
 }
+

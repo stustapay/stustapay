@@ -30,11 +30,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Contextual
 
 /**
+ * 
  *
- *
- * @param nodeId
- * @param nodeName
- * @param roles
+ * @param nodeId 
+ * @param nodeName 
+ * @param roles 
  */
 @Serializable
 
@@ -53,3 +53,4 @@ data class AssignableUserRolesAtNode (
 
 
 }
+

@@ -327,7 +327,11 @@ class TerminalService(Service[Config]):
         assert event_node_id is not None
 
         current_token = self.sumup_oauth_cache.get(event_node_id, None)
-        if current_token and current_token.is_valid():
+        if (
+            current_token
+            and current_token.is_valid()
+            and current_token.refresh_token == event_settings.sumup_oauth_refresh_token
+        ):
             return current_token
 
         logger.info(f"Refreshing SumUp Oauth token for event with ID {event_node_id}")
@@ -415,6 +419,7 @@ class TerminalService(Service[Config]):
             enable_ssp_payment=profile.enable_ssp_payment,
             enable_cash_payment=profile.enable_cash_payment,
             enable_card_payment=profile.enable_card_payment,
+            use_ttp_for_card_payment=profile.use_ttp_for_card_payment,
             buttons=buttons,
             sumup_secrets=secrets,
         )

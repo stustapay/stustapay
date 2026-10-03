@@ -47,6 +47,7 @@ export const NewTillProfileSchema = z.object({
   enable_ssp_payment: z.boolean(),
   enable_cash_payment: z.boolean(),
   enable_card_payment: z.boolean(),
+  use_ttp_for_card_payment: z.boolean(),
 });
 
 export type NewTillProfile = z.infer<typeof NewTillProfileSchema>;

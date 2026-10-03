@@ -56,6 +56,7 @@ export const TillProfileUpdate: React.FC = withPrivilegeGuard("node_administrati
           draft.enable_ssp_payment = p.enable_ssp_payment;
           draft.enable_cash_payment = p.enable_cash_payment;
           draft.enable_card_payment = p.enable_card_payment;
+          draft.use_ttp_for_card_payment = p.use_ttp_for_card_payment;
         })
       }
       form={TillProfileForm}
