@@ -30,18 +30,20 @@ class ECPaymentRepository @Inject constructor(
         sumUp.wakeup()
     }
 
-    suspend fun login(keepTrying: Boolean = false) {
-        var res = sumUpTapToPay.login()
-
-        if (res == SumUpTapToPayLoginResult.NotSupported) {
+    suspend fun login() {
+        if (!sumUpTapToPay.isSupported()) {
             Log.e("ec", "tap-to-pay is disabled in this build")
             return
         }
 
-        while (keepTrying && res is SumUpTapToPayLoginResult.Error) {
-            Log.e("ec", "ttp login failed: ${res.msg}")
-            delay(1000)
-            res = sumUpTapToPay.login()
+        for (i in 0..3) {
+            val res = sumUpTapToPay.login()
+            if (res is SumUpTapToPayLoginResult.Error) {
+                Log.e("ec", "ttp login failed: ${res.msg}")
+                delay(1000)
+            } else {
+                break
+            }
         }
     }
 
@@ -49,7 +51,17 @@ class ECPaymentRepository @Inject constructor(
     suspend fun pay(context: Activity, ecPayment: ECPayment): ECPaymentResult {
         val terminalConfig =
             terminalConfigRepository.terminalConfigState.value as? TerminalConfigState.Success
-        return if (terminalConfig?.config?.till?.useTtpForCardPayment == true) {
+        val useTtpForCardPayment = terminalConfig?.config?.till?.useTtpForCardPayment == true
+
+        if (useTtpForCardPayment && !sumUpTapToPay.isSupported()) {
+            return ECPaymentResult.Failure("This device is configured for Tap-to-Pay, but it is disabled in this version of the app.")
+        }
+
+        if (useTtpForCardPayment && !sumUpTapToPay.isReady()) {
+            return ECPaymentResult.Failure("Failed to initialize Tap-to-Pay.")
+        }
+
+        return if (useTtpForCardPayment) {
             payTapToPay(ecPayment)
         } else {
             payReader(context, ecPayment)

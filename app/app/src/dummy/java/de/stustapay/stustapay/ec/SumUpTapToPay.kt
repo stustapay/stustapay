@@ -11,6 +11,10 @@ class SumUpTapToPay @Inject constructor(
 ) {
     fun init(applicationContext: Context) {}
 
+    fun isSupported(): Boolean = false
+
+    fun isReady(): Boolean = false
+
     suspend fun login(): SumUpTapToPayLoginResult = SumUpTapToPayLoginResult.NotSupported
 
     suspend fun pay(payment: ECPayment): SumUpTapToPayResult = SumUpTapToPayResult.NotSupported

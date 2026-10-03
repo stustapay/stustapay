@@ -56,6 +56,12 @@ class SumUpTapToPay @Inject constructor(
         }
     }
 
+    fun isSupported(): Boolean = true
+
+    fun isReady(): Boolean {
+        return state.value is SumUpTapToPayState.Ready
+    }
+
     suspend fun login(): SumUpTapToPayLoginResult {
         val terminalConfig =
             (terminalConfigRepository.terminalConfigState.value as? TerminalConfigState.Success)?.config
@@ -103,7 +109,6 @@ class SumUpTapToPay @Inject constructor(
 
         return SumUpTapToPayLoginResult.Success
     }
-
 
     suspend fun pay(payment: ECPayment): SumUpTapToPayResult {
         val api =

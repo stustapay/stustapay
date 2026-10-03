@@ -62,7 +62,7 @@ class TerminalConfigViewModel @Inject constructor(
 
     suspend fun fetchAccessData() {
         terminalConfigRepository.fetchConfig(keepTrying = true)
-        ecPaymentRepository.login(keepTrying = true)
+        ecPaymentRepository.login()
         userRepository.fetchLogin()
     }
 }
