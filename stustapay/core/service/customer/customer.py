@@ -91,7 +91,7 @@ class CustomerService(Service[Config]):
             "   left join user_tag ut on ut.id = c.user_tag_id "
             "   left join ticket_voucher tv on tv.customer_account_id = c.id "
             "where ((ut.pin = $1 or ut.pin = $2) and ut.node_id = $4) or (tv.token_hash = $3 and tv.node_id = $4) "
-            "   or (tv.token = $3 and tv.node_id = $4)",
+            "   or (tv.token_hash = hash_voucher_token($3) and tv.node_id = $4)",
             # TODO: restore case sensitivity
             pin.lower(),  # for simulator
             pin.upper(),  # for humans
