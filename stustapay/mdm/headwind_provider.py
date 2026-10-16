@@ -240,7 +240,9 @@ class HeadwindApi:
         if message_filter:
             payload["messageFilter"] = message_filter
 
+        logger.warning(f"{payload}")
         response = await self._post(HEADWIND_DEVICE_LOG_ENDPOINT, payload, timeout=30)
+        logger.warning(f"{response}")
         return self._parse_log_search_response(response)
 
     async def get_device_location(self, device_id: str) -> DeviceLocation:
