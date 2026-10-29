@@ -503,7 +503,11 @@ class TerminalService(Service[Config]):
         """
 
         # we fetch all roles that contain either the terminal login or supervised terminal login privilege
-        new_user_id = await conn.fetchval("select id from user_with_tag where user_tag_uid = $1", user_tag.uid)
+        new_user_id = await conn.fetchval(
+            "select id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
+            user_tag.uid,
+            node.ids_to_event_node,
+        )
         if new_user_id is None:
             raise InvalidArgument(f"User with tag {format_user_tag_uid(user_tag.uid)} is not known")
 
@@ -559,6 +563,7 @@ class TerminalService(Service[Config]):
     async def login_user(
         self,
         *,
+        node: Node,
         conn: Connection,
         token: str,
         current_terminal: CurrentTerminal,
@@ -576,7 +581,9 @@ class TerminalService(Service[Config]):
             raise AccessDenied("The user does not have the requested role")
 
         user_id, cash_register_id = await conn.fetchrow(
-            "select id, cash_register_id from user_with_tag where user_tag_uid = $1", user_tag.uid
+            "select id, cash_register_id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
+            user_tag.uid,
+            node.ids_to_event_node,
         )
         assert user_id is not None
         if current_terminal.till is not None:
@@ -669,8 +676,9 @@ class TerminalService(Service[Config]):
             "from user_with_tag u "
             "left join account transp_a on transp_a.id = u.transport_account_id "
             "left join cash_register_with_balance cr on u.cash_register_id = cr.id "
-            "where u.user_tag_uid = $1",
+            "where u.user_tag_uid = $1 and u.node_id = any($2)",
             user_tag_uid,
+            node.ids_to_event_node,
         )
         if info is None:
             raise InvalidArgument(f"There is no user registered for tag {format_user_tag_uid(user_tag_uid)}")

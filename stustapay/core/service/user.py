@@ -439,7 +439,11 @@ class UserService(Service[Config]):
                 conn=conn, node=node, pin=new_user.user_tag_pin, uid=new_user.user_tag_uid
             )
 
-            existing_user = await conn.fetchrow("select * from user_with_tag where user_tag_id = $1", user_tag_id)
+            existing_user = await conn.fetchrow(
+                "select * from user_with_tag where user_tag_id = $1 and node_id = any($2)",
+                user_tag_id,
+                node.ids_to_event_node,
+            )
             if existing_user is not None:
                 raise InvalidArgument(f"User with tag id {new_user.user_tag_pin} already exists")
 
@@ -583,7 +587,7 @@ class UserService(Service[Config]):
         user_id = await conn.fetchval(
             "select id from user_with_tag where user_tag_uid = $1 and node_id = any($2)",
             user_tag_uid,
-            node.ids_to_root,
+            node.ids_to_event_node,
         )
         if user_id is None:
             raise InvalidArgument(f"User with tag uid {format_user_tag_uid(user_tag_uid)} does not exist")
